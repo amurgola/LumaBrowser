@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LLM</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/luma-components.css">
+    <link rel="stylesheet" href="css/setup.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/code-editor.css">
+    <link rel="stylesheet" href="css/live-module.css">
+    <script src="/llm-ui/luma-modal.js"></script>
+    <script src="resonant.js"></script>
+    <script type="importmap">{ "imports": { "/llm-server/ui/": "/llm-ui/", "/llm-ui/core/llm-server/ui/": "/llm-ui/" } }</script>
+    <script type="module" src="js/entry.js"></script>
+</head>
+<body>
+    <div id="modeSlider" class="mode-slider" role="tablist" aria-label="LLM mode">
+        <button type="button" data-mode="setup" class="active" role="tab">Setup</button>
+        <button type="button" data-mode="chat" role="tab">Chat</button>
+        <button type="button" data-mode="code" role="tab" hidden>Code</button>
+    </div>
+
+    <div id="setupRoot">
+    <div class="page-head">
+        <span class="page-eyebrow" id="pageEyebrow">LLM Server</span>
+        <h1 class="page-title" id="pageTitle">LLM Setup</h1>
+    </div>
+    <p class="page-sub">
+        <span id="hostMeta">Probing host…</span>
+        <button class="luma-btn pill luma-btn--sm" id="reloadBtn" type="button">Refresh</button>
+    </p>
+
+    <div class="luma-segmented" id="pageNav">
+        <button data-view="settings" class="active">LLM</button>
+        <button data-view="image">Image</button>
+        <button data-view="music" id="navMusic">Music</button>
+        <button data-view="advanced" id="navAdvanced">Advanced</button>
+    </div>
+
+    <div class="grid" data-view-pane="settings">
+        <section class="card" id="cardDefaults" data-card-group="settings">
+            <div class="card-head">
+                <h2 class="card-title">Defaults · Chat</h2>
+                <span class="luma-badge accent" id="defaultsPill">…</span>
+            </div>
+            <div id="defaultsBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardPlanExplainer" data-card-group="settings" hidden>
+            <div class="card-head">
+                <h2 class="card-title">How your model is running</h2>
+                <span class="luma-badge accent" id="planExplainerPill">…</span>
+            </div>
+            <div id="planExplainerBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardRuntimes" data-card-group="settings">
+            <div class="card-head">
+                <h2 class="card-title">Inference Runtimes</h2>
+                <span class="luma-badge accent" id="runtimesPill">…</span>
+            </div>
+            <div id="runtimesBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardModels" data-card-group="settings">
+            <div class="card-head">
+                <h2 class="card-title">Models Directory</h2>
+                <button type="button" class="luma-icon-btn card-head-icon" data-open-model-search title="Search for models to download" aria-label="Search for models to download">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+                </button>
+                <span class="luma-badge accent" id="modelsPill">…</span>
+            </div>
+            <div id="modelsBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardGrounding" data-card-group="settings">
+            <div class="card-head">
+                <h2 class="card-title">Visual grounding</h2>
+                <span class="luma-badge accent" id="groundingPill">…</span>
+            </div>
+            <div id="groundingBody" class="luma-muted">Loading…</div>
+        </section>
+
+
+        <section class="card" id="cardImageDefaults" data-card-group="image">
+            <div class="card-head">
+                <h2 class="card-title">Image Server</h2>
+                <span class="luma-badge accent" id="imageDefaultsPill">…</span>
+            </div>
+            <div id="imageDefaultsBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardImageRuntimes" data-card-group="image">
+            <div class="card-head">
+                <h2 class="card-title">Image Runtimes</h2>
+                <span class="luma-badge accent" id="imageRuntimesPill">…</span>
+            </div>
+            <div id="imageRuntimesBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardImageModels" data-card-group="image">
+            <div class="card-head">
+                <h2 class="card-title">Image Models</h2>
+                <span class="luma-badge accent" id="imageModelsPill">…</span>
+            </div>
+            <div id="imageModelsBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardMusicRuntime" data-card-group="music">
+            <div class="card-head">
+                <h2 class="card-title">Music Server</h2>
+                <span class="luma-badge accent" id="musicRuntimePill">…</span>
+            </div>
+            <div id="musicRuntimeBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardMusicModels" data-card-group="music">
+            <div class="card-head">
+                <h2 class="card-title">Music Models</h2>
+                <span class="luma-badge accent" id="musicModelsPill">…</span>
+            </div>
+            <div id="musicModelsBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardMusicDefaults" data-card-group="music">
+            <div class="card-head">
+                <h2 class="card-title">Defaults · Music</h2>
+                <span class="luma-badge accent" id="musicDefaultsPill">…</span>
+            </div>
+            <div id="musicDefaultsBody" class="luma-muted">Loading…</div>
+        </section>
+
+        <section class="card" id="cardMusicTry" data-card-group="music">
+            <div class="card-head">
+                <h2 class="card-title">Try It</h2>
+                <span class="luma-badge accent" id="musicTryPill">…</span>
+            </div>
+            <div id="musicTryBody" class="luma-muted">Loading…</div>
+        </section>
+    </div>
+
+    <div id="advancedRoot" data-view-pane="advanced" hidden>
+        <div class="luma-tabs adv-subtabs" id="advSubtabs">
+            <button type="button" data-subtab="placement" class="active">Model Placement</button>
+            <button type="button" data-subtab="server">Server Info</button>
+            <button type="button" data-subtab="data">Data</button>
+        </div>
+
+        <div data-subtab-pane="placement">
+            <div class="adv-head">
+                <div>
+                    <h2 class="adv-title">Model Placement</h2>
+                    <p class="adv-sub">Drag each model onto a GPU, an ordered GPU group, or System RAM. Combine cards into a group for overflow, or into a singularity to share one card. Leave a model in the Automatic tray to let the coordinator decide.</p>
+                </div>
+                <div class="adv-head-actions">
+                    <button class="adv-btn" id="advAutoArrange" title="Reset everything to automatic placement">Auto-arrange</button>
+                </div>
+            </div>
+            <div id="advBody" class="luma-muted">Loading…</div>
+        </div>
+
+        <div data-subtab-pane="server" hidden>
+            <div class="grid adv-server-grid">
+                <section class="card" id="cardMemory" data-card-group="info">
+                    <div class="card-head">
+                        <h2 class="card-title">Memory</h2>
+                        <span class="luma-badge accent" id="memPill">…</span>
+                    </div>
+                    <div id="memBody" class="luma-muted">Loading…</div>
+                </section>
+
+                <section class="card" id="cardCpu" data-card-group="info">
+                    <div class="card-head">
+                        <h2 class="card-title">Processor</h2>
+                        <span class="luma-badge accent" id="cpuPill">…</span>
+                    </div>
+                    <div id="cpuBody" class="luma-muted">Loading…</div>
+                </section>
+
+                <section class="card" id="cardGpu" data-card-group="info" style="grid-column: span 2;">
+                    <div class="card-head">
+                        <h2 class="card-title">Graphics Adapters</h2>
+                        <span class="luma-badge accent" id="gpuPill">…</span>
+                    </div>
+                    <div id="gpuBody" class="luma-muted">Loading…</div>
+                </section>
+
+                <section class="card" id="cardCuda" data-card-group="info">
+                    <div class="card-head">
+                        <h2 class="card-title">CUDA</h2>
+                        <span class="luma-badge accent" id="cudaPill">…</span>
+                    </div>
+                    <div id="cudaBody" class="luma-muted">Loading…</div>
+                </section>
+
+                <section class="card" id="cardDisks" data-card-group="info">
+                    <div class="card-head">
+                        <h2 class="card-title">Storage</h2>
+                        <span class="luma-badge accent" id="diskPill">…</span>
+                    </div>
+                    <div id="diskBody" class="luma-muted">Loading…</div>
+                </section>
+
+                <section class="card" id="cardBudget" data-card-group="info" style="grid-column: span 2;">
+                    <div class="card-head">
+                        <h2 class="card-title">Local Model Budget</h2>
+                        <span class="luma-badge accent" id="budgetPill">…</span>
+                    </div>
+                    <div id="budgetBody" class="luma-muted">Loading…</div>
+                </section>
+
+                <section class="card" id="cardApiSecurity" data-card-group="info" style="grid-column: span 2;">
+                    <div class="card-head">
+                        <h2 class="card-title">API Security</h2>
+                        <span class="luma-badge accent" id="apiSecurityPill">…</span>
+                    </div>
+                    <div id="apiSecurityBody" class="luma-muted">Loading…</div>
+                </section>
+            </div>
+        </div>
+
+        <div data-subtab-pane="data" hidden>
+            <div class="grid adv-server-grid">
+                <section class="card" id="cardChatData" data-card-group="data" style="grid-column: span 2;">
+                    <div class="card-head">
+                        <h2 class="card-title">Conversations &amp; artifacts</h2>
+                        <span class="luma-badge" id="chatDataPill">Danger zone</span>
+                    </div>
+                    <p class="luma-muted">Deletes every chat conversation, its messages, and every artifact (including live modules pinned to the Dashboard and any scheduled tasks). Files in project folders you selected for Code mode are not touched. This cannot be undone.</p>
+                    <div class="adv-head-actions" style="margin-top:12px;">
+                        <button class="luma-btn danger" id="chatDataWipe">Clear conversations &amp; artifacts</button>
+                        <span class="adv-status" id="chatDataStatus"></span>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <div id="chatRoot" hidden></div>
+
+    <div id="codeRoot" hidden></div>
+</body>
+</html>

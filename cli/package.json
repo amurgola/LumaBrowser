@@ -1,0 +1,41 @@
+{
+  "name": "lumabrowser",
+  "version": "2.0.0",
+  "description": "CLI launcher for LumaBrowser: a multi-tab browser with notification interception and AI-driven automation.",
+  "bin": {
+    "lumabrowser": "bin/lumabrowser.js",
+    "luma": "bin/luma.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "lumabrowser",
+    "browser",
+    "electron",
+    "automation",
+    "notifications",
+    "webhook",
+    "mcp",
+    "ai"
+  ],
+  "homepage": "https://lumabyte.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amurgola/LumaBrowser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/amurgola/LumaBrowser/issues"
+  },
+  "author": {
+    "name": "Lumabyte, LLC",
+    "url": "https://lumabyte.com"
+  },
+  "license": "AGPL-3.0-or-later",
+  "engines": {
+    "node": ">=18"
+  }
+}

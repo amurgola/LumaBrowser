@@ -1,0 +1,86 @@
+:root {
+  --bg: #0f141f;
+  --bg-bar: #16202e;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #e6e8ee;
+  --text-muted: #a8aebd;
+  --accent: #f59034;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overscroll-behavior: none; }
+body { display: flex; flex-direction: column; height: 100dvh; -webkit-font-smoothing: antialiased; touch-action: none; }
+
+.ts-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top));
+  background: var(--bg-bar); border-bottom: 1px solid var(--border);
+  flex: 0 0 auto; min-height: 44px;
+}
+.ts-brand { color: var(--accent); display: flex; align-items: center; }
+.ts-title { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ts-badge {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted);
+}
+body.is-interact .ts-badge { color: var(--accent); border-color: rgba(245, 144, 52, 0.5); }
+.ts-status { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+.ts-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
+body.is-live .ts-dot { background: var(--ok); }
+body.is-ended .ts-dot, body.is-error .ts-dot { background: var(--bad); }
+
+.ts-stage {
+  position: relative; flex: 1 1 auto; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #000; overflow: hidden; outline: none;
+}
+#frame, #video { display: block; max-width: 100%; max-height: 100%; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; opacity: 0; transition: opacity 0.15s ease-out; }
+body.has-frame #frame { opacity: 1; }
+#video { position: absolute; left: 0; top: 0; pointer-events: none; }
+body.rtc-on #video { position: static; opacity: 1; pointer-events: auto; }
+body.rtc-on #frame { display: none; }
+body.is-interact #frame, body.is-interact #video { cursor: default; }
+.ts-status .ts-hd { display: none; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--ok); color: var(--ok); }
+body.rtc-on .ts-status .ts-hd { display: inline-block; }
+
+.ts-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(15, 20, 31, 0.72); backdrop-filter: blur(2px); padding: 20px;
+}
+body.has-frame.is-live .ts-overlay { display: none; }
+.ts-overlay-card {
+  background: var(--bg-bar); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px 20px; max-width: 360px; text-align: center;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+.ts-overlay-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.ts-overlay-text { font-size: 12.5px; line-height: 1.5; color: var(--text-muted); }
+
+.ts-tools {
+  display: none; align-items: center; gap: 8px;
+  padding: 8px 12px; padding-bottom: max(8px, env(safe-area-inset-bottom));
+  background: var(--bg-bar); border-top: 1px solid var(--border); flex: 0 0 auto;
+}
+body.is-interact .ts-tools { display: flex; }
+.ts-tools-gap { flex: 1 1 auto; }
+.ts-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-width: 40px; height: 36px; padding: 0 10px;
+  background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px;
+  font: inherit; font-size: 12.5px; cursor: pointer;
+}
+.ts-btn:hover { border-color: var(--accent); }
+.ts-btn:active { background: rgba(255, 255, 255, 0.06); }
+.ts-btn:disabled { opacity: 0.4; cursor: default; }
+.ts-btn-kbd { display: none; }
+body.is-touch .ts-btn-kbd { display: inline-flex; }
+body.kbd-open #btnKeyboard { border-color: var(--accent); color: var(--accent); }
+
+.ts-kbd {
+  position: fixed; left: 0; bottom: 0; width: 1px; height: 1px;
+  opacity: 0.01; border: 0; padding: 0; margin: 0; resize: none; overflow: hidden;
+  color: transparent; background: transparent; caret-color: transparent;
+}

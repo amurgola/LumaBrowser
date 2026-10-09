@@ -1,0 +1,287 @@
+{
+  "name": "lumabrowser",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Your local AI stack in one app",
+  "homepage": "https://lumabyte.com",
+  "license": "AGPL-3.0-or-later",
+  "author": "Lumabyte, LLC",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "dev:trace": "electron . --dev --trace-llm",
+    "start:hidden": "electron . --hidden",
+    "mcp": "node mcp-server.js",
+    "test": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js --runInBand --forceExit",
+    "test:watch": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js --watch",
+    "test:verbose": "cross-env ELECTRON_RUN_AS_NODE=1 VERBOSE_TESTS=true electron node_modules/jest/bin/jest.js --verbose --runInBand --forceExit",
+    "test:coverage": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js --coverage --runInBand --forceExit",
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:mac": "electron-builder --mac",
+    "build:portable": "electron-builder --win portable",
+    "build:extensions": "node scripts/build-extensions.js",
+    "build:docs-rag": "node scripts/build-docs-rag.js",
+    "build:jetbrains": "node scripts/build-jetbrains-plugin.js",
+    "build:vscode": "node scripts/build-vscode-extension.js",
+    "verify:installer": "node scripts/verify-installer-nsh.js",
+    "test:node": "jest",
+    "test:e2e": "jest --config=tests/e2e/jest.config.js --runInBand",
+    "test:integration:live": "jest --config=tests/integration/live/jest.config.js --runInBand",
+    "verify:bytecode": "node scripts/_verify-bytecode-asar.js",
+    "sync:prod": "node scripts/sync-prod.js",
+    "cleanup": "node scripts/cleanup.js",
+    "test:clean": "npm run cleanup && npm test",
+    "profile:performance": "node scripts/profile-performance.js",
+    "profile:summarize-runtime": "node scripts/summarize-runtime-trace.js",
+    "crash:repro": "node scripts/crash-repro.js",
+    "test:performance": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js --config=tests/performance.config.js --runInBand --silent",
+    "build:site-replays": "node scripts/build-site-dev-replays.js",
+    "test:integration": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js tests/integration --runInBand --forceExit"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-modules-commonjs": "^7.29.7",
+    "@electron/asar": "^3.4.1",
+    "@electron/rebuild": "^4.2.0",
+    "cross-env": "^10.0.0",
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.3",
+    "javascript-obfuscator": "^5.9.0",
+    "jest": "^30.1.1",
+    "jest-environment-jsdom": "^30.5.2",
+    "madge": "^8.0.0",
+    "playwright": "^1.63.0",
+    "supertest": "^7.1.4"
+  },
+  "main": "main.js",
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "@ghostery/adblocker-electron": "^2.14.1",
+    "@modelcontextprotocol/sdk": "^1.18.2",
+    "@napi-rs/canvas": "^0.1.100",
+    "@vscode/ripgrep": "^1.18.0",
+    "archiver": "^7.0.1",
+    "axios": "^1.6.5",
+    "better-sqlite3": "^13.0.3",
+    "bonjour-service": "^1.4.0",
+    "bytenode": "^1.6.0",
+    "chart.js": "^4.5.1",
+    "cors": "^2.8.5",
+    "cross-fetch": "^4.1.0",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.8.3",
+    "eslint": "^10.4.1",
+    "express": "^5.1.0",
+    "extract-zip": "^2.0.1",
+    "gridstack": "^12.6.0",
+    "http-proxy": "^1.18.1",
+    "jsonc-parser": "^3.3.1",
+    "koffi": "^3.2.0",
+    "monaco-editor": "^0.55.1",
+    "node-machine-id": "^1.1.12",
+    "node-turn": "^0.0.6",
+    "pdfjs-dist": "^5.7.284",
+    "phaser": "^3.90.0",
+    "picomatch": "^2.3.2",
+    "selfsigned": "^2.4.1",
+    "smol-toml": "^1.9.0",
+    "tree-sitter-powershell": "^0.26.4",
+    "typescript": "^6.0.3",
+    "web-tree-sitter": "^0.26.9",
+    "ws": "^8.20.0"
+  },
+  "build": {
+    "appId": "com.lumabyte.lumabrowser",
+    "productName": "LumaBrowser",
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://lumabyte.com/install/"
+      }
+    ],
+    "afterPack": "./scripts/compile-bytecode.js",
+    "onNodeModuleFile": "./scripts/build-hooks.js",
+    "directories": {
+      "output": "dist"
+    },
+    "extraResources": [
+      {
+        "from": "cli",
+        "to": "cli",
+        "filter": [
+          "bin/**",
+          "lib/**",
+          "package.json",
+          "README.md",
+          "LICENSE"
+        ]
+      },
+      {
+        "from": "ide/dist",
+        "to": "ide",
+        "filter": [
+          "luma-jetbrains/**",
+          "jetbrains.json",
+          "luma-vscode.vsix",
+          "vscode.json"
+        ]
+      },
+      {
+        "from": "dist/docs-rag",
+        "to": "docs-rag",
+        "filter": [
+          "docs-rag.db"
+        ]
+      }
+    ],
+    "files": [
+      "**/*",
+      "!cli",
+      "!ide",
+      "!tests",
+      "!test-data",
+      "!documentation",
+      "!Documentation",
+      "!tools",
+      "!tmp",
+      "!scripts",
+      "!dist",
+      "!.git",
+      "!*.md",
+      "!CLAUDE.md",
+      "!models/*/**",
+      "!runtimes",
+      "!router",
+      "!research",
+      "!.idea",
+      "!.github",
+      "!docker",
+      "!package-lock.json",
+      "!knip.json",
+      "!**/*.map",
+      "!node_modules/monaco-editor/{esm,dev,min-maps}/**",
+      "!node_modules/tree-sitter-powershell/{build,prebuilds,src,bin,queries,node_modules}/**",
+      "!node_modules/typescript/lib/_tsc.js",
+      "!node_modules/typescript/lib/{cs,de,es,fr,it,ja,ko,pl,pt-br,ru,tr,zh-cn,zh-tw}/**",
+      "!node_modules/pdfjs-dist/{build,web,types,image_decoders}/**",
+      "!node_modules/pdfjs-dist/legacy/{web,image_decoders}/**",
+      "!node_modules/pdfjs-dist/legacy/build/*.min.mjs",
+      "!node_modules/pdfjs-dist/{cmaps,standard_fonts,wasm}/**",
+      "!node_modules/better-sqlite3/{deps,src,bin}/**",
+      "!node_modules/monaco-editor/min/vs/nls.messages.*.js.js",
+      "!node_modules/monaco-editor/{monaco.d.ts,package-lock.json,ThirdPartyNotices.txt}",
+      "!node_modules/chart.js/dist/chunks/**",
+      "!node_modules/chart.js/dist/{chart.cjs,chart.js,chart.umd.js}",
+      "!node_modules/chart.js/dist/types/**",
+      "!node_modules/chart.js/{auto,helpers}/**",
+      "!node_modules/phaser/{src,types,plugins,scripts}/**",
+      "!node_modules/phaser/dist/phaser.js",
+      "!node_modules/phaser/dist/phaser.esm*.js",
+      "!node_modules/phaser/dist/phaser-*.js"
+    ],
+    "asarUnpack": [
+      "mcp-server.js",
+      "core/shell/McpServer.js",
+      "core/shell/mcp-stdio/AppLauncher.js",
+      "core/shell/mcp-stdio/JsonHttpClient.js",
+      "core/shell/mcp-stdio/StdioJsonRpc.js",
+      "node_modules/koffi/**",
+      "node_modules/@koromix/**",
+      "node_modules/@vscode/ripgrep-*/**",
+      "node_modules/web-tree-sitter/**",
+      "node_modules/tree-sitter-powershell/**",
+      "node_modules/@modelcontextprotocol/**",
+      "node_modules/axios/**",
+      "node_modules/follow-redirects/**",
+      "node_modules/form-data/**",
+      "node_modules/proxy-from-env/**",
+      "node_modules/mime-types/**",
+      "node_modules/mime-db/**",
+      "node_modules/combined-stream/**",
+      "node_modules/delayed-stream/**",
+      "node_modules/asynckit/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon/icon.png"
+    },
+    "portable": {
+      "artifactName": "LumaBrowser-${version}-portable.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "license": "LICENSE",
+      "include": "build/installer.nsh"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon/icon.png",
+      "category": "Network",
+      "maintainer": "LumaByte <admin@murgo.la>",
+      "vendor": "Lumabyte, LLC"
+    },
+    "deb": {
+      "depends": [
+        "libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libnspr4",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0",
+        "libuuid1",
+        "libsecret-1-0",
+        "libasound2t64 | libasound2",
+        "libgomp1"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "icon/icon.png",
+      "category": "public.app-category.utilities",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": true
+    },
+    "dmg": {
+      "sign": false
+    }
+  }
+}

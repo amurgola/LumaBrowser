@@ -1,0 +1,133 @@
+[
+  {
+    "id": "instr-no-tool-for-knowledge",
+    "group": "instruction",
+    "prompt": "What is the capital of France? Answer in one short sentence and do not use any tools.",
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "contains": "Paris"
+      }
+    },
+    "_note": "HINTED: the prompt tells the model not to use tools. Keep, but see the no-hint tasks below; a suite of only these scores 5/5 while the model reaches for navigate on a plain conversational turn."
+  },
+  {
+    "id": "instr-no-tool-for-creative",
+    "group": "instruction",
+    "prompt": "Write a two-line poem about a lighthouse. Just write it, no tools.",
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "regex": "\\S+(\\s+\\S+){5,}"
+      }
+    },
+    "_note": "Scored on TOOL RESTRAINT and on having written something, not on vocabulary. The model returned \"A lone sentinel on the cliff's cold edge, / its beam cuts through the night like hope\": a good lighthouse poem that never says \"lighthouse\", and a keyword assertion failed it. Judging creative output by required words measures the matcher, not the model."
+  },
+  {
+    "id": "instr-format-constraint",
+    "group": "instruction",
+    "prompt": "List exactly three primary colours. Output ONLY three lines, each starting with '- '. No preamble, no closing sentence.",
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "regex": "^\\s*-\\s+\\S+[\\s\\S]*-\\s+\\S+[\\s\\S]*-\\s+\\S+",
+        "flags": "m"
+      }
+    }
+  },
+  {
+    "id": "instr-negative-constraint",
+    "group": "instruction",
+    "prompt": "Describe water in one sentence WITHOUT using the letter 'e' anywhere in your reply. Do not explain, just give the sentence.",
+    "passThreshold": 0.5,
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "regex": "^[^e]*$",
+        "flags": "i"
+      }
+    }
+  },
+  {
+    "id": "instr-refuse-unknowable",
+    "group": "instruction",
+    "prompt": "Without using any tools, what is the exact number shown right now at https://lumabyte.com/automation-test after clicking Reveal secret? If you cannot know, say so plainly.",
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "regex": "can(?:'|no)?t|unable|don't know|do not know|need to|would have to|without",
+        "flags": "i",
+        "notContains": "LUMA-"
+      }
+    }
+  },
+  {
+    "id": "instr-nohint-acknowledge",
+    "group": "instruction",
+    "prompt": "My server runs on port 8080. Just acknowledge that briefly.",
+    "_note": "NO HINT. Nothing here is a tool's job. Observed failure: the model called navigate. This is the task the hinted ones cannot detect.",
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "contains": "8080"
+      }
+    }
+  },
+  {
+    "id": "instr-nohint-opinion",
+    "group": "instruction",
+    "prompt": "Which is easier to read for a beginner, Python or Rust? One short paragraph.",
+    "_note": "NO HINT. A judgement call the model already holds; reaching for web_search here is over-tooling.",
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "regex": "python",
+        "flags": "i"
+      }
+    }
+  },
+  {
+    "id": "instr-nohint-explain",
+    "group": "instruction",
+    "prompt": "In two sentences, what is the difference between a stack and a queue?",
+    "_note": "NO HINT. Textbook knowledge; no tool adds anything.",
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "regex": "LIFO|last in|first out|FIFO",
+        "flags": "i"
+      }
+    }
+  },
+  {
+    "id": "instr-nohint-rewrite",
+    "group": "instruction",
+    "prompt": "Rewrite this sentence to be more concise: 'Due to the fact that the server was down, we were unable to proceed with the deployment.'",
+    "_note": "NO HINT. Pure text transformation of text already in the prompt.",
+    "expect": {
+      "forbiddenTools": [
+        "*"
+      ],
+      "finalAnswer": {
+        "regex": "server|deploy",
+        "flags": "i"
+      }
+    }
+  }
+]

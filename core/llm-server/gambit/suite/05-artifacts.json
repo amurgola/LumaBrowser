@@ -1,0 +1,117 @@
+[
+  {
+    "id": "artifact-code-type-routing",
+    "group": "artifacts",
+    "prompt": "Write me a Python script that reverses every word in a sentence.",
+    "expect": {
+      "toolCalls": [
+        {
+          "tool": "create_artifact",
+          "params": {
+            "type": "code",
+            "language": { "regex": "python", "flags": "i" },
+            "content": { "regex": "def |print|split", "flags": "i" }
+          }
+        }
+      ],
+      "maxIterations": 4
+    }
+  },
+  {
+    "id": "artifact-markdown-type-routing",
+    "group": "artifacts",
+    "prompt": "Write me a README for a small command line tool called 'tidy' that removes trailing whitespace. Put it in an artifact.",
+    "expect": {
+      "toolCalls": [
+        {
+          "tool": "create_artifact",
+          "params": {
+            "type": { "oneOf": ["markdown", "md"] },
+            "content": { "regex": "tidy", "flags": "i" }
+          }
+        }
+      ],
+      "maxIterations": 6
+    }
+  },
+  {
+    "id": "artifact-html-type-routing",
+    "group": "artifacts",
+    "prompt": "Build me a simple landing page for a coffee shop called Ember. One page, styled, ready to look at.",
+    "expect": {
+      "toolCalls": [
+        {
+          "tool": "create_artifact",
+          "params": {
+            "type": "html",
+            "content": { "regex": "<html|<body|<div|<style", "flags": "i" }
+          }
+        }
+      ],
+      "_note": "6, not 4: a first-use of the artifacts group spends one iteration on activate_tools before the real call, so 4 penalises the documented happy path.",
+      "maxIterations": 6
+    }
+  },
+  {
+    "id": "artifact-create-then-edit",
+    "group": "artifacts",
+    "turns": [
+      {
+        "prompt": "Create an HTML artifact whose page title is exactly 'Hello' and which shows a single h1 saying Hello.",
+        "expect": {
+          "toolCalls": [
+            { "tool": "create_artifact", "params": { "type": "html", "content": { "contains": "Hello" } } }
+          ]
+        }
+      },
+      {
+        "prompt": "Now change that title to 'Lorem Ipsum'. Use a targeted edit, do not rewrite the whole document.",
+        "expect": {
+          "toolCalls": [
+            {
+              "tool": "edit_artifact",
+              "params": { "replacements": { "exists": true } },
+              "success": true
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "artifact-live-widget",
+    "group": "artifacts",
+    "prompt": "Build me a live tip calculator I can actually use: I set the bill amount and a tip percentage, and it shows the tip and the total.",
+    "expect": {
+      "toolCalls": [
+        {
+          "tool": "create_live_artifact",
+          "params": {
+            "html": { "exists": true },
+            "js": { "exists": true }
+          },
+          "success": true
+        }
+      ],
+      "maxIterations": 5
+    }
+  },
+  {
+    "id": "artifact-live-not-full-document",
+    "group": "artifacts",
+    "prompt": "Make me an interactive celsius to fahrenheit converter widget with a slider.",
+    "expect": {
+      "toolCalls": [
+        {
+          "tool": "create_live_artifact",
+          "params": {
+            "html": { "regex": "^(?![\\s\\S]*<!DOCTYPE)[\\s\\S]*$", "flags": "i" },
+            "js": { "exists": true }
+          },
+          "success": true
+        }
+      ],
+      "maxIterations": 5
+    }
+  }
+]

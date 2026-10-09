@@ -1,0 +1,132 @@
+.form-label,
+.form-help,
+.watcher-details,
+.watcher-note {
+    color: var(--text-secondary);
+}
+
+.watcher-stats,
+.watcher-form {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+}
+
+.stat-value {
+    color: var(--accent);
+}
+
+.watcher-list {
+    border-color: var(--border-soft);
+    background: var(--bg-canvas);
+    border-radius: var(--radius-md);
+}
+
+.watcher-item {
+    border-bottom-color: rgba(73, 86, 107, 0.45);
+}
+
+.watcher-item:hover {
+    background: var(--bg-surface);
+}
+
+.watcher-toggle {
+    background: var(--text-muted);
+}
+
+.watcher-toggle.enabled {
+    background: var(--success);
+}
+
+.watcher-toggle::after {
+    background: #ffffff;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.btn-secondary:hover {
+    background: var(--accent-dim);
+    color: var(--accent);
+}
+
+.btn-test,
+.btn-fetch,
+.btn-generate,
+.btn-validate,
+.btn-add,
+.btn-pick {
+    background: var(--bg-surface-2);
+    color: var(--text-secondary);
+    border-color: var(--border-soft);
+}
+
+.btn-test:hover,
+.btn-fetch:hover,
+.btn-generate:hover,
+.btn-validate:hover,
+.btn-add:hover,
+.btn-pick:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+}
+
+.form-select:disabled {
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    border-color: var(--border-soft);
+    cursor: not-allowed;
+}
+
+.btn-fetch:disabled,
+.btn-generate:disabled,
+.btn-validate:disabled,
+.btn-secondary:disabled {
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    border-color: var(--border-soft);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.ai-chat-toggle:disabled {
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.notification-log {
+    width: min(360px, calc(100vw - 24px));
+    background: rgba(8, 15, 30, 0.96);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+.log-title {
+    color: var(--text-primary);
+}
+
+.log-item {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-soft);
+}
+
+.log-item.success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.log-item.error {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+}

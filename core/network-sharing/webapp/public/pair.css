@@ -1,0 +1,31 @@
+.pair-view {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom));
+  background: radial-gradient(1100px 560px at 50% -10%, var(--accent-soft), transparent 62%), var(--bg);
+  color: var(--text);
+}
+.pair-card {
+  width: 100%; max-width: 360px; text-align: center;
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  border-radius: 16px; padding: 30px 26px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+.pair-logo {
+  width: 56px; height: 56px; border-radius: 14px; object-fit: cover;
+  display: block; margin: 0 auto 14px;
+  box-shadow: 0 8px 28px rgba(245, 144, 52, 0.25);
+}
+.pair-card h1 { font-size: 19px; margin: 0 0 6px; font-weight: 650; color: var(--text); }
+.pair-card h1 span { color: var(--accent); }
+.pair-sub { font-size: 13px; color: var(--text-dim); margin: 0 0 18px; line-height: 1.5; }
+.pair-pin {
+  width: 100%; text-align: center; letter-spacing: 8px; font-size: 22px; padding: 12px;
+  border-radius: 12px; border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.03); color: var(--text); outline: none; margin-bottom: 12px;
+}
+.pair-pin::placeholder { color: var(--text-muted); letter-spacing: normal; }
+.pair-pin:focus { border-color: var(--accent); }
+.pair-btn { border-radius: var(--radius-pill); padding: 12px; font-size: 14.5px; }
+.pair-error { margin-top: 12px; }
+.pair-foot { max-width: 340px; text-align: center; margin-top: 0; }

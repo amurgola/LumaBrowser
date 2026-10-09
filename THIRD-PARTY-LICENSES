@@ -1,0 +1,1062 @@
+This file contains the licenses of third-party software distributed with
+LumaBrowser. These licenses require that copyright notices and permission
+statements be included when the software is redistributed.
+
+================================================================================
+
+@ghostery/adblocker, @ghostery/adblocker-electron, @ghostery/adblocker-electron-preload,
+@ghostery/adblocker-content, @ghostery/adblocker-extended-selectors,
+@ghostery/url-parser - Mozilla Public License 2.0
+https://github.com/ghostery/adblocker
+
+Copyright (c) Ghostery GmbH
+
+This Source Code Form is subject to the terms of the Mozilla Public License,
+v. 2.0. If a copy of the MPL was not distributed with this file, You can
+obtain one at https://mozilla.org/MPL/2.0/.
+
+LumaBrowser uses the @ghostery/adblocker suite unmodified as a library for
+native (non-extension) ad and tracker blocking. No source files from these
+packages have been altered. The full text of the Mozilla Public License 2.0
+is available at https://www.mozilla.org/en-US/MPL/2.0/ and the upstream
+source code is available at https://github.com/ghostery/adblocker.
+
+================================================================================
+
+bytenode - MIT License
+https://github.com/nicolo-ribaudo/bytenode
+
+Copyright (c) 2018 Osama Abbas
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+Chromium (user-agent client hints brand list) - BSD 3-Clause License
+https://source.chromium.org/chromium/chromium/src/+/main:components/embedder_support/user_agent_utils.cc
+
+Copyright 2015 The Chromium Authors
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * Neither the name of Google LLC nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+core/browser/identity/ChromeBrandList.js is a JavaScript port of the GREASE
+brand generation and brand-order shuffle (GetGreasedUserAgentBrandVersion,
+GetRandomOrder, GenerateBrandVersionList) so the Sec-CH-UA header matches real
+Chrome byte for byte. It was rewritten in JavaScript; no other Chromium source
+is included.
+
+================================================================================
+
+gridstack - MIT License
+https://github.com/gridstack/gridstack.js
+
+MIT License
+
+Copyright (c) 2019-2025 Alain Dumesny. v0.4.0 and older (c) 2014-2018 Pavel Reznikov, Dylan Weiss
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+LumaBrowser uses gridstack.js unmodified as the drag/drop grid engine for
+the Dashboard tab (core/dashboard). No source files from this package have
+been altered.
+
+================================================================================
+
+koffi (and its @koromix/koffi-* platform binaries) - MIT License
+https://koffi.dev / https://github.com/Koromix/koffi
+
+MIT License
+
+Copyright (C) 2026 Niels Martignène <niels.martignene@protonmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+LumaBrowser uses koffi unmodified as the FFI bridge for the RAM-pin worker
+(core/llm-server/rampin), which calls the operating system's memory-locking
+APIs (Windows VirtualLock, Linux mlock). No source files from this package
+have been altered.
+
+================================================================================
+
+@mlc-ai/web-llm - Apache License 2.0
+https://github.com/mlc-ai/web-llm
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+================================================================================
+
+@modelcontextprotocol/sdk - MIT License
+https://github.com/modelcontextprotocol/typescript-sdk
+
+Copyright (c) 2024 Anthropic, PBC
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+axios - MIT License
+https://github.com/axios/axios
+
+Copyright (c) 2014-present Matt Zabriskie & Collaborators
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+better-sqlite3 - MIT License
+https://github.com/WiseLibs/better-sqlite3
+
+Copyright (c) 2017 Joshua Wise
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+cors - MIT License
+https://github.com/expressjs/cors
+
+Copyright (c) 2013 Troy Goode <troygoode@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+express - MIT License
+https://github.com/expressjs/express
+
+Copyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>
+Copyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>
+Copyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+monaco-editor - MIT License
+https://github.com/microsoft/monaco-editor
+
+Copyright (c) 2016 - present Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+  LOCAL AI COMPONENTS — DOWNLOADED ON DEMAND, NOT BUNDLED
+================================================================================
+
+The components in this section are NOT distributed with or redistributed by
+LumaBrowser. They are fetched from their official sources only when you
+choose to install a local AI runtime or download a model in the setup
+wizard, and are cached in your local models directory. Your use of each is
+governed by the license shown below. They are listed here so you know
+exactly what you are downloading and under what terms. All currently
+offered runtimes and models are free for commercial and business use.
+
+================================================================================
+
+llama.cpp (and its optional ik_llama.cpp fork) - MIT License
+https://github.com/ggml-org/llama.cpp
+https://github.com/ikawrakow/ik_llama.cpp
+
+Copyright (c) 2023-2024 The ggml authors
+
+The local inference engine. LumaBrowser downloads official prebuilt
+llama.cpp release binaries (CPU / CUDA 12 / Vulkan) from ggml-org's GitHub
+Releases at your request. ik_llama.cpp is an optional, build-from-source
+fork and is never downloaded automatically.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+pdfjs-dist - Apache License 2.0
+https://github.com/mozilla/pdf.js
+
+Copyright (c) Mozilla and contributors
+
+LumaBrowser uses pdfjs-dist (the official Mozilla PDF.js distribution)
+unmodified as a library to extract plain text from PDF files the user
+attaches to a chat. No source files from the package have been altered;
+no PDF content is uploaded anywhere — extraction runs entirely in the
+local Node process. Released under the Apache License 2.0, the full
+text of which is reproduced above under the @mlc-ai/web-llm entry.
+Free for commercial and business use.
+
+================================================================================
+
+Qwen 3.6 models (Qwen3.6-27B, Qwen3.6-35B-A3B) - Apache License 2.0
+https://huggingface.co/Qwen
+
+Copyright (c) Alibaba Cloud / Qwen Team
+
+Downloaded as GGUF quantizations (repackaged by "bartowski" on HuggingFace)
+only when you select them in the setup wizard. Released under the Apache
+License 2.0, the full text of which is reproduced above under the
+@mlc-ai/web-llm entry. Free for commercial and business use.
+
+================================================================================
+
+Gemma 4 models (Gemma 4 E2B, E4B, 26B-A4B, 31B) - Apache License 2.0
+https://ai.google.dev/gemma
+
+Copyright (c) Google DeepMind
+
+Downloaded as GGUF quantizations (repackaged by "bartowski" on HuggingFace)
+only when you select them in the setup wizard. Released under the Apache
+License 2.0, the full text of which is reproduced above under the
+@mlc-ai/web-llm entry. Free for commercial and business use.
+
+NOTE: In addition to Apache 2.0, Google applies a Gemma Prohibited Use
+Policy (https://ai.google.dev/gemma/docs/gemma_4_license) — a content /
+responsible-AI policy prohibiting illegal or harmful generation. It does
+NOT restrict commercial or business use.
+
+================================================================================
+
+stable-diffusion.cpp - MIT License
+https://github.com/leejet/stable-diffusion.cpp
+
+Copyright (c) 2023-2024 leejet
+
+The local image-generation engine. LumaBrowser downloads official prebuilt
+sd-server release binaries (CPU / CUDA 12 / Vulkan) from leejet's GitHub
+Releases at your request, in the same shape as the llama.cpp runtime.
+
+core/image-server/FlowSchedule.js reuses the timestep-shift constants of its
+FluxScheduler (src/runtime/denoiser.hpp) so the custom sigmas LumaBrowser sends
+match what the engine itself would compute.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+Z-Image-Turbo (diffusion weights + ae VAE) - Apache License 2.0
+https://huggingface.co/Tongyi-MAI/Z-Image-Turbo
+
+Copyright (c) Alibaba Tongyi
+
+An 8-step bilingual text-to-image diffusion model. Downloaded as GGUF
+quants from wbruna/Z-Image-Turbo-sdcpp-GGUF (a community packaging
+targeted at stable-diffusion.cpp's loader) only when you select the model
+in the image setup wizard. Released under the Apache License 2.0, the
+full text of which is reproduced above under the @mlc-ai/web-llm entry.
+Free for commercial and business use.
+
+================================================================================
+
+FLUX.1-schnell (diffusion weights + ae VAE) - Apache License 2.0
+https://huggingface.co/black-forest-labs/FLUX.1-schnell
+
+Copyright (c) 2024 Black Forest Labs
+
+A 12B-parameter rectified-flow text-to-image model distilled for 4-step
+inference. Downloaded as a GGUF diffusion quant (one of several
+quantizations offered from city96/FLUX.1-schnell-gguf — you pick the
+quality/VRAM trade-off in the image setup wizard) plus the byte-identical
+FLUX autoencoder re-host from StableDiffusionVN/Flux only when you select
+the model in the image setup wizard. The official BFL repo is click-through gated, which would break
+unattended installs; the StableDiffusionVN mirror hosts the same
+Apache-2.0-licensed file unaltered (335,304,388 bytes, matching SHA). The
+weights themselves are released under the Apache License 2.0, the full
+text of which is reproduced above under the @mlc-ai/web-llm entry. Free
+for commercial and business use.
+
+NOTE: Only FLUX.1-schnell is offered for auto-install. Other FLUX
+variants (FLUX.1-dev, FLUX.1-Krea-dev, FLUX.1-Kontext-dev) ship under
+the BFL Non-Commercial License and are NOT included in LumaBrowser's
+catalog.
+
+================================================================================
+
+CLIP-L text encoder (clip_l.safetensors) - MIT License
+https://github.com/openai/CLIP
+
+Copyright (c) 2021 OpenAI
+
+The CLIP text encoder used by FLUX.1 and many other diffusion models to
+turn the prompt into conditioning embeddings. Downloaded from
+comfyanonymous/flux_text_encoders on HuggingFace only when you install a
+model that requires it (currently FLUX.1-schnell).
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+T5-XXL v1.1 text encoder (t5xxl_fp8_e4m3fn.safetensors) - Apache License 2.0
+https://huggingface.co/google/t5-v1_1-xxl
+
+Copyright (c) Google Research
+
+The T5-XXL encoder branch used by FLUX.1 to turn long prompts into
+conditioning embeddings. Downloaded as the fp8 quantization
+(t5xxl_fp8_e4m3fn.safetensors, ~4.9 GB) from
+comfyanonymous/flux_text_encoders on HuggingFace only when you install a
+model that requires it (currently FLUX.1-schnell). Released under the
+Apache License 2.0, the full text of which is reproduced above under the
+@mlc-ai/web-llm entry. Free for commercial and business use.
+
+================================================================================
+
+Stable Diffusion 1.5 (v1-5-pruned-emaonly-fp16.safetensors) - CreativeML Open RAIL-M License
+https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive
+https://huggingface.co/spaces/CompVis/stable-diffusion-license
+
+Copyright (c) 2022 Stability AI, Robin Rombach, Patrick Esser, RunwayML
+
+The original Latent Diffusion text-to-image model from CompVis / Stability
+AI. Downloaded from the Comfy-Org archive mirror (chosen because the
+RunwayML originals were removed in 2024; this is an unaltered
+re-distribution of the same weights) only when you select it in the
+image setup wizard.
+
+The CreativeML Open RAIL-M license permits commercial and personal use,
+free of royalty. It carries usage restrictions in its Attachment A
+prohibiting certain harmful applications (medical advice, harassment,
+defamation, surveillance, illegal activity, etc.). Read the full text
+at https://huggingface.co/spaces/CompVis/stable-diffusion-license.
+
+================================================================================
+
+Stable Diffusion XL 1.0 base (sd_xl_base_1.0.safetensors) - CreativeML Open RAIL++-M License
+https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
+https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/LICENSE.md
+
+Copyright (c) 2023 Stability AI
+
+The SDXL base model from Stability AI. Downloaded from the official
+stabilityai HuggingFace repository only when you select it in the image
+setup wizard.
+
+The CreativeML Open RAIL++-M license permits commercial and personal
+use, free of royalty, and unlike the original RAIL-M license it
+explicitly clarifies that outputs are owned by the user. It retains
+content-based restrictions in its Attachment A prohibiting certain
+harmful applications. Read the full text at the URL above.
+
+================================================================================
+
+chart.js - MIT License
+https://github.com/chartjs/Chart.js
+
+Copyright (c) 2014-2024 Chart.js Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+@kurkle/color - MIT License
+https://github.com/kurkle/color
+(bundled into chart.js's UMD build)
+
+Copyright (c) 2018-2024 Jukka Kurkela
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+whisper.cpp - MIT License
+https://github.com/ggml-org/whisper.cpp
+
+Copyright (c) 2023-2024 The ggml authors
+
+The local speech-to-text engine behind voice conversation mode. LumaBrowser
+downloads official prebuilt whisper.cpp release binaries (whisper-server,
+CPU / cuBLAS) from ggml-org's GitHub Releases at your request — downloaded
+on demand, not bundled. Free for commercial and business use.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+OpenAI Whisper models (ggml conversions) - MIT License
+https://github.com/openai/whisper
+https://huggingface.co/ggerganov/whisper.cpp
+
+Copyright (c) 2022 OpenAI
+
+Speech-recognition model weights for voice conversation mode, downloaded as
+ggml conversions from ggerganov's HuggingFace repository only when you
+install a voice model. Released under the MIT License, the full text of
+which is reproduced above under the whisper.cpp entry. Free for commercial
+and business use.
+
+================================================================================
+
+sherpa-onnx / sherpa-onnx-node - Apache License 2.0
+https://github.com/k2-fsa/sherpa-onnx
+
+Copyright (c) 2022-2026 Xiaomi Corporation (authors: Fangjun Kuang and
+the sherpa-onnx contributors)
+
+The local text-to-speech runtime behind voice conversation mode. LumaBrowser
+downloads the official sherpa-onnx-node package (with its prebuilt
+platform binary) from the public npm registry at your request — downloaded
+on demand, not bundled. Released under the Apache License 2.0, the full
+text of which is reproduced above under the @mlc-ai/web-llm entry. Free for
+commercial and business use.
+
+The prebuilt sherpa-onnx binaries statically include:
+  - ONNX Runtime (Microsoft) — MIT License,
+    https://github.com/microsoft/onnxruntime
+  - espeak-ng (text phonemization) — GNU GPL v3.0,
+    https://github.com/espeak-ng/espeak-ng
+  - piper-phonemize — MIT License,
+    https://github.com/rhasspy/piper-phonemize
+
+espeak-ng's GPL v3.0 license does not restrict commercial use. It is
+honoured here by never bundling or redistributing sherpa-onnx with
+LumaBrowser: the runtime is fetched from its official public source only
+at your explicit request, unmodified, and runs as a separate worker
+process. Its complete corresponding source is available at the URLs above.
+
+================================================================================
+
+Kokoro-82M text-to-speech model - Apache License 2.0
+https://huggingface.co/hexgrad/Kokoro-82M
+
+Copyright (c) hexgrad and the Kokoro contributors
+
+The default voice for voice conversation mode, downloaded as a ready-to-run
+ONNX archive from the k2-fsa (sherpa-onnx) GitHub Releases only when you
+install it. Released under the Apache License 2.0, the full text of which
+is reproduced above under the @mlc-ai/web-llm entry. Free for commercial
+and business use. The archive includes espeak-ng pronunciation data (GPL
+v3.0 — see the sherpa-onnx entry above).
+
+================================================================================
+
+Piper voices (LibriTTS-R) - MIT License (engine) / CC BY 4.0 (voice data)
+https://github.com/rhasspy/piper
+https://www.openslr.org/141/
+
+Piper is Copyright (c) 2023 Michael Hansen (MIT License). The optional
+fast fallback voice offered in LumaBrowser is trained on the LibriTTS-R
+corpus (Creative Commons Attribution 4.0). Downloaded as a ready-to-run
+ONNX archive from the k2-fsa (sherpa-onnx) GitHub Releases only when you
+install it, and executed by the sherpa-onnx runtime above. Free for
+commercial and business use with attribution:
+LibriTTS-R — Y. Koizumi et al., "LibriTTS-R: A Restoration of a Large-Scale
+Multi-Speaker TTS Corpus" (CC BY 4.0).
+
+================================================================================
+
+================================================================================
+
+@vscode/ripgrep and @vscode/ripgrep-<platform>-<arch> - MIT License
+https://github.com/microsoft/vscode-ripgrep
+
+Copyright (c) Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+These packages carry the ripgrep executable that LumaBrowser spawns for code
+search. The executable itself is ripgrep, and it links PCRE2; both are
+attributed separately below, because the upstream packages ship only the
+Microsoft notice above and redistributing the binary means redistributing
+what is inside it.
+
+================================================================================
+
+ripgrep - MIT License (also available under The Unlicense)
+https://github.com/BurntSushi/ripgrep
+
+Copyright (c) 2015 Andrew Gallant
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ripgrep is dual-licensed under MIT OR The Unlicense; LumaBrowser redistributes
+it under the MIT terms reproduced above. The binary is shipped unmodified as
+built by https://github.com/microsoft/ripgrep-prebuilt and is spawned as a
+separate process, never linked into LumaBrowser.
+
+================================================================================
+
+PCRE2 - BSD 3-Clause License (with the PCRE2 exemption)
+https://github.com/PCRE2Project/pcre2
+
+Copyright (c) 1997-2024 University of Cambridge
+Copyright (c) 2009-2024 Zoltan Herczeg
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of any
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+The ripgrep build LumaBrowser ships reports `features:+pcre2`, so the PCRE2
+library is compiled into that executable and is redistributed with it.
+
+================================================================================
+
+Pocket TTS text-to-speech model - Creative Commons Attribution 4.0
+https://huggingface.co/kyutai/pocket-tts
+https://huggingface.co/KevinAHM/pocket-tts-onnx (ONNX export)
+
+Copyright (c) Kyutai. ONNX export by KevinAHM (models CC BY 4.0, inherited
+from kyutai/pocket-tts; export code Apache License 2.0).
+
+The "Fast" voice tier for voice conversation mode. Downloaded as a
+ready-to-run ONNX archive from the k2-fsa (sherpa-onnx) GitHub Releases only
+when you install it, and executed by the sherpa-onnx runtime above. Free for
+commercial and business use with attribution to Kyutai. Kyutai asks that the
+model is not used for voice impersonation without consent, deception, or
+unlawful content; LumaBrowser only ever conditions it on the clips below or
+on clips the user records of themselves.
+
+Reference voice clips fetched next to the model, from
+https://huggingface.co/kyutai/tts-voices:
+  alba.wav   — Alba MacKenna, "casual" (CC BY 4.0, credit Alba MacKenna)
+  bill.wav, caro.wav, peter.wav, stuart.wav — Voice-Zero donations by
+               Bill Boerst, Caro Davy, Peter Yearsley, Stuart Bell (CC0)
+
+================================================================================
+
+NVIDIA Parakeet TDT 0.6B v3 speech-to-text model - Creative Commons
+Attribution 4.0
+https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
+
+Copyright (c) NVIDIA Corporation
+
+The default speech recognition model for voice conversation mode.
+Downloaded as a ready-to-run ONNX archive (int8) from the k2-fsa
+(sherpa-onnx) GitHub Releases only when you install it, and executed by the
+sherpa-onnx runtime above. Free for commercial and business use with
+attribution to NVIDIA.
+
+================================================================================
+
+Qwen3-ASR 0.6B speech-to-text model - Apache License 2.0
+https://huggingface.co/Qwen/Qwen3-ASR-0.6B
+
+Copyright (c) Alibaba Cloud (Qwen team)
+
+Optional multilingual speech recognition model for voice conversation mode.
+Downloaded as a ready-to-run ONNX archive (int8) from the k2-fsa
+(sherpa-onnx) GitHub Releases only when you install it, and executed by the
+sherpa-onnx runtime above. Released under the Apache License 2.0, the full
+text of which is reproduced above under the @mlc-ai/web-llm entry. Free for
+commercial and business use.
+
+================================================================================
+
+audio.cpp - Apache License 2.0
+https://github.com/0xShug0/audio.cpp
+
+Copyright 2026 ShugoAI LLC
+
+Used by the optional "Chatterbox Voice Cloning" add-on. The add-on downloads
+the official prebuilt audio.cpp release binaries (audiocpp_server) from the
+project's GitHub Releases only when you install it, and runs them as a
+separate process; nothing from audio.cpp is bundled with LumaBrowser.
+Released under the Apache License 2.0, the full text of which is reproduced
+above under the @mlc-ai/web-llm entry. The Windows CUDA packages include the
+NVIDIA CUDA runtime redistributables, under the NVIDIA CUDA Toolkit EULA
+(redistribution of the runtime libraries is permitted).
+
+================================================================================
+
+Chatterbox and Chatterbox Turbo text-to-speech models - MIT License
+https://github.com/resemble-ai/chatterbox
+https://huggingface.co/ResembleAI/chatterbox
+https://huggingface.co/ResembleAI/chatterbox-turbo
+https://huggingface.co/audio-cpp/audio.cpp-gguf (GGUF conversions)
+
+Copyright (c) 2025 Resemble AI
+
+Used by the optional "Chatterbox Voice Cloning" add-on: downloaded as GGUF
+files from the audio.cpp project's Hugging Face repository only when you
+install them, and executed by audio.cpp above. Licensed under the MIT
+License, reproduced above under the @vscode/ripgrep entry. Free for
+commercial and business use. Resemble AI's generated audio carries an
+inaudible neural watermark (Perth); cloning a voice other than your own
+without that person's consent is the user's responsibility.

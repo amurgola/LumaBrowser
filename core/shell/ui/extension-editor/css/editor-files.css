@@ -1,0 +1,6 @@
+.editor-body { display: flex; flex: 1; overflow: hidden; }
+.file-tree { width: 220px; background: var(--surface-pop); border-right: 1px solid var(--border-strong); overflow-y: auto; flex-shrink: 0; }
+.file-item { padding: 8px 12px; font-size: 12px; color: var(--text-dim); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-item:hover { background: var(--bg-card); color: var(--text); }
+.file-item.active { background: var(--accent-soft); color: var(--accent); }
+.editor-container { flex: 1; overflow: hidden; }

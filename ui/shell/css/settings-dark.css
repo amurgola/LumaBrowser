@@ -1,0 +1,19 @@
+.provider-card { border-color: var(--border); }
+.provider-card-header { background: var(--surface-input); }
+.provider-card-header:hover { background: var(--surface-hover); }
+.provider-card-name { color: var(--text-primary); }
+.provider-card-status { background: rgba(231,76,60,0.15); color: #f7a099; }
+.provider-card-status.configured { background: rgba(39,174,96,0.15); color: #6ddb99; }
+.provider-card-body { border-top-color: var(--border); }
+
+.ext-config-header-top { border-bottom-color: var(--border); }
+.ext-config-back-btn { border-color: var(--border); color: var(--text-secondary); }
+.ext-config-back-btn:hover { background: var(--surface-hover); border-color: var(--text-muted); color: var(--text-primary); }
+.ext-config-title { color: var(--text-primary); }
+.ext-config-desc { color: var(--text-secondary); }
+.ext-config-deps-label { color: var(--text-muted); }
+.ext-dep--installed { background: rgba(39,174,96,0.08); }
+.ext-dep--missing { background: rgba(231,76,60,0.08); }
+.ext-dep-name { color: var(--text-primary); }
+.ext-dep-type { background: var(--surface-hover); color: var(--text-muted); }
+.ext-dep-status { color: var(--text-secondary); }

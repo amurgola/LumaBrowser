@@ -1,0 +1,37 @@
+[
+  {
+    "id": "validate-catches-syntax-error",
+    "group": "validation",
+    "prompt": "Here is some JavaScript:\n\n```js\nfunction add(a, b) {\n  return a + b;\n\n```\n\nCheck whether it is valid using the code validation tool, then tell me plainly whether it passes and what is wrong if not.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "validate_code", "params": { "code": { "exists": true } } }
+      ],
+      "maxIterations": 6,
+      "finalAnswer": { "regex": "brace|bracket|unexpected|syntax|missing|not valid|invalid", "flags": "i" }
+    }
+  },
+  {
+    "id": "validate-clean-code-passes",
+    "group": "validation",
+    "prompt": "Validate this JSON with the validation tool and tell me if it is valid:\n\n```json\n{ \"name\": \"tidy\", \"version\": \"1.0.0\", \"bin\": { \"tidy\": \"./cli.js\" } }\n```",
+    "expect": {
+      "toolCalls": [
+        { "tool": "validate_code", "params": { "code": { "exists": true } } }
+      ],
+      "maxIterations": 5,
+      "finalAnswer": { "regex": "valid|passe?[sd]|no (?:errors|issues)", "flags": "i" }
+    }
+  },
+  {
+    "id": "validate-before-claiming",
+    "group": "validation",
+    "prompt": "Write a small JavaScript function that returns the median of an array of numbers, then actually verify it parses cleanly before you tell me it works.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "validate_code", "params": { "code": { "regex": "median|sort", "flags": "i" } } }
+      ],
+      "maxIterations": 8
+    }
+  }
+]

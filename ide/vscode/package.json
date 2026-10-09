@@ -1,0 +1,121 @@
+{
+  "name": "luma-vscode",
+  "displayName": "LumaBrowser",
+  "description": "The LumaBrowser Code agent inside VS Code: your local models, tools and agents, working on the folder you have open.",
+  "version": "0.0.0",
+  "publisher": "lumabyte",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "homepage": "https://lumabyte.com",
+  "icon": "media/icon.png",
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["AI", "Chat", "Other"],
+  "keywords": ["luma", "lumabrowser", "local llm", "agent", "ai"],
+  "extensionKind": ["ui", "workspace"],
+  "main": "./extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "The Luma view stays available in Restricted Mode, but the agent reads, edits and runs commands in the open folder, so it only connects once the folder is trusted."
+    },
+    "virtualWorkspaces": false
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "luma", "title": "Luma", "icon": "resources/luma.svg" }
+      ]
+    },
+    "views": {
+      "luma": [
+        { "type": "webview", "id": "luma.chat", "name": "Luma", "icon": "resources/luma.svg", "contextualTitle": "Luma" }
+      ]
+    },
+    "commands": [
+      { "command": "luma.ask", "title": "Ask Luma About Selection", "category": "Luma" },
+      { "command": "luma.addSelection", "title": "Add Selection to Luma Chat", "category": "Luma" },
+      { "command": "luma.addFile", "title": "Add to Luma Chat", "category": "Luma" },
+      { "command": "luma.newSession", "title": "New Session", "category": "Luma", "icon": "$(add)" },
+      { "command": "luma.chooseAgent", "title": "Answer As…", "category": "Luma", "icon": "$(person)" },
+      { "command": "luma.openInApp", "title": "Open in LumaBrowser", "category": "Luma", "icon": "$(link-external)" },
+      { "command": "luma.stop", "title": "Stop the Running Turn", "category": "Luma", "icon": "$(debug-stop)" },
+      { "command": "luma.reconnect", "title": "Reconnect to LumaBrowser", "category": "Luma" },
+      { "command": "luma.toggleApprovals", "title": "Toggle Approvals (Ask Before Edits and Commands)", "category": "Luma" },
+      { "command": "luma.toggleReasoning", "title": "Toggle Reasoning Display", "category": "Luma" },
+      { "command": "luma.openSettings", "title": "Settings", "category": "Luma" },
+      { "command": "luma.generateCommitMessage", "title": "Generate Commit Message with Luma", "category": "Luma", "icon": "$(sparkle)" }
+    ],
+    "keybindings": [
+      { "command": "luma.ask", "key": "ctrl+alt+l", "mac": "cmd+alt+l" },
+      { "command": "luma.addSelection", "key": "ctrl+alt+shift+l", "mac": "cmd+alt+shift+l", "when": "editorHasSelection" },
+      { "command": "luma.stop", "key": "escape", "when": "focusedView == luma.chat && luma.streaming" }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "luma.newSession", "when": "view == luma.chat", "group": "navigation@1" },
+        { "command": "luma.chooseAgent", "when": "view == luma.chat", "group": "navigation@2" },
+        { "command": "luma.openInApp", "when": "view == luma.chat", "group": "navigation@3" },
+        { "command": "luma.stop", "when": "view == luma.chat && luma.streaming", "group": "1_turn@1" },
+        { "command": "luma.reconnect", "when": "view == luma.chat", "group": "2_conn@1" },
+        { "command": "luma.toggleApprovals", "when": "view == luma.chat", "group": "3_opts@1" },
+        { "command": "luma.toggleReasoning", "when": "view == luma.chat", "group": "3_opts@2" },
+        { "command": "luma.openSettings", "when": "view == luma.chat", "group": "4_settings@1" }
+      ],
+      "editor/context": [
+        { "command": "luma.ask", "group": "9_luma@1" },
+        { "command": "luma.addSelection", "when": "editorHasSelection", "group": "9_luma@2" }
+      ],
+      "editor/title/context": [
+        { "command": "luma.addFile", "group": "9_luma@1" }
+      ],
+      "explorer/context": [
+        { "command": "luma.addFile", "when": "!explorerResourceIsFolder", "group": "9_luma@1" }
+      ],
+      "scm/title": [
+        { "command": "luma.generateCommitMessage", "when": "scmProvider == git", "group": "navigation@9" }
+      ],
+      "commandPalette": [
+        { "command": "luma.addFile", "when": "editorIsOpen" },
+        { "command": "luma.stop", "when": "luma.streaming" }
+      ]
+    },
+    "configuration": {
+      "title": "LumaBrowser",
+      "properties": {
+        "luma.appExecutable": {
+          "type": "string", "default": "", "scope": "machine-overridable",
+          "markdownDescription": "Path to the LumaBrowser executable, when it is not in a standard location. Leave empty to find it automatically (the same lookup the `luma` terminal command uses)."
+        },
+        "luma.autoStart": {
+          "type": "boolean", "default": true,
+          "description": "Start LumaBrowser (hidden) when it is not running."
+        },
+        "luma.approval": {
+          "type": "string", "enum": ["ask", "never"], "default": "ask",
+          "enumDescriptions": ["Ask before edits and commands.", "Never ask: the agent edits and runs commands on its own."],
+          "description": "Approvals for edits and commands."
+        },
+        "luma.openEditedFiles": {
+          "type": "boolean", "default": true,
+          "description": "Open a file in the editor when the agent writes or edits it."
+        },
+        "luma.showReasoning": {
+          "type": "boolean", "default": false,
+          "description": "Show the model's reasoning as it streams."
+        },
+        "luma.suggestFollowups": {
+          "type": "boolean", "default": true,
+          "description": "Offer a suggested next prompt after each turn (Tab accepts it)."
+        },
+        "luma.defaultAgent": {
+          "type": "string", "default": "",
+          "description": "Name of the LumaBrowser agent to answer as. Empty means the plain Code agent."
+        },
+        "luma.approvalNotifications": {
+          "type": "boolean", "default": true,
+          "description": "Show a notification when the agent needs approval and the Luma view is not visible."
+        }
+      }
+    }
+  }
+}

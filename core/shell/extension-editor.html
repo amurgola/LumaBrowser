@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Extension Editor</title>
+  <link rel="stylesheet" href="ui/extension-editor/css/editor-base.css">
+  <link rel="stylesheet" href="ui/extension-editor/css/editor-toolbar.css">
+  <link rel="stylesheet" href="ui/extension-editor/css/editor-files.css">
+  <script src="ui/luma-modal.js"></script>
+  <script src="../../node_modules/monaco-editor/min/vs/loader.js"></script>
+</head>
+<body>
+  <div class="editor-toolbar">
+    <span class="ext-name" id="extName">Extension</span>
+    <div class="editor-toolbar-spacer"></div>
+    <span class="editor-status-text" id="statusText"></span>
+    <button class="btn btn-save" id="saveBtn">Save</button>
+    <button class="btn" id="saveAllBtn">Save All</button>
+  </div>
+  <div class="editor-body">
+    <div class="file-tree" id="fileTree"></div>
+    <div class="editor-container" id="editorContainer"></div>
+  </div>
+
+  <script type="module" src="ui/extension-editor/entry.js"></script>
+</body>
+</html>

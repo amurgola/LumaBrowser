@@ -1,0 +1,38 @@
+.gs-subsection { margin-bottom: 24px; }
+.gs-subsection-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border-soft); }
+.gs-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.gs-row-label { font-size: 13px; color: var(--text-secondary); min-width: 100px; }
+.gs-port-input { width: 90px; padding: 6px 10px; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); font-size: 13px; background: var(--bg-surface); color: var(--text-primary); }
+.gs-port-input:focus { outline: none; border-color: var(--accent); }
+.gs-url-display { flex: 1; padding: 6px 10px; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); font-size: 13px; background: var(--bg-surface); color: var(--text-secondary); font-family: var(--font-mono); user-select: all; }
+.gs-copy-btn, .gs-action-btn { padding: 6px 14px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 12px; cursor: pointer; background: var(--bg-surface); color: var(--text-secondary); transition: all 0.15s; }
+.gs-copy-btn:hover, .gs-action-btn:hover { background: var(--bg-surface-2); color: var(--text-primary); border-color: var(--border-strong); }
+.gs-toggle { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+.gs-toggle input { opacity: 0; width: 0; height: 0; }
+.gs-toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--text-muted); border-radius: 22px; transition: var(--transition); }
+.gs-toggle-slider::before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: var(--transition); }
+.gs-toggle input:checked + .gs-toggle-slider { background: var(--accent); }
+.gs-toggle input:checked + .gs-toggle-slider::before { transform: translateX(18px); }
+.gs-restart-note { font-size: 11px; color: var(--accent); opacity: 0.7; margin-left: 6px; display: none; }
+.gs-restart-note.visible { display: inline; }
+.gs-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.gs-endpoint-group-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.gs-endpoint-list { display: flex; flex-direction: column; gap: 4px; }
+.gs-endpoint-desc { font-size: 11px; color: var(--text-secondary); opacity: 0.5; margin-left: auto; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-collapsible-header { cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none; }
+.gs-collapsible-header .gs-chevron { font-size: 10px; transition: transform 0.2s; }
+.gs-collapsible-header.expanded .gs-chevron { transform: rotate(90deg); }
+.gs-collapsible-body { display: none; margin-top: 10px; }
+.gs-collapsible-body.visible { display: block; }
+.gs-guide-modal { position: fixed; inset: 0; z-index: 10001; background: rgba(8,10,16,0.78); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; }
+.gs-guide-content { background: var(--bg-canvas); border: 1px solid var(--border-strong); border-radius: var(--radius-md); width: 700px; max-width: 90vw; max-height: 80vh; overflow-y: auto; padding: 24px; color: var(--text-primary); }
+.gs-guide-content h1, .gs-guide-content h2, .gs-guide-content h3 { color: var(--text-primary); margin-top: 16px; }
+.gs-guide-content pre { background: rgba(100,100,100,0.15); padding: 10px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+.gs-guide-content code { font-size: 12px; background: rgba(100,100,100,0.1); padding: 2px 4px; border-radius: 3px; }
+.gs-guide-content pre code { background: none; padding: 0; }
+.gs-guide-content table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.gs-guide-content th, .gs-guide-content td { border: 1px solid var(--border-soft); padding: 6px 10px; text-align: left; }
+.gs-guide-content th { background: rgba(100,100,100,0.1); }
+.gs-guide-close { position: sticky; top: 0; float: right; background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: 6px; color: var(--text-secondary); padding: 4px 12px; cursor: pointer; font-size: 13px; z-index: 1; }
+.gs-guide-close:hover { background: var(--bg-surface-2); color: var(--text-primary); }
+.gs-divider { margin: 20px 0; border: 0; border-top: 1px solid var(--border-soft); }

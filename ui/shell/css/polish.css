@@ -1,0 +1,86 @@
+.btn-primary,
+#goBtn {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: var(--border-strong);
+    font-weight: 600;
+}
+.btn-primary:hover {
+    background: rgba(245, 144, 52, 0.22);
+    box-shadow: 0 6px 16px rgba(245, 144, 52, 0.14);
+    transform: translateY(-1px);
+}
+.btn-warning,
+.btn-danger {
+    background: var(--accent-warm);
+    color: #fff;
+    border-color: var(--accent-warm);
+}
+.btn-warning:hover,
+.btn-danger:hover {
+    background: var(--accent-warm-hover);
+}
+
+.settings-tab {
+    position: relative;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    border: none !important;
+    border-bottom: none !important;
+    transition: background var(--transition), color var(--transition);
+}
+.settings-tab.active {
+    background: var(--accent-dim);
+    color: var(--accent) !important;
+    border-bottom-color: transparent !important;
+}
+.settings-tabs {
+    border-bottom: 1px solid var(--border-soft);
+    gap: 4px;
+    padding-bottom: 6px;
+}
+
+.url-bar,
+.form-input,
+.form-select,
+.ai-chat-input {
+    background: var(--bg-surface-2) !important;
+    border: 1px solid transparent !important;
+    transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+.url-bar:focus,
+.form-input:focus,
+.form-select:focus,
+.ai-chat-input:focus {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-strong) !important;
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.gs-toggle-slider {
+    transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.gs-toggle-slider::before {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.gs-toggle input:checked + .gs-toggle-slider::before {
+    box-shadow: 0 2px 6px rgba(245, 144, 52, 0.35);
+}
+
+.tab-title,
+.settings-tab,
+.ext-list-item-name {
+    font-weight: 550;
+}
+.json-output,
+pre code,
+.terminal,
+.log-entry-detail pre {
+    font-family: var(--font-mono);
+}
+
+.toolbar {
+    border-top: none;
+}

@@ -1,0 +1,27 @@
+<div class="luma-dockpanel tt-panel" id="ext-tt-panel">
+  <div class="luma-dockpanel-head">
+    <span class="luma-dockpanel-title">Timed Tasks</span>
+    <span class="luma-dockpanel-count" id="ext-tt-barCount">0 tasks</span>
+    <div class="luma-dockpanel-actions">
+      <button class="luma-btn luma-btn--sm primary" id="tt-bar-new-btn" title="Create a new task">+ New task</button>
+    </div>
+    <div class="luma-dockpanel-sub" id="ext-tt-barNext"></div>
+  </div>
+
+  <div id="tt-bar-create-form" class="luma-dockpanel-form ext-hidden">
+    <div class="luma-dockpanel-formlabel" id="tt-bar-form-title">New task</div>
+    <input type="text" class="luma-field-input" id="tt-bar-name" placeholder="Task name">
+    <textarea class="luma-field-textarea" id="tt-bar-prompt" placeholder="What should the AI do each run?" rows="3"></textarea>
+    <div class="luma-dockpanel-formlabel">Runs</div>
+    <div id="tt-bar-interval-mount"></div>
+    <textarea class="luma-field-textarea" id="tt-bar-response-prompt" placeholder='Response JSON schema (optional), for example {"rate": ""}' rows="2"></textarea>
+    <input type="text" class="luma-field-input" id="tt-bar-webhook" placeholder="Webhook URL for results (optional)">
+    <div class="luma-form-err ext-hidden" id="tt-bar-form-err"></div>
+    <div class="ext-layout-inline ext-layout-inline--gap-sm">
+      <button class="luma-btn primary luma-btn--sm" id="tt-bar-create-btn">Create</button>
+      <button class="luma-btn luma-btn--sm" id="tt-bar-cancel-btn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="luma-dockpanel-body" id="ext-tt-barTaskList"></div>
+</div>

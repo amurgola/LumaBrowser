@@ -1,0 +1,5 @@
+{
+  "name": "luma-bytecode-compiler",
+  "private": true,
+  "main": "main.js"
+}

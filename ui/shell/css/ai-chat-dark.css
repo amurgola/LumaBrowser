@@ -1,0 +1,113 @@
+.ai-chat-panel .resize-handle--row {
+    position: relative;
+    flex: 0 0 4px;
+}
+
+.ai-chat-header,
+.ai-chat-input-area {
+    background: var(--bg-surface);
+    border-color: var(--border-soft);
+}
+
+.ai-chat-header h4 {
+    color: var(--text-primary);
+}
+
+.ai-chat-new,
+.ai-chat-clear,
+.ai-chat-preview-toggle {
+    border-color: var(--border-soft);
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+}
+
+.ai-chat-new:hover,
+.ai-chat-clear:hover,
+.ai-chat-preview-toggle:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+    background: var(--bg-surface-2);
+}
+
+.ai-chat-content {
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.ai-chat-history {
+    background: var(--bg-root);
+    border-right-color: var(--border-soft);
+}
+
+.ai-history-title-row {
+    color: var(--text-muted);
+    border-bottom-color: var(--border-soft);
+}
+
+.ai-history-item {
+    background: var(--bg-surface);
+    border-color: var(--border-soft);
+    color: var(--text-secondary);
+}
+
+.ai-history-item:hover {
+    background: var(--bg-surface-2);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+}
+
+.ai-history-item.active {
+    background: var(--bg-elevated);
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.ai-history-meta {
+    color: var(--text-muted);
+}
+
+.ai-msg-assistant {
+    background: var(--bg-surface);
+    border-color: var(--border-soft);
+}
+
+.ai-msg-user {
+    background: var(--bg-surface-2);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+}
+
+.ai-msg-step {
+    background: var(--bg-canvas);
+}
+
+.ai-chat-context {
+    background: var(--bg-surface-2);
+    color: var(--text-secondary);
+}
+
+.ai-chat-status {
+    color: var(--text-muted);
+}
+
+.ai-chat-status.running {
+    color: var(--warning);
+}
+
+.ai-chat-send {
+    background: var(--accent-warm);
+    color: #fff;
+    border: 1px solid var(--accent-warm);
+    font-weight: 600;
+}
+
+.ai-chat-send:hover {
+    background: var(--accent-warm-hover);
+    border-color: var(--accent-warm-hover);
+}
+
+.ai-chat-stop {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-weight: 600;
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LumaBrowser</title>
+<link rel="stylesheet" href="../ui/error-page/error-page.css">
+</head>
+<body>
+  <div class="card">
+    <div class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <h1 id="title">This site cannot be reached</h1>
+    <p id="message"></p>
+    <div class="url" id="url"></div>
+    <ul id="hints"></ul>
+    <div class="actions">
+      <button class="primary" id="reload">Reload</button>
+      <button id="back">Go back</button>
+    </div>
+    <div class="code" id="code"></div>
+  </div>
+<script type="module" src="../ui/error-page/entry.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+.right-panel {
+    background: linear-gradient(180deg, rgba(13, 26, 48, 0.96), rgba(8, 15, 30, 0.98)) !important;
+    backdrop-filter: blur(8px);
+    border-left: 1px solid rgba(245, 144, 52, 0.12) !important;
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.4);
+}
+.right-panel .slot-content {
+    padding: 14px 16px 20px !important;
+}
+.right-panel::before {
+    content: '';
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245, 144, 52, 0.25), transparent);
+    display: block;
+}
+
+#webhookStatus, #notificationStatus,
+#webhookStatusText, #notificationStatusText { display: none; }

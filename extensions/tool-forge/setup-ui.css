@@ -1,0 +1,48 @@
+.tf-head-actions { display: flex; gap: 8px; align-items: center; }
+
+.tf-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tf-warn { background: rgba(234, 179, 8, 0.18); color: #b58200; }
+
+.tf-status-published { background: rgba(52, 168, 83, 0.16); color: #1f9d54; }
+.tf-status-draft { opacity: 0.75; }
+
+.luma-card-name .luma-chip { margin-left: 8px; vertical-align: middle; }
+
+.tf-notice { position: relative; margin: 12px 0; }
+.tf-notice.warn { border-color: rgba(234, 179, 8, 0.5); }
+.tf-notice.ok { border-color: rgba(52, 168, 83, 0.4); }
+.tf-notice-title { font-weight: 600; margin-bottom: 4px; }
+.tf-notice-line { font-size: 13px; opacity: 0.9; margin: 2px 0; white-space: pre-wrap; word-break: break-word; }
+.tf-notice-dismiss { position: absolute; top: 8px; right: 10px; }
+
+.tf-edit-head { align-items: center; gap: 12px; }
+.tf-edit-title { font-size: 17px; font-weight: 600; }
+.tf-edit-title .luma-chip { margin-left: 8px; }
+
+.tf-section { margin: 18px 0; }
+.tf-hint { font-size: 12px; opacity: 0.65; margin: 4px 0 8px; }
+
+.tf-settings { display: flex; flex-direction: column; gap: 10px; max-width: 520px; }
+
+.tf-code-editor {
+  height: 440px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tf-definition { padding: 12px 14px; border-radius: 10px;
+  background: rgba(127, 127, 127, 0.06); }
+.tf-definition > summary { cursor: pointer; font-weight: 600; margin-bottom: 6px; }
+.tf-definition .luma-field { margin-top: 10px; display: flex; flex-direction: column; gap: 3px; }
+.tf-textarea { min-height: 72px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+
+.tf-slots { margin-top: 12px; }
+.tf-slots-list { display: flex; flex-direction: column; gap: 6px; margin: 6px 0; }
+.tf-slot-row { display: flex; gap: 6px; align-items: center; }
+.tf-slot-row .luma-input { flex: 1 1 auto; min-width: 0; }
+.tf-check { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; white-space: nowrap; }
+
+.tf-actionbar { display: flex; flex-direction: column; gap: 10px; }
+.tf-testargs { min-height: 48px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+.tf-actionbar-btns { display: flex; gap: 8px; }

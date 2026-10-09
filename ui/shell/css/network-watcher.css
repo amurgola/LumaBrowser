@@ -1,0 +1,165 @@
+.watcher-list {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+
+.watcher-item {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.watcher-item:last-child {
+    border-bottom: none;
+}
+
+.watcher-item:hover {
+    background: #f8f9fa;
+}
+
+.watcher-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.watcher-pattern {
+    font-weight: bold;
+    font-size: 13px;
+    color: #2c3e50;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.watcher-details {
+    font-size: 11px;
+    color: #777;
+}
+
+.watcher-note {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+.watcher-toggle {
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
+    background: #95a5a6;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.watcher-toggle.enabled {
+    background: #2ecc71;
+}
+
+.watcher-toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+}
+
+.watcher-toggle.enabled::after {
+    transform: translateX(20px);
+}
+
+.watcher-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 11px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-delete {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #c0392b;
+}
+
+.watcher-form {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.watcher-form h4 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.form-grid-full {
+    grid-column: 1 / -1;
+}
+
+.checkbox-group {
+    display: flex;
+    gap: 15px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #555;
+}
+
+.watcher-stats {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3498db;
+}
+
+.stat-label {
+    color: #777;
+    font-size: 11px;
+}

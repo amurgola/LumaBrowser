@@ -1,0 +1,17 @@
+:root {
+  --ide-bg: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  --ide-fg: var(--vscode-foreground);
+  --ide-border: var(--vscode-panel-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.35)));
+  --ide-editor-bg: var(--vscode-editor-background);
+  --ide-editor-fg: var(--vscode-editor-foreground);
+  --ide-input-bg: var(--vscode-input-background);
+  --ide-hover: var(--vscode-list-hoverBackground);
+  --ide-selection: var(--vscode-list-activeSelectionBackground, var(--vscode-editor-selectionBackground));
+  --ide-link: var(--vscode-textLink-foreground);
+  --ide-muted: var(--vscode-descriptionForeground);
+  --ide-font: var(--vscode-font-family);
+  --ide-font-size: var(--vscode-font-size, 13px);
+  --ide-mono: var(--vscode-editor-font-family);
+  --ide-mono-size: calc(var(--vscode-editor-font-size, 13px) - 1px);
+}
+body { padding: 0; }

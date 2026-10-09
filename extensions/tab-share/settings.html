@@ -1,0 +1,68 @@
+<div class="ts-settings" id="ext-ts-settings">
+  <div class="luma-field">
+    <label class="luma-field-label">How it works</label>
+    <div class="luma-field-help">
+      Right-click a tab and choose Share tab. The tab is persisted (it keeps running after you close it) and you get a link to send to someone.
+      A view link lets them watch the tab live in their own browser. An interact link also lets them click, scroll and type in it, as if they were sitting at your keyboard.
+      Links are served by the Network Sharing web backend and stop working the moment you stop sharing the tab or turn the web backend off.
+    </div>
+    <div class="luma-callout ext-mt-8" id="ext-ts-availability"></div>
+  </div>
+
+  <hr class="ext-divider">
+
+  <div class="luma-field">
+    <div class="ext-layout-inline ext-layout-inline--gap-sm" style="justify-content: space-between; align-items: center;">
+      <label class="luma-field-label" style="margin: 0;">Shared tabs</label>
+      <button class="luma-btn luma-btn--sm danger" id="ext-ts-stopAll" type="button">Stop all</button>
+    </div>
+    <div class="luma-list ext-mt-8" id="ext-ts-list"></div>
+  </div>
+
+  <hr class="ext-divider">
+
+  <div class="luma-field">
+    <label class="luma-field-label">Streaming</label>
+    <div class="luma-field-help">
+      Guests always get a frame-by-frame picture over the link itself, which works anywhere the link does.
+      With the optimized stream on, a guest's browser upgrades to a real video stream of the tab (smoother, sharper, lighter on your machine) when it can reach this computer directly, such as on your network or over a VPN.
+    </div>
+    <label class="luma-check ext-mt-8">
+      <span class="luma-switch"><input type="checkbox" id="ext-ts-rtcEnabled"><span class="luma-switch-track"></span></span>
+      <span>Optimized video stream (WebRTC)</span>
+    </label>
+    <div class="luma-field-help" id="ext-ts-rtcStatus"></div>
+  </div>
+
+  <div class="luma-field">
+    <label class="luma-check">
+      <span class="luma-switch"><input type="checkbox" id="ext-ts-turnEnabled"><span class="luma-switch-track"></span></span>
+      <span>Relay server for guests outside your network</span>
+    </label>
+    <div class="luma-field-help">
+      Runs a small relay (TURN) on this computer so the video stream also works for guests on the internet. Their browser must be able to reach the relay port over UDP: forward it on your router, or use a VPN. Without the relay, those guests simply stay on the frame-by-frame picture.
+    </div>
+    <div class="ext-layout-inline ext-layout-inline--gap-sm ext-mt-8">
+      <div class="luma-field" style="margin: 0; width: 140px;">
+        <label class="luma-field-label" for="ext-ts-turnPort">UDP port</label>
+        <input class="luma-field-input" id="ext-ts-turnPort" type="number" min="1" max="65535" placeholder="3478">
+      </div>
+      <div class="luma-field" style="margin: 0; flex: 1 1 auto;">
+        <label class="luma-field-label" for="ext-ts-turnHost">Relay address guests use</label>
+        <input class="luma-field-input" id="ext-ts-turnHost" type="text" placeholder="Defaults to your public URL's host, else your LAN address" spellcheck="false">
+      </div>
+    </div>
+    <div class="luma-field-help" id="ext-ts-turnStatus"></div>
+  </div>
+
+  <hr class="ext-divider">
+
+  <div class="luma-field">
+    <label class="luma-field-label">Good to know</label>
+    <div class="luma-field-help">
+      Anyone with an interact link can do anything in that tab, including on sites where you are logged in. Share interact links only with people you trust, and stop sharing when you are done.
+      Links that open a new tab (target blank) land in a new, unshared tab on your side.
+      Up to 8 people can watch one tab at a time.
+    </div>
+  </div>
+</div>

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "conv-recall-across-turns",
+    "group": "conversation",
+    "turns": [
+      {
+        "prompt": "Remember this for later: my project's codename is Bluefin and it ships on a Thursday. Just acknowledge briefly.",
+        "expect": { "forbiddenTools": ["*"] }
+      },
+      {
+        "prompt": "Unrelated: what is 17 times 3?",
+        "expect": { "forbiddenTools": ["*"], "finalAnswer": { "contains": "51" } }
+      },
+      {
+        "prompt": "What was my project's codename, and which day does it ship?",
+        "expect": {
+          "forbiddenTools": ["*"],
+          "finalAnswer": { "contains": ["Bluefin", "Thursday"] }
+        }
+      }
+    ]
+  },
+  {
+    "id": "conv-subject-inheritance",
+    "group": "conversation",
+    "turns": [
+      {
+        "prompt": "Write a short packing list for a weekend camping trip.",
+        "expect": { "forbiddenTools": ["*"] }
+      },
+      {
+        "prompt": "Create artifact",
+        "expect": {
+          "toolCalls": [
+            {
+              "tool": "create_artifact",
+              "params": { "content": { "regex": "tent|sleep|pack|camp|water", "flags": "i" } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "conv-correction",
+    "group": "conversation",
+    "turns": [
+      {
+        "prompt": "My server runs on port 8080. Acknowledge briefly.",
+        "expect": { "forbiddenTools": ["*"] }
+      },
+      {
+        "prompt": "Correction: it actually runs on port 9443, not 8080.",
+        "expect": { "forbiddenTools": ["*"] }
+      },
+      {
+        "prompt": "Which port does my server run on? Answer with just the number.",
+        "expect": {
+          "forbiddenTools": ["*"],
+          "finalAnswer": { "contains": "9443", "notContains": "8080" }
+        }
+      }
+    ]
+  },
+  {
+    "id": "conv-pronoun-reference",
+    "group": "conversation",
+    "turns": [
+      {
+        "prompt": "In one sentence, what is the Mariana Trench?",
+        "expect": { "forbiddenTools": ["*"] }
+      },
+      {
+        "prompt": "How deep is it, roughly?",
+        "expect": {
+          "forbiddenTools": ["*"],
+          "finalAnswer": { "regex": "10[,.]?9|11[,.]?0|36,?0|35,?8|deep", "flags": "i" }
+        }
+      }
+    ]
+  }
+]

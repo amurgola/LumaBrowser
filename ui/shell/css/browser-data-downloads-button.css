@@ -1,0 +1,18 @@
+#downloadsBtn { position: relative; }
+#downloadsBtn[hidden] { display: none; }
+#downloadsBtn .downloads-ring {
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+}
+#downloadsBtn.is-active .downloads-ring {
+    display: block;
+    background: conic-gradient(var(--accent) calc(var(--dl-pct, 0) * 1%), rgba(245, 144, 52, 0.18) 0);
+    -webkit-mask: radial-gradient(circle, transparent 62%, #000 64%);
+    mask: radial-gradient(circle, transparent 62%, #000 64%);
+    animation: dl-pulse 1.6s ease-in-out infinite;
+}
+#downloadsBtn.is-active { color: var(--accent); }
+@keyframes dl-pulse { 50% { opacity: 0.6; } }

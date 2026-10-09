@@ -1,0 +1,159 @@
+name: Build Installers
+
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build_cmd: npm run build:linux -- --publish never
+            artifact_name: linux-appimage
+            artifact_path: dist/*.AppImage
+            asar_path: dist/linux-unpacked/resources/app.asar
+          - os: windows-2022
+            build_cmd: npm run build:win -- --publish never
+            artifact_name: windows-installer
+            artifact_path: dist/*.exe
+            asar_path: dist/win-unpacked/resources/app.asar
+          - os: macos-latest
+            build_cmd: npm run build:mac -- --arm64 --publish never
+            artifact_name: macos-arm64
+            artifact_path: |
+              dist/*-arm64-mac.zip
+              dist/*-arm64.dmg
+            asar_path: dist/mac-arm64/LumaBrowser.app/Contents/Resources/app.asar
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libnotify-dev libnss3 libxss1 libxtst6 xdg-utils libsecret-1-dev xvfb
+
+      - name: Cache electron-builder binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron-builder
+            ~/AppData/Local/electron-builder/Cache
+            ~/Library/Caches/electron-builder
+          key: electron-builder-${{ runner.os }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Java (JetBrains plugin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Gradle + IntelliJ SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ide/jetbrains/.intellijPlatform
+          key: jetbrains-plugin-${{ runner.os }}-${{ hashFiles('ide/jetbrains/build.gradle.kts', 'ide/jetbrains/gradle.properties', 'ide/jetbrains/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Build JetBrains plugin
+        run: npm run build:jetbrains --if-present -- --force --require
+
+      - name: Build VS Code extension
+        run: npm run build:vscode --if-present -- --force
+
+      - name: Build documentation index
+        run: npm run build:docs-rag
+
+      - name: Prepare macOS notarization key
+        if: runner.os == 'macOS'
+        env:
+          APPLE_API_KEY_B64: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          if [ -n "$APPLE_API_KEY_B64" ]; then
+            echo "$APPLE_API_KEY_B64" | base64 --decode > "$RUNNER_TEMP/authkey.p8"
+            echo "APPLE_API_KEY=$RUNNER_TEMP/authkey.p8" >> "$GITHUB_ENV"
+          else
+            echo "APPLE_API_KEY secret not set: building unsigned/un-notarized"
+          fi
+
+      - name: Build
+        shell: bash
+        run: |
+          for v in CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_ID APPLE_API_ISSUER APPLE_TEAM_ID; do
+            if [ -z "${!v:-}" ]; then unset "$v"; fi
+          done
+
+          build_cmd='${{ matrix.build_cmd }}'
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            export ELECTRON_DISABLE_SANDBOX=1
+            build_cmd="xvfb-run -a $build_cmd"
+          fi
+
+          for attempt in 1 2 3; do
+            if $build_cmd; then
+              exit 0
+            fi
+            echo "::warning::Build attempt $attempt failed$([ $attempt -lt 3 ] && echo ', retrying in 15s')"
+            [ $attempt -lt 3 ] && sleep 15
+          done
+          exit 1
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Verify bytecode and asarUnpack
+        shell: bash
+        run: node scripts/_verify-bytecode-asar.js --asar "${{ matrix.asar_path }}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: error
+
+  addons:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Package add-on extensions
+        run: npm run build:extensions
+
+      - name: Upload add-on extensions
+        uses: actions/upload-artifact@v4
+        with:
+          name: addon-extensions
+          path: dist/extensions/**
+          if-no-files-found: ignore

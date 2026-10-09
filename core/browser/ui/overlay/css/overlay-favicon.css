@@ -1,0 +1,5 @@
+.bookmark-favicon { width: 16px; height: 16px; flex: none; border-radius: 3px; object-fit: contain; }
+.bookmark-favicon.bd-fallback {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #3a4a5e; color: #fff; font-size: 9px; font-weight: 700;
+}

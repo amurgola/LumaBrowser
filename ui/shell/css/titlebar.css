@@ -1,0 +1,65 @@
+.app-titlebar {
+    display: flex;
+    align-items: flex-end;
+    height: 38px;
+    background: rgba(11, 18, 32, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: none;
+    -webkit-app-region: drag;
+    user-select: none;
+}
+.app-titlebar-drag {
+    flex: 1;
+    -webkit-app-region: drag;
+    align-self: stretch;
+}
+.app-titlebar-controls {
+    display: flex;
+    align-self: stretch;
+    -webkit-app-region: no-drag;
+}
+body.platform-darwin .app-titlebar-controls { display: none; }
+body.platform-darwin .app-titlebar { padding-left: 76px; }
+body.platform-win32 .app-titlebar-controls { display: none; }
+body.platform-win32 .app-titlebar { height: 40px; padding-right: 138px; }
+body.platform-win32 .win-ctrl { height: 40px; }
+
+html:has(> body.platform-linux) {
+    background: transparent;
+    border-radius: 10px;
+    overflow: hidden;
+}
+body.platform-linux {
+    background: var(--bg-root);
+    border-radius: 10px;
+    overflow: hidden;
+}
+html:has(> body.platform-linux.window-maximized),
+body.platform-linux.window-maximized {
+    border-radius: 0;
+}
+body.platform-linux .app-titlebar {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+.win-ctrl {
+    width: 46px;
+    height: 38px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), color var(--transition);
+}
+.win-ctrl:hover {
+    background: var(--bg-surface-2);
+    color: var(--text-primary);
+}
+.win-ctrl--close:hover {
+    background: #e81123;
+    color: #fff;
+}

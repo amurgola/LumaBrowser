@@ -1,0 +1,108 @@
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+}
+
+.db-grid-wrap::-webkit-scrollbar,
+.db-dock-list::-webkit-scrollbar,
+.db-modal-body::-webkit-scrollbar { width: 10px; }
+.db-grid-wrap::-webkit-scrollbar-thumb,
+.db-dock-list::-webkit-scrollbar-thumb,
+.db-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(245, 144, 52, 0.15);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
+
+#dbRoot { display: flex; flex-direction: column; height: 100vh; width: 100%; }
+
+.db-page-head {
+    padding: 22px 24px 4px;
+}
+.db-page-head-row {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+}
+.db-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+}
+.db-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+.db-sub {
+    margin: 4px 0 0;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    min-height: 17px;
+}
+.db-sub[hidden] { display: none; }
+
+.db-mode-slider {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: var(--z-dropdown, 50);
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    backdrop-filter: blur(8px);
+    transition: right 0.18s ease;
+}
+.db-mode-slider button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 5px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+.db-mode-slider button:hover { color: var(--text); }
+.db-mode-slider button.active {
+    color: var(--on-accent-warm, #1a1208);
+    background: var(--accent-grad, var(--accent));
+}
+#dbRoot.db-edit .db-mode-slider { right: calc(260px + 18px); }
+
+.db-main { display: flex; flex: 1; min-height: 0; }
+.db-grid-wrap { flex: 1; overflow: auto; padding: 14px; position: relative; }
+
+.db-empty[hidden],
+.db-dock[hidden],
+#dbHiddenToggle[hidden] { display: none; }
+
+.db-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-dim);
+    pointer-events: none;
+}
+.db-empty h2 { margin: 0 0 6px; font-size: 17px; color: var(--text); }
+.db-empty p { margin: 0; max-width: 420px; font-size: 13px; line-height: 1.5; }

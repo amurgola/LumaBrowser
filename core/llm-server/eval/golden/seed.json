@@ -1,0 +1,119 @@
+[
+  {
+    "id": "navigate-title",
+    "category": "navigate",
+    "prompt": "Open example.com and tell me the page's main heading.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "example\\.com" } } }
+      ],
+      "forbiddenTools": ["get_source"],
+      "maxIterations": 4,
+      "finalAnswer": { "contains": "Example Domain" }
+    }
+  },
+  {
+    "id": "fill-login-form",
+    "category": "fill_form",
+    "prompt": "Go to https://the-internet.herokuapp.com/login and log in with username 'tomsmith' and password 'SuperSecretPassword!'.",
+    "expect": {
+      "ordered": true,
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "contains": "herokuapp.com/login" } } },
+        { "tool": "fill_form", "params": { "fields": { "exists": true } } },
+        { "tool": "click" }
+      ],
+      "finalAnswer": { "contains": "secure" }
+    }
+  },
+  {
+    "id": "extract-products",
+    "category": "extract_data",
+    "prompt": "On the current shop page, extract every product's title and price as structured data.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "extract_data", "params": { "baseSelector": { "exists": true }, "childSelectors": { "exists": true } } }
+      ],
+      "forbiddenTools": ["get_source"]
+    }
+  },
+  {
+    "id": "react-wikipedia-fact",
+    "category": "react",
+    "prompt": "Search Wikipedia for Ada Lovelace and tell me the year she was born.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "wikipedia\\.org" } } }
+      ],
+      "maxIterations": 8,
+      "finalAnswer": { "contains": "1815" }
+    }
+  },
+  {
+    "id": "artifact-python-fib",
+    "category": "artifact",
+    "prompt": "Write me a Python script that prints the Fibonacci numbers up to 100. Put it in an artifact.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "create_artifact", "params": { "type": "code", "language": { "regex": "py(thon)?", "flags": "i" } } }
+      ],
+      "finalAnswer": { "notContains": "def fib" }
+    }
+  },
+  {
+    "id": "artifact-create-then-edit",
+    "category": "artifact",
+    "prompt": "Create an HTML page whose <title> is 'Hello', then update that title to 'Welcome'.",
+    "expect": {
+      "ordered": true,
+      "toolCalls": [
+        { "tool": "create_artifact", "params": { "type": "html" } },
+        { "tool": "edit_artifact" }
+      ]
+    }
+  },
+  {
+    "id": "image-generate-cat",
+    "category": "image",
+    "prompt": "Generate an image of a cat wearing a wizard hat.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "generate_image", "params": { "prompt": { "regex": "cat", "flags": "i" } } }
+      ]
+    }
+  },
+  {
+    "id": "image-add-feature-strength",
+    "category": "image",
+    "prompt": "Generate a clean-shaven cat, then add a big bushy mustache to it.",
+    "expect": {
+      "ordered": true,
+      "toolCalls": [
+        { "tool": "generate_image" },
+        { "tool": "edit_image", "params": { "strength": { "gte": 0.8 }, "prompt": { "regex": "mustache", "flags": "i" } } }
+      ]
+    }
+  },
+  {
+    "id": "navigate-click-by-text",
+    "category": "navigate",
+    "prompt": "On the current page, click the 'Sign In' button.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "click", "params": { "text": { "contains": "Sign In" } } }
+      ],
+      "forbiddenTools": ["get_source"],
+      "maxIterations": 3
+    }
+  },
+  {
+    "id": "ask-when-vague",
+    "category": "react",
+    "prompt": "Fix it.",
+    "expect": {
+      "maxIterations": 1,
+      "maxIterationsWeight": 1,
+      "finalAnswer": { "regex": "(what|which|clarify|more (info|detail)|can you|do you mean)", "flags": "i" }
+    }
+  }
+]

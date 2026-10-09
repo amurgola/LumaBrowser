@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <title>Shared conversation</title>
+  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="stylesheet" href="/llm-ui/css/base.css">
+  <link rel="stylesheet" href="/llm-ui/css/chat.css">
+  <link rel="stylesheet" href="/share-view.css">
+  <script type="importmap">{ "imports": { "/llm-server/ui/": "/llm-ui/" } }</script>
+</head>
+<body>
+  <div class="sv-wrap">
+    <header class="sv-head">
+      <svg class="sv-logo" viewBox="0 0 24 24" fill="none"><rect x="2.4" y="2.4" width="19.2" height="19.2" rx="5.2" stroke="#dfe4f3" stroke-width="1.8"/><path d="M8.4 7H10.7V14.7H16.8V17H8.4Z" fill="#dfe4f3"/><path d="M12.6 7H16.8V11.2Z" fill="#f59034"/></svg>
+      <div>
+        <h1 class="sv-title" id="svTitle">Shared conversation</h1>
+        <div class="sv-meta" id="svMeta"></div>
+      </div>
+      <span class="sv-badge">read-only</span>
+    </header>
+    <main class="sv-thread" id="svThread">
+      <div class="sv-status">Loading conversation…</div>
+    </main>
+    <footer class="sv-foot">Shared from LumaBrowser</footer>
+  </div>
+  <script type="module" src="/js/share/entry.js"></script>
+</body>
+</html>

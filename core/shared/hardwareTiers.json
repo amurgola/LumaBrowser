@@ -1,0 +1,40 @@
+{
+  "$comment": "Shared hardware tiers: the app's automatic planner classifies the host with these boundaries and the website's 'Will it run on my PC' table renders the same rows. One source, no drift. Bytes are GiB. Edit here only.",
+  "minGpuGiB": 1.5,
+  "tiers": [
+    {
+      "id": "laptop",
+      "name": "Laptop",
+      "match": { "maxVramGiB": 8, "unifiedMemoryMaxGiB": 32 },
+      "yourMachine": "Laptop, no gaming graphics card, 8 to 16 GB memory",
+      "whatYouGet": "Small model, good for questions and drafts, weaker on long documents",
+      "speedFeel": "Reads like slow typing",
+      "modelSizeGiB": [2, 8],
+      "downloadGiB": [2, 5],
+      "diskFreeGiB": 10
+    },
+    {
+      "id": "gaming",
+      "name": "Gaming PC",
+      "match": { "minVramGiB": 8, "maxVramGiB": 24, "unifiedMemoryMaxGiB": 32 },
+      "yourMachine": "Gaming PC with an NVIDIA or AMD card (8 to 16 GB video memory)",
+      "whatYouGet": "Mid model, close to a free chatbot tier",
+      "speedFeel": "Faster than you read",
+      "modelSizeGiB": [6, 20],
+      "downloadGiB": [6, 20],
+      "diskFreeGiB": 30
+    },
+    {
+      "id": "highend",
+      "name": "High-end PC",
+      "match": { "minVramGiB": 24, "unifiedMemoryMinGiB": 32 },
+      "yourMachine": "High-end PC (24 GB+ video memory) or Mac with 32 GB+",
+      "whatYouGet": "Large model, feels like a paid chatbot for most tasks",
+      "speedFeel": "Instant",
+      "modelSizeGiB": [20, 60],
+      "downloadGiB": [20, 50],
+      "diskFreeGiB": 80
+    }
+  ],
+  "imagesNeedVramGiB": 8
+}

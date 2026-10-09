@@ -1,0 +1,90 @@
+.db-dock {
+    width: 260px;
+    border-left: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.015);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.db-dock[hidden] { display: none; }
+.db-dock-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px 6px;
+}
+.db-dock-head h2 {
+    margin: 0;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-muted, var(--text-dim));
+    font-weight: 600;
+}
+.db-ghost {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.db-ghost:hover { color: var(--text); background: var(--bg-card); }
+.db-dock-list { flex: 1; overflow-y: auto; padding: 2px 8px 10px; display: flex; flex-direction: column; gap: 1px; }
+.db-dock-foot { border-top: 1px solid var(--border); padding: 8px 14px 10px; }
+.db-dock-foot #dbHiddenToggle { padding-left: 0; }
+.db-dock-hint { margin: 4px 0 0; color: var(--text-muted, var(--text-dim)); font-size: 11.5px; line-height: 1.45; }
+.db-dock-empty { color: var(--text-dim); font-size: 12.5px; padding: 8px 8px; line-height: 1.5; }
+.db-dock-section {
+    margin: 8px 0 2px;
+    padding: 4px 9px 0;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-muted, var(--text-dim));
+    font-weight: 600;
+}
+
+.db-dock-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: grab;
+    user-select: none;
+}
+.db-dock-item:hover { background: var(--bg-card); color: var(--text); }
+.db-dock-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.db-dock-state {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+.db-dock-state:empty { display: none; }
+.db-dock-item .db-dock-hide,
+.db-dock-item .db-dock-add {
+    flex: 0 0 auto;
+    font-size: 11px;
+    padding: 2px 6px;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+.db-dock-item:hover .db-dock-hide,
+.db-dock-item:hover .db-dock-add,
+.db-dock-item .db-dock-hide:focus-visible,
+.db-dock-item .db-dock-add:focus-visible { opacity: 1; }
+.db-dock-item.db-placed {
+    background: var(--accent-soft);
+    color: var(--text);
+    cursor: default;
+}
+.db-dock-item.db-hidden { opacity: 0.55; cursor: default; }
+.db-dock-item.db-hidden .db-dock-state { color: var(--text-muted, var(--text-dim)); }

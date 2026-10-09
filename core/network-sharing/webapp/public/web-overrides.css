@@ -1,0 +1,30 @@
+.cm-side-foot .cm-icon-btn { display: none !important; }
+
+@media (max-width: 760px) {
+  .cm-sidebar.expanded {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: min(84vw, 300px); flex-basis: auto;
+    background: var(--bg);
+    z-index: 1000; box-shadow: 0 0 50px rgba(0, 0, 0, 0.7);
+  }
+
+  .cm-greet { font-size: 30px; }
+  .cm-composer-wrap,
+  .cm-landing .cm-composer-wrap { max-width: 100%; }
+
+  .cm-composer-bar { padding: 10px 12px calc(max(14px, env(safe-area-inset-bottom)) + var(--cm-bar-slack, 0px)); }
+  .cm-composer { padding: 12px 12px 8px; }
+  .cm-composer-row { gap: 6px; }
+  .cm-composer-left { gap: 6px; }
+  .cm-composer-right { gap: 6px; min-width: 0; }
+  .cm-tools { padding: 0 10px 0 9px; font-size: 12px; }
+  .cm-model-pill { border-color: var(--border-strong); padding: 5px 11px; }
+  .cm-model-pill b, .cm-model-pill .cm-caret { display: none; }
+  .cm-model-pill::after { content: "Info"; color: var(--text-dim); font-size: 12.5px; }
+
+  #chatRoot.cm-has-panel .cm-artifact-panel {
+    position: fixed; inset: 0; z-index: 70;
+    flex: none; width: 100%; min-width: 0; max-width: 100%;
+    border-left: 0;
+  }
+}

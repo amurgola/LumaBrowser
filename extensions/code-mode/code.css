@@ -1,0 +1,96 @@
+.cm-code-panel {
+  position: fixed;
+  right: 18px;
+  bottom: 96px;
+  width: 264px;
+  max-height: 46vh;
+  overflow: auto;
+  z-index: 60;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--bg-elevated, var(--bg-card, #1b1f29));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+  color: var(--text, #e7ebf3);
+}
+
+.cm-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cm-code-name {
+  font-weight: 600;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cm-code-status {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.06));
+  color: var(--text-muted, #93a0b4);
+}
+.cm-code-status.cm-installing { background: rgba(245, 144, 52, 0.16); color: var(--accent, #f59034); }
+.cm-code-status.cm-installed { background: rgba(74, 222, 128, 0.16); color: var(--ok, #4ade80); }
+.cm-code-status.cm-error { background: rgba(248, 113, 113, 0.16); color: var(--bad, #f87171); }
+
+.cm-code-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cm-code-file {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+}
+
+.cm-code-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted, #93a0b4);
+}
+.cm-code-dot.ok { background: var(--ok, #4ade80); }
+.cm-code-dot.bad { background: var(--bad, #f87171); }
+.cm-code-dot.writing { background: var(--accent, #f59034); animation: cm-code-pulse 1s ease-in-out infinite; }
+
+@keyframes cm-code-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.cm-code-fname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cm-code-foot {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  font-size: 12px;
+  color: var(--text-muted, #93a0b4);
+}
+.cm-code-foot code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--accent, #f59034);
+}

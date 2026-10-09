@@ -1,0 +1,149 @@
+.settings-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ddd;
+}
+
+.settings-tab {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+}
+
+.settings-tab:hover {
+    color: #2c3e50;
+}
+
+.settings-tab.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+}
+
+.provider-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+.provider-default-control {
+    border: 1px solid var(--accent, #f59034);
+    background: rgba(245, 144, 52, 0.06);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+}
+.provider-default-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.provider-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f8f8f8;
+    cursor: pointer;
+}
+.provider-card-header:hover { background: #f0f0f0; }
+.provider-card-name { font-weight: 600; font-size: 13px; }
+.provider-card-status {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #ffeaea;
+    color: #c0392b;
+}
+.provider-card-status.configured {
+    background: #eafff0;
+    color: #27ae60;
+}
+.provider-card-body {
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.settings-section {
+    display: none;
+}
+
+.ext-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
+    background: var(--bg-card);
+    gap: 12px;
+}
+.ext-list-item:hover { background: var(--surface-hover); }
+.ext-list-item-info { flex: 1; min-width: 0; }
+.ext-list-item-name { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+.ext-list-item-version { font-weight: 400; font-size: 11px; color: var(--text-muted); }
+.ext-list-item-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.ext-list-item-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.ext-list-item-reason { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; }
+.ext-list-item-error { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--bad); margin-top: 6px; word-break: break-word; }
+.ext-list-no-config { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+.ext-list-configure-btn { padding: 6px 16px; font-size: 12px; flex-shrink: 0; }
+.ext-list-item-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.ext-list-item--disabled { opacity: 0.6; }
+.ext-list-item--disabled .ext-list-item-name { text-decoration: line-through; }
+.ext-list-item--error { border-color: rgba(248, 113, 113, 0.35); }
+.ext-tag-state { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; opacity: 0.85; }
+
+.ext-config-header { margin-bottom: 16px; }
+.ext-config-header-top {
+    display: flex; align-items: center; gap: 12px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.ext-config-header-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ext-config-back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 6px 12px; cursor: pointer; font-size: 13px; color: var(--text-secondary);
+    transition: all 0.2s; flex-shrink: 0;
+}
+.ext-config-back-btn:hover { background: var(--surface-hover); border-color: var(--text-muted); color: var(--text-primary); }
+.ext-config-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.ext-config-desc { font-size: 12px; color: var(--text-secondary); }
+
+.ext-config-deps { margin-top: 12px; padding: 10px 0; }
+.ext-config-deps-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.5px; }
+.ext-dep {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: var(--radius-sm); margin-bottom: 4px; font-size: 12px;
+}
+.ext-dep--installed { background: rgba(74, 222, 128, 0.08); }
+.ext-dep--missing { background: rgba(248, 113, 113, 0.08); }
+.ext-dep-name { font-weight: 600; color: var(--text-primary); }
+.ext-dep-type { font-size: 10px; color: var(--text-muted); background: var(--surface-hover); padding: 1px 6px; border-radius: 3px; }
+.ext-dep-status { font-size: 11px; color: var(--text-secondary); }
+.ext-dep-optional { font-size: 10px; color: var(--warn); font-style: italic; }
+.gs-item-card { border: 1px solid var(--border); border-radius: var(--radius-md); background: rgba(11, 18, 32, 0.45); }
+
+.ext-private-badge {
+    display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.4px; padding: 1px 6px; border-radius: 8px; vertical-align: middle;
+    background: rgba(245,144,52,0.15); color: var(--accent, #f59034); margin-left: 6px;
+}
+.ext-default-config { margin-top: 4px; }
+.ext-default-config-note { font-size: 13px; color: var(--text-secondary, #888); margin-bottom: 14px; }
+.ext-default-config-meta { display: flex; flex-direction: column; gap: 6px; }
+.ext-default-config-row { display: flex; gap: 12px; font-size: 12.5px; }
+.ext-default-config-key { min-width: 90px; font-weight: 600; color: var(--text-secondary, #999); }
+.ext-default-config-val { color: var(--text-primary, #ddd); word-break: break-all; font-family: var(--font-mono, monospace); }
+
+.settings-section.active {
+    display: block;
+}

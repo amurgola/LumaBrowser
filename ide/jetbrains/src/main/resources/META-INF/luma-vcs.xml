@@ -1,0 +1,11 @@
+<idea-plugin>
+    <actions>
+        <action id="luma.generateCommitMessage" class="com.lumabyte.luma.vcs.GenerateCommitMessageAction"
+                text="Generate Commit Message with Luma"
+                description="Draft a concise commit message from the changes ticked for this commit"
+                icon="com.lumabyte.luma.LumaIcons.ToolWindow">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
+            <override-text place="GoToAction" text="Luma: Generate Commit Message"/>
+        </action>
+    </actions>
+</idea-plugin>

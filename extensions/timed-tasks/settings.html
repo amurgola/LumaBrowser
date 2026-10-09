@@ -1,0 +1,37 @@
+<div class="tt-settings" id="ext-tt-settings">
+  <div class="luma-field">
+    <label class="luma-field-label">Where tasks live</label>
+    <div class="luma-field-help">
+      Tasks are created and managed in the Timed Tasks panel, opened from the clock button in the toolbar.
+      Each task runs its prompt on a schedule, stores every run, and can POST the result to a webhook.
+    </div>
+    <div class="ext-layout-inline ext-layout-inline--gap-sm ext-mt-8">
+      <button class="luma-btn luma-btn--sm primary" id="ext-tt-openPanelBtn">Open Timed Tasks panel</button>
+      <span class="luma-field-help" id="ext-tt-settingsSummary" style="margin-top:0;"></span>
+    </div>
+  </div>
+
+  <hr class="ext-divider">
+
+  <div class="luma-field">
+    <label class="luma-field-label">Model used for runs</label>
+    <div class="luma-kv">
+      <div class="luma-kv-row">
+        <span class="luma-kv-key">Navigator model</span>
+        <span class="luma-kv-val" id="ext-tt-modelLabel">Checking...</span>
+      </div>
+    </div>
+    <div class="luma-field-help">
+      Runs use the AI Chat Navigator model. Change it in the AI Chat settings (Extensions, AI Chat, Configure).
+    </div>
+  </div>
+
+  <hr class="ext-divider">
+
+  <div class="luma-field">
+    <label class="luma-field-label">Chat tools</label>
+    <div class="luma-field-help">
+      The chat agent can list, create, run, pause, and delete timed tasks through the timed_tasks tools. Creating or deleting a task from chat asks for approval first.
+    </div>
+  </div>
+</div>

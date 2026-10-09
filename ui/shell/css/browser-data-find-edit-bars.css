@@ -1,0 +1,36 @@
+.find-bar,
+.bookmark-edit-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(11, 18, 32, 0.92);
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.find-bar[hidden], .bookmark-edit-bar[hidden] { display: none; }
+.find-bar { justify-content: flex-end; }
+.find-bar .icon, .bookmark-edit-bar .icon { width: 14px; height: 14px; }
+.find-bar-icon, .bookmark-edit-icon { color: var(--text-muted); flex: none; }
+.find-input {
+    width: min(320px, 40vw);
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 13px;
+}
+.find-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.find-bar.no-match .find-input { border-color: var(--bad, #f87171); }
+.find-count { min-width: 64px; text-align: right; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.find-bar.no-match .find-count { color: var(--bad, #f87171); }
+.find-bar .luma-icon-btn, .bookmark-edit-bar .luma-icon-btn { color: var(--text-secondary); }
+.bookmark-edit-status { font-weight: 600; color: var(--text-primary); margin-right: 4px; }
+.bookmark-edit-field { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.bookmark-edit-field > span { color: var(--text-muted); }
+.bookmark-edit-field .form-input { width: min(320px, 30vw); padding: 5px 10px; font-size: 13px; }
+.bookmark-edit-field .form-select { padding: 5px 10px; font-size: 13px; max-width: 200px; }
+.bookmark-edit-bar .luma-btn { padding: 5px 12px; font-size: 12px; }
+.bookmark-edit-bar #bmEditClose { margin-left: auto; }

@@ -1,0 +1,76 @@
+[
+  {
+    "id": "exec-factorial",
+    "group": "execution",
+    "prompt": "Write JavaScript that declares exactly `async function run(args, ctx)`. It must return the factorial of `args.n`. Return the number itself, not an object or a string. Put the code in a code artifact, nothing else.",
+    "execute": {
+      "source": "artifact",
+      "cases": [
+        { "args": { "n": 5 }, "expect": { "equals": 120 } },
+        { "args": { "n": 0 }, "expect": { "equals": 1 } },
+        { "args": { "n": 10 }, "expect": { "equals": 3628800 } }
+      ]
+    },
+    "expect": {
+      "toolCalls": [
+        { "tool": "create_artifact", "params": { "content": { "regex": "function run", "flags": "i" } } }
+      ],
+      "execution": { "weight": 2 },
+      "maxIterations": 5
+    }
+  },
+  {
+    "id": "exec-word-frequency",
+    "group": "execution",
+    "prompt": "Write JavaScript declaring exactly `async function run(args, ctx)`. Given `args.text`, it must return the single most frequent word, lowercased, ignoring case and punctuation. Return just the word as a string. Put it in a code artifact.",
+    "execute": {
+      "source": "artifact",
+      "cases": [
+        { "args": { "text": "the cat the dog THE bird" }, "expect": { "equals": "the" } },
+        { "args": { "text": "Apple banana apple, BANANA banana." }, "expect": { "equals": "banana" } }
+      ]
+    },
+    "expect": {
+      "toolCalls": [
+        { "tool": "create_artifact", "params": { "content": { "regex": "function run", "flags": "i" } } }
+      ],
+      "execution": { "weight": 2 },
+      "maxIterations": 5
+    }
+  },
+  {
+    "id": "exec-fizzbuzz-range",
+    "group": "execution",
+    "prompt": "Write JavaScript declaring exactly `async function run(args, ctx)`. It must return an array of FizzBuzz values from 1 to `args.n` inclusive: numbers as numbers, and the strings 'Fizz', 'Buzz', 'FizzBuzz' where they apply. Put it in a code artifact.",
+    "execute": {
+      "source": "artifact",
+      "cases": [
+        { "args": { "n": 5 }, "expect": { "equals": [1, 2, "Fizz", 4, "Buzz"] } },
+        { "args": { "n": 15 }, "expect": { "lastEquals": "FizzBuzz" } }
+      ]
+    },
+    "expect": {
+      "toolCalls": [
+        { "tool": "create_artifact", "params": { "content": { "regex": "function run", "flags": "i" } } }
+      ],
+      "execution": { "weight": 2 },
+      "maxIterations": 5
+    }
+  },
+  {
+    "id": "exec-live-artifact-mounts",
+    "group": "execution",
+    "prompt": "Build me a live counter widget: a number starting at zero, a plus button and a minus button that change it.",
+    "execute": {
+      "source": "live",
+      "cases": []
+    },
+    "expect": {
+      "toolCalls": [
+        { "tool": "create_live_artifact", "params": { "js": { "exists": true } }, "success": true }
+      ],
+      "execution": { "weight": 2 },
+      "maxIterations": 5
+    }
+  }
+]

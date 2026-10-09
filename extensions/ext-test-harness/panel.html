@@ -1,0 +1,174 @@
+<div class="luma-bottombar th-bottom-bar" id="ext-th-bottomBar">
+  <div class="luma-bottombar-summary th-bar-summary" id="ext-th-barSummary">
+    <span class="th-bar-label">Test Harness</span>
+    <span class="th-bar-count" id="ext-th-barCount">0 tests</span>
+    <span class="th-bar-status" id="ext-th-barStatus"></span>
+    <button class="luma-btn luma-btn--sm" id="th-bar-refresh-btn" title="Refresh test list">Refresh</button>
+    <button class="luma-caret-btn th-bar-toggle" id="ext-th-barToggle" title="Expand or collapse" aria-label="Expand or collapse"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+
+  <div class="luma-bottombar-expanded th-bar-expanded ext-hidden" id="ext-th-barExpanded">
+    <div class="th-section" id="ext-th-testList">
+      <div class="th-section-header">Available Tests</div>
+      <div class="th-test-items" id="ext-th-testItems"></div>
+    </div>
+
+    <div class="th-section" id="ext-th-runHistory">
+      <div class="th-section-header">
+        Run History
+        <button class="luma-btn luma-btn--sm danger" id="th-bar-clear-btn" title="Clear all runs">Clear All</button>
+      </div>
+      <div class="th-run-items" id="ext-th-runItems"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .th-bottom-bar { font-size: 12px; }
+  .th-bar-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .th-bar-label { font-weight: 600; }
+  .th-bar-count { opacity: 0.7; }
+  .th-bar-status { opacity: 0.8; font-style: italic; }
+  .th-bar-toggle { margin-left: auto; }
+
+  .th-bar-expanded {
+    max-height: 400px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+    padding: 8px;
+  }
+
+  .th-section { margin-bottom: 12px; }
+  .th-section-header {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .th-test-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    background: var(--bg-card);
+  }
+  .th-test-name { flex: 1; font-weight: 500; }
+  .th-test-suite {
+    font-size: 10px;
+    opacity: 0.6;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--surface-hover);
+  }
+  .th-test-variants { display: flex; gap: 4px; }
+
+  .th-run-item {
+    padding: 6px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    background: var(--bg-card);
+    cursor: pointer;
+  }
+  .th-run-item:hover { background: var(--surface-hover); }
+  .th-run-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+  .th-run-test-name { font-weight: 500; flex: 1; }
+  .th-run-variant {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--surface-hover);
+  }
+  .th-run-status {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .th-run-status.completed { background: rgba(74,222,128,0.14); color: var(--good); }
+  .th-run-status.error { background: rgba(248,113,113,0.14); color: var(--bad); }
+  .th-run-status.timeout { background: rgba(251,191,36,0.14); color: var(--warn); }
+  .th-run-status.running { background: var(--accent-soft); color: var(--accent); }
+  .th-run-time { font-size: 10px; opacity: 0.6; }
+  .th-run-duration { font-size: 10px; opacity: 0.6; }
+  .th-run-summary { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+
+  .th-run-detail {
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    background: var(--bg-primary, #0d0d1a);
+    font-size: 11px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .th-run-detail pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 11px;
+  }
+
+  .th-assertion {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+  }
+  .th-assertion-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .th-assertion-badge.pass { background: #1a3a1a; color: var(--good); }
+  .th-assertion-badge.fail { background: #3a1a1a; color: var(--bad); }
+
+  .th-notes-section { margin-top: 8px; }
+  .th-note-item {
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-left: 2px solid var(--warn);
+    font-size: 11px;
+    opacity: 0.85;
+  }
+
+  .th-tool-timeline { margin-top: 8px; }
+  .th-tool-call {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    font-size: 11px;
+  }
+  .th-tool-name { font-weight: 600; color: #64b5f6; }
+  .th-tool-duration { opacity: 0.5; }
+
+  .th-empty { opacity: 0.5; padding: 8px; text-align: center; }
+
+  .th-run-detail-actions { margin-bottom: 8px; }
+
+  .th-conversation-details { margin-top: 8px; }
+  .th-conversation-details summary { cursor: pointer; opacity: 0.8; }
+  .th-conversation-details summary:hover { opacity: 1; }
+  .th-conv-msg { margin: 4px 0; padding: 4px; border-radius: 3px; }
+  .th-conv-msg--system { background: rgba(100,100,100,0.1); }
+  .th-conv-msg--assistant { background: rgba(33,150,243,0.08); }
+  .th-conv-msg--user { background: rgba(76,175,80,0.08); }
+  .th-conv-msg pre { margin: 4px 0 0; font-size: 10px; max-height: 150px; overflow-y: auto; }
+</style>

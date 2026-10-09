@@ -1,0 +1,18 @@
+.url-bar-wrap { position: relative; }
+.url-suggestions {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 9500;
+    background: var(--bg-elevated, #16202e); border: 1px solid var(--border-soft, #2c3e50);
+    border-radius: var(--radius-md, 8px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden; max-height: 60vh; overflow-y: auto;
+}
+.url-suggestions[hidden] { display: none; }
+.url-suggestion {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer;
+}
+.url-suggestion .bd-suggest-icon { width: 16px; height: 16px; flex: none; color: var(--text-secondary, #8b98a5); }
+.url-suggestion .bd-suggest-icon .icon { width: 16px; height: 16px; }
+.url-suggestion .bd-suggest-main { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.url-suggestion .bd-suggest-title { color: var(--text-primary, #e6edf3); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.url-suggestion .bd-suggest-url { color: var(--text-secondary, #8b98a5); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.url-suggestion.bd-active, .url-suggestion:hover { background: rgba(74,163,255,0.18); }
+.url-suggestion .bd-suggest-search { color: var(--text-secondary, #8b98a5); font-style: italic; }

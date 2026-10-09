@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' blob:; connect-src 'none';">
+<title>Luma On Demand</title>
+<link rel="stylesheet" href="on-demand.css">
+</head>
+<body class="collapsed">
+  <button id="tile" class="od-tile" type="button" title="Luma On Demand: talk to this page" aria-label="Open Luma On Demand">
+    <span class="od-tile-ring"></span>
+    <svg class="od-tile-glyph" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+      <path d="M12 3.5c.3 0 .5.2.6.5l1.1 3.6a4 4 0 0 0 2.6 2.6l3.6 1.1c.3.1.5.3.5.6s-.2.5-.5.6l-3.6 1.1a4 4 0 0 0-2.6 2.6l-1.1 3.6c-.1.3-.3.5-.6.5s-.5-.2-.6-.5l-1.1-3.6a4 4 0 0 0-2.6-2.6l-3.6-1.1c-.3-.1-.5-.3-.5-.6s.2-.5.5-.6l3.6-1.1a4 4 0 0 0 2.6-2.6l1.1-3.6c.1-.3.3-.5.6-.5z" fill="currentColor"/>
+    </svg>
+    <span class="od-tile-dot" id="tileDot"></span>
+  </button>
+
+  <div id="panel" class="od-panel" hidden>
+    <header class="od-head" id="head">
+      <span class="od-live" id="liveBadge"><i class="od-live-dot"></i>Live</span>
+      <div class="od-page">
+        <span class="od-page-title" id="pageTitle">This page</span>
+        <span class="od-page-model" id="modelLabel"></span>
+      </div>
+      <button id="btnSpeak" class="od-ib" type="button" title="Read replies aloud" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm11.5 3a3.5 3.5 0 0 0-2-3.2v6.4a3.5 3.5 0 0 0 2-3.2zm-2-7.6v2.1a5.6 5.6 0 0 1 0 11v2.1a7.7 7.7 0 0 0 0-15.2z" fill="currentColor"/></svg>
+      </button>
+      <button id="btnClose" class="od-ib" type="button" title="Close (Esc)">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+
+    <div id="log" class="od-log" aria-live="polite"></div>
+
+    <div id="hint" class="od-hint"></div>
+
+    <footer class="od-foot">
+      <button id="btnMic" class="od-mic" type="button" title="Voice" aria-label="Toggle listening">
+        <span class="od-mic-ring"></span>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 0 0-7 0v6A3.5 3.5 0 0 0 12 15zm5.5-3.5a5.5 5.5 0 0 1-11 0H4.6a7.4 7.4 0 0 0 6.4 7.3V21h2v-2.2a7.4 7.4 0 0 0 6.4-7.3h-1.9z" fill="currentColor"/></svg>
+      </button>
+      <input id="txt" class="od-input" type="text" placeholder="Type, or just speak…" autocomplete="off" spellcheck="false">
+      <button id="btnSend" class="od-send" type="button" title="Send">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 12l16-8-6 16-2-6-8-2z" fill="currentColor"/></svg>
+      </button>
+    </footer>
+  </div>
+
+  <script type="module" src="entry.js"></script>
+</body>
+</html>

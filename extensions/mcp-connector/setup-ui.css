@@ -1,0 +1,12 @@
+.mcpc-target { color: var(--text-dim); font-size: 12px; margin: 5px 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+.mcpc-err-line { color: var(--bad); font-size: 12px; margin-top: 6px; }
+
+.mcpc-tools { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.mcpc-tool {
+  font-size: 11px; color: var(--text);
+  background: var(--accent-soft); border: 1px solid rgba(245, 144, 52, 0.30);
+  border-radius: 6px; padding: 2px 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.mcpc-transport-fields { display: flex; flex-direction: column; gap: 14px; }

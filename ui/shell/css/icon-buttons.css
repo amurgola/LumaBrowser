@@ -1,0 +1,67 @@
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition), transform var(--transition);
+}
+.icon-btn:hover:not(:disabled) {
+    background: var(--bg-surface-2);
+    color: var(--text-primary);
+    border-color: var(--border-soft);
+}
+.icon-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+.icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.icon-btn[aria-pressed="true"] {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: var(--border-strong);
+}
+.icon-btn .icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    stroke: currentColor;
+}
+.nav-btn.icon-btn {
+    width: 32px;
+    height: 32px;
+}
+.nav-btn.icon-btn .icon {
+    width: 16px;
+    height: 16px;
+}
+#aiActivityToggle .ai-activity-toggle-count {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background: var(--accent-warm);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+#aiActivityToggle .ai-activity-toggle-count.visible {
+    display: inline-flex;
+}
+#aiActivityToggle { position: relative; }
+#aiActivityToggle.has-active { color: var(--accent); }

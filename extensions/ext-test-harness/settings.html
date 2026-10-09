@@ -1,0 +1,23 @@
+<div class="ext-settings-section" id="ext-th-settings">
+  <div class="luma-field">
+    <label class="luma-field-label" for="ext-th-modelSelect">Test Runner Model</label>
+    <select class="luma-field-select" id="ext-th-modelSelect">
+      <option value="">Use active provider (default)</option>
+    </select>
+    <span class="luma-field-help">The LLM model used for running test agent loops</span>
+  </div>
+
+  <div class="luma-field ext-mt-md">
+    <label class="luma-field-label" for="ext-th-timeout">Default Timeout (seconds)</label>
+    <input type="number" class="luma-field-input" id="ext-th-timeout" value="300" min="30" max="600" step="30">
+    <span class="luma-field-help">Maximum time allowed for each test variant to complete</span>
+  </div>
+
+  <div class="luma-field ext-mt-md">
+    <label class="luma-field-label">Run History</label>
+    <div class="ext-layout-inline ext-layout-inline--gap-sm">
+      <button class="luma-btn luma-btn--sm danger" id="ext-th-clearAllBtn">Clear All Runs</button>
+    </div>
+    <span class="luma-field-help">Delete all stored test run logs</span>
+  </div>
+</div>

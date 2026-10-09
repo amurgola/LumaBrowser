@@ -1,0 +1,197 @@
+.rp-body .rp-line {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid var(--accent, #f59034);
+  border-radius: 10px;
+}
+.rp-body .rp-line-av {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent, #f59034);
+  flex: 0 0 auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.rp-body .rp-line-text { min-width: 0; line-height: 1.5; }
+.rp-body .rp-speaker { color: var(--accent, #f59034); }
+.rp-body .rp-action { color: var(--text-dim, #8a95ad); font-style: italic; }
+.rp-body .rp-speech { color: var(--text, #e6e9f2); font-weight: 500; }
+
+.rp-blank-av {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.rp-blank-av:hover { border-style: solid; border-color: var(--accent, #f59034); }
+.rp-body .rp-line-av.rp-blank-av { width: 40px; height: 40px; border-radius: 50%; font-size: 16px; }
+
+.rp-body .rp-narr {
+  margin: 10px 0;
+  line-height: 1.6;
+  color: var(--text, #e6e9f2);
+}
+.rp-body .rp-narr:first-child { margin-top: 0; }
+
+.rp-scene-img {
+  margin: 12px 0 4px;
+}
+.rp-scene-img img {
+  max-width: 100%;
+  width: 420px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  display: block;
+}
+
+.rp-scene-btn, .rp-edit-btn { align-self: center; margin-left: 4px; }
+.rp-scene-btn {
+  color: var(--accent);
+  border-color: rgba(245, 144, 52, 0.4);
+  background: var(--accent-soft);
+}
+.rp-scene-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.rp-scene-item.active { color: var(--accent); font-weight: 600; }
+
+.rp-roster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  margin: 0 0 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.rp-roster-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim, #8a95ad);
+  flex: 0 0 auto;
+}
+.rp-roster-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+.rp-roster-av {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent, #f59034);
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+.rp-roster-av.rp-blank-av { font-size: 13px; }
+.rp-roster-name { font-size: 12px; color: var(--text, #e6e9f2); white-space: nowrap; }
+
+.rp-test-panel { padding: 18px; }
+.rp-test-sub { margin-bottom: 14px; }
+.rp-test-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.rp-test-cell { text-align: center; font-size: 12px; }
+.rp-test-thumb {
+  width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
+  border-radius: var(--radius-md); border: 1px solid var(--border);
+}
+.rp-test-fail {
+  width: 100%; aspect-ratio: 1 / 1; border-radius: var(--radius-md);
+  border: 1px dashed rgba(248, 113, 113, 0.4); display: flex; align-items: center;
+  justify-content: center; color: var(--bad); font-size: 11px; padding: 4px;
+}
+.rp-test-cap { margin-top: 5px; }
+.rp-test-close { margin-top: 16px; }
+
+.rp-scene-loading {
+  position: relative;
+  overflow: hidden;
+  margin: 12px 0 4px;
+  width: 420px;
+  max-width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(110deg, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.04) 70%);
+  background-size: 220% 100%;
+  animation: rp-shimmer 1.4s ease-in-out infinite;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  color: #eef1f8; font-size: 13px;
+}
+.rp-scene-loading.has-stage {
+  animation: none;
+  background: #0c0e16;
+}
+@keyframes rp-shimmer { 0% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
+
+.rp-scene-stage-wrap {
+  position: absolute; inset: 0;
+  display: block;
+}
+.rp-scene-stage-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  opacity: 0.62;
+  animation: rp-stage-in 0.45s ease;
+}
+@keyframes rp-stage-in { from { opacity: 0; transform: scale(1.015); } to { opacity: 0.62; transform: none; } }
+
+.rp-scene-spin, .rp-scene-loading-t, .rp-scene-cancel { position: relative; z-index: 1; }
+.rp-scene-loading-t { text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85); padding: 0 16px; text-align: center; }
+.rp-scene-spin { box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+.rp-scene-cancel {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 6px;
+  background: rgba(12, 14, 22, 0.72);
+  color: inherit;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+.rp-scene-cancel:disabled { opacity: 0.55; cursor: default; }
+
+.rp-img-actions {
+  display: flex; gap: 8px; margin: 6px 0 2px;
+  opacity: 0; transition: opacity 0.12s;
+}
+.cm-asst:hover .rp-img-actions { opacity: 1; }
+.rp-img-btn-del:hover { background: rgba(248, 113, 113, 0.18); color: var(--bad); border-color: rgba(248, 113, 113, 0.5); }
+
+.cm-turn.user:hover .rp-user-actions { opacity: 1; }
+.rp-user-actions { justify-content: flex-end; margin: 2px 2px 8px; }
+
+.rp-gallery { padding: 16px 18px; }
+.rp-gallery-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.rp-gallery-head b { font-size: 16px; }
+.rp-gallery-head span { color: var(--text-dim); font-size: 12px; }
+.rp-gallery-x { margin-left: auto; }
+.rp-gallery-group { color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; margin: 14px 2px 6px; }
+.rp-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.rp-gallery-cell {
+  border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface-sunken);
+  display: flex; flex-direction: column;
+}
+.rp-gallery-cell.current { border-color: var(--good); box-shadow: 0 0 0 1px var(--good) inset; }
+.rp-gallery-cell img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+.rp-gallery-cap { font-size: 11px; color: var(--text-dim); padding: 5px 7px 2px; }
+.rp-gallery-acts { display: flex; gap: 6px; padding: 4px 7px 7px; }
+.rp-gallery-acts .rp-img-btn { flex: 1; text-align: center; padding: 4px 6px; }

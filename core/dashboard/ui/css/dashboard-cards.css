@@ -1,0 +1,50 @@
+.grid-stack-item-content.db-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: var(--bg-card);
+    overflow: hidden;
+}
+.db-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--accent-soft);
+    cursor: grab;
+    flex: 0 0 auto;
+}
+.db-card-title {
+    font-weight: 600;
+    font-size: 12.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.db-card-head .db-ghost { margin-left: auto; }
+.db-card-head .db-ghost + .db-ghost { margin-left: 0; }
+#dbRoot:not(.db-edit) .db-card-head { display: none; }
+#dbRoot.db-edit .grid-stack-item-content.db-card {
+    outline: 1.5px dashed var(--accent);
+    outline-offset: 3px;
+}
+.db-card-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+.db-card-body .cm-live-root { min-height: 100%; border-radius: 0; }
+.db-tombstone {
+    padding: 18px 14px;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.grid-stack-placeholder > .placeholder-content {
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    background: var(--accent-soft);
+}

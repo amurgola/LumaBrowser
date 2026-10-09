@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0f141f">
+  <title>Shared tab</title>
+  <link rel="stylesheet" href="/tab/assets/viewer.css">
+</head>
+<body class="is-view">
+  <header class="ts-bar">
+    <div class="ts-brand" title="LumaBrowser Tab Share">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
+    </div>
+    <div class="ts-title" id="title">Shared tab</div>
+    <div class="ts-badge" id="modeBadge">Viewing</div>
+    <div class="ts-status" id="status"><span class="ts-dot"></span><span id="statusText">Connecting</span><span class="ts-hd" title="Optimized video stream">HD</span></div>
+  </header>
+
+  <main class="ts-stage" id="stage">
+    <img id="frame" alt="Live view of the shared tab" draggable="false">
+    <video id="video" autoplay playsinline muted disablepictureinpicture></video>
+    <div class="ts-overlay" id="overlay">
+      <div class="ts-overlay-card">
+        <div class="ts-overlay-title" id="overlayTitle">Connecting</div>
+        <div class="ts-overlay-text" id="overlayText">Opening the live view of the shared tab.</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="ts-tools" id="tools">
+    <button type="button" class="ts-btn" id="btnBack" title="Back" aria-label="Back">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button type="button" class="ts-btn" id="btnForward" title="Forward" aria-label="Forward">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button type="button" class="ts-btn" id="btnReload" title="Reload" aria-label="Reload">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+    </button>
+    <span class="ts-tools-gap"></span>
+    <button type="button" class="ts-btn ts-btn-kbd" id="btnKeyboard" title="Keyboard" aria-label="Keyboard">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
+      <span>Keyboard</span>
+    </button>
+    <button type="button" class="ts-btn ts-btn-kbd" id="btnEnter" title="Enter" aria-label="Enter">Enter</button>
+  </footer>
+
+  <textarea id="kbd" class="ts-kbd" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Type into the shared tab"></textarea>
+
+  <script src="/tab/assets/viewer.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.url-suggestions {
+  background: var(--surface-pop); border: 1px solid var(--border-strong); border-radius: 10px;
+  box-shadow: var(--shadow-md); overflow: hidden;
+}
+.url-suggestion { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; }
+.url-suggestion .bd-suggest-icon { width: 16px; height: 16px; flex: none; color: var(--text-dim); display: inline-flex; }
+.url-suggestion .bd-suggest-main { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.url-suggestion .bd-suggest-title { color: var(--text); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.url-suggestion .bd-suggest-url { color: var(--text-dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.url-suggestion.bd-active, .url-suggestion:hover { background: var(--bg-card); }
+.url-suggestion .bd-suggest-search { color: var(--text-dim); font-style: italic; }

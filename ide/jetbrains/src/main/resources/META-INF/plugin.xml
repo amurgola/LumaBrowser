@@ -1,0 +1,79 @@
+<idea-plugin>
+    <id>com.lumabyte.luma</id>
+    <name>LumaBrowser</name>
+    <vendor url="https://lumabyte.com">Lumabyte, LLC</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="luma-jcef.xml">com.intellij.modules.jcef</depends>
+    <depends optional="true" config-file="luma-vcs.xml">com.intellij.modules.vcs</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Luma" anchor="right" icon="com.lumabyte.luma.LumaIcons.ToolWindow"
+                    factoryClass="com.lumabyte.luma.ui.LumaToolWindowFactory"/>
+        <notificationGroup id="Luma" displayType="BALLOON"/>
+        <applicationService serviceImplementation="com.lumabyte.luma.settings.LumaSettings"/>
+        <applicationConfigurable parentId="tools"
+                                 instance="com.lumabyte.luma.settings.LumaConfigurable"
+                                 id="com.lumabyte.luma.settings"
+                                 displayName="LumaBrowser"/>
+        <statusBarWidgetFactory id="LumaStatus" implementation="com.lumabyte.luma.ide.LumaStatusBarWidgetFactory"
+                                order="before positionWidget"/>
+        <postStartupActivity implementation="com.lumabyte.luma.ui.LumaDevStartup"/>
+    </extensions>
+
+    <actions>
+        <action id="luma.ask" class="com.lumabyte.luma.actions.AskLumaAction"
+                text="Ask Luma About Selection" description="Send the selection (or the current file) to the Luma agent"
+                icon="com.lumabyte.luma.LumaIcons.ToolWindow">
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shift L"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta shift L"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+            <override-text place="GoToAction" text="Luma: Ask About Selection"/>
+        </action>
+        <action id="luma.addSelection" class="com.lumabyte.luma.actions.AddSelectionAction"
+                text="Add Selection to Luma Chat" description="Attach the selection to the next Luma prompt">
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift alt L"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shift alt L"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta shift alt L"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="luma.ask"/>
+            <override-text place="GoToAction" text="Luma: Add Selection to Chat"/>
+        </action>
+        <action id="luma.addFile" class="com.lumabyte.luma.actions.AddFileAction"
+                text="Add to Luma Chat" description="Attach the file(s) to the next Luma prompt"
+                icon="com.lumabyte.luma.LumaIcons.ToolWindow">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+            <add-to-group group-id="EditorTabPopupMenu" anchor="last"/>
+        </action>
+
+        <action id="luma.newSession" class="com.lumabyte.luma.actions.NewSessionAction"
+                text="New Session" description="Start a fresh Luma conversation for this project" icon="AllIcons.General.Add"/>
+        <action id="luma.chooseAgent" class="com.lumabyte.luma.actions.ChooseAgentAction"
+                text="Agent" description="Pick which LumaBrowser agent answers here" icon="AllIcons.General.User"/>
+        <action id="luma.stop" class="com.lumabyte.luma.actions.StopTurnAction"
+                text="Stop" description="Stop the running turn" icon="AllIcons.Actions.Suspend"/>
+        <action id="luma.openInApp" class="com.lumabyte.luma.actions.OpenInAppAction"
+                text="Open in LumaBrowser" description="Show this conversation in the LumaBrowser chat" icon="AllIcons.Ide.External_link_arrow"/>
+        <action id="luma.reconnect" class="com.lumabyte.luma.actions.ReconnectAction"
+                text="Reconnect" description="Reconnect to LumaBrowser (start it when it is not running)" icon="AllIcons.Actions.Refresh"/>
+        <action id="luma.settings" class="com.lumabyte.luma.actions.OpenSettingsAction"
+                text="Settings" description="LumaBrowser plugin settings" icon="AllIcons.General.Settings"/>
+        <action id="luma.toggleApprovals" class="com.lumabyte.luma.actions.ToggleApprovalsAction"
+                text="Ask Before Edits and Commands" description="Approve each file edit and command, or let the agent run for this session"/>
+        <action id="luma.toggleReasoning" class="com.lumabyte.luma.actions.ToggleReasoningAction"
+                text="Show Reasoning" description="Show the model's thinking as it streams"/>
+
+        <group id="LumaToolWindowTitle">
+            <reference ref="luma.newSession"/>
+            <reference ref="luma.chooseAgent"/>
+            <reference ref="luma.openInApp"/>
+        </group>
+        <group id="LumaToolWindowGear">
+            <reference ref="luma.toggleApprovals"/>
+            <reference ref="luma.toggleReasoning"/>
+            <separator/>
+            <reference ref="luma.reconnect"/>
+            <reference ref="luma.settings"/>
+        </group>
+    </actions>
+</idea-plugin>

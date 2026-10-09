@@ -1,0 +1,60 @@
+.notification-log {
+    position: fixed;
+    bottom: 40px;
+    right: 20px;
+    width: 300px;
+    max-height: 200px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 15px;
+    overflow-y: auto;
+    display: none;
+}
+
+.notification-log.active {
+    display: block;
+}
+
+.log-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #2c3e50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.log-close-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    opacity: 0.6;
+}
+
+.log-close-btn:hover {
+    opacity: 1;
+}
+
+.log-item {
+    font-size: 12px;
+    padding: 5px;
+    margin-bottom: 5px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.log-item.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.log-item.error {
+    background: #f8d7da;
+    color: #721c24;
+}

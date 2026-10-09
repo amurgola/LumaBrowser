@@ -1,0 +1,73 @@
+.browser-container {
+    display: flex;
+    flex-direction: row;
+}
+.webview-container {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+.right-panel {
+    width: var(--right-panel-width, 420px);
+    min-width: 240px;
+    max-width: 75vw;
+    flex-shrink: 0;
+    overflow-y: auto;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border-soft);
+}
+.right-panel.ext-hidden {
+    display: none !important;
+}
+
+.resize-handle {
+    background: transparent;
+    transition: background 0.12s ease;
+    user-select: none;
+    z-index: 60;
+}
+.resize-handle:hover,
+.resize-handle.is-dragging {
+    background: rgba(245, 144, 52, 0.5);
+}
+.resize-handle--col {
+    width: 4px;
+    flex-shrink: 0;
+    cursor: col-resize;
+}
+.browser-container:has(> .right-panel.ext-hidden) > .resize-handle--col {
+    display: none;
+}
+.resize-handle--row {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    cursor: row-resize;
+    z-index: 60;
+    background: transparent;
+}
+.resize-handle--row:hover,
+.resize-handle--row.is-dragging {
+    background: rgba(245, 144, 52, 0.5);
+}
+body.pcd-resizing,
+body.pcd-resizing * {
+    cursor: inherit !important;
+    user-select: none !important;
+}
+
+.icon-btn.is-open,
+.toolbar-btn.is-open {
+    background: rgba(245, 144, 52, 0.18) !important;
+    color: var(--accent, #f59034) !important;
+    box-shadow: inset 0 0 0 1px rgba(245, 144, 52, 0.45);
+}
+.icon-btn.is-open:hover,
+.toolbar-btn.is-open:hover {
+    background: rgba(245, 144, 52, 0.26) !important;
+}
+.right-panel .slot-content {
+    padding: 10px 12px;
+}

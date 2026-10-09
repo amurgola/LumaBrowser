@@ -1,0 +1,56 @@
+<div class="pcd-settings" id="ext-pcd-settings">
+  <div class="luma-field">
+    <label class="luma-field-label">Where monitors live</label>
+    <div class="luma-field-help">
+      Monitors are created and managed in the Page Monitors panel, opened from the bell button in the toolbar.
+      Each monitor loads its page on a schedule, compares the text (or just the elements you picked), and alerts you when something changed.
+    </div>
+    <div class="ext-layout-inline ext-layout-inline--gap-sm ext-mt-8">
+      <button class="luma-btn luma-btn--sm primary" id="ext-pcd-openPanelBtn">Open Page Monitors panel</button>
+      <span class="luma-field-help" id="ext-pcd-settingsSummary" style="margin-top:0;"></span>
+    </div>
+  </div>
+
+  <hr class="ext-divider">
+
+  <div class="luma-field">
+    <label class="luma-field-label">Check history</label>
+    <div class="ext-layout-inline ext-layout-inline--gap-sm">
+      <select class="luma-field-select" id="ext-pcd-historyMonitor" aria-label="Monitor"></select>
+      <div class="luma-segmented" id="ext-pcd-historyMode">
+        <button class="luma-segmented-btn active" data-mode="changed" type="button">Changes only</button>
+        <button class="luma-segmented-btn" data-mode="all" type="button">All checks</button>
+      </div>
+    </div>
+    <div class="luma-field-help" id="ext-pcd-historyStats"></div>
+    <div id="ext-pcd-historyList" class="ext-mt-8"></div>
+    <div id="ext-pcd-historyPager" class="pcd-history-pager"></div>
+  </div>
+
+  <hr class="ext-divider">
+
+  <div class="luma-field">
+    <label class="luma-field-label">Chat tools</label>
+    <div class="luma-field-help">
+      The chat agent can list, create, check, pause, and delete monitors through the page_monitor tools. Creating or deleting a monitor from chat asks for approval first.
+    </div>
+  </div>
+
+  <hr class="ext-divider">
+
+  <div class="luma-field">
+    <label class="luma-field-label">Webhook payload</label>
+    <pre class="luma-code pcd-settings-webhook-example">{
+  "monitorId": "mon_xxx",
+  "monitorName": "Price Page",
+  "url": "https://example.com/product",
+  "timestamp": "2026-04-26T11:00:00.000Z",
+  "checksum": "abc123...",
+  "prevChecksum": "def456...",
+  "diffSummary": "+3 new lines, -1 removed",
+  "textPreview": "first 2000 chars...",
+  "textLength": 15234,
+  "changeCount": 3
+}</pre>
+  </div>
+</div>

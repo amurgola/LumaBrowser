@@ -1,0 +1,102 @@
+[
+  {
+    "id": "web-navigate-and-title",
+    "group": "web",
+    "requires": ["web"],
+    "prompt": "Go to https://lumabyte.com/automation-test and tell me the page's main heading.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "lumabyte\\.com/automation-test" } } }
+      ],
+      "maxIterations": 5,
+      "finalAnswer": { "contains": "Automation Test" }
+    }
+  },
+  {
+    "id": "web-click-primary-button",
+    "group": "web",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test and click the button labelled 'Primary button'. Then tell me what the status text under it says.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } },
+        { "tool": "click", "success": true }
+      ],
+      "ordered": true,
+      "maxIterations": 8,
+      "_note": "Assert the POST-click text, not the absence of the pre-click text. A good answer reports the transition ('previously showed not clicked, now reads clicked at ...'), and a notContains check fails exactly the most informative replies.",
+      "finalAnswer": { "regex": "clicked at\\s", "flags": "i" }
+    }
+  },
+  {
+    "id": "web-fill-form",
+    "group": "web",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test. In the form, set Full name to 'Ada Lovelace', Email to 'ada@analytical.engine', and Age to 36, then submit the form. Tell me whether the submission succeeded.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } },
+        { "tool": "*", "success": true }
+      ],
+      "maxIterations": 14,
+      "finalAnswer": { "regex": "submitted|success", "flags": "i" }
+    }
+  },
+  {
+    "id": "web-wait-for-delayed",
+    "group": "web",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test, click 'Trigger 2s delay', wait for the delayed element to actually appear, and tell me what it says. Do not answer until it has appeared.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } },
+        { "tool": "click", "success": true }
+      ],
+      "maxIterations": 10,
+      "finalAnswer": { "regex": "appear|delay|loaded|ready", "flags": "i" }
+    }
+  },
+  {
+    "id": "web-press-enter-search",
+    "group": "web",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test, type 'telescope' into the search box in the Press key section, and submit it by pressing Enter. Tell me what the result line says afterwards.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } }
+      ],
+      "maxIterations": 12,
+      "_note": "Same as web-click-primary-button: assert the post-submit line rather than the absence of the placeholder.",
+      "finalAnswer": { "contains": ["telescope", "search submitted"] }
+    }
+  },
+  {
+    "id": "web-agentic-flow",
+    "group": "web",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test and complete the multi-step agentic flow: log in with demo@acme.com / demo123, go to settings, then save the settings. Confirm the flow reached the saved state.",
+    "passThreshold": 0.75,
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } },
+        { "tool": "click", "success": true }
+      ],
+      "maxIterations": 22,
+      "maxIterationsWeight": 0.5,
+      "finalAnswer": { "regex": "saved|settings", "flags": "i" }
+    }
+  },
+  {
+    "id": "web-scroll-to-anchor",
+    "group": "web",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test, scroll down to the section-bottom anchor near the end of the page, and tell me the exact text of that anchor.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } }
+      ],
+      "maxIterations": 10,
+      "finalAnswer": { "contains": "section-bottom" }
+    }
+  }
+]

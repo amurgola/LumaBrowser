@@ -1,0 +1,87 @@
+[
+  {
+    "id": "answer-reveal-token",
+    "group": "answer",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test, click 'Reveal secret', and tell me the exact secret code it shows.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } },
+        { "tool": "click", "success": true }
+      ],
+      "ordered": true,
+      "maxIterations": 10,
+      "finalAnswer": {
+        "regex": "LUMA-\\d{4}",
+        "notContains": "LUMA-0000"
+      }
+    }
+  },
+  {
+    "id": "answer-cheapest-product",
+    "group": "answer",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test and tell me which product in the products table is cheapest, and its price.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } }
+      ],
+      "maxIterations": 8,
+      "finalAnswer": { "contains": ["Widget C", "9.49"] }
+    }
+  },
+  {
+    "id": "answer-out-of-stock",
+    "group": "answer",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test. Which product in the products table is out of stock? Name it and give its SKU.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } }
+      ],
+      "maxIterations": 8,
+      "finalAnswer": { "contains": ["Widget C", "SKU-003"] }
+    }
+  },
+  {
+    "id": "answer-highest-stock",
+    "group": "answer",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test and tell me which product has the highest stock count, and what that count is.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } }
+      ],
+      "maxIterations": 8,
+      "finalAnswer": { "contains": ["Gizmo Mini", "120"] }
+    }
+  },
+  {
+    "id": "answer-extract-user-list",
+    "group": "answer",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test and list every name in the repeating user list.",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } }
+      ],
+      "maxIterations": 10,
+      "finalAnswer": {
+        "contains": ["Ada Lovelace", "Grace Hopper", "Alan Turing", "Hedy Lamarr"]
+      }
+    }
+  },
+  {
+    "id": "answer-data-attribute",
+    "group": "answer",
+    "requires": ["web"],
+    "prompt": "Open https://lumabyte.com/automation-test. In the element inspection section, what is the data-value of the element with id el-data?",
+    "expect": {
+      "toolCalls": [
+        { "tool": "navigate", "params": { "url": { "regex": "automation-test" } } }
+      ],
+      "maxIterations": 10,
+      "finalAnswer": { "contains": "42" }
+    }
+  }
+]

@@ -1,0 +1,40 @@
+<div class="luma-dockpanel pcd-panel" id="ext-pcd-panel">
+  <div class="luma-dockpanel-head">
+    <span class="luma-dockpanel-title">Page Monitors</span>
+    <span class="luma-dockpanel-count" id="ext-pcd-barCount">0 monitors</span>
+    <div class="luma-dockpanel-actions">
+      <button class="luma-btn luma-btn--sm primary" id="pcd-bar-new-btn" title="Create a new monitor">+ New monitor</button>
+    </div>
+    <div class="luma-dockpanel-sub" id="ext-pcd-barStatus"></div>
+  </div>
+
+  <div id="pcd-bar-create-form" class="luma-dockpanel-form ext-hidden">
+    <div class="luma-dockpanel-formlabel" id="pcd-bar-form-title">New monitor</div>
+    <input type="text" class="luma-field-input" id="pcd-bar-name" placeholder="Monitor name">
+    <input type="text" class="luma-field-input" id="pcd-bar-url" placeholder="https://example.com/page">
+    <div class="luma-dockpanel-formlabel">Check</div>
+    <div id="pcd-bar-interval-mount"></div>
+    <div class="luma-dockpanel-formrow">
+      <select class="luma-field-select" id="pcd-bar-jitter" aria-label="Timing jitter">
+        <option value="0">Exact timing</option>
+        <option value="10">Vary timing by 10%</option>
+        <option value="25">Vary timing by 25%</option>
+        <option value="50">Vary timing by 50%</option>
+      </select>
+      <input type="text" class="luma-field-input" id="pcd-bar-webhook" placeholder="Webhook URL (optional)">
+    </div>
+    <label class="luma-check">
+      <input type="checkbox" id="pcd-bar-notifications" checked> Desktop notification on change
+    </label>
+    <label class="luma-check" title="Use the tab that is already open and do not reload it. Good for pages that update themselves.">
+      <input type="checkbox" id="pcd-bar-no-refresh"> Page updates itself, do not reload
+    </label>
+    <div class="luma-form-err ext-hidden" id="pcd-bar-form-err"></div>
+    <div class="ext-layout-inline ext-layout-inline--gap-sm">
+      <button class="luma-btn primary luma-btn--sm" id="pcd-bar-create-btn">Create</button>
+      <button class="luma-btn luma-btn--sm" id="pcd-bar-cancel-btn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="luma-dockpanel-body" id="ext-pcd-barMonitorList"></div>
+</div>

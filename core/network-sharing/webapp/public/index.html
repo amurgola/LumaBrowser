@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>LumaBrowser Chat</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="/llm-ui/css/base.css">
+  <link rel="stylesheet" href="/llm-ui/css/chat.css">
+  <link rel="stylesheet" href="/llm-ui/css/live-module.css">
+  <link rel="stylesheet" href="/llm-ui/css/luma-components.css">
+  <link rel="stylesheet" href="web-overrides.css">
+  <link rel="stylesheet" href="pair.css">
+  <script type="importmap">{ "imports": { "/llm-server/ui/": "/llm-ui/", "/core/llm-server/ui/": "/llm-ui/" } }</script>
+</head>
+<body>
+  <div id="chatRoot"></div>
+
+  <section id="pair-view" class="pair-view">
+    <div class="pair-card">
+      <img class="pair-logo" src="icon.png" alt="">
+      <h1 class="luma-title">Connect to <span id="pair-host">LumaBrowser</span></h1>
+      <p class="pair-sub luma-sub">Enter the PIN from the host's Network Sharing settings.</p>
+      <input id="pair-pin" class="pair-pin" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN">
+      <button id="pair-btn" class="pair-btn luma-btn primary luma-btn--block">Connect</button>
+      <div id="pair-error" class="pair-error luma-form-err" style="display:none;"></div>
+    </div>
+    <div class="pair-foot luma-muted">Chats are stored on this device. The AI runs on the host.</div>
+  </section>
+
+  <script src="/llm-ui/luma-modal.js"></script>
+  <script src="/llm-ui/resonant.js"></script>
+  <script type="module" src="js/web/entry.js"></script>
+</body>
+</html>

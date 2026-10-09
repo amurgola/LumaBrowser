@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/llm-ui/css/base.css">
+    <link rel="stylesheet" href="/llm-ui/css/luma-components.css">
+    <link rel="stylesheet" href="/llm-ui/css/live-module.css">
+    <link rel="stylesheet" href="/dashboard-ui/lib/gridstack/gridstack.min.css">
+    <link rel="stylesheet" href="css/dashboard-page.css">
+    <link rel="stylesheet" href="css/dashboard-dock.css">
+    <link rel="stylesheet" href="css/dashboard-cards.css">
+    <link rel="stylesheet" href="css/dashboard-tasks.css">
+    <script type="importmap">{ "imports": { "/llm-server/ui/": "/llm-ui/" } }</script>
+</head>
+<body>
+    <div id="dbRoot">
+        <div id="dbModeSlider" class="db-mode-slider" role="tablist" aria-label="Dashboard mode">
+            <button type="button" data-mode="live" class="active" role="tab">Live</button>
+            <button type="button" data-mode="edit" role="tab">Edit</button>
+        </div>
+        <header class="db-page-head">
+            <div class="db-page-head-row">
+                <span class="db-eyebrow">Live modules</span>
+                <h1 class="db-title">Dashboard</h1>
+            </div>
+            <p class="db-sub" id="dbSub"></p>
+        </header>
+        <main class="db-main">
+            <section class="db-grid-wrap">
+                <div class="grid-stack"></div>
+                <div id="dbEmpty" class="db-empty" hidden>
+                    <h2>Nothing here yet</h2>
+                    <p id="dbEmptyHint"></p>
+                </div>
+            </section>
+            <aside id="dbDock" class="db-dock" hidden>
+                <div class="db-dock-head">
+                    <h2>Widgets</h2>
+                    <button id="dbDockRefresh" class="db-ghost" type="button" title="Refresh list">Refresh</button>
+                </div>
+                <div id="dbDockList" class="db-dock-list"></div>
+                <div class="db-dock-foot">
+                    <button id="dbHiddenToggle" class="db-ghost" type="button" hidden></button>
+                    <p class="db-dock-hint">Modules created in chat and widgets from extensions such as the Hub appear here. Drag one onto the grid; each can be placed once.</p>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script src="/llm-ui/resonant.js"></script>
+    <script src="/dashboard-ui/lib/gridstack/gridstack-all.js"></script>
+    <script type="module" src="js/entry.js"></script>
+</body>
+</html>

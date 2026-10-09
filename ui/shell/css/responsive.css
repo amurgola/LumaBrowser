@@ -1,0 +1,86 @@
+.watcher-list,
+.settings-content,
+.ai-chat-messages,
+.notification-log {
+    scrollbar-color: var(--accent) #00030a;
+}
+
+@media (max-width: 1100px) {
+    .toolbar {
+        flex-wrap: wrap;
+    }
+
+    .toolbar #settingsBtn {
+        margin-left: 0;
+    }
+
+    .url-bar {
+        min-width: 300px;
+        order: 2;
+        flex-basis: 100%;
+    }
+}
+
+@media (max-width: 760px) {
+    .status-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .settings-content {
+        width: calc(100% - 20px);
+        max-height: calc(100vh - 24px);
+        padding: 20px;
+    }
+
+    .form-row,
+    .form-grid {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+
+    .watcher-stats {
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .ai-chat-content {
+        grid-template-columns: 1fr;
+    }
+
+    .ai-chat-history {
+        border-right: none;
+        border-bottom: 1px solid var(--border-soft);
+        max-height: 110px;
+    }
+
+    .ai-history-list {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .ai-history-item {
+        min-width: 180px;
+    }
+
+    .ai-msg {
+        max-width: 100%;
+    }
+}
+#extensionBottomBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    height: var(--bottom-bar-height, auto);
+    min-height: 0;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.toolbar-slot-inline {
+    display: inline-flex;
+    gap: 6px;
+}

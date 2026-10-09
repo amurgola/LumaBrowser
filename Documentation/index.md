@@ -1,0 +1,3721 @@
+# LumaBrowser documentation
+
+LumaBrowser is a desktop app that bundles a web browser with a full local AI
+stack: an LLM runtime that fits models to the user's GPUs, chat with tools and
+agents, local image, video, music and voice generation, browser automation for
+external AI agents (MCP, WebDriver, CDP), and triggers that turn browser events
+into webhooks and automations. Everything runs on the user's own machine.
+
+Every code file has a doc here at the same path. When you change a file,
+update its doc, and update this index if its purpose changed.
+
+## core/shared
+
+Small building blocks shared by more than one subsystem.
+
+- [core/shared/text/TokenEstimator.md](core/shared/text/TokenEstimator.md): estimates token counts at one shared characters-per-token ratio; has `estimateTokens`, `tokensToChars`.
+- [core/DebugLog.md](core/DebugLog.md): dev-only ring buffer of console output for "Copy Logs"; has `install`, `isInstalled`, `dump`, `clear`.
+- [core/shared/AgentNotices.md](core/shared/AgentNotices.md): per-conversation queue of background notices for the agent loop; has `enqueue`, `drain`, `drainAll`, `pending`, `beginRun`, `drainIfSoleRun`, `endRun`, `reset`.
+- [core/shared/AgentNoticeRun.md](core/shared/AgentNoticeRun.md): handle for one registered agent run; has `drain`, `end`.
+- [core/shared/AppPaths.md](core/shared/AppPaths.md): picks the base dir for managed models and runtimes and migrates it out of the install dir; has `resolveBaseDir`, `migration`.
+- [core/shared/ImageModelPicker.md](core/shared/ImageModelPicker.md): quality-first image model pick against one card's budget; has `pickImageModel`, `cardBudgetBytesFromHw`.
+- [core/shared/ModelDescriptor.md](core/shared/ModelDescriptor.md): one host-independent shape for the LLM and image model lists; has `toLlmDescriptor`, `toImageInstalledDescriptor`, `toImageCatalogDescriptor`.
+- [core/shared/hardwareTiers.json.md](core/shared/hardwareTiers.json.md): hardware tier rows shared with the website; data file.
+- [core/shared/audio/WavCodec.md](core/shared/audio/WavCodec.md): dependency-free WAV reader and writer; has `parse`, `encode`, `durationSec`.
+- [core/shared/audio/PcmSamples.md](core/shared/audio/PcmSamples.md): Float32/Int16 PCM conversion and linear resampling; has `floatToInt16Bytes`, `int16BytesToFloat`, `resampleLinear`.
+- [core/shared/content/HtmlToMarkdown.md](core/shared/content/HtmlToMarkdown.md): HTML to model-legible Markdown, main content only; has `convert`.
+- [core/shared/content/HtmlTokenizer.md](core/shared/content/HtmlTokenizer.md): HTML string to open/close/text tokens; has `tokenize`.
+- [core/shared/content/HtmlTreeBuilder.md](core/shared/content/HtmlTreeBuilder.md): tokens to a forgiving node tree with implied end tags; has `build`.
+- [core/shared/content/HtmlNode.md](core/shared/content/HtmlNode.md): element or text node of the converter tree; has `attribute`, `find`, `findAll`, `plainText`, `remove`.
+- [core/shared/content/HtmlElementCatalog.md](core/shared/content/HtmlElementCatalog.md): element categories (void, raw-text, non-content, chrome, block); has `isNonContent`, `isBlock`, `headingLevel`.
+- [core/shared/content/NodeTextStats.md](core/shared/content/NodeTextStats.md): per-element text and link-text totals; has `measure`, `of`, `linkDensity`.
+- [core/shared/content/TreePruner.md](core/shared/content/TreePruner.md): base for top-down subtree removal passes; has `prune`, `shouldDrop`.
+- [core/shared/content/InvisibleContentPruner.md](core/shared/content/InvisibleContentPruner.md): drops metadata, media, controls and hidden elements; has `shouldDrop`.
+- [core/shared/content/ContentRootLocator.md](core/shared/content/ContentRootLocator.md): picks main, a lone article, or the body; has `locate`.
+- [core/shared/content/BoilerplatePruner.md](core/shared/content/BoilerplatePruner.md): drops chrome landmarks, roles, widgets and link-dense blocks; has `prune`.
+- [core/shared/content/UrlResolver.md](core/shared/content/UrlResolver.md): href to absolute http(s) URL against the page base; has `forDocument`, `resolve`.
+- [core/shared/content/MarkdownWriter.md](core/shared/content/MarkdownWriter.md): Markdown output buffer that owns spacing; has `text`, `lineBreak`, `blockBreak`, `block`.
+- [core/shared/content/MarkdownRenderer.md](core/shared/content/MarkdownRenderer.md): walks the tree and writes Markdown; has `render`, `renderBlocks`, `renderInline`, `renderChildren`.
+- [core/shared/content/BlockRenderer.md](core/shared/content/BlockRenderer.md): base for structured block renderers; has `matches`, `render`.
+- [core/shared/content/CodeBlockRenderer.md](core/shared/content/CodeBlockRenderer.md): pre to fenced code with a language hint; has `render`, `fenceFor`.
+- [core/shared/content/ListBlockRenderer.md](core/shared/content/ListBlockRenderer.md): ul/ol/menu to Markdown lists; has `render`.
+- [core/shared/content/QuoteBlockRenderer.md](core/shared/content/QuoteBlockRenderer.md): blockquote to quote lines; has `render`.
+- [core/shared/content/TableBlockRenderer.md](core/shared/content/TableBlockRenderer.md): data tables to GFM, layout tables unwrapped; has `render`.
+- [core/shared/content/HtmlEntityDecoder.md](core/shared/content/HtmlEntityDecoder.md): decodes HTML character references; has `decode`.
+- [core/shared/content/MarkdownTableRenderer.md](core/shared/content/MarkdownTableRenderer.md): renders cell rows as a GFM table; has `render`.
+- [core/shared/content/ImageDimensions.md](core/shared/content/ImageDimensions.md): PNG/JPEG header dimensions and aspect fit to an area budget; has `read`, `fitToBudget`.
+- [core/shared/content/SelectorQuerySanitizer.md](core/shared/content/SelectorQuerySanitizer.md): strips session query strings from learned selectors; has `sanitize`.
+- [core/shared/download/ResumableDownload.md](core/shared/download/ResumableDownload.md): starts or resumes a single-file download, parallel or sequential; has `download`.
+- [core/shared/download/ParallelDownload.md](core/shared/download/ParallelDownload.md): concurrent Range-chunk download resumable from a sidecar; has `execute`.
+- [core/shared/download/SequentialDownload.md](core/shared/download/SequentialDownload.md): single-stream fallback with Range-append resume; has `execute`.
+- [core/shared/download/ChunkMeta.md](core/shared/download/ChunkMeta.md): crash-safe sidecar recording finished chunks; has `pathFor`, `plan`, `load`, `save`, `clear`, `exists`.
+- [core/shared/download/DownloadHeaders.md](core/shared/download/DownloadHeaders.md): total size and trusted sha256 from response headers; has `totalFromHeaders`, `sha256FromHeaders`.
+- [core/shared/download/DownloadRateMeter.md](core/shared/download/DownloadRateMeter.md): smoothed transfer rate and ETA; has `sample`.
+- [core/shared/download/DownloadVerifier.md](core/shared/download/DownloadVerifier.md): size and sha256 check before rename; has `verifyPartial`, `sha256File`.
+- [core/shared/download/PartialFile.md](core/shared/download/PartialFile.md): `.partial` naming and sizing; has `pathFor`, `size`.
+- [core/shared/fs/ContainedPath.md](core/shared/fs/ContainedPath.md): proves a path is strictly inside a root; has `isWithin`, `resolveWithin`, `isImmediateChild`.
+- [core/shared/fs/FileLinker.md](core/shared/fs/FileLinker.md): places a model file by hardlink, then symlink, never copy; has `link`, `isSameFile`.
+- [core/shared/ipc/IpcEnvelope.md](core/shared/ipc/IpcEnvelope.md): wraps IPC handlers in the `{ success }` envelope; has `enveloped`, `raw`, `errorFields`, `isCloneable`.
+- [core/shared/ipc/PathPicker.md](core/shared/ipc/PathPicker.md): native open dialog with one normalised cancel result; has `pick`.
+- [core/shared/ipc/SenderStream.md](core/shared/ipc/SenderStream.md): progress emitter that stops once the renderer is gone; has `create`.
+- [core/shared/ipc/VoiceChannels.md](core/shared/ipc/VoiceChannels.md): voice IPC channel names; has `VOICE_EVENT_CHANNEL`, `TTS_STREAM_CHANNEL`.
+- [core/shared/llm/BalancedJson.md](core/shared/llm/BalancedJson.md): finds where a JSON object really ends; has `extractObject`.
+- [core/shared/llm/KvCacheModes.md](core/shared/llm/KvCacheModes.md): KV cache precision table; has `mode`, `pair`, `idFor`, `shortLabel`.
+- [core/shared/llm/OpenAiChatBody.md](core/shared/llm/OpenAiChatBody.md): single builder for OpenAI-compatible chat bodies; has `build`.
+- [core/shared/llm/ReasoningEffort.md](core/shared/llm/ReasoningEffort.md): the thinking dial; has `normalizeDial`, `normalizeEffort`, `extraFor`, `resolveDial`, `nearestEffort`, `dialPositionsFor`.
+- [core/shared/lumabyte/LumaRequestSigner.md](core/shared/lumabyte/LumaRequestSigner.md): lumabyte.com rolling token and identity headers; has `computeToken`, `buildAuthHeaders`.
+- [core/shared/lumabyte/SignedLumaClient.md](core/shared/lumabyte/SignedLumaClient.md): signed lumabyte.com HTTP client with an egress policy; has `request`, `headerValue`.
+- [core/shared/net/IpClass.md](core/shared/net/IpClass.md): IP range taxonomy with inbound trust and outbound safety checks; has `classifyIp`, `isLanPeer`, `isConnectableTarget`, `isLoopbackIp`, `normalizeIp`, `clientIp`.
+- [core/shared/runtime/BinaryLookup.md](core/shared/runtime/BinaryLookup.md): finds a runtime binary inside an extracted archive; has `findBinaryIn`, `pathExists`.
+- [core/shared/runtime/RuntimeCatalog.md](core/shared/runtime/RuntimeCatalog.md): platform-keyed accessors over a runtime declaration (base class); has `getCatalog`, `getById`, `getAssetPattern`, `getBinaryNames`, `fingerprint`, `hashDeclaration`.
+- [core/shared/runtime/CudaSnapshot.md](core/shared/runtime/CudaSnapshot.md): decides whether a failed CUDA probe was transient; has `isTransientCudaFailure`.
+- [core/shared/runtime/FreePort.md](core/shared/runtime/FreePort.md): free loopback ports and the port-window table; has `findFreePort`, `isPortFree`, `ephemeralPort`, `portWindow`.
+- [core/shared/runtime/HotswapRamGate.md](core/shared/runtime/HotswapRamGate.md): decides whether RAM can hold a hotswap pool; has `evaluate`, `ramReserveBytes`.
+- [core/shared/runtime/NvidiaSmi.md](core/shared/runtime/NvidiaSmi.md): resolves and runs nvidia-smi; has `setSmiPath`, `queryGpuCount`, `queryGpus`, `queryComputeApps`.
+- [core/shared/runtime/NvidiaSmiOutputParser.md](core/shared/runtime/NvidiaSmiOutputParser.md): pure nvidia-smi output parsers; has `parseGpuCount`, `parseGpuRows`, `parseComputeApps`.
+- [core/shared/runtime/ProcessMemory.md](core/shared/runtime/ProcessMemory.md): reads a process's RSS; has `rssBytes`, `rssBytesSync`.
+- [core/shared/runtime/RuntimeUpdateChecker.md](core/shared/runtime/RuntimeUpdateChecker.md): checks GitHub for newer runtime releases; has `check`.
+- [core/shared/runtime/SysdepsChecker.md](core/shared/runtime/SysdepsChecker.md): Linux system-library check via ldconfig and ldd; has `checkKnownLibs`, `checkBinary`, `preflight`.
+- [core/shared/runtime/SysdepsReport.md](core/shared/runtime/SysdepsReport.md): builds and merges library-check results; has `aptLineFor`, `describeMissing`, `build`, `merge`.
+- [core/shared/runtime/SysdepsLinkerParser.md](core/shared/runtime/SysdepsLinkerParser.md): parses ldconfig and ldd output; has `parseLdconfig`, `parseLddNotFound`.
+- [core/shared/runtime/SysdepsCommandRunner.md](core/shared/runtime/SysdepsCommandRunner.md): runs a probe command that always resolves; has `run`.
+- [core/shared/runtime/server/IdleTimer.md](core/shared/runtime/server/IdleTimer.md): idle-unload timer for runtime supervisors; has `set`, `arm`, `disarm`.
+- [core/shared/runtime/rampin/RamPinWorker.md](core/shared/runtime/rampin/RamPinWorker.md): entry script for the RAM-pin utility process; has `main`.
+- [core/shared/runtime/rampin/RamPinSession.md](core/shared/runtime/rampin/RamPinSession.md): one RAM-pin worker lifetime; has `handle`.
+- [core/shared/runtime/rampin/RamPinMessagePort.md](core/shared/runtime/rampin/RamPinMessagePort.md): the RAM-pin worker's link to its parent; has `fromProcess`, `on`, `post`.
+- [core/shared/runtime/rampin/MemoryLock.md](core/shared/runtime/rampin/MemoryLock.md): base class for platform memory locks; has `prepare`, `mapFile`, `lockAsync`.
+- [core/shared/runtime/rampin/WindowsMemoryLock.md](core/shared/runtime/rampin/WindowsMemoryLock.md): VirtualLock through koffi; has `prepare`, `mapFile`, `lockAsync`.
+- [core/shared/runtime/rampin/LinuxMemoryLock.md](core/shared/runtime/rampin/LinuxMemoryLock.md): mlock through koffi with a memlock limit check; has `prepare`, `mapFile`, `lockAsync`.
+- [core/shared/text/LineDiff.md](core/shared/text/LineDiff.md): bounded line diff into hunks with context; has `diff`.
+- [core/shared/text/Slug.md](core/shared/text/Slug.md): filesystem- and id-safe slugs; has `from`.
+- [core/shared/registry/ContributionRegistry.md](core/shared/registry/ContributionRegistry.md): base class for registries extensions contribute to, tracking which extension owns which ids; has `register`, `unregister`, `unregisterByExtension`, `get`, `getById`, `has`, `list`, `extensions`.
+- [core/shared/HardwareTiers.md](core/shared/HardwareTiers.md): classifies a machine into a hardware tier row; has `classify`, `minGpuBytes`.
+- [core/shared/llm/ContextBudget.md](core/shared/llm/ContextBudget.md): context-window shares, fixed costs and a coherence check; has `resolveBudget`, `assertCoherent`, `headroomShare`, `compactionTrigger`.
+- [core/shared/runtime/CudaPin.md](core/shared/runtime/CudaPin.md): picks the CUDA devices a managed server is pinned to; has `resolveCudaDevice`, `filterDiagnosticsToDevices`, `applyCudaDeviceEnv`.
+- [core/shared/runtime/CudaDeviceProbe.md](core/shared/runtime/CudaDeviceProbe.md): reads CUDA cards from diagnostics or nvidia-smi; has `readDevices`, `withLiveMemory`, `readComputeApps`, `gpuCount`.
+- [core/shared/runtime/CudaDevicePicker.md](core/shared/runtime/CudaDevicePicker.md): the most-powerful-free-card pick order; has `pick`, `cardRoomBytes`.
+- [core/shared/runtime/ManagedRuntimeSettings.md](core/shared/runtime/ManagedRuntimeSettings.md): saved runtime detection and manual binary paths; has `getManualRuntimeBinary`, `setManualRuntimeBinary`, `getCachedRuntimesView`, `ensureRuntimesView`.
+- [core/shared/runtime/rampin/RamPinService.md](core/shared/runtime/rampin/RamPinService.md): supervises one RAM-pin worker for a feature's default model; has `apply`, `stop`, `getStatus`, `isActiveFor`.
+- [core/shared/runtime/rampin/RamPinFitGate.md](core/shared/runtime/rampin/RamPinFitGate.md): refuses a pin that would cut into the OS RAM reserve; has `evaluate`.
+- [core/shared/runtime/rampin/RamPinWorkerLauncher.md](core/shared/runtime/rampin/RamPinWorkerLauncher.md): forks the RAM-pin worker by path; has `fork`.
+- [core/shared/runtime/RuntimeInstaller.md](core/shared/runtime/RuntimeInstaller.md): base class for managed runtime installers; has `installRuntime`, `uninstallRuntime`, `fetchLatestRelease`, `resolvePrerelease`.
+- [core/shared/runtime/RuntimeDetector.md](core/shared/runtime/RuntimeDetector.md): base class for binary runtime detectors; has `detectRuntimes`, `parseVersionOutput`, `readVersion`.
+- [core/shared/runtime/RuntimeManifest.md](core/shared/runtime/RuntimeManifest.md): the managed runtime's manifest.json; has `build`, `write`, `read`.
+- [core/shared/runtime/install/GithubRuntimeInstall.md](core/shared/runtime/install/GithubRuntimeInstall.md): one GitHub-release runtime install end to end; has `execute`.
+- [core/shared/runtime/install/AcquisitionGuard.md](core/shared/runtime/install/AcquisitionGuard.md): refuses early when there is no auto-download path; has `entryFor`, `assertKind`, `assetPatternOrThrow`.
+- [core/shared/runtime/install/RuntimeInstallError.md](core/shared/runtime/install/RuntimeInstallError.md): install error carrying a code and detail.
+- [core/shared/runtime/install/GithubReleaseClient.md](core/shared/runtime/install/GithubReleaseClient.md): GitHub release feed and nightly pointers; has `latestRelease`, `latestPrerelease`, `newestReleaseWithAsset`.
+- [core/shared/runtime/install/ReleaseAssetResolver.md](core/shared/runtime/install/ReleaseAssetResolver.md): picks release and asset by channel; has `resolve`.
+- [core/shared/runtime/install/AssetDownload.md](core/shared/runtime/install/AssetDownload.md): streams a release asset and returns its sha256; has `toFile`.
+- [core/shared/runtime/install/ArchiveExtractor.md](core/shared/runtime/install/ArchiveExtractor.md): extracts archives with tar, extract-zip or PowerShell; has `extract`.
+- [core/shared/runtime/install/SharedLibLinker.md](core/shared/runtime/install/SharedLibLinker.md): links .so files beside the binary on Linux; has `consolidate`.
+- [core/shared/runtime/install/InstallEvents.md](core/shared/runtime/install/InstallEvents.md): safe install progress emitter; has `emitter`, `releaseFields`, `assetFields`.
+- [core/shared/runtime/install/ManagedDir.md](core/shared/runtime/install/ManagedDir.md): managed and staging runtime paths; has `pathFor`, `stagingPathFor`, `ensure`, `remove`.
+- [core/shared/runtime/install/CompanionAssets.md](core/shared/runtime/install/CompanionAssets.md): companion archives (cudart, NCCL) installed on top; has `install`.
+- [core/shared/runtime/detect/VersionProbe.md](core/shared/runtime/detect/VersionProbe.md): --version probe that never caches a loader error; has `read`, `normalize`.
+- [core/shared/runtime/detect/LlamaBuildNumber.md](core/shared/runtime/detect/LlamaBuildNumber.md): reads the llama.cpp build number; has `parse`.
+- [core/shared/runtime/detect/PathBinaryLookup.md](core/shared/runtime/detect/PathBinaryLookup.md): PATH lookup with PATHEXT; has `find`.
+- [core/shared/runtime/detect/RuntimeHardwareCheck.md](core/shared/runtime/detect/RuntimeHardwareCheck.md): hardware readiness for CUDA, Vulkan and Apple Silicon; has `evaluate`.
+- [core/shared/runtime/detect/BinaryRuntimeProbe.md](core/shared/runtime/detect/BinaryRuntimeProbe.md): finds a runtime binary (registered, managed dir, PATH); has `detect`.
+- [core/shared/runtime/detect/ExtensionRuntimeProbe.md](core/shared/runtime/detect/ExtensionRuntimeProbe.md): fail-soft extension runtime detect hook; has `detect`.
+- [core/shared/runtime/detect/RuntimeDetailFields.md](core/shared/runtime/detect/RuntimeDetailFields.md): stamps entry and host fields onto a detection row; has `stamp`.
+- [core/shared/runtime/BaseRuntimeServer.md](core/shared/runtime/BaseRuntimeServer.md): base supervisor for one native inference child; has `start`, `stop`, `getStatus`, `setIdleTimeout`, `markActive`, `holdIdle`, `waitUntilSettled`.
+- [core/shared/runtime/server/ChildReaper.md](core/shared/runtime/server/ChildReaper.md): kills a child and resolves on its real exit; has `reap`, `killNow`.
+- [core/shared/runtime/server/RuntimeLogRing.md](core/shared/runtime/server/RuntimeLogRing.md): bounded child output log with the stderr tail; has `capture`, `snapshot`, `clear`, `errorTail`.
+- [core/shared/runtime/server/RuntimeSpawnEnv.md](core/shared/runtime/server/RuntimeSpawnEnv.md): spawn cwd and env for a runtime binary; has `build`, `isPinned`.
+- [core/shared/runtime/HotswapCoordinator.md](core/shared/runtime/HotswapCoordinator.md): single-occupancy eviction per hotswap pool; has `shared`, `configure`, `register`, `acquire`, `release`, `snapshot`.
+- [core/shared/runtime/placement/VramReleaseWaiter.md](core/shared/runtime/placement/VramReleaseWaiter.md): waits for a card's VRAM to be reclaimed after eviction; has `read`, `wait`.
+- [core/shared/runtime/PlacementLayout.md](core/shared/runtime/PlacementLayout.md): unified placement layout schema, normalizer and queries; has `emptyLayout`, `normalizeLayout`, `resourceById`, `orderedDevices`, `placedItems`, `hotswapPools`.
+- [core/shared/runtime/placement/PlacementStore.md](core/shared/runtime/placement/PlacementStore.md): loads and saves the placement layout; has `load`, `save`, `migrateLegacy`.
+- [core/shared/runtime/placement/PlacementResolver.md](core/shared/runtime/placement/PlacementResolver.md): resolves an item to ordered devices and RAM; has `resolve`, `deviceRoomMap`.
+- [core/shared/runtime/placement/RemoteDeviceRef.md](core/shared/runtime/placement/RemoteDeviceRef.md): peer GPU references; has `isRef`, `parse`, `format`.
+- [core/shared/runtime/VramCoordinator.md](core/shared/runtime/VramCoordinator.md): first-come-first-serve VRAM ledger and multi-GPU placement; has `shared`, `reserve`, `hold`, `release`, `setSplit`, `snapshot`.
+- [core/shared/runtime/vram/VramLedger.md](core/shared/runtime/vram/VramLedger.md): VRAM claims and per-card debit math; has `set`, `get`, `delete`, `debitMap`, `applyDebit`.
+- [core/shared/runtime/vram/AutoVramPlacement.md](core/shared/runtime/vram/AutoVramPlacement.md): automatic GPU placement rules; has `place`, `cudaDeviceFor`.
+- [core/shared/runtime/vram/VramOverride.md](core/shared/runtime/vram/VramOverride.md): per-role explicit CUDA device setting; has `read`, `devices`.
+- [core/shared/runtime/vram/StateChangeHook.md](core/shared/runtime/vram/StateChangeHook.md): safe supervisor state-change subscription; has `on`.
+- [core/shared/net/LoopbackRequestGuard.md](core/shared/net/LoopbackRequestGuard.md): refuses DNS-rebinding and cross-site browser requests to local automation servers (Host must be loopback or the bind host; Origin absent or same-port loopback); has `refusal`, `isAllowed`, `rejectUpgrade`, `hostnameOf`.
+- [core/shared/ipc/IpcSubscription.md](core/shared/ipc/IpcSubscription.md): subscribe functions for preload IPC channels; has `of`, `payload`.
+
+## core/browser
+
+- [core/browser/Accelerators.md](core/browser/Accelerators.md): maps a tab keyDown input to a browser action id; has `match`.
+- [core/browser/ActionEvidence.md](core/browser/ActionEvidence.md): turns before/after page fingerprints into action evidence; has `compare`, `stateKey`, `isFingerprint`.
+- [core/browser/ActionEvidenceScripts.md](core/browser/ActionEvidenceScripts.md): in-page fingerprint and settle-observer script sources; has `beforeExpr`, `beforeScript`, `pollScript`, `installScript`, `finalScript`.
+- [core/browser/PageSettler.md](core/browser/PageSettler.md): waits for a page to go quiet and runs page scripts with a timeout; has `settle`, `runBounded`.
+- [core/browser/ActionWatcher.md](core/browser/ActionWatcher.md): watches one input action (navigations, new tabs) and builds its evidence; has `finish`, `cancel`, `state`.
+- [core/browser/BrowserActions.md](core/browser/BrowserActions.md): the one browser action table and the REST, MCP and chat surfaces built from it; has `ACTIONS`, `restRoutes`, `mcpToolDefinitions`, `chatToolEntries`, `chatActionIds`.
+- [core/browser/BrowserService.md](core/browser/BrowserService.md): the browser API extensions get as `context.browser`; has tab and page actions, `attachCDP`, `registerWebviewPreload`, tab event hooks, `emit`.
+- [core/browser/ChromeOverlay.md](core/browser/ChromeOverlay.md): display-only view layers above the tab views so popups paint over the page; has `show`, `measure`, `setActive`, `hide`, `raiseVisible`, `destroy`.
+- [core/browser/ChromeObjectShim.md](core/browser/ChromeObjectShim.md): page source that fills `window.chrome` like stock Chrome; has `SOURCE`.
+- [core/browser/DataFileRender.md](core/browser/DataFileRender.md): shows CSV/TSV downloads as an inline HTML page; has `isRenderableDataFile`, `buildDataFileHtml`.
+- [core/browser/DownloadManager.md](core/browser/DownloadManager.md): follows Chromium downloads for the downloads shelf; has `track`, `list`, `get`, `cancel`, `open`, `showInFolder`, `clearFinished`.
+- [core/browser/FaviconCache.md](core/browser/FaviconCache.md): LRU cache of one favicon per hostname saved to JSON; has `hostOf`, `get`, `getMany`, `getForUrl`, `record`, `flush`.
+- [core/browser/FaviconFetcher.md](core/browser/FaviconFetcher.md): turns a favicon source into a size-capped data URL; has `toDataUrl`.
+- [core/browser/InputDriver.md](core/browser/InputDriver.md): trusted mouse clicks via sendInputEvent; has `trustedClick`, `toDip`.
+- [core/browser/LlmFallbackOrchestrator.md](core/browser/LlmFallbackOrchestrator.md): finds a working selector from a plain-language description; has `resolve`, `execute`.
+- [core/browser/PasskeyShim.md](core/browser/PasskeyShim.md): page source that holds passkey requests the user did not start; has `SOURCE`.
+- [core/browser/PermissionManager.md](core/browser/PermissionManager.md): deny-by-default web permission policy with camera/microphone prompts; has `install`, `attachSession`, `handleRequest`, `check`, `decideMedia`, `respond`, site list methods.
+- [core/browser/PermissionKinds.md](core/browser/PermissionKinds.md): permission request origin, media kinds and prompt wording; has `originOf`, `kindsOf`, `kindsOfCheck`, `describe`, `hostOf`.
+- [core/browser/SitePermissionStore.md](core/browser/SitePermissionStore.md): remembered allow/block answers per origin; has `answerFor`, `remember`, `list`, `clear`, `clearAll`.
+- [core/browser/SearchEngines.md](core/browser/SearchEngines.md): omnibox search engines and their query URLs; has `byId`, `urlFor`, `currentId`.
+- [core/browser/TabPreviewManager.md](core/browser/TabPreviewManager.md): shows a live tab inside another tab's renderer rect; has `attach`, `setRect`, `detach`, `focus`, `captureFrame`, `reapply`, `destroy`.
+- [core/browser/TabPreviewGeometry.md](core/browser/TabPreviewGeometry.md): rect mapping and fit-zoom maths for the tab preview; has `toWindowRect`, `clampZoom`, `widthZoom`, `fittedZoom`.
+- [core/browser/TabUrl.md](core/browser/TabUrl.md): the single definition of what a tab can load; has `normalize`, `isNavigable`, `isLoopbackOrPrivateHost`.
+- [core/browser/extraction/ElementDigest.md](core/browser/extraction/ElementDigest.md): page script that lists visible interactive elements and tags them; has `SCRIPT`.
+- [core/browser/extraction/RowExtract.md](core/browser/extraction/RowExtract.md): page source for reading one repeating element into a row; has `TEXT_OF_SRC`, `EXTRACT_ROW_SRC`.
+- [core/browser/extraction/SelectorKit.md](core/browser/extraction/SelectorKit.md): spots machine-generated class names and ids; has `isHashedToken`, `HASHED_TOKEN_SRC`.
+- [core/browser/models/ApiResponse.md](core/browser/models/ApiResponse.md): the JSON envelope every browser REST route replies with; has `success`, `error`, `toJSON`.
+- [core/browser/vision/CoordinateSpace.md](core/browser/vision/CoordinateSpace.md): converts points between CSS px, screenshot pixels and model grids; has `frameScale`, `imageToCss`, `cssToImage`, `modelToSent`, `sentToModel`, `smartResize`, `zoomWindow`.
+- [core/browser/vision/GroundingReplyParser.md](core/browser/vision/GroundingReplyParser.md): reads a point or box out of a grounding model reply; has `parse`, `stripReasoning`.
+- [core/browser/vision/GroundingProfiles.md](core/browser/vision/GroundingProfiles.md): per-family grounding prompt, coordinate format and image size; has `getProfile`, `profileForModel`.
+- [core/browser/vision/ImageOps.md](core/browser/vision/ImageOps.md): nativeImage size, resize, crop and encode in true pixels; has `normalize`, `size`, `resize`, `crop`, `toDataUrl`, `pngSize`.
+- [core/browser/widgets/OptionMatcher.md](core/browser/widgets/OptionMatcher.md): decides which select or listbox option the caller meant; has `pickOption`, `describeOptions`, `normalize`.
+- [core/browser/widgets/DateFormatter.md](core/browser/widgets/DateFormatter.md): turns an ISO date into a native or masked input value; has `parseIsoDate`, `nativeDateValue`, `detectDateFormat`, `formatDate`.
+- [core/browser/widgets/SliderValue.md](core/browser/widgets/SliderValue.md): clamps and step-snaps a slider value; has `snap`.
+- [core/browser/BrowserRoutes.md](core/browser/BrowserRoutes.md): /api/browser REST controller derived from BrowserActions; has `create`.
+- [core/browser/ChromeIdentity.md](core/browser/ChromeIdentity.md): single source of the Chrome identity spoof; has `USER_AGENT`, `CHROME_VERSION`, `UA_METADATA`, `acceptLanguage`, `applyToSession`, `overrideParams`.
+- [core/browser/identity/ChromeBrandList.md](core/browser/identity/ChromeBrandList.md): Chromium's GREASE brand list; has `build`, `toHeader`.
+- [core/browser/identity/WindowsPlatformVersion.md](core/browser/identity/WindowsPlatformVersion.md): real sec-ch-ua-platform-version from the OS build; has `detect`, `fromBuild`.
+- [core/browser/identity/ClientHintHeaders.md](core/browser/identity/ClientHintHeaders.md): rewrites Sec-CH-UA headers to match the spoof; has `rewrite`.
+- [core/browser/identity/IdentityOverride.md](core/browser/identity/IdentityOverride.md): CDP identity override per webContents and child targets; has `apply`.
+- [core/browser/LlmFallbackService.md](core/browser/LlmFallbackService.md): natural-language description to CSS selector; has `tryDeterministicResolve`, `validateSelector`, `snapshotFor`, `resolveSelector`.
+- [core/browser/llm-fallback/SelectorPrompt.md](core/browser/llm-fallback/SelectorPrompt.md): the selector-resolver prompt; has `build`, `snapshotContext`.
+- [core/browser/llm-fallback/SelectorReplyParser.md](core/browser/llm-fallback/SelectorReplyParser.md): model reply text to one selector; has `parse`.
+- [core/browser/llm-fallback/SelectorValidation.md](core/browser/llm-fallback/SelectorValidation.md): live-DOM selector uniqueness probe; has `script`, `verdict`.
+- [core/browser/llm-fallback/EmptyReplyDiagnostic.md](core/browser/llm-fallback/EmptyReplyDiagnostic.md): debug summary of an empty completion; has `summarize`, `fullDump`.
+- [core/browser/NetworkInterceptor.md](core/browser/NetworkInterceptor.md): per-tab CDP network watching with opt-in body capture; has `attachToWebContents`, `syncFetchInterception`, `getRequestLog`, `detachAll`.
+- [core/browser/network/RequestLog.md](core/browser/network/RequestLog.md): per-tab URL-only request ring buffer that fails closed; has `add`, `recordResponse`, `forTab`, `forget`.
+- [core/browser/network/WatcherForwarder.md](core/browser/network/WatcherForwarder.md): redacted per-watcher webhook payloads; has `forward`, `buildPayload`.
+- [core/browser/ResolutionCachePage.md](core/browser/ResolutionCachePage.md): in-page capture and validate scripts for the resolution cache; has `captureAtPointScript`, `captureForSelectorScript`, `validateScript`.
+- [core/browser/extraction/SemanticTreeScript.md](core/browser/extraction/SemanticTreeScript.md): flat actionable-element extraction script; has `SOURCE`.
+- [core/browser/extraction/StructuralSummaryScript.md](core/browser/extraction/StructuralSummaryScript.md): compacted DOM skeleton extraction script; has `SOURCE`.
+- [core/browser/vision/GroundingClient.md](core/browser/vision/GroundingClient.md): screenshot plus description to a pixel point; has `pass`, `locate`, `sentSizeFor`.
+- [core/browser/vision/VisionPageScripts.md](core/browser/vision/VisionPageScripts.md): set-of-marks overlay and hit-test scripts; has `drawMarksScript`, `removeMarksScript`, `hitTestScript`.
+- [core/browser/widgets/KeyInput.md](core/browser/widgets/KeyInput.md): trusted key, type, clear and drag input; has `trustedKey`, `trustedType`, `trustedClearField`, `trustedDrag`.
+- [core/browser/widgets/WidgetScript.md](core/browser/widgets/WidgetScript.md): shared frame and helpers for widget page scripts; has `wrap`, `refArg`.
+- [core/browser/widgets/SelectScripts.md](core/browser/widgets/SelectScripts.md): select_option page steps; has `inspectSelectScript`, `applyNativeSelectScript`, `collectOptionsScript`, `readSelectionScript`.
+- [core/browser/widgets/FieldScripts.md](core/browser/widgets/FieldScripts.md): set_date and set_slider page steps; has `inspectDateScript`, `inspectSliderScript`, `setValueScript`, `readValueScript`.
+- [core/browser/widgets/ListScripts.md](core/browser/widgets/ListScripts.md): collect_list page steps; has `collectListStepScript`, `scrollListScript`, `findLoadMoreScript`, `clickLoadMoreScript`.
+- [core/browser/BrowserController.md](core/browser/BrowserController.md): /api/browser REST controller over the tab manager; has tab, page, input, extraction and network-log actions.
+- [core/browser/BrowserMcpTools.md](core/browser/BrowserMcpTools.md): browser_* MCP tool controller derived from BrowserActions; has `TOOLS`, `ROUTES`, `createDirectHandler`.
+- [core/browser/controller/SelectorFallback.md](core/browser/controller/SelectorFallback.md): shared REST and MCP selector-plus-description fallback; has `run`.
+- [core/browser/controller/NavigationStamp.md](core/browser/controller/NavigationStamp.md): stamps urlChanged and newUrl on a reply; has `apply`.
+- [core/browser/controller/NetworkLogQuery.md](core/browser/controller/NetworkLogQuery.md): reads and filters a tab's request log; has `read`, `filter`.
+- [core/browser/controller/BrowserRequestParser.md](core/browser/controller/BrowserRequestParser.md): browser REST request shapes to tab manager arguments; has `tabId`, `updateAction`, `screenshotOptions`.
+- [core/browser/controller/RestFallbackReply.md](core/browser/controller/RestFallbackReply.md): fallback outcome to a REST reply; has `build`.
+- [core/browser/controller/FormFieldResolver.md](core/browser/controller/FormFieldResolver.md): re-resolves each field of a failed form fill; has `resolve`.
+- [core/browser/controller/PlainTab.md](core/browser/controller/PlainTab.md): tab to plain JSON; has `from`.
+- [core/browser/mcp/McpPayload.md](core/browser/mcp/McpPayload.md): result to MCP data payload; has `data`, `iso`.
+- [core/browser/mcp/ChildSelectorWarning.md](core/browser/mcp/ChildSelectorWarning.md): words child-selector defects for the model; has `compose`.
+- [core/browser/mcp/ScreenshotReply.md](core/browser/mcp/ScreenshotReply.md): browser_screenshot image reply; has `build`, `note`.
+- [core/browser/mcp/ExtractionReply.md](core/browser/mcp/ExtractionReply.md): browser_extract_data reply; has `build`.
+- [core/browser/mcp/SettledTab.md](core/browser/mcp/SettledTab.md): post-load state of a new tab; has `read`.
+- [core/browser/mcp/FallbackToolRunner.md](core/browser/mcp/FallbackToolRunner.md): runs a selector MCP tool with LLM and vision fallback; has `run`.
+- [core/browser/widgets/WidgetDriver.md](core/browser/widgets/WidgetDriver.md): widget primitives facade; has `selectOption`, `setDate`, `setSlider`, `collectList`.
+- [core/browser/widgets/WidgetPage.md](core/browser/widgets/WidgetPage.md): runs a widget page script with a uniform failure; has `run`.
+- [core/browser/widgets/DropdownOptions.md](core/browser/widgets/DropdownOptions.md): opens, lists, finds and clicks dropdown options; has `open`, `list`, `find`, `click`.
+- [core/browser/widgets/OptionSelector.md](core/browser/widgets/OptionSelector.md): select_option for native selects, listboxes and comboboxes; has `execute`.
+- [core/browser/widgets/DateSetter.md](core/browser/widgets/DateSetter.md): set_date for native and masked fields; has `execute`.
+- [core/browser/widgets/SliderSetter.md](core/browser/widgets/SliderSetter.md): set_slider for range inputs and ARIA sliders; has `execute`.
+- [core/browser/widgets/SliderKeyDriver.md](core/browser/widgets/SliderKeyDriver.md): moves an ARIA slider by trusted keys; has `execute`.
+- [core/browser/widgets/ListCollector.md](core/browser/widgets/ListCollector.md): collect_list over infinite, virtualized or load-more lists; has `execute`.
+- [core/browser/widgets/ListRowLedger.md](core/browser/widgets/ListRowLedger.md): rows seen once per key with virtualization detection; has `absorb`, `rows`.
+- [core/browser/TabViewManager.md](core/browser/TabViewManager.md): facade owning every tab view (lifecycle, strip, layout, focus, navigation, persistence); has `createTab`, `closeTab`, `switchToTab`, `navigate`, `goBack`, `goForward`, `setZoom`, `getAllTabs`, `findTabIdByWebContents`, `performAccelerator`.
+- [core/browser/tab-view/TabKinds.md](core/browser/tab-view/TabKinds.md): automation and internal tab kinds; has `isInternal`, `isAutomation`.
+- [core/browser/tab-view/NavigationGenerations.md](core/browser/tab-view/NavigationGenerations.md): drops load events from an older navigation; has `fresh`, `decide`, `normalizeUrl`.
+- [core/browser/tab-view/TabEntry.md](core/browser/tab-view/TabEntry.md): one tab's live state; has `applyNavEvent`, `isInternal`, `isInStrip`.
+- [core/browser/tab-view/TabRegistry.md](core/browser/tab-view/TabRegistry.md): tabs, strip order and active tab; has `add`, `remove`, `get`, `list`, `move`, `findIdByWebContents`.
+- [core/browser/tab-view/TabStateChannel.md](core/browser/tab-view/TabStateChannel.md): serializes tabs and sends them to the browser chrome; has `send`, `broadcast`, `serialize`.
+- [core/browser/tab-view/HiddenTabState.md](core/browser/tab-view/HiddenTabState.md): mutes hidden tabs and lowers their priority; has `sync`.
+- [core/browser/tab-view/TabErrorPage.md](core/browser/tab-view/TabErrorPage.md): the branded tab error and crash page; has `isErrorPage`, `targetOf`, `show`.
+- [core/browser/tab-view/TabViewFactory.md](core/browser/tab-view/TabViewFactory.md): builds and parks tab views and attaches per-tab services; has `createView`, `attach`, `attachServices`.
+- [core/browser/tab-view/PersistedTabList.md](core/browser/tab-view/PersistedTabList.md): the persisted-tab list in settings; has `read`, `write`.
+- [core/browser/tab-view/PersistedTabs.md](core/browser/tab-view/PersistedTabs.md): keep-alive tabs, reserved partitions, restore and revive; has `save`, `forget`, `list`, `restore`, `revive`.
+- [core/browser/tab-view/KeepAliveSweep.md](core/browser/tab-view/KeepAliveSweep.md): timed heartbeat, reload and revive of persisted tabs; has `start`, `stop`, `activateAll`.
+- [core/browser/tab-view/TabLayout.md](core/browser/tab-view/TabLayout.md): positions the active tab view; has `setBounds`, `applyTo`.
+- [core/browser/tab-view/TabActivation.md](core/browser/tab-view/TabActivation.md): switches, raises and focuses tabs; has `switchTo`, `cycle`, `selectByIndex`.
+- [core/browser/tab-view/TabLifecycle.md](core/browser/tab-view/TabLifecycle.md): creates, closes, moves and destroys tabs; has `create`, `close`, `reopenClosed`, `move`, `destroyAll`.
+- [core/browser/tab-view/TabZoom.md](core/browser/tab-view/TabZoom.md): per-host tab zoom; has `set`, `get`, `by`.
+- [core/browser/tab-view/TabLoader.md](core/browser/tab-view/TabLoader.md): loads, reloads and stops tabs; has `navigate`, `waitForLoad`, `reload`, `stop`.
+- [core/browser/tab-view/TabHistory.md](core/browser/tab-view/TabHistory.md): tab session history; has `goBack`, `goForward`, `list`, `goToIndex`.
+- [core/browser/tab-view/TabPageTools.md](core/browser/tab-view/TabPageTools.md): find, print and DevTools; has `findInPage`, `print`, `toggleDevTools`.
+- [core/browser/tab-view/TabConsoleLog.md](core/browser/tab-view/TabConsoleLog.md): bounded per-tab console log; has `add`, `list`.
+- [core/browser/tab-view/TabLoadEvents.md](core/browser/tab-view/TabLoadEvents.md): keeps tab loading state in step with load events; has `wire`.
+- [core/browser/tab-view/TabPageEvents.md](core/browser/tab-view/TabPageEvents.md): crash recovery, shortcuts, find, favicon and console events; has `wire`.
+- [core/browser/tab-view/TabPopupHandler.md](core/browser/tab-view/TabPopupHandler.md): routes window.open to a popup or a new tab; has `wire`.
+- [core/browser/tab-view/TabPermissionHook.md](core/browser/tab-view/TabPermissionHook.md): applies the permission policy to tab sessions; has `install`.
+- [core/browser/tab-view/DataFileDownloadHook.md](core/browser/tab-view/DataFileDownloadHook.md): renders CSV and TSV inline and sends other downloads to the shelf; has `install`.
+- [core/browser/tab-view/TabAcceleratorActions.md](core/browser/tab-view/TabAcceleratorActions.md): main-handled browser shortcuts; has `perform`.
+- [core/browser/tab-view/TabNotificationRelay.md](core/browser/tab-view/TabNotificationRelay.md): relays intercepted web notifications; has `relay`.
+- [core/browser/tab-view/TabSessionCache.md](core/browser/tab-view/TabSessionCache.md): clears every tab session's cache; has `clearAll`.
+- [core/browser/tab-view/TabViewIpcController.md](core/browser/tab-view/TabViewIpcController.md): tab view IPC routes; has `register`.
+- [core/browser/ResolutionCache.md](core/browser/ResolutionCache.md): replays earlier LLM and vision element answers as validated selectors; has `isEnabled`, `replay`, `capture`, `remember`.
+- [core/browser/resolution-cache/ResolutionCacheKey.md](core/browser/resolution-cache/ResolutionCacheKey.md): resolution cache keys; has `of`, `urlPattern`, `description`, `kind`.
+- [core/browser/resolution-cache/ResolutionCacheSnapshot.md](core/browser/resolution-cache/ResolutionCacheSnapshot.md): persists the resolution cache in settings; has `load`, `save`.
+- [core/browser/resolution-cache/ResolutionCacheStore.md](core/browser/resolution-cache/ResolutionCacheStore.md): LRU resolution cache store with TTL; has `get`, `put`, `delete`, `clear`, `stats`, `flush`.
+- [core/browser/resolution-cache/TabPageAccess.md](core/browser/resolution-cache/TabPageAccess.md): tab URL and in-page script runs; has `urlOf`, `run`.
+- [core/browser/vision/VisualGroundingService.md](core/browser/vision/VisualGroundingService.md): finds described elements on screenshots with a vision model and clicks them; has `isAvailable`, `locate`, `locateInImage`, `clickDescribed`.
+- [core/browser/vision/GroundingCacheBridge.md](core/browser/vision/GroundingCacheBridge.md): visual grounding's resolution cache use; has `replay`, `noteHit`, `noteFailedClick`, `remember`.
+- [core/browser/TabManager.md](core/browser/TabManager.md): browser automation facade (page actions, refs, extraction, screenshots, evidence); has tab lifecycle, click, type, fill, scroll, observe, extract and widget methods.
+- [core/browser/tab-manager/TabPage.md](core/browser/tab-manager/TabPage.md): one tab for automation; has `run`, `runEnvelope`, `url`, `watchAction`.
+- [core/browser/tab-manager/NavigationReply.md](core/browser/tab-manager/NavigationReply.md): input-action reply with navigation details; has `build`.
+- [core/browser/tab-manager/TabControl.md](core/browser/tab-manager/TabControl.md): tab lifecycle and update actions; has `getAllTabs`, `createTab`, `getConsoleLogs`, `update`.
+- [core/browser/tab-manager/PageSource.md](core/browser/tab-manager/PageSource.md): page source by extraction type; has `read`.
+- [core/browser/tab-manager/PageSourceScripts.md](core/browser/tab-manager/PageSourceScripts.md): in-page source scripts per type; has `forType`.
+- [core/browser/tab-manager/PageAnalysisScript.md](core/browser/tab-manager/PageAnalysisScript.md): framework and selector-stability analysis script; has `SOURCE`.
+- [core/browser/tab-manager/ElementDigestFormatter.md](core/browser/tab-manager/ElementDigestFormatter.md): element digest to budgeted model text; has `format`.
+- [core/browser/tab-manager/PageObserver.md](core/browser/tab-manager/PageObserver.md): observe_page numbered element inventory; has `observe`.
+- [core/browser/tab-manager/TabScreenshot.md](core/browser/tab-manager/TabScreenshot.md): full-page or viewport screenshot with geometry and marks; has `capture`.
+- [core/browser/tab-manager/TargetScripts.md](core/browser/tab-manager/TargetScripts.md): target resolve, synthetic click and typing scripts; has `resolve`, `syntheticClick`, `typeValue`.
+- [core/browser/tab-manager/ElementClicker.md](core/browser/tab-manager/ElementClicker.md): trusted click with fallback and evidence; has `click`.
+- [core/browser/tab-manager/PointClicker.md](core/browser/tab-manager/PointClicker.md): click_at and point_info; has `clickAt`, `pointInfo`.
+- [core/browser/tab-manager/FieldTyper.md](core/browser/tab-manager/FieldTyper.md): focuses a field, sets its value, optionally submits; has `typeInto`.
+- [core/browser/tab-manager/KeyPresser.md](core/browser/tab-manager/KeyPresser.md): press_key with Enter emulation; has `pressKey`.
+- [core/browser/tab-manager/PageScroller.md](core/browser/tab-manager/PageScroller.md): scroll with settled position and evidence; has `scroll`.
+- [core/browser/tab-manager/FormFiller.md](core/browser/tab-manager/FormFiller.md): React-safe multi-field form fill; has `fill`.
+- [core/browser/tab-manager/ElementWaiter.md](core/browser/tab-manager/ElementWaiter.md): waits for a selector or its absence; has `waitFor`.
+- [core/browser/tab-manager/ElementInspector.md](core/browser/tab-manager/ElementInspector.md): get_element and batched selector checks; has `getElement`, `checkSelectors`.
+- [core/browser/tab-manager/TableReader.md](core/browser/tab-manager/TableReader.md): reads table or div-layout rows; has `read`.
+- [core/browser/tab-manager/DialogHandler.md](core/browser/tab-manager/DialogHandler.md): alert, confirm and prompt replacement; has `install`.
+- [core/browser/tab-manager/InteractableElements.md](core/browser/tab-manager/InteractableElements.md): interactable elements with stable selectors; has `list`.
+- [core/browser/tab-manager/AccessibleAttributeMatcher.md](core/browser/tab-manager/AccessibleAttributeMatcher.md): description to selector without an LLM; has `find`, `slug`.
+- [core/browser/tab-manager/ExtractDataScript.md](core/browser/tab-manager/ExtractDataScript.md): extract_data page script with child-selector diagnostics; has `build`.
+- [core/browser/tab-manager/RowDataExtractor.md](core/browser/tab-manager/RowDataExtractor.md): extract_data rows plus diagnostics; has `extract`.
+- [core/browser/tab-manager/SettleWaiter.md](core/browser/tab-manager/SettleWaiter.md): waits for the page to go quiet; has `wait`.
+- [core/browser/overlay/OverlayPreloadApi.md](core/browser/overlay/OverlayPreloadApi.md): `core/browser/overlay/OverlayPreloadApi.js` (entry: `core/browser/overlay/overlay-preload.js`).
+- [core/browser/ui/overlay/FaviconFallback.md](core/browser/ui/overlay/FaviconFallback.md): `FaviconFallback.apply(root)`: an `img.bookmark-favicon` that fails to load is replaced by `span.bookmark-favicon.bd-fallback` with its `data-letter` (or "?").
+- [core/browser/ui/overlay/OverlayInput.md](core/browser/ui/overlay/OverlayInput.md): - `new OverlayInput(root, api, win)`, `attach()`: - mousedown on `[data-bd-action]` (prevented, so it lands before the URL bar's blur) -> `sendAction({ action, index, id, url })`; - mousemove over `[data-bd-index]` -> `sendHover({ index })`; - body enter/leave while a `.notification-log` is shown -> `sendHover({ hovering })`; - Ctrl/Cmd+C with a selection -> `execCommand('copy')`.
+- [core/browser/ui/overlay/OverlayUi.md](core/browser/ui/overlay/OverlayUi.md): `core/browser/ui/overlay/` (page: `core/browser/overlay/overlay.html`, loaded by ChromeOverlay).
+- [core/browser/ui/overlay/OverlayView.md](core/browser/ui/overlay/OverlayView.md): - `new OverlayView(root, api, win)`, `attach()`.
+- [core/browser/ui/error-page/ErrorPage.md](core/browser/ui/error-page/ErrorPage.md): `core/browser/ui/error-page/ErrorPage.js` (page: `core/browser/tab-view/error.html`, started by `entry.js`).
+- [core/browser/ui/error-page/NetErrorText.md](core/browser/ui/error-page/NetErrorText.md): the error page's wording per Chromium net error code.
+- [core/browser/tab-preload/ClickUpSocketScript.md](core/browser/tab-preload/ClickUpSocketScript.md): builds the page script that reports ClickUp's notifications from its websocket, the only page-side source for a site whose notifications only come through Web Push.
+- [core/browser/tab-preload/MainWorldScript.md](core/browser/tab-preload/MainWorldScript.md): builds the page script the tab preload runs in the page's MAIN world: the window.chrome and passkey shims, then the Notification and ServiceWorkerRegistration.showNotification overrides that report every notification with `window.postMessage`.
+- [core/browser/tab-preload/NotificationForwarder.md](core/browser/tab-preload/NotificationForwarder.md): the isolated-world half of notification interception: hears the main-world script's postMessage reports and sends each payload to the main process.
+- [core/browser/tab-preload/TabPreload.md](core/browser/tab-preload/TabPreload.md): installs the tab preload: injects the main-world script at document start and starts the notification forwarder.
+- [core/browser/ui/BrowserRenderer.md](core/browser/ui/BrowserRenderer.md): read-only tab view and tab events for extension renderers.
+- [core/browser/ui/TabSession.md](core/browser/ui/TabSession.md): renderer tab record with capped history.
+
+## core/llm-server
+
+- [core/llm-server/GgufParser.md](core/llm-server/GgufParser.md): reads a GGUF header and, best-effort, its tensor layout; never throws; has `parseHeader`, `parse`.
+- [core/llm-server/GgufCursor.md](core/llm-server/GgufCursor.md): forward-only paged file reader with a byte cap and deadline; has `take`, `skip`, `skipStringArray`, `extendDeadline`.
+- [core/llm-server/GgufValueReader.md](core/llm-server/GgufValueReader.md): decodes GGUF primitive values from a cursor; has `uint32`, `uint64`, `length`, `string`, `scalar`, `array`.
+- [core/llm-server/GgufTensorLayout.md](core/llm-server/GgufTensorLayout.md): turns tensor entries into per-block KV, MTP and byte-placement facts; has `scan`, `merge`, `derive`.
+- [core/llm-server/GgufHeaderSummary.md](core/llm-server/GgufHeaderSummary.md): picks which GGUF metadata to keep and builds the header summary; has `wants`, `numberOrNull`, `build`.
+- [core/llm-server/HardwareSummary.md](core/llm-server/HardwareSummary.md): one-line hardware snapshot for fit-test results; has `summarize`, `shortGpuName`.
+- [core/llm-server/MemoryBandwidth.md](core/llm-server/MemoryBandwidth.md): GPU and RAM memory bandwidth with its source; has `tableGpuBandwidth`, `resolveGpuBandwidth`, `resolveRamBandwidth`.
+- [core/llm-server/LegacyChatMigration.md](core/llm-server/LegacyChatMigration.md): one-time non-destructive import of the old aiChat blob into ChatStore; has `run`, `readLegacyConversations`.
+- [core/llm-server/LocalApiIpcHandlers.md](core/llm-server/LocalApiIpcHandlers.md): IPC controller for the localhost OpenAI API toggle and port; has `register`.
+- [core/llm-server/eval/Aggregator.md](core/llm-server/eval/Aggregator.md): per-variant eval means, pass rates and A/B diffs; has `aggregate`, `diffVariants`, `formatDiff`.
+- [core/llm-server/eval/GoldenSet.md](core/llm-server/eval/GoldenSet.md): loads and checks golden eval tasks; has `loadGoldenTasks`, `validateTask`.
+- [core/llm-server/eval/Scorer.md](core/llm-server/eval/Scorer.md): scores a task's transcripts to 0..1 with a per-check breakdown; has `scoreTask`, `normalizeTurns`, `harvestHealth`.
+- [core/llm-server/eval/TurnChecks.md](core/llm-server/eval/TurnChecks.md): builds the weighted checks for one turn's expect block; has `collect`.
+- [core/llm-server/eval/ExpectationMatcher.md](core/llm-server/eval/ExpectationMatcher.md): JSON value, param and tool-call matchers, shared with trigger gating; has `matchValue`, `matchParams`, `callMatches`, `safeRegex`.
+- [core/llm-server/eval/TranscriptHealth.md](core/llm-server/eval/TranscriptHealth.md): rolls up health signals from transcripts; has `harvest`.
+- [core/llm-server/gambit/ExecutionCheck.md](core/llm-server/gambit/ExecutionCheck.md): runs the model's JS for a gambit task and grades each case; has `runExecutionCheck`, `extractCode`, `checkCase`.
+- [core/llm-server/gambit/CodeSandbox.md](core/llm-server/gambit/CodeSandbox.md): runs code once in a vm with sync and async timeouts; has `runOnce`.
+- [core/llm-server/gambit/LiveArtifactStubs.md](core/llm-server/gambit/LiveArtifactStubs.md): stand-ins for live-artifact globals during checks; has `create`.
+- [core/llm-server/models/CuratedModelCatalog.md](core/llm-server/models/CuratedModelCatalog.md): curated GGUF picks for onboarding with download URLs; has `resolveUrl`, `listCatalog`.
+- [core/llm-server/models/HfHubClient.md](core/llm-server/models/HfHubClient.md): HF Hub transport and repo id helpers, plus the full hfHub.js mapping; has `get`, `getRepoFile`, `resolveUrl`, `fileUrl`, `treeUrl`, `normalizeRepoId`.
+- [core/llm-server/models/HfModelSearch.md](core/llm-server/models/HfModelSearch.md): GGUF and MLX repo search on the Hub; has `search`.
+- [core/llm-server/models/HfGgufRepo.md](core/llm-server/models/HfGgufRepo.md): a GGUF repo's header, quant variants and companions; has `fetchVariants`, `fetchCompanions`, `fetchMmprojs`.
+- [core/llm-server/models/HfMlxRepo.md](core/llm-server/models/HfMlxRepo.md): describes an MLX repo for snapshot download; has `fetchInfo`, `quantFromName`.
+- [core/llm-server/models/HfReadme.md](core/llm-server/models/HfReadme.md): fetches a repo's model card, frontmatter stripped; has `fetch`.
+- [core/llm-server/models/GgufFileName.md](core/llm-server/models/GgufFileName.md): reads quant, shard and companion type from GGUF file names; has `quantOf`, `split`, `shardIndex`, `isMtpHead`, `isMmproj`.
+- [core/llm-server/models/GgufVariantGrouper.md](core/llm-server/models/GgufVariantGrouper.md): turns a repo tree into one variant per quant; has `group`.
+- [core/llm-server/models/GgufCompanionPicker.md](core/llm-server/models/GgufCompanionPicker.md): picks the vision projector and MTP head to download; has `bestMmproj`, `bestMtp`.
+- [core/llm-server/models/ModelCatalogRegistry.md](core/llm-server/models/ModelCatalogRegistry.md): add-on models contributed to LLM Setup by extensions; has `shared` plus registry methods.
+- [core/llm-server/models/MoeEstimator.md](core/llm-server/models/MoeEstimator.md): splits MoE weight bytes into expert, GPU-resident and host parts; has `estimateSplit`.
+- [core/llm-server/router/RouterPrompt.md](core/llm-server/router/RouterPrompt.md): prompt, grammar and parser for the tool-group router; has `buildRouterPrompt`, `parseRouterAnswer`.
+- [core/llm-server/runtimes/RuntimeCatalogRegistry.md](core/llm-server/runtimes/RuntimeCatalogRegistry.md): extension-contributed inference runtimes and launch hooks; has `shared`, `register`, `hooksFor`, `runtimesForModelKind`.
+- [core/llm-server/server/FailureInterpreter.md](core/llm-server/server/FailureInterpreter.md): turns a dead runtime's stderr into a diagnosis; has `interpret`, `extractUnknownFlag`.
+- [core/llm-server/server/ModelCapsCache.md](core/llm-server/server/ModelCapsCache.md): remembers each model file's reasoning capabilities; has `remember`, `recall`, `recallProbe`, `modelKeyOf`.
+- [core/llm-server/server/ModelFamilies.md](core/llm-server/server/ModelFamilies.md): detects a model's tuning family and its launch args and switches; has `detect`, `launchArgs`, `speculativeArgs`, `nativeToolCalls`, `kvQuantUnsafe`, `ngramSpec`.
+- [core/llm-server/server/ModelFamilyTable.md](core/llm-server/server/ModelFamilyTable.md): data-only table of each family's sampler, flags and drafters; has `FAMILIES`, `SAMPLER_CLI`.
+- [core/llm-server/server/ThinkingProbe.md](core/llm-server/server/ThinkingProbe.md): learns a chat template's reasoning controls; has `probe`, `templateHashOf`.
+- [core/llm-server/server/ThinkingFacts.md](core/llm-server/server/ThinkingFacts.md): the single shape for reasoning facts; has `derive`, `fromRegex`, `offersControl`.
+- [core/llm-server/server/ThinkingFactsDeriver.md](core/llm-server/server/ThinkingFactsDeriver.md): derives reasoning facts from template renders; has `execute`.
+- [core/llm-server/server/ThinkingProbePlan.md](core/llm-server/server/ThinkingProbePlan.md): builds the bounded render plan and request bodies; has `buildShapes`, `buildPlan`, `requestBody`.
+- [core/llm-server/server/ThinkingVocabulary.md](core/llm-server/server/ThinkingVocabulary.md): data-only effort vocabulary and think markers.
+- [core/llm-server/server/RpcPeers.md](core/llm-server/server/RpcPeers.md): borrows peer GPUs for a launch and heartbeats the leases; has `acquireForLaunch`, `releaseAll`, `isActive`, `activePeers`.
+- [core/llm-server/server/UnsupportedFlagMemory.md](core/llm-server/server/UnsupportedFlagMemory.md): remembers launch flags a runtime build rejected; has `runtimeKey`, `learnedFlags`, `withLearnedFlags`, `remember`.
+- [core/llm-server/server/UserArgs.md](core/llm-server/server/UserArgs.md): shell-style split of the user's extra llama.cpp flags; has `splitShellArgs`, `normalize`.
+- [core/llm-server/server/chat/ChatAdapter.md](core/llm-server/server/chat/ChatAdapter.md): base class for inference-server wire-protocol adapters; has `authHeaders`, `healthCheck`, `chat`, `protocolId`.
+- [core/llm-server/validation/ICodeLanguageValidator.md](core/llm-server/validation/ICodeLanguageValidator.md): base class for per-language code validators; has `name`, `languages`, `validate`.
+- [core/llm-server/ChatStore.md](core/llm-server/ChatStore.md): repository for chat conversations, messages, variants and mode meta; has conversation CRUD, `restoreConversationTimestamps`, message CRUD, variants.
+- [core/llm-server/SystemDiagnostics.md](core/llm-server/SystemDiagnostics.md): facade over the hardware report and the Windows GPU fixes; has `gather`, `addDirectoryToUserPath`, `recoverDisplayDevice`, `setPcieAspmOff`.
+- [core/llm-server/diagnostics/DiagnosticsGatherer.md](core/llm-server/diagnostics/DiagnosticsGatherer.md): builds the full fail-soft diagnostics report; has `gather`.
+- [core/llm-server/diagnostics/HostProbe.md](core/llm-server/diagnostics/HostProbe.md): platform, RAM totals and CPU; has `platform`, `memory`, `cpu`.
+- [core/llm-server/diagnostics/RamModuleProbe.md](core/llm-server/diagnostics/RamModuleProbe.md): per-DIMM RAM details on each platform; has `probe`.
+- [core/llm-server/diagnostics/RamModuleTextParser.md](core/llm-server/diagnostics/RamModuleTextParser.md): reads system_profiler and dmidecode text; has `parseSystemProfiler`, `parseDmidecode`.
+- [core/llm-server/diagnostics/WindowsRamModuleParser.md](core/llm-server/diagnostics/WindowsRamModuleParser.md): maps Win32_PhysicalMemory rows; has `parseRows`.
+- [core/llm-server/diagnostics/CudaProbe.md](core/llm-server/diagnostics/CudaProbe.md): finds nvidia-smi and reads CUDA; has `probe`.
+- [core/llm-server/diagnostics/CudaDeviceParser.md](core/llm-server/diagnostics/CudaDeviceParser.md): nvidia-smi CSV and XML parsing; has `parseDevices`, `parsePciDeviceId`, `parseCudaVersion`.
+- [core/llm-server/diagnostics/GpuProbe.md](core/llm-server/diagnostics/GpuProbe.md): GPU adapters with VRAM and PCIe details; has `probe`.
+- [core/llm-server/diagnostics/GpuAdapterMatcher.md](core/llm-server/diagnostics/GpuAdapterMatcher.md): pairs and de-duplicates GPU adapters across sources; has `matchNvidiaByPci`, `matchNvidiaByName`, `matchRegistry`, `dedupe`.
+- [core/llm-server/diagnostics/RegistryVramProbe.md](core/llm-server/diagnostics/RegistryVramProbe.md): Windows 64-bit VRAM from the registry; has `probe`.
+- [core/llm-server/diagnostics/GpuHealthProbe.md](core/llm-server/diagnostics/GpuHealthProbe.md): Windows Plug-and-Play health of display adapters; has `probe`, `classify`.
+- [core/llm-server/diagnostics/PnpDisplayDevices.md](core/llm-server/diagnostics/PnpDisplayDevices.md): lists display-class Plug-and-Play devices; has `list`, `isNonGpu`.
+- [core/llm-server/diagnostics/PcieAspm.md](core/llm-server/diagnostics/PcieAspm.md): reads and turns off PCIe link power saving; has `read`, `setOff`, `parse`.
+- [core/llm-server/diagnostics/DisplayDeviceRecovery.md](core/llm-server/diagnostics/DisplayDeviceRecovery.md): elevated recovery of a faulted display adapter; has `recover`, `interpret`.
+- [core/llm-server/diagnostics/DisplayRecoveryScripts.md](core/llm-server/diagnostics/DisplayRecoveryScripts.md): the display recovery PowerShell scripts; has `elevated`, `launcher`.
+- [core/llm-server/diagnostics/UserPathEditor.md](core/llm-server/diagnostics/UserPathEditor.md): adds the nvidia-smi folder to the user PATH; has `addDirectory`.
+- [core/llm-server/diagnostics/UserPathScripts.md](core/llm-server/diagnostics/UserPathScripts.md): the PATH PowerShell scripts; has `displayCommand`, `persistScript`.
+- [core/llm-server/diagnostics/DiskProbe.md](core/llm-server/diagnostics/DiskProbe.md): volumes and free space with fallbacks; has `probe`.
+- [core/llm-server/diagnostics/DiskTableParser.md](core/llm-server/diagnostics/DiskTableParser.md): PowerShell, wmic and df disk tables; has `fromLogicalDiskRows`, `parseWmicCsv`, `parseDf`.
+- [core/llm-server/diagnostics/ResourceBudget.md](core/llm-server/diagnostics/ResourceBudget.md): RAM and VRAM budget after reserves; has `compute`.
+- [core/llm-server/diagnostics/DiagnosticsCommand.md](core/llm-server/diagnostics/DiagnosticsCommand.md): runs a probe command that never throws; has `run`, `isBinaryMissing`.
+- [core/llm-server/diagnostics/PowerShellRunner.md](core/llm-server/diagnostics/PowerShellRunner.md): runs a script on the first PowerShell found; has `run`, `quote`, `failureMessage`.
+- [core/llm-server/diagnostics/PowerShellJson.md](core/llm-server/diagnostics/PowerShellJson.md): reads ConvertTo-Json output as rows; has `parseRows`, `stripBom`.
+- [core/llm-server/diagnostics/HardwareText.md](core/llm-server/diagnostics/HardwareText.md): placeholder-aware hardware text and numbers; has `clean`, `numberOrNull`.
+- [core/llm-server/eval/EvalRunner.md](core/llm-server/eval/EvalRunner.md): runs eval tasks across variants and models; has `runEval`, `diffFromRuns`, `run`.
+- [core/llm-server/gambit/GambitReport.md](core/llm-server/gambit/GambitReport.md): model compatibility score with health, coverage and worst decile; has `build`, `band`, `orderGroups`.
+- [core/llm-server/gambit/GambitHealth.md](core/llm-server/gambit/GambitHealth.md): gambit health totals and clean-turn score; has `totals`, `score`.
+- [core/llm-server/gambit/GambitReportFormatter.md](core/llm-server/gambit/GambitReportFormatter.md): one-screen console summary of a gambit report; has `format`.
+- [core/llm-server/GgufHeaderParseWorker.md](core/llm-server/GgufHeaderParseWorker.md): parses GGUF headers on a worker thread (entry ggufParseWorker.js); has `listen`, `handle`.
+- [core/llm-server/Preflight.md](core/llm-server/Preflight.md): boot-time list of configuration problems for the LLM tab; has `collectIssues`, `collect`.
+- [core/llm-server/PreflightRuntimeIssue.md](core/llm-server/PreflightRuntimeIssue.md): unknown, missing or not-ready runtime issue; has `findRuntime`, `forRow`.
+- [core/llm-server/PreflightSysdepsIssue.md](core/llm-server/PreflightSysdepsIssue.md): Linux missing-system-libraries issue; has `collect`.
+- [core/llm-server/models/ModelDownload.md](core/llm-server/models/ModelDownload.md): resumable single-file model download with pause and cancel; has `start`.
+- [core/llm-server/models/MlxRepoDownload.md](core/llm-server/models/MlxRepoDownload.md): downloads an MLX repo snapshot with aggregate progress; has `start`.
+- [core/llm-server/models/HwBudget.md](core/llm-server/models/HwBudget.md): turns diagnostics into the flat hardware budget the pickers read; has `build`.
+- [core/llm-server/models/ModelName.md](core/llm-server/models/ModelName.md): stable model keys and display names; has `key`, `prettify`, `resolveDisplayName`.
+- [core/llm-server/models/ModelNameToken.md](core/llm-server/models/ModelNameToken.md): noise and styling rules for one model-name token; has `isNoise`, `isQuantOrFormat`, `style`.
+- [core/llm-server/models/libraries/ExistingLibraryScanner.md](core/llm-server/models/libraries/ExistingLibraryScanner.md): finds GGUFs in LM Studio, the HF cache and Ollama; has `scan`.
+- [core/llm-server/models/libraries/ExistingModelImporter.md](core/llm-server/models/libraries/ExistingModelImporter.md): adopts a found model by link, never copy; has `importModel`.
+- [core/llm-server/models/libraries/LibrarySource.md](core/llm-server/models/libraries/LibrarySource.md): base class for another tool's model library; has `id`, `label`, `roots`, `scan`.
+- [core/llm-server/models/libraries/LmStudioSource.md](core/llm-server/models/libraries/LmStudioSource.md): LM Studio library source; has `roots`, `scan`.
+- [core/llm-server/models/libraries/HfCacheSource.md](core/llm-server/models/libraries/HfCacheSource.md): Hugging Face hub cache source; has `roots`, `scan`.
+- [core/llm-server/models/libraries/OllamaSource.md](core/llm-server/models/libraries/OllamaSource.md): Ollama manifest and blob source; has `roots`, `scan`.
+- [core/llm-server/models/libraries/GgufTreeWalker.md](core/llm-server/models/libraries/GgufTreeWalker.md): depth-bounded walk for adoptable GGUFs; has `walk`, `isAdoptableName`.
+- [core/llm-server/models/libraries/FileProbe.md](core/llm-server/models/libraries/FileProbe.md): never-throwing filesystem checks; has `stat`, `isDirectory`, `readDirectory`, `realPath`.
+- [core/llm-server/runtimes/LlmRuntimeCatalog.md](core/llm-server/runtimes/LlmRuntimeCatalog.md): LLM runtime catalog with extension runtimes merged at read time; has `shared`, `getCatalog`, `getById`, `fingerprint`, `cudaRuntimePreference`.
+- [core/llm-server/runtimes/LlmRuntimeDeclarations.md](core/llm-server/runtimes/LlmRuntimeDeclarations.md): data-only table of the llama.cpp, MLX and Harmony runtimes; has `RUNTIMES`.
+- [core/llm-server/server/chat/RequestProfile.md](core/llm-server/server/chat/RequestProfile.md): per-runtime chat body translation and effort rounding; has `apply`, `mapEffortLevel`, `fromThinking`.
+- [core/llm-server/server/ThinkingKnobs.md](core/llm-server/server/ThinkingKnobs.md): turns a client's thinking spellings into llama-server knobs; has `extra`, `apply`, `refusal`.
+- [core/llm-server/server/ModelIdRewriter.md](core/llm-server/server/ModelIdRewriter.md): stream transform that rewrites the model field in JSON and SSE; has `create`.
+- [core/llm-server/server/UpstreamProxy.md](core/llm-server/server/UpstreamProxy.md): forwards one JSON POST to llama-server and streams the reply; has `forward`.
+- [core/llm-server/server/OpenAiModelList.md](core/llm-server/server/OpenAiModelList.md): builds the /v1/models replies; has `build`, `single`.
+- [core/llm-server/server/OpenAiLocalRouter.md](core/llm-server/server/OpenAiLocalRouter.md): route controller for the localhost OpenAI API; has `create`.
+- [core/llm-server/server/ByteLadder.md](core/llm-server/server/ByteLadder.md): main-process byte formatter; has `format`.
+- [core/llm-server/server/MlxLaunchPlanner.md](core/llm-server/server/MlxLaunchPlanner.md): plans an mlx_lm.server launch; has `plan`.
+- [core/llm-server/server/decode/DecodeFormula.md](core/llm-server/server/decode/DecodeFormula.md): the memory-bound decode speed formula; has `estimateTps`, `tpsFromMs`, `describeTps`.
+- [core/llm-server/server/decode/GpuLayerAssignment.md](core/llm-server/server/decode/GpuLayerAssignment.md): maps offloaded blocks to GPUs; has `assign`.
+- [core/llm-server/server/decode/PlanDecodeEstimator.md](core/llm-server/server/decode/PlanDecodeEstimator.md): decode speed prediction for a resolved launch plan; has `estimate`.
+- [core/llm-server/server/decode/CatalogDecodeEstimator.md](core/llm-server/server/decode/CatalogDecodeEstimator.md): pre-download decode speed guess for a catalog row; has `estimate`.
+- [core/llm-server/validation/validators/JavaScriptValidator.md](core/llm-server/validation/validators/JavaScriptValidator.md): ESLint validator for JS and JSX; has `validate`.
+- [core/llm-server/validation/validators/TypeScriptValidator.md](core/llm-server/validation/validators/TypeScriptValidator.md): TypeScript compiler validator for TS and TSX; has `validate`.
+- [core/llm-server/validation/validators/JsonValidator.md](core/llm-server/validation/validators/JsonValidator.md): JSON and JSONC validator; has `validate`, `locateError`.
+- [core/llm-server/validation/validators/JsonCommentStripper.md](core/llm-server/validation/validators/JsonCommentStripper.md): string-aware JSONC comment remover; has `strip`.
+- [core/llm-server/validation/validators/PowerShellValidator.md](core/llm-server/validation/validators/PowerShellValidator.md): syntax-only PowerShell validator in wasm; has `validate`.
+- [core/llm-server/validation/validators/PowerShellGrammar.md](core/llm-server/validation/validators/PowerShellGrammar.md): cached tree-sitter PowerShell grammar loader; has `load`, `createParser`.
+- [core/llm-server/validation/validators/PowerShellSyntaxCollector.md](core/llm-server/validation/validators/PowerShellSyntaxCollector.md): turns parse errors into diagnostics; has `collect`.
+- [core/llm-server/chat/ArtifactStore.md](core/llm-server/chat/ArtifactStore.md): persists artifact version chains and writes each version to a standalone HTML file; has `create`, `createVersion`, `get`, `renderedHtml`, `list`, `versions`, `delete`, `deleteRoot`, `urlFor`.
+- [core/llm-server/chat/artifacts/ArtifactContent.md](core/llm-server/chat/artifacts/ArtifactContent.md): artifact kinds and how each kind's content is stored; has `typeOf`, `isMedia`, `normalize`.
+- [core/llm-server/chat/artifacts/ArtifactDocument.md](core/llm-server/chat/artifacts/ArtifactDocument.md): wraps artifact content into a self-contained styled document; has `render`.
+- [core/llm-server/chat/artifacts/ArtifactDocumentShell.md](core/llm-server/chat/artifacts/ArtifactDocumentShell.md): the dark artifact document chrome; has `wrap`.
+- [core/llm-server/chat/artifacts/ArtifactMarkdown.md](core/llm-server/chat/artifacts/ArtifactMarkdown.md): compact markdown converter for markdown artifacts; has `toHtml`.
+- [core/llm-server/chat/artifacts/LiveModuleDocument.md](core/llm-server/chat/artifacts/LiveModuleDocument.md): standalone live-module page with store and luma wiring; has `renderBody`.
+- [core/llm-server/chat/artifacts/HtmlText.md](core/llm-server/chat/artifacts/HtmlText.md): HTML escaping for artifact documents; has `escape`.
+- [core/llm-server/chat/ArtifactDataStore.md](core/llm-server/chat/ArtifactDataStore.md): per-chain key/value data for live artifacts; has `all`, `get`, `mutate`, `set`, `remove`, `deleteForRoot`.
+- [core/llm-server/chat/artifacts/ArtifactDataQuota.md](core/llm-server/chat/artifacts/ArtifactDataQuota.md): size limits on live-artifact data; has `checkEntry`, `checkObject`.
+- [core/llm-server/chat/IntervalTaskStore.md](core/llm-server/chat/IntervalTaskStore.md): base class for recurring-task stores with run history; has `create`, `get`, `list`, `due`, `update`, `recordCompletion`, `delete`, `recordRunStart`, `recordRunFinish`, `listRuns`.
+- [core/llm-server/chat/ArtifactTaskStore.md](core/llm-server/chat/ArtifactTaskStore.md): scheduled artifact-refresh tasks; has `listByRoot`, `deleteByRoot` plus the base methods.
+- [core/llm-server/chat/ScheduledTaskStore.md](core/llm-server/chat/ScheduledTaskStore.md): chat scheduled tasks; has `listWithRunCounts`, `listByConversation`, `getByConversation` plus the base methods.
+- [core/llm-server/chat/ChatDataWipe.md](core/llm-server/chat/ChatDataWipe.md): clears all conversations and artifacts from the database; has `execute`.
+- [core/llm-server/chat/MessageTree.md](core/llm-server/chat/MessageTree.md): the branch structure of a conversation's messages (parent links, variants as siblings) and the active path the thread shows; also the parent links backfilled for pre-branching rows.
+- [core/llm-server/chat/JsonOutliner.md](core/llm-server/chat/JsonOutliner.md): budgeted JSONPath outline of an oversized tool result, with inferred schema and statistics; has `outline`.
+- [core/llm-server/chat/outline/BoundedJson.md](core/llm-server/chat/outline/BoundedJson.md): compact JSON that gives up past a character cap; has `stringify`.
+- [core/llm-server/chat/outline/ValueKind.md](core/llm-server/chat/outline/ValueKind.md): the JSON kind of a value; has `of`, `normalize`, `isPresent`.
+- [core/llm-server/chat/outline/JsonPath.md](core/llm-server/chat/outline/JsonPath.md): JSONPath strings for outline labels; has `child`, `everyElement`.
+- [core/llm-server/chat/outline/ElementSampler.md](core/llm-server/chat/outline/ElementSampler.md): evenly spread array indices to profile; has `indices`.
+- [core/llm-server/chat/outline/StringPreview.md](core/llm-server/chat/outline/StringPreview.md): a short quoted prefix of a string; has `quote`.
+- [core/llm-server/chat/outline/CountPhrase.md](core/llm-server/chat/outline/CountPhrase.md): a count with its singular or plural noun; has `of`, `noun`.
+- [core/llm-server/chat/outline/ValueProfile.md](core/llm-server/chat/outline/ValueProfile.md): kinds, statistics, fields and elements observed at one path; has `record`, `field`, `elementProfile`.
+- [core/llm-server/chat/outline/ProfileWalker.md](core/llm-server/chat/outline/ProfileWalker.md): walks a value into a bounded profile tree; has `profile`.
+- [core/llm-server/chat/outline/ProfileSummary.md](core/llm-server/chat/outline/ProfileSummary.md): the words for one profiled path; has `describe`.
+- [core/llm-server/chat/outline/OutlineNode.md](core/llm-server/chat/outline/OutlineNode.md): one outline line and its children; has `line`, `moreLine`.
+- [core/llm-server/chat/outline/OutlineTreeBuilder.md](core/llm-server/chat/outline/OutlineTreeBuilder.md): profile tree to outline nodes with optional-field marks; has `build`.
+- [core/llm-server/chat/outline/OutlineBudget.md](core/llm-server/chat/outline/OutlineBudget.md): breadth-first line admission within a token budget; has `select`, `cost`.
+- [core/llm-server/chat/outline/OutlineRenderer.md](core/llm-server/chat/outline/OutlineRenderer.md): writes admitted lines in document order; has `render`.
+- [core/llm-server/chat/outline/TokenSizeLabel.md](core/llm-server/chat/outline/TokenSizeLabel.md): approximate token counts for the model ("4,300"); has `format`, `ofText`.
+- [core/llm-server/chat/outline/stats/ValueStats.md](core/llm-server/chat/outline/stats/ValueStats.md): base for per-kind path statistics; has `observe`, `describe`, `detail`.
+- [core/llm-server/chat/outline/stats/NumberStats.md](core/llm-server/chat/outline/stats/NumberStats.md): integer/number range, distinct count, codes; extends ValueStats.
+- [core/llm-server/chat/outline/stats/StringStats.md](core/llm-server/chat/outline/stats/StringStats.md): string lengths, distinct count, categories, example; extends ValueStats.
+- [core/llm-server/chat/outline/stats/BooleanStats.md](core/llm-server/chat/outline/stats/BooleanStats.md): true and false counts; extends ValueStats.
+- [core/llm-server/chat/outline/stats/RangeTracker.md](core/llm-server/chat/outline/stats/RangeTracker.md): min and max phrased as a range; has `observe`, `phrase`, `format`.
+- [core/llm-server/chat/outline/stats/DistinctCounter.md](core/llm-server/chat/outline/stats/DistinctCounter.md): capped distinct counting and enumerations; has `add`, `label`, `enumeration`.
+- [core/llm-server/chat/LlmTrace.md](core/llm-server/chat/LlmTrace.md): one JSON line per model call per conversation, off by default; has `enabled`, `status`, `instrument`, `record`, `deleteFor`, `wipeAll`.
+- [core/llm-server/chat/trace/LlmTraceWriter.md](core/llm-server/chat/trace/LlmTraceWriter.md): non-blocking trace appender with rotation; has `append`, `fileFor`, `deleteFor`, `wipeAll`.
+- [core/llm-server/chat/trace/LlmTraceRecord.md](core/llm-server/chat/trace/LlmTraceRecord.md): turns a trace record into a bounded, image-free line; has `toLine`, `sanitizeBody`.
+- [core/llm-server/chat/trace/LlmCallRecorder.md](core/llm-server/chat/trace/LlmCallRecorder.md): wraps dispatch hooks and records each call once; has `wrap`.
+- [core/llm-server/chat/ToolPresentation.md](core/llm-server/chat/ToolPresentation.md): replay-safe tool-card metadata kept away from the model; has `present`, `metaFromEntry`, `withDiffBasis`.
+- [core/llm-server/chat/presentation/ToolCardPresenter.md](core/llm-server/chat/presentation/ToolCardPresenter.md): base class for tool card presenters; has `present`, `validate`.
+- [core/llm-server/chat/presentation/DiffCardPresenter.md](core/llm-server/chat/presentation/DiffCardPresenter.md): diff card for file-editing tools; has `attachBasis`, `present`, `validate`.
+- [core/llm-server/chat/presentation/ReadCardPresenter.md](core/llm-server/chat/presentation/ReadCardPresenter.md): read-slice card for read_file; has `present`, `validate`.
+- [core/llm-server/chat/ToolResultSpill.md](core/llm-server/chat/ToolResultSpill.md): writes over-budget tool results to disk; has `createWriter`, `deleteFor`, `wipeAll`, `setBaseDir`.
+- [core/llm-server/chat/spill/SpillWriter.md](core/llm-server/chat/spill/SpillWriter.md): one run's spill files; has `write`, `dir`, `readable`.
+- [core/llm-server/chat/spill/GitExclude.md](core/llm-server/chat/spill/GitExclude.md): adds a pattern to .git/info/exclude once; has `addOnce`.
+- [core/llm-server/chat/AppOwnedDir.md](core/llm-server/chat/AppOwnedDir.md): app-owned subfolder of the managed base dir; has `resolve`.
+- [core/llm-server/chat/FileNameSegment.md](core/llm-server/chat/FileNameSegment.md): turns an id into one safe path segment; has `from`.
+- [core/llm-server/chat/WorkspaceFiles.md](core/llm-server/chat/WorkspaceFiles.md): root-jailed file API behind the Code view; has `resolveRoot`, `listDir`, `readFile`, `writeFile`, `createEntry`, `renameEntry`, `removeEntry`.
+- [core/llm-server/chat/workspace/WorkspaceRootResolver.md](core/llm-server/chat/workspace/WorkspaceRootResolver.md): finds a conversation's workspace folder; has `resolve`.
+- [core/llm-server/chat/workspace/DirectoryListing.md](core/llm-server/chat/workspace/DirectoryListing.md): one capped, dirs-first directory level; has `list`.
+- [core/llm-server/chat/workspace/EditorFileReader.md](core/llm-server/chat/workspace/EditorFileReader.md): reads a file for the editor, refusing binary and oversized files; has `read`.
+- [core/llm-server/chat/workspace/WorkspaceFileIpcHandlers.md](core/llm-server/chat/workspace/WorkspaceFileIpcHandlers.md): IPC controller for workspace files; has `register`.
+- [core/llm-server/chat/triggers/TriggerGating.md](core/llm-server/chat/triggers/TriggerGating.md): trigger cooldown and batch gating; has `normalize`, `buildBatchEvent`, `describe`.
+- [core/llm-server/chat/triggers/TriggerFilter.md](core/llm-server/chat/triggers/TriggerFilter.md): dotted-path filter rules over an event; has `getPath`, `normalize`, `evaluate`.
+- [core/llm-server/chat/triggers/FileWatchSource.md](core/llm-server/chat/triggers/FileWatchSource.md): file and folder trigger source; has `reconcile`, `validateDir`, `status`, `watchFor`, `stopAll`.
+- [core/llm-server/chat/triggers/file/FileWatch.md](core/llm-server/chat/triggers/file/FileWatch.md): one trigger's file watch with settle, snapshot and catch-up; has `start`, `stop`.
+- [core/llm-server/chat/triggers/file/WatchFolder.md](core/llm-server/chat/triggers/file/WatchFolder.md): watch-folder safety rules; has `validate`, `resolveInside`.
+- [core/llm-server/chat/triggers/file/FileGlobMatcher.md](core/llm-server/chat/triggers/file/FileGlobMatcher.md): glob matcher with scratch-file ignores; has `create`.
+- [core/llm-server/chat/triggers/file/FileEventBuilder.md](core/llm-server/chat/triggers/file/FileEventBuilder.md): builds sanitised file events with previews; has `build`, `forPath`.
+- [core/llm-server/chat/triggers/file/FolderScanner.md](core/llm-server/chat/triggers/file/FolderScanner.md): bounded folder snapshot; has `scan`.
+- [core/llm-server/chat/triggers/file/CatchUpPlan.md](core/llm-server/chat/triggers/file/CatchUpPlan.md): what to replay after a restart; has `build`, `sameSignature`.
+- [core/llm-server/server/AnthropicMessagesRouter.md](core/llm-server/server/AnthropicMessagesRouter.md): Express controller for the local Anthropic Messages API; has `create`.
+- [core/llm-server/server/anthropic/MessagesRequestTranslator.md](core/llm-server/server/anthropic/MessagesRequestTranslator.md): Messages request to chat-completions body; has `translate`.
+- [core/llm-server/server/anthropic/MessageTurnTranslator.md](core/llm-server/server/anthropic/MessageTurnTranslator.md): one Messages turn to chat-completions messages; has `translate`.
+- [core/llm-server/server/anthropic/ToolDefinitionTranslator.md](core/llm-server/server/anthropic/ToolDefinitionTranslator.md): Anthropic tools to OpenAI functions; has `apply`, `functions`.
+- [core/llm-server/server/anthropic/AnthropicContent.md](core/llm-server/server/anthropic/AnthropicContent.md): system, tool_result and image content conversion; has `systemText`, `toolResultText`, `imagePart`.
+- [core/llm-server/server/anthropic/AnthropicIds.md](core/llm-server/server/anthropic/AnthropicIds.md): mints message and tool-use ids; has `messageId`, `toolUseId`.
+- [core/llm-server/server/anthropic/StopReason.md](core/llm-server/server/anthropic/StopReason.md): finish_reason to stop_reason; has `forFinish`, `forReply`.
+- [core/llm-server/server/anthropic/MessagesResponseTranslator.md](core/llm-server/server/anthropic/MessagesResponseTranslator.md): non-stream reply to a Messages response; has `translate`.
+- [core/llm-server/server/anthropic/MessagesStreamTranslator.md](core/llm-server/server/anthropic/MessagesStreamTranslator.md): stream chunks to Messages events; has `chunk`, `end`, `error`.
+- [core/llm-server/server/anthropic/MessagesTokenCount.md](core/llm-server/server/anthropic/MessagesTokenCount.md): count_tokens estimate; has `estimate`.
+- [core/llm-server/server/anthropic/AnthropicError.md](core/llm-server/server/anthropic/AnthropicError.md): Anthropic-shaped errors; has `send`, `body`.
+- [core/llm-server/server/relay/UpstreamChatRequest.md](core/llm-server/server/relay/UpstreamChatRequest.md): posts to llama-server chat completions for the translated routes; has `open`, `collect`.
+- [core/llm-server/server/anthropic/MessagesCompletion.md](core/llm-server/server/anthropic/MessagesCompletion.md): one non-streaming Messages request; has `run`.
+- [core/llm-server/server/anthropic/MessagesStream.md](core/llm-server/server/anthropic/MessagesStream.md): relays upstream SSE as Messages events; has `run`.
+- [core/llm-server/server/relay/TranslatedChatStream.md](core/llm-server/server/relay/TranslatedChatStream.md): base for a translated streaming request (relays upstream SSE through a dialect translator); has `run`, `parseLine`.
+- [core/llm-server/server/relay/TranslatedChatCompletion.md](core/llm-server/server/relay/TranslatedChatCompletion.md): base for a translated non-streaming request; has `run`.
+- [core/llm-server/server/OpenAiResponsesRouter.md](core/llm-server/server/OpenAiResponsesRouter.md): Express controller for the local OpenAI Responses API (what Codex speaks); has `create`.
+- [core/llm-server/server/responses/ResponsesRequestTranslator.md](core/llm-server/server/responses/ResponsesRequestTranslator.md): Responses request to chat-completions body; has `translate`.
+- [core/llm-server/server/responses/ResponseInputTranslator.md](core/llm-server/server/responses/ResponseInputTranslator.md): Responses input items to chat-completions messages; has `translate`.
+- [core/llm-server/server/responses/ResponsesToolTranslator.md](core/llm-server/server/responses/ResponsesToolTranslator.md): Responses function and custom tools to chat functions; has `apply`.
+- [core/llm-server/server/responses/ResponsesContent.md](core/llm-server/server/responses/ResponsesContent.md): content parts and tool outputs to chat text and parts; has `text`, `userContent`, `toolOutput`.
+- [core/llm-server/server/responses/ResponsesIds.md](core/llm-server/server/responses/ResponsesIds.md): mints response, item and call ids; has `responseId`, `itemId`, `callId`.
+- [core/llm-server/server/responses/ResponsesError.md](core/llm-server/server/responses/ResponsesError.md): OpenAI-shaped errors and failure codes; has `send`, `body`, `failure`, `codeFor`.
+- [core/llm-server/server/responses/OutputItems.md](core/llm-server/server/responses/OutputItems.md): message, reasoning and tool-call output items; has `message`, `reasoning`, `toolCall`, `customInput`.
+- [core/llm-server/server/responses/ResponseEnvelope.md](core/llm-server/server/responses/ResponseEnvelope.md): the response object per lifecycle state; has `inProgress`, `finished`, `failed`, `echo`, `usage`.
+- [core/llm-server/server/responses/ResponsesResponseTranslator.md](core/llm-server/server/responses/ResponsesResponseTranslator.md): non-stream reply to a Responses object; has `translate`.
+- [core/llm-server/server/responses/ResponsesStreamTranslator.md](core/llm-server/server/responses/ResponsesStreamTranslator.md): stream chunks to Responses events; has `chunk`, `end`, `error`.
+- [core/llm-server/server/responses/StreamedOutputItem.md](core/llm-server/server/responses/StreamedOutputItem.md): base for one output item while it streams; has `open`, `append`, `close`.
+- [core/llm-server/server/responses/StreamedTextItem.md](core/llm-server/server/responses/StreamedTextItem.md): base for a streamed item with one text part; has `append`.
+- [core/llm-server/server/responses/StreamedMessageItem.md](core/llm-server/server/responses/StreamedMessageItem.md): the streamed assistant message item.
+- [core/llm-server/server/responses/StreamedReasoningItem.md](core/llm-server/server/responses/StreamedReasoningItem.md): the streamed reasoning item.
+- [core/llm-server/server/responses/StreamedToolCallItem.md](core/llm-server/server/responses/StreamedToolCallItem.md): the streamed function or custom tool call item; has `append`.
+- [core/llm-server/server/responses/ResponsesCompletion.md](core/llm-server/server/responses/ResponsesCompletion.md): one non-streaming Responses request; has `run`.
+- [core/llm-server/server/responses/ResponsesStream.md](core/llm-server/server/responses/ResponsesStream.md): relays upstream SSE as Responses events; has `run`.
+- [core/llm-server/server/chat/OpenAICompatAdapter.md](core/llm-server/server/chat/OpenAICompatAdapter.md): ChatAdapter for OpenAI-compatible servers; has `healthCheck`, `chat`, `protocolId`.
+- [core/llm-server/server/chat/OpenAiChatStream.md](core/llm-server/server/chat/OpenAiChatStream.md): state of one streaming completion; has `handleLines`, `end`, `fail`, `abort`, `summary`.
+- [core/llm-server/server/chat/OpenAiChatRequest.md](core/llm-server/server/chat/OpenAiChatRequest.md): SSE chat request with one dead-socket retry; has `start`.
+- [core/llm-server/server/chat/ChatErrorBody.md](core/llm-server/server/chat/ChatErrorBody.md): HTTP error body to one capped line; has `read`.
+- [core/llm-server/server/chat/TimingsUsage.md](core/llm-server/server/chat/TimingsUsage.md): OpenAI usage from llama.cpp timings; has `fromTimings`.
+- [core/llm-server/validation/CodeValidator.md](core/llm-server/validation/CodeValidator.md): dispatches code to the right language validator; has `validate`, `formatForModel`, `isSupported`, `register`.
+- [core/llm-server/validation/ValidationResult.md](core/llm-server/validation/ValidationResult.md): validation result shape and model-facing block; has `fromDiagnostics`, `formatForModel`.
+- [core/llm-server/gambit/GambitRunner.md](core/llm-server/gambit/GambitRunner.md): runs the model compatibility suite and returns the report; has `runGambit`, `loadSuite`.
+- [core/llm-server/gambit/GambitCapabilities.md](core/llm-server/gambit/GambitCapabilities.md): host capabilities for the gambit with skip reasons; has `detect`, `probeWeb`.
+- [core/llm-server/gambit/GambitConversation.md](core/llm-server/gambit/GambitConversation.md): plays one gambit task as a conversation; has `play`.
+- [core/llm-server/gambit/GambitBridgeTurn.md](core/llm-server/gambit/GambitBridgeTurn.md): live gambit turns through the agent bridge; has `create`.
+- [core/llm-server/models/AddonModelSetup.md](core/llm-server/models/AddonModelSetup.md): one-click add-on model setup; has `execute`, `isInstalled`, `sha256File`.
+- [core/llm-server/runtimes/LlmRuntimeDetector.md](core/llm-server/runtimes/LlmRuntimeDetector.md): LLM runtime detector; has `shared`, `detectRuntimes`, `parseVersionOutput`.
+- [core/llm-server/runtimes/LlmRuntimeInstaller.md](core/llm-server/runtimes/LlmRuntimeInstaller.md): LLM runtime installer; has `shared`, `installRuntime`, `uninstallRuntime`, `fetchLatestRelease`.
+- [core/llm-server/chat/ToolGroups.md](core/llm-server/chat/ToolGroups.md): lazy tool-group registry, the prose tool doc surface; has `staticGroups`, `extGroupsFor`, `extToolDoc`, `groupForTool`, `buildInactiveRegistry`.
+- [core/llm-server/chat/tool-groups/ScheduleBounds.md](core/llm-server/chat/tool-groups/ScheduleBounds.md): schedule bounds in minutes for tool docs; has `rangeText`.
+- [core/llm-server/chat/tool-groups/ArtifactManuals.md](core/llm-server/chat/tool-groups/ArtifactManuals.md): artifact, live artifact and widget-data tool manuals (data).
+- [core/llm-server/chat/tool-groups/MediaManuals.md](core/llm-server/chat/tool-groups/MediaManuals.md): image, video and music tool manuals (data).
+- [core/llm-server/chat/tool-groups/UtilityManuals.md](core/llm-server/chat/tool-groups/UtilityManuals.md): web, knowledge base, validate and webhook tool manuals (data).
+- [core/llm-server/chat/tool-groups/ActivationManual.md](core/llm-server/chat/tool-groups/ActivationManual.md): activate_tools manual and inactive-registry text (data).
+- [core/llm-server/chat/tool-groups/StaticGroupTable.md](core/llm-server/chat/tool-groups/StaticGroupTable.md): built-in tool groups in render order (data).
+- [core/llm-server/chat/tool-groups/MergedSourceTable.md](core/llm-server/chat/tool-groups/MergedSourceTable.md): tool sources merged into one group; has `forSource`.
+- [core/llm-server/chat/tool-groups/ExtensionGroupBuilder.md](core/llm-server/chat/tool-groups/ExtensionGroupBuilder.md): discovered tools to lazy groups; has `groupsFor`, `toolDoc`.
+- [core/llm-server/chat/tool-groups/FenceExampleStripper.md](core/llm-server/chat/tool-groups/FenceExampleStripper.md): strips fence examples for native tool routes; has `strip`.
+- [core/llm-server/chat/tool-groups/GeneratedPayload.md](core/llm-server/chat/tool-groups/GeneratedPayload.md): bounce exemption for calls carrying generated content; has `carries`.
+- [core/llm-server/chat/ToolSchemas.md](core/llm-server/chat/ToolSchemas.md): OpenAI tools array for native-tool turns, the JSON doc surface; has `buildHarmonyTools`, `browserToolSchemas`, `pseudoToolSchemas`, `extToolSchemas`, `stubToolSchema`.
+- [core/llm-server/chat/tool-schemas/FunctionSchema.md](core/llm-server/chat/tool-schemas/FunctionSchema.md): builds one OpenAI function entry; has `build`, `nameOf`.
+- [core/llm-server/chat/tool-schemas/PseudoToolSchemaTable.md](core/llm-server/chat/tool-schemas/PseudoToolSchemaTable.md): pseudo-tool schemas (data).
+- [core/llm-server/chat/tool-schemas/BrowserToolSchemas.md](core/llm-server/chat/tool-schemas/BrowserToolSchemas.md): browser tool schemas from BrowserTools; has `build`, `paramToSchema`.
+- [core/llm-server/chat/tool-schemas/LazySchemaStubber.md](core/llm-server/chat/tool-schemas/LazySchemaStubber.md): stubs tools of inactive groups on the native path; has `apply`, `stubSchema`.
+- [core/llm-server/chat/tool-schemas/FenceFallbackDoc.md](core/llm-server/chat/tool-schemas/FenceFallbackDoc.md): fence contract for natively excluded tools; has `build`.
+- [core/llm-server/chat/Compaction.md](core/llm-server/chat/Compaction.md): summarizes older chat history to fit the context window; has `shouldCompact`, `findCutIndex`, `compact`, `buildSummaryPrompt`.
+- [core/llm-server/chat/compaction/SummaryDirective.md](core/llm-server/chat/compaction/SummaryDirective.md): compaction directive and summary frame; has `wrap`.
+- [core/llm-server/chat/compaction/TurnBoundary.md](core/llm-server/chat/compaction/TurnBoundary.md): where a compaction cut may land; has `isTurnStart`, `isCutPoint`.
+- [core/llm-server/chat/compaction/MessageText.md](core/llm-server/chat/compaction/MessageText.md): flattens message content to text; has `of`.
+- [core/llm-server/chat/ToolOutputTruncator.md](core/llm-server/chat/ToolOutputTruncator.md): bounds tool output with head and tail selection and optional spill; has `forSlotBudget`, `truncate`.
+- [core/llm-server/chat/tool-output/TruncationNotice.md](core/llm-server/chat/tool-output/TruncationNotice.md): the model-facing truncation notice; has `build`.
+- [core/llm-server/chat/SafeFetch.md](core/llm-server/chat/SafeFetch.md): SSRF-hardened fetch for the agent's headless web tools; has `fetch`.
+- [core/llm-server/chat/safe-fetch/AddressGuard.md](core/llm-server/chat/safe-fetch/AddressGuard.md): which addresses SafeFetch may connect to, including IP-literal hosts; has `isBlockedAddress`, `literalRefusal`, `lookup`.
+- [core/llm-server/chat/safe-fetch/FetchOptions.md](core/llm-server/chat/safe-fetch/FetchOptions.md): SafeFetch options and Chrome-identity headers; has `from`, `followsRedirects`, `headers`.
+- [core/llm-server/chat/safe-fetch/CappedBodyReader.md](core/llm-server/chat/safe-fetch/CappedBodyReader.md): reads a response body up to a byte cap; has `read`.
+- [core/llm-server/chat/safe-fetch/ResponseCharset.md](core/llm-server/chat/safe-fetch/ResponseCharset.md): maps a Content-Type charset to a Buffer encoding; has `encodingFor`.
+- [core/llm-server/chat/ScheduledTaskMode.md](core/llm-server/chat/ScheduledTaskMode.md): the scheduled-task chat mode; has `register`, `unregister`, `descriptor`, `buildTurn`.
+- [core/llm-server/chat/scheduled-task/ScheduledTaskPrompt.md](core/llm-server/chat/scheduled-task/ScheduledTaskPrompt.md): the scheduled-task setup system prompt; has `build`.
+- [core/llm-server/chat/scheduled-task/ScheduledTaskTools.md](core/llm-server/chat/scheduled-task/ScheduledTaskTools.md): the scheduled-task create, update and run tools; has `build`, `create`, `update`, `runNow`.
+- [core/llm-server/chat/scheduled-task/ScheduledTaskToolSpecs.md](core/llm-server/chat/scheduled-task/ScheduledTaskToolSpecs.md): scheduled-task tool names, descriptions and schemas; has `create`, `update`, `run`.
+- [core/llm-server/chat/scheduled-task/TaskInterval.md](core/llm-server/chat/scheduled-task/TaskInterval.md): task intervals as readable frequencies; has `describe`, `toMinutes`, `fromMinutes`.
+- [core/llm-server/chat/scheduled-task/TestRunOutcome.md](core/llm-server/chat/scheduled-task/TestRunOutcome.md): shapes a test run's result for the setup model; has `from`.
+- [core/llm-server/chat/triggers/TriggerFileTools.md](core/llm-server/chat/triggers/TriggerFileTools.md): run-scoped file tools for file triggers; has `build`.
+- [core/llm-server/chat/triggers/file-tools/ReadTriggerFileTool.md](core/llm-server/chat/triggers/file-tools/ReadTriggerFileTool.md): read_trigger_file, pinned to the watch folder; has `definition`, `execute`.
+- [core/llm-server/chat/triggers/file-tools/WriteWatchDirFileTool.md](core/llm-server/chat/triggers/file-tools/WriteWatchDirFileTool.md): write_file_in_watch_dir, pinned to the watch folder; has `definition`, `execute`.
+- [core/llm-server/chat/TriggerStore.md](core/llm-server/chat/TriggerStore.md): triggers with their runs, delivery log and instruction history; has trigger CRUD, versions, drift, memory, delivery and run methods.
+- [core/llm-server/chat/trigger-store/TriggerLifecycle.md](core/llm-server/chat/trigger-store/TriggerLifecycle.md): the derived trigger lifecycle; has `configHash`, `isArmable`, `statusOf`.
+- [core/llm-server/chat/trigger-store/TriggerSourceConfig.md](core/llm-server/chat/trigger-store/TriggerSourceConfig.md): normalises a trigger source per kind; has `normalize`, `merge`.
+- [core/llm-server/chat/trigger-store/TriggerActionConfig.md](core/llm-server/chat/trigger-store/TriggerActionConfig.md): normalises a trigger action; has `normalize`, `merge`.
+- [core/llm-server/chat/trigger-store/TriggerPatch.md](core/llm-server/chat/trigger-store/TriggerPatch.md): works out an update's merged config and armed state; has `apply`.
+- [core/llm-server/chat/trigger-store/TriggerPolicy.md](core/llm-server/chat/trigger-store/TriggerPolicy.md): base class for per-trigger policies; has `normalizeInto`, `of`.
+- [core/llm-server/chat/trigger-store/TriggerFailurePolicy.md](core/llm-server/chat/trigger-store/TriggerFailurePolicy.md): auto-pause, notify and retry policy; has `normalizeInto`, `of`.
+- [core/llm-server/chat/trigger-store/TriggerApprovalPolicy.md](core/llm-server/chat/trigger-store/TriggerApprovalPolicy.md): approval mode and always-allow list; has `normalizeInto`, `of`, `withTool`.
+- [core/llm-server/chat/trigger-store/TriggerMemoryPolicy.md](core/llm-server/chat/trigger-store/TriggerMemoryPolicy.md): persistent trigger memory policy; has `normalize`, `of`, `capNotes`.
+- [core/llm-server/chat/trigger-store/FailureStreak.md](core/llm-server/chat/trigger-store/FailureStreak.md): applies the failure policy to one finished run; has `after`.
+- [core/llm-server/chat/trigger-store/DriftRecord.md](core/llm-server/chat/trigger-store/DriftRecord.md): the stored payload-drift record; has `next`.
+- [core/llm-server/chat/trigger-store/CappedJson.md](core/llm-server/chat/trigger-store/CappedJson.md): JSON under a hard character cap; has `stringify`.
+- [core/llm-server/chat/trigger-store/DeliveryEventSummary.md](core/llm-server/chat/trigger-store/DeliveryEventSummary.md): compact event facts for the delivery log; has `compact`.
+- [core/llm-server/chat/trigger-store/HookToken.md](core/llm-server/chat/trigger-store/HookToken.md): webhook hook tokens; has `create`, `isWellFormed`.
+- [core/llm-server/chat/trigger-store/TriggerRowMapper.md](core/llm-server/chat/trigger-store/TriggerRowMapper.md): hydrates trigger table rows; has `trigger`, `run`, `delivery`, `version`.
+- [core/llm-server/chat/trigger-store/TriggerRunLog.md](core/llm-server/chat/trigger-store/TriggerRunLog.md): a trigger's fire history; has `start`, `finish`, `get`, `list`, `hasDedupeKey`, `pruneTranscripts`.
+- [core/llm-server/chat/trigger-store/TriggerDeliveryLog.md](core/llm-server/chat/trigger-store/TriggerDeliveryLog.md): per-trigger inbound delivery log; has `record`, `update`, `get`, `list`, `counts`.
+- [core/llm-server/chat/trigger-store/TriggerVersionHistory.md](core/llm-server/chat/trigger-store/TriggerVersionHistory.md): trigger instruction version history; has `record`, `list`, `info`, `find`, `markTested`.
+- [core/llm-server/chat/trigger-store/TriggerRepository.md](core/llm-server/chat/trigger-store/TriggerRepository.md): plain SQL over the triggers table; has `insert`, `get`, `getByToken`, `list`, `delete`, `updateConfig`.
+- [core/llm-server/chat/trigger-store/TriggerRunRepository.md](core/llm-server/chat/trigger-store/TriggerRunRepository.md): plain SQL over trigger runs; has `insert`, `finish`, `get`, `list`, `hasDedupeKey`.
+- [core/llm-server/chat/trigger-store/TriggerDeliveryRepository.md](core/llm-server/chat/trigger-store/TriggerDeliveryRepository.md): plain SQL over trigger deliveries; has `insert`, `update`, `get`, `list`, `counts`, `prune`.
+- [core/llm-server/chat/trigger-store/TriggerVersionRepository.md](core/llm-server/chat/trigger-store/TriggerVersionRepository.md): plain SQL over trigger versions; has `insert`, `list`, `latest`, `get`, `markTested`, `prune`.
+- [core/llm-server/server/LaunchPlanner.md](core/llm-server/server/LaunchPlanner.md): plans a llama-server launch (VRAM fit, KV and expert placement, splits, speculation, serving flags); has `plan`.
+- [core/llm-server/server/launch/KvCacheType.md](core/llm-server/server/launch/KvCacheType.md): accepted KV cache types and bytes per element; has `normalize`, `elementBytes`, `isQuantized`.
+- [core/llm-server/server/launch/SlidingWindowLayout.md](core/llm-server/server/launch/SlidingWindowLayout.md): which layers cache only a sliding window; has `of`.
+- [core/llm-server/server/launch/HybridAttentionLayout.md](core/llm-server/server/launch/HybridAttentionLayout.md): which hybrid-attention blocks keep KV; has `of`.
+- [core/llm-server/server/launch/KvCacheSizer.md](core/llm-server/server/launch/KvCacheSizer.md): sliding-window and hybrid-aware KV cache bytes; has `perLayer`, `total`, `atLayer`.
+- [core/llm-server/server/launch/GpuOverhead.md](core/llm-server/server/launch/GpuOverhead.md): per-card reserve and fixed GPU scratch; has `fixed`.
+- [core/llm-server/server/launch/DraftBranchCost.md](core/llm-server/server/launch/DraftBranchCost.md): VRAM of an MTP or drafter branch; has `bytes`.
+- [core/llm-server/server/launch/FullOffloadCost.md](core/llm-server/server/launch/FullOffloadCost.md): full-offload VRAM price; has `bytes`, `noHeaderBytes`.
+- [core/llm-server/server/launch/PartialOffloadSizer.md](core/llm-server/server/launch/PartialOffloadSizer.md): sizes a partial GPU layer split; has `size`.
+- [core/llm-server/server/launch/GpuInventory.md](core/llm-server/server/launch/GpuInventory.md): local and remote GPUs to budget against; has `fromDiagnostics`, `remoteDevices`, `largestIndex`.
+- [core/llm-server/server/launch/TensorParallelRatio.md](core/llm-server/server/launch/TensorParallelRatio.md): bandwidth-weighted tensor-parallel ratio; has `compute`.
+- [core/llm-server/server/launch/MoeLayerSplit.md](core/llm-server/server/launch/MoeLayerSplit.md): byte-balanced multi-GPU split for MoE expert offload; has `balance`.
+- [core/llm-server/server/launch/LayerFillSplit.md](core/llm-server/server/launch/LayerFillSplit.md): fastest-card-first layer split; has `compute`, `describe`.
+- [core/llm-server/server/launch/RpcSplitRatio.md](core/llm-server/server/launch/RpcSplitRatio.md): split across remote RPC GPUs; has `compute`.
+- [core/llm-server/server/launch/PromptCacheRam.md](core/llm-server/server/launch/PromptCacheRam.md): sizes the prompt cache in RAM; has `resolve`.
+- [core/llm-server/server/launch/ModelFiles.md](core/llm-server/server/launch/ModelFiles.md): a model's weights, projector, drafter and header for planning.
+- [core/llm-server/server/launch/RuntimeFlags.md](core/llm-server/server/launch/RuntimeFlags.md): which flags a runtime build accepts; has `accepts`.
+- [core/llm-server/server/launch/KvSettings.md](core/llm-server/server/launch/KvSettings.md): context clamp and KV precision for a launch; has `forceF16`.
+- [core/llm-server/server/launch/SlotPlan.md](core/llm-server/server/launch/SlotPlan.md): parallel slots and cache reuse; has `resolve`.
+- [core/llm-server/server/launch/SpeculationPlan.md](core/llm-server/server/launch/SpeculationPlan.md): speculative decoding choice and budget; has `resolve`.
+- [core/llm-server/server/launch/VisionProjectorPlan.md](core/llm-server/server/launch/VisionProjectorPlan.md): whether the vision projector loads; has `resolve`.
+- [core/llm-server/server/launch/VramBudget.md](core/llm-server/server/launch/VramBudget.md): usable VRAM including remote peers and the cap; has `resolve`.
+- [core/llm-server/server/launch/TensorParallelGate.md](core/llm-server/server/launch/TensorParallelGate.md): whether tensor split is eligible; has `resolve`.
+- [core/llm-server/server/launch/LaunchCostInput.md](core/llm-server/server/launch/LaunchCostInput.md): full-offload cost inputs for a launch; has `build`, `noHeader`.
+- [core/llm-server/server/launch/MoeExpertPlan.md](core/llm-server/server/launch/MoeExpertPlan.md): MoE expert CPU offload and spare-VRAM fill; has `resolve`.
+- [core/llm-server/server/launch/OffloadDecision.md](core/llm-server/server/launch/OffloadDecision.md): full, partial or CPU decision; has `resolve`.
+- [core/llm-server/server/launch/SplitPlan.md](core/llm-server/server/launch/SplitPlan.md): which tensor-split owner applies; has `resolve`.
+- [core/llm-server/server/launch/LoadingPolicy.md](core/llm-server/server/launch/LoadingPolicy.md): mmap versus bulk read and prompt cache; has `resolve`.
+- [core/llm-server/server/launch/FamilyTuning.md](core/llm-server/server/launch/FamilyTuning.md): family sampler, template and drafter args; has `resolve`.
+- [core/llm-server/server/launch/LaunchArgsBuilder.md](core/llm-server/server/launch/LaunchArgsBuilder.md): assembles the llama-server argv in order; has `build`.
+- [core/llm-server/server/launch/PlacementNotes.md](core/llm-server/server/launch/PlacementNotes.md): plan notes on runtime, VRAM need and offload; has `build`.
+- [core/llm-server/server/launch/ModelFeatureNotes.md](core/llm-server/server/launch/ModelFeatureNotes.md): plan notes on KV, attention and speculation; has `build`.
+- [core/llm-server/server/launch/ServingNotes.md](core/llm-server/server/launch/ServingNotes.md): plan notes on slots, caches and splits; has `build`.
+- [core/llm-server/server/launch/PlanSummary.md](core/llm-server/server/launch/PlanSummary.md): the plan object returned with the argv; has `build`.
+- [core/llm-server/models/FitVramMath.md](core/llm-server/models/FitVramMath.md): shared pre-download KV and overhead arithmetic; has `kvBytes`, `kvBytesAt8k`.
+- [core/llm-server/models/FitClassifier.md](core/llm-server/models/FitClassifier.md): pre-download fit badge with predicted speed; has `classify`.
+- [core/llm-server/models/MlxFitClassifier.md](core/llm-server/models/MlxFitClassifier.md): fit badge for MLX on unified memory; has `classify`.
+- [core/llm-server/models/Recommender.md](core/llm-server/models/Recommender.md): onboarding model, quant, context and runtime pick; has `recommend`.
+- [core/llm-server/models/RecommenderRuntimePicker.md](core/llm-server/models/RecommenderRuntimePicker.md): runtime choice for a machine; has `pick`.
+- [core/llm-server/models/RecommenderRationale.md](core/llm-server/models/RecommenderRationale.md): wizard explanation text for a recommendation; has `build`.
+- [core/llm-server/LlmModelsScanner.md](core/llm-server/LlmModelsScanner.md): scans the LLM models folder into classified entries with parsed headers; has `shared`, `scan`.
+- [core/llm-server/scanner/GgufParseWorkerClient.md](core/llm-server/scanner/GgufParseWorkerClient.md): parses GGUF headers on a lazy, idle-terminated worker; has `parse`, `stop`.
+- [core/llm-server/scanner/GgufHeaderCache.md](core/llm-server/scanner/GgufHeaderCache.md): persisted GGUF header memo; has `get`, `flush`.
+- [core/llm-server/scanner/ShardScanMerger.md](core/llm-server/scanner/ShardScanMerger.md): merges split-model shard scans into one layout; has `merge`.
+- [core/llm-server/scanner/ModelDirWalker.md](core/llm-server/scanner/ModelDirWalker.md): capped folder walk collecting model candidates; has `walk`.
+- [core/llm-server/scanner/GgufModelGrouper.md](core/llm-server/scanner/GgufModelGrouper.md): groups GGUF files into models with shards, projectors and drafters; has `group`.
+- [core/llm-server/scanner/MlxModelBuilder.md](core/llm-server/scanner/MlxModelBuilder.md): builds MLX model entries; has `build`, `readConfigFacts`.
+- [core/llm-server/scanner/AddonModelBuilder.md](core/llm-server/scanner/AddonModelBuilder.md): builds add-on model entries; has `build`.
+- [core/llm-server/scanner/ModelSidecars.md](core/llm-server/scanner/ModelSidecars.md): finds metadata files beside model weights; has `attach`, `forModel`.
+- [core/llm-server/scanner/ModelClassifier.md](core/llm-server/scanner/ModelClassifier.md): model formats, runtimes and MTP capability; has `classify`, `augmentFromGguf`.
+- [core/llm-server/scanner/GgufHeaderAttacher.md](core/llm-server/scanner/GgufHeaderAttacher.md): reads a model's GGUF header into its entry; has `attach`, `factsOf`.
+- [core/llm-server/scanner/BoundedParallel.md](core/llm-server/scanner/BoundedParallel.md): ordered async map with a concurrency cap; has `map`.
+- [core/llm-server/models/AutoPlanner.md](core/llm-server/models/AutoPlanner.md): Automatic Local Setup planner for chat, image and music; has `plan`.
+- [core/llm-server/models/auto-plan/AutoPlanRanking.md](core/llm-server/models/auto-plan/AutoPlanRanking.md): shared ladders and pick ranking for setup; has `modelScore`, `vramNeedOf`, `predictedTps`, `tierOf`.
+- [core/llm-server/models/auto-plan/LlmTierPicker.md](core/llm-server/models/auto-plan/LlmTierPicker.md): four-tier chat model pick; has `pick`.
+- [core/llm-server/models/auto-plan/AutoPlanMachine.md](core/llm-server/models/auto-plan/AutoPlanMachine.md): hardware budget to planning facts; has `describe`.
+- [core/llm-server/models/auto-plan/CoexistencePicker.md](core/llm-server/models/auto-plan/CoexistencePicker.md): per-card chat and image coexistence picks; has `coexists`, `residentPick`, `moePick`.
+- [core/llm-server/models/auto-plan/ImagePlacementPlanner.md](core/llm-server/models/auto-plan/ImagePlacementPlanner.md): image placement decision with the chat trade-off; has `decide`.
+- [core/llm-server/models/auto-plan/MusicLegPlanner.md](core/llm-server/models/auto-plan/MusicLegPlanner.md): music eligibility and pool joining; has `plan`.
+- [core/llm-server/models/auto-plan/LlmRecommendation.md](core/llm-server/models/auto-plan/LlmRecommendation.md): chat pick to install recommendation; has `build`.
+- [core/llm-server/models/auto-plan/RamPinAdvice.md](core/llm-server/models/auto-plan/RamPinAdvice.md): RAM pin recommendation for swap pools; has `advise`.
+- [core/llm-server/models/auto-plan/PlanSummary.md](core/llm-server/models/auto-plan/PlanSummary.md): setup plan preview lines; has `build`.
+- [core/llm-server/models/CatalogBuilder.md](core/llm-server/models/CatalogBuilder.md): builds the curated catalog from HF repo facts; has `build`, `buildEntry`.
+- [core/llm-server/models/LiveCatalog.md](core/llm-server/models/LiveCatalog.md): cached live catalog with a static fallback; has `shared`, `get`, `reset`.
+- [core/llm-server/agent/AgentRunner.md](core/llm-server/agent/AgentRunner.md): headless agent tool loop facade (moved from the ai-chat extension into core); has `run`, `buildSystemPrompt`.
+- [core/llm-server/agent/AgentRun.md](core/llm-server/agent/AgentRun.md): one execution of the agent loop; has `execute`.
+- [core/llm-server/agent/AgentHistory.md](core/llm-server/agent/AgentHistory.md): run messages plus tool-history and carried-note ledgers; has `push`, `pushToolResult`, `evictToolHistory`, `applyCompaction`.
+- [core/llm-server/agent/AgentLoopText.md](core/llm-server/agent/AgentLoopText.md): model-facing agent loop strings (data).
+- [core/llm-server/agent/AgentPromptText.md](core/llm-server/agent/AgentPromptText.md): browser tool lines for the agent prompt (data); has `browserToolLines`.
+- [core/llm-server/agent/AgentSystemPromptBuilder.md](core/llm-server/agent/AgentSystemPromptBuilder.md): builds the agent system prompt with overrides; has `build`.
+- [core/llm-server/agent/AgentToolExecutor.md](core/llm-server/agent/AgentToolExecutor.md): executes one tool call on the working tab; has `execute`.
+- [core/llm-server/agent/CarriedNotesLedger.md](core/llm-server/agent/CarriedNotesLedger.md): eviction order for carried reasoning notes; has `track`, `remap`.
+- [core/llm-server/agent/CarriedReasoning.md](core/llm-server/agent/CarriedReasoning.md): carried-reasoning budgets; has `resolveBudget`, `tail`.
+- [core/llm-server/agent/CompletionSender.md](core/llm-server/agent/CompletionSender.md): agent completions with warm-up retry; has `send`, `sendFirst`, `summarize`.
+- [core/llm-server/agent/CompletionVerifier.md](core/llm-server/agent/CompletionVerifier.md): tracks page actions that had no effect; has `next`, `observe`, `takeNudge`.
+- [core/llm-server/agent/ContextOverflow.md](core/llm-server/agent/ContextOverflow.md): recognises context-overflow errors; has `isExceeded`, `parseCounts`.
+- [core/llm-server/agent/FinalAnswerGate.md](core/llm-server/agent/FinalAnswerGate.md): retry, stall and verify nudges before a final answer; has `review`.
+- [core/llm-server/agent/LargeStringShrinker.md](core/llm-server/agent/LargeStringShrinker.md): cuts the largest strings of an over-budget result; has `shrink`.
+- [core/llm-server/agent/MidTurnCompactor.md](core/llm-server/agent/MidTurnCompactor.md): proactive and reactive in-turn compaction; has `compactIfOverTrigger`, `compact`.
+- [core/llm-server/agent/OverflowRecovery.md](core/llm-server/agent/OverflowRecovery.md): evict, shrink, compact and retry after an overflow; has `recover`.
+- [core/llm-server/agent/RunClock.md](core/llm-server/agent/RunClock.md): agent run wall clock; has `expired`, `remainingMs`, `extend`.
+- [core/llm-server/agent/RunOptions.md](core/llm-server/agent/RunOptions.md): agent run options with defaults; has `normalize`.
+- [core/llm-server/agent/RunSummary.md](core/llm-server/agent/RunSummary.md): one-sentence agent run summary; has `generate`.
+- [core/llm-server/agent/SystemPromptRenderer.md](core/llm-server/agent/SystemPromptRenderer.md): renders the base agent system prompt; has `render`.
+- [core/llm-server/agent/SystemPromptText.md](core/llm-server/agent/SystemPromptText.md): base agent system prompt wording (data).
+- [core/llm-server/agent/TabLookup.md](core/llm-server/agent/TabLookup.md): tab description, URL and element digest for the agent; has `describe`, `currentUrl`, `attachDigest`.
+- [core/llm-server/agent/ToolBatchParser.md](core/llm-server/agent/ToolBatchParser.md): all tool calls of a reply in model order; has `parse`.
+- [core/llm-server/agent/ToolBatchRunner.md](core/llm-server/agent/ToolBatchRunner.md): runs one reply's tool calls in parallel or exclusively; has `run`.
+- [core/llm-server/agent/ToolCallGuard.md](core/llm-server/agent/ToolCallGuard.md): allow-list rejection before a tool call; has `check`.
+- [core/llm-server/agent/ToolHistoryBudget.md](core/llm-server/agent/ToolHistoryBudget.md): tool-history character budgets; has `forSlot`.
+- [core/llm-server/agent/ToolHistoryEvictor.md](core/llm-server/agent/ToolHistoryEvictor.md): size-weighted tool-result eviction; has `evict`.
+- [core/llm-server/agent/ToolResultCompactor.md](core/llm-server/agent/ToolResultCompactor.md): tool result to model text; has `compact`.
+- [core/llm-server/agent/UnfulfilledIntent.md](core/llm-server/agent/UnfulfilledIntent.md): detects announce-only replies; has `matches`.
+- [core/llm-server/agent/WorkTab.md](core/llm-server/agent/WorkTab.md): the agent's working tab; has `open`, `ensure`, `closeIfOwned`.
+- [core/llm-server/server/LlmRuntimeServer.md](core/llm-server/server/LlmRuntimeServer.md): supervises the chat model's llama-server; has `findFreePort`, `baseUrl`, `markDirty`, `ensureStopped` plus the base API.
+- [core/llm-server/server/LlmCapsProbe.md](core/llm-server/server/LlmCapsProbe.md): learns how the loaded model's template controls thinking; has `execute`, `emptyCaps`.
+- [core/llm-server/router/RouterRuntimeServer.md](core/llm-server/router/RouterRuntimeServer.md): supervises the tool-group router's CPU llama-server; has `findFreePort` plus the base API.
+- [core/llm-server/server/chat/ChatAdapterRegistry.md](core/llm-server/server/chat/ChatAdapterRegistry.md): maps a runtime protocol to its chat adapter; has `createAdapterFor`, `listProtocols`.
+- [core/llm-server/server/PlanFor.md](core/llm-server/server/PlanFor.md): picks and runs the right launch planner; has `plan`, `isCustomLaunch`, `isMlx`.
+- [core/llm-server/server/LocalApiServer.md](core/llm-server/server/LocalApiServer.md): localhost OpenAI- (chat and Responses) and Anthropic-compatible endpoint; has `setEnabled`, `setPort`, `start`, `stop`, `getConfig`, `getBaseUrl`.
+- [core/llm-server/server/LocalApiUpstream.md](core/llm-server/server/LocalApiUpstream.md): what the local API sees of the running model; has `current`, `getThinking`, `listModels`.
+- [core/llm-server/server/LocalApiListener.md](core/llm-server/server/LocalApiListener.md): loopback-only HTTP listener; has `start`, `stop`, `isRunning`, `address`.
+- [core/llm-server/chat/ToolRequiredArgs.md](core/llm-server/chat/ToolRequiredArgs.md): enforces required tool arguments at dispatch; has `missing`, `softMissing`, `refusal`, `withSoftMissingNote`.
+- [core/llm-server/chat/triggers/WebhookSource.md](core/llm-server/chat/triggers/WebhookSource.md): the inbound webhook receiver for triggers; has `router`.
+- [core/llm-server/chat/triggers/webhook/WebhookDelivery.md](core/llm-server/chat/triggers/webhook/WebhookDelivery.md): one webhook delivery from rate limit and signature check to fire; has `handle`.
+- [core/llm-server/chat/triggers/webhook/WebhookFireReply.md](core/llm-server/chat/triggers/webhook/WebhookFireReply.md): trigger fire outcome to HTTP reply; has `refused`, `ack`, `result`.
+- [core/llm-server/chat/triggers/webhook/WebhookEvent.md](core/llm-server/chat/triggers/webhook/WebhookEvent.md): event record from a webhook request with header redaction; has `build`, `safeHeaders`.
+- [core/llm-server/chat/triggers/webhook/WebhookBodyParser.md](core/llm-server/chat/triggers/webhook/WebhookBodyParser.md): parses raw webhook bodies by content type; has `parse`.
+- [core/llm-server/chat/triggers/webhook/WindowCounter.md](core/llm-server/chat/triggers/webhook/WindowCounter.md): sliding-window counters for rate limits and lockouts; has `hit`, `count`.
+- [core/llm-server/chat/WebLookup.md](core/llm-server/chat/WebLookup.md): the headless web_search tool (search, paged page reads); has `run`.
+- [core/llm-server/chat/web-tools/LookupRequest.md](core/llm-server/chat/web-tools/LookupRequest.md): validated web_search arguments; has `parse`.
+- [core/llm-server/chat/web-tools/LookupReply.md](core/llm-server/chat/web-tools/LookupReply.md): result shapes and actionable error voice; has `ok`, `fail`, `reasonOf`, `today`.
+- [core/llm-server/chat/web-tools/WebSession.md](core/llm-server/chat/web-tools/WebSession.md): one run's web state (results, read pages).
+- [core/llm-server/chat/web-tools/ResultMemory.md](core/llm-server/chat/web-tools/ResultMemory.md): numbered search results and near-match lookup; has `remember`, `byNumber`, `nearest`.
+- [core/llm-server/chat/web-tools/PageCache.md](core/llm-server/chat/web-tools/PageCache.md): short-lived per-run cache of read pages; has `get`, `put`.
+- [core/llm-server/chat/web-tools/ReadBudget.md](core/llm-server/chat/web-tools/ReadBudget.md): characters per page part from the slot size; has `partChars`.
+- [core/llm-server/chat/web-tools/PageReader.md](core/llm-server/chat/web-tools/PageReader.md): reads one URL headless, then in a silent tab; has `read`.
+- [core/llm-server/chat/web-tools/PageReport.md](core/llm-server/chat/web-tools/PageReport.md): one bounded page reply with parts, find excerpts and continuation; has `render`.
+- [core/llm-server/chat/web-tools/PageNotes.md](core/llm-server/chat/web-tools/PageNotes.md): redirect, cut-download and thin-page caveats; has `collect`.
+- [core/llm-server/chat/web-tools/TextPager.md](core/llm-server/chat/web-tools/TextPager.md): splits text into numbered parts; has `count`, `part`, `partAt`.
+- [core/llm-server/chat/web-tools/MatchExcerpts.md](core/llm-server/chat/web-tools/MatchExcerpts.md): excerpts around term matches; has `extract`.
+- [core/llm-server/chat/web-tools/BoilerplateTrimmer.md](core/llm-server/chat/web-tools/BoilerplateTrimmer.md): trims link-dense menus and footers from page edges; has `trim`, `isFurniture`.
+- [core/llm-server/chat/web-tools/ResponseText.md](core/llm-server/chat/web-tools/ResponseText.md): response body to model text; has `isHtml`, `toText`.
+- [core/llm-server/chat/web-tools/PageClassifier.md](core/llm-server/chat/web-tools/PageClassifier.md): bot walls, nothing-found, prose, tab-worthy failures; has `isChallenge`, `isNothingFound`, `isProse`, `tabMightSucceed`.
+- [core/llm-server/chat/web-tools/SilentTab.md](core/llm-server/chat/web-tools/SilentTab.md): renders a page in a background tab that never takes focus; has `make`, `render`.
+- [core/llm-server/chat/web-tools/SearchRunner.md](core/llm-server/chat/web-tools/SearchRunner.md): web search over a ladder of engines, topped up without repeats; has `run`.
+- [core/llm-server/chat/web-tools/ResultList.md](core/llm-server/chat/web-tools/ResultList.md): de-duplicated numbered result list; has `add`, `reply`.
+- [core/llm-server/chat/web-tools/UrlIdentity.md](core/llm-server/chat/web-tools/UrlIdentity.md): when two URLs are the same page; has `key`, `same`.
+- [core/llm-server/chat/web-tools/EditDistance.md](core/llm-server/chat/web-tools/EditDistance.md): edit distance for URLs; has `levenshtein`, `similarity`.
+- [core/llm-server/chat/web-tools/SearchEngine.md](core/llm-server/chat/web-tools/SearchEngine.md): base class for scraped search engines; has `searchUrl`, `parse`.
+- [core/llm-server/chat/web-tools/DuckDuckGoEngine.md](core/llm-server/chat/web-tools/DuckDuckGoEngine.md): DuckDuckGo HTML search engine; has `searchUrl`, `parse`.
+- [core/llm-server/chat/web-tools/BingEngine.md](core/llm-server/chat/web-tools/BingEngine.md): Bing fallback search engine; has `searchUrl`, `parse`.
+- [core/llm-server/chat/TriggerMode.md](core/llm-server/chat/TriggerMode.md): the trigger setup chat mode; has `register`, `unregister`, `descriptor`, `buildTurn`.
+- [core/llm-server/chat/trigger-mode/TriggerModePrompt.md](core/llm-server/chat/trigger-mode/TriggerModePrompt.md): trigger setup system prompt; has `build`.
+- [core/llm-server/chat/trigger-mode/TriggerModeGuide.md](core/llm-server/chat/trigger-mode/TriggerModeGuide.md): fixed trigger setup prompt text; has `lines`.
+- [core/llm-server/chat/trigger-mode/TriggerStateView.md](core/llm-server/chat/trigger-mode/TriggerStateView.md): a trigger's state for the model; has `build`.
+- [core/llm-server/chat/trigger-mode/TriggerFacts.md](core/llm-server/chat/trigger-mode/TriggerFacts.md): shared model-facing trigger facts; has `describeStatus`, `hookUrls`, `oneLine`.
+- [core/llm-server/chat/trigger-mode/TriggerTestOutcome.md](core/llm-server/chat/trigger-mode/TriggerTestOutcome.md): trigger test result for the model; has `from`.
+- [core/llm-server/chat/trigger-mode/TriggerModeServices.md](core/llm-server/chat/trigger-mode/TriggerModeServices.md): late-bound collaborators for trigger mode; has `runner`, `pageSource`, `hookBaseUrls`.
+- [core/llm-server/chat/trigger-mode/TriggerPromptExtras.md](core/llm-server/chat/trigger-mode/TriggerPromptExtras.md): live context for the trigger setup prompt; has `build`.
+- [core/llm-server/chat/trigger-mode/TriggerToolSpecs.md](core/llm-server/chat/trigger-mode/TriggerToolSpecs.md): trigger setup tool schemas; has `create`, `update`, `test`.
+- [core/llm-server/chat/trigger-mode/TriggerGatingParams.md](core/llm-server/chat/trigger-mode/TriggerGatingParams.md): gating parameters to source keys; has `toSource`.
+- [core/llm-server/chat/trigger-mode/TriggerCreateSource.md](core/llm-server/chat/trigger-mode/TriggerCreateSource.md): a new trigger's source per kind; has `kindOf`, `build`.
+- [core/llm-server/chat/trigger-mode/TriggerUpdatePatch.md](core/llm-server/chat/trigger-mode/TriggerUpdatePatch.md): update_trigger store patch; has `build`, `hasChanges`.
+- [core/llm-server/chat/trigger-mode/TriggerTools.md](core/llm-server/chat/trigger-mode/TriggerTools.md): the trigger setup tool handlers; has `build`, `create`, `test`, `update`.
+- [core/llm-server/chat/trigger-mode/TriggerSummary.md](core/llm-server/chat/trigger-mode/TriggerSummary.md): compact trigger summary; has `of`.
+- [core/llm-server/chat/ApprovalGate.md](core/llm-server/chat/ApprovalGate.md): which agent tool calls need a human yes, and the refusal text; has `requiresApproval`, `mutatingNamesOf`, `deniedResult`, `deniedCommandResult`.
+- [core/llm-server/chat/approval/ApprovalPolicy.md](core/llm-server/chat/approval/ApprovalPolicy.md): whether the approval gate is on for a run; has `resolve`, `resolveRun`.
+- [core/llm-server/chat/approval/CommandCallAssessor.md](core/llm-server/chat/approval/CommandCallAssessor.md): shell-command verdict from the classifier and write boundary; has `assess`, `isEnabled`, `isCommandTool`.
+- [core/llm-server/chat/approval/CallDescriber.md](core/llm-server/chat/approval/CallDescriber.md): the approval card's description of a call; has `describe`.
+- [core/llm-server/chat/approval/CardText.md](core/llm-server/chat/approval/CardText.md): one-line clipping for approval cards; has `clip`.
+- [core/llm-server/chat/LiveApi.md](core/llm-server/chat/LiveApi.md): host side of a live artifact's `luma` bridge (page fetch, open tab, guarded extension API calls); has `fetchPage`, `openTab`, `extCall`.
+- [core/llm-server/chat/live-api/FetchQueue.md](core/llm-server/chat/live-api/FetchQueue.md): concurrency and queue cap for live page fetches; has `run`.
+- [core/llm-server/chat/live-api/LivePageRequest.md](core/llm-server/chat/live-api/LivePageRequest.md): validates live page fetch parameters; has `from`, `validHttpUrl`.
+- [core/llm-server/chat/live-api/LivePageFetch.md](core/llm-server/chat/live-api/LivePageFetch.md): one live page read, headless then silent tab, never for refused private addresses; has `execute`.
+- [core/llm-server/ContextEstimator.md](core/llm-server/ContextEstimator.md): per-model context ladders for the chat picker and the Setup fit matrix; has `buildLocalModelOptions`, `measuredComboVram`, `ctxLabel`.
+- [core/llm-server/context/ContextLadder.md](core/llm-server/context/ContextLadder.md): shared context rungs and labels; has `label`, `rungsFor`.
+- [core/llm-server/context/FitRows.md](core/llm-server/context/FitRows.md): lookups over saved fit-test rows; has `okRow`, `anyRow`, `measuredComboVram`.
+- [core/llm-server/context/RungEstimator.md](core/llm-server/context/RungEstimator.md): planner estimate for one context size; has `estimate`, `predictedTps`.
+- [core/llm-server/context/RungTip.md](core/llm-server/context/RungTip.md): hover text for one context rung; has `for`.
+- [core/llm-server/context/ContextRungBuilder.md](core/llm-server/context/ContextRungBuilder.md): one context rung from a measurement or an estimate; has `build`.
+- [core/llm-server/context/AutoContextPick.md](core/llm-server/context/AutoContextPick.md): auto-picked context ladder and default; has `ladder`, `recommendedTokens`.
+- [core/llm-server/context/ModelContextEntry.md](core/llm-server/context/ModelContextEntry.md): one model's chat picker entry; has `build`, `isChattable`.
+- [core/llm-server/context/EffectiveContext.md](core/llm-server/context/EffectiveContext.md): the per-slot context window in effect; has `resolve`, `clampSlots`.
+- [core/llm-server/server/VramWatchdog.md](core/llm-server/server/VramWatchdog.md): free-VRAM pressure watchdog with optional idle unload; has `start`, `stop`, `tick`, `dismiss`, `getState`.
+- [core/llm-server/server/vram-watchdog/VramBand.md](core/llm-server/server/vram-watchdog/VramBand.md): normal, low or critical VRAM against the reserve; has `of`.
+- [core/llm-server/server/vram-watchdog/LedgerCards.md](core/llm-server/server/vram-watchdog/LedgerCards.md): watched and loading cards from the VRAM ledger; has `fromLedger`.
+- [core/llm-server/server/vram-watchdog/WatchedCard.md](core/llm-server/server/vram-watchdog/WatchedCard.md): one card's VRAM pressure state; has `sample`, `commit`, `dismiss`, `unloadDue`.
+- [core/llm-server/server/vram-watchdog/VramPressureText.md](core/llm-server/server/vram-watchdog/VramPressureText.md): VRAM pressure banner text; has `describe`.
+- [core/llm-server/rampin/LlmPinTarget.md](core/llm-server/rampin/LlmPinTarget.md): default chat model to the RAM-pin file list; has `resolve`.
+- [core/llm-server/router/GroupRouterService.md](core/llm-server/router/GroupRouterService.md): opt-in resident CPU tool-group router; has `apply`, `classify`, `downloadModel`, `getStatus`, `stop`.
+- [core/llm-server/router/GroupRouterSettings.md](core/llm-server/router/GroupRouterSettings.md): tool-group router settings and model location; has `isEnabled`, `setEnabled`, `modelPath`.
+- [core/llm-server/router/RouterModelDownloader.md](core/llm-server/router/RouterModelDownloader.md): verified router model download; has `download`, `cancel`.
+- [core/llm-server/router/RouterLaunchPlan.md](core/llm-server/router/RouterLaunchPlan.md): CPU-only router launch plan; has `pickRuntime`, `build`.
+- [core/llm-server/router/RouterClient.md](core/llm-server/router/RouterClient.md): one grammar-constrained router call; has `classify`.
+- [core/llm-server/eval/EvalAdapter.md](core/llm-server/eval/EvalAdapter.md): wires eval runs to AgentRunner or the chat bridge; has `makeAgentRun`, `makeBridgeAgentRun`.
+- [core/llm-server/server/ServerLauncher.md](core/llm-server/server/ServerLauncher.md): starts the local llama-server from saved defaults; has `shared`, `resolveAndStart`.
+- [core/llm-server/server/FitTester.md](core/llm-server/server/FitTester.md): measured VRAM, RAM and speed fit test across contexts and KV modes; has `shared`, `run`.
+- [core/llm-server/server/launcher/LaunchRun.md](core/llm-server/server/launcher/LaunchRun.md): one llama-server start, step by step; has `execute`.
+- [core/llm-server/server/launcher/LaunchContext.md](core/llm-server/server/launcher/LaunchContext.md): per-start state plus the planning call; has `plan`, `syncQueue`, `succeed`.
+- [core/llm-server/server/launcher/LaunchPreflight.md](core/llm-server/server/launcher/LaunchPreflight.md): pre-launch diagnostics, runtime, flags, model and key checks; has `resolve`.
+- [core/llm-server/server/launcher/ModelRuntimeMatch.md](core/llm-server/server/launcher/ModelRuntimeMatch.md): refuses a model the chosen runtime cannot run; has `refusal`.
+- [core/llm-server/server/launcher/LaunchOverrides.md](core/llm-server/server/launcher/LaunchOverrides.md): planner overrides from defaults, layout and measured fit; has `apply`.
+- [core/llm-server/server/launcher/LlmLayoutIntent.md](core/llm-server/server/launcher/LlmLayoutIntent.md): what the placement layout says about the LLM; has `read`.
+- [core/llm-server/server/launcher/PeerGpuBorrow.md](core/llm-server/server/launcher/PeerGpuBorrow.md): borrows peer GPUs over RPC when needed; has `borrow`, `release`.
+- [core/llm-server/server/launcher/LlmPlacement.md](core/llm-server/server/launcher/LlmPlacement.md): LLM VRAM reserve and device narrowing; has `place`, `placeForRescue`.
+- [core/llm-server/server/launcher/LaunchFinalizer.md](core/llm-server/server/launcher/LaunchFinalizer.md): auth key, pin, health budget and split for a launch; has `finalize`.
+- [core/llm-server/server/launcher/FlagRescue.md](core/llm-server/server/launcher/FlagRescue.md): one-shot retry after an unknown flag; has `attempt`.
+- [core/llm-server/server/launcher/OomRescue.md](core/llm-server/server/launcher/OomRescue.md): one-shot retry after running out of memory; has `attempt`.
+- [core/llm-server/server/fit-test/FitComboRunner.md](core/llm-server/server/fit-test/FitComboRunner.md): measures one fit-test combination; has `run`.
+- [core/llm-server/server/fit-test/FitComboLadder.md](core/llm-server/server/fit-test/FitComboLadder.md): fit-test combinations and the depth probe pick; has `build`, `pickDepthProbe`.
+- [core/llm-server/server/fit-test/FitGenerationClient.md](core/llm-server/server/fit-test/FitGenerationClient.md): timed completions and token counts for fit tests; has `generateAndTime`, `countTokens`.
+- [core/llm-server/server/fit-test/DepthProbe.md](core/llm-server/server/fit-test/DepthProbe.md): long-context generation speed probe; has `measure`.
+- [core/llm-server/server/fit-test/VramFootprint.md](core/llm-server/server/fit-test/VramFootprint.md): VRAM and RAM peak during a fit test; has `captureBaseline`, `track`, `resolve`.
+- [core/llm-server/server/fit-test/FitRunSignals.md](core/llm-server/server/fit-test/FitRunSignals.md): fit-test cancel and progress hooks; has `cancelled`, `emit`.
+- [core/llm-server/server/fit-test/CancellableDelay.md](core/llm-server/server/fit-test/CancellableDelay.md): cancel-aware sleep and settle wait; has `sleep`, `until`.
+- [core/llm-server/LLMServerService.md](core/llm-server/LLMServerService.md): owns the local LLM feature (settings, defaults, supervisor, watchdog, RAM pin, router, caches, pinned tab); has `ensureRunning`, `getEffectiveContext`, `getDefaults`, `setDefaults`, `computeLocalProviderEntry`, `setEnabled`, `shutdown`.
+- [core/llm-server/service/SettingsMapStore.md](core/llm-server/service/SettingsMapStore.md): base for one object map under one settings key; has `all`.
+- [core/llm-server/service/ModelTextOverrides.md](core/llm-server/service/ModelTextOverrides.md): base for per-model text overrides; has `get`, `set`.
+- [core/llm-server/service/LlmModelDisplayNames.md](core/llm-server/service/LlmModelDisplayNames.md): display-name overrides for local models; has `all`, `set`, `resolve`.
+- [core/llm-server/service/ModelLaunchFlags.md](core/llm-server/service/ModelLaunchFlags.md): extra llama-server flags per model; has `resolve`, `setForModel`.
+- [core/llm-server/service/ModelResultStore.md](core/llm-server/service/ModelResultStore.md): base for saved per-model run results; has `get`, `save`.
+- [core/llm-server/service/FitResultStore.md](core/llm-server/service/FitResultStore.md): saved fit-test results; has `all`, `get`, `save`.
+- [core/llm-server/service/GambitResultStore.md](core/llm-server/service/GambitResultStore.md): saved model compatibility results; has `all`, `get`, `save`.
+- [core/llm-server/service/KeyedSettings.md](core/llm-server/service/KeyedSettings.md): base for settings spread over several keys.
+- [core/llm-server/service/LlmServerSettings.md](core/llm-server/service/LlmServerSettings.md): local LLM feature settings; has `isEnabled`, `setEnabled`, `getModelsDirConfig`, `setAutoUnloadMs`.
+- [core/llm-server/service/LlmUiState.md](core/llm-server/service/LlmUiState.md): LLM tab UI state; has `getMode`, `setMode`, `takeChatIntent`.
+- [core/llm-server/service/LlmDefaults.md](core/llm-server/service/LlmDefaults.md): saved launch defaults; has `get`, `set`.
+- [core/llm-server/service/NvidiaSmiPathSettings.md](core/llm-server/service/NvidiaSmiPathSettings.md): saved nvidia-smi path; has `getSavedPath`, `setSavedPath`.
+- [core/llm-server/service/LlmDiagnosticsCache.md](core/llm-server/service/LlmDiagnosticsCache.md): cached hardware diagnostics; has `getCached`, `ensure`.
+- [core/llm-server/service/LocalRequestTracker.md](core/llm-server/service/LocalRequestTracker.md): in-flight local request counts; has `start`, `end`, `isBusy`.
+- [core/llm-server/service/LocalServerStarter.md](core/llm-server/service/LocalServerStarter.md): on-demand start and vision restart; has `ensureRunning`, `needsVisionLoad`.
+- [core/llm-server/service/RunningModelCaps.md](core/llm-server/service/RunningModelCaps.md): the running model's capabilities; has `get`, `runningThinking`.
+- [core/llm-server/service/LocalProviderEntry.md](core/llm-server/service/LocalProviderEntry.md): the local provider row; has `compute`, `queueKey`.
+- [core/llm-server/service/InstalledChatModels.md](core/llm-server/service/InstalledChatModels.md): installed chat models; has `list`.
+- [core/llm-server/service/PinnedLlmTab.md](core/llm-server/service/PinnedLlmTab.md): the pinned LLM tab; has `ensure`, `remove`, `send`.
+- [core/llm-server/service/LlmSupervisorHooks.md](core/llm-server/service/LlmSupervisorHooks.md): wires the LLM supervisor to the VRAM ledger, watchdog and caches; has `wire`.
+- [core/llm-server/chat/TriggerRunner.md](core/llm-server/chat/TriggerRunner.md): runs trigger fires with gating, a per-trigger queue and one run at a time; has `fire`, `deliver`, `runInline`, `simulate`, `replay`, `approve`, `stop`.
+- [core/llm-server/chat/ArtifactTaskScheduler.md](core/llm-server/chat/ArtifactTaskScheduler.md): recurring runs that refresh a live widget's data; has `start`, `stop`, `tick`, `runNow`.
+- [core/llm-server/chat/ScheduledTaskScheduler.md](core/llm-server/chat/ScheduledTaskScheduler.md): recurring chat scheduled tasks; has `start`, `stop`, `tick`, `runNow`, `runInline`.
+- [core/llm-server/chat/schedulers/IntervalTaskScheduler.md](core/llm-server/chat/schedulers/IntervalTaskScheduler.md): base for tick-driven task schedulers; has `start`, `stop`, `tick`, `runNow`.
+- [core/llm-server/chat/schedulers/CapturedBridgeRun.md](core/llm-server/chat/schedulers/CapturedBridgeRun.md): one captured background bridge run with a pausable timeout; has `run`, `pauseTimeout`, `resumeTimeout`.
+- [core/llm-server/chat/schedulers/RunTranscript.md](core/llm-server/chat/schedulers/RunTranscript.md): hidden transcript of a background run and its retention; has `open`, `addUser`, `addAssistant`, `prune`.
+- [core/llm-server/chat/schedulers/SetupChatToolPolicy.md](core/llm-server/chat/schedulers/SetupChatToolPolicy.md): a setup conversation's run tools; has `denySet`, `runConfig`, `describe`.
+- [core/llm-server/chat/trigger-runner/TriggerRunExecution.md](core/llm-server/chat/trigger-runner/TriggerRunExecution.md): one trigger run from start to finish; has `execute`.
+- [core/llm-server/chat/trigger-runner/PendingTriggerWork.md](core/llm-server/chat/trigger-runner/PendingTriggerWork.md): base for timer-held trigger work; has `has`, `dropAll`.
+- [core/llm-server/chat/trigger-runner/TriggerBatchWindows.md](core/llm-server/chat/trigger-runner/TriggerBatchWindows.md): trigger batch windows; has `add`, `depth`.
+- [core/llm-server/chat/trigger-runner/QuietHoursHold.md](core/llm-server/chat/trigger-runner/QuietHoursHold.md): holds events until quiet hours end; has `add`, `status`.
+- [core/llm-server/chat/trigger-runner/TriggerRetryScheduler.md](core/llm-server/chat/trigger-runner/TriggerRetryScheduler.md): jittered retries of failed trigger runs; has `schedule`, `pending`.
+- [core/llm-server/chat/trigger-runner/TriggerApprovalHold.md](core/llm-server/chat/trigger-runner/TriggerApprovalHold.md): parks trigger runs on human approval; has `onRequest`, `pending`, `approve`.
+- [core/llm-server/chat/trigger-runner/TriggerAdmission.md](core/llm-server/chat/trigger-runner/TriggerAdmission.md): loop guard, filter and cooldown gates; has `refusal`, `markAccepted`.
+- [core/llm-server/chat/trigger-runner/TriggerDriftCheck.md](core/llm-server/chat/trigger-runner/TriggerDriftCheck.md): records and notifies payload drift; has `note`.
+- [core/llm-server/chat/trigger-runner/TriggerFailureNotifier.md](core/llm-server/chat/trigger-runner/TriggerFailureNotifier.md): failure streak and auto-pause notifications; has `afterFire`.
+- [core/llm-server/chat/trigger-runner/TriggerRunConfig.md](core/llm-server/chat/trigger-runner/TriggerRunConfig.md): run model and tools for a trigger; has `resolve`.
+- [core/llm-server/chat/trigger-runner/TriggerRunTools.md](core/llm-server/chat/trigger-runner/TriggerRunTools.md): run-scoped trigger tools and allow-list; has `build`, `allowList`.
+- [core/llm-server/chat/trigger-runner/SaveMemoryTool.md](core/llm-server/chat/trigger-runner/SaveMemoryTool.md): the save_memory trigger tool; has `definition`.
+- [core/llm-server/chat/trigger-runner/RespondToWebhookTool.md](core/llm-server/chat/trigger-runner/RespondToWebhookTool.md): the respond_to_webhook trigger tool; has `definition`.
+- [core/llm-server/chat/trigger-runner/TriggerResultShape.md](core/llm-server/chat/trigger-runner/TriggerResultShape.md): checks a trigger result against its expected shape; has `resultJson`, `error`.
+- [core/llm-server/chat/trigger-runner/TriggerSampleEvent.md](core/llm-server/chat/trigger-runner/TriggerSampleEvent.md): turns a sample into a trigger event; has `for`.
+- [core/llm-server/chat/trigger-runner/TriggerRunPrompt.md](core/llm-server/chat/trigger-runner/TriggerRunPrompt.md): builds the trigger run system prompt; has `system`, `memoryBlock`.
+- [core/llm-server/chat/trigger-runner/TriggerDeliveryLogger.md](core/llm-server/chat/trigger-runner/TriggerDeliveryLogger.md): delivery-log writer that never throws; has `log`.
+- [core/llm-server/chat/trigger-runner/HeldGate.md](core/llm-server/chat/trigger-runner/HeldGate.md): a run's hold on the background run gate; has `acquire`, `release`, `reacquire`.
+- [core/llm-server/chat/trigger-runner/TriggerRunQueue.md](core/llm-server/chat/trigger-runner/TriggerRunQueue.md): global trigger queue with a per-trigger bound; has `push`, `shift`, `depth`.
+- [core/llm-server/ui/SharedUiLibrary.md](core/llm-server/ui/SharedUiLibrary.md): `core/llm-server/ui/js/`, `core/llm-server/ui/resonant.js`, `core/shell/ui/luma-modal.js`, `extensions/ui-kit/ui/`, `extensions/ext-ui.js`.
+- [core/llm-server/ui/js/artifact-data-client.md](core/llm-server/ui/js/artifact-data-client.md): classic-script exception: sets `window.LumaArtifactData = { create }` for the standalone live-artifact page that [LiveModuleDocument](core/llm-server/chat/artifacts/LiveModuleDocument.md) writes.
+- [core/llm-server/ui/js/artifacts/ArtifactDataCache.md](core/llm-server/ui/js/artifacts/ArtifactDataCache.md): the localStorage write-through cache behind an [ArtifactDataStore](core/llm-server/ui/js/artifacts/ArtifactDataStore.md), so reads paint instantly and survive short offline windows.
+- [core/llm-server/ui/js/artifacts/ArtifactDataStore.md](core/llm-server/ui/js/artifacts/ArtifactDataStore.md): the `store` a live artifact module receives: saved data for one artifact chain.
+- [core/llm-server/ui/js/artifacts/ArtifactDataTransport.md](core/llm-server/ui/js/artifacts/ArtifactDataTransport.md): base class (the interface) for how an [ArtifactDataStore](core/llm-server/ui/js/artifacts/ArtifactDataStore.md) talks to the host.
+- [core/llm-server/ui/js/artifacts/HttpDataTransport.md](core/llm-server/ui/js/artifacts/HttpDataTransport.md): [ArtifactDataTransport](core/llm-server/ui/js/artifacts/ArtifactDataTransport.md) over HTTP, for the pop-out page, the sharing PWA and read-only `/share` views.
+- [core/llm-server/ui/js/artifacts/IpcDataTransport.md](core/llm-server/ui/js/artifacts/IpcDataTransport.md): [ArtifactDataTransport](core/llm-server/ui/js/artifacts/ArtifactDataTransport.md) over the preload's `artifactData` surface (`{ all, mutate, onChanged }`), used by the LLM tab and the Dashboard.
+- [core/llm-server/ui/js/dialogs/Dialogs.md](core/llm-server/ui/js/dialogs/Dialogs.md): promise-returning alert, confirm and prompt for module code.
+- [core/llm-server/ui/js/dom/Clipboard.md](core/llm-server/ui/js/dom/Clipboard.md): copies text to the clipboard with a fallback.
+- [core/llm-server/ui/js/dom/Dom.md](core/llm-server/ui/js/dom/Dom.md): the one element factory and id lookup for renderer code.
+- [core/llm-server/ui/js/format/ByteFormatter.md](core/llm-server/ui/js/format/ByteFormatter.md): the renderer's byte ladder and gigabyte card label.
+- [core/llm-server/ui/js/format/HtmlEscaper.md](core/llm-server/ui/js/format/HtmlEscaper.md): the renderer's HTML escapers.
+- [core/llm-server/ui/js/format/TransferText.md](core/llm-server/ui/js/format/TransferText.md): download progress wording shared by every setup surface.
+- [core/llm-server/ui/js/live/ChartLoader.md](core/llm-server/ui/js/live/ChartLoader.md): loads the vendored Chart.js once, on the first live module that asks for it.
+- [core/llm-server/ui/js/live/LiveModuleMounter.md](core/llm-server/ui/js/live/LiveModuleMounter.md): the one mounter for live (interactive) artifacts in the chat, the web PWA and the Dashboard, so the three cannot drift.
+- [core/llm-server/ui/js/live/LiveModuleSource.md](core/llm-server/ui/js/live/LiveModuleSource.md): reads a live module's JS for the names the mount injects.
+- [core/llm-server/ui/js/live/LumaBridge.md](core/llm-server/ui/js/live/LumaBridge.md): builds the `luma` page-API object a live module receives (`fetchPage`, `openTab`, `ext(extensionId)` for extension APIs such as the Hub).
+- [core/llm-server/ui/js/markdown/AttachmentParser.md](core/llm-server/ui/js/markdown/AttachmentParser.md): splits the attachment blocks the chat composer splices onto the top of a user message back out, so renderers (chat bubble, web client, share viewer) can show each file as a card.
+- [core/llm-server/ui/js/markdown/ChartWidget.md](core/llm-server/ui/js/markdown/ChartWidget.md): the ```chart fence: a JSON spec rendered as an inline SVG column or line chart (validated palette, tooltips, legend from two series, a data table).
+- [core/llm-server/ui/js/markdown/CodeHighlighter.md](core/llm-server/ui/js/markdown/CodeHighlighter.md): the chat's compact, language-agnostic code highlighter.
+- [core/llm-server/ui/js/markdown/MarkdownBlocks.md](core/llm-server/ui/js/markdown/MarkdownBlocks.md): the block pass of [MarkdownRenderer](core/llm-server/ui/js/markdown/MarkdownRenderer.md).
+- [core/llm-server/ui/js/markdown/MarkdownInline.md](core/llm-server/ui/js/markdown/MarkdownInline.md): the chat markdown's inline rules, applied to text that is already escaped.
+- [core/llm-server/ui/js/markdown/MarkdownRenderer.md](core/llm-server/ui/js/markdown/MarkdownRenderer.md): the chat's bespoke markdown renderer, used by the chat, the web client, the Dashboard, On Demand and the share viewer.
+- [core/llm-server/ui/js/markdown/StatsWidget.md](core/llm-server/ui/js/markdown/StatsWidget.md): the ```stats fence: up to four stat tiles (label, value, a delta with a direction arrow).
+- [core/llm-server/ui/js/markdown/StreamingMarkdown.md](core/llm-server/ui/js/markdown/StreamingMarkdown.md): closes the markdown a streaming reply has left open (code fence, inline code, bold, a link still arriving) so live renders never flash raw syntax.
+- [core/llm-server/ui/js/monaco/MonacoDiagnostics.md](core/llm-server/ui/js/monaco/MonacoDiagnostics.md): turns on Monaco's built-in squiggles, tuned for standalone snippets.
+- [core/llm-server/ui/js/monaco/MonacoLanguages.md](core/llm-server/ui/js/monaco/MonacoLanguages.md): maps an artifact's language tag or a file name to a Monaco language id.
+- [core/llm-server/ui/js/monaco/MonacoLoader.md](core/llm-server/ui/js/monaco/MonacoLoader.md): lazily loads the vendored Monaco editor (about 5 MB parsed) once, on first use.
+- [core/llm-server/ui/js/monaco/MonacoThemes.md](core/llm-server/ui/js/monaco/MonacoThemes.md): the LumaBrowser editor theme.
+- [core/llm-server/ui/js/resonant/ResonantRuntime.md](core/llm-server/ui/js/resonant/ResonantRuntime.md): the ES-module door to ResonantJs ([resonant.js](core/llm-server/ui/resonant.md), a classic vendor script the page loads before its module entry).
+- [core/llm-server/ui/js/resonant/ResonantTemplates.md](core/llm-server/ui/js/resonant/ResonantTemplates.md): the small, deliberate set of ResonantJs templates shared across LLM-tab sections.
+- [core/llm-server/ui/js/setup/AutoImageChoice.md](core/llm-server/ui/js/setup/AutoImageChoice.md): the plan screen's one image choice, shared by both setup front doors.
+- [core/llm-server/ui/js/setup/AutoSetup.md](core/llm-server/ui/js/setup/AutoSetup.md): the full Automatic Local Setup [pipeline](core/llm-server/ui/js/setup/SetupPipeline.md), from a planner plan.
+- [core/llm-server/ui/js/setup/AutoSetupProgress.md](core/llm-server/ui/js/setup/AutoSetupProgress.md): one progress bar across every download leg of an [AutoSetup](core/llm-server/ui/js/setup/AutoSetup.md) plan.
+- [core/llm-server/ui/js/setup/ExistingImagePlan.md](core/llm-server/ui/js/setup/ExistingImagePlan.md): lets an Automatic Setup plan link an image checkpoint the user already has (ComfyUI, Forge, ...) instead of downloading the catalog model.
+- [core/llm-server/ui/js/setup/ExistingLibraryView.md](core/llm-server/ui/js/setup/ExistingLibraryView.md): shapes a scan of models the user already has for both setup front doors.
+- [core/llm-server/ui/js/setup/FoldMemory.md](core/llm-server/ui/js/setup/FoldMemory.md): remembers which collapsible Setup sections the user opened.
+- [core/llm-server/ui/js/setup/HardwareText.md](core/llm-server/ui/js/setup/HardwareText.md): the one hardware line every onboarding screen shows.
+- [core/llm-server/ui/js/setup/ImageModelBudget.md](core/llm-server/ui/js/setup/ImageModelBudget.md): the setup wizards' quality-first image model pick against ONE card's memory.
+- [core/llm-server/ui/js/setup/ImageRuntimePicker.md](core/llm-server/ui/js/setup/ImageRuntimePicker.md): picks the image runtime for setup.
+- [core/llm-server/ui/js/setup/ImageSetup.md](core/llm-server/ui/js/setup/ImageSetup.md): the image-server [setup pipeline](core/llm-server/ui/js/setup/SetupPipeline.md).
+- [core/llm-server/ui/js/setup/ImportSetup.md](core/llm-server/ui/js/setup/ImportSetup.md): the [setup pipeline](core/llm-server/ui/js/setup/SetupPipeline.md) that adopts an LLM the user already has (LM Studio, Hugging Face cache, Ollama) instead of downloading one.
+- [core/llm-server/ui/js/setup/LlmSetup.md](core/llm-server/ui/js/setup/LlmSetup.md): the local-LLM [setup pipeline](core/llm-server/ui/js/setup/SetupPipeline.md): runtime, resumable model download, defaults, server start.
+- [core/llm-server/ui/js/setup/MusicSetup.md](core/llm-server/ui/js/setup/MusicSetup.md): the music-server [setup pipeline](core/llm-server/ui/js/setup/SetupPipeline.md).
+- [core/llm-server/ui/js/setup/QuantText.md](core/llm-server/ui/js/setup/QuantText.md): plain-language glosses for GGUF quant tags (tooltips on the wizards' quant badges).
+- [core/llm-server/ui/js/setup/RamPin.md](core/llm-server/ui/js/setup/RamPin.md): turns on RAM pinning for the chat and image servers after a singularity setup.
+- [core/llm-server/ui/js/setup/RuntimeEnsurer.md](core/llm-server/ui/js/setup/RuntimeEnsurer.md): makes sure the LLM inference runtime is installed.
+- [core/llm-server/ui/js/setup/RuntimeInstallModal.md](core/llm-server/ui/js/setup/RuntimeInstallModal.md): the runtime install or update chooser shared by the LLM and image runtime cards.
+- [core/llm-server/ui/js/setup/SegmentedPicker.md](core/llm-server/ui/js/setup/SegmentedPicker.md): a segmented pill picker backed by a hidden input, for short closed sets (2 to 6 values).
+- [core/llm-server/ui/js/setup/ServerStarter.md](core/llm-server/ui/js/setup/ServerStarter.md): starts the LLM server idempotently.
+- [core/llm-server/ui/js/setup/SetupHooks.md](core/llm-server/ui/js/setup/SetupHooks.md): the view callbacks a setup pipeline reports through.
+- [core/llm-server/ui/js/setup/SetupPipeline.md](core/llm-server/ui/js/setup/SetupPipeline.md): base class for the setup pipelines that both onboarding surfaces drive (the LLM tab's Easy Setup and the first-run SetupWizard): [LlmSetup](core/llm-server/ui/js/setup/LlmSetup.md), [ImportSetup](core/llm-server/ui/js/setup/ImportSetup.md), [ImageSetup](core/llm-server/ui/js/setup/ImageSetup.md), [MusicSetup](core/llm-server/ui/js/setup/MusicSetup.md) and [AutoSetup](core/llm-server/ui/js/setup/AutoSetup.md).
+- [core/llm-server/ui/js/setup/SetupProgressEvents.md](core/llm-server/ui/js/setup/SetupProgressEvents.md): turns runtime-install and model-download events into progress-bar updates with the same wording on every setup leg.
+- [core/llm-server/ui/js/setup/SetupQuestions.md](core/llm-server/ui/js/setup/SetupQuestions.md): the guided wizards' three questions, held once.
+- [core/llm-server/ui/js/setup/SpeedSimulator.md](core/llm-server/ui/js/setup/SpeedSimulator.md): the wizards' live "speed tolerance" preview.
+- [core/llm-server/ui/js/setup/SystemLibraries.md](core/llm-server/ui/js/setup/SystemLibraries.md): the Linux system-library preflight, run before any download.
+- [core/llm-server/ui/resonant.md](core/llm-server/ui/resonant.md): resonantJs, the owner's reactive templating framework, copied byte for byte from legacy as a vendor file (allowed exception: not one class per file, not a module, and it keeps six em-dashes in its comments because the owner's rule is "copy it unchanged").
+- [core/llm-server/ui/js/image-setup/CatalogModelRow.md](core/llm-server/ui/js/image-setup/CatalogModelRow.md): `CatalogModelRow.view(model, installed, activeDl, vramBytes)` builds the mlRow view of an image catalog model: category and NC pills, the graphics-memory line, the quant picker (when downloadable and idle), the size chip of the selected quant, and Auto-download, Download (NC), a disabled Download while another runs, or Cancel on the downloading row (which opens to show [DownloadDetail](core/llm-server/ui/js/image-setup/DownloadDetail.md)).
+- [core/llm-server/ui/js/image-setup/DownloadDetail.md](core/llm-server/ui/js/image-setup/DownloadDetail.md): `DownloadDetail.html(dl)`: the in-row progress block of the downloading catalog row ("File n of m · role", bar, percent and bytes, or "starting…").
+- [core/llm-server/ui/js/image-setup/HfRepoUrl.md](core/llm-server/ui/js/image-setup/HfRepoUrl.md): `HfRepoUrl.isRepoUrl(url)`: true for a huggingface.co owner/repo page URL without a `/resolve/` or `/blob/` segment.
+- [core/llm-server/ui/js/image-setup/ImageDefaultsCard.md](core/llm-server/ui/js/image-setup/ImageDefaultsCard.md): the Image Defaults card: enable switch, runtime and per-job model selectors (generation, edit, video), the "More settings" fold (RAM pin, 15-minute auto-unload) and Start or Stop server.
+- [core/llm-server/ui/js/image-setup/ImageDefaultsMarkup.md](core/llm-server/ui/js/image-setup/ImageDefaultsMarkup.md): markup for the Image Defaults card.
+- [core/llm-server/ui/js/image-setup/ImageModal.md](core/llm-server/ui/js/image-setup/ImageModal.md): base for the Image Setup's hand-rolled modals: one overlay at a time, closed by Escape, the surround or `[data-act="close"]`, with the footer error line.
+- [core/llm-server/ui/js/image-setup/ImageModelActions.md](core/llm-server/ui/js/image-setup/ImageModelActions.md): routes the image model rows' buttons: `dl` and `dl-nc` (license confirm first; sends the picked quant), `dl-cancel`, `pin` (the default of the button's category), `move` (set the stored kind), `loras`, `update-file` (companion file swap) and `uninstall` (confirm first).
+- [core/llm-server/ui/js/image-setup/ImageModelsCard.md](core/llm-server/ui/js/image-setup/ImageModelsCard.md): the Image Models card: a one-time scaffold of two remembered folds holding two STABLE [ModelList](core/llm-server/ui/js/models/ModelList.md) mounts (`mlImgInstalled` with the image library scan, `mlImgCatalog` with the quant pickers), plus repainted chrome: the download error banner, the models-folder controls, the empty note, "+ Import custom model" and the fine-tune hint.
+- [core/llm-server/ui/js/image-setup/ImageRuntimeRow.md](core/llm-server/ui/js/image-setup/ImageRuntimeRow.md): markup for one collapsible image runtime row: status badges ("ready" needs the hardware AND an installed binary or a prebuilt asset for this host), the primary Install or Update (hidden while installing, shown again after a failure), details with version, path and secondary actions, and the progress strip.
+- [core/llm-server/ui/js/image-setup/ImageRuntimesCard.md](core/llm-server/ui/js/image-setup/ImageRuntimesCard.md): the Image Runtimes card: installed runtimes above a Catalogue fold (open while one of its rows installs or nothing is installed), Install or Update through [RuntimeInstallModal](core/llm-server/ui/js/setup/RuntimeInstallModal.md) (prebuilt download or locate), Uninstall, Clear registration, Relocate, live install progress and update badges.
+- [core/llm-server/ui/js/image-setup/ImageSetupPanel.md](core/llm-server/ui/js/image-setup/ImageSetupPanel.md): the Image section of the LLM tab's Setup view (cards `cardImageDefaults`, `cardImageRuntimes`, `cardImageModels`).
+- [core/llm-server/ui/js/image-setup/ImageSetupStore.md](core/llm-server/ui/js/image-setup/ImageSetupStore.md): the Image Setup panel's last-known state and its best-effort loaders: a failed or missing IPC leaves a safe empty value.
+- [core/llm-server/ui/js/image-setup/ImportModelMarkup.md](core/llm-server/ui/js/image-setup/ImportModelMarkup.md): `ImportModelMarkup.HTML`: the static markup of the Import custom image model modal.
+- [core/llm-server/ui/js/image-setup/ImportModelModal.md](core/llm-server/ui/js/image-setup/ImportModelModal.md): "Import custom image model": from a Hugging Face model page (recipe resolver, no name needed), a direct file URL or a local file, with the base architecture, a prompt style for bases that have profiles, and the Qwen and Anima notes.
+- [core/llm-server/ui/js/image-setup/InstalledModelRow.md](core/llm-server/ui/js/image-setup/InstalledModelRow.md): `InstalledModelRow.view(model, defaults, downloading)` builds the mlRow view of an installed image model: category pill ("generation + edit" for unified weights), default badges, file-update pills, NC and imported pills, and the actions Pin, Pin as edit default (unified only), Update <file>, Move to <other categories> (never Edit for a unified model), LoRAs / speed and Remove.
+- [core/llm-server/ui/js/image-setup/LoraBaseNote.md](core/llm-server/ui/js/image-setup/LoraBaseNote.md): `LoraBaseNote.describe(row, modelFamily)` returns `{ text, warn }`: "Trained for X.", a mismatch warning when the LoRA's families exclude the model's, and a LyCORIS LoKr/LoHa hint.
+- [core/llm-server/ui/js/image-setup/LoraCuratedList.md](core/llm-server/ui/js/image-setup/LoraCuratedList.md): curated speed LoRAs for the model's family (`loraCatalog`): Download (then select it and pre-check the preset), In library, or for Wan pairs Download & attach / Attach pair (both halves with the entry's preset, then close).
+- [core/llm-server/ui/js/image-setup/LoraModal.md](core/llm-server/ui/js/image-setup/LoraModal.md): "LoRAs / speed" for one installed image model: pick a LoRA from the shared library (annotated with its detected base), set its weight and the distilled speed preset, import one, or download a curated one; Save writes the manifest (None removes it).
+- [core/llm-server/ui/js/image-setup/LoraModalMarkup.md](core/llm-server/ui/js/image-setup/LoraModalMarkup.md): `LoraModalMarkup.html(label, hasPair)`: the LoRA modal markup.
+- [core/llm-server/ui/js/image-setup/ModelsDirControls.md](core/llm-server/ui/js/image-setup/ModelsDirControls.md): the image models-folder controls, mirroring the LLM "Models Directory" card: a path field that commits on change (Enter blurs), Browse, and "Use default" while a custom path is set.
+- [core/llm-server/ui/js/image-setup/ProgressPercent.md](core/llm-server/ui/js/image-setup/ProgressPercent.md): `ProgressPercent.of(received, total)`: the whole-number percent (capped at 100), or null while the total is unknown.
+- [core/llm-server/ui/js/image-setup/QuantPicker.md](core/llm-server/ui/js/image-setup/QuantPicker.md): the image catalog's quant picker over `files.diffusion.quants`.
+- [core/llm-server/ui/js/image-setup/RamPinHint.md](core/llm-server/ui/js/image-setup/RamPinHint.md): the caption on the image "RAM pin" row: pin progress, the pinned size, or the failure.
+- [core/llm-server/ui/js/image-setup/RuntimeProgressMarkup.md](core/llm-server/ui/js/image-setup/RuntimeProgressMarkup.md): the always-present progress strip of an image runtime row: an idle strip, a phase label with bytes and a bar (indeterminate while the total is unknown), or the failure line.
+- [core/llm-server/ui/js/image-setup/RuntimeUpdateBadge.md](core/llm-server/ui/js/image-setup/RuntimeUpdateBadge.md): `RuntimeUpdateBadge.apply(body, id, info)` applies a cached upstream-update result to one runtime row: the primary button reads "Update" with a version title, and an "update: vX" pill joins the head when a newer release exists.
+- [core/llm-server/ui/js/music-setup/AiTextCleaner.md](core/llm-server/ui/js/music-setup/AiTextCleaner.md): strips think blocks, code fences and surrounding quotes from a drafted field: `AiTextCleaner.clean(text)`, `AiTextCleaner.firstLine(text, maxChars)`.
+- [core/llm-server/ui/js/music-setup/MusicAiAssist.md](core/llm-server/ui/js/music-setup/MusicAiAssist.md): attaches the shared AI-fill buttons to the lyrics and style fields through the chat-extension `attachAssist` contract; this class only builds the requests (system prompt, user parts, temperature 0.9 / 0.8, 300 s timeout, noThink).
+- [core/llm-server/ui/js/music-setup/MusicDefaultsCard.md](core/llm-server/ui/js/music-setup/MusicDefaultsCard.md): the Music Defaults card: enable, default model, seed (blank = random), max song length (default 300 s) and idle unload.
+- [core/llm-server/ui/js/music-setup/MusicInstallProgress.md](core/llm-server/ui/js/music-setup/MusicInstallProgress.md): folds the music runtime's install events into the Runtime card's progress: start, resolved, download (bytes), extract (installing, keeping the last pip or uv output line), error (failed with message), finalize (null).
+- [core/llm-server/ui/js/music-setup/MusicModelsCard.md](core/llm-server/ui/js/music-setup/MusicModelsCard.md): the Music Models card: Download (disabled while another runs or without the server), progress with Cancel, or Installed with Delete (confirm first); an error stays on its row.
+- [core/llm-server/ui/js/music-setup/MusicRuntimeCard.md](core/llm-server/ui/js/music-setup/MusicRuntimeCard.md): paints the Music Runtime card (or the CUDA-only notice) and wires its buttons: install (shows "Preparing install…" at once), cancel, uninstall (confirm first), check for updates, stop server.
+- [core/llm-server/ui/js/music-setup/MusicRuntimeMarkup.md](core/llm-server/ui/js/music-setup/MusicRuntimeMarkup.md): markup for the Music Runtime card: name, version and status rows, hardware / WSL2 / GPU-in-WSL pills, the install progress, the "Rebuild needed" notice, and Install, Update to X, Reinstall, Cancel, Check for updates, Uninstall and Stop server.
+- [core/llm-server/ui/js/music-setup/MusicSetupPanel.md](core/llm-server/ui/js/music-setup/MusicSetupPanel.md): the Music section of the LLM tab's Setup view (cards `cardMusicRuntime`, `cardMusicModels`, `cardMusicDefaults`, `cardMusicTry`) for the managed SGLang-Omni server (WSL2-wrapped on Windows).
+- [core/llm-server/ui/js/music-setup/MusicTryCard.md](core/llm-server/ui/js/music-setup/MusicTryCard.md): the Music "Try it" card: lyrics and style with AI drafting, Generate and Cancel, the status line ("Loading model…", "Switching model…", "Composing… Ns", "Failed: …") and an audio player for the returned WAV.
+- [core/llm-server/ui/js/grounding-setup/GroundingMarkup.md](core/llm-server/ui/js/grounding-setup/GroundingMarkup.md): markup for the Visual grounding card.
+- [core/llm-server/ui/js/grounding-setup/GroundingSetupCard.md](core/llm-server/ui/js/grounding-setup/GroundingSetupCard.md): the "Visual grounding" card of the LLM tab settings.
+- [core/llm-server/ui/js/wizard/AutoPlanView.md](core/llm-server/ui/js/wizard/AutoPlanView.md): automatic Setup's plan screen: calls `planAutoSetup({ wantImage, wantMusic })` once, then shows the picked chat model, the download line, the planner's reasons, the detected hardware, the image-checkpoint choice ([AutoImageChoice](core/llm-server/ui/js/setup/AutoImageChoice.md), one scan per plan, undoable through `basePlan`), models already on disk, the storage line, "Set it up" and "Customize instead".
+- [core/llm-server/ui/js/wizard/AutoQuestionViews.md](core/llm-server/ui/js/wizard/AutoQuestionViews.md): automatic Setup's questions: `image(wizard, body)` and `music(wizard, body)`.
+- [core/llm-server/ui/js/wizard/AutoResultViews.md](core/llm-server/ui/js/wizard/AutoResultViews.md): automatic Setup's progress (Pause; Cancel stops BOTH the chat and the image download), done (per-leg image and music outcome) and error views (the apt line with Copy and "Check again" for missing Linux libraries, else "Try again"; "Use guided setup instead").
+- [core/llm-server/ui/js/wizard/AutoSetupFlow.md](core/llm-server/ui/js/wizard/AutoSetupFlow.md): automatic Local Setup inside Easy Setup.
+- [core/llm-server/ui/js/wizard/ChoiceCard.md](core/llm-server/ui/js/wizard/ChoiceCard.md): one clickable Easy Setup choice card: `ChoiceCard.button(className, html, onClick)`, `ChoiceCard.titleDesc(title, desc)` (escaped).
+- [core/llm-server/ui/js/wizard/EasySetupWizard.md](core/llm-server/ui/js/wizard/EasySetupWizard.md): "Easy Setup", the LLM tab's onboarding overlay over the Setup surface.
+- [core/llm-server/ui/js/wizard/ExistingLibraries.md](core/llm-server/ui/js/wizard/ExistingLibraries.md): `ExistingLibraries.mount(wizard, host, recFor)`: lists chat models already on this machine (open as soon as one is found); picking one adopts it through [ImportFlow](core/llm-server/ui/js/wizard/ImportFlow.md) with the runtime and context from `recFor()`.
+- [core/llm-server/ui/js/wizard/ExistingModelsMarkup.md](core/llm-server/ui/js/wizard/ExistingModelsMarkup.md): the "You already have N models on this machine.
+- [core/llm-server/ui/js/wizard/GuidedSteps.md](core/llm-server/ui/js/wizard/GuidedSteps.md): the question steps: `welcome` (Automatic or Guided), `useCase`, `speed` (one live typing sim per speed, fastest last) and `context` (sample snippets).
+- [core/llm-server/ui/js/wizard/HfSearchPanel.md](core/llm-server/ui/js/wizard/HfSearchPanel.md): the live Hugging Face search under the recommendation: Search or Enter, results with downloads and gated marks, a repo opens its quants once (multi-part quants are refused with "paste URL"), and a pick becomes `state.override` (MLX picks carry `runtimeId: 'mlx-lm'`) with a Clear chip.
+- [core/llm-server/ui/js/wizard/HostPlatform.md](core/llm-server/ui/js/wizard/HostPlatform.md): renderer-side platform checks shared by the Setup panels: `isMacPlatform(nav?)` (navigator.platform; music and the music question) and `isMac(nav?)` (platform or user agent; the MLX search toggles).
+- [core/llm-server/ui/js/wizard/ImageSetupFlow.md](core/llm-server/ui/js/wizard/ImageSetupFlow.md): runs [ImageSetup](core/llm-server/ui/js/setup/ImageSetup.md) for the image step (runtime plus model download or a found checkpoint) and lands on its done or error view.
+- [core/llm-server/ui/js/wizard/ImageStep.md](core/llm-server/ui/js/wizard/ImageStep.md): step 5, optional image generation.
+- [core/llm-server/ui/js/wizard/ImportFlow.md](core/llm-server/ui/js/wizard/ImportFlow.md): adopts a found chat model with [ImportSetup](core/llm-server/ui/js/setup/ImportSetup.md): progress, then "is set up and running.
+- [core/llm-server/ui/js/wizard/LlmSetupFlow.md](core/llm-server/ui/js/wizard/LlmSetupFlow.md): the guided "Download & set up": [LlmSetup](core/llm-server/ui/js/setup/LlmSetup.md) with the recommendation, the search override and the pasted URL, Pause and Cancel, then "Local AI is ready" with Continue to image generation or Skip.
+- [core/llm-server/ui/js/wizard/LoadingSteps.md](core/llm-server/ui/js/wizard/LoadingSteps.md): `LoadingSteps.mount(body, steps, timers, stepMs?)`: a spinner over a step list that ticks forward every 1.8 s while a single-call IPC (plan, recommend, catalog) runs; the last step stays lit.
+- [core/llm-server/ui/js/wizard/PausedView.md](core/llm-server/ui/js/wizard/PausedView.md): `PausedView.show(wizard, body, resume)`: "Download paused" with Resume; the bytes stay on disk with their chunk map, so resuming (now or after a restart) continues where it stopped.
+- [core/llm-server/ui/js/wizard/ProgressBar.md](core/llm-server/ui/js/wizard/ProgressBar.md): `ProgressBar.set(bar, fill, fraction)`: a fraction fills the bar; null makes it indeterminate and leaves the width to the CSS keyframes.
+- [core/llm-server/ui/js/wizard/RecommendStep.md](core/llm-server/ui/js/wizard/RecommendStep.md): step 4: asks `recommendModel(answers)`, then shows the pick (label, quant, size, context, runtime, rationale, hardware, CPU-only or spill warning), the HF search and URL paste, models already on disk, the storage line and "Download & set up".
+- [core/llm-server/ui/js/wizard/StorageLine.md](core/llm-server/ui/js/wizard/StorageLine.md): `StorageLine.mount(host, needBytes, api)`: "path · N GB free · Change" under a recommendation, with a warning when the drive has under 110% of the download free.
+- [core/llm-server/ui/js/wizard/WizardState.md](core/llm-server/ui/js/wizard/WizardState.md): `WizardState.initial()`: the fresh state of one Easy Setup run (step, answers, rec, hw, advanced, busy, mode, the `auto` bag, `override`, `llmDone`, the `image` bag).
+- [core/llm-server/ui/js/wizard/WizardTimers.md](core/llm-server/ui/js/wizard/WizardTimers.md): the overlay's interval timers (speed sims, loading tickers): `add(id)`, `clear()`.
+- [core/llm-server/ui/js/models/LibraryScan.md](core/llm-server/ui/js/models/LibraryScan.md): "Scan other tools' libraries" under a model list: runs the existing-library scan (LM Studio, Ollama, the Hugging Face cache; ComfyUI and friends for images), offers to link each found model into the models folder (never a copy), and asks Setup to refresh.
+- [core/llm-server/ui/js/models/LibraryScanMarkup.md](core/llm-server/ui/js/models/LibraryScanMarkup.md): markup for LibraryScan: `head(text, withPicker)`, `results(view, skipped, text)` and `failure(error)`.
+- [core/llm-server/ui/js/models/ModelList.md](core/llm-server/ui/js/models/ModelList.md): the one renderer for the LLM "Models Directory" and the Image "Image Models" lists.
+- [core/llm-server/ui/js/models/ModelListController.md](core/llm-server/ui/js/models/ModelListController.md): the handle a section gets back from `ModelList.mount`.
+- [core/llm-server/ui/js/models/ModelSearch.md](core/llm-server/ui/js/models/ModelSearch.md): the "Search models" modal of the LLM Setup area: a two-pane Hugging Face GGUF (or, on a Mac, MLX) browser.
+- [core/llm-server/ui/js/models/ModelSearchDetail.md](core/llm-server/ui/js/models/ModelSearchDetail.md): the right pane of [ModelSearch](core/llm-server/ui/js/models/ModelSearch.md): repo facts (params, context, architecture), a quant `<select>` with fit notes, the fit badge, the download bar of the selected quant, and the model card through [ReadmeRenderer](core/llm-server/ui/js/models/ReadmeRenderer.md).
+- [core/llm-server/ui/js/models/ModelSearchDownload.md](core/llm-server/ui/js/models/ModelSearchDownload.md): one download started from the model search: subscribes to model events for the progress strip (Resuming, "Part i/n", companion-file labels, bytes), offers Cancel, and reports canceled (progress saved), failed or done.
+- [core/llm-server/ui/js/models/QuantVariantPicker.md](core/llm-server/ui/js/models/QuantVariantPicker.md): `QuantVariantPicker.defaultIndex(variants)`: the quant the model search preselects.
+- [core/llm-server/ui/js/models/ReadmeBlocks.md](core/llm-server/ui/js/models/ReadmeBlocks.md): the block pass of the README renderer: vaulted block lines, fenced code, GFM tables, headings, horizontal rules, block quotes, ordered and unordered lists, and paragraphs.
+- [core/llm-server/ui/js/models/ReadmeHtmlTable.md](core/llm-server/ui/js/models/ReadmeHtmlTable.md): rebuilds a raw HTML `<table>` body as a clean `.ms-table`: cell text through ReadmeInline, `colspan` kept (capped at 32), the first row a `<thead>` only when every cell is a `<th>`.
+- [core/llm-server/ui/js/models/ReadmeInline.md](core/llm-server/ui/js/models/ReadmeInline.md): renders one inline run for the README renderer: `<a href>` becomes a vaulted inert link (http and https only; other links keep their text), `b/strong`, `i/em`, `code/kbd/tt` tags become Markdown delimiters, the rest is escaped, then images (alt text), links, inline code, bold and italics are applied to the escaped text.
+- [core/llm-server/ui/js/models/ReadmeRenderer.md](core/llm-server/ui/js/models/ReadmeRenderer.md): escape-first renderer for REMOTE, UNTRUSTED Hugging Face model cards shown in the privileged LLM tab.
+- [core/llm-server/ui/js/models/ReadmeVault.md](core/llm-server/ui/js/models/ReadmeVault.md): holds pre-built safe markup behind sentinel tokens (NUL, "B", index, NUL).
+- [core/llm-server/ui/js/models/SearchText.md](core/llm-server/ui/js/models/SearchText.md): text helpers for the model search: `SearchText.count(n)` ("1.2M", "46k", "999") and `SearchText.fitLabel(fit)` ("fits · ~40 tok/s").
+- [core/llm-server/ui/js/chat-ext/AssistField.md](core/llm-server/ui/js/chat-ext/AssistField.md): the AI-fill button inside a text box: the field's `assist()` says what to generate, this streams the draft in while the box is locked and shimmering, and the sparkle becomes a stop button that keeps the partial draft.
+- [core/llm-server/ui/js/chat-ext/ChatExtRegistry.md](core/llm-server/ui/js/chat-ext/ChatExtRegistry.md): the chat-mode registry behind `window.LumaChatExt`: backend descriptors fetched once through `api.chat.listModes`, and the client hooks each bundle registers.
+- [core/llm-server/ui/js/chat-ext/ChatExtStyles.md](core/llm-server/ui/js/chat-ext/ChatExtStyles.md): the schema-form styles the component library does not cover (field groups, repeaters, image field, character-art studio, the AI-fill box), injected once as `<style id="cm-ext-styles">`.
+- [core/llm-server/ui/js/chat-ext/ChatUiScriptLoader.md](core/llm-server/ui/js/chat-ext/ChatUiScriptLoader.md): injects extension chat-UI scripts once each: bundled module entries as `type="module"`, everything else as a classic script, so user-installed add-ons keep the plain-script contract.
+- [core/llm-server/ui/js/chat-ext/FileBase64.md](core/llm-server/ui/js/chat-ext/FileBase64.md): reads a picked image `File` as `{ b64, mime }` (the shape image fields store).
+- [core/llm-server/ui/js/chat-ext/ImageGenerator.md](core/llm-server/ui/js/chat-ext/ImageGenerator.md): one-shot image generation over the streaming `api.image` surface.
+- [core/llm-server/ui/js/chat-ext/LumaChatExt.md](core/llm-server/ui/js/chat-ext/LumaChatExt.md): `window.LumaChatExt`, the chat-extension contract of the LLM tab.
+- [core/llm-server/ui/js/chat-ext/QuickPrompt.md](core/llm-server/ui/js/chat-ext/QuickPrompt.md): the small text prompt the image and character-art fields open for a subject.
+- [core/llm-server/ui/js/chat-ext/SchemaCard.md](core/llm-server/ui/js/chat-ext/SchemaCard.md): the schema form card shared by the modal and inline presentations: head, fields with `showIf` visibility, required-field validation and the foot.
+- [core/llm-server/ui/js/chat-ext/SchemaFieldRenderer.md](core/llm-server/ui/js/chat-ext/SchemaFieldRenderer.md): renders one schema field into a `.luma-field` wrapper: label row and hint, the field type's controls, then the AI-fill box on text fields with `assist`.
+- [core/llm-server/ui/js/chat-ext/SchemaPresenter.md](core/llm-server/ui/js/chat-ext/SchemaPresenter.md): presents a [SchemaCard](core/llm-server/ui/js/chat-ext/SchemaCard.md) as an overlay modal or inline in a host.
+- [core/llm-server/ui/js/chat-ext/fields/ButtonField.md](core/llm-server/ui/js/chat-ext/fields/ButtonField.md): `type: 'button'`: a generic action.
+- [core/llm-server/ui/js/chat-ext/fields/CharArtField.md](core/llm-server/ui/js/chat-ext/fields/CharArtField.md): `type: 'charart'`: multi-shot subject art in `model[key]` (`{ base, <derivativeKey>, extraEmotions }`), rendered by [CharArtStudio](core/llm-server/ui/js/chat-ext/fields/CharArtStudio.md).
+- [core/llm-server/ui/js/chat-ext/fields/CharArtPrompts.md](core/llm-server/ui/js/chat-ext/fields/CharArtPrompts.md): prompt and model choices for the studio.
+- [core/llm-server/ui/js/chat-ext/fields/CharArtSections.md](core/llm-server/ui/js/chat-ext/fields/CharArtSections.md): the studio's gated sections: Emotions (after a base face; core derivatives plus custom emotions with "+ Add emotion"), Full Body (after every core emotion), Outfits (after the full body; stored on the sibling model's `outfits`, "+ Add outfit").
+- [core/llm-server/ui/js/chat-ext/fields/CharArtStudio.md](core/llm-server/ui/js/chat-ext/fields/CharArtStudio.md): the character-art studio: base face (generate or upload), Generate variations (every core emotion in turn), and ref-conditioned derivatives that pass the base (or, for outfits, the full body) as `refImages` with `slot: 'edit'`, so an edit model keeps the identity.
+- [core/llm-server/ui/js/chat-ext/fields/GroupField.md](core/llm-server/ui/js/chat-ext/fields/GroupField.md): `type: 'group'`: sub-fields stored as one nested object under `key`; the wrapper becomes `.cm-xgroup` with a title (label row and hint dropped).
+- [core/llm-server/ui/js/chat-ext/fields/ImageField.md](core/llm-server/ui/js/chat-ext/fields/ImageField.md): `type: 'image'`: stored as `{ b64, mime }`.
+- [core/llm-server/ui/js/chat-ext/fields/RepeaterField.md](core/llm-server/ui/js/chat-ext/fields/RepeaterField.md): `type: 'repeater'`: an array of sub-field groups under `key` with "+ Add <itemLabel>" and per-item Remove; optional AI add through `assistAdd({ api, items, rootModel, setStatus })` returning an item or `null`.
+- [core/llm-server/ui/js/chat-ext/fields/SchemaField.md](core/llm-server/ui/js/chat-ext/fields/SchemaField.md): base class for one schema field type.
+- [core/llm-server/ui/js/chat-ext/fields/SelectField.md](core/llm-server/ui/js/chat-ext/fields/SelectField.md): `type: 'select'` over `options: [{ value, label?.
+- [core/llm-server/ui/js/chat-ext/fields/TextInputField.md](core/llm-server/ui/js/chat-ext/fields/TextInputField.md): `type: 'text' | 'number'`.
+- [core/llm-server/ui/js/chat-ext/fields/TextareaField.md](core/llm-server/ui/js/chat-ext/fields/TextareaField.md): `type: 'textarea'`: a multi-line text field.
+- [core/llm-server/ui/js/chat-ext/fields/ToggleField.md](core/llm-server/ui/js/chat-ext/fields/ToggleField.md): `type: 'toggle'`: a `.luma-check` checkbox with its label beside it; stores a boolean.
+- [core/llm-server/ui/js/voice/IdleCue.md](core/llm-server/ui/js/voice/IdleCue.md): the "still with you" blip while waiting: two sine notes a fourth apart every 2.6 s after a 1.4 s grace, silent while speech plays.
+- [core/llm-server/ui/js/voice/LiveTranscript.md](core/llm-server/ui/js/voice/LiveTranscript.md): the transcript strip pinned at the top of `.cm-composer-wrap` while the user talks: a "You" bubble with a live dot during partials, the final text until it is submitted.
+- [core/llm-server/ui/js/voice/LoopSpeech.md](core/llm-server/ui/js/voice/LoopSpeech.md): the loop's synth requests: one `api.voice.synthesize({ requestId: 'v-...', text })` per sentence, tracked until done, error, refusal or a 60 s watchdog.
+- [core/llm-server/ui/js/voice/MicCapture.md](core/llm-server/ui/js/voice/MicCapture.md): the live microphone graph: the device into a 16 kHz AudioContext (resumed if suspended) and a ScriptProcessor routed through a zero-gain sink (Chromium gives a sinkless processor no callbacks).
+- [core/llm-server/ui/js/voice/MicFailure.md](core/llm-server/ui/js/voice/MicFailure.md): explains a getUserMedia failure (no device, busy, denied, other) on the picker's note line, and when `api.voice.micAccessStatus` reports the OS blocking the app, says so and adds "Open microphone privacy settings".
+- [core/llm-server/ui/js/voice/MicPicker.md](core/llm-server/ui/js/voice/MicPicker.md): the microphone list: System default plus each input (Windows' virtual default and communications entries skipped); picking one saves it and moves the meter to it.
+- [core/llm-server/ui/js/voice/MicPreference.md](core/llm-server/ui/js/voice/MicPreference.md): the chosen microphone (`localStorage` `lumaVoice.micDeviceId`) and opening a stream with echo cancellation, noise suppression and auto gain.
+- [core/llm-server/ui/js/voice/MicProbe.md](core/llm-server/ui/js/voice/MicProbe.md): the picker's preview stream: drives the level meter (RMS times 700, capped at 100%) on animation frames and unlocks device labels.
+- [core/llm-server/ui/js/voice/PartialTranscriber.md](core/llm-server/ui/js/voice/PartialTranscriber.md): rolling live transcript: re-transcribes the utterance so far every 1.2 s (once it is at least 0.6 s long), one request at a time, ignoring results that arrive after the utterance ended.
+- [core/llm-server/ui/js/voice/PcmScheduler.md](core/llm-server/ui/js/voice/PcmScheduler.md): plays streamed Int16 PCM back to back on an AudioContext at the TTS rate (24 kHz default; a new rate recreates the context once nothing plays), with a 4 ms de-click ramp per chunk, a 0.15 s lead and a 0.12 s breath between sentences.
+- [core/llm-server/ui/js/voice/ReadAloudReader.md](core/llm-server/ui/js/voice/ReadAloudReader.md): reads one committed reply, independent of the loop: chunks fed two at a time, stale requests dropped after 60 s, an engine refusal drops the rest.
+- [core/llm-server/ui/js/voice/SpeechStreamChunker.md](core/llm-server/ui/js/voice/SpeechStreamChunker.md): cuts a streamed reply into speakable sentences as deltas arrive; fenced code is never spoken, even across deltas.
+- [core/llm-server/ui/js/voice/SpeechText.md](core/llm-server/ui/js/voice/SpeechText.md): turns chat markdown into speakable text and sentence-sized synth requests.
+- [core/llm-server/ui/js/voice/SttChoice.md](core/llm-server/ui/js/voice/SttChoice.md): the recognition model choice (Parakeet, Qwen3-ASR, Whisper).
+- [core/llm-server/ui/js/voice/VoiceActivityDetector.md](core/llm-server/ui/js/voice/VoiceActivityDetector.md): finds utterances by RMS against an adaptive noise floor (slow EMA while not capturing; threshold `max(0.012, floor * 3)`), with a pre-roll ring of about a second so late starts keep the first words.
+- [core/llm-server/ui/js/voice/VoiceController.md](core/llm-server/ui/js/voice/VoiceController.md): the voice conversation loop of the chat and read aloud for one reply.
+- [core/llm-server/ui/js/voice/VoiceDownloadProgress.md](core/llm-server/ui/js/voice/VoiceDownloadProgress.md): shows engine and model download progress from `api.voice.onVoiceEvent` on a note ("Downloading X: N%", then "Unpacking…").
+- [core/llm-server/ui/js/voice/VoicePanels.md](core/llm-server/ui/js/voice/VoicePanels.md): the panels the voice controls open: setup ("Set up voice conversation" or "Set up read aloud", noting the engines run on this computer or on the host), the microphone picker (devices, level meter, recognition model, voice quality, Start) and notes.
+- [core/llm-server/ui/js/voice/VoicePopover.md](core/llm-server/ui/js/voice/VoicePopover.md): the one voice popover at a time (`.cm-voice-pop`), positioned above its anchor.
+- [core/llm-server/ui/js/voice/VoiceQualityChoice.md](core/llm-server/ui/js/voice/VoiceQualityChoice.md): the voice choice: catalog tiers in Low, Fast, Medium, High order, then extension engines' voices grouped under the engine name (no download here; the add-on's Setup tab owns them).
+- [core/llm-server/ui/js/voice/VoiceRadioRow.md](core/llm-server/ui/js/voice/VoiceRadioRow.md): one radio row of the picker (microphone, recognition model, voice).
+- [core/llm-server/ui/js/voice/VoiceSetupRows.md](core/llm-server/ui/js/voice/VoiceSetupRows.md): the setup panel's list of missing engines and models with one install button (stops at the first failure).
+- [core/llm-server/ui/js/voice/VoiceStyles.md](core/llm-server/ui/js/voice/VoiceStyles.md): the voice controls' styles (mic states, popovers, meter, transcript strip), injected once as `<style id="cm-voice-styles">`; kept in JS because the PWA and the LLM tab both use the controller.
+- [core/llm-server/ui/js/voice/WavEncoder.md](core/llm-server/ui/js/voice/WavEncoder.md): encodes Float32 microphone frames as mono PCM16 WAV (clamped to [-1, 1]) and measures RMS.
+- [core/llm-server/ui/js/code/AgentWriteFollower.md](core/llm-server/ui/js/code/AgentWriteFollower.md): follows the agent's `write_file` / `edit_file` steps from the chat's `luma-chat-tool` events for the open conversation: snapshot before the write, then refresh and open the file after a successful one (in the background when the user is mid-edit in another file).
+- [core/llm-server/ui/js/code/ChatDock.md](core/llm-server/ui/js/code/ChatDock.md): the conversation docked beside the editor: the Chat button's preference (`luma.code.chatDock`, docked unless '0') and the drag grip that sets `--ce-chat-w` on `<body>` (`luma.code.chatDockWidth`, clamped to 320 px and the window minus 480 px; double-click resets).
+- [core/llm-server/ui/js/code/CodeEditor.md](core/llm-server/ui/js/code/CodeEditor.md): the Code surface of the LLM tab: a real editor over the open conversation's folder (the folder the agent edits, for Code mode and Game mode): lazy file tree, tabbed Monaco editors, save, create, rename, delete.
+- [core/llm-server/ui/js/code/CodeEditorLayout.md](core/llm-server/ui/js/code/CodeEditorLayout.md): builds the surface DOM: `.ce-head` (title, status, New file, New folder, Refresh, Diff, Chat, Save) and `.ce-body` (tree beside tabs, editor, diff and image hosts).
+- [core/llm-server/ui/js/code/CodeIcons.md](core/llm-server/ui/js/code/CodeIcons.md): the file tree and tab icons.
+- [core/llm-server/ui/js/code/CodeWorkspace.md](core/llm-server/ui/js/code/CodeWorkspace.md): the shared state of the surface for one folder (elements, client, tree, open files, snapshots, editor, diff) and the repaint helpers.
+- [core/llm-server/ui/js/code/DiffView.md](core/llm-server/ui/js/code/DiffView.md): the diff in place of the editor: the pre-write snapshot on the left, the file's own model on the right (edits there are edits to the file).
+- [core/llm-server/ui/js/code/DiskSync.md](core/llm-server/ui/js/code/DiskSync.md): pulls the tree and every unedited open file back off disk; a file with unsaved edits is left alone and flagged ("Changed on disk while you were editing: ...").
+- [core/llm-server/ui/js/code/EditorContext.md](core/llm-server/ui/js/code/EditorContext.md): context chips for the chat: the selection (line range; a selection ending at column 1 excludes that line) capped at 24,000 characters, or the whole file at 48,000.
+- [core/llm-server/ui/js/code/EditorPane.md](core/llm-server/ui/js/code/EditorPane.md): opening files into tabs (text into Monaco models, images as previews), switching without losing cursor and scroll, closing with an unsaved-changes confirm, the diff toggle and inserting at the caret.
+- [core/llm-server/ui/js/code/EditorTabs.md](core/llm-server/ui/js/code/EditorTabs.md): renders the tab strip (name, unsaved dot, close button), hidden when empty.
+- [core/llm-server/ui/js/code/FileEntryActions.md](core/llm-server/ui/js/code/FileEntryActions.md): create, rename and delete in the folder, and the tree's context menu (New file, New folder, Add to chat for files, Rename, Delete).
+- [core/llm-server/ui/js/code/FileSaver.md](core/llm-server/ui/js/code/FileSaver.md): saves through the workspace IPC: the active file, or every unsaved file once more than one is unsaved.
+- [core/llm-server/ui/js/code/FileTree.md](core/llm-server/ui/js/code/FileTree.md): the lazy file tree: folders are listed when first expanded; renders the expanded part with the active file highlighted.
+- [core/llm-server/ui/js/code/MonacoEditorHost.md](core/llm-server/ui/js/code/MonacoEditorHost.md): creates the Monaco editor once through [MonacoLoader](core/llm-server/ui/js/monaco/MonacoLoader.md), with Ctrl+S and the IDE plugins' commands: Ask Luma About Selection (Ctrl+Alt+L) and Add Selection to Chat (Ctrl+Alt+Shift+L, needs a selection).
+- [core/llm-server/ui/js/code/OpenFiles.md](core/llm-server/ui/js/code/OpenFiles.md): the open files in tab order and the active one.
+- [core/llm-server/ui/js/code/StatusLine.md](core/llm-server/ui/js/code/StatusLine.md): the header status line: errors stay, other messages clear after 2.6 s.
+- [core/llm-server/ui/js/code/TreeMenu.md](core/llm-server/ui/js/code/TreeMenu.md): the file tree's context menu (`.ce-menu`), closed by a pick or any press outside.
+- [core/llm-server/ui/js/code/WorkspaceClient.md](core/llm-server/ui/js/code/WorkspaceClient.md): calls `api.chat.workspace.<name>({ conversationId, ...args })` (the root-jailed workspace IPC); a missing surface or a throw becomes `{ success: false, error }`.
+- [core/llm-server/ui/js/code/WorkspacePath.md](core/llm-server/ui/js/code/WorkspacePath.md): workspace-relative path helpers ('/'-separated keys relative to the folder).
+- [core/llm-server/ui/js/code/WriteSnapshots.md](core/llm-server/ui/js/code/WriteSnapshots.md): the text each file had before the agent last wrote it (at most 40, oldest evicted).
+- [core/llm-server/ui/js/tasks/ScheduledTaskForm.md](core/llm-server/ui/js/tasks/ScheduledTaskForm.md): the Scheduled Task setup form: schema, interval presets (5 minutes to 7 days, as the server allows) and the opening turn a submitted form becomes.
+- [core/llm-server/ui/js/tasks/ScheduledTaskMode.md](core/llm-server/ui/js/tasks/ScheduledTaskMode.md): client hooks for the core `scheduled-task` chat mode (the server half is core/llm-server/chat ScheduledTaskMode).
+- [core/llm-server/ui/js/triggers/TriggerCard.md](core/llm-server/ui/js/triggers/TriggerCard.md): the live card above a trigger conversation's composer.
+- [core/llm-server/ui/js/triggers/TriggerCardActions.md](core/llm-server/ui/js/triggers/TriggerCardActions.md): handles clicks on the card's `data-act` buttons directly over `api.triggers` (no model turn).
+- [core/llm-server/ui/js/triggers/TriggerCardButtons.md](core/llm-server/ui/js/triggers/TriggerCardButtons.md): the card's action row and sample composer.
+- [core/llm-server/ui/js/triggers/TriggerCardData.md](core/llm-server/ui/js/triggers/TriggerCardData.md): loads the open conversation's trigger: the `api.triggers.list()` entry for the conversation, then `get(id)` (base URLs, watch, secret, pending, versions, agent) and the last five `deliveries`.
+- [core/llm-server/ui/js/triggers/TriggerCardHtml.md](core/llm-server/ui/js/triggers/TriggerCardHtml.md): the whole card markup: headline (with fire count when armed), source rows, status lines, buttons.
+- [core/llm-server/ui/js/triggers/TriggerChoices.md](core/llm-server/ui/js/triggers/TriggerChoices.md): what the trigger form can offer; each resolves `[]` when the source is off.
+- [core/llm-server/ui/js/triggers/TriggerForm.md](core/llm-server/ui/js/triggers/TriggerForm.md): the trigger setup form and the opening turn a submitted form becomes.
+- [core/llm-server/ui/js/triggers/TriggerIcons.md](core/llm-server/ui/js/triggers/TriggerIcons.md): the card's inline SVG icons.
+- [core/llm-server/ui/js/triggers/TriggerMode.md](core/llm-server/ui/js/triggers/TriggerMode.md): client hooks for the core `trigger` chat mode (the server half is core/llm-server/chat TriggerMode): an inline setup form whose submission becomes the first turn, and the live [TriggerCard](core/llm-server/ui/js/triggers/TriggerCard.md) above the composer of every trigger conversation.
+- [core/llm-server/ui/js/triggers/TriggerSourceRows.md](core/llm-server/ui/js/triggers/TriggerSourceRows.md): the card's event-source rows: webhook URLs (primary plus "All URLs"), watched folder and match, Page Watcher page and monitor, notification tab and site, the waiting-for-a-sample hints, and a webhook's secret status and entry.
+- [core/llm-server/ui/js/triggers/TriggerStatusLines.md](core/llm-server/ui/js/triggers/TriggerStatusLines.md): the card's status lines: pause reason or failure streak, payload drift with "Use latest as sample", restore of the last tested version, pending approval (Allow, Allow for this run, Always allow, Deny), retry, quiet-hours hold, batch, agent, gating, last refused delivery, expectations, sample, last test, note.
+- [core/llm-server/ui/js/triggers/TriggerText.md](core/llm-server/ui/js/triggers/TriggerText.md): text helpers for the trigger card.
+- [core/llm-server/ui/js/mode/ModeToggle.md](core/llm-server/ui/js/mode/ModeToggle.md): the LLM tab's top-level Setup / Chat / Code slider.
+- [core/llm-server/ui/js/mode/PlanExplainerOpener.md](core/llm-server/ui/js/mode/PlanExplainerOpener.md): opens the Setup page's launch-plan explainer (`#cardPlanExplainer .plan-notes-details`) and scrolls to it, polling every 250 ms for up to 8 s because Setup paints it after the server reports a plan.
+- [core/llm-server/ui/js/mode/SetupDeepLink.md](core/llm-server/ui/js/mode/SetupDeepLink.md): reads Setup deep links from the tab URL hash.
+- [core/llm-server/ui/js/setup-ui/LibraryRefresher.md](core/llm-server/ui/js/setup-ui/LibraryRefresher.md): repaints the installed lists and the Defaults pickers after anything adds or removes a model or runtime.
+- [core/llm-server/ui/js/setup-ui/SetupClickRouter.md](core/llm-server/ui/js/setup-ui/SetupClickRouter.md): one delegated click, change and keydown listener on the document body for every control the Setup cards re-render, so bindings survive every innerHTML repaint.
+- [core/llm-server/ui/js/setup-ui/SetupContext.md](core/llm-server/ui/js/setup-ui/SetupContext.md): what the LLM Setup cards share: the preload API, the document and window, the caches every card reads and the cards themselves, so one card can repaint another.
+- [core/llm-server/ui/js/setup-ui/SetupMain.md](core/llm-server/ui/js/setup-ui/SetupMain.md): builds and starts the LLM tab's Setup main panel: the Defaults, launch plan, Runtimes and Models cards, the Server Info diagnostics, the [Advanced view](core/llm-server/ui/js/setup-ui/advanced/AdvancedView.md), [extension Setup tabs](core/llm-server/ui/js/setup-ui/extensions/SetupExtensionTabs.md) and [sub-view navigation](core/llm-server/ui/js/setup-ui/nav/SetupNavigator.md), with their live event wiring.
+- [core/llm-server/ui/js/setup-ui/StatusLine.md](core/llm-server/ui/js/setup-ui/StatusLine.md): sets an inline status span's state class and text.
+- [core/llm-server/ui/js/setup-ui/advanced/AdvancedStyles.md](core/llm-server/ui/js/setup-ui/advanced/AdvancedStyles.md): the placement canvas stylesheet, injected once into the page head the first time the Advanced view opens.
+- [core/llm-server/ui/js/setup-ui/advanced/AdvancedSubtabs.md](core/llm-server/ui/js/setup-ui/advanced/AdvancedSubtabs.md): the Advanced view's sub-tab strip (Model Placement, Server Info, Data): toggles panes and retitles the page header.
+- [core/llm-server/ui/js/setup-ui/advanced/AdvancedView.md](core/llm-server/ui/js/setup-ui/advanced/AdvancedView.md): the LLM tab's Advanced view.
+- [core/llm-server/ui/js/setup-ui/advanced/ChatDataWipe.md](core/llm-server/ui/js/setup-ui/advanced/ChatDataWipe.md): the Data sub-tab's "Clear conversations & artifacts": wipes the store and reloads the tab so every surface re-reads it.
+- [core/llm-server/ui/js/setup-ui/advanced/DropTargets.md](core/llm-server/ui/js/setup-ui/advanced/DropTargets.md): drag and drop of placement chips onto trays, lanes and singularity boxes.
+- [core/llm-server/ui/js/setup-ui/advanced/LlmSplit.md](core/llm-server/ui/js/setup-ui/advanced/LlmSplit.md): slicing the LLM's measured footprint: how much stays on its primary card and whether the overflow goes to another GPU (tensor-split ratio) or System RAM (a VRAM cap).
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementChips.md](core/llm-server/ui/js/setup-ui/advanced/PlacementChips.md): builds the model chips (and the split-out context chip) and drops each where the layout puts it.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementControls.md](core/llm-server/ui/js/setup-ui/advanced/PlacementControls.md): the control row: save the layout with auto-start and auto-stop, start or stop every server, reset to automatic.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementFit.md](core/llm-server/ui/js/setup-ui/advanced/PlacementFit.md): measured-fit arithmetic of the placement canvas: what each item, singularity and lane commits according to the last test render.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementItems.md](core/llm-server/ui/js/setup-ui/advanced/PlacementItems.md): the draggable model items of the placement canvas and the fallback empty layout.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementLanes.md](core/llm-server/ui/js/setup-ui/advanced/PlacementLanes.md): builds the drop lanes: local GPUs, ordered groups, remote peer GPUs (including unpaired refs, marked unavailable) and System RAM, each with its plan bar and singularity boxes.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementLayoutModel.md](core/llm-server/ui/js/setup-ui/advanced/PlacementLayoutModel.md): the placement canvas's state and every edit a drag, group or singularity action makes to it.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementRows.md](core/llm-server/ui/js/setup-ui/advanced/PlacementRows.md): the rows above the lanes: the allocation gate, the "split LLM context" toggle and the "combine GPUs" picker.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementText.md](core/llm-server/ui/js/setup-ui/advanced/PlacementText.md): text helpers of the placement canvas.
+- [core/llm-server/ui/js/setup-ui/advanced/PromptPreviewPanel.md](core/llm-server/ui/js/setup-ui/advanced/PromptPreviewPanel.md): the "System prompt preview" panel: the exact system prompt of a Tools-on turn from the current settings.
+- [core/llm-server/ui/js/setup-ui/advanced/RemoteRefs.md](core/llm-server/ui/js/setup-ui/advanced/RemoteRefs.md): remote GPU refs (`r:<peerId>:<gpuIndex>`) borrowed from network-sharing peers; LLM only.
+- [core/llm-server/ui/js/setup-ui/advanced/SplitEditorPanel.md](core/llm-server/ui/js/setup-ui/advanced/SplitEditorPanel.md): the LLM split editor panel: boundary slider, overflow target and Apply / Cancel.
+- [core/llm-server/ui/js/setup-ui/advanced/TestRenderPanel.md](core/llm-server/ui/js/setup-ui/advanced/TestRenderPanel.md): the "Test render" panel: runs the cat-and-hat test, streams its status, and shows each step plus where each model ran and its peak VRAM and RAM.
+- [core/llm-server/ui/js/setup-ui/advanced/TestRenderTables.md](core/llm-server/ui/js/setup-ui/advanced/TestRenderTables.md): the HTML of a test render's results, rows in PlacementItems order.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsCard.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsCard.md): the LLM Setup "Defaults" card: the runtime, model and launch settings Start uses, which also gate the Chat surface.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsCardHtml.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsCardHtml.md): the Defaults card body and all its help copy.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsForm.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsForm.md): reads the Defaults card's controls into the setDefaults payload; optional rows are sent only when rendered.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsOptions.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsOptions.md): the closed option sets of the Defaults card and its option lists.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsPrefs.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsPrefs.md): the Defaults settings outside the launch payload (auto-unload, unload on VRAM pressure, tool approval, RAM-pin status), cached so a re-render never redraws one as unset.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsRows.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsRows.md): row builders of the Defaults card with a "?" help toggle whose open state survives re-renders.
+- [core/llm-server/ui/js/setup-ui/defaults/GroupRouterHint.md](core/llm-server/ui/js/setup-ui/defaults/GroupRouterHint.md): the "Tool router" row's caption: downloading, starting, ready with its last latency, or failed.
+- [core/llm-server/ui/js/setup-ui/defaults/MoreSettingsChips.md](core/llm-server/ui/js/setup-ui/defaults/MoreSettingsChips.md): what the collapsed "More settings" handle says: only the values that differ from a fresh install.
+- [core/llm-server/ui/js/setup-ui/defaults/PeerGpusHint.md](core/llm-server/ui/js/setup-ui/defaults/PeerGpusHint.md): the "Peer GPUs" row's caption: every GPU the attached peers offer, or a pointer to attach one.
+- [core/llm-server/ui/js/setup-ui/defaults/PollingHint.md](core/llm-server/ui/js/setup-ui/defaults/PollingHint.md): base class of the Defaults card's live caption hints: fetch a status, paint the hint, poll again while it is still on its way.
+- [core/llm-server/ui/js/setup-ui/defaults/RamPinHint.md](core/llm-server/ui/js/setup-ui/defaults/RamPinHint.md): the "RAM pin" row's caption: pin progress, pinned size or refusal; keeps polling while enabled but not yet started.
+- [core/llm-server/ui/js/setup-ui/diagnostics/ApiSecurityCard.md](core/llm-server/ui/js/setup-ui/diagnostics/ApiSecurityCard.md): the Server Info "API Security" card: whether the local LLM and Image servers are gated by a Bearer key right now.
+- [core/llm-server/ui/js/setup-ui/diagnostics/BudgetCard.md](core/llm-server/ui/js/setup-ui/diagnostics/BudgetCard.md): the Server Info "Model budget" card: the RAM and VRAM the launch planner may spend after reserves, per adapter, with an explanation when no adapter reports VRAM.
+- [core/llm-server/ui/js/setup-ui/diagnostics/CpuCard.md](core/llm-server/ui/js/setup-ui/diagnostics/CpuCard.md): the Server Info "CPU" card: model, logical cores and base clock.
+- [core/llm-server/ui/js/setup-ui/diagnostics/CudaCard.md](core/llm-server/ui/js/setup-ui/diagnostics/CudaCard.md): the Server Info "CUDA" card: the CUDA version and each NVIDIA device from nvidia-smi, or why CUDA was not detected, with the nvidia-smi PATH hint.
+- [core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsCache.md](core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsCache.md): the renderer-side diagnostics snapshot in localStorage, painted on the first load so the cards never sit on "Loading…" while the probe round-trips.
+- [core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsLoader.md](core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsLoader.md): the Setup load: the cached snapshot first, spinners only on never-painted cards, fresh diagnostics, then runtimes, models, defaults, API security and the launch plan in dependency order.
+- [core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsPainter.md](core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsPainter.md): paints one diagnostics payload into every Server Info card and the header's host line.
+- [core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsText.md](core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsText.md): text helpers of the Server Info cards.
+- [core/llm-server/ui/js/setup-ui/diagnostics/DiskCard.md](core/llm-server/ui/js/setup-ui/diagnostics/DiskCard.md): the Server Info "Disks" card: each volume's free space, filesystem and a usage badge coloured by DiagnosticsText.
+- [core/llm-server/ui/js/setup-ui/diagnostics/GpuCard.md](core/llm-server/ui/js/setup-ui/diagnostics/GpuCard.md): the Server Info "GPU" card: every adapter Chromium reports with VRAM, driver and PCIe link, then the adapter health block (in every branch, since a faulted card is when Chromium reports nothing).
+- [core/llm-server/ui/js/setup-ui/diagnostics/GpuHealthHtml.md](core/llm-server/ui/js/setup-ui/diagnostics/GpuHealthHtml.md): the Plug-and-Play display-adapter health block of the GPU card: faulted cards, a one-click elevated restart, and when something faulted, how to stop the PCIe link drop recurring (Windows power plan one-click, BIOS steps).
+- [core/llm-server/ui/js/setup-ui/diagnostics/HostCaps.md](core/llm-server/ui/js/setup-ui/diagnostics/HostCaps.md): host GPU capabilities captured from the diagnostics load, for the runtime recommendation.
+- [core/llm-server/ui/js/setup-ui/diagnostics/HostFixActions.md](core/llm-server/ui/js/setup-ui/diagnostics/HostFixActions.md): the fixes the Server Info cards offer for host problems, each reporting next to its button and re-probing when it changed something.
+- [core/llm-server/ui/js/setup-ui/diagnostics/MemoryCard.md](core/llm-server/ui/js/setup-ui/diagnostics/MemoryCard.md): the Server Info "Memory" card: installed, used and free RAM, plus the DIMM modules when the host reports them (or why not).
+- [core/llm-server/ui/js/setup-ui/diagnostics/PathHintBanner.md](core/llm-server/ui/js/setup-ui/diagnostics/PathHintBanner.md): the "Found nvidia-smi at ..." banner of the CUDA card: a one-click PATH fix, a copyable PowerShell line and a permanent dismiss.
+- [core/llm-server/ui/js/setup-ui/diagnostics/PcieText.md](core/llm-server/ui/js/setup-ui/diagnostics/PcieText.md): describes a GPU's PCIe link: current and maximum generation and width, downtraining, and the theoretical one-direction bandwidth.
+- [core/llm-server/ui/js/setup-ui/extensions/ExtensionScriptLoader.md](core/llm-server/ui/js/setup-ui/extensions/ExtensionScriptLoader.md): injects an extension's Setup-tab UI bundle once per URL: `type="module"` for bundled module entries, a classic script for add-ons and distributable extensions.
+- [core/llm-server/ui/js/setup-ui/extensions/ExtensionTabNav.md](core/llm-server/ui/js/setup-ui/extensions/ExtensionTabNav.md): the DOM half of extension Setup tabs: one nav button under an "Extensions" group label in `#pageNav` and one hidden pane in `#setupRoot` per tab.
+- [core/llm-server/ui/js/setup-ui/extensions/SetupExtensionTabs.md](core/llm-server/ui/js/setup-ui/extensions/SetupExtensionTabs.md): hosts extension-contributed Setup tabs in the LLM tab.
+- [core/llm-server/ui/js/setup-ui/fit-test/FitTestController.md](core/llm-server/ui/js/setup-ui/fit-test/FitTestController.md): runs the measured fit test from a model row: start, cancel, events, rehydration, and pinning a measured row as the Start defaults.
+- [core/llm-server/ui/js/setup-ui/fit-test/FitTestState.md](core/llm-server/ui/js/setup-ui/fit-test/FitTestState.md): fit-test state per model path plus the single-flight lock and event route; folds streamed events, the invoke result and live or stored results into it.
+- [core/llm-server/ui/js/setup-ui/fit-test/FitTestView.md](core/llm-server/ui/js/setup-ui/fit-test/FitTestView.md): the fit-test block on a model row: the run, re-run or cancel control, notes, and the measured table whose "Use" buttons pin a combination as the Start defaults.
+- [core/llm-server/ui/js/setup-ui/gambit/GambitController.md](core/llm-server/ui/js/setup-ui/gambit/GambitController.md): runs the compatibility gambit for the default model and downloads its raw transcripts.
+- [core/llm-server/ui/js/setup-ui/gambit/GambitState.md](core/llm-server/ui/js/setup-ui/gambit/GambitState.md): compatibility-gambit state per model path with the same single-flight lock and event route as the fit test.
+- [core/llm-server/ui/js/setup-ui/gambit/GambitView.md](core/llm-server/ui/js/setup-ui/gambit/GambitView.md): the compatibility-gambit section of the Defaults card: it grades the model being served, so it sits under the defaults, not on a row.
+- [core/llm-server/ui/js/setup-ui/models/AddonModels.md](core/llm-server/ui/js/setup-ui/models/AddonModels.md): the "Add-on models" fold: extension-contributed models bound to their own runtime, each with one "Download & set up" that runs the whole chain main-side, repainted from the streamed add-on events.
+- [core/llm-server/ui/js/setup-ui/models/AddonProgress.md](core/llm-server/ui/js/setup-ui/models/AddonProgress.md): folds one streamed add-on setup event into the in-flight setup's progress state.
+- [core/llm-server/ui/js/setup-ui/models/AddonRow.md](core/llm-server/ui/js/setup-ui/models/AddonRow.md): the shared model-list row view for one add-on model, and its setup progress block.
+- [core/llm-server/ui/js/setup-ui/models/CtxFitMatrix.md](core/llm-server/ui/js/setup-ui/models/CtxFitMatrix.md): the "GPU fit by context" block on a model row: pills per KV mode coloured by the launch planner, a measured or predicted speed chip, and the MTP overhead note.
+- [core/llm-server/ui/js/setup-ui/models/CtxFitStore.md](core/llm-server/ui/js/setup-ui/models/CtxFitStore.md): the planner-backed context-fit ladders per weights path, the one answer both the fit matrix and the Defaults dropdown read (no renderer KV maths, bug H6).
+- [core/llm-server/ui/js/setup-ui/models/CtxLadder.md](core/llm-server/ui/js/setup-ui/models/CtxLadder.md): the context-length rungs Setup offers.
+- [core/llm-server/ui/js/setup-ui/models/LlmModelRow.md](core/llm-server/ui/js/setup-ui/models/LlmModelRow.md): builds the shared model-list row view (the mlRow contract) for one LLM scan model.
+- [core/llm-server/ui/js/setup-ui/models/ModelLibrary.md](core/llm-server/ui/js/setup-ui/models/ModelLibrary.md): the last models-directory scan, plus the model choices a selected runtime can load.
+- [core/llm-server/ui/js/setup-ui/models/ModelRename.md](core/llm-server/ui/js/setup-ui/models/ModelRename.md): the per-model display-name override: the pencil swaps a row head for an input with Save and Cancel.
+- [core/llm-server/ui/js/setup-ui/models/ModelsCard.md](core/llm-server/ui/js/setup-ui/models/ModelsCard.md): the LLM Setup "Models Directory" card: directory controls, installed models through the shared model list (each with its fit matrix and fit-test block), the add-on models fold, and directory changes.
+- [core/llm-server/ui/js/setup-ui/models/ModelsCardHtml.md](core/llm-server/ui/js/setup-ui/models/ModelsCardHtml.md): the fixed markup of the Models Directory card: the list scaffold, the directory controls, the empty or unavailable note and the "Where models come from" callout.
+- [core/llm-server/ui/js/setup-ui/models/RuntimeRecommender.md](core/llm-server/ui/js/setup-ui/models/RuntimeRecommender.md): picks the runtime to recommend for a model on this host and renders its runtime tags.
+- [core/llm-server/ui/js/setup-ui/nav/SetupNavigator.md](core/llm-server/ui/js/setup-ui/nav/SetupNavigator.md): switches the Setup surface's sub-views (LLM, Image, Music, Advanced and extension tabs): the active nav button, the page header, which panes and card groups show, and each view's lazy init.
+- [core/llm-server/ui/js/setup-ui/plan/PlanExplainer.md](core/llm-server/ui/js/setup-ui/plan/PlanExplainer.md): the "How your model is running" card: the launch planner's decision notes for the current or last start, the interpreted failure, a live server-log tail and Start / Stop.
+- [core/llm-server/ui/js/setup-ui/plan/PlanExplainerHtml.md](core/llm-server/ui/js/setup-ui/plan/PlanExplainerHtml.md): the markup of the launch-plan card: headline, promoted decision, failure block, notes, log drawer and the Start or Stop button.
+- [core/llm-server/ui/js/setup-ui/preflight/PreflightBanner.md](core/llm-server/ui/js/setup-ui/preflight/PreflightBanner.md): the LLM tab's boot-time configuration banner.
+- [core/llm-server/ui/js/setup-ui/preflight/PreflightInstall.md](core/llm-server/ui/js/setup-ui/preflight/PreflightInstall.md): runs a preflight "Download and install" fix on the right runtime surface and streams its events into the row's progress bar.
+- [core/llm-server/ui/js/setup-ui/preflight/PreflightIssues.md](core/llm-server/ui/js/setup-ui/preflight/PreflightIssues.md): the preflight banner's issue list: the boot issues from the main process plus one live row per GPU under VRAM pressure.
+- [core/llm-server/ui/js/setup-ui/preflight/PreflightProgress.md](core/llm-server/ui/js/setup-ui/preflight/PreflightProgress.md): paints the inline install progress inside one preflight banner row.
+- [core/llm-server/ui/js/setup-ui/preflight/PreflightRow.md](core/llm-server/ui/js/setup-ui/preflight/PreflightRow.md): builds one preflight banner row: the issue's title and detail plus the button its declarative fix asks for.
+- [core/llm-server/ui/js/setup-ui/preflight/VramIssue.md](core/llm-server/ui/js/setup-ui/preflight/VramIssue.md): turns one live VRAM watchdog card into a preflight banner issue.
+- [core/llm-server/ui/js/setup-ui/runtimes/PrereleaseInstall.md](core/llm-server/ui/js/setup-ui/runtimes/PrereleaseInstall.md): the "Download pre-release" action: resolves the newest upstream build first so the confirmation names the exact tag, then installs it over the managed copy.
+- [core/llm-server/ui/js/setup-ui/runtimes/RuntimeActions.md](core/llm-server/ui/js/setup-ui/runtimes/RuntimeActions.md): what a runtime row's buttons do.
+- [core/llm-server/ui/js/setup-ui/runtimes/RuntimeProvenanceHtml.md](core/llm-server/ui/js/setup-ui/runtimes/RuntimeProvenanceHtml.md): a runtime row's provenance lines: the upstream project and acquisition, and for a managed install the exact release asset (name, size, companions, tag, SHA-256).
+- [core/llm-server/ui/js/setup-ui/runtimes/RuntimeRowHtml.md](core/llm-server/ui/js/setup-ui/runtimes/RuntimeRowHtml.md): one collapsible runtime row: status badges, the primary Install/Update button that stays visible collapsed, and the details panel with version, path, provenance and the secondary actions.
+- [core/llm-server/ui/js/setup-ui/runtimes/RuntimeRowProgress.md](core/llm-server/ui/js/setup-ui/runtimes/RuntimeRowProgress.md): live state of a runtime row while it installs: the progress strip, disabled buttons and the translation of streamed installer events.
+- [core/llm-server/ui/js/setup-ui/runtimes/RuntimeStatusStore.md](core/llm-server/ui/js/setup-ui/runtimes/RuntimeStatusStore.md): the last runtimes view keyed by runtime id plus the upstream update info: the source of truth for "installed" across the model rows and the Defaults pickers.
+- [core/llm-server/ui/js/setup-ui/runtimes/RuntimeUpdateBadge.md](core/llm-server/ui/js/setup-ui/runtimes/RuntimeUpdateBadge.md): marks a runtime row with an upstream update: the Update button's tooltip and an "update: vX" pill.
+- [core/llm-server/ui/js/setup-ui/runtimes/RuntimesCard.md](core/llm-server/ui/js/setup-ui/runtimes/RuntimesCard.md): the LLM Setup "Runtimes" card: installed runtimes as the working set, everything still installable in a collapsed Catalogue with the provenance note, and update badges filled in after the rows paint.
+- [core/llm-server/ui/js/chat/ChatContext.md](core/llm-server/ui/js/chat/ChatContext.md): the shared wiring of one chat surface: the injected `api`, the `root` element, the chat-scoped Resonant (`resonant`), the [ChatState](core/llm-server/ui/js/chat/ChatState.md) (`state`), the mounted elements (`els`: sidebar, main, panel, content, stage, composerBar, scroll, title, jump, artifactsBtn, sideModes, searchBox, recents, chatsList, artsList) and every component by name (set by [ChatMode](core/llm-server/ui/js/chat/ChatMode.md)).
+- [core/llm-server/ui/js/chat/ChatIcons.md](core/llm-server/ui/js/chat/ChatIcons.md): the chat's inline SVG icons (stroke `currentColor`) as static strings, plus the LumaBrowser app mark (`logo`) and `pulse()`, the pulsing logo painted into a reply before its first token.
+- [core/llm-server/ui/js/chat/ChatMode.md](core/llm-server/ui/js/chat/ChatMode.md): the LLM tab's chat surface, also run by the web PWA: it builds the sidebar, chat column, artifact panel and composer into a root element over ONE injected API object, and exposes the lifecycle other surfaces drive.
+- [core/llm-server/ui/js/chat/ChatState.md](core/llm-server/ui/js/chat/ChatState.md): everything one chat surface remembers between renders: models and the selection, conversations and the open one, the in-flight stream, the composer's per-chat options, staged attachments and editor context, the open panel, the active extension mode, and the session caches of server timings and final tab frames by message id.
+- [core/llm-server/ui/js/chat/ChatSubscriptions.md](core/llm-server/ui/js/chat/ChatSubscriptions.md): subscribes the chat to the host's pushes.
+- [core/llm-server/ui/js/chat/ChatSurface.md](core/llm-server/ui/js/chat/ChatSurface.md): the LLM tab's chat (and the web PWA's, over its API shim), ported from the legacy `ui/js/chat-mode.js`.
+- [core/llm-server/ui/js/chat/common/ActionButton.md](core/llm-server/ui/js/chat/common/ActionButton.md): runs a host call behind a task or trigger view button: disables it, shows the host's error (escaped, or a fallback) on the button when the call fails, optionally restores it after 2.5 s, and runs `onSuccess` otherwise.
+- [core/llm-server/ui/js/chat/common/ChatShortcuts.md](core/llm-server/ui/js/chat/common/ChatShortcuts.md): the chat's keyboard shortcuts: Escape stops the reply on screen (menus first), Ctrl/Cmd+Shift+N starts a new chat, Up in an empty composer edits the last prompt.
+- [core/llm-server/ui/js/chat/common/ChatModals.md](core/llm-server/ui/js/chat/common/ChatModals.md): the chat's themed (cm-modal) confirm and rename dialogs, used instead of Electron's unstyled native confirm and its missing prompt.
+- [core/llm-server/ui/js/chat/common/PopoverCloser.md](core/llm-server/ui/js/chat/common/PopoverCloser.md): the one outside-click closer for the chat's menus and model popover.
+- [core/llm-server/ui/js/chat/common/PopoverFit.md](core/llm-server/ui/js/chat/common/PopoverFit.md): keeps a composer-anchored popover inside its clip edge: the top of the nearest scrolling ancestor (the landing's scroll container), not the viewport.
+- [core/llm-server/ui/js/chat/common/RunTimeText.md](core/llm-server/ui/js/chat/common/RunTimeText.md): short time texts for the artifact history and the task and trigger views.
+- [core/llm-server/ui/js/chat/common/SelectorText.md](core/llm-server/ui/js/chat/common/SelectorText.md): escapes an app-minted id for a double-quoted attribute selector.
+- [core/llm-server/ui/js/chat/common/ShareLinks.md](core/llm-server/ui/js/chat/common/ShareLinks.md): share-as-link through the Network Sharing web backend.
+- [core/llm-server/ui/js/chat/composer/AttachmentStrip.md](core/llm-server/ui/js/chat/composer/AttachmentStrip.md): the chips above every composer for what the next submit carries: editor context from the Code surface ("app.js:12-40", never stored in the message) and staged files (name, size from the one byte ladder, a red border with the reason when unreadable; a read page with its favicon, the Dashboard with the grid icon).
+- [core/llm-server/ui/js/chat/composer/ClipboardAttach.md](core/llm-server/ui/js/chat/composer/ClipboardAttach.md): paste to attach: pasted files and screenshots stage as chips like a drop; images are read in the page, other files through the host reader; a paste with text stays a text paste.
+- [core/llm-server/ui/js/chat/composer/Availability.md](core/llm-server/ui/js/chat/composer/Availability.md): whether anything can answer.
+- [core/llm-server/ui/js/chat/composer/ComposerCommands.md](core/llm-server/ui/js/chat/composer/ComposerCommands.md): slash commands (/summarize, /explain, /translate, /tab, /dashboard, /attach, /model, /new) and @mentions of open tabs and the Dashboard in the composer, with keyboard navigation.
+- [core/llm-server/ui/js/chat/composer/ComposerView.md](core/llm-server/ui/js/chat/composer/ComposerView.md): the composer: the textarea (grows to 220 px; Enter sends, Shift+Enter is a new line, ignored while streaming), the Send button that is Stop while streaming, the gear, thinking pill and mic on the left, the token meter on the right, the no-model callout and the attachment strip above, and the AI disclaimer under the reply composer.
+- [core/llm-server/ui/js/chat/composer/ContextOptionText.md](core/llm-server/ui/js/chat/composer/ContextOptionText.md): text for the model picker's context chips, keeping a measured fit apart from an estimate and a measured speed apart from a predicted one ("~").
+- [core/llm-server/ui/js/chat/composer/DocsSourceContext.md](core/llm-server/ui/js/chat/composer/DocsSourceContext.md): the "@lumabrowser-documentation" source: a conversation-wide pill (no attachment text) that makes every turn carry `docsSource: true`, kept in the conversation meta and restored on reopen; hidden where the host has no index; has `load`, `available`, `matches`, `set`, `enable`, `disable`, `restore`, `pillHtml`.
+- [core/llm-server/ui/js/chat/composer/DashboardContext.md](core/llm-server/ui/js/chat/composer/DashboardContext.md): ask about the Dashboard: "@dashboard" or "/dashboard" reads every placed widget on the host and stages the text as one chip (a second mention refreshes it; a failed read is a red chip with the reason); has `available`, `attach`, `attachment`.
+- [core/llm-server/ui/js/chat/composer/GearPanel.md](core/llm-server/ui/js/chat/composer/GearPanel.md): the composer's gear panel, this chat's options: Attach a file (desktop), the model row (keeps the `cm-model-pill` class the picker anchors to and the PWA's info intercept reads) with a one-line launch-plan summary, Suggest replies, Watch the browser tab live (a global preference), and the per-chat tool list.
+- [core/llm-server/ui/js/chat/composer/GearToolList.md](core/llm-server/ui/js/chat/composer/GearToolList.md): the gear panel's per-chat agent tool checklist: collapsible groups (collapsed by default) with a tri-state group box and an on/total count.
+- [core/llm-server/ui/js/chat/composer/ModelPicker.md](core/llm-server/ui/js/chat/composer/ModelPicker.md): the model selection: the listed models, local models with per-context options (fit-measured or estimated), the pill label ("Local · Qwen3-8B · 16k"), the picker popover, and the context window the usage meter divides by.
+- [core/llm-server/ui/js/chat/composer/TabContext.md](core/llm-server/ui/js/chat/composer/TabContext.md): ask about an open browser tab: the composer's tab picker and the dashed suggestion chip for the tab just viewed; a picked page is staged as a text attachment with its host and URL.
+- [core/llm-server/ui/js/chat/composer/ThinkPill.md](core/llm-server/ui/js/chat/composer/ThinkPill.md): the composer's thinking dial for THIS chat.
+- [core/llm-server/ui/js/chat/composer/UsageMeter.md](core/llm-server/ui/js/chat/composer/UsageMeter.md): the composer's context meter: how full the window is (a bar coloured warm at 75% and hot at 90%, the percent, used/window) or raw prompt/completion counts when the window is unknown, with the breakdown in the tooltip.
+- [core/llm-server/ui/js/chat/composer/UserMessageComposer.md](core/llm-server/ui/js/chat/composer/UserMessageComposer.md): splices staged attachments into the user message the model sees, in the format [AttachmentParser](core/llm-server/ui/js/markdown/AttachmentParser.md) reads back: text and PDF text as `[Attached: name · size]` plus a fenced block, images as a short `[Attached image: ...]` marker (their bytes travel separately as real image parts; inlining them flooded the context), and failures and binaries with the wire-format dash (`AttachmentParser.DASH`).
+- [core/llm-server/ui/js/chat/conversation/ConversationMarkdown.md](core/llm-server/ui/js/chat/conversation/ConversationMarkdown.md): the full-fidelity Markdown dump behind Copy as Markdown: header facts, then per message its role and model, reasoning in a `<details>`, tool calls with params, status and errors, artifacts, content and error.
+- [core/llm-server/ui/js/chat/conversation/ConversationMenu.md](core/llm-server/ui/js/chat/conversation/ConversationMenu.md): a conversation's menu: Rename (themed prompt), Pin/Unpin, Share (a flyout that opens on hover or click: Copy as Markdown, a public Link while the web backend runs, Download as PDF or PNG through `api.conv.export`), Copy Logs in dev builds, Restart and Delete.
+- [core/llm-server/ui/js/chat/conversation/ConversationView.md](core/llm-server/ui/js/chat/conversation/ConversationView.md): opens and renders a conversation: leaves the current one (mode hook, popovers, reading, panel, live modules, parked tab), loads its messages (session timings and tab frames re-attached), restores its model, mode, tools, choices and thinking position, re-attaches a turn that is still streaming, paints the thread with the reply composer in the bottom bar, and re-applies the mode's theme and hooks.
+- [core/llm-server/ui/js/chat/conversation/LandingView.md](core/llm-server/ui/js/chat/conversation/LandingView.md): the landing screen: a greeting over the big centred composer and the starter chips (a click fills the composer).
+- [core/llm-server/ui/js/chat/conversation/PersonaSeeds.md](core/llm-server/ui/js/chat/conversation/PersonaSeeds.md): the landing's starter chips per first-run persona (chat, create, build, tune) and the greeting by hour.
+- [core/llm-server/ui/js/chat/main/CodeBlockBar.md](core/llm-server/ui/js/chat/main/CodeBlockBar.md): one floating Copy / Insert bar placed over whichever reply code block the pointer is on (buttons baked into the markdown would be dropped by a streaming re-render).
+- [core/llm-server/ui/js/chat/main/FileDrop.md](core/llm-server/ui/js/chat/main/FileDrop.md): drag-and-drop attach: files dropped anywhere on the chat are read through `api.readDroppedAttachments` and staged like picked ones, with a "Drop to attach" veil while dragging.
+- [core/llm-server/ui/js/chat/main/MainColumn.md](core/llm-server/ui/js/chat/main/MainColumn.md): the chat column: the top bar (the conversation title, which opens its menu, and the conversation-scoped Artifacts button), the message scroller with its auto-follow, and the "New text" pill that re-pins it after the user scrolls up mid-stream.
+- [core/llm-server/ui/js/chat/modes/CodeSurfaceReporter.md](core/llm-server/ui/js/chat/modes/CodeSurfaceReporter.md): tells the tab page whether the open conversation has a folder on disk (Code mode's project, Game mode's game) so the mode pill shows "Code" and the editor opens over that folder.
+- [core/llm-server/ui/js/chat/modes/ModeContext.md](core/llm-server/ui/js/chat/modes/ModeContext.md): what an extension chat mode's client hooks receive, and the safe way to call them (a throwing hook is swallowed).
+- [core/llm-server/ui/js/chat/modes/ModeLauncher.md](core/llm-server/ui/js/chat/modes/ModeLauncher.md): starts a conversation in an extension chat mode: preflight (the mode's own, else [ModePreflight](core/llm-server/ui/js/chat/modes/ModePreflight.md)), setup (the mode's `openSetup(api, ctx)` with a lazily created inline host, else its schema form through `chatExt.openSchemaInline`, else none; a cancel restores the previous screen), create the conversation and persist its meta up front, render and theme it, then let the mode send its opening turn (marked as a first turn for the AI title).
+- [core/llm-server/ui/js/chat/modes/ModePreflight.md](core/llm-server/ui/js/chat/modes/ModePreflight.md): the built-in requirement check before a mode starts, and the blocking card listing what is missing with Close and Open Setup.
+- [core/llm-server/ui/js/chat/modes/ModeTheme.md](core/llm-server/ui/js/chat/modes/ModeTheme.md): a mode's theme over the chat column: a background image (base64 or URL) through the `--cm-bg-image` property and the `cm-has-bg` class.
+- [core/llm-server/ui/js/chat/panel/ArtifactDownloader.md](core/llm-server/ui/js/chat/panel/ArtifactDownloader.md): downloads the artifact open in the panel: media as a typed blob with an extension from its mime (using the bytes the panel holds, else a fetch), anything else as UTF-8 text with an extension from its type or code language.
+- [core/llm-server/ui/js/chat/panel/ArtifactPanel.md](core/llm-server/ui/js/chat/panel/ArtifactPanel.md): the artifact side panel docked right of the chat: a sandboxed iframe and the Monaco editor, laid out per type (`data-layout` `iframe`, `monaco`, or `split` for HTML source over its live preview).
+- [core/llm-server/ui/js/chat/panel/MediaArtifactCache.md](core/llm-server/ui/js/chat/panel/MediaArtifactCache.md): session cache of binary artifact bytes (images, video, audio) by id, with in-flight dedupe, so the thumbnail, the panel and every re-render share one `api.artifact.get`.
+- [core/llm-server/ui/js/chat/panel/PanelDocuments.md](core/llm-server/ui/js/chat/panel/PanelDocuments.md): the documents the panel writes into its sandboxed iframe: building (escaped partial source or "Generating <type>…"), svg, image, video (an image fallback when ffmpeg was missing) and audio, each with a literal background (CSS variables do not cross into the frame) and the app's scrollbar style.
+- [core/llm-server/ui/js/chat/panel/PanelEditor.md](core/llm-server/ui/js/chat/panel/PanelEditor.md): the artifact panel's one Monaco editor, created on first use and reused for the tab's lifetime (Monaco costs about 5 MB parsed).
+- [core/llm-server/ui/js/chat/sidebar/ArtifactRowHtml.md](core/llm-server/ui/js/chat/sidebar/ArtifactRowHtml.md): markup for the artifact views: the scope header, one row per chain (its latest version, a "vN ▾" history badge when there are several, and in the global view the owning conversation or "Not in a conversation" plus the chain's size), and the version rows.
+- [core/llm-server/ui/js/chat/sidebar/ArtifactsSidebar.md](core/llm-server/ui/js/chat/sidebar/ArtifactsSidebar.md): the sidebar's two artifact views sharing one pane: the open conversation's artifacts (the top-bar Artifacts button, which only shows when there are some) and every chain saved on the device (All artifacts), with version history, open, jump-to-conversation and delete.
+- [core/llm-server/ui/js/chat/sidebar/ConversationGroups.md](core/llm-server/ui/js/chat/sidebar/ConversationGroups.md): the sidebar's date buckets: Pinned, then Today, Yesterday, Previous 7 days and Older by the conversation's last update.
+- [core/llm-server/ui/js/chat/sidebar/ConversationList.md](core/llm-server/ui/js/chat/sidebar/ConversationList.md): the sidebar's reactive conversations list, rendered through the `cmConvRow` ResonantJs template into `cm.visible` so a repaint touches only changed rows.
+- [core/llm-server/ui/js/chat/sidebar/Sidebar.md](core/llm-server/ui/js/chat/sidebar/Sidebar.md): the sidebar's shell: the header strip (search, collapse), New chat with its mode-tray chevron, the extension mode launcher slot, the search box, the reactive chats list and the artifacts pane, and the footer (Settings tray with Advanced / Setup and General, All artifacts, Dashboard, logo).
+- [core/llm-server/ui/js/chat/sidebar/SidebarFootAlignment.md](core/llm-server/ui/js/chat/sidebar/SidebarFootAlignment.md): keeps the sidebar footer and the composer bar the same height so their top borders meet on one pixel row: the shorter one gets the difference as bottom padding (`--cm-foot-slack` / `--cm-bar-slack`, consumed in chat.css).
+- [core/llm-server/ui/js/chat/sidebar/SidebarModes.md](core/llm-server/ui/js/chat/sidebar/SidebarModes.md): the sidebar's extension chat-mode launcher: landing modes (Code, Game, Roleplay...) in a tray under New chat that unfolds only on demand, then the always-visible utility rows (`launcher: 'sidebar'`, such as Chat with agent).
+- [core/llm-server/ui/js/chat/stream/AgentEventReducer.md](core/llm-server/ui/js/chat/stream/AgentEventReducer.md): folds one `agent` event into the live message's `agentRuns`, one run per invocation id: start (name), reasoning, delta (answer), tool steps, done, error.
+- [core/llm-server/ui/js/chat/stream/ChatEventRouter.md](core/llm-server/ui/js/chat/stream/ChatEventRouter.md): routes the in-flight turn's chat events (only those for the current request id):.
+- [core/llm-server/ui/js/chat/stream/StatusText.md](core/llm-server/ui/js/chat/stream/StatusText.md): the pending-bubble lines for server work before the model speaks, and the compaction pill's text.
+- [core/llm-server/ui/js/chat/stream/StreamFinisher.md](core/llm-server/ui/js/chat/stream/StreamFinisher.md): ends the in-flight turn: re-renders it statically (a reasoning pane still open animates shut), closes the sink, clears the panel's building badge and a stale live tab, restores Send, refreshes the sidebar, and, keyed on the conversation the stream belonged to, reloads a regenerated thread for its variant pager and asks for an AI title after a first exchange.
+- [core/llm-server/ui/js/chat/stream/StreamFade.md](core/llm-server/ui/js/chat/stream/StreamFade.md): fades in a streaming answer's newly arrived words, resuming each fade across the per-flush innerHTML rebuilds with a negative animation-delay.
+- [core/llm-server/ui/js/chat/stream/StreamImages.md](core/llm-server/ui/js/chat/stream/StreamImages.md): carries a streaming answer's images over each repaint instead of recreating them, and fades a new image in once it has loaded.
+- [core/llm-server/ui/js/chat/stream/StreamView.md](core/llm-server/ui/js/chat/stream/StreamView.md): the live turn on screen.
+- [core/llm-server/ui/js/chat/stream/ToolEventReducer.md](core/llm-server/ui/js/chat/stream/ToolEventReducer.md): folds one `tool` event into the live message's steps.
+- [core/llm-server/ui/js/chat/stream/TurnFlags.md](core/llm-server/ui/js/chat/stream/TurnFlags.md): the per-turn flags every chat2 call carries, built in one place so a send and a regenerate (the same turn run again) never drift apart (legacy bug H4).
+- [core/llm-server/ui/js/chat/stream/TurnSender.md](core/llm-server/ui/js/chat/stream/TurnSender.md): starts turns.
+- [core/llm-server/ui/js/chat/tasks/ScheduledTaskMenu.md](core/llm-server/ui/js/chat/tasks/ScheduledTaskMenu.md): the menu on a Scheduled sidebar row and on a task's runs-view title: View runs, Edit scheduled task, Run now (shows Started or the refusal), Pause/Resume and Delete (the setup chat stays).
+- [core/llm-server/ui/js/chat/tasks/ScheduledTaskView.md](core/llm-server/ui/js/chat/tasks/ScheduledTaskView.md): a scheduled task's runs view in the main pane: schedule facts, the instructions, Run now (a refusal shows on the button for 2.5 s), Pause/Resume, Edit in chat, and the run history newest first with the newest expanded.
+- [core/llm-server/ui/js/chat/tasks/TriggerHeaderHtml.md](core/llm-server/ui/js/chat/tasks/TriggerHeaderHtml.md): the trigger header card markup: status, source and fire facts plus the extra facts (agent, expected result keys, fed artifact, filter, cooldown, batch, approval, quiet hours, memory, bot guard, held deliveries), the paused reason, the payload-drift notice, a pending approval, the source rows (folder, notification tab and site, page and monitor, or webhook URLs with the secret row and a curl example) and the action buttons.
+- [core/llm-server/ui/js/chat/tasks/TriggerMenu.md](core/llm-server/ui/js/chat/tasks/TriggerMenu.md): the menu on a Triggers sidebar row and on a trigger's runs-view title: View runs, Edit trigger, Pause/Arm (a refusal shows on the item) and Delete (its webhook URL stops working; the setup chat stays).
+- [core/llm-server/ui/js/chat/tasks/TriggerSections.md](core/llm-server/ui/js/chat/tasks/TriggerSections.md): the lower sections of a trigger's runs view: Memory (Clear memory), Instruction versions when there is more than one (Restore, re-arming a tested version without a new test), Runs (Replay this event; the newest run expanded) and the delivery log with outcome counts, which answers "why didn't it fire?" with each refusal's reason and links to its run.
+- [core/llm-server/ui/js/chat/tasks/TriggerText.md](core/llm-server/ui/js/chat/tasks/TriggerText.md): trigger texts: sidebar suffixes that keep an unarmed trigger from looking live, status labels, webhook URLs per base, the curl example (quoting the sample body), pretty events, and delivery-outcome labels and dot colours.
+- [core/llm-server/ui/js/chat/tasks/TriggerView.md](core/llm-server/ui/js/chat/tasks/TriggerView.md): a trigger's runs view: the header card ([TriggerHeaderHtml](core/llm-server/ui/js/chat/tasks/TriggerHeaderHtml.md)) with its actions (copy URL or path, use the latest event as the sample, answer a held approval, save the secret, send a test event, Arm or Pause, Edit in chat) above the [TriggerSections](core/llm-server/ui/js/chat/tasks/TriggerSections.md).
+- [core/llm-server/ui/js/chat/turns/AgentRunCards.md](core/llm-server/ui/js/chat/turns/AgentRunCards.md): sub-agent cards: when a tool delegates to a named agent, its thinking, steps and answer stream into a collapsible card above the main answer, open while it works and collapsed when it finishes (unless toggled).
+- [core/llm-server/ui/js/chat/turns/ArtifactChips.md](core/llm-server/ui/js/chat/turns/ArtifactChips.md): a turn's artifacts: images and video as inline thumbnails (a sized skeleton until the bytes land; video autoplays muted like a GIF, an image fallback swaps in), audio as an inline player, live modules mounted inline ([LiveArtifacts](core/llm-server/ui/js/chat/turns/LiveArtifacts.md)), anything else a chip opening the panel.
+- [core/llm-server/ui/js/chat/turns/AssistantTurnEditor.md](core/llm-server/ui/js/chat/turns/AssistantTurnEditor.md): inline editing of the newest reply: the bubble (and its action row and chips) hide behind a textarea holding the raw markdown.
+- [core/llm-server/ui/js/chat/turns/AttachmentCard.md](core/llm-server/ui/js/chat/turns/AttachmentCard.md): a collapsed timeline card for one parsed attachment: a text file is a `<details>` that highlights its body on first expand; binary and failed ones are inert one-liners.
+- [core/llm-server/ui/js/chat/turns/ErrorCard.md](core/llm-server/ui/js/chat/turns/ErrorCard.md): the card under a failed turn: a plain-language title and hint from the raw error, the raw text, Retry on the newest reply and Open Setup when the fix is there.
+- [core/llm-server/ui/js/chat/turns/LiveArtifacts.md](core/llm-server/ui/js/chat/turns/LiveArtifacts.md): live (interactive) artifacts render inline, mounted by [LiveModuleMounter](core/llm-server/ui/js/live/LiveModuleMounter.md) on the next frame.
+- [core/llm-server/ui/js/chat/turns/PreviewSlot.md](core/llm-server/ui/js/chat/turns/PreviewSlot.md): the rectangle reserved for the agent's live working tab.
+- [core/llm-server/ui/js/chat/turns/ReplyChoiceChips.md](core/llm-server/ui/js/chat/turns/ReplyChoiceChips.md): the tappable reply chips under the newest answer; a click sends that reply.
+- [core/llm-server/ui/js/chat/turns/ReplyChoices.md](core/llm-server/ui/js/chat/turns/ReplyChoices.md): the "Suggest replies" fence: a ```choices block of short replies ending an answer.
+- [core/llm-server/ui/js/chat/turns/RuntimeFixCard.md](core/llm-server/ui/js/chat/turns/RuntimeFixCard.md): a one-click fix under a turn that failed with `RUNTIME_NOT_INSTALLED`: download the runtime with live progress (`api.onRuntimeEvent`), then regenerate the turn.
+- [core/llm-server/ui/js/chat/turns/TableSort.md](core/llm-server/ui/js/chat/turns/TableSort.md): click a reply table's header to sort by that column (numbers as numbers), ascending then descending.
+- [core/llm-server/ui/js/chat/turns/TabPreviewCard.md](core/llm-server/ui/js/chat/turns/TabPreviewCard.md): the browser-tab card at the end of a tool chain: live (an empty slot the native view covers, the last still frame underneath, Open tab) while the agent drives it, then the final frame.
+- [core/llm-server/ui/js/chat/turns/ThinkPane.md](core/llm-server/ui/js/chat/turns/ThinkPane.md): the collapsible reasoning pane above a reply.
+- [core/llm-server/ui/js/chat/turns/ThinkingText.md](core/llm-server/ui/js/chat/turns/ThinkingText.md): the reasoning pane's summary: a running token estimate so a long think never looks frozen while collapsed.
+- [core/llm-server/ui/js/chat/turns/ToolCardText.md](core/llm-server/ui/js/chat/turns/ToolCardText.md): a tool card's one-line detail: the target and live byte count while the call assembles, then the validated structured card data (diff or read slices), the tool's own summary, or its most identifying argument.
+- [core/llm-server/ui/js/chat/turns/ToolChainView.md](core/llm-server/ui/js/chat/turns/ToolChainView.md): an agentic run as one collapsible unit: a header ("Validating code…" while running, "Ran N steps · M failed" once settled) over connector-linked step cards in their own scroller (auto-followed while running), and the browser-tab card outside it.
+- [core/llm-server/ui/js/chat/turns/ToolLabels.md](core/llm-server/ui/js/chat/turns/ToolLabels.md): human labels for agent tool steps: settled names and the present-continuous running labels, with a humanized fallback so no step reads as a permanent "Preparing…".
+- [core/llm-server/ui/js/chat/turns/TurnActions.md](core/llm-server/ui/js/chat/turns/TurnActions.md): a settled reply's action row (Copy, Regenerate, Read aloud, Edit on the newest reply only, the tok/s pill, the "‹ n/m ›" variant pager) and token strip (the turn's totals, plus the context fill on the last answer), and the one delegated click handler that resolves each button's message by its turn's `data-msg-id`.
+- [core/llm-server/ui/js/chat/turns/TurnData.md](core/llm-server/ui/js/chat/turns/TurnData.md): reads a message's optional parts the same way for the live turn (on the message) and a reloaded row (the persisted `toolCalls` trace).
+- [core/llm-server/ui/js/chat/turns/TurnRenderer.md](core/llm-server/ui/js/chat/turns/TurnRenderer.md): renders one message as a turn element.
+- [core/llm-server/ui/js/chat/turns/TurnTimings.md](core/llm-server/ui/js/chat/turns/TurnTimings.md): normalises llama.cpp's per-turn timings into prompt and generation tok/s (one decimal; derived from counts and times when the precomputed rates are missing) and builds the action row's speed pill with the counts in its tooltip.
+- [core/llm-server/ui/js/chat/turns/UserTurnEditor.md](core/llm-server/ui/js/chat/turns/UserTurnEditor.md): edit and resend a prompt: the bubble swaps for a textarea with the typed text; Send branches the conversation from that prompt with a fresh reply, the original stays in the pager.
+- [core/llm-server/ui/js/chat/turns/UserTurnView.md](core/llm-server/ui/js/chat/turns/UserTurnView.md): a user turn: each attachment spliced into the message collapsed back into its own card (image markers dropped: the thumbnails represent them), the bubble with only what was typed, the editor-context chips sent with it (live turn only), and image thumbnails (the bytes held since send, else the persisted image artifacts).
+- [core/llm-server/ui/js/chat/voice/VoiceBridge.md](core/llm-server/ui/js/chat/voice/VoiceBridge.md): the chat's side of voice.
+- [core/llm-server/preload/AppLinksApi.md](core/llm-server/preload/AppLinksApi.md): llmDiagAPI section: what the tab reads from the rest of the app: the settings modal, the read-only API security status, the first-run persona, the dev log tail for "Copy Logs", and the Roleplay Lab (dev) pipeline driver.
+- [core/llm-server/preload/ArtifactApi.md](core/llm-server/preload/ArtifactApi.md): llmDiagAPI section: saved artifacts, public share links, the Dashboard hand-offs, and the persistent data and host bridge behind live modules.
+- [core/llm-server/preload/ChatModesApi.md](core/llm-server/preload/ChatModesApi.md): llmDiagAPI sections `chat` and `setup`: extension chat modes, side completions, the agent-tool catalog, the root-jailed workspace of a folder conversation, and the extension Setup tabs with their auth-free invoke.
+- [core/llm-server/preload/ChatTasksApi.md](core/llm-server/preload/ChatTasksApi.md): llmDiagAPI section: chat scheduled tasks (`schedTasks`) and triggers (`triggers`), with their lifecycle event streams, for the sidebar's Scheduled and Triggers sections and their runs views.
+- [core/llm-server/preload/ChatTurnApi.md](core/llm-server/preload/ChatTurnApi.md): llmDiagAPI section: one chat turn through the unified router (local and remote providers), the model picker list, chat attachments (files, a tab's page, the Dashboard's widgets), and the stream of chat events.
+- [core/llm-server/preload/ConversationApi.md](core/llm-server/preload/ConversationApi.md): llmDiagAPI section `conv`: conversation history (SQLite-backed), its per-conversation options, mode metadata, artifacts and regeneration variants.
+- [core/llm-server/preload/GroundingApi.md](core/llm-server/preload/GroundingApi.md): llmDiagAPI section `grounding`: the managed grounding server (the vision model that finds elements on screenshots) with its download events, and the desktop-control opt-in shown in the same card.
+- [core/llm-server/preload/ImageApi.md](core/llm-server/preload/ImageApi.md): llmDiagAPI section `image`: the image server (stable-diffusion.cpp) runtimes, models, imports, LoRAs, defaults and lifecycle, one-shot generation, and `image.video` for video generation.
+- [core/llm-server/preload/LlmHostApi.md](core/llm-server/preload/LlmHostApi.md): llmDiagAPI section: host diagnostics and fixes, the models directory and existing libraries, model display names, the boot preflight, the VRAM pressure watchdog and the Linux system-library check.
+- [core/llm-server/preload/LlmRuntimeApi.md](core/llm-server/preload/LlmRuntimeApi.md): llmDiagAPI section: the LLM inference runtimes (install, update check, uninstall, locate a binary) with their progress stream, and openExternal for the runtime cards' upstream links.
+- [core/llm-server/preload/LlmServerApi.md](core/llm-server/preload/LlmServerApi.md): llmDiagAPI section: LLM defaults and the server lifecycle, the human-in-the-loop answers, the tab's persisted UI state, and the host pushes that drive the page (server events, state, show Chat / Setup, open a conversation).
+- [core/llm-server/preload/LlmTabPreloadApi.md](core/llm-server/preload/LlmTabPreloadApi.md): `core/llm-server/preload/LlmTabPreloadApi.js` (entry: [llm-tab-preload.js](core/llm-server/llm-tab-preload.md)).
+- [core/llm-server/preload/ModelSetupApi.md](core/llm-server/preload/ModelSetupApi.md): llmDiagAPI section: the onboarding catalog, Hugging Face search, hardware and recommendation, Automatic Local Setup, resumable model downloads (progress on onModelEvent) and extension add-on models.
+- [core/llm-server/preload/ModelTestApi.md](core/llm-server/preload/ModelTestApi.md): llmDiagAPI section: the fit test (a measured context by KV-precision sweep) and the compatibility gambit (a behavioural test of the loaded model), with the same run, cancel, status, results and event shape.
+- [core/llm-server/preload/MusicApi.md](core/llm-server/preload/MusicApi.md): llmDiagAPI section `music`: the managed SGLang-Omni music server (inside WSL2 on Windows) runtime, models, defaults and status, and `music.gen` for generation.
+- [core/llm-server/preload/PlacementApi.md](core/llm-server/preload/PlacementApi.md): llmDiagAPI section `placement`: the Advanced tab's manual VRAM placement (layout, auto-arrange, measured fits, hotswap info, start and stop) and its timing test with events.
+- [core/llm-server/preload/PreloadSection.md](core/llm-server/preload/PreloadSection.md): base class of the `window.llmDiagAPI` sections merged by [LlmTabPreloadApi](core/llm-server/preload/LlmTabPreloadApi.md).
+- [core/llm-server/preload/TabPreviewApi.md](core/llm-server/preload/TabPreviewApi.md): llmDiagAPI section `tabPreview`: the agent's work tab parked over a rect this page reserves in its tool card.
+- [core/llm-server/preload/VoiceApi.md](core/llm-server/preload/VoiceApi.md): llmDiagAPI section `voice`: local speech-to-text and text-to-speech for voice conversation mode and read aloud, the OS microphone checks, and the setup surfaces of both engines with their event streams.
+- [core/llm-server/ui/js/page/ChatWiring.md](core/llm-server/ui/js/page/ChatWiring.md): builds the LLM tab's chat side for [LlmTabPage](core/llm-server/ui/js/page/LlmTabPage.md): the `window.LumaChatExt` contract with the two core chat modes registered on it, the chat surface and the Code editor, each wired to the others.
+- [core/llm-server/ui/js/page/LlmTabPage.md](core/llm-server/ui/js/page/LlmTabPage.md): `core/llm-server/ui/js/page/LlmTabPage.js` (started by [entry.js](core/llm-server/ui/js/entry.md)).
+- [core/llm-server/ui/js/page/SetupWiring.md](core/llm-server/ui/js/page/SetupWiring.md): builds the LLM tab's Setup side for [LlmTabPage](core/llm-server/ui/js/page/LlmTabPage.md): the [SetupMain](core/llm-server/ui/js/setup-ui/SetupMain.md) panel with its model list, model search and the lazy Image and Music panels, plus the visual grounding card and the Easy Setup launch button.
+- [core/llm-server/llm-tab-preload.md](core/llm-server/llm-tab-preload.md): the pinned LLM tab's preload entry (unsandboxed tab view, so split into classes).
+- [core/llm-server/ui/LlmTabUi.md](core/llm-server/ui/LlmTabUi.md): the LLM tab page, its stylesheets, import map and module graph.
+- [core/llm-server/ui/js/entry.md](core/llm-server/ui/js/entry.md): LLM tab module entry; starts LlmTabPage.
+- [core/llm-server/chat/ModuleScriptBundler.md](core/llm-server/chat/ModuleScriptBundler.md): bundles a renderer module graph into one classic script (conversation export); has `bundle`, `resolve`.
+
+## core/database
+
+- [core/database/DatabaseService.md](core/database/DatabaseService.md): namespaced, table-restricted settings and SQL view per extension; has `get`, `set`, `delete`, `getAll`, `query`, `run`, plus table-gated watcher methods.
+- [core/database/SqliteOpener.md](core/database/SqliteOpener.md): opens SQLite with WAL and a busy timeout; has `open`.
+- [core/database/SqliteSchema.md](core/database/SqliteSchema.md): idempotent column migrations; has `ensureColumn`, `hasColumn`.
+- [core/database/StoreHandle.md](core/database/StoreHandle.md): guards borrowing the shared SQLite handle; has `requireOpen`.
+- [core/database/RecordId.md](core/database/RecordId.md): sortable record ids; has `create`.
+- [core/database/JsonColumn.md](core/database/JsonColumn.md): JSON column parse with an explicit fallback; has `parse`.
+- [core/database/SettingsValueStore.md](core/database/SettingsValueStore.md): base class for stores that keep one JSON value under a settings key; has `_read`, `_write`, abstract `_emptyValue`, `_hasValidShape`.
+- [core/database/JsonCollectionStore.md](core/database/JsonCollectionStore.md): base for stores keeping a JSON array of records under one settings key; has `list`, `get`, `delete`.
+- [core/database/SettingsDatabase.md](core/database/SettingsDatabase.md): central SQLite facade for settings and core tables; has `get`, `set`, `delete`, `has`, `getAllKeysWithPrefix`, `migrateKeys`, `replacePathPrefix`, watcher methods, `close`.
+- [core/database/settings/SettingsSchema.md](core/database/settings/SettingsSchema.md): creates all tables, runs migrations and builds indexes; has `apply`.
+- [core/database/settings/SettingsMigrations.md](core/database/settings/SettingsMigrations.md): adds later columns and backfills artifact roots; has `apply`.
+- [core/database/settings/schema/AppTablesSchema.md](core/database/settings/schema/AppTablesSchema.md): DDL for settings and watchers, drops the old page-template tables; has `SQL`.
+- [core/database/settings/schema/ChatTablesSchema.md](core/database/settings/schema/ChatTablesSchema.md): DDL for the LLM chat tables; has `SQL`, `POST_MIGRATION_SQL`.
+- [core/database/settings/schema/ScheduledWorkTablesSchema.md](core/database/settings/schema/ScheduledWorkTablesSchema.md): DDL for artifact and scheduled tasks and their runs; has `SQL`.
+- [core/database/settings/schema/TriggerTablesSchema.md](core/database/settings/schema/TriggerTablesSchema.md): DDL for triggers, runs, deliveries and versions; has `SQL`.
+- [core/database/settings/schema/BrowserTablesSchema.md](core/database/settings/schema/BrowserTablesSchema.md): DDL for browser history and bookmarks; has `SQL`.
+- [core/database/settings/SettingsRepository.md](core/database/settings/SettingsRepository.md): raw SQL over the settings key-value table; has `get`, `set`, `delete`, `has`, `getAllKeysWithPrefix`, `migrateKeys`, `replacePathPrefix`.
+- [core/database/settings/SettingsValueCodec.md](core/database/settings/SettingsValueCodec.md): setting value encode and decode; has `encode`, `decode`.
+- [core/database/settings/PathPrefixRewrite.md](core/database/settings/PathPrefixRewrite.md): raw and JSON-escaped path-prefix rewrite; has `variants`, `apply`.
+- [core/database/settings/NetworkWatcherRepository.md](core/database/settings/NetworkWatcherRepository.md): raw SQL over network watchers; has `addWatcher`, `updateWatcher`, `removeWatcher`, `getAllWatchers`.
+
+## core/install
+
+- [core/install/MachineIdentity.md](core/install/MachineIdentity.md): resolves the install's machine id once, used to sign lumabyte.com requests; has `resolve`, `machineId`.
+
+## core/telemetry
+
+- [core/telemetry/TelemetryConsent.md](core/telemetry/TelemetryConsent.md): whether the anonymous pulse may be sent (never in dev mode or after opt-out); has `allowed`, `optOut`, `setOptOut`, `status`.
+- [core/telemetry/TelemetryIpcHandlers.md](core/telemetry/TelemetryIpcHandlers.md): IPC controller for the Settings telemetry switch; has `register`.
+
+## core/llm-service
+
+- [core/llm-service/LLMQueueManager.md](core/llm-service/LLMQueueManager.md): per-model LLM request queues with concurrency limits; has `registerModel`, `setConcurrency`, `ensureConcurrency`, `enqueue`, `getSnapshot`.
+- [core/llm-service/ModelQueue.md](core/llm-service/ModelQueue.md): one model's gated FIFO; has `add`, `hasFreeSlot`, `takeNext`, `finish`, `stats`.
+- [core/llm-service/ResponseText.md](core/llm-service/ResponseText.md): tolerant reader for non-streaming response text; has `extract`.
+- [core/llm-service/ToolConcurrency.md](core/llm-service/ToolConcurrency.md): which agent tool calls may overlap and how many; has `executionMode`, `resolveMaxParallel`.
+- [core/llm-service/RepetitionMonitor.md](core/llm-service/RepetitionMonitor.md): detects streaming repetition loops; has `push`, `reset`, `normalizeLine`.
+- [core/llm-service/ThinkingOff.md](core/llm-service/ThinkingOff.md): resolves both reasoning-off levers; has `resolve`, `extraFor`, `extraFromProbe`.
+- [core/llm-service/ThinkingOffParams.md](core/llm-service/ThinkingOffParams.md): per-family request fields that turn thinking off; has `forModel`, `isQwenFamily`.
+- [core/llm-service/NoThinkDirective.md](core/llm-service/NoThinkDirective.md): in-message Qwen /no_think directive; has `apply`.
+- [core/llm-service/providers/BaseLlmProvider.md](core/llm-service/providers/BaseLlmProvider.md): interface base for LLM providers (config, capabilities, protocol plumbing); has config getters and setters, abstract `testConnection`, `fetchModels`, `sendChatCompletion`, `createChatCompletionStreamSession`.
+- [core/llm-service/AgentToolCatalog.md](core/llm-service/AgentToolCatalog.md): single source of truth for the chat agent's tools; has `getDynamicTools`, `getToolGroups`, `getAllToolNames`, `seedDefaultOffAgentTools`.
+- [core/llm-service/tools/ExtensionDisplayName.md](core/llm-service/tools/ExtensionDisplayName.md): readable labels for tool source ids; has `forSource`, `forExtension`.
+- [core/llm-service/BrowserTools.md](core/llm-service/BrowserTools.md): chat browser tool docs, prompt, executor and parser; has `getToolPrompt`, `executeTool`, `parseToolCalls`, `normalizeToolCall`.
+- [core/llm-service/tools/BrowserToolExecutor.md](core/llm-service/tools/BrowserToolExecutor.md): runs one chat browser tool on BrowserService; has `execute`.
+- [core/llm-service/tools/ToolFenceParser.md](core/llm-service/tools/ToolFenceParser.md): strict, brace-counted tool fence parser; has `parseAll`, `parseFirst`, `fixIllegalJsonEscapes`.
+- [core/llm-service/tools/ToolCallNormalizer.md](core/llm-service/tools/ToolCallNormalizer.md): turns a fence body into a canonical tool call; has `normalize`.
+- [core/llm-service/ProviderConfigService.md](core/llm-service/ProviderConfigService.md): LLM provider settings logic; has `getDefaultProvider`, `setDefaultProvider`, `applyProviderSettings`, `probeModels`, `listProviderConfigs`, `saveProviderConfigs`.
+- [core/llm-service/LlmIpcHandlers.md](core/llm-service/LlmIpcHandlers.md): IPC controller for provider, slot, completion and queue channels; has `register`.
+- [core/llm-service/ProviderConfigIpcHandlers.md](core/llm-service/ProviderConfigIpcHandlers.md): IPC controller for the provider list; has `register`.
+- [core/llm-service/LlmQueueEventForwarder.md](core/llm-service/LlmQueueEventForwarder.md): forwards LLM queue events to the main window; has `attach`.
+- [core/llm-service/providers/AnthropicProvider.md](core/llm-service/providers/AnthropicProvider.md): Anthropic Messages API provider; has `testConnection`, `fetchModels`, `sendChatCompletion`, `createChatCompletionStreamSession`.
+- [core/llm-service/providers/anthropic/AnthropicModelLimits.md](core/llm-service/providers/anthropic/AnthropicModelLimits.md): Anthropic output ceilings and adaptive thinking per model; has `outputCeilingFor`, `resolveMaxTokens`, `takesAdaptiveThinking`.
+- [core/llm-service/providers/anthropic/AnthropicRequestBody.md](core/llm-service/providers/anthropic/AnthropicRequestBody.md): Anthropic Messages API body builder; has `build`, `effortFromOptions`.
+- [core/llm-service/providers/anthropic/AnthropicMessageConverter.md](core/llm-service/providers/anthropic/AnthropicMessageConverter.md): OpenAI messages to Anthropic shape; has `convert`.
+- [core/llm-service/providers/anthropic/AnthropicResponseMapper.md](core/llm-service/providers/anthropic/AnthropicResponseMapper.md): Anthropic responses to OpenAI vocabulary; has `mapStopReason`, `usageFrom`, `textOf`.
+- [core/llm-service/providers/anthropic/AnthropicStreamReader.md](core/llm-service/providers/anthropic/AnthropicStreamReader.md): reads one Anthropic SSE stream; has `read`.
+- [core/llm-service/providers/SseLineReader.md](core/llm-service/providers/SseLineReader.md): shared SSE line splitter; has `read`.
+- [core/llm-service/providers/StreamedErrorBody.md](core/llm-service/providers/StreamedErrorBody.md): reads a streamed HTTP error body; has `materialize`.
+- [core/llm-service/providers/OpenAICompatibleProvider.md](core/llm-service/providers/OpenAICompatibleProvider.md): OpenAI-compatible LLM provider; has `testConnection`, `fetchModels`, `sendChatCompletion`, `createChatCompletionStreamSession`.
+- [core/llm-service/providers/openai/OpenAiRequestBody.md](core/llm-service/providers/openai/OpenAiRequestBody.md): OpenAI chat body with cache-key gates; has `build`.
+- [core/llm-service/providers/openai/AnthropicCacheControl.md](core/llm-service/providers/openai/AnthropicCacheControl.md): cache_control markers for Anthropic-backed proxies; has `apply`.
+- [core/llm-service/providers/openai/SessionAffinity.md](core/llm-service/providers/openai/SessionAffinity.md): session-affinity headers; has `headers`.
+- [core/llm-service/providers/openai/ToolCallAccumulator.md](core/llm-service/providers/openai/ToolCallAccumulator.md): reassembles streamed native tool calls; has `add`, `finalize`.
+- [core/llm-service/providers/openai/OpenAiStreamReader.md](core/llm-service/providers/openai/OpenAiStreamReader.md): reads one OpenAI SSE stream with a loop guard; has `read`.
+- [core/llm-service/LLMService.md](core/llm-service/LLMService.md): routes LLM requests by slot through the queue; has `registerSlot`, `getSlotConfig`, `setSlotConfig`, `sendCompletion`, `createStream`, `resolveSlot`, `getAllAvailableModels`.
+- [core/llm-service/service/ManagedServers.md](core/llm-service/service/ManagedServers.md): link to the managed local and grounding llama-servers; has `isManaged`, `ensureReady`, `localHasVision`.
+- [core/llm-service/service/SlotResolver.md](core/llm-service/service/SlotResolver.md): slot config to provider and model; has `resolve`, `defaultConfig`.
+- [core/llm-service/service/EphemeralProviders.md](core/llm-service/service/EphemeralProviders.md): cached providers that never save settings; has `forManagedLocal`, `forGrounding`, `forStoredConfig`.
+- [core/llm-service/service/SlotRequestRunner.md](core/llm-service/service/SlotRequestRunner.md): runs one slot request with occupancy tracking; has `run`.
+- [core/llm-service/service/SlotConfigStore.md](core/llm-service/service/SlotConfigStore.md): per-slot provider, model and cache session id; has `explicitConfig`, `set`, `clear`, `sessionId`.
+- [core/llm-service/service/AvailableModels.md](core/llm-service/service/AvailableModels.md): model list for slot pickers; has `list`, `labelFor`.
+- [core/llm-service/service/StoredProviderConfigs.md](core/llm-service/service/StoredProviderConfigs.md): reads stored provider configs for routing; has `userConfigs`, `findById`, `defaultModelOf`.
+- [core/llm-service/service/NonPersistingDb.md](core/llm-service/service/NonPersistingDb.md): settings db wrapper that drops writes; has `wrap`.
+
+## core/network-sharing
+
+- [core/network-sharing/RevocableEntryStore.md](core/network-sharing/RevocableEntryStore.md): base for revocable credential lists; has `revoke`, `revokeAll`.
+- [core/network-sharing/ShareStore.md](core/network-sharing/ShareStore.md): public read-only share-link tokens; has `list`, `issueOrGet`, `resolve`, `revoke`, `removeForTarget`, `revokeAll`.
+- [core/network-sharing/TokenStore.md](core/network-sharing/TokenStore.md): paired-client bearer tokens; has `list`, `issue`, `verify`, `revoke`, `remove`, `revokeAll`.
+- [core/network-sharing/UsageStore.md](core/network-sharing/UsageStore.md): per-client usage counters; has `record`, `get`, `remove`.
+- [core/network-sharing/NetworkDiscovery.md](core/network-sharing/NetworkDiscovery.md): mDNS advertise and browse facade; has `isAvailable`, `advertise`, `browse`, `destroy`.
+- [core/network-sharing/MdnsInstancePool.md](core/network-sharing/MdnsInstancePool.md): one Bonjour instance per network interface; has `isAvailable`, `currentInstances`, `destroy`.
+- [core/network-sharing/MdnsAdvertisement.md](core/network-sharing/MdnsAdvertisement.md): publishes the host on every interface, republishing on network change; has `start`, `stop`.
+- [core/network-sharing/MdnsBrowser.md](core/network-sharing/MdnsBrowser.md): peer browsing with re-query and dedupe; has `start`, `stop`, `list`, `normalize`.
+- [core/network-sharing/LanInterfaces.md](core/network-sharing/LanInterfaces.md): LAN IPv4 addresses per interface; has `ipv4Addresses`, `addressKey`.
+- [core/network-sharing/Firewall.md](core/network-sharing/Firewall.md): creates and reports the inbound LAN allow rule; has `ensureAllowed`, `detect`.
+- [core/network-sharing/FirewallCommands.md](core/network-sharing/FirewallCommands.md): per-platform firewall command builders; has `windowsEnsure`, `windowsElevate`, `windowsDetect`, `macAllow`, `linuxUfw`.
+- [core/network-sharing/ShellQuote.md](core/network-sharing/ShellQuote.md): single-quotes shell literals; has `powershell`, `posix`.
+- [core/network-sharing/host/PublicUrlProbe.md](core/network-sharing/host/PublicUrlProbe.md): verifies the public URL reaches this instance; has `probe`.
+- [core/network-sharing/tls/HostCertificate.md](core/network-sharing/tls/HostCertificate.md): persistent self-signed host TLS identity; has `getOrCreate`, `fingerprintOf`, `resetCache`.
+- [core/network-sharing/tls/PinnedTls.md](core/network-sharing/tls/PinnedTls.md): pinned certificate registry and HTTPS agents per origin; has `setPin`, `removePin`, `getPin`, `clearPins`, `agentFor`.
+- [core/network-sharing/tls/ServerCertificateProbe.md](core/network-sharing/tls/ServerCertificateProbe.md): captures a server certificate at pairing time; has `fetch`, `derToPem`.
+- [core/network-sharing/OriginPolicy.md](core/network-sharing/OriginPolicy.md): lan or any network-scope gate for the sharing host; has `originAllowed`.
+- [core/network-sharing/SharingIpcHandlers.md](core/network-sharing/SharingIpcHandlers.md): IPC controller for sharing host settings, links, tokens and peers; has `register`.
+- [core/network-sharing/webapp/ShareRouter.md](core/network-sharing/webapp/ShareRouter.md): Express routes for public /share links; has `build`.
+- [core/network-sharing/webapp/SharedContentReader.md](core/network-sharing/webapp/SharedContentReader.md): resolves share tokens and reads only what a share covers; has `resolve`, `artifactHtml`, `conversationData`, `artifactData`.
+- [core/network-sharing/webapp/SharedConversationView.md](core/network-sharing/webapp/SharedConversationView.md): whitelist projection of a shared conversation; has `build`, `artifactRefs`.
+- [core/network-sharing/client/SharingClientService.md](core/network-sharing/client/SharingClientService.md): client side of Network Sharing (pairing, manifest sync, peer LLM, image and GPU registration); has `pair`, `refreshPeer`, `startPolling`, `setPeerEnabled`, `removePeer`, `rpcAcquire`, `startDiscovery`.
+- [core/network-sharing/client/PeerStore.md](core/network-sharing/client/PeerStore.md): paired-peer list in settings; has `all`, `find`, `patch`, `upsert`, `remove`.
+- [core/network-sharing/client/PeerView.md](core/network-sharing/client/PeerView.md): public peer and GPU projections without tokens; has `toPublic`, `attachedGpuPeers`, `gpuPeerDevices`.
+- [core/network-sharing/client/PeerAddress.md](core/network-sharing/client/PeerAddress.md): picks a reachable base URL for a peer; has `baseUrl`, `pick`.
+- [core/network-sharing/client/PeerApi.md](core/network-sharing/client/PeerApi.md): host /sharing HTTP calls with the pinned agent; has `info`, `pair`, `fetchManifest`, `rpcAcquire`, `rpcHeartbeat`, `rpcRelease`.
+- [core/network-sharing/client/PeerTlsUpgrade.md](core/network-sharing/client/PeerTlsUpgrade.md): fail-closed upgrade to the host's TLS listener; has `resolve`.
+- [core/network-sharing/client/ManifestSignature.md](core/network-sharing/client/ManifestSignature.md): signature of a manifest's pickable resources; has `of`.
+- [core/network-sharing/client/PeerPoller.md](core/network-sharing/client/PeerPoller.md): manifest poll with per-peer backoff; has `start`, `stop`, `pollOnce`.
+- [core/network-sharing/client/PeerProviderConfigs.md](core/network-sharing/client/PeerProviderConfigs.md): peer LLMs as OpenAI-compatible provider configs; has `register`, `unregister`, `configId`.
+- [core/network-sharing/client/PeerImageServers.md](core/network-sharing/client/PeerImageServers.md): peer image slots as remote image servers; has `register`, `unregister`, `serverId`.
+- [core/network-sharing/client/PeerDiscovery.md](core/network-sharing/client/PeerDiscovery.md): mDNS browse of sharing hosts; has `start`, `stop`, `list`.
+- [core/network-sharing/host/SharingHostService.md](core/network-sharing/host/SharingHostService.md): host side of Network Sharing (toggle, PIN pairing, tokens, share links, manifest, listeners); has `setEnabled`, `setPin`, `pair`, `verifyCredential`, `getInfo`, `buildManifest`, `createShareLink`, `resolveShare`, `shutdown`.
+- [core/network-sharing/host/HostSettings.md](core/network-sharing/host/HostSettings.md): the host's saved sharing settings with safe defaults; has `getShareFlags`, `setShareFlag`, `setPin`, `getWebPort`, `getTlsPort`.
+- [core/network-sharing/host/PinPairing.md](core/network-sharing/host/PinPairing.md): PIN-for-token pairing with a growing per-IP lockout; has `pair`, `reset`, `pinMatches`.
+- [core/network-sharing/host/LanAddress.md](core/network-sharing/host/LanAddress.md): picks the LAN-reachable address for share links; has `pick`.
+- [core/network-sharing/host/ShareLinkPublisher.md](core/network-sharing/host/ShareLinkPublisher.md): public share links gated on sharing and the web toggle; has `status`, `create`, `resolve`, `baseUrl`.
+- [core/network-sharing/host/HostAdvertiser.md](core/network-sharing/host/HostAdvertiser.md): mDNS advert of the sharing host; has `start`, `stop`.
+- [core/network-sharing/host/HostListeners.md](core/network-sharing/host/HostListeners.md): TLS listener, web backend and GPU lender lifecycle; has `startOnEnable`, `stopOnDisable`, `shutdown`, `startWeb`.
+- [core/network-sharing/host/WebToolAllowList.md](core/network-sharing/host/WebToolAllowList.md): agent tools a shared client may use; has `get`, `set`, `toolGroups`.
+- [core/network-sharing/host/HostManifestBuilder.md](core/network-sharing/host/HostManifestBuilder.md): toggle-aware sharing resource manifest; has `execute`.
+- [core/network-sharing/host/HostModelInventory.md](core/network-sharing/host/HostModelInventory.md): installed models as client-safe lists; has `localLlmModels`, `imageModels`.
+- [core/network-sharing/host/HostDialPosition.md](core/network-sharing/host/HostDialPosition.md): the host's thinking-dial fallback; has `of`.
+- [core/network-sharing/host/SharingCredentialReader.md](core/network-sharing/host/SharingCredentialReader.md): bearer and browser credential reading; has `bearer`, `browser`.
+- [core/network-sharing/host/SharedAgents.md](core/network-sharing/host/SharedAgents.md): custom agents offered to shared clients; has `isShared`, `list`, `resolveTurn`.
+- [core/network-sharing/host/SharedArtifacts.md](core/network-sharing/host/SharedArtifacts.md): host artifacts and live data for paired clients; has `describe`, `html`, `data`, `mutate`.
+- [core/network-sharing/host/SharedGpuLease.md](core/network-sharing/host/SharedGpuLease.md): one-consumer GPU lending over llama.cpp RPC; has `acquire`, `heartbeat`, `release`.
+- [core/network-sharing/host/routes/SharingRouter.md](core/network-sharing/host/routes/SharingRouter.md): Express router for /sharing; has `create`.
+- [core/network-sharing/host/routes/SharingAuth.md](core/network-sharing/host/routes/SharingAuth.md): origin, enabled and credential middleware for /sharing; has `originPolicy`, `requireEnabled`, `requireToken`, `requireBrowserCredential`.
+- [core/network-sharing/host/routes/RouteReply.md](core/network-sharing/host/routes/RouteReply.md): sends service replies; has `send`.
+- [core/network-sharing/host/routes/DiscoveryRoutes.md](core/network-sharing/host/routes/DiscoveryRoutes.md): sharing info, pair and resources routes; has `mount`.
+- [core/network-sharing/host/routes/GpuLendRoutes.md](core/network-sharing/host/routes/GpuLendRoutes.md): GPU lending routes; has `mount`.
+- [core/network-sharing/host/routes/LlmRoutes.md](core/network-sharing/host/routes/LlmRoutes.md): OpenAI-compatible LLM routes for shared clients; has `mount`.
+- [core/network-sharing/host/routes/ArtifactRoutes.md](core/network-sharing/host/routes/ArtifactRoutes.md): shared artifact routes; has `mount`.
+- [core/network-sharing/host/routes/AgentRoutes.md](core/network-sharing/host/routes/AgentRoutes.md): shared agent and chat mode routes; has `mount`.
+- [core/network-sharing/host/routes/MediaRoutes.md](core/network-sharing/host/routes/MediaRoutes.md): shared image and voice routes; has `mount`.
+- [core/network-sharing/host/llm/SharedLlmTurn.md](core/network-sharing/host/llm/SharedLlmTurn.md): base lifecycle of one shared LLM turn; has `run`.
+- [core/network-sharing/host/llm/ChatCompletionTurn.md](core/network-sharing/host/llm/ChatCompletionTurn.md): one shared chat completions turn; has `run`.
+- [core/network-sharing/host/llm/ChatCompletionStream.md](core/network-sharing/host/llm/ChatCompletionStream.md): chat completions SSE and JSON writer; has `chunk`, `usage`, `finish`, `completion`.
+- [core/network-sharing/host/llm/ChatTurnInputs.md](core/network-sharing/host/llm/ChatTurnInputs.md): images, agent mode and tool allow-list for a shared turn; has `images`, `wantsAgent`, `allowedTools`.
+- [core/network-sharing/host/llm/ResponsesTurn.md](core/network-sharing/host/llm/ResponsesTurn.md): OpenAI Responses API shim turn; has `run`.
+- [core/network-sharing/host/llm/ResponsesStream.md](core/network-sharing/host/llm/ResponsesStream.md): Responses SSE writer; has `started`, `delta`, `completed`, `failed`.
+- [core/network-sharing/host/llm/ResponsesInput.md](core/network-sharing/host/llm/ResponsesInput.md): Responses input to chat messages; has `toMessages`.
+- [core/network-sharing/host/llm/LiveTurnRegistry.md](core/network-sharing/host/llm/LiveTurnRegistry.md): in-flight shared turns for explicit abort; has `register`, `abort`.
+- [core/network-sharing/host/llm/LlmModelGate.md](core/network-sharing/host/llm/LlmModelGate.md): manifest-based model authorization; has `denied`, `modelList`.
+- [core/network-sharing/host/llm/SseChannel.md](core/network-sharing/host/llm/SseChannel.md): lazily opened SSE response; has `open`, `data`, `event`, `done`.
+- [core/network-sharing/host/llm/TurnUsageMeter.md](core/network-sharing/host/llm/TurnUsageMeter.md): records a shared turn's usage once; has `setUsage`, `bank`.
+- [core/network-sharing/host/media/SharedImageJob.md](core/network-sharing/host/media/SharedImageJob.md): one queued shared image request; has `run`.
+- [core/network-sharing/host/media/SharedVoice.md](core/network-sharing/host/media/SharedVoice.md): host speech-to-text and TTS for shared clients; has `status`, `transcribe`, `synthesisRefusal`.
+- [core/network-sharing/host/media/VoiceViews.md](core/network-sharing/host/media/VoiceViews.md): path-free voice readiness views; has `stt`, `tts`.
+- [core/network-sharing/host/media/VoiceAudioInput.md](core/network-sharing/host/media/VoiceAudioInput.md): reads audio from a transcribe request; has `read`, `isUsable`.
+- [core/network-sharing/host/media/VoiceSynthesisStream.md](core/network-sharing/host/media/VoiceSynthesisStream.md): streamed speech synthesis with cancel on disconnect; has `run`.
+- [core/network-sharing/host/SharingListener.md](core/network-sharing/host/SharingListener.md): base class for the sharing host's listeners with readable bind errors; has `isRunning`, `getPort`, `start`, `stop`.
+- [core/network-sharing/host/TlsSharingServer.md](core/network-sharing/host/TlsSharingServer.md): HTTPS listener for /sharing behind the pinned host certificate; has `start`, `stop`, `getFingerprint`.
+- [core/network-sharing/webapp/WebAppServer.md](core/network-sharing/webapp/WebAppServer.md): web backend listener (PWA, /sharing, /share, /hooks, mounts, origin gate); has `buildApp`, `setHooksRouter`, `registerMount`, `start`, `stop`.
+- [core/network-sharing/webapp/WebMountRegistry.md](core/network-sharing/webapp/WebMountRegistry.md): routers and upgrade handlers mounted on the web backend; has `register`, `createDispatcher`, `dispatchUpgrade`.
+- [core/network-sharing/host/RpcLendingService.md](core/network-sharing/host/RpcLendingService.md): lends this host's GPUs to one peer over llama.cpp RPC; has `acquire`, `heartbeat`, `release`, `waitUntilFree`, `shutdown`, `getStatus`.
+- [core/network-sharing/host/rpc/RpcServerBinary.md](core/network-sharing/host/rpc/RpcServerBinary.md): finds the rpc-server binary; has `resolve`.
+- [core/network-sharing/host/rpc/RpcDeviceInventory.md](core/network-sharing/host/rpc/RpcDeviceInventory.md): live GPU inventory for lending; has `probe`.
+- [core/network-sharing/host/rpc/RpcBindAddress.md](core/network-sharing/host/rpc/RpcBindAddress.md): picks the one address the RPC listener binds to; has `choose`.
+- [core/network-sharing/host/rpc/RpcChildTerminator.md](core/network-sharing/host/rpc/RpcChildTerminator.md): kills a lent rpc-server and checks it is gone; has `terminate`.
+- [core/network-sharing/host/rpc/RpcPortWaiter.md](core/network-sharing/host/rpc/RpcPortWaiter.md): waits for the rpc-server port to open; has `wait`.
+- [core/network-sharing/host/rpc/LendWaiters.md](core/network-sharing/host/rpc/LendWaiters.md): local launches waiting for a lend to end; has `wait`, `wakeAll`.
+- [core/network-sharing/webapp/public/WebClient.md](core/network-sharing/webapp/public/WebClient.md): the browser chat client the web backend ([WebAppServer](core/network-sharing/webapp/WebAppServer.md)) serves at `/`, and the read-only shared conversation page it serves at `/share/<token>`.
+- [core/network-sharing/webapp/public/js/share/ShareArtifacts.md](core/network-sharing/webapp/public/js/share/ShareArtifacts.md): a shared turn's artifacts.
+- [core/network-sharing/webapp/public/js/share/ShareTurnView.md](core/network-sharing/webapp/public/js/share/ShareTurnView.md): one shared turn in the chat's classes.
+- [core/network-sharing/webapp/public/js/share/ShareView.md](core/network-sharing/webapp/public/js/share/ShareView.md): the read-only viewer of a shared conversation link (`/share/<token>`, served by [ShareRouter](core/network-sharing/webapp/ShareRouter.md)).
+- [core/network-sharing/webapp/public/js/share/entry.md](core/network-sharing/webapp/public/js/share/entry.md): the shared conversation page's module entry (`<script type="module" src="/js/share/entry.js">` in `share-view.html`): `new ShareView({ win: window, doc: document }).start()`.
+- [core/network-sharing/webapp/public/js/shim/ArtifactViewUrl.md](core/network-sharing/webapp/public/js/shim/ArtifactViewUrl.md): `ArtifactViewUrl.of(id)`: `/sharing/artifacts/<id>/view`, the web-reachable view of a host artifact.
+- [core/network-sharing/webapp/public/js/shim/AttachmentReader.md](core/network-sharing/webapp/public/js/shim/AttachmentReader.md): the shim's attachment surface: images only on the web.
+- [core/network-sharing/webapp/public/js/shim/ChatTurnRunner.md](core/network-sharing/webapp/public/js/shim/ChatTurnRunner.md): the shim's `chat2`: persists the turn on the device, streams it from the host, and re-emits it as the requestId-keyed chat event stream the chat expects.
+- [core/network-sharing/webapp/public/js/shim/HostThinking.md](core/network-sharing/webapp/public/js/shim/HostThinking.md): the host's thinking capability (`/sharing/resources` `.thinking`), fetched once per session.
+- [core/network-sharing/webapp/public/js/shim/LlmApiShim.md](core/network-sharing/webapp/public/js/shim/LlmApiShim.md): the web build of `window.llmDiagAPI`: the surface the transport-agnostic chat ([ChatMode](core/llm-server/ui/js/chat/ChatMode.md)) consumes, built from HTTP ([LumaApi](core/network-sharing/webapp/public/js/transport/LumaApi.md)) plus on-device storage ([LumaStore](core/network-sharing/webapp/public/js/store/LumaStore.md)).
+- [core/network-sharing/webapp/public/js/shim/LocalPrefs.md](core/network-sharing/webapp/public/js/shim/LocalPrefs.md): per-device chat preferences in localStorage: `luma.web.sidebar` (`'1'` collapsed) and `luma.web.model`.
+- [core/network-sharing/webapp/public/js/shim/ShimArtifactData.md](core/network-sharing/webapp/public/js/shim/ShimArtifactData.md): the shim's live-artifact data surface (`all` / `mutate` / `onChanged`, the desktop preload's shape, read by the chat's LiveArtifacts through `ArtifactDataStore` with `{ kind: 'ipc', api: api.artifactData }`) over `/sharing/artifact-data/<id>`.
+- [core/network-sharing/webapp/public/js/shim/ShimArtifacts.md](core/network-sharing/webapp/public/js/shim/ShimArtifacts.md): the shim's `artifact` surface.
+- [core/network-sharing/webapp/public/js/shim/ShimConversations.md](core/network-sharing/webapp/public/js/shim/ShimConversations.md): the shim's `conv` surface over the device store, in the desktop's reply shapes.
+- [core/network-sharing/webapp/public/js/shim/ShimModels.md](core/network-sharing/webapp/public/js/shim/ShimModels.md): the shim's `listModels` and the model-list self-heal.
+- [core/network-sharing/webapp/public/js/shim/ShimVoice.md](core/network-sharing/webapp/public/js/shim/ShimVoice.md): the desktop's `llmDiagAPI.voice` surface over `/sharing/voice`, driven by [VoiceController](core/llm-server/ui/js/voice/VoiceController.md).
+- [core/network-sharing/webapp/public/js/shim/SingleListener.md](core/network-sharing/webapp/public/js/shim/SingleListener.md): a one-subscriber event slot, the shape of the desktop's `onChatEvent` and `onServerEvent`.
+- [core/network-sharing/webapp/public/js/shim/TurnRecorder.md](core/network-sharing/webapp/public/js/shim/TurnRecorder.md): collects what one streamed web turn produced and shapes it for the assistant message, in the desktop's `toolCalls: { tools, artifacts }` shape so a reloaded web turn renders exactly like the desktop chat.
+- [core/network-sharing/webapp/public/js/store/ArtifactStore.md](core/network-sharing/webapp/public/js/store/ArtifactStore.md): cached artifacts: `{ id, conversationId, messageId, title, type, language, content, createdAt }` (content is base64 for images).
+- [core/network-sharing/webapp/public/js/store/ConversationStore.md](core/network-sharing/webapp/public/js/store/ConversationStore.md): the web chat's conversation records.
+- [core/network-sharing/webapp/public/js/store/IndexedDbRepository.md](core/network-sharing/webapp/public/js/store/IndexedDbRepository.md): plain IndexedDB access: opens the database once (creating missing object stores and their indexes on upgrade) and runs one transaction with promise-returning operations.
+- [core/network-sharing/webapp/public/js/store/LumaStore.md](core/network-sharing/webapp/public/js/store/LumaStore.md): on-device persistence for the web chat client: conversations with embedded messages, and cached artifacts, in IndexedDB (`luma-web-chat`, version 2; image artifacts outgrow localStorage).
+- [core/network-sharing/webapp/public/js/store/MessageStore.md](core/network-sharing/webapp/public/js/store/MessageStore.md): messages embedded in their conversation record.
+- [core/network-sharing/webapp/public/js/store/StoreRecords.md](core/network-sharing/webapp/public/js/store/StoreRecords.md): the web chat store's object store names (`conversations`, `artifacts`), ids, timestamps, the blank conversation and the title rule.
+- [core/network-sharing/webapp/public/js/transport/ChatStream.md](core/network-sharing/webapp/public/js/transport/ChatStream.md): one streamed chat completion against `POST /sharing/llm/v1/chat/completions` (OpenAI-compatible SSE plus the `luma.event` side channel).
+- [core/network-sharing/webapp/public/js/transport/HostApi.md](core/network-sharing/webapp/public/js/transport/HostApi.md): the host's discovery, pairing, model, capability, agent and artifact calls.
+- [core/network-sharing/webapp/public/js/transport/HostHttp.md](core/network-sharing/webapp/public/js/transport/HostHttp.md): same-origin fetch to `/sharing` with the pairing bearer, and the shared 401 check.
+- [core/network-sharing/webapp/public/js/transport/ImageStream.md](core/network-sharing/webapp/public/js/transport/ImageStream.md): one image generation over `POST /sharing/image/generate` (NDJSON).
+- [core/network-sharing/webapp/public/js/transport/LumaApi.md](core/network-sharing/webapp/public/js/transport/LumaApi.md): the web client's transport, published as `window.LumaAPI`: the web counterpart of the desktop preload, on `fetch` against the host's same-origin, PIN-gated `/sharing` API.
+- [core/network-sharing/webapp/public/js/transport/PairingToken.md](core/network-sharing/webapp/public/js/transport/PairingToken.md): the web client's pairing token and host name in `localStorage` (`luma.web.token`, `luma.web.host`), with the token mirrored into the same-origin cookie `luma_share_token` (`path=/`, one year, `SameSite=Strict`) so artifact iframes and the agent-chat module scripts, which cannot send an Authorization header, still authenticate to `/sharing`.
+- [core/network-sharing/webapp/public/js/transport/StreamFrames.md](core/network-sharing/webapp/public/js/transport/StreamFrames.md): reads a streamed response body as text frames split on a separator.
+- [core/network-sharing/webapp/public/js/transport/Unauthorized.md](core/network-sharing/webapp/public/js/transport/Unauthorized.md): the error a `/sharing` call throws on a 401 (`unauthorized: true`, message `Pairing required` by default).
+- [core/network-sharing/webapp/public/js/transport/VoiceApi.md](core/network-sharing/webapp/public/js/transport/VoiceApi.md): the host's speech engines over `/sharing/voice`.
+- [core/network-sharing/webapp/public/js/web/MobileModelInfo.md](core/network-sharing/webapp/public/js/web/MobileModelInfo.md): phone-only behaviour: `web-overrides.css` restyles the chat's model pill (`.cm-model-pill`, kept by GearPanel) as an "Info" button; a remote device cannot change the host's model, so a tap shows what the host runs instead of the picker.
+- [core/network-sharing/webapp/public/js/web/PairingGate.md](core/network-sharing/webapp/public/js/web/PairingGate.md): the PIN card in front of the chat: shown until a valid token exists, then the real chat surface mounts over the shim.
+- [core/network-sharing/webapp/public/js/web/ServiceWorkerRegistrar.md](core/network-sharing/webapp/public/js/web/ServiceWorkerRegistrar.md): `ServiceWorkerRegistrar.register(win)`: when `navigator.serviceWorker` exists, registers `sw.js` (relative to the page) on `load`, ignoring failures (it only installs in a secure context, and the app is online-first).
+- [core/network-sharing/webapp/public/js/web/WebApp.md](core/network-sharing/webapp/public/js/web/WebApp.md): builds the web chat client and publishes its page globals.
+- [core/network-sharing/webapp/public/js/web/entry.md](core/network-sharing/webapp/public/js/web/entry.md): the chat page's module entry (`<script type="module" src="js/web/entry.js">` in `index.html`, after the classic `luma-modal.js` and `resonant.js`): `WebApp.boot(window)`.
+- [core/network-sharing/webapp/public/sw.md](core/network-sharing/webapp/public/sw.md): the web client's service worker (class `ServiceWorkerCache`, run on `self`).
+
+## core/network-watcher
+
+- [core/network-watcher/HeaderRedactor.md](core/network-watcher/HeaderRedactor.md): always-on removal of credential headers from captures; has `redactHeaders`, `redactCapturePayload`.
+- [core/network-watcher/NetworkWatcher.md](core/network-watcher/NetworkWatcher.md): watcher model with validation and wildcard matching; has `validate`, `matches`, `recordTrigger`, `toJSON`, `fromJSON`.
+- [core/network-watcher/NetworkWatcherService.md](core/network-watcher/NetworkWatcherService.md): watcher CRUD and the redaction choke point before persist and webhook; has `addWatcher`, `updateWatcher`, `removeWatcher`, `findMatchingWatchers`, `forwardToWebhook`.
+- [core/network-watcher/WatcherWebhook.md](core/network-watcher/WatcherWebhook.md): posts a capture to a webhook and shapes the replies; has `post`.
+
+## core/llm-server/chat
+
+- [core/llm-server/chat/BackgroundRunGate.md](core/llm-server/chat/BackgroundRunGate.md): one shared lock so only one background agent run is in flight; has `tryAcquire`, `release`, `status`.
+- [core/llm-server/chat/BatchScheduler.md](core/llm-server/chat/BatchScheduler.md): runs sub-tasks with a concurrency limit, never editing one file twice at once; has `run`.
+- [core/llm-server/chat/ChatModeRegistry.md](core/llm-server/chat/ChatModeRegistry.md): registry of extension chat modes; has `shared`, `notifyConversationDeleted` plus registry methods.
+- [core/llm-server/chat/SetupTabRegistry.md](core/llm-server/chat/SetupTabRegistry.md): registry of extension Setup tabs and their invoke handlers; has `shared`, `setInvokeHandler`, `invoke` plus registry methods.
+- [core/llm-server/chat/ConversationArtifactPurge.md](core/llm-server/chat/ConversationArtifactPurge.md): deletes a deleted conversation's artifacts but keeps Dashboard-pinned ones; has `execute`.
+- [core/llm-server/chat/ConversationExportData.md](core/llm-server/chat/ConversationExportData.md): the read-only data a PDF/PNG export draws; has `build`.
+- [core/llm-server/chat/ConversationExportHtml.md](core/llm-server/chat/ConversationExportHtml.md): builds the self-contained export page; has `build`, `scriptSafeJson`.
+- [core/llm-server/chat/ConversationExportRenderer.md](core/llm-server/chat/ConversationExportRenderer.md): renders the export page to PDF or PNG in a hidden window; has `render`, `defaultFileName`.
+- [core/llm-server/chat/HarmonyModel.md](core/llm-server/chat/HarmonyModel.md): recognises harmony (gpt-oss) models; has `matches`.
+- [core/llm-server/chat/NativeToolCallAccumulator.md](core/llm-server/chat/NativeToolCallAccumulator.md): reassembles streamed tool-call fragments and spots call loops; has `add`, `finalize`, `isLooping`.
+- [core/llm-server/chat/ToolArgumentParser.md](core/llm-server/chat/ToolArgumentParser.md): reads tool-call arguments and repairs stray backslashes; has `parse`.
+- [core/llm-server/chat/HarmonyToolFence.md](core/llm-server/chat/HarmonyToolFence.md): turns native tool calls into the agent's tool fences; has `build`.
+- [core/llm-server/chat/HarmonyLeakedToolCallParser.md](core/llm-server/chat/HarmonyLeakedToolCallParser.md): recovers tool calls that leaked into reply text; has `parseAll`.
+- [core/llm-server/chat/IdeContextFormatter.md](core/llm-server/chat/IdeContextFormatter.md): formats editor context as the `<ide_context>` block; has `render`, `appendToLastUserMessage`.
+- [core/llm-server/chat/ToolAdmission.md](core/llm-server/chat/ToolAdmission.md): adds tools published mid-run to the live run; has `admitNewTools`.
+- [core/llm-server/chat/ToolLoopMonitor.md](core/llm-server/chat/ToolLoopMonitor.md): watches a run's tool calls for loops and stalls, holding or annotating them with graduated feedback; has `attempt`, `report`.
+- [core/llm-server/chat/BareArgumentRepair.md](core/llm-server/chat/BareArgumentRepair.md): wraps a bare-string tool argument under the one field the tool's schema allows; has `repair`.
+- [core/llm-server/chat/tool-loop/CallSignature.md](core/llm-server/chat/tool-loop/CallSignature.md): normalised call identity (key order, whitespace, numeric strings, empty fields ignored); has `of`, `matches`.
+- [core/llm-server/chat/tool-loop/ActionTarget.md](core/llm-server/chat/tool-loop/ActionTarget.md): what a browser action is aimed at, ignoring fields that do not pick the target; has `of`.
+- [core/llm-server/chat/tool-loop/QueryResemblance.md](core/llm-server/chat/tool-loop/QueryResemblance.md): content-word Jaccard similarity of two search queries; has `between`, `words`.
+- [core/llm-server/chat/tool-loop/LookupTools.md](core/llm-server/chat/tool-loop/LookupTools.md): which calls are lookups, page reads and searches; has `isLookup`, `isPageRead`, `queryOf`.
+- [core/llm-server/chat/tool-loop/CallRecord.md](core/llm-server/chat/tool-loop/CallRecord.md): one call as the loop monitor remembers it; has `settle`, `madeProgress`.
+- [core/llm-server/chat/tool-loop/CallHistory.md](core/llm-server/chat/tool-loop/CallHistory.md): the run's ordered call records and the questions checks ask of them; has `open`, `identicalRunBefore`, `lastSucceededBefore`, `countRan`, `latestRan`.
+- [core/llm-server/chat/tool-loop/ResultNovelty.md](core/llm-server/chat/tool-loop/ResultNovelty.md): share of a result's passages new to the run; has `measure`.
+- [core/llm-server/chat/tool-loop/LoopFinding.md](core/llm-server/chat/tool-loop/LoopFinding.md): one check's verdict about one call (pattern, held, facts).
+- [core/llm-server/chat/tool-loop/LoopCheck.md](core/llm-server/chat/tool-loop/LoopCheck.md): base for loop checks; has `inspectRequest`, `inspectOutcome`.
+- [core/llm-server/chat/tool-loop/IdenticalStreakCheck.md](core/llm-server/chat/tool-loop/IdenticalStreakCheck.md): holds a fourth identical back-to-back call.
+- [core/llm-server/chat/tool-loop/EchoedLookupCheck.md](core/llm-server/chat/tool-loop/EchoedLookupCheck.md): holds a lookup identical to, or a rewording of, an earlier success.
+- [core/llm-server/chat/tool-loop/SearchAllowanceCheck.md](core/llm-server/chat/tool-loop/SearchAllowanceCheck.md): holds searches past the turn's shared allowance; has `spent`.
+- [core/llm-server/chat/tool-loop/InertActionCheck.md](core/llm-server/chat/tool-loop/InertActionCheck.md): notes a browser action that repeatedly changed nothing on the same target and page.
+- [core/llm-server/chat/tool-loop/StaleSearchCheck.md](core/llm-server/chat/tool-loop/StaleSearchCheck.md): notes consecutive searches that brought almost nothing new.
+- [core/llm-server/chat/tool-loop/InterventionLadder.md](core/llm-server/chat/tool-loop/InterventionLadder.md): loop pressure mapped to steer, insist, conclude; has `climb`, `ease`.
+- [core/llm-server/chat/tool-loop/LoopFeedback.md](core/llm-server/chat/tool-loop/LoopFeedback.md): model-facing text for a finding at a level; has `compose`.
+- [core/llm-server/chat/tool-loop/LoopTelemetry.md](core/llm-server/chat/tool-loop/LoopTelemetry.md): per-run loop figures for the done payload; has `noteRequest`, `noteRan`, `noteFinding`, `snapshot`.
+- [core/llm-server/chat/SendWebhookTool.md](core/llm-server/chat/SendWebhookTool.md): the agent's send_webhook tool; has `execute`.
+- [core/llm-server/chat/triggers/TriggerSource.md](core/llm-server/chat/triggers/TriggerSource.md): base class for in-app trigger sources; has `upstream`, `ensureSubscribed`, `stop`.
+- [core/llm-server/chat/triggers/NotificationSource.md](core/llm-server/chat/triggers/NotificationSource.md): web notifications as a trigger source; has `onNotification`, `listTabs`, `matches`, `eventFor`, `dedupeKeyFor`.
+- [core/llm-server/chat/triggers/PageChangeSource.md](core/llm-server/chat/triggers/PageChangeSource.md): page-change-detector changes as a trigger source; has `onChange`, `listMonitors`, `sampleFor`, `eventFor`.
+- [core/llm-server/chat/triggers/PayloadDrift.md](core/llm-server/chat/triggers/PayloadDrift.md): detects when a trigger's payload shape drifts from its sample; has `shapeOf`, `diffShape`, `driftOf`, `describe`.
+- [core/llm-server/chat/triggers/QuietHours.md](core/llm-server/chat/triggers/QuietHours.md): daily quiet-hours window for triggers; has `normalize`, `check`.
+- [core/llm-server/chat/triggers/TriggerPayload.md](core/llm-server/chat/triggers/TriggerPayload.md): cleans, caps and fences untrusted event data; has `sanitize`, `eventJson`, `buildUserMessage`, `syntheticEvent`.
+- [core/llm-server/chat/triggers/TriggerRunPreamble.md](core/llm-server/chat/triggers/TriggerRunPreamble.md): the system preamble for a trigger run; has `build`.
+- [core/llm-server/chat/triggers/TriggerMemoryBlock.md](core/llm-server/chat/triggers/TriggerMemoryBlock.md): a trigger's memory notes and recent-run summary; has `build`.
+- [core/llm-server/chat/triggers/WebhookPresets.md](core/llm-server/chat/triggers/WebhookPresets.md): Slack, GitHub and generic webhook verification, dedupe and acks; has `normalizePreset`, `verify`, `dedupeKeyFor`, `loopGuard`, `ackResponse`.
+- [core/llm-server/chat/triggers/TriggerSecrets.md](core/llm-server/chat/triggers/TriggerSecrets.md): one per-trigger secret, encrypted when the keychain allows; has `has`, `get`, `set`, `delete`.
+
+## core/media-shared
+
+- [core/media-shared/MediaModelCatalog.md](core/media-shared/MediaModelCatalog.md): base for the curated media model catalogs; has `list`, `getById`, `fingerprint`.
+- [core/media-shared/ModelDirectoryScanner.md](core/media-shared/ModelDirectoryScanner.md): base for model-directory scanners that never throw on a missing directory; has `scan`, `onnxFilesIn`.
+- [core/media-shared/MediaLaunchPlanner.md](core/media-shared/MediaLaunchPlanner.md): base for pure argv planners returning binary, args and plan; has `plan`.
+
+## core/image-server
+
+- [core/image-server/FlowSchedule.md](core/image-server/FlowSchedule.md): turns a few-step model's sigma nodes into shifted sigmas for sd-server; has `flowMu`, `timeShift`, `sigmasFromNodes`.
+- [core/image-server/EditFrames.md](core/image-server/EditFrames.md): resolves a named edit frame to a canvas size for one model; has `resolveFrame`, `listFrames`, `sizeForAspect`.
+- [core/image-server/VideoConstraints.md](core/image-server/VideoConstraints.md): fits a video request to the model's size multiple, frame grid and fps; has `normalizeVideoRequest`, `alignUp`, `snapToGrid`.
+- [core/image-server/models/ModelFileUpdates.md](core/image-server/models/ModelFileUpdates.md): finds catalog companion files that replace an installed file; has `findFileUpdates`, `catalogSourceFor`.
+- [core/image-server/models/ImageCatalogRegistry.md](core/image-server/models/ImageCatalogRegistry.md): image catalog rows contributed by extensions; has `shared` plus registry methods.
+- [core/image-server/models/ImageLoraCatalog.md](core/image-server/models/ImageLoraCatalog.md): the curated downloadable LoRAs; has `list`, `getById`, `fingerprint`, `entryFiles`.
+- [core/image-server/models/ImageLoraEntries.md](core/image-server/models/ImageLoraEntries.md): the LoRA data table; has `ENTRIES`.
+- [core/image-server/models/SafetensorsHeader.md](core/image-server/models/SafetensorsHeader.md): reads and writes the .safetensors header; has `read`, `encode`, `tensorNames`.
+- [core/image-server/models/LoraRepacker.md](core/image-server/models/LoraRepacker.md): adds fused-MLP alias tensors to Qwen-Image 2.1 LoRAs; has `needsFusedMlpAliases`, `repackFusedMlpAliases`, `repackInPlaceIfNeeded`.
+- [core/image-server/prompt/EditProfiles.md](core/image-server/prompt/EditProfiles.md): how each edit family names its input images, plus the keep clause; has `editProfileFor`, `tagFor`, `referencePreamble`, `keepClause`, `applyEditProfile`.
+- [core/image-server/prompt/EditGuide.md](core/image-server/prompt/EditGuide.md): the edit-prompt rules shown to the chat agent; has `build`.
+- [core/image-server/prompt/ImagePromptProfiles.md](core/image-server/prompt/ImagePromptProfiles.md): prompting style per image model type; has `getProfile`, `profilesForBase`, `profileDefaultsPatch`.
+- [core/image-server/server/AuthProxy.md](core/image-server/server/AuthProxy.md): puts API security in front of a loopback sd-server; has `start`, `stop`, `isRunning`.
+- [core/image-server/server/ImageLaunchPlanner.md](core/image-server/server/ImageLaunchPlanner.md): builds the sd-server argv for an image or video model; has `plan`, `inferLoaderFlag`, `preferSdServer`.
+- [core/image-server/server/image/ImageAdapter.md](core/image-server/server/image/ImageAdapter.md): base contract for image engine adapters; has `protocolId`, `healthCheck`, `generate`.
+- [core/image-server/server/image/SdcppJob.md](core/image-server/server/image/SdcppJob.md): the sd-server submit and poll job lifecycle with deadline, retries and cancel; has `run`, `healthCheck`.
+- [core/image-server/server/image/SdcppPayload.md](core/image-server/server/image/SdcppPayload.md): reads sd-server job payloads and env budgets; has `progressOf`, `previewOf`, `errorMessage`.
+- [core/image-server/runtimes/ImageRuntimeCatalog.md](core/image-server/runtimes/ImageRuntimeCatalog.md): the sd.cpp runtimes, extends RuntimeCatalog; has `RUNTIMES` plus inherited accessors.
+- [core/image-server/models/ImageModelCatalog.md](core/image-server/models/ImageModelCatalog.md): curated image and video catalog merged with extension rows; has `list`, `getById`, `fingerprint`, `totalApproxBytes`.
+- [core/image-server/models/ImageModelEntries.md](core/image-server/models/ImageModelEntries.md): data-only image and video model rows; has `ENTRIES`, `WAN_CONSTRAINTS`.
+- [core/image-server/models/ImageModelDownload.md](core/image-server/models/ImageModelDownload.md): resumable multi-file image model download; has `create`.
+- [core/image-server/models/LoraInspector.md](core/image-server/models/LoraInspector.md): checks a safetensors file is a LoRA and which base it targets; has `inspect`.
+- [core/image-server/models/LoraBaseDetector.md](core/image-server/models/LoraBaseDetector.md): LoRA base from trainer metadata or key fingerprints; has `fromMetadata`, `fromKeys`.
+- [core/image-server/models/existing/ExistingImageLibraryScanner.md](core/image-server/models/existing/ExistingImageLibraryScanner.md): lists checkpoints in other image tools; has `scan`.
+- [core/image-server/models/existing/ExistingImageModelLinker.md](core/image-server/models/existing/ExistingImageModelLinker.md): links a found checkpoint into the library without copying; has `link`.
+- [core/image-server/models/existing/CheckpointClassifier.md](core/image-server/models/existing/CheckpointClassifier.md): checkpoint architecture and importability from its header; has `classify`, `guessPromptStyle`.
+- [core/image-server/models/existing/ImageToolInstallFinder.md](core/image-server/models/existing/ImageToolInstallFinder.md): finds other image tools' installs; has `find`.
+- [core/image-server/models/existing/ImageToolInstallProbe.md](core/image-server/models/existing/ImageToolInstallProbe.md): identifies an image tool install by folder structure; has `probe`, `labelFor`.
+- [core/image-server/models/existing/ImageToolSearchRoots.md](core/image-server/models/existing/ImageToolSearchRoots.md): search roots including ComfyUI and Stability Matrix configured roots; has `searchParents`, `stabilityMatrixRoots`, `comfyConfiguredRoots`.
+- [core/image-server/models/existing/ImageLibraryFs.md](core/image-server/models/existing/ImageLibraryFs.md): fail-soft filesystem reads for the library scan; has `statOrNull`, `isDir`, `listDirs`.
+- [core/image-server/RefSizePlanner.md](core/image-server/RefSizePlanner.md): plans edit reference encode sizes on the model grid; has `plan`, `sizeAtArea`.
+- [core/image-server/RefImagePresizer.md](core/image-server/RefImagePresizer.md): resizes edit references to the plan; has `presize`.
+- [core/image-server/server/image/SdCppHttpAdapter.md](core/image-server/server/image/SdCppHttpAdapter.md): ImageAdapter for sd-server image generation; has `protocolId`, `healthCheck`, `generate`.
+- [core/image-server/server/image/SdCppVideoAdapter.md](core/image-server/server/image/SdCppVideoAdapter.md): ImageAdapter for sd-server video generation; has `protocolId`, `healthCheck`, `generate`.
+- [core/image-server/server/image/RemoteImageAdapter.md](core/image-server/server/image/RemoteImageAdapter.md): ImageAdapter for a Network Sharing peer's image server; has `protocolId`, `healthCheck`, `generate`.
+- [core/image-server/server/image/RemoteImageStream.md](core/image-server/server/image/RemoteImageStream.md): one remote image request's event stream; has `onResponse`, `fail`, `abort`.
+- [core/image-server/server/image/SdcppImageBody.md](core/image-server/server/image/SdcppImageBody.md): builds the sd-server image request body; has `build`.
+- [core/image-server/server/image/SdcppVideoBody.md](core/image-server/server/image/SdcppVideoBody.md): builds the sd-server video request body; has `build`, `frameCount`, `fps`.
+- [core/image-server/server/image/SdcppResult.md](core/image-server/server/image/SdcppResult.md): reads images or video from a completed sd-server job; has `images`, `video`.
+- [core/image-server/server/image/RefImageClamp.md](core/image-server/server/image/RefImageClamp.md): downscales oversized edit references; has `clamp`.
+- [core/image-server/server/image/ImageBytes.md](core/image-server/server/image/ImageBytes.md): image bytes to wire base64; has `toBase64`.
+- [core/image-server/models/ImageModelName.md](core/image-server/models/ImageModelName.md): image model keys and display names; has `key`, `resolveDisplayName`, `prettify`.
+- [core/image-server/ImageModelsScanner.md](core/image-server/ImageModelsScanner.md): scans the image models folder into installed-model records; has `scan`, `readModelDir`.
+- [core/image-server/ImageModelFiles.md](core/image-server/ImageModelFiles.md): role-to-file bag from manifest or file names; has `fromManifest`, `infer`, `roleFor`.
+- [core/image-server/ImageModelRecord.md](core/image-server/ImageModelRecord.md): reconciles manifest and catalog row into a model record; has `build`, `resolveKind`.
+- [core/image-server/runtimes/ImageRuntimeDetector.md](core/image-server/runtimes/ImageRuntimeDetector.md): sd.cpp runtime detector; has `shared`, `detectRuntimes`.
+- [core/image-server/runtimes/ImageRuntimeInstaller.md](core/image-server/runtimes/ImageRuntimeInstaller.md): sd.cpp runtime installer; has `shared`, `installRuntime`, `uninstallRuntime`.
+- [core/image-server/server/ClipPlacement.md](core/image-server/server/ClipPlacement.md): per-launch choice of where text encoders load; has `decide`, `textEncoderBytes`.
+- [core/image-server/server/image/ImageAdapterRegistry.md](core/image-server/server/image/ImageAdapterRegistry.md): protocol id to image adapter class; has `createAdapterFor`, `listProtocols`.
+- [core/image-server/ImageRouter.md](core/image-server/ImageRouter.md): single entry point for image generation and editing; has `generate`, `abort`, `getModelNativeSize`, `getFrameSizes`, `getEditPromptInfo`, `getActivePromptInfo`.
+- [core/image-server/router/ImageFamilyScaffold.md](core/image-server/router/ImageFamilyScaffold.md): per-family prompt and sampling scaffold; has `merge`, `buildPrompt`, `fromProfile`.
+- [core/image-server/router/ImageCanvas.md](core/image-server/router/ImageCanvas.md): native-resolution snap and grid alignment; has `snapToQwenNative`, `alignToGrid`.
+- [core/image-server/router/ImageLoraSpecs.md](core/image-server/router/ImageLoraSpecs.md): declared LoRAs to sd-server LoRA entries; has `resolve`.
+- [core/image-server/router/ImageSlotPicker.md](core/image-server/router/ImageSlotPicker.md): which image slot serves a request; has `explicitRole`, `remoteRole`, `requestRole`, `residentSlot`.
+- [core/image-server/router/ImageModelResolver.md](core/image-server/router/ImageModelResolver.md): installed image model lookup; has `resolve`, `lorasDir`.
+- [core/image-server/router/ImageModelInfo.md](core/image-server/router/ImageModelInfo.md): native size, edit frames and prompt hint for a model; has `nativeSize`, `frameSizes`, `activePromptInfo`.
+- [core/image-server/router/ImageEditPromptInfo.md](core/image-server/router/ImageEditPromptInfo.md): how edit_image will run and its prompt rules; has `resolve`.
+- [core/image-server/router/ImageSlotLauncher.md](core/image-server/router/ImageSlotLauncher.md): makes a slot run the requested model; has `ensureReady`.
+- [core/image-server/router/ImageRequestPlanner.md](core/image-server/router/ImageRequestPlanner.md): resolves an image request into adapter parameters; has `plan`, `metaFields`.
+- [core/image-server/router/ImageRun.md](core/image-server/router/ImageRun.md): base class for one in-flight image render; has `start`, `abort`, `finished`.
+- [core/image-server/router/LocalImageRun.md](core/image-server/router/LocalImageRun.md): image render on a local slot; has `start`, `abort`.
+- [core/image-server/router/RemoteImageRun.md](core/image-server/router/RemoteImageRun.md): image render relayed to a sharing peer; has `start`, `abort`.
+- [core/image-server/server/ImageRuntimeServer.md](core/image-server/server/ImageRuntimeServer.md): supervises sd-server behind an auth proxy; has `findFreePort` plus the base API.
+- [core/image-server/rampin/ImagePinTarget.md](core/image-server/rampin/ImagePinTarget.md): default image models to the RAM-pin file list; has `resolve`.
+- [core/image-server/ImageIpcHandlers.md](core/image-server/ImageIpcHandlers.md): IPC controller for the image server (48 channels, routes only); has `register`.
+- [core/image-server/VideoRouter.md](core/image-server/VideoRouter.md): single entry point for video generation; has `generate`, `abort`.
+- [core/image-server/server/VideoRuntimeServer.md](core/image-server/server/VideoRuntimeServer.md): the video slot's sd-server supervisor; has `findFreePort` plus the base API.
+- [core/image-server/video/VideoSlotLauncher.md](core/image-server/video/VideoSlotLauncher.md): makes the video slot run the requested model; has `ensureReady`.
+- [core/image-server/video/VideoFrameFit.md](core/image-server/video/VideoFrameFit.md): fits the video canvas to a start frame's aspect; has `fit`.
+- [core/image-server/video/VideoRequestPlanner.md](core/image-server/video/VideoRequestPlanner.md): video request to adapter parameters; has `plan`, `frameCount`, `fps`.
+- [core/image-server/video/VideoRun.md](core/image-server/video/VideoRun.md): one local video render; has `start`, `abort`.
+- [core/image-server/ipc/ImageModelManifest.md](core/image-server/ipc/ImageModelManifest.md): image model manifest read and write with a contained model folder; has `read`, `write`, `modelDir`.
+- [core/image-server/ipc/ImageSlots.md](core/image-server/ipc/ImageSlots.md): operations across all image slots; has `stopHosting`, `stopAll`, `status`.
+- [core/image-server/ipc/ImageModelsView.md](core/image-server/ipc/ImageModelsView.md): installed and catalog image model views; has `view`, `catalogView`, `setModelsDir`.
+- [core/image-server/ipc/ImageDefaultsUpdater.md](core/image-server/ipc/ImageDefaultsUpdater.md): saves image defaults and reconciles slots and RAM pin; has `update`.
+- [core/image-server/ipc/ImageRuntimeSetup.md](core/image-server/ipc/ImageRuntimeSetup.md): image runtime view, install and updates; has `view`, `install`, `uninstall`, `checkUpdates`.
+- [core/image-server/ipc/ImageDownloadSlot.md](core/image-server/ipc/ImageDownloadSlot.md): the single active image download; has `run`, `cancel`, `busy`.
+- [core/image-server/ipc/ImageQuantResolver.md](core/image-server/ipc/ImageQuantResolver.md): applies a quant choice to model files; has `resolve`.
+- [core/image-server/ipc/ImageManifestBuilder.md](core/image-server/ipc/ImageManifestBuilder.md): catalog, import and repo manifest shapes; has `forCatalog`, `forImport`, `forRepo`.
+- [core/image-server/ipc/CatalogModelInstaller.md](core/image-server/ipc/CatalogModelInstaller.md): downloads a catalog image model; has `install`.
+- [core/image-server/ipc/ImportBases.md](core/image-server/ipc/ImportBases.md): import base architectures and defaults; has `get`, `names`.
+- [core/image-server/ipc/ImportedEntryBuilder.md](core/image-server/ipc/ImportedEntryBuilder.md): catalog-shaped entry for an imported checkpoint; has `build`.
+- [core/image-server/ipc/AllInOneCheckpoint.md](core/image-server/ipc/AllInOneCheckpoint.md): detects baked VAE or CLIP in a checkpoint; has `hasBakedVaeOrClip`.
+- [core/image-server/ipc/ImportCompanions.md](core/image-server/ipc/ImportCompanions.md): links companion files into an import; has `attach`.
+- [core/image-server/ipc/HfRepoRecipes.md](core/image-server/ipc/HfRepoRecipes.md): HF model page to a multi-file recipe; has `parseRepoUrl`, `resolve`.
+- [core/image-server/ipc/HfRepoSiblings.md](core/image-server/ipc/HfRepoSiblings.md): lists an HF repo's files; has `fetch`.
+- [core/image-server/ipc/FileCopyProgress.md](core/image-server/ipc/FileCopyProgress.md): file copy with throttled progress; has `copy`.
+- [core/image-server/ipc/ImageModelImporter.md](core/image-server/ipc/ImageModelImporter.md): imports custom checkpoints from a URL, file or HF page; has `fromUrl`, `fromFile`, `fromRepo`.
+- [core/image-server/ipc/ExistingModelAdopter.md](core/image-server/ipc/ExistingModelAdopter.md): scans and links checkpoints from other image tools; has `scan`, `adopt`.
+- [core/image-server/ipc/InstalledModelRemover.md](core/image-server/ipc/InstalledModelRemover.md): deletes an installed image model safely; has `remove`.
+- [core/image-server/ipc/ModelFileUpdater.md](core/image-server/ipc/ModelFileUpdater.md): swaps a model file for the catalog's newer one; has `update`.
+- [core/image-server/ipc/LoraPresetRecipe.md](core/image-server/ipc/LoraPresetRecipe.md): speed-LoRA preset apply and restore; has `apply`, `remove`.
+- [core/image-server/ipc/ModelLoraAttacher.md](core/image-server/ipc/ModelLoraAttacher.md): attaches or clears a model's LoRAs; has `attach`.
+- [core/image-server/ipc/ImageLoraLibrary.md](core/image-server/ipc/ImageLoraLibrary.md): the shared LoRA library and curated LoRAs; has `list`, `import`, `download`.
+- [core/image-server/ipc/ImageServerBroadcast.md](core/image-server/ipc/ImageServerBroadcast.md): relays image server state to all windows; has `wire`, `send`.
+- [core/image-server/ipc/ImageServerConfigs.md](core/image-server/ipc/ImageServerConfigs.md): local and remote image server configs; has `view`, `setActive`.
+- [core/image-server/ipc/ImageGenerationRequests.md](core/image-server/ipc/ImageGenerationRequests.md): renderer generate and abort through ImageRouter; has `generate`, `abort`.
+- [core/image-server/ImageServerService.md](core/image-server/ImageServerService.md): owns the image server feature (settings, slot supervisors, server selection, RAM pin, slot launch); has `slots`, `serverForRole`, `setEnabled`, `getDefaults`, `setDefaults`, `isRoleReady`, `startServerResolved`, `shutdown`.
+- [core/image-server/service/ImageSlotRoles.md](core/image-server/service/ImageSlotRoles.md): image slot role names and launch profiles; has `normalize`, `profile`.
+- [core/image-server/service/ImageServerSettings.md](core/image-server/service/ImageServerSettings.md): saved image server settings; has `isEnabled`, `setEnabled`, `getDefaults`, `setDefaults`.
+- [core/image-server/service/ImageModelDisplayNames.md](core/image-server/service/ImageModelDisplayNames.md): image model display-name overrides; has `all`, `set`, `resolve`.
+- [core/image-server/service/RemoteImageServerStore.md](core/image-server/service/RemoteImageServerStore.md): saved remote image servers; has `list`, `upsert`, `remove`.
+- [core/image-server/service/ImageServerSelection.md](core/image-server/service/ImageServerSelection.md): active image server per role and readiness; has `getActive`, `setActiveId`, `isReady`.
+- [core/image-server/service/InstalledImageModels.md](core/image-server/service/InstalledImageModels.md): installed image models per slot kind; has `list`.
+- [core/image-server/service/SdServerCapabilities.md](core/image-server/service/SdServerCapabilities.md): sd-server feature probe; has `supportsFlag`, `autoFitFlagForm`.
+- [core/image-server/service/ImageSlotPlacement.md](core/image-server/service/ImageSlotPlacement.md): image slot VRAM placement with auto-fit; has `place`, `requiredBytes`, `budgetString`.
+- [core/image-server/service/VaeTilingPolicy.md](core/image-server/service/VaeTilingPolicy.md): VAE tiling decision; has `decide`.
+- [core/image-server/service/UserGpuPin.md](core/image-server/service/UserGpuPin.md): whether the user pinned a slot to a GPU; has `isPinnedToGpu`.
+- [core/image-server/service/ImageLaunchInputs.md](core/image-server/service/ImageLaunchInputs.md): pre-launch runtime, model and API key checks; has `runtime`, `model`, `apiKeyRefusal`.
+- [core/image-server/service/ImageLaunchLog.md](core/image-server/service/ImageLaunchLog.md): the image launch console line; has `line`.
+- [core/image-server/service/ImageSlotLaunch.md](core/image-server/service/ImageSlotLaunch.md): one model launch on an image slot; has `run`.
+- [core/image-server/VideoIpcHandlers.md](core/image-server/VideoIpcHandlers.md): video generation IPC controller; has `register`.
+
+## core/music-server
+
+- [core/music-server/models/MusicModelCatalog.md](core/music-server/models/MusicModelCatalog.md): the MiniMax-Music3 catalog row with VRAM and launch facts; has `list`, `getById`, `fingerprint`.
+- [core/music-server/runtimes/WslFormat.md](core/music-server/runtimes/WslFormat.md): pure WSL string helpers; has `toWslPath`, `shellQuote`, `killPortCommand`, `parseList`, `decodeOutput`.
+- [core/music-server/runtimes/Wsl.md](core/music-server/runtimes/Wsl.md): fail-soft wsl.exe execution and WSL2/NVIDIA detection; has `exec`, `runInWsl`, `detect`, `killPortInWsl`.
+- [core/music-server/server/SglOmniAdapter.md](core/music-server/server/SglOmniAdapter.md): the sgl-omni-audio music request; has `generate`.
+- [core/music-server/MusicRouter.md](core/music-server/MusicRouter.md): single entry point for music generation; has `generate`, `abort`.
+- [core/music-server/MusicServerGate.md](core/music-server/MusicServerGate.md): makes the music supervisor serve the requested model; has `ensureServing`.
+- [core/music-server/MusicGenerationParams.md](core/music-server/MusicGenerationParams.md): music frame budget, seed and duration; has `maxNewTokens`, `effectiveSeed`, `wavDurationSec`.
+- [core/music-server/runtimes/MusicRuntimeCatalog.md](core/music-server/runtimes/MusicRuntimeCatalog.md): the sglang-omni music runtime, extends RuntimeCatalog.
+- [core/music-server/MusicIpcHandlers.md](core/music-server/MusicIpcHandlers.md): IPC controller for the music server and generation; has `register`.
+- [core/music-server/models/MusicModelDownload.md](core/music-server/models/MusicModelDownload.md): music model snapshot download with a marker file; has `start`, `isInstalled`.
+- [core/music-server/runtimes/MusicRuntimeDetector.md](core/music-server/runtimes/MusicRuntimeDetector.md): WSL-aware music runtime detector; has `detectRuntimes`.
+- [core/music-server/runtimes/MusicRuntimeInstaller.md](core/music-server/runtimes/MusicRuntimeInstaller.md): python-env music runtime installer; has `installRuntime`, `uninstallRuntime`.
+- [core/music-server/runtimes/MusicRuntimeUpdates.md](core/music-server/runtimes/MusicRuntimeUpdates.md): PyPI update check with a cache; has `check`, `latestVersion`.
+- [core/music-server/runtimes/python-env/PythonEnvInstall.md](core/music-server/runtimes/python-env/PythonEnvInstall.md): one uv, venv and pip install, native or in WSL2; has `execute`.
+- [core/music-server/runtimes/python-env/PythonEnvLayout.md](core/music-server/runtimes/python-env/PythonEnvLayout.md): paths for uv, venv and entrypoints; has `uvPath`, `venvPath`, `pythonPath`.
+- [core/music-server/runtimes/python-env/PythonEnvShell.md](core/music-server/runtimes/python-env/PythonEnvShell.md): streamed bash or wsl.exe commands with cancel and timeout; has `stream`, `exec`.
+- [core/music-server/runtimes/python-env/PythonPackageSpec.md](core/music-server/runtimes/python-env/PythonPackageSpec.md): python package to pip requirement and label; has `requirement`, `label`.
+- [core/music-server/server/MusicRuntimeServer.md](core/music-server/server/MusicRuntimeServer.md): supervises the music server natively or in WSL; has `findFreePort` plus the base API.
+- [core/music-server/server/WslHostFailover.md](core/music-server/server/WslHostFailover.md): health probe with a WSL address fallback and kill-by-port; has `probe`, `killPort`.
+- [core/music-server/server/MusicLaunchPlanner.md](core/music-server/server/MusicLaunchPlanner.md): plans the music server launch, native or through WSL; has `plan`.
+- [core/music-server/server/MusicVramShortfall.md](core/music-server/server/MusicVramShortfall.md): checks whether reserved cards can hold the music stages; has `describe`, `colocatedBytes`.
+- [core/music-server/MusicServerService.md](core/music-server/MusicServerService.md): music subsystem owner (settings, runtimes, models, supervisor); has `setEnabled`, `getDefaults`, `installRuntime`, `downloadModel`, `startServerResolved`, `stopServer`, `getStatus`.
+- [core/music-server/service/MusicServerSettings.md](core/music-server/service/MusicServerSettings.md): saved music server settings and folders; has `isEnabled`, `setEnabled`, `getDefaults`, `setDefaults`.
+- [core/music-server/service/MusicModelStore.md](core/music-server/service/MusicModelStore.md): music model rows, download and delete; has `view`, `download`, `cancelDownload`, `delete`.
+- [core/music-server/service/MusicRuntimes.md](core/music-server/service/MusicRuntimes.md): music runtime view, install and update check; has `ensureView`, `install`, `uninstall`, `checkUpdates`.
+
+## core/on-demand
+
+- [core/on-demand/OnDemandGeometry.md](core/on-demand/OnDemandGeometry.md): where the On Demand icon and panel sit in the page area; has `defaultPosition`, `clampPosition`, `iconBounds`, `panelBounds`.
+- [core/on-demand/OnDemandService.md](core/on-demand/OnDemandService.md): the per-tab hidden On Demand conversations; has `send`, `abort`, `history`, `refreshTab`, `trackedConversation`, `onTabClosed`, `sweep`, `dispose`.
+- [core/on-demand/OnDemandOverlay.md](core/on-demand/OnDemandOverlay.md): the floating On Demand tile and Live panel; has `setEnabled`, `setExpanded`, `sendTurn`, `abortTurn`, `history`, `destroy`.
+- [core/on-demand/OnDemandPlacement.md](core/on-demand/OnDemandPlacement.md): On Demand tile, panel and window bounds; has `pageRect`, `innerBounds`, `windowBounds`, `tileRect`.
+- [core/on-demand/OnDemandTabLookup.md](core/on-demand/OnDemandTabLookup.md): fail-soft TabViewManager reads for On Demand; has `activeTabId`, `tabInfo`, `pageRect`.
+- [core/on-demand/OnDemandWindowFactory.md](core/on-demand/OnDemandWindowFactory.md): creates the transparent On Demand window; has `create`.
+- [core/on-demand/OnDemandKeyboard.md](core/on-demand/OnDemandKeyboard.md): On Demand keyboard handling; has `handle`.
+- [core/on-demand/OnDemandIpc.md](core/on-demand/OnDemandIpc.md): IPC controller for the On Demand panel; has `register`.
+- [core/on-demand/preload/OnDemandPreloadApi.md](core/on-demand/preload/OnDemandPreloadApi.md): `core/on-demand/preload/OnDemandPreloadApi.js` (entry: `core/on-demand/on-demand-preload.js`).
+- [core/on-demand/ui/OnDemandPanel.md](core/on-demand/ui/OnDemandPanel.md): `core/on-demand/ui/OnDemandPanel.js` (started by `core/on-demand/ui/entry.js`).
+- [core/on-demand/ui/OnDemandUi.md](core/on-demand/ui/OnDemandUi.md): `core/on-demand/ui/` (page: `on-demand.html`, loaded from `file://` by OnDemandWindowFactory).
+- [core/on-demand/ui/PanelPreferences.md](core/on-demand/ui/PanelPreferences.md): the remembered switches `od.speak` and `od.autoVoice` (default on; stored as 1/0).
+- [core/on-demand/ui/PanelStatus.md](core/on-demand/ui/PanelStatus.md): paints the mic button, Live badge, speaker toggle and hint line.
+- [core/on-demand/ui/PointerDrag.md](core/on-demand/ui/PointerDrag.md): drags the view by a handle; under 4 px of movement is a click.
+- [core/on-demand/ui/ReplyStream.md](core/on-demand/ui/ReplyStream.md): one streamed reply in its assistant bubble.
+- [core/on-demand/ui/StepLabels.md](core/on-demand/ui/StepLabels.md): plain-language labels for the agent's page actions.
+- [core/on-demand/ui/Transcript.md](core/on-demand/ui/Transcript.md): the panel's message log.
+- [core/on-demand/ui/voice/AudioFrames.md](core/on-demand/ui/voice/AudioFrames.md): - `AudioFrames.rms(f32)`.
+- [core/on-demand/ui/voice/MicCapture.md](core/on-demand/ui/voice/MicCapture.md): opens the mic (echo cancellation, noise suppression, auto gain) on a 16 kHz AudioContext and delivers 2048-sample frames through a ScriptProcessor routed to a muted gain (an unconnected ScriptProcessor is silent in Chromium).
+- [core/on-demand/ui/voice/OnDemandVoice.md](core/on-demand/ui/voice/OnDemandVoice.md): the panel's voice loop, a compact form of the LLM tab's voice controller.
+- [core/on-demand/ui/voice/PcmPlayer.md](core/on-demand/ui/voice/PcmPlayer.md): plays streamed PCM16 TTS chunks back to back.
+- [core/on-demand/ui/voice/SpeakableChunker.md](core/on-demand/ui/voice/SpeakableChunker.md): cuts a streamed reply into speakable chunks.
+- [core/on-demand/ui/voice/SpeechText.md](core/on-demand/ui/voice/SpeechText.md): `SpeechText.clean(s)`: what TTS should say.
+- [core/on-demand/ui/voice/UtteranceDetector.md](core/on-demand/ui/voice/UtteranceDetector.md): voice activity detection over 2048-sample frames at 16 kHz.
+
+## core/tts-server
+
+- [core/tts-server/models/TtsModelCatalog.md](core/tts-server/models/TtsModelCatalog.md): the curated TTS voice models and Pocket voice clips; has `list`, `getById`, `downloadUrl`, `recommendedId`, `pocketVoiceUrl`.
+- [core/tts-server/models/TtsModelConfigBuilder.md](core/tts-server/models/TtsModelConfigBuilder.md): the sherpa OfflineTts config per engine; has `build`.
+- [core/tts-server/models/KokoroTokenPatcher.md](core/tts-server/models/KokoroTokenPatcher.md): aliases the r-colored vowels missing from Kokoro v1.x; has `patch`.
+- [core/tts-server/TtsModelsScanner.md](core/tts-server/TtsModelsScanner.md): detects extracted TTS models by their files; has `scan`, `scanPocketVoices`.
+- [core/tts-server/TtsEngineRegistry.md](core/tts-server/TtsEngineRegistry.md): extension-provided TTS engines and their namespaced voices; has `shared`, `register`, `resolve`, `listVoiceEntries`, `parseId`, `makeId`.
+- [core/tts-server/runtimes/SherpaRuntimeLayout.md](core/tts-server/runtimes/SherpaRuntimeLayout.md): sherpa addon paths, pinned version and install checks; has `tarballUrl`, `runtimeDir`, `addonDir`, `isInstalled`, `installedVersion`.
+- [core/tts-server/runtimes/SherpaRuntimeInstaller.md](core/tts-server/runtimes/SherpaRuntimeInstaller.md): installs the sherpa npm packages from the registry; has `install`.
+- [core/tts-server/runtimes/TarballDownloader.md](core/tts-server/runtimes/TarballDownloader.md): atomic partial download plus tgz extraction; has `download`, `extract`.
+- [core/tts-server/TtsIpcHandlers.md](core/tts-server/TtsIpcHandlers.md): IPC controller for TTS setup, defaults, worker lifecycle and streaming; has `register`.
+- [core/tts-server/TtsSynthesisStreams.md](core/tts-server/TtsSynthesisStreams.md): streams synthesized audio to the requesting renderer; has `start`, `abort`.
+- [core/tts-server/TtsWorker.md](core/tts-server/TtsWorker.md): entry script of the TTS utility process; has `main`.
+- [core/tts-server/worker/TtsWorkerSession.md](core/tts-server/worker/TtsWorkerSession.md): one TTS worker lifetime with streamed PCM and cancel; has `handle`.
+- [core/tts-server/worker/PocketVoices.md](core/tts-server/worker/PocketVoices.md): Pocket voice reference clips; has `load`, `voiceFor`.
+- [core/tts-server/worker/TtsSynthesisRequest.md](core/tts-server/worker/TtsSynthesisRequest.md): builds the TTS generate request; has `build`.
+- [core/tts-server/runtimes/SherpaAddon.md](core/tts-server/runtimes/SherpaAddon.md): loads the sherpa addon in a voice worker; has `load`, `create`.
+- [core/tts-server/runtimes/SherpaWorkerEnv.md](core/tts-server/runtimes/SherpaWorkerEnv.md): library-path env for a forked sherpa worker; has `build`.
+- [core/tts-server/TtsServerService.md](core/tts-server/TtsServerService.md): resident TTS worker supervisor plus extension-engine routing; has `ensureRunning`, `synthesize`, `cancel`, `stop`, `downloadModel`, `getView`.
+- [core/tts-server/TtsVoiceSettings.md](core/tts-server/TtsVoiceSettings.md): saved voice, speaker, speed and idle window; has `getModelId`, `setModelId`, `getSpeed`, `setSpeed`.
+- [core/tts-server/PendingSyntheses.md](core/tts-server/PendingSyntheses.md): in-flight synthesis requests; has `add`, `chunk`, `resolve`, `reject`, `rejectAll`.
+- [core/tts-server/TtsExternalVoices.md](core/tts-server/TtsExternalVoices.md): routes extension voices to extension engines; has `describe`, `synthesize`, `cancel`.
+- [core/tts-server/TtsModelInstaller.md](core/tts-server/TtsModelInstaller.md): downloads and extracts a catalog voice; has `install`, `cancel`.
+- [core/tts-server/runtimes/SherpaWorkerProcess.md](core/tts-server/runtimes/SherpaWorkerProcess.md): supervises one sherpa worker process; has `start`, `post`, `stop`, `state`.
+- [core/tts-server/runtimes/TarBz2Archive.md](core/tts-server/runtimes/TarBz2Archive.md): unpacks .tar.bz2 model archives; has `extract`.
+
+## core/whisper-server
+
+- [core/whisper-server/models/SttModelCatalog.md](core/whisper-server/models/SttModelCatalog.md): the curated STT models (sherpa and whisper); has `list`, `getById`, `downloadUrl`, `recommendedId`.
+- [core/whisper-server/models/SttRecognizerConfigBuilder.md](core/whisper-server/models/SttRecognizerConfigBuilder.md): the sherpa OfflineRecognizer config per model kind; has `build`.
+- [core/whisper-server/WhisperModelsScanner.md](core/whisper-server/WhisperModelsScanner.md): finds ggml whisper models; has `scan`.
+- [core/whisper-server/sherpa/SherpaSttScanner.md](core/whisper-server/sherpa/SherpaSttScanner.md): detects extracted sherpa STT archives; has `scan`.
+- [core/whisper-server/server/WhisperLaunchPlanner.md](core/whisper-server/server/WhisperLaunchPlanner.md): builds the whisper-server argv; has `plan`, `isEnglishOnlyModel`.
+- [core/whisper-server/runtimes/WhisperRuntimeCatalog.md](core/whisper-server/runtimes/WhisperRuntimeCatalog.md): whisper.cpp runtimes, extends RuntimeCatalog.
+- [core/whisper-server/sherpa/SherpaSttBackend.md](core/whisper-server/sherpa/SherpaSttBackend.md): supervises the sherpa speech-to-text worker; has `ensureRunning`, `transcribe`, `stop`, `getStatus`.
+- [core/whisper-server/sherpa/PendingTranscriptions.md](core/whisper-server/sherpa/PendingTranscriptions.md): in-flight transcription requests with timeouts; has `add`, `resolve`, `reject`, `rejectAll`.
+- [core/whisper-server/sherpa/SherpaSttWorker.md](core/whisper-server/sherpa/SherpaSttWorker.md): entry script of the speech-to-text utility process; has `main`.
+- [core/whisper-server/sherpa/SherpaSttWorkerSession.md](core/whisper-server/sherpa/SherpaSttWorkerSession.md): one speech-to-text worker lifetime; has `handle`, `cleanText`.
+- [core/whisper-server/server/WhisperRuntimeServer.md](core/whisper-server/server/WhisperRuntimeServer.md): supervises whisper-server; has `findFreePort` plus the base API.
+- [core/whisper-server/server/WhisperServerLauncher.md](core/whisper-server/server/WhisperServerLauncher.md): picks the installed whisper runtime and plans its launch; has `resolveLaunch`.
+- [core/whisper-server/WhisperServerService.md](core/whisper-server/WhisperServerService.md): speech-to-text over the sherpa and whisper.cpp backends; has `getView` (async), `ensureRunning`, `transcribe`, `stop`, `downloadModel`.
+- [core/whisper-server/service/SttSettings.md](core/whisper-server/service/SttSettings.md): saved speech-to-text model, language and idle window; has `getModelPath`, `setModelPath`, `getLanguage`.
+- [core/whisper-server/service/SttModelLibrary.md](core/whisper-server/service/SttModelLibrary.md): installed speech-to-text models across both engines; has `list`, `resolve`.
+- [core/whisper-server/service/SttRuntimeView.md](core/whisper-server/service/SttRuntimeView.md): runtime part of the voice setup view; has `build`.
+- [core/whisper-server/service/SttModelInstaller.md](core/whisper-server/service/SttModelInstaller.md): speech-to-text model download and extract; has `install`, `cancel`.
+- [core/whisper-server/service/MultipartForm.md](core/whisper-server/service/MultipartForm.md): dependency-free multipart form encoder; has `build`.
+- [core/whisper-server/service/WhisperInferenceClient.md](core/whisper-server/service/WhisperInferenceClient.md): transcribes audio through whisper-server; has `transcribe`.
+- [core/whisper-server/WhisperIpcHandlers.md](core/whisper-server/WhisperIpcHandlers.md): IPC controller for speech-to-text; has `register`.
+
+## core/shell
+
+- [core/shell/CliHandshake.md](core/shell/CliHandshake.md): per-launch port and token file for the `luma` CLI; has `verify`, `write`, `remove`, `read`, `handshakePath`.
+- [core/shell/CliShim.md](core/shell/CliShim.md): puts the `luma` launcher on PATH; has `status`, `install`, `uninstall`, `refreshIfInstalled`.
+- [core/shell/cli-shim/LauncherScript.md](core/shell/cli-shim/LauncherScript.md): launcher script text per platform; has `renderWindows`, `renderPosix`.
+- [core/shell/cli-shim/PathEntries.md](core/shell/cli-shim/PathEntries.md): PATH membership check; has `includes`.
+- [core/shell/cli-shim/WindowsUserPath.md](core/shell/cli-shim/WindowsUserPath.md): reads and edits the Windows user PATH in the registry; has `read`, `add`, `remove`.
+- [core/shell/DnsResolver.md](core/shell/DnsResolver.md): DNS-over-HTTPS provider switch; has `isValidProvider`, `applyProvider`.
+- [core/shell/ExposeRegistry.md](core/shell/ExposeRegistry.md): turns `context.expose()` into REST routes and MCP tools; has `expose`, `seal`, `getRegistrations`, `buildMcpToolSet`, `buildExpressRouter`.
+- [core/shell/expose/ExposeParams.md](core/shell/expose/ExposeParams.md): exposed-function param schema, coercion and required checks; has `toInputSchema`, `coerce`, `missingRequired`.
+- [core/shell/ExtensionAutocompleteData.md](core/shell/ExtensionAutocompleteData.md): extension editor autocomplete catalog; has `build`.
+- [core/shell/extension-autocomplete/CompletionKind.md](core/shell/extension-autocomplete/CompletionKind.md): Monaco completion kind constants.
+- [core/shell/harness-connections/ConfigFile.md](core/shell/harness-connections/ConfigFile.md): config file read, atomic write and delete; has `readTextOr`, `writeAtomic`, `remove`.
+- [core/shell/harness-connections/ConfigBackups.md](core/shell/harness-connections/ConfigBackups.md): pre-LumaBrowser copies of agent config files and byte-exact restore; has `record`, `original`, `fingerprint`.
+- [core/shell/harness-connections/ConnectionLock.md](core/shell/harness-connections/ConnectionLock.md): lock file so two windows never edit agent configs at once; has `hold`.
+- [core/shell/harness-connections/ConnectionManifest.md](core/shell/harness-connections/ConnectionManifest.md): stored agent connections with their change ledgers; has `entry`, `save`, `drop`.
+- [core/shell/harness-connections/ConnectionStager.md](core/shell/harness-connections/ConnectionStager.md): works out a connect or disconnect without writing; has `stageConnect`, `stageDisconnect`, `drift`.
+- [core/shell/harness-connections/FileTransaction.md](core/shell/harness-connections/FileTransaction.md): writes and deletes that roll back together; has `run`, `write`, `remove`.
+- [core/shell/harness-connections/documents/ConfigDocument.md](core/shell/harness-connections/documents/ConfigDocument.md): base for editable config files with checked edits; has `open`, `readPath`, `set`, `remove`, `isBlank`.
+- [core/shell/harness-connections/documents/ConfigValue.md](core/shell/harness-connections/documents/ConfigValue.md): table checks and content equality across formats; has `isTable`, `same`, `plain`.
+- [core/shell/harness-connections/documents/KeyPath.md](core/shell/harness-connections/documents/KeyPath.md): key paths with absent-aware lookup; has `lookup`, `firstMissing`, `label`.
+- [core/shell/harness-connections/documents/JsoncDocument.md](core/shell/harness-connections/documents/JsoncDocument.md): JSON/JSONC config file; has `open`, `set`, `remove`.
+- [core/shell/harness-connections/documents/JsoncSplicer.md](core/shell/harness-connections/documents/JsoncSplicer.md): reversible JSONC text edits in the file's own layout; has `set`, `remove`.
+- [core/shell/harness-connections/documents/TomlScanner.md](core/shell/harness-connections/documents/TomlScanner.md): TOML statements with exact spans; has `scan`.
+- [core/shell/harness-connections/documents/TomlRenderer.md](core/shell/harness-connections/documents/TomlRenderer.md): writes values as TOML; has `key`, `value`, `pair`, `table`.
+- [core/shell/harness-connections/documents/TomlDocument.md](core/shell/harness-connections/documents/TomlDocument.md): statement-level, reversible TOML edits; has `open`, `set`, `remove`.
+- [core/shell/harness-connections/documents/ConfigFormats.md](core/shell/harness-connections/documents/ConfigFormats.md): format id to document class; has `byId`.
+- [core/shell/harness-connections/changes/ConnectionPlan.md](core/shell/harness-connections/changes/ConnectionPlan.md): the settings a connector wants; has `file`, `settings`, `files`.
+- [core/shell/harness-connections/changes/WorkingSet.md](core/shell/harness-connections/changes/WorkingSet.md): in-memory config edits before commit; has `open`, `replace`, `changes`, `commit`.
+- [core/shell/harness-connections/changes/LedgerEntry.md](core/shell/harness-connections/changes/LedgerEntry.md): one recorded key with its prior value; has `record`, `renewed`, `inferred`, `describe`.
+- [core/shell/harness-connections/changes/ChangeApplier.md](core/shell/harness-connections/changes/ChangeApplier.md): applies a plan and records the ledger; has `apply`.
+- [core/shell/harness-connections/changes/ChangeReverter.md](core/shell/harness-connections/changes/ChangeReverter.md): undoes a ledger and reports drift; has `revert`, `drift`, `inferLedger`.
+- [core/shell/harness-connections/ExecutableFinder.md](core/shell/harness-connections/ExecutableFinder.md): finds a program on PATH without a shell; has `find`.
+- [core/shell/IdePluginInstaller.md](core/shell/IdePluginInstaller.md): JetBrains plugin installer by copy; has `detectIdes`, `status`, `install`, `uninstall`, `refreshIfInstalled`.
+- [core/shell/VscodeExtensionInstaller.md](core/shell/VscodeExtensionInstaller.md): VS Code family installer through each editor's CLI; has `detectIdes`, `status`, `install`, `uninstall`, `refreshIfInstalled`.
+- [core/shell/ide-installers/IdeInstaller.md](core/shell/ide-installers/IdeInstaller.md): shared base class for IDE installers; has `status`, `install`, `uninstall`, `refreshIfInstalled`.
+- [core/shell/ide-installers/JetBrainsIdeDir.md](core/shell/ide-installers/JetBrainsIdeDir.md): JetBrains folder naming and layout; has `parse`, `compare`, `vendorRoots`, `pluginsDir`.
+- [core/shell/ide-installers/VersionCompare.md](core/shell/ide-installers/VersionCompare.md): numeric version compare; has `compare`.
+- [core/shell/ide-installers/EditorCliRunner.md](core/shell/ide-installers/EditorCliRunner.md): runs an editor CLI and never rejects; has `run`, `lastMeaningfulLine`.
+- [core/shell/ide-installers/VscodeEditorLocator.md](core/shell/ide-installers/VscodeEditorLocator.md): finds editor CLIs and installed extension versions; has `findCli`, `extensionsDir`, `installedVersion`.
+- [core/shell/InternalTabLoader.md](core/shell/InternalTabLoader.md): load guard for gateway-served internal tabs; has `wire`, `reloadIfStale`.
+- [core/shell/IPCBridge.md](core/shell/IPCBridge.md): namespaced IPC registry; has `handle`, `on`, `removeHandle`, `removeOn`, `forExtension`, `forCore`, `removeAllForExtension`.
+- [core/shell/ipc-bridge/ScopedIPCBridge.md](core/shell/ipc-bridge/ScopedIPCBridge.md): one namespace's IPC view (`context.ipc`); has `handle`, `on`, `removeHandle`, `removeOn`, `send`.
+- [core/shell/McpAggregator.md](core/shell/McpAggregator.md): merges MCP tool sets and routes calls; has `registerCore`, `registerExtension`, `unregisterExtension`, `getToolDefinitions`, `handleToolCall`.
+- [core/shell/McpResult.md](core/shell/McpResult.md): MCP tool-result envelope; has `text`, `error`.
+- [core/shell/McpServer.md](core/shell/McpServer.md): stdio MCP server that proxies to the app; has `start`, `stop`, `handleRequest`, `listTools`, `callTool`.
+- [core/shell/mcp-stdio/StdioJsonRpc.md](core/shell/mcp-stdio/StdioJsonRpc.md): JSON-RPC over stdio; has `open`, `close`, `handleLine`.
+- [core/shell/mcp-stdio/JsonHttpClient.md](core/shell/mcp-stdio/JsonHttpClient.md): JSON HTTP client on Node built-ins; has `request`.
+- [core/shell/mcp-stdio/AppLauncher.md](core/shell/mcp-stdio/AppLauncher.md): auto-starts the app for the MCP server; has `start`, `stop`, `resolveCommand`.
+- [core/shell/QuitController.md](core/shell/QuitController.md): quit under a timeout with a keep, retry or force dialog; has `requestQuit`, `markSystemShutdown`, `isQuitting`.
+- [core/shell/RendererRecovery.md](core/shell/RendererRecovery.md): bounded main-window renderer recovery; has `attach`, `renew`, `crashed`, `loadFailed`.
+- [core/shell/RestGateway.md](core/shell/RestGateway.md): the app's local HTTP server; has `mountCore`, `registerExtension`, `mountExposedRoutes`, `disableExtension`, `enableExtension`, `start`, `stop`.
+- [core/shell/rest-gateway/ExtensionRouteTable.md](core/shell/rest-gateway/ExtensionRouteTable.md): extension route prefixes and the disabled-extension gate; has `record`, `prefixOf`, `disable`, `enable`, `gate`.
+- [core/shell/rest-gateway/UpgradeRouter.md](core/shell/rest-gateway/UpgradeRouter.md): WebSocket upgrade dispatch; has `register`, `removeExtension`, `dispatch`.
+- [core/shell/rest-gateway/McpProxyRoutes.md](core/shell/rest-gateway/McpProxyRoutes.md): controller for `/api/mcp`; has `create`.
+- [core/shell/rest-gateway/HealthRoutes.md](core/shell/rest-gateway/HealthRoutes.md): controller for `/api/health`; has `create`.
+- [core/shell/Updater.md](core/shell/Updater.md): auto-update lifecycle; has `checkForUpdates`.
+- [core/shell/ChildProcessRegistry.md](core/shell/ChildProcessRegistry.md): process-wide inventory of spawned native children for force quit; has `track`, `pids`, `killAll`, `reset`.
+- [core/shell/ContainerPath.md](core/shell/ContainerPath.md): parses and builds host spellings of paths inside a Docker container; has `parse`, `isContainerPath`, `toHostPath`.
+- [core/shell/DockerExec.md](core/shell/DockerExec.md): one synchronous docker exec that never throws; has `exec`, `sh`, `dockerBin`.
+- [core/shell/ContainerFs.md](core/shell/ContainerFs.md): the sync fs subset served from a container, plus a routed fs; has `routed`, `statSync`, `readFileSync`, `writeFileSync`, `readdirSync`, `list`.
+- [core/shell/ContainerSearch.md](core/shell/ContainerSearch.md): in-container file listing and grep; has `listFiles`, `grep`.
+- [core/shell/ContainerShell.md](core/shell/ContainerShell.md): picks bash or sh in a container and builds the exec argv; has `shellFor`, `execArgv`.
+- [core/shell/FileEdit.md](core/shell/FileEdit.md): applies exact or fuzzy, unique, non-overlapping replacements; has `apply`, `countOccurrences`.
+- [core/shell/FileMutationQueue.md](core/shell/FileMutationQueue.md): serializes mutations to the same file; has `run`, `isBusy`.
+- [core/shell/FileObservation.md](core/shell/FileObservation.md): ledger of what the agent has seen on disk; has `stampOf`, `observe`, `get`, `forget`, `forgetUnder`, `clear`.
+- [core/shell/GitignoreFilter.md](core/shell/GitignoreFilter.md): honours the project's root .gitignore; has `forRoot`, `parse`, `ignores`.
+- [core/shell/ProjectContextFiles.md](core/shell/ProjectContextFiles.md): collects and renders AGENTS.md and CLAUDE.md files up to the git root; has `collect`, `render`.
+- [core/shell/ProjectMap.md](core/shell/ProjectMap.md): one-call structural overview of a project; has `build`.
+- [core/shell/SearchSkipDirs.md](core/shell/SearchSkipDirs.md): default search skip-dirs and when a glob overrides them; has `isSkipped`, `explicitDirAllowances`, `effectiveFor`.
+- [core/shell/RipgrepBinary.md](core/shell/RipgrepBinary.md): locates the packaged rg binary; has `path`, `available`.
+- [core/shell/RipgrepRun.md](core/shell/RipgrepRun.md): reads one rg --json child into results; has `result`.
+- [core/shell/RipgrepSearch.md](core/shell/RipgrepSearch.md): ripgrep-backed grep with security-relevant flags; has `grep`, `buildArgs`, `available`.
+- [core/shell/shellClassifier/ShellDialect.md](core/shell/shellClassifier/ShellDialect.md): normalizes and guesses the shell dialect; has `normalize`, `guess`.
+- [core/shell/shellClassifier/ShellLexer.md](core/shell/shellClassifier/ShellLexer.md): command line to word, operator and redirection tokens with spans, per dialect; has `tokenize`.
+- [core/shell/shellClassifier/ShellParser.md](core/shell/shellClassifier/ShellParser.md): tokens to simple commands with joins, through groups and compound commands; has `parseLine`, `parseTokens`.
+- [core/shell/shellClassifier/syntax/SourceCursor.md](core/shell/shellClassifier/syntax/SourceCursor.md): read position over a command line; has `peek`, `take`, `startsWith`, `takeWhile`, `sliceFrom`, `restOfLine`.
+- [core/shell/shellClassifier/syntax/ShellSyntax.md](core/shell/shellClassifier/syntax/ShellSyntax.md): base description of a shell's lexical rules as data; has `endsWord`, `isSingleQuote`, `isDoubleQuote`, `isReservedWord`, `escapesInDoubleQuotes`, `defaultFd`.
+- [core/shell/shellClassifier/syntax/PosixSyntax.md](core/shell/shellClassifier/syntax/PosixSyntax.md): sh and bash lexical rules; has `escapesInDoubleQuotes`.
+- [core/shell/shellClassifier/syntax/PowerShellSyntax.md](core/shell/shellClassifier/syntax/PowerShellSyntax.md): PowerShell lexical rules; has `escapesInDoubleQuotes`.
+- [core/shell/shellClassifier/syntax/CmdSyntax.md](core/shell/shellClassifier/syntax/CmdSyntax.md): cmd.exe lexical rules.
+- [core/shell/shellClassifier/syntax/SyntaxCatalog.md](core/shell/shellClassifier/syntax/SyntaxCatalog.md): shared syntax per dialect; has `forDialect`.
+- [core/shell/shellClassifier/syntax/ShellToken.md](core/shell/shellClassifier/syntax/ShellToken.md): word, control and redirect token shapes with spans; has `word`, `control`, `redirect`, `is`.
+- [core/shell/shellClassifier/syntax/AnsiCString.md](core/shell/shellClassifier/syntax/AnsiCString.md): reads and decodes bash $'...' strings; has `opensAt`, `read`.
+- [core/shell/shellClassifier/syntax/ShellScanner.md](core/shell/shellClassifier/syntax/ShellScanner.md): recursive-descent reader of quotes, escapes, here-strings and substitutions; has `readPiece`, `opensPiece`, `skipBalanced`, `skipBackquoted`.
+- [core/shell/shellClassifier/syntax/WordReader.md](core/shell/shellClassifier/syntax/WordReader.md): reads one word token; has `read`.
+- [core/shell/shellClassifier/syntax/OperatorReader.md](core/shell/shellClassifier/syntax/OperatorReader.md): longest-match control and redirection operators; has `read`, `opensRedirect`, `readRedirect`.
+- [core/shell/shellClassifier/syntax/RedirectRole.md](core/shell/shellClassifier/syntax/RedirectRole.md): output, input or fd duplication; has `of`.
+- [core/shell/shellClassifier/syntax/AssignmentWord.md](core/shell/shellClassifier/syntax/AssignmentWord.md): recognizes posix NAME=value words; has `parse`.
+- [core/shell/shellClassifier/syntax/SimpleCommandBuilder.md](core/shell/shellClassifier/syntax/SimpleCommandBuilder.md): one simple command from a token segment; has `build`.
+- [core/shell/shellClassifier/ShellRule.md](core/shell/shellClassifier/ShellRule.md): base class and contract for shell classifier rules; has `assess`, `forbidden`, `massDestructive`, `readonly`.
+- [core/shell/shellClassifier/ShellRuleSet.md](core/shell/shellClassifier/ShellRuleSet.md): runs all rules in order and picks the deciding verdict; has `RULES`, `assess`.
+- [core/shell/shellClassifier/ShellWords.md](core/shell/shellClassifier/ShellWords.md): shared word helpers for rules; has `lower`, `hasShortFlag`, `nonFlags`, `splitWords`.
+- [core/shell/shellClassifier/PowerShellArgs.md](core/shell/shellClassifier/PowerShellArgs.md): reads PowerShell parameters; has `param`, `switchOn`, `positionals`, `splitList`.
+- [core/shell/shellClassifier/SystemPaths.md](core/shell/shellClassifier/SystemPaths.md): classifies a path as a root, home or protected system location with a reason; has `classify`, `isRootOrSystemPath`, `isDriveRoot`, `normalize`.
+- [core/shell/shellClassifier/hostPaths/HostPathSpelling.md](core/shell/shellClassifier/hostPaths/HostPathSpelling.md): canonical spelling of a path word (quotes, UNC, namespaces, variables, dots); has `normalize`, `canonicalize`, `unquote`.
+- [core/shell/shellClassifier/hostPaths/HostPathVariables.md](core/shell/shellClassifier/hostPaths/HostPathVariables.md): expands variables that name well-known host locations; has `expand`, `locationOf`.
+- [core/shell/shellClassifier/hostPaths/HostPathCatalog.md](core/shell/shellClassifier/hostPaths/HostPathCatalog.md): protected POSIX, macOS and Windows locations with their reach; has `locate`.
+- [core/shell/shellClassifier/hostPaths/RawDevicePath.md](core/shell/shellClassifier/hostPaths/RawDevicePath.md): recognizes raw disk and volume device paths; has `is`.
+- [core/shell/shellClassifier/RedirectTarget.md](core/shell/shellClassifier/RedirectTarget.md): recognizes null redirect targets; has `isNull`.
+- [core/shell/shellClassifier/WriteTargets.md](core/shell/shellClassifier/WriteTargets.md): lists which arguments a writer writes to; has `of`.
+- [core/shell/shellClassifier/PrivilegeWrapper.md](core/shell/shellClassifier/PrivilegeWrapper.md): unwraps sudo, su, runas and similar; has `unwrap`.
+- [core/shell/shellClassifier/rules/GitRule.md](core/shell/shellClassifier/rules/GitRule.md): git: launched programs and lost work or history ask, reads are readonly; has `assess`, `hazardReason`, `isReadOnly`.
+- [core/shell/shellClassifier/rules/FilesystemRule.md](core/shell/shellClassifier/rules/FilesystemRule.md): deletes, permission changes and disk tools; has `assess`, `classifyDelete`, `diskForbiddenReason`.
+- [core/shell/shellClassifier/rules/HostCommand.md](core/shell/shellClassifier/rules/HostCommand.md): shared command view for the host rules; has `has`, `hasPrefix`, `hasShortFlag`, `valueAfter`, `positionalsSkipping`.
+- [core/shell/shellClassifier/rules/filesystem/FileOperation.md](core/shell/shellClassifier/rules/filesystem/FileOperation.md): base for file-destroying operation profiles; has `covers`, `targets`, `sweepReason`, `reachesTargets`, `judge`.
+- [core/shell/shellClassifier/rules/filesystem/PosixRemoval.md](core/shell/shellClassifier/rules/filesystem/PosixRemoval.md): rm, rmdir, unlink, shred and truncate profile.
+- [core/shell/shellClassifier/rules/filesystem/PowerShellRemoval.md](core/shell/shellClassifier/rules/filesystem/PowerShellRemoval.md): Remove-Item, Clear-Content and alias profile.
+- [core/shell/shellClassifier/rules/filesystem/CmdRemoval.md](core/shell/shellClassifier/rules/filesystem/CmdRemoval.md): cmd.exe del, erase, rd and rmdir profile.
+- [core/shell/shellClassifier/rules/filesystem/FindRemoval.md](core/shell/shellClassifier/rules/filesystem/FindRemoval.md): find -delete and -exec rm profile.
+- [core/shell/shellClassifier/rules/filesystem/MirrorSync.md](core/shell/shellClassifier/rules/filesystem/MirrorSync.md): rsync --delete and robocopy /MIR profile.
+- [core/shell/shellClassifier/rules/filesystem/PosixPermissionRewrite.md](core/shell/shellClassifier/rules/filesystem/PosixPermissionRewrite.md): recursive chmod, chown and chgrp profile.
+- [core/shell/shellClassifier/rules/filesystem/WindowsPermissionRewrite.md](core/shell/shellClassifier/rules/filesystem/WindowsPermissionRewrite.md): takeown and icacls profile.
+- [core/shell/shellClassifier/rules/filesystem/DiskWipeTools.md](core/shell/shellClassifier/rules/filesystem/DiskWipeTools.md): formatters, raw-device writers, partition, firmware-erase and boot tools; has `reasonFor`.
+- [core/shell/shellClassifier/rules/SystemRule.md](core/shell/shellClassifier/rules/SystemRule.md): power, firewall, registry, services, kills, packages and accounts; has `assess`, `check`.
+- [core/shell/shellClassifier/rules/system/HostCapability.md](core/shell/shellClassifier/rules/system/HostCapability.md): base for host-control capabilities; has `covers`, `judge`, `forbid`, `ask`.
+- [core/shell/shellClassifier/rules/system/PowerControl.md](core/shell/shellClassifier/rules/system/PowerControl.md): shutdown, reboot, sleep, logoff and session-ending target switches.
+- [core/shell/shellClassifier/rules/system/FirewallControl.md](core/shell/shellClassifier/rules/system/FirewallControl.md): iptables, nft, ufw, firewalld, pfctl, netsh advfirewall and NetFirewall cmdlets.
+- [core/shell/shellClassifier/rules/system/NetworkLinkControl.md](core/shell/shellClassifier/rules/system/NetworkLinkControl.md): interface, address and route changes (ip, ifconfig, nmcli, networksetup, netsh, NetAdapter).
+- [core/shell/shellClassifier/rules/system/RegistryControl.md](core/shell/shellClassifier/rules/system/RegistryControl.md): reg, regedit and registry item cmdlets; machine hives and startup keys.
+- [core/shell/shellClassifier/rules/system/SystemctlArgs.md](core/shell/shellClassifier/rules/system/SystemctlArgs.md): systemctl positionals past value options; has `positionals`.
+- [core/shell/shellClassifier/rules/system/CriticalServices.md](core/shell/shellClassifier/rules/system/CriticalServices.md): services whose loss cuts access, network, session or defenses; has `consequenceOf`, `canonical`.
+- [core/shell/shellClassifier/rules/system/ServiceRequest.md](core/shell/shellClassifier/rules/system/ServiceRequest.md): reads service-manager calls into action, units and effect; has `parse`.
+- [core/shell/shellClassifier/rules/system/ServiceControl.md](core/shell/shellClassifier/rules/system/ServiceControl.md): systemctl, service, OpenRC, launchctl, sc, net and *-Service calls.
+- [core/shell/shellClassifier/rules/system/ProcessPattern.md](core/shell/shellClassifier/rules/system/ProcessPattern.md): one kill-command name selector; has `hits`, `names`, `hitsEverything`, `isWildcard`.
+- [core/shell/shellClassifier/rules/system/KillRequest.md](core/shell/shellClassifier/rules/system/KillRequest.md): reads kill, pkill, killall, taskkill, tskill and Stop-Process; has `parse`, `isHardSignal`.
+- [core/shell/shellClassifier/rules/system/ProcessControl.md](core/shell/shellClassifier/rules/system/ProcessControl.md): kills of everything, OS processes, shared runtimes, trees and groups.
+- [core/shell/shellClassifier/rules/system/PackageControl.md](core/shell/shellClassifier/rules/system/PackageControl.md): OS package-manager removals and essential packages.
+- [core/shell/shellClassifier/rules/system/AccountControl.md](core/shell/shellClassifier/rules/system/AccountControl.md): user, group and share account changes.
+- [core/shell/shellClassifier/rules/system/ScheduleControl.md](core/shell/shellClassifier/rules/system/ScheduleControl.md): crontab, schtasks, at and ScheduledTask changes.
+- [core/shell/shellClassifier/rules/system/KernelControl.md](core/shell/shellClassifier/rules/system/KernelControl.md): mounts over protected places, swap, sysctl and kernel modules.
+- [core/shell/shellClassifier/rules/system/SecurityPostureControl.md](core/shell/shellClassifier/rules/system/SecurityPostureControl.md): execution policy, Defender, BitLocker, DISM, SELinux, Gatekeeper and SIP changes.
+- [core/shell/shellClassifier/rules/git/GitInvocation.md](core/shell/shellClassifier/rules/git/GitInvocation.md): splits git globals, config overrides and the subcommand; has `parse`, `isInfoOnly`.
+- [core/shell/shellClassifier/rules/git/GitOptionScan.md](core/shell/shellClassifier/rules/git/GitOptionScan.md): reads git options like parse-options (abbreviations, bundles, `--`); has `has`, `hasLong`, `hasShort`, `walk`.
+- [core/shell/shellClassifier/rules/git/GitConfigKeys.md](core/shell/shellClassifier/rules/git/GitConfigKeys.md): config keys and env vars whose value is a program; has `programLabel`, `variableLabel`, `isNetworkOnly`, `isInert`.
+- [core/shell/shellClassifier/rules/git/GitReadForms.md](core/shell/shellClassifier/rules/git/GitReadForms.md): per-subcommand read profiles and option hazards; has `reads`, `staysLocal`, `hazardIn`.
+- [core/shell/shellClassifier/rules/git/GitProgramHazards.md](core/shell/shellClassifier/rules/git/GitProgramHazards.md): git lines that launch a caller-chosen program; has `reason`.
+- [core/shell/shellClassifier/rules/git/GitHistoryHazards.md](core/shell/shellClassifier/rules/git/GitHistoryHazards.md): git forms that lose work or rewrite history; has `reason`.
+- [core/shell/shellClassifier/rules/git/GitPushRewrite.md](core/shell/shellClassifier/rules/git/GitPushRewrite.md): push forms that rewrite or delete remote history; has `reason`.
+- [core/shell/shellClassifier/rules/PackagesRule.md](core/shell/shellClassifier/rules/PackagesRule.md): registries, containers, clusters, cloud, IaC, databases and cmdlets; asks always, never forbids; has `assess`, `reasonFor`, `findingFor`, `FAMILIES`.
+- [core/shell/shellClassifier/rules/ReadOnlyRule.md](core/shell/shellClassifier/rules/ReadOnlyRule.md): positive read-only allowlist; has `assess`, `isReadOnly`.
+- [core/shell/shellClassifier/rules/readOnly/ReadOnlyVerdict.md](core/shell/shellClassifier/rules/readOnly/ReadOnlyVerdict.md): read-only answer with a reason; has `reads`, `refuses`.
+- [core/shell/shellClassifier/rules/readOnly/OptionGrammar.md](core/shell/shellClassifier/rules/readOnly/OptionGrammar.md): getopt, word, slash and PowerShell option scanning; has `scan`, `namesLong`.
+- [core/shell/shellClassifier/rules/readOnly/ScannedArgs.md](core/shell/shellClassifier/rules/readOnly/ScannedArgs.md): scanned options and operands; has `valuesOf`, `hasOption`.
+- [core/shell/shellClassifier/rules/readOnly/OptionHazard.md](core/shell/shellClassifier/rules/readOnly/OptionHazard.md): declarative dangerous option with an effect; has `findIn`, `describe`.
+- [core/shell/shellClassifier/rules/readOnly/SharedHazards.md](core/shell/shellClassifier/rules/readOnly/SharedHazards.md): hazards shared across utilities and cmdlets; has `OUTPUT_FILE`, `PAGER_PROGRAM`, `POWERSHELL_COMMON`.
+- [core/shell/shellClassifier/rules/readOnly/CommandProfile.md](core/shell/shellClassifier/rules/readOnly/CommandProfile.md): base for read-only command profiles; has `judge`.
+- [core/shell/shellClassifier/rules/readOnly/UtilityProfile.md](core/shell/shellClassifier/rules/readOnly/UtilityProfile.md): per-utility capability profile; has `plain`, `judge`.
+- [core/shell/shellClassifier/rules/readOnly/PredicateProfile.md](core/shell/shellClassifier/rules/readOnly/PredicateProfile.md): profile decided by one argument test; has `never`, `always`, `judge`.
+- [core/shell/shellClassifier/rules/readOnly/ReadOnlyCatalog.md](core/shell/shellClassifier/rules/readOnly/ReadOnlyCatalog.md): base catalog of profiles by name; has `knows`, `names`, `judge`.
+- [core/shell/shellClassifier/rules/readOnly/ProfileGroup.md](core/shell/shellClassifier/rules/readOnly/ProfileGroup.md): base for static profile groups; has `profiles`.
+- [core/shell/shellClassifier/rules/readOnly/SedScript.md](core/shell/shellClassifier/rules/readOnly/SedScript.md): finds writing and executing sed script commands; has `hazardIn`.
+- [core/shell/shellClassifier/rules/readOnly/AwkProgram.md](core/shell/shellClassifier/rules/readOnly/AwkProgram.md): finds awk constructs that write or run commands; has `hazardIn`.
+- [core/shell/shellClassifier/rules/readOnly/PlainReaderProfiles.md](core/shell/shellClassifier/rules/readOnly/PlainReaderProfiles.md): utilities that never write, grouped by what they inspect; has `GROUPS`, `profiles`.
+- [core/shell/shellClassifier/rules/readOnly/SearchToolProfiles.md](core/shell/shellClassifier/rules/readOnly/SearchToolProfiles.md): find, rg, fd and ag with their exec and write options; has `profiles`.
+- [core/shell/shellClassifier/rules/readOnly/StreamEditorProfiles.md](core/shell/shellClassifier/rules/readOnly/StreamEditorProfiles.md): sed, awk, sort, uniq and yq; has `profiles`.
+- [core/shell/shellClassifier/rules/readOnly/ViewerProfiles.md](core/shell/shellClassifier/rules/readOnly/ViewerProfiles.md): less, man, info, tldr, bat, tree, file, xxd and base64; has `profiles`.
+- [core/shell/shellClassifier/rules/readOnly/NetworkProfiles.md](core/shell/shellClassifier/rules/readOnly/NetworkProfiles.md): curl, ping, ss, ifconfig and ip; has `profiles`.
+- [core/shell/shellClassifier/rules/readOnly/SystemQueryProfiles.md](core/shell/shellClassifier/rules/readOnly/SystemQueryProfiles.md): query forms of date, hostname, sysctl, nvidia-smi and similar; has `profiles`.
+- [core/shell/shellClassifier/rules/readOnly/ShellBuiltinProfiles.md](core/shell/shellClassifier/rules/readOnly/ShellBuiltinProfiles.md): listing forms of shell builtins; has `profiles`.
+- [core/shell/shellClassifier/rules/readOnly/PosixUtilityCatalog.md](core/shell/shellClassifier/rules/readOnly/PosixUtilityCatalog.md): catalog of every POSIX profile group; has `GROUPS`, `judge`.
+- [core/shell/shellClassifier/rules/readOnly/PowerShellVerbPolicy.md](core/shell/shellClassifier/rules/readOnly/PowerShellVerbPolicy.md): trusts cmdlets by read verb minus exceptions and write parameters; has `judge`, `hasReadVerb`.
+- [core/shell/shellClassifier/rules/readOnly/PowerShellCmdletCatalog.md](core/shell/shellClassifier/rules/readOnly/PowerShellCmdletCatalog.md): PowerShell aliases and non-verb readers, then the verb policy; has `judge`.
+- [core/shell/shellClassifier/rules/readOnly/CmdBuiltinCatalog.md](core/shell/shellClassifier/rules/readOnly/CmdBuiltinCatalog.md): cmd builtins and Windows reporting tools with slash-switch hazards; has `judge`.
+- [core/shell/shellClassifier/rules/readOnly/ToolchainCatalog.md](core/shell/shellClassifier/rules/readOnly/ToolchainCatalog.md): version, list and inspect forms of toolchains and admin tools; has `judge`.
+- [core/shell/shellClassifier/rules/packages/ToolArgs.md](core/shell/shellClassifier/rules/packages/ToolArgs.md): parsed view of a tool's words and options; has `words`, `hasOption`, `valuesOf`, `pathStarts`.
+- [core/shell/shellClassifier/rules/packages/VerbTable.md](core/shell/shellClassifier/rules/packages/VerbTable.md): declarative tool + words -> effect table and its matcher; has `match`, `has`, `tools`, `effects`, `oneOf`.
+- [core/shell/shellClassifier/rules/packages/ToolFamily.md](core/shell/shellClassifier/rules/packages/ToolFamily.md): base class for the package-rule tool families; has `buildTable`, `handles`, `findRisk`, `tableKey`.
+- [core/shell/shellClassifier/rules/packages/RiskEffect.md](core/shell/shellClassifier/rules/packages/RiskEffect.md): consequence vocabulary and approval-card sentences; has `reasonFor`, `isKnown`.
+- [core/shell/shellClassifier/rules/packages/PreviewFlags.md](core/shell/shellClassifier/rules/packages/PreviewFlags.md): recognizes --dry-run / -WhatIf rehearsals; has `rehearses`.
+- [core/shell/shellClassifier/rules/packages/DestructiveSql.md](core/shell/shellClassifier/rules/packages/DestructiveSql.md): names bulk-destructive SQL, CQL and Mongo statements; has `find`.
+- [core/shell/shellClassifier/rules/packages/RegistryTools.md](core/shell/shellClassifier/rules/packages/RegistryTools.md): language package managers and their registries; a ToolFamily.
+- [core/shell/shellClassifier/rules/packages/ContainerTools.md](core/shell/shellClassifier/rules/packages/ContainerTools.md): docker, podman, nerdctl and compose; a ToolFamily.
+- [core/shell/shellClassifier/rules/packages/ClusterTools.md](core/shell/shellClassifier/rules/packages/ClusterTools.md): kubectl, oc and helm; a ToolFamily.
+- [core/shell/shellClassifier/rules/packages/CloudTools.md](core/shell/shellClassifier/rules/packages/CloudTools.md): cloud provider CLIs and hosting platforms; a ToolFamily.
+- [core/shell/shellClassifier/rules/packages/InfrastructureTools.md](core/shell/shellClassifier/rules/packages/InfrastructureTools.md): Terraform/OpenTofu, Terragrunt, Pulumi, CDK, SST, Serverless, Vagrant; a ToolFamily.
+- [core/shell/shellClassifier/rules/packages/DatabaseShellTools.md](core/shell/shellClassifier/rules/packages/DatabaseShellTools.md): database shells and redis-cli; has `findRisk`.
+- [core/shell/shellClassifier/rules/packages/SchemaTools.md](core/shell/shellClassifier/rules/packages/SchemaTools.md): database utilities and migration tools; a ToolFamily.
+- [core/shell/shellClassifier/rules/packages/CmdletTools.md](core/shell/shellClassifier/rules/packages/CmdletTools.md): PowerShell Gallery publishing and Az / AWS Tools removals; has `tableKey`.
+- [core/shell/AddonClient.md](core/shell/AddonClient.md): signed lumabyte.com add-on catalog client; has `listAddons`, `downloadAddon`.
+- [core/shell/ApiSecurity.md](core/shell/ApiSecurity.md): /api origin policy and API key store; has `middleware`, `isValidKey`, `getConfig`, `setNetworkMode`, `setWhitelist`, `createKey`, `deleteKey`.
+- [core/shell/api-security/ApiSecurityConfig.md](core/shell/api-security/ApiSecurityConfig.md): stored API security policy and defaults; has `normalize`, `defaults`.
+- [core/shell/api-security/IpWhitelist.md](core/shell/api-security/IpWhitelist.md): whitelist IP and CIDR matching; has `matches`, `isValidEntry`.
+- [core/shell/api-security/ApiKeyEntry.md](core/shell/api-security/ApiKeyEntry.md): API key entries and reading keys from headers; has `create`, `refreshed`, `relabeled`, `fromHeaders`.
+- [core/shell/CodeSearch.md](core/shell/CodeSearch.md): project grep, find and listDir, ripgrep first with a Node fallback; has `grep`, `find`, `listDir`.
+- [core/shell/GlobPattern.md](core/shell/GlobPattern.md): glob to regex, shared by CodeSearch and GitignoreFilter; has `toSource`, `toRegExp`.
+- [core/shell/code-search/ProjectWalker.md](core/shell/code-search/ProjectWalker.md): async project walk honouring skip dirs and .gitignore; has `walk`.
+- [core/shell/code-search/FileGrep.md](core/shell/code-search/FileGrep.md): searches one file, skipping binary and oversized files; has `search`.
+- [core/shell/code-search/SearchQuery.md](core/shell/code-search/SearchQuery.md): reads search options the same way for every backend; has `pattern`, `fileFilter`, `grepLimit`.
+- [core/shell/code-search/ContainerCodeSearch.md](core/shell/code-search/ContainerCodeSearch.md): in-container find and grep; has `find`, `grep`.
+- [core/shell/ContextMenu.md](core/shell/ContextMenu.md): app-wide right-click menu on every webContents; has `install`, `attach`.
+- [core/shell/context-menu/ImageSrcRecovery.md](core/shell/context-menu/ImageSrcRecovery.md): recovers an image src Chromium withheld; has `isNeeded`, `recover`.
+- [core/shell/context-menu/MenuTab.md](core/shell/context-menu/MenuTab.md): the tab behind a webContents and its actions; has `resolve`, `goBack`, `goForward`, `reload`, `openInNewTab`.
+- [core/shell/context-menu/ContextMenuTemplate.md](core/shell/context-menu/ContextMenuTemplate.md): builds the Chrome-style context menu items; has `build`.
+- [core/shell/DetachedProcesses.md](core/shell/DetachedProcesses.md): registry of agent commands that outlive the detach deadline; has `register`, `status`, `list`, `tail`, `kill`.
+- [core/shell/detached-processes/DetachedProcess.md](core/shell/detached-processes/DetachedProcess.md): one detached command that settles exactly once; has `watch`, `view`, `kill`.
+- [core/shell/detached-processes/LogTail.md](core/shell/detached-processes/LogTail.md): bounded log tail; has `read`.
+- [core/shell/harness-connections/connectors/HarnessConnector.md](core/shell/harness-connections/connectors/HarnessConnector.md): base class for coding-harness connectors that describe their settings as a plan; has `configFiles`, `plan`, `inspect`, `owns`, `legacyPriors`.
+- [core/shell/harness-connections/connectors/ClaudeCodeConnector.md](core/shell/harness-connections/connectors/ClaudeCodeConnector.md): connects Claude Code to LumaBrowser; has `plan`, `inspect`, `legacyPriors`.
+- [core/shell/harness-connections/connectors/CodexConnector.md](core/shell/harness-connections/connectors/CodexConnector.md): connects Codex to LumaBrowser over the Responses wire API (and upgrades chat-era tables); has `plan`, `inspect`, `legacyPriors`.
+- [core/shell/harness-connections/connectors/OpenCodeConnector.md](core/shell/harness-connections/connectors/OpenCodeConnector.md): connects OpenCode to LumaBrowser; has `plan`, `inspect`, `legacyPriors`.
+- [core/shell/harness-connections/connectors/ClineConnector.md](core/shell/harness-connections/connectors/ClineConnector.md): connects Cline to LumaBrowser; has `plan`, `inspect`, `legacyPriors`.
+- [core/shell/shellClassifier/ShellClassifier.md](core/shell/shellClassifier/ShellClassifier.md): sorts a shell command line into readonly, normal, mass-destructive or forbidden; has `classify`.
+- [core/shell/shellClassifier/ShellWriteBoundary.md](core/shell/shellClassifier/ShellWriteBoundary.md): checks whether a command line's writes stay inside allowed roots; has `check`.
+- [core/shell/shellClassifier/ShellTier.md](core/shell/shellClassifier/ShellTier.md): shell classifier tiers on a mildest-to-harshest ladder; has `severity`, `compare`, `harshest`, `worst`, `isWorse`, `isAtLeast`, `sortWorstFirst`.
+- [core/shell/shellClassifier/ShellCommandName.md](core/shell/shellClassifier/ShellCommandName.md): bare lowercase program name from a command word; has `base`.
+- [core/shell/shellClassifier/CommandSubstitution.md](core/shell/shellClassifier/CommandSubstitution.md): finds $(...), <(...) and backquote substitutions with spans and nesting; has `extract`, `extractAll`, `locate`.
+- [core/shell/shellClassifier/ShellWrapper.md](core/shell/shellClassifier/ShellWrapper.md): unwraps bash -c, cmd /c, powershell -Command, sudo and similar; has `unwrap`, `opaque`.
+- [core/shell/shellClassifier/PassthroughArgs.md](core/shell/shellClassifier/PassthroughArgs.md): strips a pass-through wrapper's own options; has `isPassthrough`, `strip`.
+- [core/shell/shellClassifier/PipeToShell.md](core/shell/shellClassifier/PipeToShell.md): judges pipes into shells and interpreters; has `assess`.
+- [core/shell/shellClassifier/WorkingDirectoryTracker.md](core/shell/shellClassifier/WorkingDirectoryTracker.md): follows cd, pushd and popd through a command line; has `change`, `resolve`, `cwd`.
+- [core/shell/shellClassifier/WritePathScope.md](core/shell/shellClassifier/WritePathScope.md): allowed write roots plus temp dirs; has `allows`, `normalize`.
+- [core/shell/shellClassifier/ShellPathExpander.md](core/shell/shellClassifier/ShellPathExpander.md): expands environment variables and ~ in path words; has `expand`, `hasUnresolvedVariable`.
+- [core/shell/CommandRunner.md](core/shell/CommandRunner.md): the coding agent's shell, bounded in time, output size and process lifetime; has `run`, `resolveShell`, `psScript`.
+- [core/shell/command-runner/CommandRun.md](core/shell/command-runner/CommandRun.md): one spawned command from start to result; has `start`.
+- [core/shell/command-runner/OutputCapture.md](core/shell/command-runner/OutputCapture.md): capped command output with a spill file; has `push`, `detach`, `snapshot`, `finish`.
+- [core/shell/command-runner/LocalShells.md](core/shell/command-runner/LocalShells.md): PowerShell, bash and sh descriptors and probes; has `probeWindows`, `probePosix`, `findGitBash`.
+- [core/shell/command-runner/ShellResolver.md](core/shell/command-runner/ShellResolver.md): picks the shell once per kind; has `resolve`, `forContainer`.
+- [core/shell/command-runner/RunResult.md](core/shell/command-runner/RunResult.md): command run result shapes; has `failed`, `finished`, `detached`.
+- [core/shell/command-runner/ProcessTreeKiller.md](core/shell/command-runner/ProcessTreeKiller.md): kills a command's whole process tree; has `kill`.
+- [core/shell/harness-connections/HarnessConnections.md](core/shell/harness-connections/HarnessConnections.md): connects Claude Code, Codex, OpenCode and Cline to LumaBrowser with exact undo; has `list`, `preview`, `connect`, `disconnect`, `writeSkills`, `skillStatus`.
+- [core/shell/ShellIpcHandlers.md](core/shell/ShellIpcHandlers.md): IPC controller for extensions, add-ons, the editor, links and licenses; has `register`.
+- [core/shell/extension-admin/ExtensionZipInstaller.md](core/shell/extension-admin/ExtensionZipInstaller.md): installs an extension zip and activates it; has `install`.
+- [core/shell/extension-admin/AddonCatalog.md](core/shell/extension-admin/AddonCatalog.md): the lumabyte.com add-on list and download-install; has `list`, `downloadAndInstall`.
+- [core/shell/extension-admin/ExtensionExporter.md](core/shell/extension-admin/ExtensionExporter.md): zips an extension for sharing; has `export`.
+- [core/shell/extension-admin/ExtensionTemplate.md](core/shell/extension-admin/ExtensionTemplate.md): scaffolds a new extension folder; has `create`.
+- [core/shell/extension-admin/ExtensionSourceFiles.md](core/shell/extension-admin/ExtensionSourceFiles.md): extension editor file list, read and write; has `list`, `read`, `write`.
+- [core/shell/extension-admin/ExtensionEditorHints.md](core/shell/extension-admin/ExtensionEditorHints.md): autocomplete data and hints for the extension editor; has `build`.
+- [core/shell/extension-admin/ExternalUrl.md](core/shell/extension-admin/ExternalUrl.md): allowlist for opening external links; has `refusal`.
+- [core/shell/extension-admin/AppLicenseInfo.md](core/shell/extension-admin/AppLicenseInfo.md): the About page's license texts and version; has `read`.
+- [core/shell/CodeWorkspace.md](core/shell/CodeWorkspace.md): the coding agent's sandboxed workspace; has `openProject`, `createWorkspace`, `writeFile`, `editFile`, `readFile`, `grep`, `find`, `listDir`, `projectMap`, `runCommand`.
+- [core/shell/code-workspace/WorkspacePaths.md](core/shell/code-workspace/WorkspacePaths.md): workspace path containment, including container paths; has `resolve`, `resolveDir`, `relative`.
+- [core/shell/code-workspace/WorkspaceRegistry.md](core/shell/code-workspace/WorkspaceRegistry.md): open workspaces by id; has `add`, `get`, `find`, `remove`.
+- [core/shell/code-workspace/ReadGuard.md](core/shell/code-workspace/ReadGuard.md): read-before-mutate guard; has `observe`, `refusal`, `forgetUnder`.
+- [core/shell/code-workspace/WorkspaceMutations.md](core/shell/code-workspace/WorkspaceMutations.md): queued, guarded workspace writes and edits; has `writeText`, `writeBytes`, `edit`.
+- [core/shell/code-workspace/ManifestSanity.md](core/shell/code-workspace/ManifestSanity.md): pre-flight check of a built extension's manifest; has `check`.
+- [core/shell/code-workspace/WorkspaceFileList.md](core/shell/code-workspace/WorkspaceFileList.md): recursive workspace file listing; has `collect`.
+- [core/shell/code-workspace/CommandCwd.md](core/shell/code-workspace/CommandCwd.md): contained working directory for run_command; has `resolve`.
+- [core/shell/SettingsIpcHandlers.md](core/shell/SettingsIpcHandlers.md): IPC controller for the Settings screens; has `register`.
+- [core/shell/settings/OptionalServiceCall.md](core/shell/settings/OptionalServiceCall.md): one reply shape for launcher and IDE integration calls; has `run`.
+- [core/shell/settings/ApiServerSettings.md](core/shell/settings/ApiServerSettings.md): REST and MCP port and on/off settings; has `getApiPort`, `setApiPort`, `getApiEnabled`, `getMcpEnabled`.
+- [core/shell/settings/OnboardingPersona.md](core/shell/settings/OnboardingPersona.md): first-run persona; has `get`, `set`.
+- [core/shell/settings/AppPreferences.md](core/shell/settings/AppPreferences.md): update checks, bookmarks bar and DNS provider; has getters and setters.
+- [core/shell/settings/StartupSettings.md](core/shell/settings/StartupSettings.md): run on startup and start hidden; has `getRunOnStartup`, `setRunOnStartup`, `setStartHidden`.
+- [core/shell/settings/McpServerEntry.md](core/shell/settings/McpServerEntry.md): MCP server entry and config export; has `build`, `clientConfig`, `exportConfig`.
+- [core/shell/settings/AgentHarnessSettings.md](core/shell/settings/AgentHarnessSettings.md): connect your coding agent settings; has `list`, `connect`, `disconnect`, `preview`, `writeSkills`.
+- [core/shell/settings/EndpointSettings.md](core/shell/settings/EndpointSettings.md): disabled API groups and tools; has `getAvailable`, `setConfig`.
+- [core/shell/settings/SetupCompletion.md](core/shell/settings/SetupCompletion.md): first-run wizard record; has `get`, `complete`, `reset`.
+- [core/shell/settings/WebhookTester.md](core/shell/settings/WebhookTester.md): wizard test webhook; has `test`.
+- [core/shell/settings/SettingsGuides.md](core/shell/settings/SettingsGuides.md): reads the in-app guides; has `read`.
+- [core/shell/settings/ApiSecuritySettings.md](core/shell/settings/ApiSecuritySettings.md): API security settings with key masking; has `getConfig`, `revealKey`, `createKey`, `deleteKey`.
+- [core/shell/ui/luma-modal.md](core/shell/ui/luma-modal.md): the themed replacement for `window.alert`, `confirm` and `prompt`.
+- [core/shell/ui/extension-editor/EditorBridge.md](core/shell/ui/extension-editor/EditorBridge.md): the editor's only IPC: `listFiles()`, `readFile(name)`, `writeFile(name, content)` (`core.shell.listExtensionFiles/readExtensionFile/writeExtensionFile` with the folder) and `autocompleteData(extensionId)` (`core.shell.getExtensionAutocompleteData`).
+- [core/shell/ui/extension-editor/EditorFiles.md](core/shell/ui/extension-editor/EditorFiles.md): open files, one Monaco model each (URI `<dir>/<file>`).
+- [core/shell/ui/extension-editor/EditorMonaco.md](core/shell/ui/extension-editor/EditorMonaco.md): - `EditorMonaco.load(win)`: Monaco's AMD loader taken with Node's require (`monaco-editor/min/vs/loader.js`), `vs` at `node_modules/monaco-editor/min/vs` relative to the page folder; resolves `window.monaco`.
+- [core/shell/ui/extension-editor/EditorStatus.md](core/shell/ui/extension-editor/EditorStatus.md): the toolbar status: `show(text)`, `error(text)` (red), `note(text)` (keeps the colour).
+- [core/shell/ui/extension-editor/ExtensionEditor.md](core/shell/ui/extension-editor/ExtensionEditor.md): `core/shell/ui/extension-editor/ExtensionEditor.js` (started by `entry.js`).
+- [core/shell/ui/extension-editor/ExtensionEditorUi.md](core/shell/ui/extension-editor/ExtensionEditorUi.md): `core/shell/ui/extension-editor/` (page: `core/shell/extension-editor.html`, opened by ShellIpcHandlers).
+- [core/shell/ui/extension-editor/FileTree.md](core/shell/ui/extension-editor/FileTree.md): - `render(files, onOpen)`: one `.file-item` per file (text and title).
+- [core/shell/ui/extension-editor/completions/CompletionKinds.md](core/shell/ui/extension-editor/completions/CompletionKinds.md): `CompletionKinds.map(monaco, kind)`: the autocomplete data's numeric kinds to Monaco's CompletionItemKind (Property when unknown).
+- [core/shell/ui/extension-editor/completions/CompletionProvider.md](core/shell/ui/extension-editor/completions/CompletionProvider.md): - `new CompletionProvider(monaco, { data, extensionId, currentFile })`, `register()` (javascript, trigger characters `.
+- [core/shell/ui/extension-editor/completions/CompletionSource.md](core/shell/ui/extension-editor/completions/CompletionSource.md): base class of the editor's autocomplete sources.
+- [core/shell/ui/extension-editor/completions/ContextPropertyCompletions.md](core/shell/ui/extension-editor/completions/ContextPropertyCompletions.md): after `context.`: `data.contextProperties` by prefix, as snippets.
+- [core/shell/ui/extension-editor/completions/CssClassCompletions.md](core/shell/ui/extension-editor/completions/CssClassCompletions.md): `data.cssClasses` for the word being typed in .css/.html files, and inside `class="` in .js files.
+- [core/shell/ui/extension-editor/completions/DependencyShortcutCompletions.md](core/shell/ui/extension-editor/completions/DependencyShortcutCompletions.md): after `<camelCaseId>.` for an `ext:` dependency in `data.contextHints`: that extension's methods, inserted as `name()`.
+- [core/shell/ui/extension-editor/completions/ExtensionApiCompletions.md](core/shell/ui/extension-editor/completions/ExtensionApiCompletions.md): after `context.extensions.`: the active extension ids from `data.extensionApis` (detail: name, docs: description or "Extension: <id>").
+- [core/shell/ui/extension-editor/completions/RendererContextCompletions.md](core/shell/ui/extension-editor/completions/RendererContextCompletions.md): in renderer.js after `context.`: `data.rendererContext` (in addition to the main-process context properties, as in legacy).
+- [core/shell/ui/extension-editor/completions/ServiceMethodCompletions.md](core/shell/ui/extension-editor/completions/ServiceMethodCompletions.md): after `db.`, `browser.`, `llm.`, `ipc.`, `events.`, `logger.` or `sharedServices.`: method names parsed from that property's documentation (`ServiceMethodCompletions.methodLines`: lines after "Methods:" up to a blank line or "Properties:", each `name(` or `name -`), inserted as `name()`.
+- [core/shell/ui/extension-editor/completions/SlotNameCompletions.md](core/shell/ui/extension-editor/completions/SlotNameCompletions.md): in renderer.js inside `slotManager.register("`: the six UI slots (`SLOTS`) matching the typed name; the item's range covers the whole typed name.
+- [core/shell/ui/slots/DockPanel.md](core/shell/ui/slots/DockPanel.md): `core/shell/ui/slots/DockPanel.js` (ES module).
+- [core/shell/ui/slots/ManifestUi.md](core/shell/ui/slots/ManifestUi.md): `core/shell/ui/slots/ManifestUi.js` (ES module).
+- [core/shell/ui/slots/ToolbarButton.md](core/shell/ui/slots/ToolbarButton.md): `core/shell/ui/slots/ToolbarButton.js` (ES module).
+- [core/shell/ui/slots/UISlotManager.md](core/shell/ui/slots/UISlotManager.md): `core/shell/ui/slots/UISlotManager.js` (ES module).
+- [core/shell/ui/extensions/ExtensionInstallEvents.md](core/shell/ui/extensions/ExtensionInstallEvents.md): `core/shell/ui/extensions/ExtensionInstallEvents.js` (ES module).
+- [core/shell/ui/extensions/ExtensionMetaStore.md](core/shell/ui/extensions/ExtensionMetaStore.md): `core/shell/ui/extensions/ExtensionMetaStore.js` (ES module).
+- [core/shell/ui/extensions/ExtensionRendererHost.md](core/shell/ui/extensions/ExtensionRendererHost.md): `core/shell/ui/extensions/ExtensionRendererHost.js` (ES module).
+- [core/shell/ui/extensions/RendererGlobal.md](core/shell/ui/extensions/RendererGlobal.md): `core/shell/ui/extensions/RendererGlobal.js` (ES module).
+- [core/shell/ui/extensions/RendererScriptLoader.md](core/shell/ui/extensions/RendererScriptLoader.md): `core/shell/ui/extensions/RendererScriptLoader.js` (ES module).
+- [core/shell/ui/settings/AboutPanel.md](core/shell/ui/settings/AboutPanel.md): `core/shell/ui/settings/AboutPanel.js` (ES module).
+- [core/shell/ui/settings/ActionPromptModal.md](core/shell/ui/settings/ActionPromptModal.md): `core/shell/ui/settings/ActionPromptModal.js` (ES module).
+- [core/shell/ui/settings/AddonsBrowser.md](core/shell/ui/settings/AddonsBrowser.md): `core/shell/ui/settings/AddonsBrowser.js` (ES module).
+- [core/shell/ui/settings/ChromeExtensionsPanel.md](core/shell/ui/settings/ChromeExtensionsPanel.md): `core/shell/ui/settings/ChromeExtensionsPanel.js` (ES module).
+- [core/shell/ui/settings/ExtensionConfigHeader.md](core/shell/ui/settings/ExtensionConfigHeader.md): `core/shell/ui/settings/ExtensionConfigHeader.js` (ES module).
+- [core/shell/ui/settings/ExtensionConfigView.md](core/shell/ui/settings/ExtensionConfigView.md): `core/shell/ui/settings/ExtensionConfigView.js` (ES module).
+- [core/shell/ui/settings/ExtensionFileActions.md](core/shell/ui/settings/ExtensionFileActions.md): `core/shell/ui/settings/ExtensionFileActions.js` (ES module).
+- [core/shell/ui/settings/ExtensionRow.md](core/shell/ui/settings/ExtensionRow.md): `core/shell/ui/settings/ExtensionRow.js` (ES module).
+- [core/shell/ui/settings/ExtensionSettingsRegistry.md](core/shell/ui/settings/ExtensionSettingsRegistry.md): holds each extension's settings page, hidden for Configure or visible in its own tab's section; has `register`, `registerInSection`, `get`, `byTab`, `remove`, `setCallback`.
+- [core/shell/ui/settings/ExtensionsActionBar.md](core/shell/ui/settings/ExtensionsActionBar.md): `core/shell/ui/settings/ExtensionsActionBar.js` (ES module).
+- [core/shell/ui/settings/ExtensionsListView.md](core/shell/ui/settings/ExtensionsListView.md): `core/shell/ui/settings/ExtensionsListView.js` (ES module).
+- [core/shell/ui/settings/ManifestCopy.md](core/shell/ui/settings/ManifestCopy.md): `core/shell/ui/settings/ManifestCopy.js` (ES module).
+- [core/shell/ui/settings/SettingsScreens.md](core/shell/ui/settings/SettingsScreens.md): wires the Settings Extensions and About screens and places each extension's settings page (hidden under Extensions, or its own top-level tab); has `init`, `switchTab`, `registerPage`, `unregisterPage`, `tabOf`.
+- [core/shell/ui/settings/SettingsTabs.md](core/shell/ui/settings/SettingsTabs.md): the Settings tab strip: Extensions and About, their subtabs, the top-level tabs extensions ask for, and switching; has `init`, `switchTab`, `switchSubtab`, `addExtensionTab`, `removeExtensionTab`.
+- [core/shell/ui/settings/ShellHooks.md](core/shell/ui/settings/ShellHooks.md): `core/shell/ui/settings/ShellHooks.js` (ES module).
+- [core/shell/ui/settings/TelemetryPanel.md](core/shell/ui/settings/TelemetryPanel.md): `core/shell/ui/settings/TelemetryPanel.js` (ES module).
+- [core/shell/ui/settings/UpdateControls.md](core/shell/ui/settings/UpdateControls.md): `core/shell/ui/settings/UpdateControls.js` (ES module).
+- [core/shell/ui/wizard/ModalGuard.md](core/shell/ui/wizard/ModalGuard.md): `core/shell/ui/wizard/ModalGuard.js` (ES module).
+- [core/shell/ui/wizard/PlanText.md](core/shell/ui/wizard/PlanText.md): `core/shell/ui/wizard/PlanText.js` (ES module).
+- [core/shell/ui/wizard/ProgressPane.md](core/shell/ui/wizard/ProgressPane.md): `core/shell/ui/wizard/ProgressPane.js` (ES module).
+- [core/shell/ui/wizard/SetupWizard.md](core/shell/ui/wizard/SetupWizard.md): `core/shell/ui/wizard/SetupWizard.js` (ES module).
+- [core/shell/ui/wizard/WizardApis.md](core/shell/ui/wizard/WizardApis.md): `core/shell/ui/wizard/WizardApis.js` (ES module).
+- [core/shell/ui/wizard/WizardFinisher.md](core/shell/ui/wizard/WizardFinisher.md): `core/shell/ui/wizard/WizardFinisher.js` (ES module).
+- [core/shell/ui/wizard/WizardLanding.md](core/shell/ui/wizard/WizardLanding.md): `core/shell/ui/wizard/WizardLanding.js` (ES module).
+- [core/shell/ui/wizard/WizardPersonas.md](core/shell/ui/wizard/WizardPersonas.md): `core/shell/ui/wizard/WizardPersonas.js` (ES module).
+- [core/shell/ui/wizard/WizardState.md](core/shell/ui/wizard/WizardState.md): `core/shell/ui/wizard/WizardState.js` (ES module).
+- [core/shell/ui/wizard/WizardSteps.md](core/shell/ui/wizard/WizardSteps.md): `core/shell/ui/wizard/WizardSteps.js` (ES module).
+- [core/shell/ui/wizard/WorkflowPresets.md](core/shell/ui/wizard/WorkflowPresets.md): `core/shell/ui/wizard/WorkflowPresets.js` (ES module).
+- [core/shell/ui/wizard/auto/AutoPlanPane.md](core/shell/ui/wizard/auto/AutoPlanPane.md): `core/shell/ui/wizard/auto/AutoPlanPane.js` (ES module).
+- [core/shell/ui/wizard/auto/AutoQuestionPanes.md](core/shell/ui/wizard/auto/AutoQuestionPanes.md): `core/shell/ui/wizard/auto/AutoQuestionPanes.js` (ES module).
+- [core/shell/ui/wizard/auto/AutoRunner.md](core/shell/ui/wizard/auto/AutoRunner.md): `core/shell/ui/wizard/auto/AutoRunner.js` (ES module).
+- [core/shell/ui/wizard/auto/AutoStatusPanes.md](core/shell/ui/wizard/auto/AutoStatusPanes.md): `core/shell/ui/wizard/auto/AutoStatusPanes.js` (ES module).
+- [core/shell/ui/wizard/image/ImageAskPane.md](core/shell/ui/wizard/image/ImageAskPane.md): `core/shell/ui/wizard/image/ImageAskPane.js` (ES module).
+- [core/shell/ui/wizard/image/ImageRecommendPane.md](core/shell/ui/wizard/image/ImageRecommendPane.md): `core/shell/ui/wizard/image/ImageRecommendPane.js` (ES module).
+- [core/shell/ui/wizard/image/ImageRunner.md](core/shell/ui/wizard/image/ImageRunner.md): `core/shell/ui/wizard/image/ImageRunner.js` (ES module).
+- [core/shell/ui/wizard/image/ImageStatusPanes.md](core/shell/ui/wizard/image/ImageStatusPanes.md): `core/shell/ui/wizard/image/ImageStatusPanes.js` (ES module).
+- [core/shell/ui/wizard/llm/LlmExistingPane.md](core/shell/ui/wizard/llm/LlmExistingPane.md): `core/shell/ui/wizard/llm/LlmExistingPane.js` (ES module).
+- [core/shell/ui/wizard/llm/LlmLocalRunner.md](core/shell/ui/wizard/llm/LlmLocalRunner.md): `core/shell/ui/wizard/llm/LlmLocalRunner.js` (ES module).
+- [core/shell/ui/wizard/llm/LlmLocalStatusPanes.md](core/shell/ui/wizard/llm/LlmLocalStatusPanes.md): `core/shell/ui/wizard/llm/LlmLocalStatusPanes.js` (ES module).
+- [core/shell/ui/wizard/llm/LlmQuestionsPane.md](core/shell/ui/wizard/llm/LlmQuestionsPane.md): `core/shell/ui/wizard/llm/LlmQuestionsPane.js` (ES module).
+- [core/shell/ui/wizard/llm/LlmRecommendPane.md](core/shell/ui/wizard/llm/LlmRecommendPane.md): `core/shell/ui/wizard/llm/LlmRecommendPane.js` (ES module).
+- [core/shell/ui/wizard/llm/LlmRemotePane.md](core/shell/ui/wizard/llm/LlmRemotePane.md): `core/shell/ui/wizard/llm/LlmRemotePane.js` (ES module).
+- [core/shell/ui/wizard/steps/AutoStep.md](core/shell/ui/wizard/steps/AutoStep.md): `core/shell/ui/wizard/steps/AutoStep.js` (ES module).
+- [core/shell/ui/wizard/steps/DoneStep.md](core/shell/ui/wizard/steps/DoneStep.md): `core/shell/ui/wizard/steps/DoneStep.js` (ES module).
+- [core/shell/ui/wizard/steps/FeaturesStep.md](core/shell/ui/wizard/steps/FeaturesStep.md): `core/shell/ui/wizard/steps/FeaturesStep.js` (ES module).
+- [core/shell/ui/wizard/steps/ImageStep.md](core/shell/ui/wizard/steps/ImageStep.md): `core/shell/ui/wizard/steps/ImageStep.js` (ES module).
+- [core/shell/ui/wizard/steps/LlmStep.md](core/shell/ui/wizard/steps/LlmStep.md): `core/shell/ui/wizard/steps/LlmStep.js` (ES module).
+- [core/shell/ui/wizard/steps/PersonaStep.md](core/shell/ui/wizard/steps/PersonaStep.md): `core/shell/ui/wizard/steps/PersonaStep.js` (ES module).
+- [core/shell/ui/wizard/steps/WebhookStep.md](core/shell/ui/wizard/steps/WebhookStep.md): `core/shell/ui/wizard/steps/WebhookStep.js` (ES module).
+- [core/shell/ui/wizard/steps/WizardStepView.md](core/shell/ui/wizard/steps/WizardStepView.md): `core/shell/ui/wizard/steps/WizardStepView.js` (ES module).
+- [core/shell/ui/wizard/steps/WorkflowStep.md](core/shell/ui/wizard/steps/WorkflowStep.md): `core/shell/ui/wizard/steps/WorkflowStep.js` (ES module).
+- [core/shell/ui/IPCBridgeRenderer.md](core/shell/ui/IPCBridgeRenderer.md): extension-scoped renderer IPC; has `forExtension`.
+- [core/shell/extension-editor-preload.md](core/shell/extension-editor-preload.md): sandboxed preload of the extension editor window, a single file; exposes `window.extensionEditorAPI` with `listFiles`, `readFile`, `writeFile`, `autocompleteData`.
+- [core/shell/extension-admin/ExtensionEditorWindows.md](core/shell/extension-admin/ExtensionEditorWindows.md): opens isolated, sandboxed editor windows and scopes editor IPC to the sending window's extension folder; has `options`, `open`, `sessionOf`.
+- [core/shell/extension-admin/ExtensionFolderResolver.md](core/shell/extension-admin/ExtensionFolderResolver.md): extension id to real folder from main's records; has `resolve`.
+
+## core/activity-log
+
+- [core/activity-log/ActivityLogService.md](core/activity-log/ActivityLogService.md): the universal activity logger (entries and spans), off by default; has `log`, `startSpan`, `finishSpan`, `span`, `forCaller`, `getEntries`, `prune`, `destroy`.
+- [core/activity-log/ActivityLogSettings.md](core/activity-log/ActivityLogSettings.md): the activity log's saved settings; has `snapshot`, `apply`, `isCallerEnabled`, `pruneLimits`.
+- [core/activity-log/ActivityLogSpanContext.md](core/activity-log/ActivityLogSpanContext.md): the context a span callback receives so child entries nest; has `log`, `span`, `update`.
+- [core/activity-log/ActivityLogCallerLogger.md](core/activity-log/ActivityLogCallerLogger.md): a logger bound to one caller (`context.logger`); has `log`, `span`, `info`, `warn`, `error`, `debug`.
+- [core/activity-log/ActivityLogStore.md](core/activity-log/ActivityLogStore.md): SQLite repository for activity log entries; has `insert`, `update`, `getById`, `getChildren`, `query`, `count`, `clear`, `prune`.
+
+## core/adblocker
+
+- [core/adblocker/AdblockerService.md](core/adblocker/AdblockerService.md): native ad and tracker blocker on every session; has `init`, `applyToSession`, `setEnabled`, `isEnabled`.
+- [core/adblocker/FilterWorkerLauncher.md](core/adblocker/FilterWorkerLauncher.md): builds the filter engine in a short-lived worker with a timeout; has `build`.
+- [core/adblocker/FilterBuildWorker.md](core/adblocker/FilterBuildWorker.md): the worker side of the filter engine build; has `run`, `build`.
+- [core/adblocker/AdblockerIpcHandlers.md](core/adblocker/AdblockerIpcHandlers.md): IPC controller for the ad blocker toggle; has `register`.
+
+## core/bookmarks
+
+- [core/bookmarks/BookmarkStore.md](core/bookmarks/BookmarkStore.md): reads and writes the bookmarks tree; has `create`, `getById`, `children`, `tree`, `findByUrl`, `update`, `remove`.
+- [core/bookmarks/BookmarkService.md](core/bookmarks/BookmarkService.md): bookmarks API over BookmarkStore; has `getTree`, `addBookmark`, `addFolder`, `update`, `move`, `remove`, `toggleUrl`, `getStartupBookmarks`.
+
+## core/chrome-extensions
+
+- [core/chrome-extensions/ChromeExtensionSchema.md](core/chrome-extensions/ChromeExtensionSchema.md): creates the `chrome_extensions` table; has `ensure`.
+- [core/chrome-extensions/ChromeExtensionService.md](core/chrome-extensions/ChromeExtensionService.md): installs, persists and replays unpacked Chrome extensions into every session; has `init`, `list`, `installFromDirectory`, `remove`, `setEnabled`, `loadAllEnabled`.
+- [core/chrome-extensions/ChromeExtensionRepository.md](core/chrome-extensions/ChromeExtensionRepository.md): raw SQL over chrome_extensions; has `list`, `listEnabled`, `get`, `upsert`, `setEnabled`, `remove`.
+- [core/chrome-extensions/ChromeExtensionManifest.md](core/chrome-extensions/ChromeExtensionManifest.md): comment-tolerant manifest.json reader; has `read`, `parse`.
+- [core/chrome-extensions/ExtensionSessionLoader.md](core/chrome-extensions/ExtensionSessionLoader.md): loads and unloads Chrome extensions across sessions; has `track`, `loadInto`, `loadEverywhere`, `unloadEverywhere`.
+- [core/chrome-extensions/ChromeExtensionIpcHandlers.md](core/chrome-extensions/ChromeExtensionIpcHandlers.md): IPC controller for the Chrome extensions panel; has `register`.
+
+## core/dashboard
+
+- [core/dashboard/DashboardActions.md](core/dashboard/DashboardActions.md): Dashboard operations (pins, live and extension widgets, layout, scheduled tasks, runs, guarded extension API calls); has `pin`, `listLiveWidgets`, `callExtension`, `getLayout`, `setLayout`, `createTask`, `runTaskNow`, `listTaskRuns`, `openChat`.
+- [core/dashboard/DashboardIpcHandlers.md](core/dashboard/DashboardIpcHandlers.md): IPC controller for `core.dashboard.*`; has `register`.
+- [core/dashboard/DashboardService.md](core/dashboard/DashboardService.md): owns the Dashboard tab and its layout; has `ensureTab`, `getLayout`, `setLayout`, `pinWidget`, `setWidgetHidden`.
+- [core/dashboard/DashboardLayout.md](core/dashboard/DashboardLayout.md): Dashboard grid geometry and hidden widgets in settings; has `get`, `set`, `pin`, `hiddenWidgets`, `setHidden`.
+- [core/dashboard/DashboardSnapshot.md](core/dashboard/DashboardSnapshot.md): the Dashboard as text for the chat's "@dashboard": every placed widget as a markdown section (extension widgets through their manifest `context` method, live modules as their saved state), capped like a read page; has `read`.
+- [core/dashboard/ExtensionWidgetCatalog.md](core/dashboard/ExtensionWidgetCatalog.md): the Dashboard widgets active extensions contribute, with served URLs, sizes and their chat context method; has `list`.
+- [core/dashboard/preload/DashboardPreloadApi.md](core/dashboard/preload/DashboardPreloadApi.md): `core/dashboard/preload/DashboardPreloadApi.js` (entry: `core/dashboard/dashboard-tab-preload.js`).
+- [core/dashboard/ui/DashboardUi.md](core/dashboard/ui/DashboardUi.md): `core/dashboard/ui/` (page: `dashboard.html`, served at `/dashboard-ui/dashboard.html`).
+- [core/dashboard/ui/js/DashboardGrid.md](core/dashboard/ui/js/DashboardGrid.md): the GridStack 12-column grid: one card per chain, removal, static (Live) versus editable (Edit), the persisted geometry and dock drag-in.
+- [core/dashboard/ui/js/DashboardMode.md](core/dashboard/ui/js/DashboardMode.md): live and Edit modes, and the empty-grid hint.
+- [core/dashboard/ui/js/DashboardPage.md](core/dashboard/ui/js/DashboardPage.md): `core/dashboard/ui/js/DashboardPage.js` (started by `core/dashboard/ui/js/entry.js` on DOMContentLoaded).
+- [core/dashboard/ui/js/FatalNotice.md](core/dashboard/ui/js/FatalNotice.md): replaces the page body with "Dashboard unavailable" and an escaped message.
+- [core/dashboard/ui/js/LayoutSaver.md](core/dashboard/ui/js/LayoutSaver.md): persists the grid geometry through `dashboardAPI.layout.set`.
+- [core/dashboard/ui/js/WidgetCards.md](core/dashboard/ui/js/WidgetCards.md): builds the grid cards for live modules and extension widgets (the latter with Reload and Remove only).
+- [core/dashboard/ui/js/WidgetCatalog.md](core/dashboard/ui/js/WidgetCatalog.md): every live-module chain (rootId -> `{ title, conversationId, latestId, kind }`), every extension widget (`ext:<id>:<widget>` -> `{ title, url, w, h, kind }`) and the user's hidden set, from `dashboardAPI.widgets`.
+- [core/dashboard/ui/js/WidgetDock.md](core/dashboard/ui/js/WidgetDock.md): the dock rail: one row per live module, a "From extensions" section per extension widget, the hidden-list toggle and placed marking.
+- [core/dashboard/ui/js/ExtensionWidgetMount.md](core/dashboard/ui/js/ExtensionWidgetMount.md): imports an extension widget's module and runs its mount(root, host), errors rendered in the root.
+- [core/dashboard/ui/js/ExtensionWidgetHost.md](core/dashboard/ui/js/ExtensionWidgetHost.md): builds the host an extension widget receives (call, onEvent, openTab, openChat).
+- [core/dashboard/ui/js/WidgetMounts.md](core/dashboard/ui/js/WidgetMounts.md): mounts each placed widget: a live module (always the chain's LATEST version, through the shared plumbing the chat uses, so a widget and its chat twin share one store) or an extension widget through ExtensionWidgetMount.
+- [core/dashboard/ui/js/tasks/DashboardModal.md](core/dashboard/ui/js/tasks/DashboardModal.md): the Dashboard's single modal (`.db-overlay > .db-modal`).
+- [core/dashboard/ui/js/tasks/DashboardTasks.md](core/dashboard/ui/js/tasks/DashboardTasks.md): scheduled tasks on the Dashboard: the schedule panel, card badges and the task event stream.
+- [core/dashboard/ui/js/tasks/TaskBadges.md](core/dashboard/ui/js/tasks/TaskBadges.md): shows the Scheduled badge on cards whose chain has an enabled task.
+- [core/dashboard/ui/js/tasks/TaskForm.md](core/dashboard/ui/js/tasks/TaskForm.md): the "New scheduled update" form.
+- [core/dashboard/ui/js/tasks/TaskHistory.md](core/dashboard/ui/js/tasks/TaskHistory.md): the run history modal and a run's transcript modal.
+- [core/dashboard/ui/js/tasks/TaskPanel.md](core/dashboard/ui/js/tasks/TaskPanel.md): a widget's "Scheduled updates: <title>" modal.
+
+## core/desktop
+
+- [core/desktop/DesktopKeys.md](core/desktop/DesktopKeys.md): key combos to virtual-key codes and SendInput events; has `parseCombo`, `comboEvents`.
+- [core/desktop/AntiCheatDetector.md](core/desktop/AntiCheatDetector.md): recognises anti-cheat-protected games without opening their process; has `detect`.
+- [core/desktop/SystemPromptDetector.md](core/desktop/SystemPromptDetector.md): recognises UAC, sign-in and lock prompts only a person may answer; has `detect`.
+- [core/desktop/DesktopIpcHandlers.md](core/desktop/DesktopIpcHandlers.md): IPC controller for the desktop-control opt-in; has `register`.
+- [core/desktop/uia/UiaHostScript.md](core/desktop/uia/UiaHostScript.md): the PowerShell UI Automation sidecar script; has `SCRIPT`.
+- [core/desktop/Win32.md](core/desktop/Win32.md): the Windows desktop-control surface, routing to the win32 classes; has window, process, capture and input statics.
+- [core/desktop/win32/Win32Api.md](core/desktop/win32/Win32Api.md): cached koffi bindings for user32, gdi32 and kernel32; has `load`, `loadDesktop`.
+- [core/desktop/win32/Win32Buffers.md](core/desktop/win32/Win32Buffers.md): UTF-16 and RECT buffer readers; has `readWide`, `readWideZ`, `rectFrom`.
+- [core/desktop/win32/Win32Windows.md](core/desktop/win32/Win32Windows.md): top-level windows and focus; has `listTopLevelWindows`, `windowRect`, `focusWindow`, `virtualScreen`.
+- [core/desktop/win32/Win32Process.md](core/desktop/win32/Win32Process.md): process exe path and elevation; has `imagePath`, `isElevated`.
+- [core/desktop/win32/Win32Capture.md](core/desktop/win32/Win32Capture.md): window and screen capture as BGRA; has `captureBGRA`, `isBlank`.
+- [core/desktop/win32/Win32Input.md](core/desktop/win32/Win32Input.md): SendInput records and sending; has `mouseInput`, `keyInput`, `keyInputScan`, `relativeMoveInput`, `sendInputs`.
+- [core/desktop/win32/Win32ScanCodes.md](core/desktop/win32/Win32ScanCodes.md): keyboard layout scan codes with a US fallback; has `scanCodeFor`.
+- [core/desktop/win32/Win32InputDesktop.md](core/desktop/win32/Win32InputDesktop.md): names the input desktop to detect the secure desktop; has `name`.
+- [core/desktop/uia/UiaHost.md](core/desktop/uia/UiaHost.md): Node side of the UI Automation PowerShell sidecar; has `request`, `tree`, `act`, `wake`, `hit`, `close`.
+- [core/desktop/uia/JsonLineReader.md](core/desktop/uia/JsonLineReader.md): chunked text to JSON-line messages; has `push`.
+- [core/desktop/DesktopMcpTools.md](core/desktop/DesktopMcpTools.md): desktop_* MCP tool controller; has `TOOLS`, `handler`, `handle`.
+- [core/desktop/DesktopService.md](core/desktop/DesktopService.md): Windows desktop control, accessibility tree first then vision, behind the guard rails; has `listWindows`, `focus`, `screenshot`, `observe`, `click`, `type`, `pressKey`, `scroll`, `drag`, `setValue`, `gate`, `inputRefusal`.
+- [core/desktop/DesktopError.md](core/desktop/DesktopError.md): desktop control error with a refusal code; has `toResult`.
+- [core/desktop/service/DesktopGuards.md](core/desktop/service/DesktopGuards.md): desktop control refusals (anti-cheat, elevated, system prompts, secure desktop, stolen foreground); has `inputRefusal`, `promptRefusal`, `targetRefusal`, `checkForeground`, `preInput`.
+- [core/desktop/service/GuardedInput.md](core/desktop/service/GuardedInput.md): the only path to SendInput, with a foreground check on every send; has `send`, `release`.
+- [core/desktop/service/DesktopKeyboard.md](core/desktop/service/DesktopKeyboard.md): key combos, Unicode keystrokes and clipboard pastes; has `combo`, `typeKeys`, `enter`, `paste`.
+- [core/desktop/service/ClipboardSnapshot.md](core/desktop/service/ClipboardSnapshot.md): saves and restores the user's clipboard around a paste; has `take`, `restore`.
+- [core/desktop/service/TypingMode.md](core/desktop/service/TypingMode.md): desktop typing modes and when to paste; has `isValid`, `shouldPaste`.
+- [core/desktop/service/ScreenFrames.md](core/desktop/service/ScreenFrames.md): maps screenshot pixels back to screen pixels; has `record`, `toScreen`.
+- [core/desktop/service/ScreenshotImage.md](core/desktop/service/ScreenshotImage.md): turns a capture into a downscaled PNG; has `fromShot`, `fullSize`.
+- [core/desktop/service/UiaObservation.md](core/desktop/service/UiaObservation.md): accessibility refs of the last observe; has `record`, `isFor`, `node`.
+- [core/desktop/service/WindowObserver.md](core/desktop/service/WindowObserver.md): reads a window's accessibility tree; has `read`, `isChromium`, `describe`.
+- [core/desktop/service/HitCover.md](core/desktop/service/HitCover.md): decides whether something covers a target before clicking; has `coverOf`, `rectContains`.
+- [core/desktop/service/SavedCursor.md](core/desktop/service/SavedCursor.md): saves and restores the user's cursor position; has `saved`, `restore`.
+- [core/desktop/service/PointerClicker.md](core/desktop/service/PointerClicker.md): a real click with a pre-click hit test; has `click`.
+- [core/desktop/service/RefLocator.md](core/desktop/service/RefLocator.md): finds an element's current position and drag points; has `rectOf`, `pointOf`.
+- [core/desktop/service/DesktopClickLadder.md](core/desktop/service/DesktopClickLadder.md): desktop_click by ref, coordinates or description; has `click`.
+- [core/desktop/service/DesktopTyping.md](core/desktop/service/DesktopTyping.md): desktop_type via value pattern, keystrokes or paste; has `type`.
+- [core/desktop/service/DesktopDrag.md](core/desktop/service/DesktopDrag.md): desktop_drag with real input that always releases the button; has `drag`.
+- [core/desktop/service/DesktopScroll.md](core/desktop/service/DesktopScroll.md): desktop_scroll wheel notches; has `scroll`.
+
+## core/diagnostics
+
+- [core/diagnostics/CrashTracer.md](core/diagnostics/CrashTracer.md): always-on journal of events before an unexplained exit, plus minidumps; has `install`, `mark`, `getLogPath`, `getPreviousRunReview`.
+- [core/diagnostics/CrashTraceJournal.md](core/diagnostics/CrashTraceJournal.md): the crash trace run log file, written synchronously; has `open`, `write`, `close`.
+- [core/diagnostics/CrashTraceFormat.md](core/diagnostics/CrashTraceFormat.md): formatting for crash trace lines; has `short`, `extra`, `webContentsTag`, `stackOf`.
+- [core/diagnostics/CrashTraceRunLogs.md](core/diagnostics/CrashTraceRunLogs.md): prunes run logs and reviews the previous run at boot; has `list`, `prune`, `reviewPrevious`.
+- [core/diagnostics/CrashTraceHeartbeat.md](core/diagnostics/CrashTraceHeartbeat.md): heartbeat and event-loop lag lines; has `start`, `stop`.
+- [core/diagnostics/CrashTraceWiring.md](core/diagnostics/CrashTraceWiring.md): hooks quit paths and app, window and process events into the trace; has `install`.
+- [core/diagnostics/RuntimeTraceSummary.md](core/diagnostics/RuntimeTraceSummary.md): turns a UI trace capture into summary.json and summary.md; has `summarize`.
+- [core/diagnostics/TraceThreadCollector.md](core/diagnostics/TraceThreadCollector.md): groups trace slices by thread and role; has `collect`.
+- [core/diagnostics/TraceThreadAnalyzer.md](core/diagnostics/TraceThreadAnalyzer.md): self time per activity and longest tasks for one thread; has `analyze`.
+- [core/diagnostics/CpuProfileSummary.md](core/diagnostics/CpuProfileSummary.md): busy/idle split and top functions from a CPU profile; has `busy`, `topFunctions`.
+- [core/diagnostics/TraceEventLabel.md](core/diagnostics/TraceEventLabel.md): readable labels for DevTools trace events; has `describe`, `shortUrl`.
+- [core/diagnostics/RuntimeTraceMarkdown.md](core/diagnostics/RuntimeTraceMarkdown.md): renders the trace summary as markdown; has `render`, `headline`, `table`.
+- [core/diagnostics/TraceNumbers.md](core/diagnostics/TraceNumbers.md): rounds millisecond figures; has `round`.
+- [core/diagnostics/RuntimeTracer.md](core/diagnostics/RuntimeTracer.md): on-demand UI-stall capture (Ctrl+Shift+U); has `isRunning`, `start`.
+- [core/diagnostics/RuntimeTraceCapture.md](core/diagnostics/RuntimeTraceCapture.md): one runtime trace capture from record to summary; has `execute`.
+- [core/diagnostics/RuntimeTraceScripts.md](core/diagnostics/RuntimeTraceScripts.md): renderer counter and toast page scripts for traces; has `RENDERER_INSTALL`, `RENDERER_STOP`, `toast`.
+- [core/diagnostics/EventLoopDelaySampler.md](core/diagnostics/EventLoopDelaySampler.md): bucketed main event-loop delay; has `start`, `stop`.
+- [core/diagnostics/CpuProfiler.md](core/diagnostics/CpuProfiler.md): base class for DevTools-protocol CPU profilers; has `start`, `stop`, `detach`.
+- [core/diagnostics/MainCpuProfiler.md](core/diagnostics/MainCpuProfiler.md): main-process CPU profiler; has `start`, `stop`, `detach`.
+- [core/diagnostics/RendererCpuProfiler.md](core/diagnostics/RendererCpuProfiler.md): renderer CPU profiler via webContents.debugger; has `start`, `stop`, `detach`.
+
+## core/games
+
+- [core/games/FrameHash.md](core/games/FrameHash.md): frame signatures for game mode; has `dHash`, `colorGrid`, `frameSignature`, `hamming`.
+- [core/games/GameController.md](core/games/GameController.md): game input and frame watching on DesktopService's guard rails; has `pressKeys`, `holdKey`, `moveMouseRelative`, `clickUI`, `waitForChange`, `waitForStill`, `calibrateMouse`.
+- [core/games/GameControlArgs.md](core/games/GameControlArgs.md): clamps game input and wait arguments; has `keySequence`, `press`, `move`, `clamp`.
+- [core/games/GameKeyEvents.md](core/games/GameKeyEvents.md): down and up records for one game key; has `forKey`.
+- [core/games/GameFrameWatcher.md](core/games/GameFrameWatcher.md): polls frame signatures for change or stillness; has `waitForChange`, `waitForStill`.
+- [core/games/RelativeMovePlan.md](core/games/RelativeMovePlan.md): per-tick mouse-look deltas; has `tickCount`, `chunks`.
+- [core/games/GameSession.md](core/games/GameSession.md): per-game profile, allowance, notes, macros and stuck detection; has `save`, `allow`, `addNote`, `saveMacro`, `recordStep`, `isStuck`, `status`.
+- [core/games/GameSessionStore.md](core/games/GameSessionStore.md): loads and saves a game profile atomically; has `open`, `emptyProfile`.
+- [core/games/GameId.md](core/games/GameId.md): filesystem-safe game ids; has `from`, `sanitize`.
+- [core/games/GameMacroStep.md](core/games/GameMacroStep.md): game macro step validation; has `validate`.
+- [core/games/GameBriefing.md](core/games/GameBriefing.md): game session briefing text; has `describe`.
+- [core/games/GamesMcpTools.md](core/games/GamesMcpTools.md): game_* MCP tool controller; has `TOOLS`, `handler`, `handle`.
+- [core/games/GameService.md](core/games/GameService.md): game mode entry point with the allowlist, anti-cheat refusal and stuck detector; has `start`, `allow`, `press`, `hold`, `mouseMove`, `click`, `wait`, `runMacro`, `status`.
+- [core/games/GameMacroRunner.md](core/games/GameMacroRunner.md): replays game macro steps; has `run`.
+
+## core/history
+
+- [core/history/HistoryStore.md](core/history/HistoryStore.md): browser history with frecency-ranked autocomplete; has `addVisit`, `updateTitle`, `list`, `suggest`, `deleteById`, `clear`.
+- [core/history/HistoryService.md](core/history/HistoryService.md): browsing history with recordable-url and dedupe rules; has `recordVisit`, `updateVisitTitle`, `list`, `suggest`, `deleteEntry`, `clear`.
+
+## core/placement
+
+- [core/placement/PlacementIpcHandlers.md](core/placement/PlacementIpcHandlers.md): IPC controller for `core.placement.*`; has `register`.
+- [core/placement/PlacementService.md](core/placement/PlacementService.md): unified placement canvas backend (layout, start and stop, VRAM snapshot, hotswap gate, measuring test); has `getConfig`, `setConfig`, `autoArrange`, `getVramSnapshot`, `startAll`, `stopAll`, `runTest`.
+- [core/placement/service/BestEffort.md](core/placement/service/BestEffort.md): null-on-throw reads for placement; has `read`.
+- [core/placement/service/PlacementServers.md](core/placement/service/PlacementServers.md): managed model services by layout item; has `runtimeServer`, `status`, `isAvailable`.
+- [core/placement/service/MeasuredFootprintStore.md](core/placement/service/MeasuredFootprintStore.md): measured test-render footprints per model; has `all`, `merge`.
+- [core/placement/service/PlacementGate.md](core/placement/service/PlacementGate.md): allocation gate on measured or stated footprints; has `canApply`.
+- [core/placement/service/HotswapWiring.md](core/placement/service/HotswapWiring.md): registers servers for hotswap eviction; has `wire`, `applyPools`.
+- [core/placement/service/PoolModels.md](core/placement/service/PoolModels.md): hotswap pool model sizes and files; has `sizes`, `files`.
+- [core/placement/service/PoolPrewarmer.md](core/placement/service/PoolPrewarmer.md): page-cache prewarm of hotswap pool files; has `prewarm`.
+- [core/placement/service/VramSnapshotBuilder.md](core/placement/service/VramSnapshotBuilder.md): the placement canvas VRAM snapshot; has `build`.
+- [core/placement/service/PlacementSlotInfo.md](core/placement/service/PlacementSlotInfo.md): where each model loaded and in what mode; has `build`.
+- [core/placement/service/VramPeakSampler.md](core/placement/service/VramPeakSampler.md): VRAM and RAM peak sampling during a placement test; has `start`, `stop`.
+- [core/placement/service/MeasuredFootprintRecorder.md](core/placement/service/MeasuredFootprintRecorder.md): turns a peak summary into saved footprints; has `record`.
+- [core/placement/service/LlmKvBreakdown.md](core/placement/service/LlmKvBreakdown.md): the running LLM's KV bytes; has `fromStatus`.
+- [core/placement/service/TurnMilestones.md](core/placement/service/TurnMilestones.md): per-phase timing of a placement test turn; has `timing`.
+- [core/placement/service/PlacementTestTurn.md](core/placement/service/PlacementTestTurn.md): one timed placement test chat turn; has `run`.
+- [core/placement/service/PlacementTestRun.md](core/placement/service/PlacementTestRun.md): the placement test sequence; has `run`.
+- [core/placement/service/PlacementLifecycle.md](core/placement/service/PlacementLifecycle.md): starts and unloads the placed models; has `startAll`, `stopAll`.
+
+## core/rag
+
+- [core/rag/RagEmbedder.md](core/rag/RagEmbedder.md): the seam where a dense embedder plugs in; has `set`, `isConfigured`, `embed`.
+- [core/rag/EmbeddingVector.md](core/rag/EmbeddingVector.md): cosine similarity and float32 BLOB packing; has `cosine`, `pack`, `unpack`.
+- [core/rag/RagDocumentImporter.md](core/rag/RagDocumentImporter.md): adds knowledge-base documents from a picker or paths; has `pickAndIngest`, `ingest`.
+- [core/rag/RagIpcHandlers.md](core/rag/RagIpcHandlers.md): IPC controller for `core.rag.*`; has `register`.
+- [core/rag/TextChunker.md](core/rag/TextChunker.md): Markdown-aware, sentence-safe chunking of document pages with heading trails; has `chunkText`, `chunkDocument`.
+- [core/rag/ChunkBudget.md](core/rag/ChunkBudget.md): chunk size rules (384-token budget, 48-token sentence carry, section floor) resolved to characters; has `fits`.
+- [core/rag/BlockUnitizer.md](core/rag/BlockUnitizer.md): Markdown blocks to packable unit groups (sentences, whole code/tables, lines) with heading trails; has `unitize`.
+- [core/rag/ChunkPacker.md](core/rag/ChunkPacker.md): packs unit groups into budgeted windows, moving blocks whole and carrying whole sentences; has `pack`.
+- [core/rag/MarkdownBlockScanner.md](core/rag/MarkdownBlockScanner.md): page text to heading, fence, table and prose blocks with offsets; has `scan`.
+- [core/rag/HeadingTrail.md](core/rag/HeadingTrail.md): the heading chain in force at a point of a document; has `enter`, `titles`.
+- [core/rag/SpanSegmenter.md](core/rag/SpanSegmenter.md): base for segmenters that cut a range into tight spans; has `segment`, `tighten`.
+- [core/rag/SentenceSegmenter.md](core/rag/SentenceSegmenter.md): rule-based sentence and list-item cuts for prose; has `segment`.
+- [core/rag/LineSegmenter.md](core/rag/LineSegmenter.md): one span per line, for oversized code and tables; has `segment`.
+- [core/rag/OversizeSpanSplitter.md](core/rag/OversizeSpanSplitter.md): cuts a too-long span at whitespace into budget-sized pieces; has `split`.
+- [core/rag/DocumentParser.md](core/rag/DocumentParser.md): Markdown, text, HTML/XHTML and PDF to page-tagged text; has `parse`, `isSupported`, `supportedExtensions`.
+- [core/rag/RecursiveTextSplitter.md](core/rag/RecursiveTextSplitter.md): splits on the most semantic separator with exact offsets; has `split`.
+- [core/rag/ChunkMerger.md](core/rag/ChunkMerger.md): greedy chunk merge with bounded overlap; has `merge`.
+- [core/rag/PdfTextExtractor.md](core/rag/PdfTextExtractor.md): per-page PDF text through the pdfjs-dist legacy build; has `extract`.
+- [core/rag/KnowledgeRetriever.md](core/rag/KnowledgeRetriever.md): lexical and optional dense evidence, convex blend, diversity pass; records the retrieval design rationale; has `retrieve`.
+- [core/rag/WordTokenizer.md](core/rag/WordTokenizer.md): Unicode words with offsets and unicode61-style folding; has `words`, `fold`, `foldedSet`.
+- [core/rag/QueryTermExtractor.md](core/rag/QueryTermExtractor.md): query text to terms (function words dropped, term budget, stem prefixes); has `extract`.
+- [core/rag/LexicalMatchExpression.md](core/rag/LexicalMatchExpression.md): query terms to a safe FTS5 MATCH expression of barewords and stem prefixes; has `fromText`, `fromTerms`.
+- [core/rag/TermMatcher.md](core/rag/TermMatcher.md): where query terms occur in a passage; has `spans`, `coverage`.
+- [core/rag/ScoreNormalizer.md](core/rag/ScoreNormalizer.md): BM25 shares and floor-rescaled cosine on a 0..1 scale; has `bm25Shares`, `cosineAboveFloor`.
+- [core/rag/ConvexScoreFusion.md](core/rag/ConvexScoreFusion.md): weighted blend of lexical and dense relevance; has `blend`.
+- [core/rag/PassageSimilarity.md](core/rag/PassageSimilarity.md): embedding cosine or word overlap between passages; has `between`.
+- [core/rag/DiversitySelector.md](core/rag/DiversitySelector.md): MMR selection with a soft per-document cap; has `select`.
+- [core/rag/RagSchema.md](core/rag/RagSchema.md): knowledge-base tables, FTS5 index and triggers; has `ensure`.
+- [core/rag/RagStore.md](core/rag/RagStore.md): knowledge-base repository (raw SQL); has `addDocument`, `addChunks`, `findKeywordPassages`, `denseCandidates`, `documentsInScope`, `removeDocument`; `readOnly` opens a prebuilt file as is.
+- [core/rag/ReadOnlyRagStore.md](core/rag/ReadOnlyRagStore.md): a RagStore over a prebuilt, read-only knowledge base (the shipped docs index); scope from its metadata, writes throw; has `openIfPresent`, `scope`, `meta`.
+- [core/rag/DocsKnowledgeBase.md](core/rag/DocsKnowledgeBase.md): the app's own documentation as a knowledge base: the shipped prebuilt index opened read-only on first use, "not available" when the build has none; has `resolvePath`, `available`, `status`, `search`, `close`.
+- [core/rag/PrebuiltRagMeta.md](core/rag/PrebuiltRagMeta.md): the `prebuilt_meta` key/value table of a prebuilt knowledge base (scope, content hash, build time, counts); has `ensure`, `write`, `read`, `exists`.
+- [core/rag/KnowledgeLookup.md](core/rag/KnowledgeLookup.md): the search_knowledge_base tool engine; has `lookup`.
+- [core/rag/KnowledgeLookupOutcome.md](core/rag/KnowledgeLookupOutcome.md): blank, miss and hit result shapes and their wording; has `blank`, `of`.
+- [core/rag/CitationTag.md](core/rag/CitationTag.md): the S1, S2, ... tag a passage is cited by; has `at`.
+- [core/rag/PassageCitationRenderer.md](core/rag/PassageCitationRenderer.md): [S1]-tagged, fenced passages for the model; has `render`.
+- [core/rag/SourceCardBuilder.md](core/rag/SourceCardBuilder.md): source cards for the citations event; has `build`.
+- [core/rag/ExcerptWindow.md](core/rag/ExcerptWindow.md): highlighted passage previews for the sources UI; has `cut`.
+- [core/rag/RagService.md](core/rag/RagService.md): app-wide knowledge base service; has `store`, `ingestFile`, `search`, `documentsInScope`, `removeDocument`, `count`, `close`.
+- [core/rag/RagFileIngestor.md](core/rag/RagFileIngestor.md): parses, chunks, embeds and stores one file; has `ingest`.
+
+## core/roleplay-lab
+
+- [core/roleplay-lab/LabHarness.md](core/roleplay-lab/LabHarness.md): the Roleplay Lab step recorder and override hook; has `beforeImage`, `afterImage`, `completeMock`, `manifest`, `install`, `uninstall`.
+- [core/roleplay-lab/LabStepParams.md](core/roleplay-lab/LabStepParams.md): scrubs Roleplay Lab step params for display; has `scrub`, `overlayResolved`.
+- [core/roleplay-lab/LabCompletionKind.md](core/roleplay-lab/LabCompletionKind.md): guesses which roleplay agent an LLM call belongs to; has `detect`.
+- [core/roleplay-lab/LabIpcHandlers.md](core/roleplay-lab/LabIpcHandlers.md): IPC controller for `core.rpLab.*`; has `register`.
+
+## core/pulse
+
+- [core/pulse/PulseService.md](core/pulse/PulseService.md): consent-gated anonymous check-in to lumabyte.com that never gates a feature; has `start`, `stop`, `pulseNow`, `getStatus`.
+- [core/pulse/PulseDeviceInfo.md](core/pulse/PulseDeviceInfo.md): app version, platform and pulse User-Agent; has `appVersion`, `platform`, `userAgent`.
+
+## core/browser-data
+
+- [core/browser-data/BrowserDataIpcHandlers.md](core/browser-data/BrowserDataIpcHandlers.md): IPC controller for history, bookmarks, start page, search engine, favicons and dark mode; has `register`.
+- [core/browser-data/BrowserDataPreferences.md](core/browser-data/BrowserDataPreferences.md): start page, search engine and dark-mode preferences; has `getStartPage`, `setStartPage`, `getSearchEngine`, `setSearchEngine`, `searchUrl`, `getDarkMode`, `setDarkMode`.
+- [core/browser-data/FaviconLookup.md](core/browser-data/FaviconLookup.md): renderer favicon lookups with host normalising; has `get`, `getMany`.
+- [core/browser-data/BookmarkChangeNotifier.md](core/browser-data/BookmarkChangeNotifier.md): broadcasts bookmark changes to the main window; has `notify`, `afterMutation`.
+
+## core/grounding-server
+
+- [core/grounding-server/GroundingServerService.md](core/grounding-server/GroundingServerService.md): runs a managed llama-server for a vision grounding model; has `setModel`, `ensureRunning`, `stop`, `getStatus`, `getView`, `downloadRecommended`, `PROVIDER_ID`.
+- [core/grounding-server/GroundingRuntimeServer.md](core/grounding-server/GroundingRuntimeServer.md): supervisor for the grounding llama-server; has `findFreePort`.
+- [core/grounding-server/GroundingSettings.md](core/grounding-server/GroundingSettings.md): saved grounding model, projector and idle unload; has `select`, `clear`, `isConfigured`.
+- [core/grounding-server/GroundingModelFiles.md](core/grounding-server/GroundingModelFiles.md): pairs the grounding projector and reads file facts; has `pairMmproj`, `sizeOf`, `exists`.
+- [core/grounding-server/GroundingLaunch.md](core/grounding-server/GroundingLaunch.md): grounding argv, VRAM size and runtime pick; has `buildArgs`, `requiredBytes`, `plan`, `pickRuntime`.
+- [core/grounding-server/GroundingRecommendedModels.md](core/grounding-server/GroundingRecommendedModels.md): recommended grounding models and their download; has `find`, `view`, `download`, `cancel`.
+- [core/grounding-server/GroundingModelSelection.md](core/grounding-server/GroundingModelSelection.md): grounding model choice and slot routing; has `setModel`, `pickModel`, `downloadRecommended`.
+- [core/grounding-server/GroundingIpcHandlers.md](core/grounding-server/GroundingIpcHandlers.md): grounding server IPC controller; has `register`.
+
+## core/llm-server/chat/bridge
+
+- [core/llm-server/chat/AgentChatBridge.md](core/llm-server/chat/AgentChatBridge.md): runs the agent tool loop on the chat model (facade over the bridge classes); has `run`, `abort`, `isAborted`, `respondTakeover`, `respondApproval`, `buildPreviewSystemPrompt`, `runForEval`.
+- [core/llm-server/chat/bridge/AgentBudget.md](core/llm-server/chat/bridge/AgentBudget.md): resolves a chat mode's requested agent-run budget against the defaults and ceilings.
+- [core/llm-server/chat/bridge/BridgeGlobals.md](core/llm-server/chat/bridge/BridgeGlobals.md): the app singletons main.js parks on `global` that the bridge reaches for, read lazily on every call because they may arrive after the bridge.
+- [core/llm-server/chat/bridge/BridgeRun.md](core/llm-server/chat/bridge/BridgeRun.md): one Tools-on chat turn: wires the run's tool set, parser, dispatch pipeline and streaming into an AgentRunner driven by the user's model, runs it, and normalises its output onto the chat router's hooks.
+- [core/llm-server/chat/bridge/RunResultSpill.md](core/llm-server/chat/bridge/RunResultSpill.md): builds the spill writer for one agent run: over-budget tool results go to disk and the model sees a path and a shape sketch.
+- [core/llm-server/chat/bridge/TabPreviewSession.md](core/llm-server/chat/bridge/TabPreviewSession.md): one turn's live tab preview: the agent's work tab parked inside its tool card, frozen to a still frame when the tab goes away.
+- [core/llm-server/chat/bridge/eval/EvalEventCapture.md](core/llm-server/chat/bridge/eval/EvalEventCapture.md): the capturing `send` sink an eval turn hands the chat router; accumulates the stream the way the renderer does.
+- [core/llm-server/chat/bridge/eval/EvalTurn.md](core/llm-server/chat/bridge/eval/EvalTurn.md): one eval or gambit turn, driven through the router's production `chat()` with a capturing sink, so every decision chat() makes applies by construction.
+- [core/llm-server/chat/bridge/groups/ActivateToolsCall.md](core/llm-server/chat/bridge/groups/ActivateToolsCall.md): the `activate_tools` meta-tool: loads lazy groups' manuals on demand.
+- [core/llm-server/chat/bridge/groups/AutoActivation.md](core/llm-server/chat/bridge/groups/AutoActivation.md): the auto-activate guard for a lazy tool called before its group is loaded.
+- [core/llm-server/chat/bridge/groups/AvailableGroups.md](core/llm-server/chat/bridge/groups/AvailableGroups.md): the lazy tool groups available for one turn.
+- [core/llm-server/chat/bridge/groups/GroupIntent.md](core/llm-server/chat/bridge/groups/GroupIntent.md): infers from a user message which lazy tool groups the turn plainly needs.
+- [core/llm-server/chat/bridge/groups/GroupRouting.md](core/llm-server/chat/bridge/groups/GroupRouting.md): asks the opt-in tool-group router which lazy groups a message needs and activates them.
+- [core/llm-server/chat/bridge/groups/ToolGroupState.md](core/llm-server/chat/bridge/groups/ToolGroupState.md): one run's lazy tool-group state.
+- [core/llm-server/chat/bridge/parsing/ArtifactStreamSniffer.md](core/llm-server/chat/bridge/parsing/ArtifactStreamSniffer.md): reads fields out of a create_artifact call that is still streaming.
+- [core/llm-server/chat/bridge/parsing/CallMarkers.md](core/llm-server/chat/bridge/parsing/CallMarkers.md): the recovery markers a parsed tool call carries, moved onto its params under symbol keys.
+- [core/llm-server/chat/bridge/parsing/LooseToolCallParser.md](core/llm-server/chat/bridge/parsing/LooseToolCallParser.md): the chat agent's lenient tool-call parser for calls the strict fence matcher missed.
+- [core/llm-server/chat/bridge/parsing/OffFormatShape.md](core/llm-server/chat/bridge/parsing/OffFormatShape.md): names the shape of a recovered off-format tool call for the health report.
+- [core/llm-server/chat/bridge/parsing/RunToolCallParser.md](core/llm-server/chat/bridge/parsing/RunToolCallParser.md): the tool-call parser one run hands AgentRunner.
+- [core/llm-server/chat/bridge/parsing/ToolCallSniffer.md](core/llm-server/chat/bridge/parsing/ToolCallSniffer.md): reads what a tool call is about from streaming or unparseable text.
+- [core/llm-server/chat/bridge/parsing/ToolFenceStripper.md](core/llm-server/chat/bridge/parsing/ToolFenceStripper.md): removes tool-call text from prose the user sees.
+- [core/llm-server/chat/bridge/parsing/ToolJson.md](core/llm-server/chat/bridge/parsing/ToolJson.md): reads one candidate tool-call JSON text into `{ tool, params }`.
+- [core/llm-server/chat/bridge/parsing/TruncatedJsonRepair.md](core/llm-server/chat/bridge/parsing/TruncatedJsonRepair.md): best-effort repair of a JSON snippet the model cut off.
+- [core/llm-server/chat/bridge/parsing/XmlToolCallParser.md](core/llm-server/chat/bridge/parsing/XmlToolCallParser.md): parses the native XML tool-call syntaxes the Qwen and Hermes families revert to.
+- [core/llm-server/chat/bridge/prompt/ArtifactCatalog.md](core/llm-server/chat/bridge/prompt/ArtifactCatalog.md): the cross-turn artifact catalog prepended to the task, so "now edit it" can name the right id.
+- [core/llm-server/chat/bridge/prompt/ImagePromptHint.md](core/llm-server/chat/bridge/prompt/ImagePromptHint.md): the per-model image prompting block that rides with the images manual.
+- [core/llm-server/chat/bridge/prompt/PreviewSystemPrompt.md](core/llm-server/chat/bridge/prompt/PreviewSystemPrompt.md): the exact system prompt a fresh Tools-on turn would send, for the Advanced tab's preview.
+- [core/llm-server/chat/bridge/prompt/SystemPromptAppend.md](core/llm-server/chat/bridge/prompt/SystemPromptAppend.md): assembles everything a Tools-on turn appends to AgentRunner's base prompt.
+- [core/llm-server/chat/bridge/prompt/TurnPrompt.md](core/llm-server/chat/bridge/prompt/TurnPrompt.md): splits a turn's wire messages into the task and the history before it.
+- [core/llm-server/chat/bridge/prompt/VisionHint.md](core/llm-server/chat/bridge/prompt/VisionHint.md): the prompt line telling a vision model the attachments are already visible.
+- [core/llm-server/chat/bridge/tools/ApprovalCheck.md](core/llm-server/chat/bridge/tools/ApprovalCheck.md): the approval gate at dispatch, the last check before a tool runs.
+- [core/llm-server/chat/bridge/tools/BridgeToolbox.md](core/llm-server/chat/bridge/tools/BridgeToolbox.md): the `browserTools` the bridge hands AgentRunner.
+- [core/llm-server/chat/bridge/tools/CallRefusalText.md](core/llm-server/chat/bridge/tools/CallRefusalText.md): model-facing texts for calls refused or flagged because of how they arrived.
+- [core/llm-server/chat/bridge/tools/ChatToolTable.md](core/llm-server/chat/bridge/tools/ChatToolTable.md): the built-in pseudo-tool handlers by name.
+- [core/llm-server/chat/bridge/tools/ExtraTools.md](core/llm-server/chat/bridge/tools/ExtraTools.md): normalises a chat mode's per-turn `extraTools`.
+- [core/llm-server/chat/bridge/tools/McpResultUnwrapper.md](core/llm-server/chat/bridge/tools/McpResultUnwrapper.md): turns an MCP tool result into the shape the agent loop threads back.
+- [core/llm-server/chat/bridge/tools/NativeToolPlan.md](core/llm-server/chat/bridge/tools/NativeToolPlan.md): whether this run's model takes tools natively, which tools its family keeps out of the array, and the array itself.
+- [core/llm-server/chat/bridge/tools/RunToolSet.md](core/llm-server/chat/bridge/tools/RunToolSet.md): the tool set of one agent run.
+- [core/llm-server/chat/bridge/tools/ToolCallPipeline.md](core/llm-server/chat/bridge/tools/ToolCallPipeline.md): the checks one tool call passes on its way to running, then the notes that ride back on its result.
+- [core/llm-server/chat/bridge/tools/ToolDispatch.md](core/llm-server/chat/bridge/tools/ToolDispatch.md): runs one admitted tool call on whatever owns it.
+- [core/llm-server/chat/bridge/tools/TruncationGuard.md](core/llm-server/chat/bridge/tools/TruncationGuard.md): the outermost check on a tool call.
+- [core/llm-server/chat/bridge/tools/artifacts/ArtifactId.md](core/llm-server/chat/bridge/tools/artifacts/ArtifactId.md): reads the artifact id every artifact-taking tool needs.
+- [core/llm-server/chat/bridge/tools/artifacts/ArtifactRetryContent.md](core/llm-server/chat/bridge/tools/artifacts/ArtifactRetryContent.md): the ground truth handed back when an artifact edit's `find` missed.
+- [core/llm-server/chat/bridge/tools/artifacts/ArtifactTextEdit.md](core/llm-server/chat/bridge/tools/artifacts/ArtifactTextEdit.md): applies edit_artifact's `replacements` to a plain (non-live) artifact.
+- [core/llm-server/chat/bridge/tools/artifacts/ArtifactValidation.md](core/llm-server/chat/bridge/tools/artifacts/ArtifactValidation.md): the validation gate on artifacts the agent writes.
+- [core/llm-server/chat/bridge/tools/artifacts/FuzzyReplacement.md](core/llm-server/chat/bridge/tools/artifacts/FuzzyReplacement.md): whitespace-tolerant fallback for an artifact edit whose `find` missed only by indentation.
+- [core/llm-server/chat/bridge/tools/artifacts/LiveHtmlUnwrapper.md](core/llm-server/chat/bridge/tools/artifacts/LiveHtmlUnwrapper.md): turns a whole HTML document (sent to create_live_artifact as `content`) into a live module's `{ html, js }`.
+- [core/llm-server/chat/bridge/tools/artifacts/LiveModuleEdit.md](core/llm-server/chat/bridge/tools/artifacts/LiveModuleEdit.md): applies an edit_artifact request to a LIVE module's `{ html, js, libs }`.
+- [core/llm-server/chat/bridge/tools/artifacts/SubstringCount.md](core/llm-server/chat/bridge/tools/artifacts/SubstringCount.md): counts non-overlapping plain-substring occurrences.
+- [core/llm-server/chat/bridge/tools/handlers/ArtifactDataHandler.md](core/llm-server/chat/bridge/tools/handlers/ArtifactDataHandler.md): `get_artifact_data` and `update_artifact_data`: the agent-side twin of a live widget's injected `store`.
+- [core/llm-server/chat/bridge/tools/handlers/ChatToolHandler.md](core/llm-server/chat/bridge/tools/handlers/ChatToolHandler.md): base class for the chat agent's built-in pseudo-tools.
+- [core/llm-server/chat/bridge/tools/handlers/CreateArtifactHandler.md](core/llm-server/chat/bridge/tools/handlers/CreateArtifactHandler.md): `create_artifact`: stores a document, code file, SVG or page shown in the docked side panel.
+- [core/llm-server/chat/bridge/tools/handlers/CreateLiveArtifactHandler.md](core/llm-server/chat/bridge/tools/handlers/CreateLiveArtifactHandler.md): `create_live_artifact`: stores an interactive module rendered inline.
+- [core/llm-server/chat/bridge/tools/handlers/EditArtifactHandler.md](core/llm-server/chat/bridge/tools/handlers/EditArtifactHandler.md): `edit_artifact`: saves the next VERSION of an artifact's chain.
+- [core/llm-server/chat/bridge/tools/handlers/EditImageHandler.md](core/llm-server/chat/bridge/tools/handlers/EditImageHandler.md): `edit_image`: edits an image artifact and saves the next version of its chain.
+- [core/llm-server/chat/bridge/tools/handlers/GenerateImageHandler.md](core/llm-server/chat/bridge/tools/handlers/GenerateImageHandler.md): `generate_image`: renders an image and stores it as an image artifact.
+- [core/llm-server/chat/bridge/tools/handlers/KnowledgeBaseHandler.md](core/llm-server/chat/bridge/tools/handlers/KnowledgeBaseHandler.md): `search_knowledge_base`: retrieves passages from the run's scope.
+- [core/llm-server/chat/bridge/tools/handlers/MusicHandler.md](core/llm-server/chat/bridge/tools/handlers/MusicHandler.md): `generate_music`: composes a song and stores it as an audio artifact.
+- [core/llm-server/chat/bridge/tools/handlers/ScheduleArtifactUpdatesHandler.md](core/llm-server/chat/bridge/tools/handlers/ScheduleArtifactUpdatesHandler.md): `schedule_artifact_updates`: a recurring task that refreshes a live widget's data.
+- [core/llm-server/chat/bridge/tools/handlers/SendWebhookHandler.md](core/llm-server/chat/bridge/tools/handlers/SendWebhookHandler.md): `send_webhook`: the programmatic group's outbound write.
+- [core/llm-server/chat/bridge/tools/handlers/TakeoverHandler.md](core/llm-server/chat/bridge/tools/handlers/TakeoverHandler.md): `ask_user_takeover`: the loop blocks until the chat card answers.
+- [core/llm-server/chat/bridge/tools/handlers/ValidateCodeHandler.md](core/llm-server/chat/bridge/tools/handlers/ValidateCodeHandler.md): `validate_code`: lints a piece of source in-process.
+- [core/llm-server/chat/bridge/tools/handlers/VideoHandler.md](core/llm-server/chat/bridge/tools/handlers/VideoHandler.md): `generate_video` and `animate_image`: renders a clip and stores it as a video artifact.
+- [core/llm-server/chat/bridge/tools/handlers/WebSearchHandler.md](core/llm-server/chat/bridge/tools/handlers/WebSearchHandler.md): `web_search`: a headless search or page read.
+- [core/llm-server/chat/bridge/tools/media/EditCanvas.md](core/llm-server/chat/bridge/tools/media/EditCanvas.md): sizes edit_image's canvas from a named frame.
+- [core/llm-server/chat/bridge/tools/media/EditModelChoice.md](core/llm-server/chat/bridge/tools/media/EditModelChoice.md): decides how edit_image will run on this box.
+- [core/llm-server/chat/bridge/tools/media/EditReferences.md](core/llm-server/chat/bridge/tools/media/EditReferences.md): resolves edit_image's extra reference images to their bytes.
+- [core/llm-server/chat/bridge/tools/media/ImageServerLogTail.md](core/llm-server/chat/bridge/tools/media/ImageServerLogTail.md): appends the image runtime's recent stderr to an image tool's error.
+- [core/llm-server/chat/bridge/tools/media/MediaProgressSink.md](core/llm-server/chat/bridge/tools/media/MediaProgressSink.md): the `send` callback a media router reports through during a chat tool call.
+- [core/llm-server/chat/bridge/tools/media/MediaRenderOutcome.md](core/llm-server/chat/bridge/tools/media/MediaRenderOutcome.md): the media tools' shared failure ladder after a render.
+- [core/llm-server/chat/bridge/tools/media/MediaTitle.md](core/llm-server/chat/bridge/tools/media/MediaTitle.md): the title a media artifact is saved under.
+- [core/llm-server/chat/bridge/turn/AgentEventRelay.md](core/llm-server/chat/bridge/turn/AgentEventRelay.md): turns AgentRunner's loop events into the chat's.
+- [core/llm-server/chat/bridge/turn/ArtifactStreamPreview.md](core/llm-server/chat/bridge/turn/ArtifactStreamPreview.md): pushes a partially streamed create_artifact document into the side panel.
+- [core/llm-server/chat/bridge/turn/CompletionDriver.md](core/llm-server/chat/bridge/turn/CompletionDriver.md): the `sendCompletion` the bridge hands AgentRunner.
+- [core/llm-server/chat/bridge/turn/FallbackMessage.md](core/llm-server/chat/bridge/turn/FallbackMessage.md): the honest answer for a run that ended without a clean final message.
+- [core/llm-server/chat/bridge/turn/FinalTextResolver.md](core/llm-server/chat/bridge/turn/FinalTextResolver.md): decides the visible final answer of a finished run.
+- [core/llm-server/chat/bridge/turn/IterationStream.md](core/llm-server/chat/bridge/turn/IterationStream.md): the content-token handler for one completion.
+- [core/llm-server/chat/bridge/turn/PendingToolCard.md](core/llm-server/chat/bridge/turn/PendingToolCard.md): the "preparing" tool card shown while a call is still being generated.
+- [core/llm-server/chat/bridge/turn/ReasoningRelay.md](core/llm-server/chat/bridge/turn/ReasoningRelay.md): forwards reasoning tokens with a paragraph break at each iteration seam.
+- [core/llm-server/chat/bridge/turn/ReplyCap.md](core/llm-server/chat/bridge/turn/ReplyCap.md): how many tokens one agent completion may generate.
+- [core/llm-server/chat/bridge/turn/RunControl.md](core/llm-server/chat/bridge/turn/RunControl.md): one run's cancel state.
+- [core/llm-server/chat/bridge/turn/RunHealth.md](core/llm-server/chat/bridge/turn/RunHealth.md): one run's health tally and usage figures.
+- [core/llm-server/chat/bridge/turn/RunImages.md](core/llm-server/chat/bridge/turn/RunImages.md): the images that ride on a run's completions, each exactly once.
+- [core/llm-server/chat/bridge/turn/StreamMirror.md](core/llm-server/chat/bridge/turn/StreamMirror.md): mirrors content tokens into the bubble and retracts a tool iteration's.
+- [core/llm-server/chat/bridge/turn/TextDrip.md](core/llm-server/chat/bridge/turn/TextDrip.md): paces a buffered answer back in small chunks.
+- [core/llm-server/chat/bridge/turn/ToolTrace.md](core/llm-server/chat/bridge/turn/ToolTrace.md): one turn's tool trace, persisted on the assistant message.
+- [core/llm-server/chat/bridge/turn/TurnFinisher.md](core/llm-server/chat/bridge/turn/TurnFinisher.md): ends a turn on exactly one terminal hook.
+- [core/llm-server/chat/bridge/turn/TurnReminder.md](core/llm-server/chat/bridge/turn/TurnReminder.md): the per-iteration restatement of the tool-call protocol.
+- [core/llm-server/chat/bridge/waits/ApprovalWait.md](core/llm-server/chat/bridge/waits/ApprovalWait.md): the wait on an approval card.
+- [core/llm-server/chat/bridge/waits/HumanWait.md](core/llm-server/chat/bridge/waits/HumanWait.md): base for a question the agent loop blocks on until a person (or a timer) answers.
+- [core/llm-server/chat/bridge/waits/TakeoverWait.md](core/llm-server/chat/bridge/waits/TakeoverWait.md): the wait on an ask_user_takeover card.
+
+## core/shell/extensions
+
+- [core/shell/ExtensionManager.md](core/shell/ExtensionManager.md): discovers, resolves, activates and manages extensions at runtime; has `discover`, `resolve`, `activate`, `enableExtension`, `disableExtension`, `deleteExtension`, `hotInstallExtension`, `getApi`.
+- [core/shell/extensions/CapabilitiesSnapshot.md](core/shell/extensions/CapabilitiesSnapshot.md): what a new extension can build on, fed to the coding agent (`context.code.capabilities()`).
+- [core/shell/extensions/ChatImageGenerator.md](core/shell/extensions/ChatImageGenerator.md): server-side image generation for extensions through the core ImageRouter (`context.chat.generateImage` / `abortImage`).
+- [core/shell/extensions/ChatSurface.md](core/shell/extensions/ChatSurface.md): `context.chat`: chat modes plus server-side image and text helpers for mode reactions.
+- [core/shell/extensions/CodeSurface.md](core/shell/extensions/CodeSurface.md): `context.code`: the coding agent's privileged workspace seam (Vibe builder, Code and Game modes).
+- [core/shell/extensions/ContextSurface.md](core/shell/extensions/ContextSurface.md): base class for one area of an extension's activation context.
+- [core/shell/extensions/DependencyResolver.md](core/shell/extensions/DependencyResolver.md): decides which discovered, non-disabled extensions can load and in what order.
+- [core/shell/extensions/DisabledExtensions.md](core/shell/extensions/DisabledExtensions.md): the user-disabled extension ids, persisted in the `shell.extensions.disabled` setting.
+- [core/shell/extensions/ExtensionActivator.md](core/shell/extensions/ExtensionActivator.md): activates one discovered extension.
+- [core/shell/extensions/ExtensionContextFactory.md](core/shell/extensions/ExtensionContextFactory.md): builds the `context` an extension's `activate(context)` receives.
+- [core/shell/extensions/ExtensionEventBus.md](core/shell/extensions/ExtensionEventBus.md): `context.events`: a per-extension publish/subscribe bus.
+- [core/shell/extensions/ExtensionGlobals.md](core/shell/extensions/ExtensionGlobals.md): lazy readers for the singletons main.js parks on `global`, so extension activation order relative to the servers never matters.
+- [core/shell/extensions/ExtensionLedger.md](core/shell/extensions/ExtensionLedger.md): the manager's live state, shared by all its parts.
+- [core/shell/extensions/ExtensionRemover.md](core/shell/extensions/ExtensionRemover.md): fully deletes a user-installed extension.
+- [core/shell/extensions/ExtensionTeardown.md](core/shell/extensions/ExtensionTeardown.md): undoes everything an active extension plugged into the app.
+- [core/shell/extensions/ExtensionUrls.md](core/shell/extensions/ExtensionUrls.md): the served URL of an extension's chat or Setup UI bundle and of a Dashboard widget file by sub-path; has `uiAsset`, `uiFile`.
+- [core/shell/extensions/ExtensionWiring.md](core/shell/extensions/ExtensionWiring.md): plugs an activated extension into the app.
+- [core/shell/extensions/HotInstaller.md](core/shell/extensions/HotInstaller.md): adds one extension directory to the live set at runtime (add-on installer, `context.code.installAndActivate`).
+- [core/shell/extensions/ImageCatalogSurface.md](core/shell/extensions/ImageCatalogSurface.md): `context.imageCatalog`: downloadable image-model rows contributed by an extension.
+- [core/shell/extensions/ImageGenerationRun.md](core/shell/extensions/ImageGenerationRun.md): one `generateImage` call in flight.
+- [core/shell/extensions/ImageSlotWarmer.md](core/shell/extensions/ImageSlotWarmer.md): pre-warms an image slot's server (`context.chat.warmImageSlot`), e.g.
+- [core/shell/extensions/ImageVramMediator.md](core/shell/extensions/ImageVramMediator.md): gives image generation the GPU on single-GPU machines, behind `context.chat.beginExclusiveImage()` / `endExclusiveImage()`.
+- [core/shell/extensions/LlmCatalogSurface.md](core/shell/extensions/LlmCatalogSurface.md): `context.llmCatalog`: inference runtimes and downloadable add-on models contributed by an extension.
+- [core/shell/extensions/LlmRuntimesView.md](core/shell/extensions/LlmRuntimesView.md): drops the LLM server's cached runtimes view after an extension adds or removes a runtime.
+- [core/shell/extensions/LoadPriority.md](core/shell/extensions/LoadPriority.md): orders extensions by `manifest.loadPriority` (lower first, default 100).
+- [core/shell/extensions/ManifestDeps.md](core/shell/extensions/ManifestDeps.md): reads what a manifest declares it depends on.
+- [core/shell/extensions/ManifestFields.md](core/shell/extensions/ManifestFields.md): normalises the loosely shaped manifest fields so every reader agrees.
+- [core/shell/extensions/ManifestHtmlFiles.md](core/shell/extensions/ManifestHtmlFiles.md): inlines the HTML files a manifest's declarative UI points at.
+- [core/shell/extensions/ManifestScanner.md](core/shell/extensions/ManifestScanner.md): finds every directory containing a `manifest.js` under the extension roots.
+- [core/shell/extensions/ManifestValidator.md](core/shell/extensions/ManifestValidator.md): checks a manifest for required fields and common mistakes.
+- [core/shell/extensions/McpToolSetMerger.md](core/shell/extensions/McpToolSetMerger.md): combines an extension's manual MCP tool set (`manifest.mcpTools`) with the one built from `context.expose()`.
+- [core/shell/extensions/RendererBroadcast.md](core/shell/extensions/RendererBroadcast.md): best-effort push of an extension lifecycle event to every open window.
+- [core/shell/extensions/DashboardContribution.md](core/shell/extensions/DashboardContribution.md): reads a manifest's dashboard contribution (widgets with their optional chat `context` method, assets, api allow-list) and the ext:<id>:<widget> root ids; has `widgets`, `contextMethod`, `apiMethods`, `allowsMethod`, `publishedFiles`, `rootId`, `parseRootId`, `widgetUrl`.
+- [core/shell/extensions/ExtensionApiCall.md](core/shell/extensions/ExtensionApiCall.md): one guarded renderer call onto an active extension's published API, and the host's call onto a widget's context method; has `invoke`, `invokeWidgetContext`.
+- [core/shell/extensions/DashboardEventBroadcast.md](core/shell/extensions/DashboardEventBroadcast.md): pushes an extension's data-change event to every renderer on ext.<id>.dashboard.event; has `channel`, `send`.
+- [core/shell/extensions/RendererExtensionList.md](core/shell/extensions/RendererExtensionList.md): the serialisable list of every discovered extension the renderer builds its UI from.
+- [core/shell/extensions/RendererSource.md](core/shell/extensions/RendererSource.md): reads a user-installed extension's declared renderer script for inline injection.
+- [core/shell/extensions/RequireCacheBuster.md](core/shell/extensions/RequireCacheBuster.md): forgets every cached module loaded from an extension directory, so a reinstall loads new code (routes, tools and helpers too, not just manifest.js).
+- [core/shell/extensions/SetupTabSurface.md](core/shell/extensions/SetupTabSurface.md): `context.setupTab`: a runtime-registered Setup-area tab and the handler its UI calls.
+- [core/shell/extensions/ToggleConstraints.md](core/shell/extensions/ToggleConstraints.md): whether each discovered extension can be switched on or off now.
+- [core/shell/extensions/VisionAvailability.md](core/shell/extensions/VisionAvailability.md): whether an image passed to `context.chat.complete` would reach the model.
+- [core/shell/extensions/VoiceSurface.md](core/shell/extensions/VoiceSurface.md): `context.voice`: alternate TTS engines and the app's speech recognizer.
+
+## core/llm-server/chat/router
+
+- [core/llm-server/chat/UnifiedChatRouter.md](core/llm-server/chat/UnifiedChatRouter.md): single chat entry point (local, remote and peer routing, one in-flight turn); has `chat`, `abort`, `listModels`, `contextWindowFor`, `previewSystemPrompt`, `complete`, `completeStream`, `proxyStream`, `proxyAgent`, `getAgentDeps`.
+- [core/llm-server/chat/router/AgentCompletion.md](core/llm-server/chat/router/AgentCompletion.md): one non-streaming completion for the agent loop, with retries.
+- [core/llm-server/chat/router/AgentToolPolicy.md](core/llm-server/chat/router/AgentToolPolicy.md): the user's agent-tool policy: the global denylist plus a conversation's gear-panel denylist as an allow-list, the gear panel's catalog, and its opt-in toggle channel.
+- [core/llm-server/chat/router/AgentTurnDispatch.md](core/llm-server/chat/router/AgentTurnDispatch.md): routes a Tools-on chat turn through the agent bridge.
+- [core/llm-server/chat/router/DocsSourceGrant.md](core/llm-server/chat/router/DocsSourceGrant.md): what a turn with the "@lumabrowser-documentation" source on gets: the `search_lumabrowser_docs` session tool and prompt note (Tools on) or a retrieval pre-pass into the system head (Tools off); has `forTurn`, `extraTool`, `note`, `allowing`, `prepass`.
+- [core/llm-server/chat/router/ArtifactAccess.md](core/llm-server/chat/router/ArtifactAccess.md): read and data access to stored artifacts for the sharing host, share links and the web client.
+- [core/llm-server/chat/router/AttachmentArtifacts.md](core/llm-server/chat/router/AttachmentArtifacts.md): promotes a turn's attached images to persisted artifacts linked to the user message.
+- [core/llm-server/chat/router/ChatModeTurn.md](core/llm-server/chat/router/ChatModeTurn.md): resolves a conversation's extension chat mode for one turn.
+- [core/llm-server/chat/router/ChatModelList.md](core/llm-server/chat/router/ChatModelList.md): the chat's model picker list and default selection.
+- [core/llm-server/chat/router/ChatModelRef.md](core/llm-server/chat/router/ChatModelRef.md): reads the chat's model routing key: `local::<modelBasename>` is the managed local server, `<providerConfigId>::<modelId>` a remote provider config (a paired sharing peer included).
+- [core/llm-server/chat/router/ChatStyleDocs.md](core/llm-server/chat/router/ChatStyleDocs.md): the per-turn style documents the chat injects, and the plain path's fold into the system head.
+- [core/llm-server/chat/router/ChatTurn.md](core/llm-server/chat/router/ChatTurn.md): one chat turn, built fresh for every `chat()` call.
+- [core/llm-server/chat/router/CollectedCompletion.md](core/llm-server/chat/router/CollectedCompletion.md): runs one dispatch to completion and resolves with the whole reply text.
+- [core/llm-server/chat/router/CompactionGate.md](core/llm-server/chat/router/CompactionGate.md): condenses an over-long conversation into one summary before a turn is dispatched, but only against a server already serving the turn's model.
+- [core/llm-server/chat/router/CompletionAttempt.md](core/llm-server/chat/router/CompletionAttempt.md): one try of an agent-loop completion.
+- [core/llm-server/chat/router/ConversationTitle.md](core/llm-server/chat/router/ConversationTitle.md): conversation title text: the provisional title from the first user message and the cleanup of a model-written title.
+- [core/llm-server/chat/router/FamilySampler.md](core/llm-server/chat/router/FamilySampler.md): the model family's published sampler to send with one local request.
+- [core/llm-server/chat/router/InFlightTurn.md](core/llm-server/chat/router/InFlightTurn.md): the router's single in-flight chat turn.
+- [core/llm-server/chat/router/LaunchErrorHints.md](core/llm-server/chat/router/LaunchErrorHints.md): carries the server launcher's machine-readable failure fields (`code`, `runtimeId`, `runtimeName`, `installable`) between launcher results, thrown errors and chat events.
+- [core/llm-server/chat/router/LocalRequest.md](core/llm-server/chat/router/LocalRequest.md): sends one chat request to the ready local server through its runtime's chat adapter, counted in the service's shared in-flight tally.
+- [core/llm-server/chat/router/LocalRestartDecision.md](core/llm-server/chat/router/LocalRestartDecision.md): decides whether the managed local server must be (re)started before a chat request, and why.
+- [core/llm-server/chat/router/LocalServerPrep.md](core/llm-server/chat/router/LocalServerPrep.md): gets the managed local server running the model a chat request asked for.
+- [core/llm-server/chat/router/LocalSlotReclaimer.md](core/llm-server/chat/router/LocalSlotReclaimer.md): after a cancelled local turn, makes sure a possibly wedged llama-server slot cannot linger.
+- [core/llm-server/chat/router/LocalStream.md](core/llm-server/chat/router/LocalStream.md): streams one chat request through the managed local server, guarded against a concurrent vision restart.
+- [core/llm-server/chat/router/MessageImages.md](core/llm-server/chat/router/MessageImages.md): puts a turn's attached images in front of the model: OpenAI `image_url` parts on the newest user turn, or a blunt note that the loaded model cannot see.
+- [core/llm-server/chat/router/ModeReaction.md](core/llm-server/chat/router/ModeReaction.md): runs a chat mode's optional postProcess reaction after a turn ends.
+- [core/llm-server/chat/router/ModelCapabilities.md](core/llm-server/chat/router/ModelCapabilities.md): what the model behind a chat model ref can do this turn, read from the LIVE launch plan.
+- [core/llm-server/chat/router/ModelContextWindow.md](core/llm-server/chat/router/ModelContextWindow.md): the context window ONE request gets from the model behind a chat model ref, in tokens.
+- [core/llm-server/chat/router/ModelDispatcher.md](core/llm-server/chat/router/ModelDispatcher.md): the one choke point every chat model call passes through.
+- [core/llm-server/chat/router/ProxyTurns.md](core/llm-server/chat/router/ProxyTurns.md): turns run for a paired Network Sharing client: never persisted, never touching the host user's in-flight turn.
+- [core/llm-server/chat/router/RemoteStream.md](core/llm-server/chat/router/RemoteStream.md): streams one chat request to a remote provider config through an ephemeral provider that never writes the user's settings.
+- [core/llm-server/chat/router/SideCompletion.md](core/llm-server/chat/router/SideCompletion.md): one-shot side completions for extension chat modes and AI-fill fields (`context.chat.complete` and its streaming twin).
+- [core/llm-server/chat/router/StreamPhaseLog.md](core/llm-server/chat/router/StreamPhaseLog.md): timestamped terminal lines for one local chat request.
+- [core/llm-server/chat/router/SystemPromptPreview.md](core/llm-server/chat/router/SystemPromptPreview.md): the Advanced tab's system prompt preview: the exact Tools-on prompt for the current settings, without running a turn.
+- [core/llm-server/chat/router/ThinkingDial.md](core/llm-server/chat/router/ThinkingDial.md): how hard the model should think this turn, resolved into request knobs.
+- [core/llm-server/chat/router/TitleGenerator.md](core/llm-server/chat/router/TitleGenerator.md): asks a conversation's model for a short title after its first exchange and renames the conversation.
+- [core/llm-server/chat/router/TransientLlmError.md](core/llm-server/chat/router/TransientLlmError.md): tells a connection-class model failure worth retrying from a real model or auth error.
+- [core/llm-server/chat/router/TurnConversation.md](core/llm-server/chat/router/TurnConversation.md): the conversation side of starting a chat turn.
+- [core/llm-server/chat/router/TurnStream.md](core/llm-server/chat/router/TurnStream.md): the live side of one chat turn: accumulates the stream into the assistant placeholder and finalises it exactly once.
+
+## core/llm-server/ipc
+
+- [core/llm-server/LlmServerIpcHandlers.md](core/llm-server/LlmServerIpcHandlers.md): IPC controller for core.llmServer.* and core.debug.getLogs, routes only; has `register(llmServerService, deps)` returning `{ router }`.
+- [core/llm-server/ipc/AddonModelInstaller.md](core/llm-server/ipc/AddonModelInstaller.md): extension-contributed add-on models on the Setup tab's Models card.
+- [core/llm-server/ipc/ApprovalPolicySetting.md](core/llm-server/ipc/ApprovalPolicySetting.md): the stored tool approval policy (see [ApprovalGate](core/llm-server/chat/ApprovalGate.md)).
+- [core/llm-server/ipc/ArtifactActions.md](core/llm-server/ipc/ArtifactActions.md): the chat's artifact sidebar.
+- [core/llm-server/ipc/AttachmentPdfText.md](core/llm-server/ipc/AttachmentPdfText.md): plain text from a PDF attached to a chat, extracted in this process with pdfjs-dist.
+- [core/llm-server/ipc/AttachmentReader.md](core/llm-server/ipc/AttachmentReader.md): reads chat attachments into the shapes the composer sends.
+- [core/llm-server/ipc/AutoSetupPlan.md](core/llm-server/ipc/AutoSetupPlan.md): automatic Local Setup's plan for this machine.
+- [core/llm-server/ipc/ChatAttachments.md](core/llm-server/ipc/ChatAttachments.md): the chat composer's attachments: the paperclip picker and dropped files.
+- [core/llm-server/ipc/ChatDataReset.md](core/llm-server/ipc/ChatDataReset.md): setup > Advanced > Data "clear conversations and artifacts".
+- [core/llm-server/ipc/ChatModeIntent.md](core/llm-server/ipc/ChatModeIntent.md): cross-view launcher: another surface asks the chat to open in a mode with preset setup data.
+- [core/llm-server/ipc/ChatTurnRequest.md](core/llm-server/ipc/ChatTurnRequest.md): one unified chat turn from the chat UI.
+- [core/llm-server/ipc/ConversationActions.md](core/llm-server/ipc/ConversationActions.md): the chat sidebar's conversation and message operations over [ChatStore](core/llm-server/ChatStore.md).
+- [core/llm-server/ipc/ConversationDeletion.md](core/llm-server/ipc/ConversationDeletion.md): deletes a conversation and everything that hangs off it.
+- [core/llm-server/ipc/ConversationExporter.md](core/llm-server/ipc/ConversationExporter.md): downloads a conversation as a PDF or a full-page PNG.
+- [core/llm-server/ipc/DebugLogsView.md](core/llm-server/ipc/DebugLogsView.md): the chat's dev-only "Copy Logs" source.
+- [core/llm-server/ipc/ExistingLlmModels.md](core/llm-server/ipc/ExistingLlmModels.md): adopts GGUF models the user already has (LM Studio, the Hugging Face cache, Ollama) instead of downloading them again.
+- [core/llm-server/ipc/FitRuntimePicker.md](core/llm-server/ipc/FitRuntimePicker.md): picks the installed runtime a model is measured (fit test) or estimated (picker options) with.
+- [core/llm-server/ipc/FitTestLive.md](core/llm-server/ipc/FitTestLive.md): the live snapshot of an in-flight fit test, read by a reloaded LLM tab.
+- [core/llm-server/ipc/FitTestSession.md](core/llm-server/ipc/FitTestSession.md): runs the empirical fit test from the LLM tab, one at a time.
+- [core/llm-server/ipc/GambitLive.md](core/llm-server/ipc/GambitLive.md): the live snapshot of an in-flight compatibility gambit, read by a reloaded LLM tab.
+- [core/llm-server/ipc/GambitProvenance.md](core/llm-server/ipc/GambitProvenance.md): the provenance block of a gambit report and the rule for which runs are stored.
+- [core/llm-server/ipc/GambitSession.md](core/llm-server/ipc/GambitSession.md): runs the model compatibility gambit from the LLM tab or the CLI, one at a time.
+- [core/llm-server/ipc/GambitTarget.md](core/llm-server/ipc/GambitTarget.md): works out what a compatibility gambit grades.
+- [core/llm-server/ipc/HfModelInput.md](core/llm-server/ipc/HfModelInput.md): reads the model download inputs the wizard accepts and names per-repo folders.
+- [core/llm-server/ipc/HfRepoBrowser.md](core/llm-server/ipc/HfRepoBrowser.md): the wizard's live model browser over the Hugging Face Hub.
+- [core/llm-server/ipc/HiddenRunConversations.md](core/llm-server/ipc/HiddenRunConversations.md): deletes the hidden run-transcript conversations a scheduled task or trigger owns.
+- [core/llm-server/ipc/IpcFailure.md](core/llm-server/ipc/IpcFailure.md): builds the error a service throws when its IPC failure reply must carry extra fields, so `IpcEnvelope.enveloped` produces `{ success: false, error, ...fields }`.
+- [core/llm-server/ipc/LlmAvailability.md](core/llm-server/ipc/LlmAvailability.md): the compact "can I chat right now" state the browser chrome binds its status dot to.
+- [core/llm-server/ipc/LlmDefaultsUpdater.md](core/llm-server/ipc/LlmDefaultsUpdater.md): saves the LLM launch defaults and stops a running server the change made stale.
+- [core/llm-server/ipc/LlmDiagnosticsView.md](core/llm-server/ipc/LlmDiagnosticsView.md): the LLM tab's hardware panel data.
+- [core/llm-server/ipc/LlmDownloadSlot.md](core/llm-server/ipc/LlmDownloadSlot.md): the one LLM model download allowed at a time (plain downloads, MLX snapshots, add-on setups).
+- [core/llm-server/ipc/LlmIpcDeps.md](core/llm-server/ipc/LlmIpcDeps.md): the optional collaborators main.js hands [LlmServerIpcHandlers](core/llm-server/LlmServerIpcHandlers.md), plus the lazy lookups several services share.
+- [core/llm-server/ipc/PageContextActions.md](core/llm-server/ipc/PageContextActions.md): the chat composer's "ask about a tab" and "@dashboard": lists open web tabs (last viewed first), reads one page as capped markdown or text, and reads the Dashboard's placed widgets as text.
+- [core/llm-server/ipc/LlmModelsView.md](core/llm-server/ipc/LlmModelsView.md): the LLM Setup models view.
+- [core/llm-server/ipc/LlmRuntimeSetup.md](core/llm-server/ipc/LlmRuntimeSetup.md): the LLM runtimes section: cached view, update and pre-release checks, registering or locating a llama.cpp build, install and uninstall.
+- [core/llm-server/ipc/LlmServerBroadcast.md](core/llm-server/ipc/LlmServerBroadcast.md): pushes LLM server events to every live renderer.
+- [core/llm-server/ipc/LocalModelOptions.md](core/llm-server/ipc/LocalModelOptions.md): the chat model picker's list of local models with per-context options.
+- [core/llm-server/ipc/MlxRepoInstall.md](core/llm-server/ipc/MlxRepoInstall.md): downloads an MLX model (a whole repo snapshot) into a managed `owner__repo` folder.
+- [core/llm-server/ipc/ModelCompanions.md](core/llm-server/ipc/ModelCompanions.md): the companion GGUFs a repo ships beside the weights.
+- [core/llm-server/ipc/ModelDownloadRequest.md](core/llm-server/ipc/ModelDownloadRequest.md): normalises a `downloadModel` request into the files to fetch.
+- [core/llm-server/ipc/ModelFileDownloader.md](core/llm-server/ipc/ModelFileDownloader.md): the wizard's and Setup's model download.
+- [core/llm-server/ipc/ModelTransfer.md](core/llm-server/ipc/ModelTransfer.md): one model download run across several files with one stable cancel and pause handle.
+- [core/llm-server/ipc/ModelWizard.md](core/llm-server/ipc/ModelWizard.md): the onboarding wizard's hardware budget and model recommendation.
+- [core/llm-server/ipc/ModelsDirStorage.md](core/llm-server/ipc/ModelsDirStorage.md): free space where models land, shown before a multi-GB download.
+- [core/llm-server/ipc/PeerGpuView.md](core/llm-server/ipc/PeerGpuView.md): the GPUs attached network-sharing peers offer for distributed inference.
+- [core/llm-server/ipc/PlannedBytesOnDisk.md](core/llm-server/ipc/PlannedBytesOnDisk.md): how much of an automatic-setup plan's download is already on disk.
+- [core/llm-server/ipc/QuickChat.md](core/llm-server/ipc/QuickChat.md): the Setup tab's quick chat straight against the running local server.
+- [core/llm-server/ipc/ScheduledTaskActions.md](core/llm-server/ipc/ScheduledTaskActions.md): the chat sidebar's Scheduled section and runs view.
+- [core/llm-server/ipc/SetupTabActions.md](core/llm-server/ipc/SetupTabActions.md): extension-contributed Setup tabs over [SetupTabRegistry](core/llm-server/chat/SetupTabRegistry.md).
+- [core/llm-server/ipc/ShardedProgress.md](core/llm-server/ipc/ShardedProgress.md): one progress bar across every part of a sharded GGUF.
+- [core/llm-server/ipc/SideCompletions.md](core/llm-server/ipc/SideCompletions.md): one-shot side completions for mode setup forms, never stored and never touching the in-flight turn.
+- [core/llm-server/ipc/SystemLibrariesCheck.md](core/llm-server/ipc/SystemLibrariesCheck.md): the Linux system-library preflight both setup wizards run before a model download.
+- [core/llm-server/ipc/TraceCallsSetting.md](core/llm-server/ipc/TraceCallsSetting.md): the Settings switch for the per-call [LlmTrace](core/llm-server/chat/LlmTrace.md).
+- [core/llm-server/ipc/TriggerActions.md](core/llm-server/ipc/TriggerActions.md): the triggers sidebar and runs view.
+- [core/llm-server/ipc/TriggerDetails.md](core/llm-server/ipc/TriggerDetails.md): everything a trigger's card shows beyond the stored row.
+- [core/llm-server/ipc/WorkspaceFileViewer.md](core/llm-server/ipc/WorkspaceFileViewer.md): reads one file from the folder a conversation works on, for the tool cards' "view file" panel.
+
+## extensions/ai-chat
+
+- [extensions/ai-chat/AiChatExtension.md](extensions/ai-chat/AiChatExtension.md): activates AI Chat (preferences IPC, headless AgentRunner, run() API); has `activate`, `deactivate`.
+- [extensions/ai-chat/AiChatPreferences.md](extensions/ai-chat/AiChatPreferences.md): the AI Chat system prompt preference under its legacy settings key; has `get`, `save`.
+- [extensions/ai-chat/AiChatRunRequest.md](extensions/ai-chat/AiChatRunRequest.md): MCP/REST input to AgentRunner run options; has `isValidPrompt`, `toRunOptions`.
+- [extensions/ai-chat/AiChatAgentFactory.md](extensions/ai-chat/AiChatAgentFactory.md): builds the core AgentRunner from the extension context; has `create`.
+- [extensions/ai-chat/AiChatMcpHandler.md](extensions/ai-chat/AiChatMcpHandler.md): routes ai_chat_run MCP calls; has `handle`.
+- [extensions/ai-chat/renderer.md](extensions/ai-chat/renderer.md): the AI Chat renderer entry the shell loads as a module (bundled, not `distributable`).
+- [extensions/ai-chat/ui/AiChatMarkup.md](extensions/ai-chat/ui/AiChatMarkup.md): static markup of the AI Chat extension.
+- [extensions/ai-chat/ui/AiChatRenderer.md](extensions/ai-chat/ui/AiChatRenderer.md): the AI Chat main-window renderer: registers the settings tab, injects the side panel and its confirmation modal, and publishes the panel controller.
+- [extensions/ai-chat/ui/AiChatSettingsTab.md](extensions/ai-chat/ui/AiChatSettingsTab.md): the AI Chat settings tab controller.
+- [extensions/ai-chat/ui/ChatPanelApi.md](extensions/ai-chat/ui/ChatPanelApi.md): the third implementation of the llmDiagAPI chat contract (after the LLM tab preload and the PWA shim): the chat slice only, over the main window's `window.ipcBridge` passthrough.
+- [extensions/ai-chat/ui/ConversationExport.md](extensions/ai-chat/ui/ConversationExport.md): exports every ChatStore conversation with its messages as a JSON download.
+- [extensions/ai-chat/ui/lite-panel/LiteActionCard.md](extensions/ai-chat/ui/lite-panel/LiteActionCard.md): the side panel's interactive cards, on the same IPC as the LLM tab's.
+- [extensions/ai-chat/ui/lite-panel/LiteChatReducer.md](extensions/ai-chat/ui/lite-panel/LiteChatReducer.md): pure translation of the chat router's chatEvent vocabulary into the side panel's view state.
+- [extensions/ai-chat/ui/lite-panel/LiteConfirm.md](extensions/ai-chat/ui/lite-panel/LiteConfirm.md): the side panel's delete confirmation in `#aiChatConfirmModal`.
+- [extensions/ai-chat/ui/lite-panel/LiteHistoryList.md](extensions/ai-chat/ui/lite-panel/LiteHistoryList.md): - `LiteHistoryList.render(listEl, conversations, activeId, onOpen)`: "No conversations yet." when empty; else one `.ai-history-item` button per conversation (`active` for the open one) with its title ("New chat" fallback, also the tooltip) and `updatedAt` as a local HH:MM time.
+- [extensions/ai-chat/ui/lite-panel/LiteMarkdown.md](extensions/ai-chat/ui/lite-panel/LiteMarkdown.md): the side panel's minimal escape-first markdown.
+- [extensions/ai-chat/ui/lite-panel/LiteModelPicker.md](extensions/ai-chat/ui/lite-panel/LiteModelPicker.md): - `LiteModelPicker.render(select, models, selectedRef)`: one option per model (`ref`, `label || ref`), the selected ref selected; with no models a disabled select holding "No model configured".
+- [extensions/ai-chat/ui/lite-panel/LiteNoModelNotice.md](extensions/ai-chat/ui/lite-panel/LiteNoModelNotice.md): with no model configured the composer must not look live.
+- [extensions/ai-chat/ui/lite-panel/LitePanel.md](extensions/ai-chat/ui/lite-panel/LitePanel.md): the AI Chat side panel controller over the modern chat machinery: real ChatStore conversations through `chat2`/`chatEvent`.
+- [extensions/ai-chat/ui/lite-panel/LitePanelStyles.md](extensions/ai-chat/ui/lite-panel/LitePanelStyles.md): the side panel's own style block (approval and takeover cards, header controls, the toolbar state dot), on base.css tokens.
+- [extensions/ai-chat/ui/lite-panel/LiteServerBadge.md](extensions/ai-chat/ui/lite-panel/LiteServerBadge.md): paints the compact LLM availability onto the toolbar.
+- [extensions/ai-chat/ui/lite-panel/LiteThreadView.md](extensions/ai-chat/ui/lite-panel/LiteThreadView.md): the side panel's message thread in the legacy CSS vocabulary (`.ai-msg`, `.ai-run-group`, `.ai-msg-step`, styles in the shell).
+- [extensions/ai-chat/ui/lite-panel/LiteToolCards.md](extensions/ai-chat/ui/lite-panel/LiteToolCards.md): reconciles `tool` events into the side panel's cards, mirroring the LLM tab.
+- [extensions/ai-chat/ui/lite-panel/LiteToolsPopover.md](extensions/ai-chat/ui/lite-panel/LiteToolsPopover.md): the side panel header's per-chat tool checklist (the same catalog and `disabled_tools` the LLM tab's gear panel edits).
+- [extensions/ai-chat/ui/lite-panel/RunZoom.md](extensions/ai-chat/ui/lite-panel/RunZoom.md): zooms the active tab out to `RUN_FACTOR` (0.25) while a turn runs and back to `RESET_FACTOR` (1.0) on the same tab when it ends.
+
+## extensions/on-demand-mode
+
+- [extensions/on-demand-mode/OnDemandExtension.md](extensions/on-demand-mode/OnDemandExtension.md): activates Luma On Demand (seeds KB, registers the hidden mode); has `activate`, `deactivate`.
+- [extensions/on-demand-mode/OnDemandMode.md](extensions/on-demand-mode/OnDemandMode.md): hidden 'on-demand' chat mode pinning the agent to the user's tab; has `descriptor`, `buildTurn`.
+- [extensions/on-demand-mode/OnDemandKnowledgeBase.md](extensions/on-demand-mode/OnDemandKnowledgeBase.md): webnav RAG scope seeding and counting; has `seed`, `docCount`.
+- [extensions/on-demand-mode/OnDemandPrompt.md](extensions/on-demand-mode/OnDemandPrompt.md): per-tab page-agent system prompt; has `build`.
+
+## extensions/anima-model
+
+- [extensions/anima-model/AnimaCatalogEntries.md](extensions/anima-model/AnimaCatalogEntries.md): Anima base and Turbo image-catalog rows and their registration; has `all`, `registerInto`.
+
+## extensions/tab-share
+
+- [extensions/tab-share/AppDependencyLoader.md](extensions/tab-share/AppDependencyLoader.md): requires an npm package that ships with the app (express, ws, node-turn) wherever Tab Share is installed.
+- [extensions/tab-share/CaptureGrantQueue.md](extensions/tab-share/CaptureGrantQueue.md): serialises tab capture grants for the hidden capturer page.
+- [extensions/tab-share/CapturerWindow.md](extensions/tab-share/CapturerWindow.md): the one hidden BrowserWindow that does Tab Share's WebRTC work (Electron's main process has no WebRTC).
+- [extensions/tab-share/ClientMessageParser.md](extensions/tab-share/ClientMessageParser.md): parses and sanitises one raw message from a tab viewer's WebSocket.
+- [extensions/tab-share/InputEventMapper.md](extensions/tab-share/InputEventMapper.md): expands a parsed viewer message into `webContents.sendInputEvent` payloads.
+- [extensions/tab-share/RtcCapturer.md](extensions/tab-share/RtcCapturer.md): host side of Tab Share's optimized (WebRTC) stream: one RTCPeerConnection per guest, run in the [CapturerWindow](extensions/tab-share/CapturerWindow.md) page, with signalling relayed over the guest's WebSocket.
+- [extensions/tab-share/TabFrameGrabber.md](extensions/tab-share/TabFrameGrabber.md): captures one JPEG frame of a shared tab.
+- [extensions/tab-share/TabInputSink.md](extensions/tab-share/TabInputSink.md): applies a guest's input to the shared tab as trusted `sendInputEvent` calls, in order, with the mapper's pauses.
+- [extensions/tab-share/TabShareExtension.md](extensions/tab-share/TabShareExtension.md): main-process side of Tab Share: right-click a tab, "Share tab", and a public link on the Network Sharing web backend streams it to whoever opens it.
+- [extensions/tab-share/TabShareList.md](extensions/tab-share/TabShareList.md): the persisted list of tab shares (key `shares`).
+- [extensions/tab-share/TabShareService.md](extensions/tab-share/TabShareService.md): the tab shares themselves, an EventEmitter.
+- [extensions/tab-share/TabShareSettings.md](extensions/tab-share/TabShareSettings.md): tab Share's streaming settings, persisted under the extension's `settings` key: `{ rtcEnabled, turnEnabled, turnPort, turnHost }`.
+- [extensions/tab-share/TabShareTransport.md](extensions/tab-share/TabShareTransport.md): tab Share's optimized-stream plumbing: the lazily created [RtcCapturer](extensions/tab-share/RtcCapturer.md), the [TurnRelay](extensions/tab-share/TurnRelay.md), per-guest ICE config and the hooks a [TabStreamer](extensions/tab-share/TabStreamer.md) uses for one share.
+- [extensions/tab-share/TabShareWebRouter.md](extensions/tab-share/TabShareWebRouter.md): public `/tab` routes on the Network Sharing web backend listener (never the desktop REST gateway).
+- [extensions/tab-share/TabStreamer.md](extensions/tab-share/TabStreamer.md): one shared tab's frame feed and input sink, an EventEmitter.
+- [extensions/tab-share/TabViewer.md](extensions/tab-share/TabViewer.md): one guest connected to a shared tab: its socket, whether it is on the WebRTC video stream, its peer, and its input rate limit.
+- [extensions/tab-share/TurnRelay.md](extensions/tab-share/TurnRelay.md): the host's own TURN server (node-turn, UDP), so a guest outside the LAN can still get WebRTC media once the relay port is reachable (port-forwarded or a routed VPN).
+- [extensions/tab-share/UdpPortProbe.md](extensions/tab-share/UdpPortProbe.md): checks a UDP port can be bound (bind and close a throwaway socket on `0.0.0.0`), so the relay settings can show a real error: node-turn reports bind failures only through its log.
+- [extensions/tab-share/renderer.md](extensions/tab-share/renderer.md): classic-script exception: the extension is `distributable: true`, so this stays one self-contained classic file (add-on scripts are injected as classic scripts, and the build obfuscates it as one file).
+- [extensions/tab-share/rtc/capturer-preload.md](extensions/tab-share/rtc/capturer-preload.md): preload of the hidden capturer window.
+- [extensions/tab-share/rtc/capturer.md](extensions/tab-share/rtc/capturer.md): `extensions/tab-share/rtc/capturer.html`, `extensions/tab-share/rtc/capturer.js`.
+- [extensions/tab-share/settings.md](extensions/tab-share/settings.md): the Tab Share settings page fragment the shell mounts for `manifest.settings.htmlFile`: how it works, the availability callout (`#ext-ts-availability`), the shared-tab list (`#ext-ts-list`, `#ext-ts-stopAll`), the streaming controls (`#ext-ts-rtcEnabled`, `#ext-ts-turnEnabled`, `#ext-ts-turnPort`, `#ext-ts-turnHost` and their status lines) and "Good to know".
+- [extensions/tab-share/web/viewer.md](extensions/tab-share/web/viewer.md): `extensions/tab-share/web/viewer.html`, `viewer.css`, `viewer.js`.
+
+## extensions/ntfy-notifier
+
+- [extensions/ntfy-notifier/NtfyMcpTools.md](extensions/ntfy-notifier/NtfyMcpTools.md): the `send_notification_ntfy` agent tool.
+- [extensions/ntfy-notifier/NtfyNotifierExtension.md](extensions/ntfy-notifier/NtfyNotifierExtension.md): main-process side of the Ntfy Notifications extension: lets the agent push notifications to the user's phone or desktop through an ntfy server.
+- [extensions/ntfy-notifier/NtfyPublisher.md](extensions/ntfy-notifier/NtfyPublisher.md): delivers one push notification through an ntfy server (ntfy.sh or self-hosted): POST the text to `<server>/<topic>`; every device subscribed to the topic gets a push.
+- [extensions/ntfy-notifier/NtfySettings.md](extensions/ntfy-notifier/NtfySettings.md): the ntfy server, default topic, username and password, stored in the extension's settings (Settings > Extensions > Ntfy Notifications) so no secret is ever typed into a chat or a scheduled task's prompt.
+- [extensions/ntfy-notifier/ui/NtfySettingsTab.md](extensions/ntfy-notifier/ui/NtfySettingsTab.md): the Ntfy Notifications settings tab in the main window: server, default topic, optional username and password, and a "Send test" button.
+
+## extensions/tool-forge
+
+- [extensions/tool-forge/ChatRouterDeps.md](extensions/tool-forge/ChatRouterDeps.md): reaches the chat router the LLM server publishes, read on every call because the router does not exist yet when the extension activates at boot.
+- [extensions/tool-forge/CodeHash.md](extensions/tool-forge/CodeHash.md): the SHA-256 (hex) of a tool's code.
+- [extensions/tool-forge/ConfigStore.md](extensions/tool-forge/ConfigStore.md): per-tool config values (API keys etc.) under one settings key per tool, `toolForge.config.<name>`.
+- [extensions/tool-forge/ForgeService.md](extensions/tool-forge/ForgeService.md): the create -> test -> publish state machine behind the builder tools, and the safety gates between the steps.
+- [extensions/tool-forge/ForgeToolDefinitions.md](extensions/tool-forge/ForgeToolDefinitions.md): the `create_tool`, `test_tool` and `publish_tool` definitions.
+- [extensions/tool-forge/ForgeToolHandler.md](extensions/tool-forge/ForgeToolHandler.md): routes builder tool calls to the [ForgeService](extensions/tool-forge/ForgeService.md) and wraps every reply in the MCP envelope ([McpEnvelope](extensions/tool-forge/McpEnvelope.md), `isError` = `!success`).
+- [extensions/tool-forge/McpEnvelope.md](extensions/tool-forge/McpEnvelope.md): wraps a result object in the MCP envelope the aggregator and the chat bridge expect.
+- [extensions/tool-forge/MyToolsSetupActions.md](extensions/tool-forge/MyToolsSetupActions.md): backend of the "My Tools" Setup tab (`setup.invoke` IPC).
+- [extensions/tool-forge/PendingTestConfig.md](extensions/tool-forge/PendingTestConfig.md): remembers the config overrides a passing test used, keyed to the code that passed, so publish can save them.
+- [extensions/tool-forge/PublishedToolEnabler.md](extensions/tool-forge/PublishedToolEnabler.md): the publish-time enable: a tool the user just had built is a tool the user wants to use.
+- [extensions/tool-forge/ToolBundleCodec.md](extensions/tool-forge/ToolBundleCodec.md): tool export and import as a JSON bundle of the portable definition only.
+- [extensions/tool-forge/ToolBundleFiles.md](extensions/tool-forge/ToolBundleFiles.md): moves tool bundles between disk and the forge through the native dialogs.
+- [extensions/tool-forge/ToolDraftInput.md](extensions/tool-forge/ToolDraftInput.md): the create_tool gates, in order: valid name, no collision, description of at least 8 characters, object `inputSchema`, non-empty code, no validator errors, code mentions `run`.
+- [extensions/tool-forge/ToolForgeExtension.md](extensions/tool-forge/ToolForgeExtension.md): activation wiring of Tool Forge.
+- [extensions/tool-forge/ToolNames.md](extensions/tool-forge/ToolNames.md): name bookkeeping for user tools.
+- [extensions/tool-forge/ToolRecordView.md](extensions/tool-forge/ToolRecordView.md): the record shapes the "My Tools" tab reads.
+- [extensions/tool-forge/UserToolHost.md](extensions/tool-forge/UserToolHost.md): turns the published user tools into one McpAggregator tool set and runs their calls through the sandbox.
+- [extensions/tool-forge/UserToolStore.md](extensions/tool-forge/UserToolStore.md): persists AI-created tools as one JSON array under `toolForge.tools`.
+- [extensions/tool-forge/sandbox/SandboxNetBridge.md](extensions/tool-forge/sandbox/SandboxNetBridge.md): the sandbox's only network.
+- [extensions/tool-forge/sandbox/SandboxPolicy.md](extensions/tool-forge/sandbox/SandboxPolicy.md): the soft rules a user tool is bound by, on top of the hard boundaries (Chromium sandbox, network-cancelled renderer, SafeFetch SSRF guard).
+- [extensions/tool-forge/sandbox/SandboxWindow.md](extensions/tool-forge/sandbox/SandboxWindow.md): the hidden renderer that tool code runs in, and its lockdown.
+- [extensions/tool-forge/sandbox/ToolCodeExecutor.md](extensions/tool-forge/sandbox/ToolCodeExecutor.md): the tested authority for compiling and running tool code: a function of ONLY `(args, ctx)` with no closure over require, module or anything else.
+- [extensions/tool-forge/sandbox/ToolSandbox.md](extensions/tool-forge/sandbox/ToolSandbox.md): main-process host of the code sandbox.
+- [extensions/tool-forge/sandbox/runner-preload.md](extensions/tool-forge/sandbox/runner-preload.md): preload of the sandboxed runner window (`sandbox: true`), so it stays one CommonJS file requiring only `electron`.
+- [extensions/tool-forge/sandbox/runner.md](extensions/tool-forge/sandbox/runner.md): `extensions/tool-forge/sandbox/runner.html`, `extensions/tool-forge/sandbox/runner.js`.
+- [extensions/tool-forge/setup-ui.md](extensions/tool-forge/setup-ui.md): `extensions/tool-forge/setup-ui.js`, `extensions/tool-forge/setup-ui.css`.
+- [extensions/tool-forge/ui/MyToolsTab.md](extensions/tool-forge/ui/MyToolsTab.md): the "My Tools" tab: the tools the AI built, import/export, and a full-pane edit view with Monaco.
+- [extensions/tool-forge/ui/ToolCodeEditor.md](extensions/tool-forge/ui/ToolCodeEditor.md): the edit view's Monaco editor.
+- [extensions/tool-forge/ui/ToolCompletions.md](extensions/tool-forge/ui/ToolCompletions.md): tool-contract IntelliSense for the My Tools editor.
+- [extensions/tool-forge/ui/ToolEditView.md](extensions/tool-forge/ui/ToolEditView.md): - `ToolEditView.render(el, { tool, slots, canPublish, notice }, on)`: back link "<- My Tools" and the status, the notice, the Settings form (one input per config slot: password for secrets, placeholder "(set)" or "Not set", "Save settings"), the Code section with the `[data-tf-editor]` host, the collapsible Definition (label, description, allowed hosts, the [ToolSlotEditor](extensions/tool-forge/ui/ToolSlotEditor.md), input schema JSON) and the action bar (test args, Test, Save draft, Publish disabled with a tooltip until a test passes).
+- [extensions/tool-forge/ui/ToolListView.md](extensions/tool-forge/ui/ToolListView.md): - `ToolListView.render(el, { tools, encryptionAvailable, notice }, on)`: the "My Tools" header with "Import tool...", the unencrypted-storage warning, the [ToolNotice](extensions/tool-forge/ui/ToolNotice.md), and the empty line or one card per tool (name with status chip, description, `net: <hosts | no network>`, "needs config" when required slots are missing, Edit / Export / Delete calling `on.edit/exportTool/deleteTool(name)`).
+- [extensions/tool-forge/ui/ToolNotice.md](extensions/tool-forge/ui/ToolNotice.md): - `ToolNotice.render(host, notice, onDismiss)`: nothing for a null notice; else a `.luma-callout tf-notice ok|warn` with the escaped title, text and lines and a Dismiss button.
+- [extensions/tool-forge/ui/ToolSlotEditor.md](extensions/tool-forge/ui/ToolSlotEditor.md): the editable config-slot rows of the definition section.
+- [extensions/tool-forge/ui/sandbox/SandboxRunner.md](extensions/tool-forge/ui/sandbox/SandboxRunner.md): runs AI-written tool code inside the hidden, sandboxed, network-cancelled runner page ([SandboxWindow](extensions/tool-forge/sandbox/SandboxWindow.md)).
+
+## extensions/mcp-connector
+
+- [extensions/mcp-connector/ChatRouterDeps.md](extensions/mcp-connector/ChatRouterDeps.md): reaches the live McpAggregator through the chat router the LLM server publishes, read on every call because the router does not exist yet at boot.
+- [extensions/mcp-connector/McpClientManager.md](extensions/mcp-connector/McpClientManager.md): connects to outside MCP servers as a client, discovers their tools, keeps them registered with the McpAggregator (via [McpToolRegistry](extensions/mcp-connector/McpToolRegistry.md)) and forwards each namespaced call to the owning server.
+- [extensions/mcp-connector/McpConnectorExtension.md](extensions/mcp-connector/McpConnectorExtension.md): activation wiring of the MCP Connector extension.
+- [extensions/mcp-connector/McpServerConfig.md](extensions/mcp-connector/McpServerConfig.md): shapes and checks a user-supplied server config before it is stored.
+- [extensions/mcp-connector/McpServerService.md](extensions/mcp-connector/McpServerService.md): the server operations shared by the Setup tab and the REST routes: persist a config change, then apply it to the live connection.
+- [extensions/mcp-connector/McpServerStore.md](extensions/mcp-connector/McpServerStore.md): persists the user's external MCP server configs as one JSON array under `mcpConnector.servers`.
+- [extensions/mcp-connector/McpSetupActions.md](extensions/mcp-connector/McpSetupActions.md): backend of the "MCP Servers" Setup tab, reached over the auth-free `setup.invoke` IPC so an API-key requirement never blocks it.
+- [extensions/mcp-connector/McpToolNaming.md](extensions/mcp-connector/McpToolNaming.md): namespaces discovered tools so they never collide with core, extension or each other's tools.
+- [extensions/mcp-connector/McpToolRegistry.md](extensions/mcp-connector/McpToolRegistry.md): keeps the single aggregator slot `ext.mcp-connector` equal to the union of every connected server's tools, and maps each namespaced name back to its origin.
+- [extensions/mcp-connector/McpTransportFactory.md](extensions/mcp-connector/McpTransportFactory.md): builds the MCP SDK client transport for a server config.
+- [extensions/mcp-connector/PromiseTimeout.md](extensions/mcp-connector/PromiseTimeout.md): bounds a promise with a deadline.
+- [extensions/mcp-connector/setup-ui.md](extensions/mcp-connector/setup-ui.md): `extensions/mcp-connector/setup-ui.js`, `extensions/mcp-connector/setup-ui.css`.
+- [extensions/mcp-connector/ui/KeyValueLines.md](extensions/mcp-connector/ui/KeyValueLines.md): - `KeyValueLines.parse(text)`: "KEY=value" per line (CRLF or LF) to an object, trimmed; lines without a key before `=` are skipped.
+- [extensions/mcp-connector/ui/McpServerCard.md](extensions/mcp-connector/ui/McpServerCard.md): - `McpServerCard.render(server, on)`: name, status badge (`STATUS_BADGE` variant, `STATUS_LABEL` text), transport chip, "N tool(s)" when connected, the target line, the error line, escaped tool chips (description as title) or "No tools exposed." when connected without tools; Enable/Disable, Reconnect (disabled when the server is disabled), Edit, Remove.
+- [extensions/mcp-connector/ui/McpServerForm.md](extensions/mcp-connector/ui/McpServerForm.md): - `McpServerForm.render(server, transport, on)`: title "Edit server" (record with an id) or "Add MCP server"; name; transport select (stdio, Streamable HTTP, SSE); the stdio group (command, args, working dir, env) or the HTTP group (URL, headers); Enabled; Cancel and Save/Add server.
+- [extensions/mcp-connector/ui/McpServersTab.md](extensions/mcp-connector/ui/McpServersTab.md): the "MCP Servers" tab: configured external MCP servers with live status and discovered tools, and an add/edit form.
+
+## extensions/activity-log
+
+- [extensions/activity-log/ActivityLogExtension.md](extensions/activity-log/ActivityLogExtension.md): main-process side of the Activity Log extension: exposes the core [ActivityLogService](core/activity-log/ActivityLogService.md) to its settings tab.
+- [extensions/activity-log/ActivityLogIpcHandlers.md](extensions/activity-log/ActivityLogIpcHandlers.md): iPC controller for the Activity Log settings tab; every channel passes through to the ActivityLogService.
+- [extensions/activity-log/ui/ActivityLogMarkup.md](extensions/activity-log/ui/ActivityLogMarkup.md): the Activity Log settings tab markup.
+- [extensions/activity-log/ui/ActivityLogTab.md](extensions/activity-log/ui/ActivityLogTab.md): the Activity Log settings tab in the main window: master enable, retention (days and max entries), per-caller toggles and a list-plus-detail log viewer.
+- [extensions/activity-log/ui/ActivityText.md](extensions/activity-log/ui/ActivityText.md): short wording for activity log rows and details.
+- [extensions/activity-log/ui/CallerListView.md](extensions/activity-log/ui/CallerListView.md): the Activity Log per-caller toggle list and the viewer's caller filter.
+- [extensions/activity-log/ui/EntryDetailView.md](extensions/activity-log/ui/EntryDetailView.md): the Activity Log viewer's detail pane for one span.
+- [extensions/activity-log/ui/EntryListView.md](extensions/activity-log/ui/EntryListView.md): the Activity Log viewer's entry list.
+
+## extensions/chatterbox-voice
+
+- [extensions/chatterbox-voice/AudioAnalysis.md](extensions/chatterbox-voice/AudioAnalysis.md): loudness and pitch analysis of reference clips, and their preparation for storage.
+- [extensions/chatterbox-voice/AudioCppInstallation.md](extensions/chatterbox-voice/AudioCppInstallation.md): finds installed audio.cpp builds under the managed runtimes dir, synchronously.
+- [extensions/chatterbox-voice/AudioCppLaunch.md](extensions/chatterbox-voice/AudioCppLaunch.md): builds the audiocpp_server launch.
+- [extensions/chatterbox-voice/AudioCppRuntimeCatalog.md](extensions/chatterbox-voice/AudioCppRuntimeCatalog.md): the audio.cpp builds the add-on can install.
+- [extensions/chatterbox-voice/AudioCppRuntimeInstaller.md](extensions/chatterbox-voice/AudioCppRuntimeInstaller.md): core [RuntimeInstaller](core/shared/runtime/RuntimeInstaller.md) bound to the audio.cpp catalog.
+- [extensions/chatterbox-voice/AudioCppServer.md](extensions/chatterbox-voice/AudioCppServer.md): supervises one audiocpp_server child.
+- [extensions/chatterbox-voice/ChatterboxEngine.md](extensions/chatterbox-voice/ChatterboxEngine.md): the TTS engine registered with `context.voice`, implementing the duck-typed contract of core [TtsEngineRegistry](core/tts-server/TtsEngineRegistry.md) on top of the audio.cpp server.
+- [extensions/chatterbox-voice/ChatterboxExtension.md](extensions/chatterbox-voice/ChatterboxExtension.md): the active Chatterbox add-on.
+- [extensions/chatterbox-voice/ChatterboxModels.md](extensions/chatterbox-voice/ChatterboxModels.md): the two Chatterbox GGUF files and the language names the Setup tab shows.
+- [extensions/chatterbox-voice/ChatterboxSettings.md](extensions/chatterbox-voice/ChatterboxSettings.md): the add-on's paths and its small settings file.
+- [extensions/chatterbox-voice/ChatterboxSetupActions.md](extensions/chatterbox-voice/ChatterboxSetupActions.md): routes the "Voice cloning" Setup tab's `setup.invoke` actions.
+- [extensions/chatterbox-voice/ChatterboxSpeechRequest.md](extensions/chatterbox-voice/ChatterboxSpeechRequest.md): one `POST /v1/audio/speech` to the audio.cpp server.
+- [extensions/chatterbox-voice/ChatterboxStatus.md](extensions/chatterbox-voice/ChatterboxStatus.md): the snapshot the "Voice cloning" tab polls.
+- [extensions/chatterbox-voice/ChatterboxVoiceActions.md](extensions/chatterbox-voice/ChatterboxVoiceActions.md): the Setup tab's voice-profile actions.
+- [extensions/chatterbox-voice/CoreRequire.md](extensions/chatterbox-voice/CoreRequire.md): loads a LumaBrowser core module from this add-on wherever it is installed.
+- [extensions/chatterbox-voice/ModelDownloadJob.md](extensions/chatterbox-voice/ModelDownloadJob.md): one background Chatterbox GGUF download started from the Setup tab.
+- [extensions/chatterbox-voice/PcmChunker.md](extensions/chatterbox-voice/PcmChunker.md): slices decoded audio into ~1 s Int16 PCM chunks for the voice pipeline.
+- [extensions/chatterbox-voice/PitchEstimator.md](extensions/chatterbox-voice/PitchEstimator.md): median fundamental frequency of a voice clip.
+- [extensions/chatterbox-voice/RuntimeInstallJob.md](extensions/chatterbox-voice/RuntimeInstallJob.md): one background audio.cpp install started from the Setup tab.
+- [extensions/chatterbox-voice/VoicePreview.md](extensions/chatterbox-voice/VoicePreview.md): renders a preview sentence with a voice.
+- [extensions/chatterbox-voice/VoiceStore.md](extensions/chatterbox-voice/VoiceStore.md): the cloned-voice profiles the "Voice cloning" tab manages.
+- [extensions/chatterbox-voice/main.md](extensions/chatterbox-voice/main.md): `extensions/chatterbox-voice/manifest.js`, `extensions/chatterbox-voice/main.js`.
+- [extensions/chatterbox-voice/setup-ui.md](extensions/chatterbox-voice/setup-ui.md): `extensions/chatterbox-voice/setup-ui.js`, `extensions/chatterbox-voice/setup-ui.css`.
+
+## extensions/ik-llama-runtime
+
+- [extensions/ik-llama-runtime/CpuModelIsa.md](extensions/ik-llama-runtime/CpuModelIsa.md): guesses the AVX-512 level from a CPU model string, the only cheap signal on Windows and macOS, where Node exposes no feature flags.
+- [extensions/ik-llama-runtime/HostIsa.md](extensions/ik-llama-runtime/HostIsa.md): decides which x64 instruction-set level of the ik_llama.cpp builds this host can run.
+- [extensions/ik-llama-runtime/IkLlamaActivation.md](extensions/ik-llama-runtime/IkLlamaActivation.md): registers the ik_llama.cpp runtime rows with `context.llmCatalog`.
+- [extensions/ik-llama-runtime/IkLlamaAssetPatterns.md](extensions/ik-llama-runtime/IkLlamaAssetPatterns.md): release-asset regexes for Thireus's ik_llama.cpp feed.
+- [extensions/ik-llama-runtime/IkLlamaCatalog.md](extensions/ik-llama-runtime/IkLlamaCatalog.md): the serializable ik_llama.cpp runtime rows.
+- [extensions/ik-llama-runtime/main.md](extensions/ik-llama-runtime/main.md): `extensions/ik-llama-runtime/manifest.js`, `extensions/ik-llama-runtime/main.js`.
+
+## extensions/ninfer-runtime
+
+- [extensions/ninfer-runtime/CoreRequire.md](extensions/ninfer-runtime/CoreRequire.md): loads a LumaBrowser core module from this add-on wherever it is installed.
+- [extensions/ninfer-runtime/NinferActivation.md](extensions/ninfer-runtime/NinferActivation.md): registers the NInfer runtime, its hooks and its add-on models.
+- [extensions/ninfer-runtime/NinferBytes.md](extensions/ninfer-runtime/NinferBytes.md): formats byte counts for NInfer's launch-plan notes.
+- [extensions/ninfer-runtime/NinferCatalog.md](extensions/ninfer-runtime/NinferCatalog.md): the serializable NInfer runtime row plus the build sources and VRAM figures the installer and planner use.
+- [extensions/ninfer-runtime/NinferContextSizer.md](extensions/ninfer-runtime/NinferContextSizer.md): sizes NInfer's context against the card.
+- [extensions/ninfer-runtime/NinferDetector.md](extensions/ninfer-runtime/NinferDetector.md): the `detect` hook.
+- [extensions/ninfer-runtime/NinferDevicePicker.md](extensions/ninfer-runtime/NinferDevicePicker.md): picks the CUDA device NInfer runs on.
+- [extensions/ninfer-runtime/NinferGpuProbe.md](extensions/ninfer-runtime/NinferGpuProbe.md): finds the RTX 5090 as the NInfer server will see it, at install time.
+- [extensions/ninfer-runtime/NinferInstaller.md](extensions/ninfer-runtime/NinferInstaller.md): the `install` hook: installs NInfer end to end.
+- [extensions/ninfer-runtime/NinferLaunchPlanner.md](extensions/ninfer-runtime/NinferLaunchPlanner.md): the synchronous `planLaunch` hook: the ninfer-serve argv plus the plan object the router, Setup UI and context estimator read.
+- [extensions/ninfer-runtime/NinferManifest.md](extensions/ninfer-runtime/NinferManifest.md): reads and writes the NInfer managed dir's `manifest.json`.
+- [extensions/ninfer-runtime/NinferModelEntries.md](extensions/ninfer-runtime/NinferModelEntries.md): the Qwen NInfer artifacts offered as one-click add-on models.
+- [extensions/ninfer-runtime/NinferPrebuiltAcquisition.md](extensions/ninfer-runtime/NinferPrebuiltAcquisition.md): acquires NInfer from the self-contained prebuilt tarball.
+- [extensions/ninfer-runtime/NinferRuntimeHooks.md](extensions/ninfer-runtime/NinferRuntimeHooks.md): the hook object registered with the NInfer runtime row.
+- [extensions/ninfer-runtime/NinferScripts.md](extensions/ninfer-runtime/NinferScripts.md): the bash scripts the NInfer installer runs and the writer that puts them on disk.
+- [extensions/ninfer-runtime/NinferShell.md](extensions/ninfer-runtime/NinferShell.md): runs a short shell command where NInfer lives.
+- [extensions/ninfer-runtime/NinferSourceBuild.md](extensions/ninfer-runtime/NinferSourceBuild.md): builds NInfer from the pinned upstream commit when no prebuilt is available.
+- [extensions/ninfer-runtime/NinferStreamingCommand.md](extensions/ninfer-runtime/NinferStreamingCommand.md): runs one long install step (clone, build, extract) with streamed progress.
+- [extensions/ninfer-runtime/NinferToolchain.md](extensions/ninfer-runtime/NinferToolchain.md): checks whether a NInfer source build can run.
+- [extensions/ninfer-runtime/NinferUninstaller.md](extensions/ninfer-runtime/NinferUninstaller.md): the `uninstall` hook.
+- [extensions/ninfer-runtime/main.md](extensions/ninfer-runtime/main.md): `extensions/ninfer-runtime/manifest.js`, `extensions/ninfer-runtime/main.js`.
+
+## extensions/cdp-driver
+
+- [extensions/cdp-driver/CdpConnection.md](extensions/cdp-driver/CdpConnection.md): one client WebSocket on the CDP server.
+- [extensions/cdp-driver/CdpDefaults.md](extensions/cdp-driver/CdpDefaults.md): - `AUTOMATION_TAB_KIND = 'cdp'`: only tabs of this kind become CDP targets (core's [TabKinds](core/browser/tab-view/TabKinds.md) lists it as an automation kind, so NetworkInterceptor leaves its debugger alone).
+- [extensions/cdp-driver/CdpDispatcher.md](extensions/cdp-driver/CdpDispatcher.md): routes one CDP method.
+- [extensions/cdp-driver/CdpDriverExtension.md](extensions/cdp-driver/CdpDriverExtension.md): the cdp-driver lifecycle.
+- [extensions/cdp-driver/CdpDriverSettings.md](extensions/cdp-driver/CdpDriverSettings.md): the cdp-driver settings in the extension's key-value store.
+- [extensions/cdp-driver/CdpError.md](extensions/cdp-driver/CdpError.md): a JSON-RPC error.
+- [extensions/cdp-driver/CdpFrameHandler.md](extensions/cdp-driver/CdpFrameHandler.md): handles one inbound WebSocket frame and sends the reply.
+- [extensions/cdp-driver/CdpHttpBootstrap.md](extensions/cdp-driver/CdpHttpBootstrap.md): chrome's `/json/*` discovery surface, so a client finds the WebSocket URL from a base URL.
+- [extensions/cdp-driver/CdpIds.md](extensions/cdp-driver/CdpIds.md): - `CdpIds.newUuid()`: 32 uppercase hex characters with no dashes, the shape Chrome uses for target, session and browser ids.
+- [extensions/cdp-driver/CdpMcpToolSet.md](extensions/cdp-driver/CdpMcpToolSet.md): the three lifecycle MCP tools: `cdp_driver_status`, `cdp_driver_start`, `cdp_driver_stop`, all with an empty input schema.
+- [extensions/cdp-driver/CdpServer.md](extensions/cdp-driver/CdpServer.md): the CDP endpoint: Chrome-style HTTP discovery ([CdpHttpBootstrap](extensions/cdp-driver/CdpHttpBootstrap.md)) plus WebSocket upgrades, and the shared state the domains use.
+- [extensions/cdp-driver/CdpSession.md](extensions/cdp-driver/CdpSession.md): one attachment of a connection to a target.
+- [extensions/cdp-driver/CdpSessionRegistry.md](extensions/cdp-driver/CdpSessionRegistry.md): `add(session)` (returns it), `get(sessionId)`, `delete(sessionId)`, `byTarget(targetId)` (several sessions may share a target), `byConnection(connection)`, `all()`, `clear()`.
+- [extensions/cdp-driver/CdpTarget.md](extensions/cdp-driver/CdpTarget.md): one CDP target; a page target is backed by one automation tab.
+- [extensions/cdp-driver/CdpTargetRegistry.md](extensions/cdp-driver/CdpTargetRegistry.md): `add(target)` (returns it), `get(targetId)`, `byTab(tabId)` (null when missing), `delete(targetId)`, `all()`, `clear()`.
+- [extensions/cdp-driver/CdpTargetTracker.md](extensions/cdp-driver/CdpTargetTracker.md): mirrors automation-tab lifecycle into CDP targets.
+- [extensions/cdp-driver/DebuggerProxy.md](extensions/cdp-driver/DebuggerProxy.md): wraps each automation tab's `webContents.debugger`.
+- [extensions/cdp-driver/FallbackConfig.md](extensions/cdp-driver/FallbackConfig.md): builds a session's LLM fallback config `{ enabled, onFindFail, onClickIntercepted, slot }`.
+- [extensions/cdp-driver/LlmSelectorFallback.md](extensions/cdp-driver/LlmSelectorFallback.md): connects the extension to core's selector fallback: [LlmFallbackService](core/browser/LlmFallbackService.md) and [LlmFallbackOrchestrator](core/browser/LlmFallbackOrchestrator.md) (accessibility match, resolution cache, validated LLM attempts).
+- [extensions/cdp-driver/domains/BrowserDomain.md](extensions/cdp-driver/domains/BrowserDomain.md): puppeteer and Playwright send `Browser.getVersion` first and give up if it fails, so it answers before any target is attached.
+- [extensions/cdp-driver/domains/CdpDomain.md](extensions/cdp-driver/domains/CdpDomain.md): base class for the CDP domains answered in-process.
+- [extensions/cdp-driver/domains/CommandForwarder.md](extensions/cdp-driver/domains/CommandForwarder.md): passes every command the server does not answer itself straight to Chromium through the [DebuggerProxy](extensions/cdp-driver/DebuggerProxy.md), so the rest of the protocol works for free.
+- [extensions/cdp-driver/domains/DomQuery.md](extensions/cdp-driver/domains/DomQuery.md): dOM-domain helpers over the debugger proxy.
+- [extensions/cdp-driver/domains/LumabyteDomain.md](extensions/cdp-driver/domains/LumabyteDomain.md): the custom `Lumabyte.*` domain for LLM selector fallback; any CDP client reaches it through its session (Puppeteer `CDPSession.send`, Playwright `newCDPSession`, CRI `send`).
+- [extensions/cdp-driver/domains/TabForeground.md](extensions/cdp-driver/domains/TabForeground.md): a WebContentsView only paints while visible, so a screenshot needs its tab in front.
+- [extensions/cdp-driver/domains/TargetDomain.md](extensions/cdp-driver/domains/TargetDomain.md): the Target domain, answered in-process because it manages LumaBrowser tabs.
+- [extensions/cdp-driver/ui/CdpSettingsTab.md](extensions/cdp-driver/ui/CdpSettingsTab.md): the CDP Driver settings tab in the main window: start and stop the CDP WebSocket server, its host, port and autostart, and the LLM selector-fallback defaults.
+
+## extensions/selenium-driver
+
+- [extensions/selenium-driver/ElementEvaluator.md](extensions/selenium-driver/ElementEvaluator.md): - `new ElementEvaluator(pageScript)`.
+- [extensions/selenium-driver/ElementFinder.md](extensions/selenium-driver/ElementFinder.md): finds elements and registers a handle per match.
+- [extensions/selenium-driver/ElementScripts.md](extensions/selenium-driver/ElementScripts.md): the in-page scripts behind element handles.
+- [extensions/selenium-driver/FallbackConfig.md](extensions/selenium-driver/FallbackConfig.md): builds a session's LLM fallback config from the `lumabyte:llmFallback` capability.
+- [extensions/selenium-driver/LlmSelectorFallback.md](extensions/selenium-driver/LlmSelectorFallback.md): connects the WebDriver server to core's [LlmFallbackService](core/browser/LlmFallbackService.md) and [LlmFallbackOrchestrator](core/browser/LlmFallbackOrchestrator.md).
+- [extensions/selenium-driver/PageScript.md](extensions/selenium-driver/PageScript.md): - `new PageScript(browser)`.
+- [extensions/selenium-driver/ScreenshotReader.md](extensions/selenium-driver/ScreenshotReader.md): - `capture(tabId)`: `browser.screenshot(tabId, { fullPage: false })` -> base64 without the `data:image/...;base64,` prefix; a failure or missing data is `unable to capture screen`.
+- [extensions/selenium-driver/SeleniumDriverExtension.md](extensions/selenium-driver/SeleniumDriverExtension.md): the selenium-driver lifecycle.
+- [extensions/selenium-driver/SeleniumDriverSettings.md](extensions/selenium-driver/SeleniumDriverSettings.md): the selenium-driver settings in the extension's key-value store.
+- [extensions/selenium-driver/SeleniumMcpToolSet.md](extensions/selenium-driver/SeleniumMcpToolSet.md): the lifecycle MCP tools `selenium_driver_status`, `selenium_driver_start`, `selenium_driver_stop` (empty input schemas).
+- [extensions/selenium-driver/SessionCapabilities.md](extensions/selenium-driver/SessionCapabilities.md): - `SessionCapabilities.merge(capabilities)`: the first `firstMatch` arm with no key in `alwaysMatch`, merged over it; just `alwaysMatch` when every arm clashes.
+- [extensions/selenium-driver/WebDriverCommandTable.md](extensions/selenium-driver/WebDriverCommandTable.md): builds every command group around one shared toolset and indexes commands by name.
+- [extensions/selenium-driver/WebDriverError.md](extensions/selenium-driver/WebDriverError.md): the W3C error vocabulary (spec 6.6).
+- [extensions/selenium-driver/WebDriverRouteTable.md](extensions/selenium-driver/WebDriverRouteTable.md): the endpoint table: the W3C Level 2 commands plus the vendor routes.
+- [extensions/selenium-driver/WebDriverServer.md](extensions/selenium-driver/WebDriverServer.md): the W3C WebDriver HTTP server (Express) on its own port, so URLs match what `RemoteWebDriver(url)` expects without colliding with the gateway's `/api/*`.
+- [extensions/selenium-driver/WebDriverSession.md](extensions/selenium-driver/WebDriverSession.md): one WebDriver session.
+- [extensions/selenium-driver/WebDriverSessionRegistry.md](extensions/selenium-driver/WebDriverSessionRegistry.md): `create({ tabId, capabilities, llmFallback })` (random UUID id), `get(id)`, `delete(id)`, `all()`, `size()`.
+- [extensions/selenium-driver/WindowHandle.md](extensions/selenium-driver/WindowHandle.md): - `WindowHandle.fromTabId(tabId)` -> `luma-tab-<id>`.
+- [extensions/selenium-driver/commands/ActionCommands.md](extensions/selenium-driver/commands/ActionCommands.md): perform Actions, approximated without CDP input.
+- [extensions/selenium-driver/commands/AlertCommands.md](extensions/selenium-driver/commands/AlertCommands.md): user prompts through `browser.handleDialog`; no pending dialog is `no such alert`.
+- [extensions/selenium-driver/commands/CaptureCommands.md](extensions/selenium-driver/commands/CaptureCommands.md): screenshots through [ScreenshotReader](extensions/selenium-driver/ScreenshotReader.md).
+- [extensions/selenium-driver/commands/CookieCommands.md](extensions/selenium-driver/commands/CookieCommands.md): cookies through `document.cookie` (no HttpOnly cookies), reported with the page hostname and path `/`.
+- [extensions/selenium-driver/commands/ElementInteractionCommands.md](extensions/selenium-driver/commands/ElementInteractionCommands.md): click, clear and send keys with in-page DOM calls.
+- [extensions/selenium-driver/commands/ElementStateCommands.md](extensions/selenium-driver/commands/ElementStateCommands.md): read-only element commands through [ElementEvaluator](extensions/selenium-driver/ElementEvaluator.md).
+- [extensions/selenium-driver/commands/FindCommands.md](extensions/selenium-driver/commands/FindCommands.md): element finding through [ElementFinder](extensions/selenium-driver/ElementFinder.md).
+- [extensions/selenium-driver/commands/LumabyteCommands.md](extensions/selenium-driver/commands/LumabyteCommands.md): the `lumabyte:` vendor commands.
+- [extensions/selenium-driver/commands/NavigationCommands.md](extensions/selenium-driver/commands/NavigationCommands.md): navigation on the session's current tab.
+- [extensions/selenium-driver/commands/ScriptCommands.md](extensions/selenium-driver/commands/ScriptCommands.md): page source and script execution.
+- [extensions/selenium-driver/commands/SessionCommands.md](extensions/selenium-driver/commands/SessionCommands.md): session lifecycle, `/status` and timeouts.
+- [extensions/selenium-driver/commands/WebDriverCommandGroup.md](extensions/selenium-driver/commands/WebDriverCommandGroup.md): base class for a group of WebDriver commands.
+- [extensions/selenium-driver/commands/WindowCommands.md](extensions/selenium-driver/commands/WindowCommands.md): windows are tabs, addressed by `luma-tab-<id>` handles ([WindowHandle](extensions/selenium-driver/WindowHandle.md)).
+- [extensions/selenium-driver/ui/SeleniumSettingsTab.md](extensions/selenium-driver/ui/SeleniumSettingsTab.md): the Selenium Driver settings tab in the main window: start and stop the WebDriver server, its host, port, URL prefix and autostart, and the LLM selector-fallback defaults.
+
+## extensions/notification-interceptor
+
+- [extensions/notification-interceptor/NotificationForwarder.md](extensions/notification-interceptor/NotificationForwarder.md): posts one intercepted web notification to the webhook.
+- [extensions/notification-interceptor/NotificationInterceptorExtension.md](extensions/notification-interceptor/NotificationInterceptorExtension.md): main-process side of the Notifications extension: web notifications captured in tabs are logged and forwarded to the user's webhook; the public API includes `onIngest`.
+- [extensions/notification-interceptor/NotificationIpcHandlers.md](extensions/notification-interceptor/NotificationIpcHandlers.md): iPC controller of the Notifications extension.
+- [extensions/notification-interceptor/NotificationLogStore.md](extensions/notification-interceptor/NotificationLogStore.md): persists the recent notification log (newest first, at most `LOG_LIMIT` = 50) and the running total of notifications seen.
+- [extensions/notification-interceptor/NotificationService.md](extensions/notification-interceptor/NotificationService.md): keeps the webhook URL, records each intercepted notification with its forward outcome, forwards it when a webhook is set, and emits `ingested` / `onIngest(cb)` so other extensions (the Hub) hear every notification.
+- [extensions/notification-interceptor/ui/NotificationCapture.md](extensions/notification-interceptor/ui/NotificationCapture.md): receives every web notification the tabs intercept, records and forwards it through the main process, and reports it in the shell's activity log.
+- [extensions/notification-interceptor/ui/NotificationInterceptorRenderer.md](extensions/notification-interceptor/ui/NotificationInterceptorRenderer.md): the Notifications extension in the main window: the [NotificationSettingsTab](extensions/notification-interceptor/ui/NotificationSettingsTab.md) plus the [NotificationCapture](extensions/notification-interceptor/ui/NotificationCapture.md) hook the shell calls for each intercepted web notification.
+- [extensions/notification-interceptor/ui/NotificationLogMarkup.md](extensions/notification-interceptor/ui/NotificationLogMarkup.md): the HTML of the Notifications tab's recent-notifications list.
+- [extensions/notification-interceptor/ui/NotificationSettingsTab.md](extensions/notification-interceptor/ui/NotificationSettingsTab.md): the Notifications settings tab: webhook URL (autosaved), a "Send a test" button, the forwarding status line and the recent-notifications list with each entry's forward status.
+
+## extensions/personal-hub
+
+The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversation queue rolled up from intercepted chat and mail notifications (enriched by an automation such as n8n through `/api/hub`), and a unified task board synced with ClickUp. Agents use the `hub_*` tools, the Dashboard its three widgets, live modules `luma.ext('personal-hub')`.
+
+- [extensions/personal-hub/PersonalHubExtension.md](extensions/personal-hub/PersonalHubExtension.md): main-process side of the Hub: tables, services, the notification feed, IPC, the master tick and the public API; also documents `manifest.js`, `main.js`, `mcp-tools.js`, `routes.js` and `renderer.js`.
+- [extensions/personal-hub/HubService.md](extensions/personal-hub/HubService.md): the Hub's one public API, a facade over the calendar, inbox, board and sync services shared by IPC, routes, tools, widgets, live modules and the chat's "@dashboard" (`widgetContext`).
+- [extensions/personal-hub/HubContext.md](extensions/personal-hub/HubContext.md): the agenda, task board and conversation queue widgets as chat text (a week of events by day, every column's tasks plus unsorted tracker statuses, open threads and today's notification log), each ending with the tool that fetches more; has `render`, `agenda`, `board`, `queue`.
+- [extensions/personal-hub/HubSchema.md](extensions/personal-hub/HubSchema.md): creates the eight `hub_*` tables and seeds the default board columns; has `ensure`.
+- [extensions/personal-hub/HubBroadcast.md](extensions/personal-hub/HubBroadcast.md): one emit reaching the Dashboard event channel and `ext.personal-hub.changed`; has `emit`, `emitter`.
+- [extensions/personal-hub/HubIpcHandlers.md](extensions/personal-hub/HubIpcHandlers.md): IPC controller of the Hub settings tab; has `register`.
+- [extensions/personal-hub/HubRoutes.md](extensions/personal-hub/HubRoutes.md): `/api/hub`: the OAuth callback and the token-guarded queue, thread, board, event and sync endpoints for automations; has `router`.
+- [extensions/personal-hub/HubTools.md](extensions/personal-hub/HubTools.md): the `hub_*` MCP tools (overview, events, threads, the notification log, tasks, sync) for every agent surface; has `handle`.
+- [extensions/personal-hub/InboundToken.md](extensions/personal-hub/InboundToken.md): the bearer token automations present to `/api/hub`; has `get`, `rotate`, `matches`.
+- [extensions/personal-hub/sync/HubSyncScheduler.md](extensions/personal-hub/sync/HubSyncScheduler.md): the single master tick syncing due calendar and task sources one at a time; has `start`, `stop`, `tick`, `syncNow`, `status`.
+- [extensions/personal-hub/sync/SyncSourceRepository.md](extensions/personal-hub/sync/SyncSourceRepository.md): base repository for remote sources with JSON config and sync bookkeeping; has `list`, `get`, `due`, `insert`, `update`, `recordSync`, `delete`.
+- [extensions/personal-hub/calendar/CalendarSourceRepository.md](extensions/personal-hub/calendar/CalendarSourceRepository.md): `hub_calendar_sources` as a SyncSourceRepository (with `color`).
+- [extensions/personal-hub/calendar/CalendarEventRepository.md](extensions/personal-hub/calendar/CalendarEventRepository.md): synced occurrences replaced per source and read by window; has `replaceForSource`, `deleteForSource`, `listBetween`, `countForSource`.
+- [extensions/personal-hub/calendar/CalendarProvider.md](extensions/personal-hub/calendar/CalendarProvider.md): base class for calendar providers: one event shape from any source; has `validateConfig`, `fetchEvents`, `needsOAuth`, `clipWindow`.
+- [extensions/personal-hub/calendar/CalendarService.md](extensions/personal-hub/calendar/CalendarService.md): calendar sources (secrets kept out of rows), the merged event view, per-source sync and OAuth sign-in; has `listSources`, `addSource`, `updateSource`, `removeSource`, `listEvents`, `syncSource`, `startOAuth`, `completeOAuth`.
+- [extensions/personal-hub/calendar/ics/IcsParser.md](extensions/personal-hub/calendar/ics/IcsParser.md): parses iCalendar text into plain VEVENT records (unfolding, params, escapes, multi EXDATE); has `parse`, `unfold`, `parseLine`, `unescapeText`.
+- [extensions/personal-hub/calendar/ics/IcsDateTime.md](extensions/personal-hub/calendar/ics/IcsDateTime.md): ICS dates with IANA or Windows TZIDs to UTC via Intl; has `toIso`, `toMs`, `componentsToMs`, `dateOnlyToMs`, `resolveIana`, `zoneOffsetMinutes`.
+- [extensions/personal-hub/calendar/ics/RecurrenceExpander.md](extensions/personal-hub/calendar/ics/RecurrenceExpander.md): bounded RRULE expansion (daily/weekly/monthly/yearly, BYDAY ordinals, EXDATE, RECURRENCE-ID overrides) with DST-stable wall times; has `expand`, `durationMs`, `parseRule`, `parseDuration`.
+- [extensions/personal-hub/calendar/providers/IcsCalendarProvider.md](extensions/personal-hub/calendar/providers/IcsCalendarProvider.md): the ICS/webcal feed provider (a Google embed or share link becomes the public feed): download, parse, expand, clip; has `validateConfig`, `fetchEvents`, `expandAll`, `toEvent`.
+- [extensions/personal-hub/calendar/providers/GoogleSessionCalendarProvider.md](extensions/personal-hub/calendar/providers/GoogleSessionCalendarProvider.md): Google Calendar read as the signed-in browser session (persisted Google tab cookies, no OAuth app), falling back to the public feed; has `validateConfig`, `fetchEvents`, `calendarIdOf`.
+- [extensions/personal-hub/calendar/GoogleCalendarId.md](extensions/personal-hub/calendar/GoogleCalendarId.md): the calendar id out of an embed link, share link, iCal address or bare id, and its public feed address; has `fromInput`, `isGoogleLink`, `publicIcsUrl`.
+- [extensions/personal-hub/calendar/session/SapisidHash.md](extensions/personal-hub/calendar/session/SapisidHash.md): the SAPISIDHASH Authorization header Google web apps send from a signed-in session; has `sapisidOf`, `header`, `cookieHeader`.
+- [extensions/personal-hub/calendar/session/SessionCookies.md](extensions/personal-hub/calendar/session/SessionCookies.md): reads a tab partition's cookies for a domain from Electron (empty outside Electron); has `reader`.
+- [extensions/personal-hub/calendar/providers/GoogleCalendarProvider.md](extensions/personal-hub/calendar/providers/GoogleCalendarProvider.md): Google Calendar API v3 provider over OAuth (singleEvents, paginated); has `fetchEvents`, `listCalendars`, `toEvent`.
+- [extensions/personal-hub/calendar/providers/MicrosoftSessionCalendarProvider.md](extensions/personal-hub/calendar/providers/MicrosoftSessionCalendarProvider.md): Microsoft 365 calendars read through a persisted Teams or Outlook tab's own Graph token (woken, never reloaded, from a sync); has `validateConfig`, `fetchEvents`.
+- [extensions/personal-hub/calendar/providers/MicrosoftCalendarProvider.md](extensions/personal-hub/calendar/providers/MicrosoftCalendarProvider.md): Microsoft Graph calendarView provider over OAuth (UTC preference, nextLink paging); has `fetchEvents`, `listCalendars`, `toEvent`.
+- [extensions/personal-hub/calendar/oauth/OAuthProviders.md](extensions/personal-hub/calendar/oauth/OAuthProviders.md): Google and Microsoft OAuth endpoints and scopes (data); has `for`, `microsoft`.
+- [extensions/personal-hub/calendar/oauth/OAuthFlow.md](extensions/personal-hub/calendar/oauth/OAuthFlow.md): PKCE authorization-code flow with single-use expiring states; has `begin`, `complete`.
+- [extensions/personal-hub/calendar/oauth/OAuthTokens.md](extensions/personal-hub/calendar/oauth/OAuthTokens.md): per-source OAuth tokens in the encrypted secrets store, refreshed before expiry; has `get`, `set`, `clear`, `isConnected`, `accessToken`.
+- [extensions/personal-hub/connections/SessionTabs.md](extensions/personal-hub/connections/SessionTabs.md): the persisted tabs over `context.browser` (partition per tab, cookies, run code, wake, reload, show, open a new persisted tab in its own partition); has `persisted`, `cookies`, `run`, `wake`, `reload`, `show`, `openPersisted`, `onNavigated`.
+- [extensions/personal-hub/connections/SignInPages.md](extensions/personal-hub/connections/SignInPages.md): the sign-in addresses of the apps the Hub reads through (data plus a check); has `isSignIn`.
+- [extensions/personal-hub/connections/GoogleAccounts.md](extensions/personal-hub/connections/GoogleAccounts.md): every Google account slot signed in to a partition, with its calendars, through the session cookies; has `probe`.
+- [extensions/personal-hub/connections/MicrosoftAccounts.md](extensions/personal-hub/connections/MicrosoftAccounts.md): the Graph token and account of a persisted Teams or Outlook tab, with the wake-up then reload fallback; has `token`, `probe`, `tabFor`, `isMicrosoftHost`.
+- [extensions/personal-hub/connections/ConnectionMonitor.md](extensions/personal-hub/connections/ConnectionMonitor.md): watches persisted app tabs, their accounts, orphaned session calendars and refused ClickUp tokens; one desktop alert per lost sign-in; has `start`, `stop`, `check`, `list`, `show`, `describe`.
+- [extensions/personal-hub/connections/AccountCalendars.md](extensions/personal-hub/connections/AccountCalendars.md): the signed-in accounts' calendars as ticks that add or remove session calendar sources; has `list`, `set`.
+- [extensions/personal-hub/connections/DesktopAlert.md](extensions/personal-hub/connections/DesktopAlert.md): a clickable OS notification through Electron; has `show`.
+- [extensions/personal-hub/inbox/NotificationRepository.md](extensions/personal-hub/inbox/NotificationRepository.md): the full intercepted-notification log; has `insert`, `get`, `hasDedupe`, `listForThread`, `listRecent` (by app, since a time), `count`, `pruneBefore`.
+- [extensions/personal-hub/inbox/ThreadRepository.md](extensions/personal-hub/inbox/ThreadRepository.md): the conversation queue rows per (app, thread key) with state, priority and enrichment; has `get`, `findByKey`, `insert`, `update`, `list`, `countByState`, `delete`.
+- [extensions/personal-hub/inbox/ThreadKey.md](extensions/personal-hub/inbox/ThreadKey.md): normalises the text notifications are grouped by (reply/forward prefixes, bracketed tags, whitespace, 120-char cap); has `normalize`, `fromParts`.
+- [extensions/personal-hub/inbox/NotificationClassifier.md](extensions/personal-hub/inbox/NotificationClassifier.md): host-to-app table plus one rule per app (slack, teams, gmail, outlook, proton, messages, clickup, ...) giving sender, thread key and title; has `classify`, `appFor`, `hostOf`.
+- [extensions/personal-hub/inbox/InboxService.md](extensions/personal-hub/inbox/InboxService.md): the conversation queue: full notification log rolled up into threads per (app, key), dedupe, reopen on activity, pruning, states, automation enrichment and pushed items; has `ingest`, `listThreads`, `getThread`, `setThreadState`, `enrichThread`, `pushItem`, `linkToTask`, `listNotifications`, `counts`.
+- [extensions/personal-hub/board/BoardService.md](extensions/personal-hub/board/BoardService.md): the Hub task board: columns, local and imported tasks, messages, remote sources, status links and pseudo columns, and the pull-then-push sync with push errors kept on tasks; has `listColumns`, `saveColumns`, `linkStatus`, `addStatusColumn`, `resetStatusLinks`, `listTasks`, `getTask`, `createTask`, `updateTask`, `moveTask`, `setTasksHidden`, `listTaskTargets`, `archiveTask`, `listMessages`, `addMessage`, `listSources`, `addSource`, `updateSource`, `removeSource`, `discover`, `syncSource`.
+- [extensions/personal-hub/board/TaskProvider.md](extensions/personal-hub/board/TaskProvider.md): base class for remote task trackers the board imports from; has `validateConfig`, `discover`, `resolveAssignee`, `fetchTasks`, `describeLists`, `createTask`, `pushStatus`, `postComment`, `pushFields`.
+- [extensions/personal-hub/board/ClickUpTaskProvider.md](extensions/personal-hub/board/ClickUpTaskProvider.md): the ClickUp task provider: workspace discovery, assignee resolution, list descriptions, task creation, task and comment mapping, and the pushes back.
+- [extensions/personal-hub/board/ClickUpClient.md](extensions/personal-hub/board/ClickUpClient.md): thin ClickUp v2 REST client with a personal token, timeout, one 429 retry and paged task listing.
+- [extensions/personal-hub/board/StatusMapping.md](extensions/personal-hub/board/StatusMapping.md): maps a remote task status onto a board column (links, status map, same name, else a `~status` pseudo column) and back to a status the list has; has `columnForStatus`, `columnKeyForStatus`, `pseudoKey`, `isPseudo`, `statusForColumn`, `link`, `prune`, `matches`.
+- [extensions/personal-hub/board/TrackerLists.md](extensions/personal-hub/board/TrackerLists.md): a task source's lists and their statuses from the tracker, cached 10 min per source; has `lists`, `statuses`, `listName`.
+- [extensions/personal-hub/board/BoardColumnRepository.md](extensions/personal-hub/board/BoardColumnRepository.md): plain queries over `hub_board_columns`; has `list`, `byKey`, `doneColumn`, `upsert`, `delete`.
+- [extensions/personal-hub/board/TaskRepository.md](extensions/personal-hub/board/TaskRepository.md): plain queries over `hub_tasks`; has `get`, `findRemote`, `list`, `insert`, `update`, `nextSortOrder`, `archiveMissing`, `setHidden`, `pendingStatusPush`, `delete`, `deleteForSource`.
+- [extensions/personal-hub/board/TaskMessageRepository.md](extensions/personal-hub/board/TaskMessageRepository.md): plain queries over `hub_task_messages`; has `get`, `listForTask`, `findRemote`, `insert`, `markSynced`, `markSyncError`, `unsyncedForSource`.
+- [extensions/personal-hub/board/TaskSourceRepository.md](extensions/personal-hub/board/TaskSourceRepository.md): `hub_task_sources` as a SyncSourceRepository.
+- [extensions/personal-hub/renderer.md](extensions/personal-hub/renderer.md): the Hub renderer entry the shell loads as a module; sets `window.__ext_personal_hub` over HubRenderer.
+- [extensions/personal-hub/ui/HubRenderer.md](extensions/personal-hub/ui/HubRenderer.md): the Hub extension in the main window: the settings tab, and board sync errors and signed-out tabs in the notification log (the Dashboard widgets load separately from the manifest).
+- [extensions/personal-hub/ui/HubSettingsTab.md](extensions/personal-hub/ui/HubSettingsTab.md): the Hub settings tab: sync summary, connections, calendars, task trackers, board columns and automation sections, reloaded on `ext.personal-hub.changed`.
+- [extensions/personal-hub/ui/settings/HubSection.md](extensions/personal-hub/ui/settings/HubSection.md): base class of the Hub settings sections (markup, bind, load, call, act).
+- [extensions/personal-hub/ui/settings/ConnectionsSection.md](extensions/personal-hub/ui/settings/ConnectionsSection.md): the persisted tabs the Hub reads through with their sign-in state, Open tab, account calendar ticks, and Add an account (Google, Microsoft 365).
+- [extensions/personal-hub/ui/settings/SourceStatus.md](extensions/personal-hub/ui/settings/SourceStatus.md): the status dot class and last-sync wording of a Hub source row.
+- [extensions/personal-hub/ui/settings/CalendarSourcesSection.md](extensions/personal-hub/ui/settings/CalendarSourcesSection.md): the calendar sources list (Connect, Sync now, Remove) and the by-hand add form (ICS feed, pasted Google link, Google or Microsoft OAuth app).
+- [extensions/personal-hub/ui/settings/TaskSourcesSection.md](extensions/personal-hub/ui/settings/TaskSourcesSection.md): the ClickUp workspaces list (with linked statuses and Reset links) and add/edit form with the discovered list tree and the column-to-status map.
+- [extensions/personal-hub/ui/settings/BoardColumnsSection.md](extensions/personal-hub/ui/settings/BoardColumnsSection.md): the editable board columns (title, slugged key, done flag, order) saved as one set.
+- [extensions/personal-hub/ui/settings/AutomationSection.md](extensions/personal-hub/ui/settings/AutomationSection.md): the inbound base URL and bearer token for automations, with copy, rotate and example payloads.
+- [extensions/personal-hub/ui/settings/SyncStatusSection.md](extensions/personal-hub/ui/settings/SyncStatusSection.md): the sync summary line and the "Sync everything now" button.
+- [extensions/personal-hub/ui/widgets/WidgetDom.md](extensions/personal-hub/ui/widgets/WidgetDom.md): self-contained DOM and time helpers of the Hub widgets; has `esc`, `el`, `relativeTime`, `formatTimeRange`, `dayKey`, `dayLabel`.
+- [extensions/personal-hub/ui/widgets/HubWidgetStyles.md](extensions/personal-hub/ui/widgets/HubWidgetStyles.md): the one `hub-*` stylesheet of the Hub widgets, themed off the Dashboard's dark tokens, injected once; has `ensure`.
+- [extensions/personal-hub/ui/widgets/HubWidgetBase.md](extensions/personal-hub/ui/widgets/HubWidgetBase.md): base class of the Hub Dashboard widgets: shell, load and paint, debounced reload on declared events, inline errors, the signed-out strip of the widget's attention area, dispose.
+- [extensions/personal-hub/ui/widgets/HubBoardWidget.md](extensions/personal-hub/ui/widgets/HubBoardWidget.md): the task board widget: lanes per column, pseudo lanes for unlinked statuses (make column, merge), drag and drop moves with a status pick when needed, quick-add into Local or a ClickUp list, source chips with counts, hiding tasks, sync failed markers, task detail.
+- [extensions/personal-hub/ui/widgets/HubTaskDetail.md](extensions/personal-hub/ui/widgets/HubTaskDetail.md): the board widget's task overlay: source and title head with Open and Hide, status, sync error, list, assignees and other meta, description, message thread with unsynced markers, and the composer.
+- [extensions/personal-hub/ui/widgets/StatusPicker.md](extensions/personal-hub/ui/widgets/StatusPicker.md): the board's in-widget "which ClickUp status?" dialog for moves and adds into a column with no linked status; has `pick`, `close`, `isOpen`.
+- [extensions/personal-hub/ui/widgets/TaskChrome.md](extensions/personal-hub/ui/widgets/TaskChrome.md): what the board and task detail draw alike: status pill in the tracker's colour, assignee initials, per-source colours, icons; has `sourceKey`, `sourceColors`, `safeColor`, `statusPill`, `names`, `initials`, `avatars`, `icon`.
+- [extensions/personal-hub/ui/widgets/HubAgendaWidget.md](extensions/personal-hub/ui/widgets/HubAgendaWidget.md): the agenda widget: today or week of events grouped by day, all-day first, source colour bar, now marker.
+- [extensions/personal-hub/ui/widgets/HubInboxWidget.md](extensions/personal-hub/ui/widgets/HubInboxWidget.md): the conversation queue widget: open threads with app badge, summary, app filter, and reviewed / snooze / done / open / to-task actions.
+
+## extensions/network-watcher
+
+- [extensions/network-watcher/NetworkWatcherExtension.md](extensions/network-watcher/NetworkWatcherExtension.md): main-process side of the Network Watcher extension: CRUD, REST and IPC on top of the core [NetworkWatcherService](core/network-watcher/NetworkWatcherService.md), the same instance the core NetworkInterceptor writes captures to.
+- [extensions/network-watcher/WatcherIpcHandlers.md](extensions/network-watcher/WatcherIpcHandlers.md): iPC controller of the Network Watcher settings tab.
+- [extensions/network-watcher/WatcherTestRun.md](extensions/network-watcher/WatcherTestRun.md): sends a sample capture through a temporary watcher so the user can check a webhook before saving.
+- [extensions/network-watcher/WatcherMcpTools.md](extensions/network-watcher/WatcherMcpTools.md): the watcher_* agent tools (list, add, remove, toggle; the last three mutating) routed to NetworkWatcherService with redacted output; has `TOOLS`, `handle`, `view`.
+- [extensions/network-watcher/WatcherInput.md](extensions/network-watcher/WatcherInput.md): request-shape checks shared by the network-watcher REST routes and agent tools; has `missingField`, `idError`, `enabledError`.
+- [extensions/network-watcher/ui/NetworkWatcherMarkup.md](extensions/network-watcher/ui/NetworkWatcherMarkup.md): the Network Watcher settings tab markup.
+- [extensions/network-watcher/ui/NetworkWatcherTab.md](extensions/network-watcher/ui/NetworkWatcherTab.md): the Network Watcher settings tab in the main window: add, test, pause, resume and delete watchers and see when each last fired.
+- [extensions/network-watcher/ui/WatcherForm.md](extensions/network-watcher/ui/WatcherForm.md): the Network Watcher "Add a watcher" form.
+- [extensions/network-watcher/ui/WatcherListView.md](extensions/network-watcher/ui/WatcherListView.md): the Network Watcher list of watcher cards.
+
+## extensions/page-change-detector
+
+- [extensions/page-change-detector/ChangeDiff.md](extensions/page-change-detector/ChangeDiff.md): fingerprints page text and summarizes a change.
+- [extensions/page-change-detector/ChangeWebhook.md](extensions/page-change-detector/ChangeWebhook.md): posts a detected change event to a monitor's webhook.
+- [extensions/page-change-detector/DesktopNotifier.md](extensions/page-change-detector/DesktopNotifier.md): shows the desktop notification for a detected change.
+- [extensions/page-change-detector/ElementPicker.md](extensions/page-change-detector/ElementPicker.md): runs the in-page element picker (`picker.js`) for a monitor.
+- [extensions/page-change-detector/MonitorBroadcast.md](extensions/page-change-detector/MonitorBroadcast.md): pushes `ext.page-change-detector.changed` `{ reason, monitorId, monitor }` to every window.
+- [extensions/page-change-detector/MonitorChecker.md](extensions/page-change-detector/MonitorChecker.md): runs one check of a monitor.
+- [extensions/page-change-detector/MonitorFields.md](extensions/page-change-detector/MonitorFields.md): maps the camelCase fields callers send to `page_change_monitors` columns.
+- [extensions/page-change-detector/MonitorIpcHandlers.md](extensions/page-change-detector/MonitorIpcHandlers.md): iPC controller of Page Monitors.
+- [extensions/page-change-detector/MonitorRepository.md](extensions/page-change-detector/MonitorRepository.md): plain queries over `page_change_monitors`.
+- [extensions/page-change-detector/MonitorScheduler.md](extensions/page-change-detector/MonitorScheduler.md): one timer per enabled monitor.
+- [extensions/page-change-detector/MonitorSchema.md](extensions/page-change-detector/MonitorSchema.md): creates `page_change_monitors` and `page_change_history`, adds the columns later releases introduced, and resets a `checking` status left by a check the app closed during.
+- [extensions/page-change-detector/MonitorService.md](extensions/page-change-detector/MonitorService.md): the page monitor operations the IPC handlers, REST routes and MCP tools share.
+- [extensions/page-change-detector/MonitorTabs.md](extensions/page-change-detector/MonitorTabs.md): finds, opens and waits on the tab a monitor reads.
+- [extensions/page-change-detector/MonitorTextExtractor.md](extensions/page-change-detector/MonitorTextExtractor.md): reads the text a monitor fingerprints.
+- [extensions/page-change-detector/MonitorTools.md](extensions/page-change-detector/MonitorTools.md): the `page_monitor_*` MCP tools for the chat agent and external MCP clients.
+- [extensions/page-change-detector/PageChangeDetectorExtension.md](extensions/page-change-detector/PageChangeDetectorExtension.md): main-process side of Page Monitors: watch a page, or picked elements on it, on a schedule and alert by desktop notification or webhook when its text changes.
+- [extensions/page-change-detector/SnapshotRepository.md](extensions/page-change-detector/SnapshotRepository.md): plain queries over `page_change_history`: one row per check, newest first.
+- [extensions/page-change-detector/ui/MonitorForm.md](extensions/page-change-detector/ui/MonitorForm.md): the Page Monitors panel's create-and-edit form.
+- [extensions/page-change-detector/ui/MonitorHistoryMarkup.md](extensions/page-change-detector/ui/MonitorHistoryMarkup.md): hTML for a monitor's check history, shared by the panel's inline history and the settings page.
+- [extensions/page-change-detector/ui/MonitorHistoryPage.md](extensions/page-change-detector/ui/MonitorHistoryPage.md): the Page Monitors settings page: the summary, the "Open Page Monitors panel" button, and a paged check history for any monitor.
+- [extensions/page-change-detector/ui/MonitorListView.md](extensions/page-change-detector/ui/MonitorListView.md): the Page Monitors panel's head summary and monitor rows.
+- [extensions/page-change-detector/ui/MonitorRowActions.md](extensions/page-change-detector/ui/MonitorRowActions.md): what a monitor row's buttons do.
+- [extensions/page-change-detector/ui/MonitorText.md](extensions/page-change-detector/ui/MonitorText.md): the short wording page-monitor rows and summaries show.
+- [extensions/page-change-detector/ui/PageMonitorsRenderer.md](extensions/page-change-detector/ui/PageMonitorsRenderer.md): the Page Monitors renderer in the main window.
+
+## extensions/timed-tasks
+
+- [extensions/timed-tasks/ResponseFormat.md](extensions/timed-tasks/ResponseFormat.md): the optional response-prompt contract of a timed task.
+- [extensions/timed-tasks/TaskBroadcast.md](extensions/timed-tasks/TaskBroadcast.md): pushes `ext.timed-tasks.changed` `{ reason, taskId, task }` to every window.
+- [extensions/timed-tasks/TaskFields.md](extensions/timed-tasks/TaskFields.md): maps the camelCase task fields to `timed_tasks` columns and owns the interval rules.
+- [extensions/timed-tasks/TaskWebhook.md](extensions/timed-tasks/TaskWebhook.md): posts a completed run to the task's webhook.
+- [extensions/timed-tasks/TimedTaskIpcHandlers.md](extensions/timed-tasks/TimedTaskIpcHandlers.md): iPC controller of Timed Tasks.
+- [extensions/timed-tasks/TimedTaskRepository.md](extensions/timed-tasks/TimedTaskRepository.md): plain queries over `timed_tasks` and `timed_task_runs`.
+- [extensions/timed-tasks/TimedTaskRunner.md](extensions/timed-tasks/TimedTaskRunner.md): executes one run of a timed task.
+- [extensions/timed-tasks/TimedTaskScheduler.md](extensions/timed-tasks/TimedTaskScheduler.md): the single master tick of Timed Tasks.
+- [extensions/timed-tasks/TimedTaskSchema.md](extensions/timed-tasks/TimedTaskSchema.md): creates `timed_tasks` and `timed_task_runs` and adds the columns later releases introduced (`conversation_log`, `status`, `last_status`, `last_error`), skipping each that already exists.
+- [extensions/timed-tasks/TimedTaskService.md](extensions/timed-tasks/TimedTaskService.md): the timed-task operations the IPC handlers, REST routes and MCP tools share.
+- [extensions/timed-tasks/TimedTaskTools.md](extensions/timed-tasks/TimedTaskTools.md): the `timed_tasks_*` MCP tools for the chat agent and external MCP clients.
+- [extensions/timed-tasks/TimedTasksExtension.md](extensions/timed-tasks/TimedTasksExtension.md): main-process side of Timed Tasks: recurring AI tasks run through the ai-chat extension's agent, with an optional response schema and webhook.
+- [extensions/timed-tasks/ui/RunDuration.md](extensions/timed-tasks/ui/RunDuration.md): the short duration of a timed-task run.
+- [extensions/timed-tasks/ui/RunLogMarkdown.md](extensions/timed-tasks/ui/RunLogMarkdown.md): formats one run log as the Markdown the "Copy log" button copies.
+- [extensions/timed-tasks/ui/TaskForm.md](extensions/timed-tasks/ui/TaskForm.md): the Timed Tasks panel's create/edit form.
+- [extensions/timed-tasks/ui/TaskList.md](extensions/timed-tasks/ui/TaskList.md): the Timed Tasks panel's task rows.
+- [extensions/timed-tasks/ui/TaskRowText.md](extensions/timed-tasks/ui/TaskRowText.md): the words and status dot a timed-task row and the panel header show.
+- [extensions/timed-tasks/ui/TaskRunList.md](extensions/timed-tasks/ui/TaskRunList.md): the run history under an expanded timed-task row.
+- [extensions/timed-tasks/ui/TimedTasksRenderer.md](extensions/timed-tasks/ui/TimedTasksRenderer.md): the Timed Tasks renderer in the main window.
+- [extensions/timed-tasks/ui/TimedTasksSettingsPage.md](extensions/timed-tasks/ui/TimedTasksSettingsPage.md): the Timed Tasks settings page (`settings.html`): a task count, a button that opens the panel, and the model runs use.
+
+## extensions/ext-test-harness
+
+- [extensions/ext-test-harness/TestHarnessExtension.md](extensions/ext-test-harness/TestHarnessExtension.md): main-process side of the Test Harness (`debugOnly: true`): discovers extension integration tests, runs them through a headless agent and keeps full logs.
+- [extensions/ext-test-harness/TestHarnessIpcHandlers.md](extensions/ext-test-harness/TestHarnessIpcHandlers.md): iPC controller of the Test Harness.
+- [extensions/ext-test-harness/TestHarnessService.md](extensions/ext-test-harness/TestHarnessService.md): the Test Harness operations the IPC handlers and REST routes share.
+- [extensions/ext-test-harness/lib/TestAgentPrompt.md](extensions/ext-test-harness/lib/TestAgentPrompt.md): the harness agent's system prompt.
+- [extensions/ext-test-harness/lib/TestAgentRunner.md](extensions/ext-test-harness/lib/TestAgentRunner.md): headless, fully instrumented agent loop for harness tests.
+- [extensions/ext-test-harness/lib/TestDiscovery.md](extensions/ext-test-harness/lib/TestDiscovery.md): finds harness tests: every `<extensionsDir>/<ext>/tests/*.test.js` exporting a descriptor with `id`, `name` and `run()`.
+- [extensions/ext-test-harness/lib/TestExecutor.md](extensions/ext-test-harness/lib/TestExecutor.md): runs one harness test.
+- [extensions/ext-test-harness/lib/TestHarnessApi.md](extensions/ext-test-harness/lib/TestHarnessApi.md): builds the `harness` object a descriptor's `run(harness)` receives.
+- [extensions/ext-test-harness/lib/TestRunLog.md](extensions/ext-test-harness/lib/TestRunLog.md): the structured log of one test run.
+- [extensions/ext-test-harness/lib/TestRunRepository.md](extensions/ext-test-harness/lib/TestRunRepository.md): plain queries over `test_runs` and `test_run_logs`.
+- [extensions/ext-test-harness/lib/TestTabs.md](extensions/ext-test-harness/lib/TestTabs.md): best-effort reads of the browser's tab list for the harness agent.
+- [extensions/ext-test-harness/lib/TestToolExecutor.md](extensions/ext-test-harness/lib/TestToolExecutor.md): executes one tool call of the harness agent.
+- [extensions/ext-test-harness/ui/HarnessText.md](extensions/ext-test-harness/ui/HarnessText.md): small text helpers the Test Harness panel shares.
+- [extensions/ext-test-harness/ui/RunDetailView.md](extensions/ext-test-harness/ui/RunDetailView.md): markup for an expanded Test Harness run.
+- [extensions/ext-test-harness/ui/RunListView.md](extensions/ext-test-harness/ui/RunListView.md): markup for the Test Harness "Run History" list.
+- [extensions/ext-test-harness/ui/RunMarkdown.md](extensions/ext-test-harness/ui/RunMarkdown.md): the "Copy as MD" export of a Test Harness run.
+- [extensions/ext-test-harness/ui/RunnerModelPicker.md](extensions/ext-test-harness/ui/RunnerModelPicker.md): the Test Runner Model select on the Test Harness settings tab.
+- [extensions/ext-test-harness/ui/TestHarnessRenderer.md](extensions/ext-test-harness/ui/TestHarnessRenderer.md): the Test Harness UI in the main window: the bottom-bar panel (discovered tests with Run buttons, run history with expandable detail and Copy as MD) and the settings tab (runner model, clear history).
+- [extensions/ext-test-harness/ui/TestListView.md](extensions/ext-test-harness/ui/TestListView.md): markup for the Test Harness "Available Tests" list.
+
+## extensions/code-mode
+
+- [extensions/code-mode/CodeModeDescriptor.md](extensions/code-mode/CodeModeDescriptor.md): the `code` chat mode descriptor handed to `context.chat.registerMode`.
+- [extensions/code-mode/CodeModeExtension.md](extensions/code-mode/CodeModeExtension.md): activation of the Code extension: registers the `code` chat mode ([CodeModeDescriptor](extensions/code-mode/CodeModeDescriptor.md)) over a per-run session map and returns the terminal bridge as the extension API.
+- [extensions/code-mode/CoreRequire.md](extensions/code-mode/CoreRequire.md): resolves a core module from code-mode wherever the extension is installed.
+- [extensions/code-mode/SessionSnapshot.md](extensions/code-mode/SessionSnapshot.md): the playground panel's view model of a Code session, one source for live mid-turn emits and the end-of-turn snapshot.
+- [extensions/code-mode/prompts/EnvironmentBlocks.md](extensions/code-mode/prompts/EnvironmentBlocks.md): renders `context.code.capabilities()` into build-prompt blocks so the agent uses what this install really has.
+- [extensions/code-mode/prompts/ProjectPrompt.md](extensions/code-mode/prompts/ProjectPrompt.md): the project-mode system prompt: the Code agent in an existing folder.
+- [extensions/code-mode/prompts/PromptText.md](extensions/code-mode/prompts/PromptText.md): the fixed prompt blocks of the Code chat mode (static strings).
+- [extensions/code-mode/prompts/SystemPromptBuilder.md](extensions/code-mode/prompts/SystemPromptBuilder.md): assembles the Code chat mode's system prompt.
+- [extensions/code-mode/terminal/CommitMessageDrafter.md](extensions/code-mode/terminal/CommitMessageDrafter.md): the IDE commit dialog's draft message: a side completion, never a chat message, never touching a running turn, no tools.
+- [extensions/code-mode/terminal/CommitPrompt.md](extensions/code-mode/terminal/CommitPrompt.md): the commit-message prompt and the reply cleanup.
+- [extensions/code-mode/terminal/FollowupSuggester.md](extensions/code-mode/terminal/FollowupSuggester.md): after a terminal turn, offers the one most useful next instruction.
+- [extensions/code-mode/terminal/GitLog.md](extensions/code-mode/terminal/GitLog.md): git calls for the commit-message style sample.
+- [extensions/code-mode/terminal/TerminalAgents.md](extensions/code-mode/terminal/TerminalAgents.md): the stored agents as the terminal sees them, through agent-manager's published `{ listAgents, buildTurn }`.
+- [extensions/code-mode/terminal/TerminalAuth.md](extensions/code-mode/terminal/TerminalAuth.md): who may open the terminal bridge.
+- [extensions/code-mode/terminal/TerminalBridge.md](extensions/code-mode/terminal/TerminalBridge.md): the terminal bridge: `luma <agent>` and the IDE plugins talk to the running app over one WebSocket, and a Code-mode project conversation does the work.
+- [extensions/code-mode/terminal/TerminalConversations.md](extensions/code-mode/terminal/TerminalConversations.md): the chat-store side of a terminal session's Code-mode conversation.
+- [extensions/code-mode/terminal/TerminalSession.md](extensions/code-mode/terminal/TerminalSession.md): one connected terminal or IDE client.
+- [extensions/code-mode/tools/CodeTool.md](extensions/code-mode/tools/CodeTool.md): base class for the Code mode's session-scoped agent tools (handed to the bridge as `extraTools`, never registered globally).
+- [extensions/code-mode/tools/batch/BatchDispatchTool.md](extensions/code-mode/tools/batch/BatchDispatchTool.md): `dispatch_batch { tasks: [{ kind?, instruction, files?.
+- [extensions/code-mode/tools/batch/BatchLanes.md](extensions/code-mode/tools/batch/BatchLanes.md): live progress of one fan-out for the chat-ui panel.
+- [extensions/code-mode/tools/batch/BatchSpecs.md](extensions/code-mode/tools/batch/BatchSpecs.md): the dispatch_batch task specs and the digest the parent agent reads.
+- [extensions/code-mode/tools/batch/SubAgentRunner.md](extensions/code-mode/tools/batch/SubAgentRunner.md): runs one batch sub-task as a focused agent run on the parent's project workspace.
+- [extensions/code-mode/tools/batch/SubAgentTextSink.md](extensions/code-mode/tools/batch/SubAgentTextSink.md): the bridge hooks of one batch sub-agent run.
+- [extensions/code-mode/tools/build/BuildName.md](extensions/code-mode/tools/build/BuildName.md): the name of the extension being built.
+- [extensions/code-mode/tools/build/BuildWorkspace.md](extensions/code-mode/tools/build/BuildWorkspace.md): one conversation's build session for the extension-builder tools.
+- [extensions/code-mode/tools/build/CodeArtifactPublisher.md](extensions/code-mode/tools/build/CodeArtifactPublisher.md): shows each file the build agent writes as a code artifact card in the chat.
+- [extensions/code-mode/tools/build/DiscardBuildTool.md](extensions/code-mode/tools/build/DiscardBuildTool.md): `discard_build {}` (a [CodeTool](extensions/code-mode/tools/CodeTool.md); name-gated by the approval gate).
+- [extensions/code-mode/tools/build/ExtensionBuildTools.md](extensions/code-mode/tools/build/ExtensionBuildTools.md): the extension-builder tool set for one turn.
+- [extensions/code-mode/tools/build/InstallExtensionTool.md](extensions/code-mode/tools/build/InstallExtensionTool.md): `install_extension {}` (a [CodeTool](extensions/code-mode/tools/CodeTool.md); name-gated by the approval gate's `MUTATING_TOOLS`).
+- [extensions/code-mode/tools/build/ListExtensionFilesTool.md](extensions/code-mode/tools/build/ListExtensionFilesTool.md): `list_extension_files {}` (a [CodeTool](extensions/code-mode/tools/CodeTool.md)).
+- [extensions/code-mode/tools/build/ReadExtensionFileTool.md](extensions/code-mode/tools/build/ReadExtensionFileTool.md): `read_extension_file { path }` (a [CodeTool](extensions/code-mode/tools/CodeTool.md)).
+- [extensions/code-mode/tools/build/WriteExtensionFileTool.md](extensions/code-mode/tools/build/WriteExtensionFileTool.md): `write_extension_file { path, content }` (a [CodeTool](extensions/code-mode/tools/CodeTool.md)).
+- [extensions/code-mode/tools/project/ArtifactFile.md](extensions/code-mode/tools/project/ArtifactFile.md): what a chat artifact becomes on disk for [SaveArtifactTool](extensions/code-mode/tools/project/SaveArtifactTool.md).
+- [extensions/code-mode/tools/project/CheckProcessTool.md](extensions/code-mode/tools/project/CheckProcessTool.md): `check_process { pid, action?: 'status'|'tail'|'kill', tail_bytes?.
+- [extensions/code-mode/tools/project/CommandOutputRelay.md](extensions/code-mode/tools/project/CommandOutputRelay.md): the live side of one run_command call.
+- [extensions/code-mode/tools/project/CommandText.md](extensions/code-mode/tools/project/CommandText.md): wording shared by run_command and check_process.
+- [extensions/code-mode/tools/project/EditFileTool.md](extensions/code-mode/tools/project/EditFileTool.md): `edit_file { path, edits: [{ oldText, newText }] }` (a [CodeTool](extensions/code-mode/tools/CodeTool.md); name-gated by the approval gate).
+- [extensions/code-mode/tools/project/FindTool.md](extensions/code-mode/tools/project/FindTool.md): `find { glob, maxResults?.
+- [extensions/code-mode/tools/project/GrepTool.md](extensions/code-mode/tools/project/GrepTool.md): `grep { pattern, glob?, ignoreCase?, maxMatches?.
+- [extensions/code-mode/tools/project/ListDirTool.md](extensions/code-mode/tools/project/ListDirTool.md): `list_dir { path?.
+- [extensions/code-mode/tools/project/ProjectOverviewTool.md](extensions/code-mode/tools/project/ProjectOverviewTool.md): `project_overview {}` (a [CodeTool](extensions/code-mode/tools/CodeTool.md)).
+- [extensions/code-mode/tools/project/ProjectTools.md](extensions/code-mode/tools/project/ProjectTools.md): the project tool set for one turn, over the folder the setup named.
+- [extensions/code-mode/tools/project/ProjectWorkspace.md](extensions/code-mode/tools/project/ProjectWorkspace.md): one conversation's project session for the project tools.
+- [extensions/code-mode/tools/project/ReadBudget.md](extensions/code-mode/tools/project/ReadBudget.md): sizes the project tools' reads from the window one read competes for.
+- [extensions/code-mode/tools/project/ReadFileTool.md](extensions/code-mode/tools/project/ReadFileTool.md): `read_file { path, offset?, limit?.
+- [extensions/code-mode/tools/project/RunCommandTool.md](extensions/code-mode/tools/project/RunCommandTool.md): (a [CodeTool](extensions/code-mode/tools/CodeTool.md), `mutating: true`, plus `projectRoot` for the approval gate's write-boundary check: the project path, or null for a container project).
+- [extensions/code-mode/tools/project/SaveArtifactTool.md](extensions/code-mode/tools/project/SaveArtifactTool.md): `save_artifact { artifactId, path, overwrite?.
+- [extensions/code-mode/tools/project/SearchText.md](extensions/code-mode/tools/project/SearchText.md): wording shared by the search tools.
+- [extensions/code-mode/tools/project/WholeReadGuard.md](extensions/code-mode/tools/project/WholeReadGuard.md): the "you already have this whole file" claim behind [ReadFileTool](extensions/code-mode/tools/project/ReadFileTool.md).
+- [extensions/code-mode/tools/project/WriteFileTool.md](extensions/code-mode/tools/project/WriteFileTool.md): `write_file { path, content }` (a [CodeTool](extensions/code-mode/tools/CodeTool.md); name-gated by the approval gate).
+- [extensions/code-mode/turn/AgentOverlay.md](extensions/code-mode/turn/AgentOverlay.md): the stored agent a project conversation runs AS (`luma <agent>`), from agent-manager's published `global.__lumaAgentManager.buildTurn(agentId)`.
+- [extensions/code-mode/turn/BuildStatePersister.md](extensions/code-mode/turn/BuildStatePersister.md): the Code mode's after-turn reaction (`postProcess`).
+- [extensions/code-mode/turn/CodeTurnBuilder.md](extensions/code-mode/turn/CodeTurnBuilder.md): the Code mode's per-turn config (`buildTurn`).
+- [extensions/code-mode/turn/ContextFilesBlock.md](extensions/code-mode/turn/ContextFilesBlock.md): the project's AGENTS.md / CLAUDE.md block for the project prompt.
+- [extensions/code-mode/turn/DecodeSlots.md](extensions/code-mode/turn/DecodeSlots.md): the fan-out budget for dispatch_batch.
+- [extensions/code-mode/ui/CodeBuildPanel.md](extensions/code-mode/ui/CodeBuildPanel.md): code mode's build playground (`.cm-code-panel`), mounted on `<body>` so `position: fixed` anchors to the viewport, and tagged `data-cm-overlay` so the shared chat CSS hides it on the Setup tab.
+- [extensions/code-mode/ui/CodeChatMode.md](extensions/code-mode/ui/CodeChatMode.md): code mode's client side on the LLM chat page: links `code.css` and registers the `code` mode's hooks with the chat-extension registry; the [build panel](extensions/code-mode/ui/CodeBuildPanel.md) follows the build events and the conversation meta.
+- [extensions/code-mode/ui/CodeKickoff.md](extensions/code-mode/ui/CodeKickoff.md): the first user turn Code mode sends from the brief.
+- [extensions/code-mode/ui/CodePanelMarkup.md](extensions/code-mode/ui/CodePanelMarkup.md): the build panel's markup.
+
+## extensions/agent-manager
+
+- [extensions/agent-manager/AgentBundle.md](extensions/agent-manager/AgentBundle.md): one agent as a portable `luma-agent` JSON bundle.
+- [extensions/agent-manager/AgentChatMode.md](extensions/agent-manager/AgentChatMode.md): the "Chat with agent" chat mode (`agent-chat`): one mode for every agent; chat-ui.js picks the agent and persists `meta.data.agentId`.
+- [extensions/agent-manager/AgentFileDialogs.md](extensions/agent-manager/AgentFileDialogs.md): the native file dialogs of the in-app Agents tab (Electron required lazily).
+- [extensions/agent-manager/AgentKnowledgeBase.md](extensions/agent-manager/AgentKnowledgeBase.md): each agent's private knowledge base: scope `agent:<id>` in the app-wide [RagService](core/rag/RagService.md) published on `global.__lumaRagService`.
+- [extensions/agent-manager/AgentKnowledgeGrant.md](extensions/agent-manager/AgentKnowledgeGrant.md): knowledge-base wiring for one agent turn, shared by delegation ([AgentRuntime](extensions/agent-manager/AgentRuntime.md)) and the chat mode ([AgentChatMode](extensions/agent-manager/AgentChatMode.md)).
+- [extensions/agent-manager/AgentManager.md](extensions/agent-manager/AgentManager.md): the Agent Manager service: the agent store plus everything that changes with it.
+- [extensions/agent-manager/AgentMcpTools.md](extensions/agent-manager/AgentMcpTools.md): `list_agents` and `chat_with_agent` for the in-app chat agent and external MCP clients.
+- [extensions/agent-manager/AgentModels.md](extensions/agent-manager/AgentModels.md): whether a model ref is installed in this app.
+- [extensions/agent-manager/AgentRunSink.md](extensions/agent-manager/AgentRunSink.md): the bridge hooks of one agent run.
+- [extensions/agent-manager/AgentRuntime.md](extensions/agent-manager/AgentRuntime.md): runs a stored agent as a "micro-LLM" on a scoped AgentChatBridge run.
+- [extensions/agent-manager/AgentSetupInvoke.md](extensions/agent-manager/AgentSetupInvoke.md): controller for the Agents tab's `setup.invoke` (auth-free IPC, so an API-key requirement never blocks the in-app tab).
+- [extensions/agent-manager/AgentSseChat.md](extensions/agent-manager/AgentSseChat.md): `POST /api/ext/agent-manager/agents/:id/chat` for API clients.
+- [extensions/agent-manager/AgentStore.md](extensions/agent-manager/AgentStore.md): persists custom sub-agents as one JSON list under `agentManager.agents`.
+- [extensions/agent-manager/ArtifactBubbler.md](extensions/agent-manager/ArtifactBubbler.md): brings files a delegated agent creates into the delegating conversation.
+- [extensions/agent-manager/ArtifactSummary.md](extensions/agent-manager/ArtifactSummary.md): the wire-safe artifact shape for API clients.
+- [extensions/agent-manager/GrantableTools.md](extensions/agent-manager/GrantableTools.md): the tools an agent may be granted.
+- [extensions/agent-manager/KnowledgeBaseTransfer.md](extensions/agent-manager/KnowledgeBaseTransfer.md): moves an agent's knowledge base in and out of an export bundle.
+- [extensions/agent-manager/chat-ui.md](extensions/agent-manager/chat-ui.md): the chat-page entry for the 'agent-chat' mode, loaded as a module: when `window.LumaChatExt.registerMode` exists it registers [AgentChatClient](extensions/agent-manager/ui/AgentChatClient.md)`.mode()`.
+- [extensions/agent-manager/setup-ui.md](extensions/agent-manager/setup-ui.md): `extensions/agent-manager/setup-ui.js`, `extensions/agent-manager/setup-ui.css`.
+- [extensions/agent-manager/ui/AgentCard.md](extensions/agent-manager/ui/AgentCard.md): - `AgentCard.render(agent, modelLabel, on)`: name, description ("No description"), chips for the model, "N tool(s)" and "N knowledge doc(s)" (when any); Edit, Export, Delete (asks "Delete agent "X"?" first).
+- [extensions/agent-manager/ui/AgentChatClient.md](extensions/agent-manager/ui/AgentChatClient.md): the client hooks of the 'agent-chat' chat mode.
+- [extensions/agent-manager/ui/AgentDirectory.md](extensions/agent-manager/ui/AgentDirectory.md): - `AgentDirectory.list(api)`: `api.setup.invoke('agent-manager', 'list')` on the desktop chat page (auth-free bridge), else `window.LumaAPI.listAgents()` on the web PWA; `[]` on any failure.
+- [extensions/agent-manager/ui/AgentForm.md](extensions/agent-manager/ui/AgentForm.md): - `AgentForm.render({ agent, models, defaultRef, toolGroups, modelLabel }, on)`: "Edit agent"/"New agent"; name, description, system prompt; model select ("App default (<default label>)" then each model); the grouped tool picker ("No tools available.
+- [extensions/agent-manager/ui/AgentKnowledgeSection.md](extensions/agent-manager/ui/AgentKnowledgeSection.md): the agent form's knowledge base.
+- [extensions/agent-manager/ui/AgentNotice.md](extensions/agent-manager/ui/AgentNotice.md): - `AgentNotice.render(notice, onDismiss)`: `.am-notice` (`warn` variant) with the title, one line per entry (text, not HTML) and Dismiss.
+- [extensions/agent-manager/ui/AgentPicker.md](extensions/agent-manager/ui/AgentPicker.md): - `AgentPicker.pick(agents)`: a fixed `.cm-model-pop` (model-popover styles, `data-cm-overlay` so it hides when the tab flips to Setup) titled "Chat with agent" with one option per agent (escaped name, "N knowledge doc(s)", description).
+- [extensions/agent-manager/ui/AgentsTab.md](extensions/agent-manager/ui/AgentsTab.md): the "Agents" tab: sub-agents with import/export and a create/edit form.
+
+## extensions/roleplay-mode
+
+- [extensions/roleplay-mode/CoreRequire.md](extensions/roleplay-mode/CoreRequire.md): resolves a LumaBrowser core module from roleplay-mode wherever the extension is installed: next to `core/` when bundled, or the running app's root when the add-on is sideloaded (`distributable: true`), where a relative require finds no `core/`.
+- [extensions/roleplay-mode/HostGlobals.md](extensions/roleplay-mode/HostGlobals.md): lazy readers for the singletons the app parks on `global`, which a distributable add-on reads instead of requiring core.
+- [extensions/roleplay-mode/RoleplayExtension.md](extensions/roleplay-mode/RoleplayExtension.md): the Roleplay Mode extension's main-process side: registers the `roleplay` chat mode, its IPC channels and the flag-gated Roleplay Lab Setup tab, and publishes the Lab service for the core `core.rpLab.*` IPC controller.
+- [extensions/roleplay-mode/audit/ArtAuditPrompt.md](extensions/roleplay-mode/audit/ArtAuditPrompt.md): the vision-model messages inspecting one stored render.
+- [extensions/roleplay-mode/audit/ArtAuditQueue.md](extensions/roleplay-mode/audit/ArtAuditQueue.md): the queue of stored renders awaiting the vision art audit (`data.pendingArtAudit`).
+- [extensions/roleplay-mode/audit/ArtAuditVerdict.md](extensions/roleplay-mode/audit/ArtAuditVerdict.md): reads the audit reply, fail-open.
+- [extensions/roleplay-mode/audit/ArtAuditor.md](extensions/roleplay-mode/audit/ArtAuditor.md): runs the vision art audit on queued renders, voiding bad ones.
+- [extensions/roleplay-mode/compose/BackdropProbe.md](extensions/roleplay-mode/compose/BackdropProbe.md): probes a figure render's backdrop so a bad plate is re-rolled.
+- [extensions/roleplay-mode/compose/BorderClusters.md](extensions/roleplay-mode/compose/BorderClusters.md): finds a render's backdrop colours by clustering its border ring.
+- [extensions/roleplay-mode/compose/CanvasLib.md](extensions/roleplay-mode/compose/CanvasLib.md): lazy `@napi-rs/canvas` access and base64 PNG conversion.
+- [extensions/roleplay-mode/compose/ComponentFilter.md](extensions/roleplay-mode/compose/ComponentFilter.md): keeps only the largest connected foreground component of a keyed figure.
+- [extensions/roleplay-mode/compose/EdgeDespill.md](extensions/roleplay-mode/compose/EdgeDespill.md): suppresses green spill and rim-light glow on a keyed figure's edge band.
+- [extensions/roleplay-mode/compose/FaceMask.md](extensions/roleplay-mode/compose/FaceMask.md): the inpaint mask for a face-only expression edit.
+- [extensions/roleplay-mode/compose/FigureKeyer.md](extensions/roleplay-mode/compose/FigureKeyer.md): keys a character figure out of its render backdrop.
+- [extensions/roleplay-mode/compose/FigureReplater.md](extensions/roleplay-mode/compose/FigureReplater.md): re-plates a rendered figure onto a perfect synthetic backdrop.
+- [extensions/roleplay-mode/compose/FigureShapeProbe.md](extensions/roleplay-mode/compose/FigureShapeProbe.md): shape probe for a figure render: close-up, tiny or off-side.
+- [extensions/roleplay-mode/compose/NativeComposite.md](extensions/roleplay-mode/compose/NativeComposite.md): the nativeImage reaction composite, the fallback when the canvas path fails.
+- [extensions/roleplay-mode/compose/NativeImageTools.md](extensions/roleplay-mode/compose/NativeImageTools.md): nativeImage helpers for painted plates.
+- [extensions/roleplay-mode/compose/PocketKeyer.md](extensions/roleplay-mode/compose/PocketKeyer.md): keys small enclosed backdrop pockets on chroma backdrops only.
+- [extensions/roleplay-mode/compose/SceneCompositor.md](extensions/roleplay-mode/compose/SceneCompositor.md): composites keyed figures onto a scene in pure pixels, tinted to the room's light.
+- [extensions/roleplay-mode/emotions/EmotionCatalog.md](extensions/roleplay-mode/emotions/EmotionCatalog.md): the 157-emotion catalog (`emotions.catalog.json`, data): resolves a short free-text emotion to its entry, its Danbooru tags, and one of five cached reaction buckets with a facial-muscle cue for edit models.
+- [extensions/roleplay-mode/emotions/EmotionEnricher.md](extensions/roleplay-mode/emotions/EmotionEnricher.md): enriches a free-text emotion with booru cues for tag-trained image models.
+- [extensions/roleplay-mode/emotions/ReactionEmotion.md](extensions/roleplay-mode/emotions/ReactionEmotion.md): maps a character's moment to one of the five cached reaction buckets.
+- [extensions/roleplay-mode/images/BeatKind.md](extensions/roleplay-mode/images/BeatKind.md): classifies the director's shot into a reaction route.
+- [extensions/roleplay-mode/images/ImageCancellation.md](extensions/roleplay-mode/images/ImageCancellation.md): detects a user image cancel since a reaction started.
+- [extensions/roleplay-mode/images/ImageProfiles.md](extensions/roleplay-mode/images/ImageProfiles.md): the image-quality profiles (fast, balanced, quality) and their resolution.
+- [extensions/roleplay-mode/images/ReactionProgress.md](extensions/roleplay-mode/images/ReactionProgress.md): live feedback for one message's background image work.
+- [extensions/roleplay-mode/images/RenderDimensions.md](extensions/roleplay-mode/images/RenderDimensions.md): render size per image type.
+- [extensions/roleplay-mode/images/RoleplayEnv.md](extensions/roleplay-mode/images/RoleplayEnv.md): the `RP_*` environment switches, read at call time.
+- [extensions/roleplay-mode/images/RpDebug.md](extensions/roleplay-mode/images/RpDebug.md): opt-in tracing (`LUMA_RP_DEBUG`) and image dumps (`RP_DEBUG_IMG_DIR`).
+- [extensions/roleplay-mode/lab/LabIntegratedScene.md](extensions/roleplay-mode/lab/LabIntegratedScene.md): the Lab's integrated A/B comparison render.
+- [extensions/roleplay-mode/lab/LabRunReport.md](extensions/roleplay-mode/lab/LabRunReport.md): a Lab run's on-disk trace.
+- [extensions/roleplay-mode/lab/LabScenario.md](extensions/roleplay-mode/lab/LabScenario.md): the Lab's seeded scenario: the most recent saved roleplay, or a synthetic fallback.
+- [extensions/roleplay-mode/lab/LabService.md](extensions/roleplay-mode/lab/LabService.md): the Roleplay Lab: drives the REAL roleplay image flow for a seeded scenario with a mocked LLM under a core LabHarness that records, overrides or freezes every image step.
+- [extensions/roleplay-mode/lab/LabSetupRunner.md](extensions/roleplay-mode/lab/LabSetupRunner.md): the Lab's setup phase: scene art and base face (base model), then a full body (edit model).
+- [extensions/roleplay-mode/lab/LabTurn.md](extensions/roleplay-mode/lab/LabTurn.md): the Lab's mock chat turn and canned LLM replies.
+- [extensions/roleplay-mode/mode/LabFlag.md](extensions/roleplay-mode/mode/LabFlag.md): the developer-only "Enable Roleplay Lab" flag and its Setup tab.
+- [extensions/roleplay-mode/mode/RoleplayDebug.md](extensions/roleplay-mode/mode/RoleplayDebug.md): test-harness entry points running single production stages on a data snapshot.
+- [extensions/roleplay-mode/mode/RoleplayIpcHandlers.md](extensions/roleplay-mode/mode/RoleplayIpcHandlers.md): routes the extension's IPC (`ext.roleplay-mode.*`).
+- [extensions/roleplay-mode/mode/RoleplayModeDescriptor.md](extensions/roleplay-mode/mode/RoleplayModeDescriptor.md): the `roleplay` chat mode descriptor.
+- [extensions/roleplay-mode/pipeline/AssetLedger.md](extensions/roleplay-mode/pipeline/AssetLedger.md): the persisted per-asset retry ledger (`data.assetRetry`).
+- [extensions/roleplay-mode/pipeline/AssetOutcomes.md](extensions/roleplay-mode/pipeline/AssetOutcomes.md): records one turn's render outcomes in the ledger and whether it changed.
+- [extensions/roleplay-mode/pipeline/AssetSweepPlanner.md](extensions/roleplay-mode/pipeline/AssetSweepPlanner.md): plans a turn's image work from world state so failed renders are rescheduled.
+- [extensions/roleplay-mode/pipeline/AvatarRenderer.md](extensions/roleplay-mode/pipeline/AvatarRenderer.md): generates missing base faces.
+- [extensions/roleplay-mode/pipeline/EditRender.md](extensions/roleplay-mode/pipeline/EditRender.md): edit-render plumbing: the edit model ref, a never-throwing generate, the retry pause.
+- [extensions/roleplay-mode/pipeline/EmotionFaceRenderer.md](extensions/roleplay-mode/pipeline/EmotionFaceRenderer.md): keeps each drawn character's emotion face variant fresh with a face-masked edit.
+- [extensions/roleplay-mode/pipeline/FastReaction.md](extensions/roleplay-mode/pipeline/FastReaction.md): ships a pure-CPU composite when every needed asset is cached.
+- [extensions/roleplay-mode/pipeline/FullBodyBuilder.md](extensions/roleplay-mode/pipeline/FullBodyBuilder.md): builds a character's canonical full body from a head-only portrait.
+- [extensions/roleplay-mode/pipeline/ImagePhase.md](extensions/roleplay-mode/pipeline/ImagePhase.md): one turn's GPU work inside a single exclusive image window.
+- [extensions/roleplay-mode/pipeline/MomentFigureRenderer.md](extensions/roleplay-mode/pipeline/MomentFigureRenderer.md): ensures the cached posed and emotive moment figure for a reaction.
+- [extensions/roleplay-mode/pipeline/OutfitRenderer.md](extensions/roleplay-mode/pipeline/OutfitRenderer.md): renders one pending outfit body by editing the character's prior look.
+- [extensions/roleplay-mode/pipeline/OutfitWardrobe.md](extensions/roleplay-mode/pipeline/OutfitWardrobe.md): points a character at the outfit record for what they wear now.
+- [extensions/roleplay-mode/pipeline/ReactionImageRenderer.md](extensions/roleplay-mode/pipeline/ReactionImageRenderer.md): renders the reaction image inside an open exclusive image window.
+- [extensions/roleplay-mode/pipeline/RenderSignature.md](extensions/roleplay-mode/pipeline/RenderSignature.md): the state-diff signature of what a reaction image would look like.
+- [extensions/roleplay-mode/pipeline/RoleplayPostProcessor.md](extensions/roleplay-mode/pipeline/RoleplayPostProcessor.md): the mode's server-side reaction after each assistant turn.
+- [extensions/roleplay-mode/pipeline/SceneArtRenderer.md](extensions/roleplay-mode/pipeline/SceneArtRenderer.md): paints a scene's establishing background.
+- [extensions/roleplay-mode/pipeline/TurnChannel.md](extensions/roleplay-mode/pipeline/TurnChannel.md): one assistant turn's outlets: emit, save, progress and the world announcement.
+- [extensions/roleplay-mode/pipeline/TurnData.md](extensions/roleplay-mode/pipeline/TurnData.md): the per-turn working copy of a conversation's roleplay data.
+- [extensions/roleplay-mode/pipeline/reaction/CompositePlate.md](extensions/roleplay-mode/pipeline/reaction/CompositePlate.md): the static-beat plate: moment figures keyed onto the saved scene.
+- [extensions/roleplay-mode/pipeline/reaction/HarmonizePass.md](extensions/roleplay-mode/pipeline/reaction/HarmonizePass.md): the "matching the light" pass over a composite (Qwen edit or Anima img2img).
+- [extensions/roleplay-mode/pipeline/reaction/IntegratedPlate.md](extensions/roleplay-mode/pipeline/reaction/IntegratedPlate.md): the dynamic-beat plate: one edit placing the solo character into the saved scene.
+- [extensions/roleplay-mode/pipeline/reaction/PaintedPlate.md](extensions/roleplay-mode/pipeline/reaction/PaintedPlate.md): the base-model plate when no composite could be made.
+- [extensions/roleplay-mode/pipeline/reaction/ReactionPlan.md](extensions/roleplay-mode/pipeline/reaction/ReactionPlan.md): everything one reaction image is decided from, computed once.
+- [extensions/roleplay-mode/pipeline/reaction/ReactionStore.md](extensions/roleplay-mode/pipeline/reaction/ReactionStore.md): stores, anchors and emits a finished reaction image.
+- [extensions/roleplay-mode/pipeline/reaction/RefinePass.md](extensions/roleplay-mode/pipeline/reaction/RefinePass.md): the identity refine over a painted or generated plate.
+- [extensions/roleplay-mode/prompts/BaseModelPrompts.md](extensions/roleplay-mode/prompts/BaseModelPrompts.md): base-model prompts for scene establishing art and a character's base face, in the model card's tag conventions.
+- [extensions/roleplay-mode/prompts/EditPromptParts.md](extensions/roleplay-mode/prompts/EditPromptParts.md): shared clauses for edit-model prompts, all in the positive voice because the edit model runs at CFG~1, where a named failure mode is summoned.
+- [extensions/roleplay-mode/prompts/EmotionReferencePrompt.md](extensions/roleplay-mode/prompts/EmotionReferencePrompt.md): the edit-model prompt for an emotion face variant: change only the expression.
+- [extensions/roleplay-mode/prompts/FigurePrompts.md](extensions/roleplay-mode/prompts/FigurePrompts.md): edit-model prompts for a character's full-body figures.
+- [extensions/roleplay-mode/prompts/HarmonizePrompts.md](extensions/roleplay-mode/prompts/HarmonizePrompts.md): prompts for the light "matching the light" pass over a composite.
+- [extensions/roleplay-mode/prompts/ImagePrompt.md](extensions/roleplay-mode/prompts/ImagePrompt.md): the base-model prompt for a reaction image, or a face-only extreme close-up of one character.
+- [extensions/roleplay-mode/prompts/IntegratedScenePrompt.md](extensions/roleplay-mode/prompts/IntegratedScenePrompt.md): the edit-model prompt that places one character into the saved scene for a dynamic beat, with one reference image only.
+- [extensions/roleplay-mode/prompts/NarratorPrompt.md](extensions/roleplay-mode/prompts/NarratorPrompt.md): the narrator system prompt, rebuilt every turn from persisted meta.data so a reopened roleplay fully restores the model's behaviour: a lean brief plus facts the prose must not contradict.
+- [extensions/roleplay-mode/prompts/OutfitReferencePrompt.md](extensions/roleplay-mode/prompts/OutfitReferencePrompt.md): the edit-model prompt that redresses a character as a full-body chroma-plate reference; the swap leads and closes the prompt.
+- [extensions/roleplay-mode/prompts/PaintedBeatPrompt.md](extensions/roleplay-mode/prompts/PaintedBeatPrompt.md): the base-model plate prompt for a painted (physical contact) beat.
+- [extensions/roleplay-mode/prompts/PoseCatalog.md](extensions/roleplay-mode/prompts/PoseCatalog.md): body poses for the composited reaction figure and the body-language cue each emotion adds.
+- [extensions/roleplay-mode/prompts/ProseCues.md](extensions/roleplay-mode/prompts/ProseCues.md): cheap regex reads of an assistant turn's prose.
+- [extensions/roleplay-mode/prompts/RefinePrompt.md](extensions/roleplay-mode/prompts/RefinePrompt.md): the edit-model refine prompt that locks identity onto a painted or generated plate.
+- [extensions/roleplay-mode/prompts/SpeakerNames.md](extensions/roleplay-mode/prompts/SpeakerNames.md): finds bold-name speakers (`**Name:**` or `**Name**:`) so new characters join the roster as soon as they speak.
+- [extensions/roleplay-mode/prompts/SubjectTag.md](extensions/roleplay-mode/prompts/SubjectTag.md): the booru subject-count tag for a shot's characters.
+- [extensions/roleplay-mode/stage/StageCall.md](extensions/roleplay-mode/stage/StageCall.md): runs the stage manager completion and parses it, best effort.
+- [extensions/roleplay-mode/stage/StageReconciler.md](extensions/roleplay-mode/stage/StageReconciler.md): applies the stage call's decisions to the working data.
+- [extensions/roleplay-mode/stage/StagingParser.md](extensions/roleplay-mode/stage/StagingParser.md): tolerant parser for the stage call's reply.
+- [extensions/roleplay-mode/stage/StagingPrompt.md](extensions/roleplay-mode/stage/StagingPrompt.md): the messages for the single post-turn STAGE MANAGER call (continuity, wardrobe and shot in one strict-JSON `/no_think` pass).
+- [extensions/roleplay-mode/stage/WorldDelta.md](extensions/roleplay-mode/stage/WorldDelta.md): what one turn's reconciliation changed.
+- [extensions/roleplay-mode/world/CastResolver.md](extensions/roleplay-mode/world/CastResolver.md): resolves which characters are in a moment: the tracked present cast, names in the passage as a fallback, lookups by name, and the director's focus order.
+- [extensions/roleplay-mode/world/CharacterArt.md](extensions/roleplay-mode/world/CharacterArt.md): picks a character's stored reference images.
+- [extensions/roleplay-mode/world/CharacterLooks.md](extensions/roleplay-mode/world/CharacterLooks.md): reads facts out of a character's free-text looks.
+- [extensions/roleplay-mode/world/CurrentState.md](extensions/roleplay-mode/world/CurrentState.md): the per-moment state (`data.currentState`: scene id and present cast).
+- [extensions/roleplay-mode/world/DataMigration.md](extensions/roleplay-mode/world/DataMigration.md): upgrades a conversation's persisted roleplay data to the current shape in place; idempotent.
+- [extensions/roleplay-mode/world/OutfitText.md](extensions/roleplay-mode/world/OutfitText.md): outfit description text: normalised comparison, slot-by-slot layer comparison, the short display name and render-safe wording.
+- [extensions/roleplay-mode/world/RoleplayIds.md](extensions/roleplay-mode/world/RoleplayIds.md): mints row ids and random per-character seeds.
+- [extensions/roleplay-mode/world/SceneLocator.md](extensions/roleplay-mode/world/SceneLocator.md): finds roleplay scenes in a conversation's persisted data.
+- [extensions/roleplay-mode/world/SetupArt.md](extensions/roleplay-mode/world/SetupArt.md): the canonical character-art and scene SETUP prompts shared by the setup modal, the server and the Roleplay Lab, and their compose order.
+- [extensions/roleplay-mode/chat-ui.md](extensions/roleplay-mode/chat-ui.md): roleplay Mode's chat-page UI.
+- [extensions/roleplay-mode/renderer.md](extensions/roleplay-mode/renderer.md): roleplay Mode's settings-page renderer.
+- [extensions/roleplay-mode/rp-lab.md](extensions/roleplay-mode/rp-lab.md): the Roleplay Lab (dev): a Setup tab that runs the real roleplay image pipeline for a seeded scenario and lets you tune and regenerate single steps.
+- [extensions/roleplay-mode/shared.md](extensions/roleplay-mode/shared.md): the chat page's copy of the shared roleplay logic, published as `window.RP_SHARED` for [chat-ui](extensions/roleplay-mode/chat-ui.md) and served from `/llm-ui/ext/roleplay-mode/shared.js` (declared in `chatUi.assets`).
+
+## extensions/game-mode
+
+- [extensions/game-mode/ConversationMeta.md](extensions/game-mode/ConversationMeta.md): reads a conversation's persisted setup (`meta.data`) and model pin straight from the chat store, for code that runs outside a chat turn (routes, play-time AI calls).
+- [extensions/game-mode/CoreRequire.md](extensions/game-mode/CoreRequire.md): loads a LumaBrowser core module from game-mode wherever the extension is installed.
+- [extensions/game-mode/GameFolders.md](extensions/game-mode/GameFolders.md): where game folders live: one per conversation under `<userData>/game-mode/`, plus `.kb-cache` for fetched game-dev pages.
+- [extensions/game-mode/GameKnowledgeBase.md](extensions/game-mode/GameKnowledgeBase.md): the shared `gamedev` RAG scope every game conversation searches: seeded from the bundled `docs/*.md` on activate and grown by `fetch_gamedev_doc`.
+- [extensions/game-mode/GameModeExtension.md](extensions/game-mode/GameModeExtension.md): activates Game mode: seeds the knowledge base, registers the `game` chat mode, and returns the API `routes.js` reaches through `context.extensionApi`.
+- [extensions/game-mode/ai/AiBridge.md](extensions/game-mode/ai/AiBridge.md): the server half of the in-game AI runtime: one request from a running AI game becomes one side completion (`context.chat.complete`) on the conversation's model, framed by the game, limited per game.
+- [extensions/game-mode/ai/AiCallLimiter.md](extensions/game-mode/ai/AiCallLimiter.md): per-game load bound: 2 calls in flight, 6 queued, an immediate refusal beyond, so a game loop firing per frame fails fast instead of piling onto a one-slot server.
+- [extensions/game-mode/ai/AiCallOptions.md](extensions/game-mode/ai/AiCallOptions.md): the completion options of one in-game call: temperature (0-1.5, default 0.8), timeout (5-300 s, default 120 s), thinking off unless `think: true`, and the model (a body `modelRef`, else the conversation's pin; routes strip the body one).
+- [extensions/game-mode/ai/AiMessageBuilder.md](extensions/game-mode/ai/AiMessageBuilder.md): builds the messages of one in-game AI call: a system message with the game framing (`<game_premise>`, `<world>`), the caller's `<instructions>` and the output protocol, then the trimmed history.
+- [extensions/game-mode/ai/AiReplyParser.md](extensions/game-mode/ai/AiReplyParser.md): interprets a model reply under the in-game protocol: `{"tool": ...}`, `{"final": ...}`, a bare JSON value (json mode) or prose.
+- [extensions/game-mode/ai/AiToolList.md](extensions/game-mode/ai/AiToolList.md): validates the game functions an in-game call declares: at most 24, valid unique names, descriptions cut to 500 chars, an object schema by default.
+- [extensions/game-mode/assets/AssetJob.md](extensions/game-mode/assets/AssetJob.md): the generation job of one prepared asset (prompt, render size, model, output size, pixel grid, transparency), the shape queued on `session.pendingAssets`.
+- [extensions/game-mode/assets/AssetPath.md](extensions/game-mode/assets/AssetPath.md): normalizes and guards an asset path: a `.png` under `assets/` that resolves inside the game folder.
+- [extensions/game-mode/assets/AssetPostChain.md](extensions/game-mode/assets/AssetPostChain.md): turns a freshly generated image into the asset file: pixel-art K-Centroids to its grid and back up to the layout size; other styles smooth-downscale; transparent assets key their background on the way.
+- [extensions/game-mode/assets/AssetSizing.md](extensions/game-mode/assets/AssetSizing.md): asset dimensions: the file size the game lays out for, the logical grid of pixel-art, and the larger size the image model renders before the post-chain downscales it.
+- [extensions/game-mode/assets/AssetSpec.md](extensions/game-mode/assets/AssetSpec.md): validates one asset request, plans its generation and writes its placeholder PNG at the real size.
+- [extensions/game-mode/assets/AssetStyle.md](extensions/game-mode/assets/AssetStyle.md): art styles for generated assets: coerces the style string a model passes onto `pixel-art`, `cartoon`, `painted`, `flat`, and builds the image prompt.
+- [extensions/game-mode/assets/ImageCapability.md](extensions/game-mode/assets/ImageCapability.md): what image generation can do right now through `context.chat`.
+- [extensions/game-mode/assets/ImageModelPins.md](extensions/game-mode/assets/ImageModelPins.md): which image model renders which game asset.
+- [extensions/game-mode/assets/InlineAssetGenerator.md](extensions/game-mode/assets/InlineAssetGenerator.md): generates one prepared asset mid-turn and writes it over its placeholder.
+- [extensions/game-mode/assets/PendingAssetDrainer.md](extensions/game-mode/assets/PendingAssetDrainer.md): generates the assets queued during a turn after the turn ends (the mode's postProcess), replacing placeholders, inside one exclusive-image window and grouped by model.
+- [extensions/game-mode/assets/PlaceholderPng.md](extensions/game-mode/assets/PlaceholderPng.md): the solid-colour placeholder PNG every asset gets before its real image exists, so a game never 404s an asset.
+- [extensions/game-mode/assets/RuntimeAssetGenerator.md](extensions/game-mode/assets/RuntimeAssetGenerator.md): `AI.image()` from inside a running game: the build-time pipeline for play-time art under `assets/runtime/`, memoised per request and one render at a time process-wide.
+- [extensions/game-mode/assets/RuntimeImageIndex.md](extensions/game-mode/assets/RuntimeImageIndex.md): the memo of play-time images an AI game has drawn, `.gamedata/images.json`, keyed by the game's `key` or a request hash.
+- [extensions/game-mode/flatten/GameFlattener.md](extensions/game-mode/flatten/GameFlattener.md): collapses a game folder into one self-contained HTML document: Phaser inlined, every local script inlined in order (`</script` escaped), every referenced `assets/` file a data: URI.
+- [extensions/game-mode/flatten/PhaserDist.md](extensions/game-mode/flatten/PhaserDist.md): locates the vendored `node_modules/phaser/dist/phaser.min.js` beside the repo root (dev) or under `app.getAppPath()` (packaged).
+- [extensions/game-mode/lint/CommentBlanker.md](extensions/game-mode/lint/CommentBlanker.md): blanks `//` and block comment bodies with spaces while keeping every offset and newline, so lint findings map onto the source and prose in comments never fires.
+- [extensions/game-mode/lint/PhaserLint.md](extensions/game-mode/lint/PhaserLint.md): the phantom Phaser API check on generated game code: calls eslint passes but Phaser 3 does not have.
+- [extensions/game-mode/lint/PhaserLintRules.md](extensions/game-mode/lint/PhaserLintRules.md): the regex rules of the phantom Phaser API check, each a hallucination a local model actually shipped: `geom-path`, `fillpath-arg`, `body-refresh`, `keyevent-concat`, `v2-game-global`, `v2-anchor`, `v2-arcade-const`, `v2-keyboard-isdown`, `stroke-arg-order` (colour where the line width goes: the black-screen bug), `v2-constructor`.
+- [extensions/game-mode/lint/ShapeStyleCheck.md](extensions/game-mode/lint/ShapeStyleCheck.md): the Shape versus Graphics style mixup: `add.rectangle()` and friends return Shapes (`setFillStyle`/`setStrokeStyle`), `fillStyle`/`lineStyle` exist only on Graphics; both directions throw.
+- [extensions/game-mode/mode/GameAiSurface.md](extensions/game-mode/mode/GameAiSurface.md): the in-game AI surface routes reach through `extensionApi.ai`, working from the persisted setup since routes have no turn.
+- [extensions/game-mode/mode/GameModeDescriptor.md](extensions/game-mode/mode/GameModeDescriptor.md): the `game` chat mode descriptor registered through `context.chat.registerMode`.
+- [extensions/game-mode/mode/GameSetupSchema.md](extensions/game-mode/mode/GameSetupSchema.md): the "New game" setup form: game type (web or AI), premise (required), world notes (AI games only), name and genre.
+- [extensions/game-mode/mode/GameTurnBuilder.md](extensions/game-mode/mode/GameTurnBuilder.md): the server-side config of one Game turn.
+- [extensions/game-mode/pixel/BackgroundKeyer.md](extensions/game-mode/pixel/BackgroundKeyer.md): keys out a near-uniform, border-connected background in place.
+- [extensions/game-mode/pixel/CanvasModule.md](extensions/game-mode/pixel/CanvasModule.md): lazily loads `@napi-rs/canvas` for PNG decode and encode.
+- [extensions/game-mode/pixel/ColorMath.md](extensions/game-mode/pixel/ColorMath.md): rec.
+- [extensions/game-mode/pixel/KCentroid.md](extensions/game-mode/pixel/KCentroid.md): k-Centroid downscale: one output pixel per source cell, coloured by the dominant k=2 k-means centroid (seeded from the darkest and lightest pixels, deterministic).
+- [extensions/game-mode/pixel/NearestUpscale.md](extensions/game-mode/pixel/NearestUpscale.md): nearest-neighbour upscale: every logical pixel becomes a solid block, so a big pixel-art asset ships chunky.
+- [extensions/game-mode/pixel/PaletteQuantizer.md](extensions/game-mode/pixel/PaletteQuantizer.md): snaps an RGBA image to a k-colour palette (deterministic k-means, seeds evenly spaced along the luminance-sorted pixels, 5 iterations).
+- [extensions/game-mode/pixel/PixelPost.md](extensions/game-mode/pixel/PixelPost.md): the post-chain entry points for generated assets.
+- [extensions/game-mode/prompts/GameAssetRules.md](extensions/game-mode/prompts/GameAssetRules.md): the `<assets>` prompt block, which changes with what the machine can do.
+- [extensions/game-mode/prompts/GamePromptBlocks.md](extensions/game-mode/prompts/GamePromptBlocks.md): the fixed blocks of the Game system prompt: `GAME_PROJECT` (folder layout, classic scripts, `window.G`), `PHASER_GROUNDING` (real Phaser 3 API facts), `KNOWLEDGE` (the two KB corpora), `AI_RUNTIME` (the `window.AI` contract) and `NO_TOOL_WORKFLOW`.
+- [extensions/game-mode/prompts/GameSystemPrompt.md](extensions/game-mode/prompts/GameSystemPrompt.md): assembles the Game mode system prompt from the conversation's setup: persona, project, AI runtime (AI games), Phaser facts, knowledge base, assets, workflow (or the no-tools block) and the user goal.
+- [extensions/game-mode/prompts/GameWorkflowRules.md](extensions/game-mode/prompts/GameWorkflowRules.md): the `<workflow>` prompt block when tools are on: the exact tool list (plus `test_ai_prompt` for AI games), the first-build order, edit discipline, index.html wiring and the run_game check.
+- [extensions/game-mode/rooms/RoomInvite.md](extensions/game-mode/rooms/RoomInvite.md): the join details of a room: the ws path carrying room and token, and one ws URL per way to reach the gateway (the request host, then each external IPv4 on the same port).
+- [extensions/game-mode/rooms/RoomRelay.md](extensions/game-mode/rooms/RoomRelay.md): the multiplayer room relay: a message relay, not a game server.
+- [extensions/game-mode/routes/AiRoutes.md](extensions/game-mode/routes/AiRoutes.md): controller for `/ai/<convId>/...`, what `src/luma-ai.js` (`window.AI`) calls from a running AI game: `GET ping`, `POST complete` (429 when busy), `POST stream` (SSE `{delta}` lines then `{done, text}`; the response's close aborts), the store (`GET store`, `GET store/:col`, `PUT store/:col/:key`, `DELETE store/:col/:key`, `DELETE store/:col`, `DELETE store`) and `POST image`.
+- [extensions/game-mode/routes/GameLookup.md](extensions/game-mode/routes/GameLookup.md): resolves a request's conversation id to an existing game folder through the extension API's sanitize and folder rules, so every route refuses unknown games the same way.
+- [extensions/game-mode/routes/GamePublisher.md](extensions/game-mode/routes/GamePublisher.md): publishes a game: flattens it into one `type: html` artifact (served verbatim by `/share/<token>`) in the conversation's artifact list, then mints a share link when sharing and the web backend are up.
+- [extensions/game-mode/routes/GameRoutes.md](extensions/game-mode/routes/GameRoutes.md): controller for `/api/ext/game-mode` (the entry `routes.js` calls `GameRoutes.create(context)`): `GET /play/...` (no-store, served relative to the game root so dotfiles never leak), `POST /open-tab/:convId` (`context.browser.createTab`, 503 without it), `GET /export/:convId`, `POST /publish/:convId`, `POST /room/:convId`, plus the `/ai` routes.
+- [extensions/game-mode/routes/GameZipExporter.md](extensions/game-mode/routes/GameZipExporter.md): streams a game as a portable zip: every file in the folder, `phaser.min.js` bundled, and index.html's engine tag rewritten to the relative copy so the unzipped game plays from a double-clicked file.
+- [extensions/game-mode/routes/PlayRequest.md](extensions/game-mode/routes/PlayRequest.md): resolves `GET /play/<convId>/<asset...>` to a file in that game folder: undecodable or NUL paths 400, unknown games 404, escapes 403; the default file is index.html.
+- [extensions/game-mode/session/GameJson.md](extensions/game-mode/session/GameJson.md): reads a game folder's `game.json` (name and kind).
+- [extensions/game-mode/session/GameKind.md](extensions/game-mode/session/GameKind.md): the two kinds of game: `web` (self-contained, exportable) and `ai` (calls the model while it plays).
+- [extensions/game-mode/session/GameScaffold.md](extensions/game-mode/session/GameScaffold.md): the starter files of a game folder and the managed AI runtime.
+- [extensions/game-mode/session/GameSessions.md](extensions/game-mode/session/GameSessions.md): gets or creates the session record that binds a conversation to its game folder, scaffolding it and registering it as a CodeWorkspace project through `context.code.openProject`.
+- [extensions/game-mode/session/GameSnapshot.md](extensions/game-mode/session/GameSnapshot.md): the panel's view of a game session and the live `game:state` event that carries it to the chat UI.
+- [extensions/game-mode/smoke/FrameStats.md](extensions/game-mode/smoke/FrameStats.md): the measured screen check on a frame: black, dark and mean brightness over every third pixel of the canvas region, a colour count, and a verdict (`black`, `nearly-black`, `flat`, `content`, `empty`).
+- [extensions/game-mode/smoke/PhaserProbeReport.md](extensions/game-mode/smoke/PhaserProbeReport.md): renders the Phaser probe: per game, active scenes with object counts by type, camera scroll/zoom/alpha and a lingering fade, per-object geometry (hidden, alpha, scroll factor, children), MISSING textures and up to 24 loaded textures.
+- [extensions/game-mode/smoke/SmokeActions.md](extensions/game-mode/smoke/SmokeActions.md): the scripted input of a smoke run, normalised: `click` (x, y), `key` (named or single character, held 60-4000 ms) and `type` (up to 120 chars), each with `at` (0-30 s), at most 24, sorted by time.
+- [extensions/game-mode/smoke/SmokeCollectorScript.md](extensions/game-mode/smoke/SmokeCollectorScript.md): the in-page collector, installed as a main-world preload: records errors, resources, console output and frames; traps the `Phaser.Game` instance for the probe; drives the scripted actions (or Space taps and centre clicks); exposes `__lumaSmokeCanvasRect` and `__lumaSmokeReport`.
+- [extensions/game-mode/smoke/SmokeConsole.md](extensions/game-mode/smoke/SmokeConsole.md): the backstop console channel: catches page output from before the collector installed.
+- [extensions/game-mode/smoke/SmokeErrorFormatter.md](extensions/game-mode/smoke/SmokeErrorFormatter.md): formats one runtime error for the agent: message, the game-relative `file:line` from the first useful stack frame (window.onerror's line is document-relative junk for inlined scripts), a repeat count, and two frames without engine or harness noise.
+- [extensions/game-mode/smoke/SmokeFrameCapture.md](extensions/game-mode/smoke/SmokeFrameCapture.md): captures frames from the offscreen paint stream (falling back to `capturePage`), measures the canvas region in device pixels, saves PNGs when asked, and keeps the bytes of only the last two frames.
+- [extensions/game-mode/smoke/SmokeReport.md](extensions/game-mode/smoke/SmokeReport.md): turns a smoke run result into run_game's message: what ran (live or offline, actions), the canvas, the screen check per frame (a black final frame fails the run even with zero errors), the probe, runtime errors (collector plus console-only), failed loads, warnings, console output and a stalled-loop note.
+- [extensions/game-mode/smoke/SmokeRunner.md](extensions/game-mode/smoke/SmokeRunner.md): boots a game for 3-30 s in a hidden offscreen BrowserWindow (offscreen so rAF keeps ticking; context isolation off so the preload collector patches the page world; Node off), captures a boot frame, one ~0.8 s after each action and a final frame, then reads the in-page report.
+- [extensions/game-mode/store/GameDataStore.md](extensions/game-mode/store/GameDataStore.md): the persistent data of one AI game: named collections of JSON values in `<gameDir>/.gamedata/store.json`, flushed atomically (tmp + rename) with a monotonic `rev`.
+- [extensions/game-mode/store/GameDataStores.md](extensions/game-mode/store/GameDataStores.md): one GameDataStore per game folder for the whole process, so every route hit and tool call shares one in-memory document.
+- [extensions/game-mode/tools/GameTool.md](extensions/game-mode/tools/GameTool.md): base class of every Game mode agent tool.
+- [extensions/game-mode/tools/GameToolScope.md](extensions/game-mode/tools/GameToolScope.md): what every Game tool of one turn shares: the extension context, the conversation, its game folder, the session map, the game name and kind.
+- [extensions/game-mode/tools/TestAiPromptTool.md](extensions/game-mode/tools/TestAiPromptTool.md): `test_ai_prompt` (AI games only, sandboxed): tries a system/prompt/json/tools set against the same [AiBridge](extensions/game-mode/ai/AiBridge.md) the running game uses, so the agent tunes it before wiring it in.
+- [extensions/game-mode/tools/assets/AssetTool.md](extensions/game-mode/tools/assets/AssetTool.md): base of `generate_asset` and `generate_assets`: the shared request schema (`ASSET_PROPS`, so the two never drift) and the sprite/backdrop model per asset.
+- [extensions/game-mode/tools/assets/FetchGamedevDocTool.md](extensions/game-mode/tools/assets/FetchGamedevDocTool.md): `fetch_gamedev_doc`: fetches a tutorial page headlessly ([PageReader](core/llm-server/chat/web-tools/PageReader.md), 20 s; the page text, at most 60,000 chars) and ingests it into the `gamedev` knowledge base.
+- [extensions/game-mode/tools/assets/GameAssetTools.md](extensions/game-mode/tools/assets/GameAssetTools.md): builds the game-specific tools of one turn: generate_asset, generate_assets, run_game, fetch_gamedev_doc.
+- [extensions/game-mode/tools/assets/GenerateAssetTool.md](extensions/game-mode/tools/assets/GenerateAssetTool.md): `generate_asset`: one image asset.
+- [extensions/game-mode/tools/assets/GenerateAssetsTool.md](extensions/game-mode/tools/assets/GenerateAssetsTool.md): `generate_assets`: up to 12 assets in one call, generated back-to-back on one model load and grouped by model.
+- [extensions/game-mode/tools/assets/RunGameTool.md](extensions/game-mode/tools/assets/RunGameTool.md): `run_game`: boots the game headlessly ([SmokeRunner](extensions/game-mode/smoke/SmokeRunner.md)), drives it with the agent's actions and reports ([SmokeReport](extensions/game-mode/smoke/SmokeReport.md)).
+- [extensions/game-mode/tools/project/EditFileTool.md](extensions/game-mode/tools/project/EditFileTool.md): `edit_file`: `{oldText, newText}` edits through `code.editFile` (read-before-edit enforced by CodeWorkspace), reporting validation, the Phaser API check and index wiring.
+- [extensions/game-mode/tools/project/FileChangeTool.md](extensions/game-mode/tools/project/FileChangeTool.md): base of `edit_file` and `write_file`: `sandboxed` (confined to the conversation's folder, so no approval prompt per file), records the file on the panel, drops the stale whole-read, emits game:state, and builds the write notes.
+- [extensions/game-mode/tools/project/FileStamp.md](extensions/game-mode/tools/project/FileStamp.md): the identity of a file's content on disk, so "you already have this file" is checked against the shared truth (anyone's edit counts), with the same stamps CodeWorkspace's read guard uses.
+- [extensions/game-mode/tools/project/FindTool.md](extensions/game-mode/tools/project/FindTool.md): `find`: game folder files matching a glob (`code.find`), bounded, with a limit note.
+- [extensions/game-mode/tools/project/GameProjectTools.md](extensions/game-mode/tools/project/GameProjectTools.md): builds the seven file tools of one turn and tallies every result's length into `session.served`, the quantity the whole-read guard ages against.
+- [extensions/game-mode/tools/project/GrepTool.md](extensions/game-mode/tools/project/GrepTool.md): `grep`: regex search over the game folder (`code.grep`), `file:line: text`, bounded, with a limit note.
+- [extensions/game-mode/tools/project/ListDirTool.md](extensions/game-mode/tools/project/ListDirTool.md): `list_dir`: one level of a game folder directory (`code.listDir`), directories suffixed `/`.
+- [extensions/game-mode/tools/project/ProjectOverviewTool.md](extensions/game-mode/tools/project/ProjectOverviewTool.md): `project_overview`: file count, types, top-level folders, entrypoints, manifests and readme of the game folder (`code.projectMap`).
+- [extensions/game-mode/tools/project/ProjectTool.md](extensions/game-mode/tools/project/ProjectTool.md): base of the game folder's file tools (extends [GameTool](extensions/game-mode/tools/GameTool.md)): each call scaffolds the session if needed and counts itself; bounded output goes through the turn's read budget.
+- [extensions/game-mode/tools/project/ReadBudget.md](extensions/game-mode/tools/project/ReadBudget.md): sizes file reads to the running model's per-slot context window.
+- [extensions/game-mode/tools/project/ReadFileTool.md](extensions/game-mode/tools/project/ReadFileTool.md): `read_file`: a whole file in one call when it fits the whole-file cap (marked `COMPLETE FILE`, `noCompact`), else a bounded page whose header and continuation name the real file line range.
+- [extensions/game-mode/tools/project/WriteFileTool.md](extensions/game-mode/tools/project/WriteFileTool.md): `write_file`: creates or overwrites a file through `code.writeFile`; a guard refusal comes back as a plain tool error so the model reads and retries.
+- [extensions/game-mode/tools/project/WriteNotes.md](extensions/game-mode/tools/project/WriteNotes.md): notes appended to a write or edit result.
+- [extensions/game-mode/ui/GameChatMode.md](extensions/game-mode/ui/GameChatMode.md): game mode's client side on the LLM chat page.
+- [extensions/game-mode/ui/GameKickoff.md](extensions/game-mode/ui/GameKickoff.md): the first user turn Game mode sends from the setup brief.
+- [extensions/game-mode/ui/GamePanelActions.md](extensions/game-mode/ui/GamePanelActions.md): the status card's export, share and reset actions; progress shows on the card's note line.
+- [extensions/game-mode/ui/GamePanelMarkup.md](extensions/game-mode/ui/GamePanelMarkup.md): the status card's markup.
+- [extensions/game-mode/ui/GamePlayOverlay.md](extensions/game-mode/ui/GamePlayOverlay.md): the play overlay (`.gm-play`, body-mounted, tagged `data-cm-overlay`): a toolbar (Back to chat, title, AI pill, Reload, Pop out) over a sandboxed `iframe.gm-frame` (`sandbox` = `SANDBOX`, `referrerpolicy="no-referrer"`).
+- [extensions/game-mode/ui/GameServerApi.md](extensions/game-mode/ui/GameServerApi.md): the Game mode routes the chat page calls under `/api/ext/game-mode`.
+- [extensions/game-mode/ui/GameSetupSchema.md](extensions/game-mode/ui/GameSetupSchema.md): the "New game" setup form, built on every open because its image-model options come from the installed models.
+- [extensions/game-mode/ui/GameStatusPanel.md](extensions/game-mode/ui/GameStatusPanel.md): game mode's edit-time status card (`.gm-panel`, tagged `data-cm-overlay`).
+
+## app
+
+- [app/AppBootstrap.md](app/AppBootstrap.md): the composition root of the Electron main process.
+- [app/AppContext.md](app/AppContext.md): the shared state of one app run.
+- [app/AppGlobals.md](app/AppGlobals.md): the one list of singletons the app publishes on `global`, for code that must not take a constructor dependency on them (extensions, the chat bridge, the sharing host, e2e harnesses).
+- [app/BootClock.md](app/BootClock.md): boot timing diagnostics: one epoch, logged as `[luma-boot +Xms] main: <label>`.
+- [app/browser/AutomationServices.md](app/browser/AutomationServices.md): builds browser automation on top of the window's tabs.
+- [app/browser/CoreMcpTools.md](app/browser/CoreMcpTools.md): registers the core MCP tool sets as direct service calls.
+- [app/browser/HistoryRecorder.md](app/browser/HistoryRecorder.md): records the user's own browsing into history.
+- [app/browser/TabSurfaces.md](app/browser/TabSurfaces.md): builds the window's tab layer and the views stacked over it.
+- [app/browser/VoiceReadiness.md](app/browser/VoiceReadiness.md): whether voice input and output are usable (runtime ready and a model present), for the Luma On Demand panel.
+- [app/browser/WindowServices.md](app/browser/WindowServices.md): wires everything that needs the main window, once per window.
+- [app/debug/DebugIpc.md](app/debug/DebugIpc.md): the shell's two debug captures.
+- [app/debug/ViewStackDump.md](app/debug/ViewStackDump.md): debug dump of the live native-view stack.
+- [app/events/AllRenderers.md](app/events/AllRenderers.md): sends one message to every live renderer.
+- [app/events/DesktopNotice.md](app/events/DesktopNotice.md): a native desktop notification with the app icon, best-effort.
+- [app/events/ModelStatusNotifier.md](app/events/ModelStatusNotifier.md): turns the model supervisors' `state-change` events into entries in the renderer's notification log.
+- [app/events/TriggerEvents.md](app/events/TriggerEvents.md): the trigger event emitter the trigger runner, the trigger mode and the LLM IPC handlers share.
+- [app/events/TriggerNotifier.md](app/events/TriggerNotifier.md): the desktop notification TriggerRunner raises for a failed, auto-paused, drifting or approval-waiting trigger run.
+- [app/gateway/ArtifactRoutes.md](app/gateway/ArtifactRoutes.md): mounts chat artifacts on the REST gateway, each route behind the ApiSecurity guard.
+- [app/gateway/ConfinedFile.md](app/gateway/ConfinedFile.md): serves files from one directory over the REST gateway with a traversal guard.
+- [app/gateway/ExtensionAssetGate.md](app/gateway/ExtensionAssetGate.md): decides which extension files the LLM chat page and the Dashboard may load at `/llm-ui/ext/<extensionId>/<asset>`: chat and Setup bundles plus declared Dashboard widgets and their assets.
+- [app/gateway/StaticUiRoutes.md](app/gateway/StaticUiRoutes.md): mounts the in-app pages on the REST gateway, each behind the ApiSecurity guard.
+- [app/ipc/CoreIpcRegistrar.md](app/ipc/CoreIpcRegistrar.md): registers every core IPC controller once, at boot.
+- [app/ipc/WindowControlIpc.md](app/ipc/WindowControlIpc.md): iPC for the custom frameless title bar.
+- [app/process/ProcessSetup.md](app/process/ProcessSetup.md): process configuration that precedes everything else.
+- [app/process/UnhandledRejectionTap.md](app/process/UnhandledRejectionTap.md): the process-wide unhandled-rejection listener.
+- [app/ready/AgentDeps.md](app/ready/AgentDeps.md): the dependencies of the agentic chat, scheduled runs, triggers, the live page API and placement's test, published as `ctx.agentDeps` once the browser and the extensions exist (null before; readers degrade).
+- [app/ready/AppMenu.md](app/ready/AppMenu.md): the application menu.
+- [app/ready/BackgroundStarts.md](app/ready/BackgroundStarts.md): starts the work that must not compete with the first window paint.
+- [app/ready/DeferredServices.md](app/ready/DeferredServices.md): the deferred startup phase, run once per process.
+- [app/ready/HeavyServices.md](app/ready/HeavyServices.md): the heavy half of startup, exposed by [WindowServices](app/browser/WindowServices.md) and run by [DeferredServices](app/ready/DeferredServices.md).
+- [app/ready/InternalBearerInjector.md](app/ready/InternalBearerInjector.md): the one `onBeforeSendHeaders` listener each session gets.
+- [app/ready/ReadyPhase.md](app/ready/ReadyPhase.md): everything that waits for Electron's ready event.
+- [app/ready/SessionSetup.md](app/ready/SessionSetup.md): session-wide browser policy once the app is ready.
+- [app/ready/SettledStarts.md](app/ready/SettledStarts.md): the ready-time starts that follow the main ready phase (their own `whenReady` callback, as in legacy).
+- [app/ready/UpdateCheck.md](app/ready/UpdateCheck.md): the auto-updater and its checks.
+- [app/services/AppServices.md](app/services/AppServices.md): builds every main-process service before the app is ready, in dependency order, into `ctx.services`.
+- [app/services/AuxiliaryServices.md](app/services/AuxiliaryServices.md): builds the loopback OpenAI-compatible API ([LocalApiServer](core/llm-server/server/LocalApiServer.md), off by default, never starts a model) and the unified model placement ([PlacementService](core/placement/PlacementService.md)).
+- [app/services/ChatTaskServices.md](app/services/ChatTaskServices.md): builds what the agentic chat persists and runs in the background.
+- [app/services/ExtensionHost.md](app/services/ExtensionHost.md): builds the [ExtensionManager](core/shell/ExtensionManager.md) and the coreServices map extensions receive as `context.sharedServices`.
+- [app/services/FoundationServices.md](app/services/FoundationServices.md): builds the services everything else leans on, over the one settings database.
+- [app/services/GatewayServices.md](app/services/GatewayServices.md): builds the app's outward surfaces.
+- [app/services/ModelServers.md](app/services/ModelServers.md): builds the local model supervisors and ties them into LLM slot routing.
+- [app/services/SettingsBoot.md](app/services/SettingsBoot.md): opens `<dataDir>/settings.db` and runs the fix-ups every service relies on.
+- [app/services/SharingServices.md](app/services/SharingServices.md): builds Network Sharing.
+- [app/services/TriggerServices.md](app/services/TriggerServices.md): builds reactive triggers.
+- [app/sharing/HookBaseUrls.md](app/sharing/HookBaseUrls.md): the base URLs a webhook sender can reach the `/hooks` trigger router on, for the trigger mode's prompt and the LLM IPC handlers.
+- [app/sharing/SharingNotices.md](app/sharing/SharingNotices.md): user-facing Network Sharing notices, each in the notification log and as a native notification.
+- [app/sharing/SharingPorts.md](app/sharing/SharingPorts.md): the inbound ports Network Sharing needs open where the firewall is per port (Linux ufw): the REST gateway, the TLS peer listener, the web backend and every port of the GPU-lend RPC range.
+- [app/sharing/SharingResume.md](app/sharing/SharingResume.md): resumes Network Sharing 3 s after the app is ready (off the boot path).
+- [app/shutdown/AppLifecycle.md](app/shutdown/AppLifecycle.md): the app's lifecycle events.
+- [app/shutdown/ShutdownSequence.md](app/shutdown/ShutdownSequence.md): the orderly shutdown of everything the app owns.
+- [app/window/AppTray.md](app/window/AppTray.md): the system tray icon and menu.
+- [app/window/MainWindow.md](app/window/MainWindow.md): creates and manages the main window.
+- [app/window/MainWindowOptions.md](app/window/MainWindowOptions.md): the main BrowserWindow options.
+- [app/window/StartupTabs.md](app/window/StartupTabs.md): opens the first tabs once the shell has painted.
+- [app/window/WindowKeys.md](app/window/WindowKeys.md): keyboard handling on the shell renderer.
+
+## extensions/ui-kit
+
+- [extensions/ui-kit/ui/Debounce.md](extensions/ui-kit/ui/Debounce.md): trailing-edge debounce for autosaving text inputs.
+- [extensions/ui-kit/ui/ExtIcons.md](extensions/ui-kit/ui/ExtIcons.md): inline 12x12 SVG icons for extension renderers, drawn in `currentColor`.
+- [extensions/ui-kit/ui/IntervalPicker.md](extensions/ui-kit/ui/IntervalPicker.md): the `.luma-interval` schedule control: a preset select with a Custom option that reveals a minutes field.
+- [extensions/ui-kit/ui/OverflowMenu.md](extensions/ui-kit/ui/OverflowMenu.md): a `.luma-menu` dropdown anchored under a button, for extension rows' overflow actions.
+- [extensions/ui-kit/ui/SavedBadge.md](extensions/ui-kit/ui/SavedBadge.md): flashes an inline "Saved" badge next to a control after an autosave.
+- [extensions/ui-kit/ui/TimeText.md](extensions/ui-kit/ui/TimeText.md): short time wording for extension list rows.
+
+## extensions
+
+- [extensions/ext-ui.md](extensions/ext-ui.md): classic `window.LumaExtUI` for classic add-on renderers (exception), with the global to module map.
+- [extensions/extension-styles.md](extensions/extension-styles.md): shared main-window extension styles.
+
+## webview-preload.md
+
+- [webview-preload.md](webview-preload.md): tab-view preload entry (Notification main-world override and shims).
+
+## ui/shell
+
+- [ui/shell/MainWindowShell.md](ui/shell/MainWindowShell.md): `index.html`, `ui/shell/`, `ui/shell/css/`, `preload.js`.
+- [ui/shell/activity/AiActivityHtml.md](ui/shell/activity/AiActivityHtml.md): markup of the AI Activity body: background runs first, then each model's tasks with timers.
+- [ui/shell/activity/AiActivityPanel.md](ui/shell/activity/AiActivityPanel.md): the AI Activity toolbar count and panel: LLM queue work plus background agent runs, renders coalesced per frame, timers tick only while open.
+- [ui/shell/activity/AiActivityState.md](ui/shell/activity/AiActivityState.md): per-model queues and background runs behind the AI Activity panel.
+- [ui/shell/app/ExtensionRendererLoader.md](ui/shell/app/ExtensionRendererLoader.md): loads the extension renderers through the slot manager, only once first-run setup is complete (their activate() calls main handlers that exist only after main activated the extension).
+- [ui/shell/app/SetupWizardLauncher.md](ui/shell/app/SetupWizardLauncher.md): shows the non-dismissible first-run setup wizard when setup is not complete, or on "Re-run setup".
+- [ui/shell/app/ShellApp.md](ui/shell/app/ShellApp.md): composition root of the main window: builds every shell part with its collaborators, installs them in the legacy order (listener order decides which Escape handler runs first), publishes the window globals, starts the slot manager, BrowserRenderer, the extension renderers and the setup-wizard gate.
+- [ui/shell/app/ShellGlobals.md](ui/shell/app/ShellGlobals.md): publishes the window globals other surfaces read by name (extension renderers, the slot manager, notification-interceptor, the e2e harness, scripts).
+- [ui/shell/bookmarks/BookmarkContextMenu.md](ui/shell/bookmarks/BookmarkContextMenu.md): right-click menu of a bar bookmark or folder.
+- [ui/shell/bookmarks/BookmarkDragDrop.md](ui/shell/bookmarks/BookmarkDragDrop.md): bar drag and drop: a bookmark dropped on a folder is filed there; any other drop reorders the top level.
+- [ui/shell/bookmarks/BookmarkEditBar.md](ui/shell/bookmarks/BookmarkEditBar.md): the in-flow edit bar under the toolbar: rename, move between the bar and top-level folders, remove; Enter saves, Escape closes.
+- [ui/shell/bookmarks/BookmarkFolderMenu.md](ui/shell/bookmarks/BookmarkFolderMenu.md): a folder dropdown (and the bar's overflow menu) in the overlay; picking a nested folder opens it.
+- [ui/shell/bookmarks/BookmarkManager.md](ui/shell/bookmarks/BookmarkManager.md): the bookmark manager modal: tree with rename, delete, move-to-folder and open-on-startup per bookmark, plus New folder.
+- [ui/shell/bookmarks/BookmarkNodeActions.md](ui/shell/bookmarks/BookmarkNodeActions.md): rename, edit URL, toggle open-on-startup, delete (themed confirm) and new folder, shared by the bar menu and the manager.
+- [ui/shell/bookmarks/BookmarkStar.md](ui/shell/bookmarks/BookmarkStar.md): the address-bar star (and Ctrl+D): filled when the page is bookmarked; a click bookmarks if needed and opens the edit bar (a second click closes it).
+- [ui/shell/bookmarks/BookmarkTree.md](ui/shell/bookmarks/BookmarkTree.md): the renderer copy of the bookmark tree, reloaded from main; views subscribe with onChange.
+- [ui/shell/bookmarks/BookmarksBar.md](ui/shell/bookmarks/BookmarksBar.md): the bookmarks bar: nodes with favicons, the "»" overflow menu, re-render on resize, and the show/hide preference.
+- [ui/shell/boot/BootLog.md](ui/shell/boot/BootLog.md): boot timing lines (`[luma-boot +Nms] renderer: ...`) offset from main's epoch, which MainWindow forwards to main's terminal.
+- [ui/shell/boot/PlatformClass.md](ui/shell/boot/PlatformClass.md): adds `platform-darwin|linux|win32|other` to `<body>` so CSS follows each OS's window chrome (Linux rounds its corners in CSS).
+- [ui/shell/debug/DebugTools.md](ui/shell/debug/DebugTools.md): ctrl+Shift+Y dumps the native view stack and Ctrl+Shift+U traces the UI thread for 15 s; results go to the console and the notification log.
+- [ui/shell/downloads/DownloadText.md](ui/shell/downloads/DownloadText.md): sizes, statuses and percentages the downloads UI shows.
+- [ui/shell/downloads/Downloads.md](ui/shell/downloads/Downloads.md): session downloads: the toolbar button (appears with the first download, progress ring), the popup list and its Open / Folder / Cancel actions; finishes and failures are logged.
+- [ui/shell/downloads/DownloadsMenuHtml.md](ui/shell/downloads/DownloadsMenuHtml.md): markup of the downloads popup (newest first, escaped names, per-state actions).
+- [ui/shell/entry.md](ui/shell/entry.md): entry module of the main browser window.
+- [ui/shell/favicons/FaviconCache.md](ui/shell/favicons/FaviconCache.md): favicons by hostname, learned from visited pages (never a third-party icon service), with letter badges as the fallback.
+- [ui/shell/find/FindBar.md](ui/shell/find/FindBar.md): find in page: an in-flow bar beneath the toolbar driving `findInPage` for regular web tabs, with match count, next/previous and Escape.
+- [ui/shell/history/HistoryDayLabel.md](ui/shell/history/HistoryDayLabel.md): today, Yesterday or the full local date for a history group.
+- [ui/shell/history/HistoryModal.md](ui/shell/history/HistoryModal.md): the History view: searchable day-grouped list, row delete, Clear for last hour / today / all time, and Clear cache.
+- [ui/shell/keyboard/AcceleratorActions.md](ui/shell/keyboard/AcceleratorActions.md): performs a shortcut action.
+- [ui/shell/keyboard/AcceleratorTable.md](ui/shell/keyboard/AcceleratorTable.md): the browser's one shortcut table (action names shared with main, which forwards page-focused chords) and the keydown-to-action lookup.
+- [ui/shell/keyboard/ChromeKeyboard.md](ui/shell/keyboard/ChromeKeyboard.md): keyboard and wheel wiring: chrome-focused shortcuts (Escape left to the address and find bars first), main-forwarded shortcuts and the `open-settings` request from internal tabs, Ctrl+wheel and Ctrl+middle-click zoom, capture-phase popup-menu keys, the Escape fan-out for modals and Ctrl+Shift+Y.
+- [ui/shell/layout/PanelResizer.md](ui/shell/layout/PanelResizer.md): inner-edge drag handles for the right dock, bottom dock, AI activity and AI chat panels.
+- [ui/shell/layout/PanelSizeStore.md](ui/shell/layout/PanelSizeStore.md): persists dragged panel sizes in localStorage (`lumabrowser.panelSizes.v1`) and re-applies them as CSS variables.
+- [ui/shell/layout/ViewBoundsMath.md](ui/shell/layout/ViewBoundsMath.md): pure geometry: the rect the native page view may occupy, the container minus every visible overlay (full cover collapses, full-height or full-width overlays trim one edge, corner popovers trim the cheapest edge).
+- [ui/shell/layout/ViewBoundsReporter.md](ui/shell/layout/ViewBoundsReporter.md): tells main where to draw the active tab's native view.
+- [ui/shell/nav/ChromeKind.md](ui/shell/nav/ChromeKind.md): internal tabs (LLM, Dashboard) hide the whole toolbar via `body.is-llm-tab` and close the address-bar popups.
+- [ui/shell/nav/NavButtons.md](ui/shell/nav/NavButtons.md): back, forward and reload.
+- [ui/shell/nav/SessionHistoryMenu.md](ui/shell/nav/SessionHistoryMenu.md): the back/forward history flyout: the active tab's session entries newest first, the current one checked.
+- [ui/shell/nav/UrlSecurityBadge.md](ui/shell/nav/UrlSecurityBadge.md): the lock (https) or warning (http) glyph before the address; hidden for other pages.
+- [ui/shell/notifications/NotificationLog.md](ui/shell/notifications/NotificationLog.md): the floating notification log (`window.addLogEntry`) in the overlay's 'notif' layer: last ten entries, auto-close 5 s after the newest, paused while hovered, lifted above the On Demand tile.
+- [ui/shell/notifications/NotificationLogHtml.md](ui/shell/notifications/NotificationLogHtml.md): markup of the floating log: countdown ring, title with dismiss, escaped entries.
+- [ui/shell/notifications/WebhookNotifier.md](ui/shell/notifications/WebhookNotifier.md): the fallback `window.handleNotification` (log, then forward when a webhook URL is known) and `window.updateWebhookStatus`, until notification-interceptor takes over.
+- [ui/shell/omnibox/AddressBar.md](ui/shell/omnibox/AddressBar.md): the address input: shows the active URL (not while the user edits), reverts, focuses with select-all, carries the placeholder and the popup anchor rect.
+- [ui/shell/omnibox/OmniboxResolver.md](ui/shell/omnibox/OmniboxResolver.md): address-bar text to URL: known schemes pass, URL-shaped text gets https (http for loopback, private ranges and bare hosts), anything else is a search.
+- [ui/shell/omnibox/SearchEngineChoice.md](ui/shell/omnibox/SearchEngineChoice.md): the omnibox search engine (ids match main's `searchEngine` setting; unknown ids fall back to DuckDuckGo).
+- [ui/shell/omnibox/SuggestionsHtml.md](ui/shell/omnibox/SuggestionsHtml.md): markup of the suggestion list for the chrome overlay; every title, URL and query is escaped.
+- [ui/shell/omnibox/UrlAutocomplete.md](ui/shell/omnibox/UrlAutocomplete.md): address-bar behaviour: debounced history suggestions in the chrome overlay (a go-to row for URL-shaped text, the search fallback last), arrows/Enter/Escape, Chrome's select-all on first click, revert on blur, and navigation.
+- [ui/shell/overlay/ChromeOverlayHost.md](ui/shell/overlay/ChromeOverlayHost.md): the shell side of main's ChromeOverlay (a transparent native view above the page): which popup is open in the 'popup' layer, placement, and dismissal on outside clicks (with exemptions for self-toggling buttons), window blur (deferred so an overlay click's action still arrives) and resize.
+- [ui/shell/overlay/MenuHtml.md](ui/shell/overlay/MenuHtml.md): popup menu markup and the extra overlay CSS (hints, checks, disabled rows, the downloads list).
+- [ui/shell/overlay/OverlayActionRouter.md](ui/shell/overlay/OverlayActionRouter.md): routes overlay clicks and hovers to the permission prompt, the notification log or the open popup (suggestions, folder, context/gear menu, downloads list).
+- [ui/shell/overlay/PopupMenu.md](ui/shell/overlay/PopupMenu.md): every popup menu (context menus, gear menu, bookmark folders): one open path, one action dispatch, and arrow/Home/End/Enter/Space/Escape keys.
+- [ui/shell/permissions/PermissionPrompts.md](ui/shell/permissions/PermissionPrompts.md): camera / microphone prompts in the overlay's 'perm' layer, anchored under the address bar, only for the active tab; answers go back through `permissionPromptAPI.respond`.
+- [ui/shell/settings/BrowserDataSettings.md](ui/shell/settings/BrowserDataSettings.md): start page, search engine, Luma On Demand, bookmarks-bar visibility (migrating the old localStorage value once) and force dark mode.
+- [ui/shell/settings/BrowsingDataCleaner.md](ui/shell/settings/BrowsingDataCleaner.md): confirm-then-clear browsing history and browser cache, shared by the gear menu, General and History.
+- [ui/shell/settings/CopyButton.md](ui/shell/settings/CopyButton.md): copies a value and flashes the button label (third use of the pattern, extracted).
+- [ui/shell/settings/SettingsFeedback.md](ui/shell/settings/SettingsFeedback.md): saved/Failed ticks beside autosaving controls with a row error line, and the modal toast (falls back to the notification log when Settings is not on screen).
+- [ui/shell/settings/SettingsMenu.md](ui/shell/settings/SettingsMenu.md): the gear dropdown in the overlay (its own 'settings-menu' mode, so window blur never drops a click): new tab, history, bookmarks, downloads, find, print, zoom, clearing data, Settings, Extensions, About, Exit.
+- [ui/shell/settings/SettingsModal.md](ui/shell/settings/SettingsModal.md): the Settings control panel: open on a tab (raising `settings:open`), close from X, backdrop or Escape (raising `settings:close` once), inline `data-gs-goto` links.
+- [ui/shell/settings/ToolGroupsView.md](ui/shell/settings/ToolGroupsView.md): the shared tool allow-list (group checkbox with indeterminate state, on/total count, Customize per-tool list, locked tools).
+- [ui/shell/settings/general/ApiMcpGroups.md](ui/shell/settings/general/ApiMcpGroups.md): builds the API & MCP cards from the endpoint catalog (prefixed `api:` / `mcp:` names, core first) and splits the off set back into deny-lists.
+- [ui/shell/settings/general/ApiPortSetting.md](ui/shell/settings/general/ApiPortSetting.md): the local API port with its live URL and Copy button; rejected ports revert.
+- [ui/shell/settings/general/CliShimSwitch.md](ui/shell/settings/general/CliShimSwitch.md): the `luma` terminal launcher switch (installed state, help line, disabled while installing).
+- [ui/shell/settings/general/CollapsibleSections.md](ui/shell/settings/general/CollapsibleSections.md): the collapsible Network Sharing block with its remembered state (`gs.expanded.<section>`).
+- [ui/shell/settings/general/EndpointToolsPanel.md](ui/shell/settings/general/EndpointToolsPanel.md): the API & MCP allow-list and the chat agent tool list, saved together as deny-lists; announces `agent-tools:changed`.
+- [ui/shell/settings/general/GeneralSettings.md](ui/shell/settings/general/GeneralSettings.md): general and API & MCP settings: composes the parts below, the application switches, DNS, MCP export, guides and endpoint lists; values reload on `settings:open`.
+- [ui/shell/settings/general/GuideMarkdown.md](ui/shell/settings/general/GuideMarkdown.md): the guide's small markdown renderer; the source is HTML-escaped first.
+- [ui/shell/settings/general/GuideViewer.md](ui/shell/settings/general/GuideViewer.md): shows the bundled extensions guide in a modal over Settings.
+- [ui/shell/settings/general/IdeInstallerList.md](ui/shell/settings/general/IdeInstallerList.md): one IDE-integration list (JetBrains plugin or VS Code extension): a row per editor with Install / Remove, install-everywhere and rescan.
+- [ui/shell/settings/general/LlmServerSettings.md](ui/shell/settings/general/LlmServerSettings.md): lLM server switch, open-on-launch and call tracing (locked on when forced by --trace-llm) with Clear.
+- [ui/shell/settings/general/RestartNotes.md](ui/shell/settings/general/RestartNotes.md): "Restart required" notes get a "Restart now" action (confirm, then `core.settings.relaunch`).
+- [ui/shell/settings/general/SettingToggle.md](ui/shell/settings/general/SettingToggle.md): autosaving switch: write, Saved tick, revert and error on failure.
+- [ui/shell/settings/general/TelemetrySwitch.md](ui/shell/settings/general/TelemetrySwitch.md): the Privacy check-in switch over `core.telemetry` (on = allowed, so it saves the inverse opt-out); a development build locks it off.
+- [ui/shell/settings/providers/AddProviderForm.md](ui/shell/settings/providers/AddProviderForm.md): the "+ Add Provider" form, including pairing with another LumaBrowser by address and PIN.
+- [ui/shell/settings/providers/DefaultProviderControl.md](ui/shell/settings/providers/DefaultProviderControl.md): the Defaults control: default LLM provider and default image generation / editor servers (plus a shared server's model).
+- [ui/shell/settings/providers/DefaultProviderOptions.md](ui/shell/settings/providers/DefaultProviderOptions.md): the resolvable choices of the Default LLM picker.
+- [ui/shell/settings/providers/EditableProviderCard.md](ui/shell/settings/providers/EditableProviderCard.md): card of a user-added provider: endpoint, key, model with Fetch Models, Save, Remove.
+- [ui/shell/settings/providers/ImageDefaultRows.md](ui/shell/settings/providers/ImageDefaultRows.md): markup of the default image server rows and a shared server's model picker.
+- [ui/shell/settings/providers/ManagedProviderCard.md](ui/shell/settings/providers/ManagedProviderCard.md): read-only card of the auto-managed local LLM server with Copy buttons.
+- [ui/shell/settings/providers/PeerDiscovery.md](ui/shell/settings/providers/PeerDiscovery.md): discovered-hosts list of the peer form, refreshed every 2.5 s while in peer mode.
+- [ui/shell/settings/providers/PeerProviderCard.md](ui/shell/settings/providers/PeerProviderCard.md): card of a paired peer: model choice persists; Refresh and Remove go through the sharing client.
+- [ui/shell/settings/providers/ProviderList.md](ui/shell/settings/providers/ProviderList.md): aI & Providers: the Defaults control, one card per provider and the Add Provider form; re-rendered on every open and after changes.
+- [ui/shell/settings/security/ApiKeysList.md](ui/shell/settings/security/ApiKeysList.md): the API key list: rename, Reveal/Copy fetched on demand, Refresh, Delete, and the one-time reveal panel; plaintext is never kept in state and is masked again on close.
+- [ui/shell/settings/security/ApiSecurityPanel.md](ui/shell/settings/security/ApiSecurityPanel.md): aPI Security: network mode, IP whitelist (with inline errors) and the require-key switch; reloads on open and masks keys on close.
+- [ui/shell/settings/security/HarnessConnectionsPanel.md](ui/shell/settings/security/HarnessConnectionsPanel.md): "Connect your agent" rows (Claude Code, Codex, OpenCode, Cline), the luma skill install and MCP export; reloads on gear click.
+- [ui/shell/settings/security/LocalApiPanel.md](ui/shell/settings/security/LocalApiPanel.md): the 127.0.0.1 OpenAI-compatible endpoint switch, port, live status and error; reloads on gear click.
+- [ui/shell/settings/security/SitePermissionsPanel.md](ui/shell/settings/security/SitePermissionsPanel.md): remembered camera / microphone answers per origin with Clear and Clear all; re-read when the Security tab opens.
+- [ui/shell/settings/sharing/NetworkSharingPanel.md](ui/shell/settings/sharing/NetworkSharingPanel.md): network Sharing host settings (enable, name, PIN, bind mode, share flags, web backend) composing the firewall, web tools, tokens and peers parts; reloads on open and warms mDNS discovery.
+- [ui/shell/settings/sharing/SharingFirewall.md](ui/shell/settings/sharing/SharingFirewall.md): the firewall status badge and the elevated "Allow through firewall" button.
+- [ui/shell/settings/sharing/SharingPeersList.md](ui/shell/settings/sharing/SharingPeersList.md): already-paired peers: enable, attach GPUs, refresh, remove; follows `sharing:peers-changed`.
+- [ui/shell/settings/sharing/SharingTokensList.md](ui/shell/settings/sharing/SharingTokensList.md): paired web clients with usage, last use, Revoke / Remove and Revoke all.
+- [ui/shell/settings/sharing/SharingWebTools.md](ui/shell/settings/sharing/SharingWebTools.md): chat tools web-backend clients may use (globally disabled tools excluded; all-on saves null).
+- [ui/shell/tabs/ClosedTabStack.md](ui/shell/tabs/ClosedTabStack.md): recently closed regular web tabs (newest last, at most 25) for Ctrl+Shift+T.
+- [ui/shell/tabs/PersistedTabsMenu.md](ui/shell/tabs/PersistedTabsMenu.md): the persisted-tabs strip button (visible only while persisted tabs exist) and its quick view, which shows a hidden tab or switches to a visible one.
+- [ui/shell/tabs/TabActions.md](ui/shell/tabs/TabActions.md): the shell's tab commands over `tabAPI`: open (start page by default, optional caret in the address bar), close (replacing the last tab with a fresh one), switch, navigate the active tab, zoom, sync zoom from main, reopen closed.
+- [ui/shell/tabs/TabContextMenu.md](ui/shell/tabs/TabContextMenu.md): the tab right-click menu: reload, duplicate, copy URL, mute, zoom, persist, extension items, close / close others / close to the right (never the pinned tab).
+- [ui/shell/tabs/TabEventSync.md](ui/shell/tabs/TabEventSync.md): applies main's tab events: `tab:state` (mirror, strip, toolbar for the active tab, BrowserRenderer events), `tab:switched`, `tab:closed`, `tab:hidden`, `tab:moved`, and intercepted notifications to `window.handleNotification`.
+- [ui/shell/tabs/TabMenuContributors.md](ui/shell/tabs/TabMenuContributors.md): the registry behind `window.registerTabMenuContributor`: extensions add items to a regular tab's right-click menu.
+- [ui/shell/tabs/TabOrderCommit.md](ui/shell/tabs/TabOrderCommit.md): persists a drag-reorder: translates "dropped before tab X" into an index in main's full order, which also holds tabs with no strip element.
+- [ui/shell/tabs/TabStore.md](ui/shell/tabs/TabStore.md): the renderer's mirror of main's tabs (main is the source of truth) and the active tab id.
+- [ui/shell/tabs/TabStripInput.md](ui/shell/tabs/TabStripInput.md): mouse input on the strip: the + button, click to switch, close button and middle-click to close (not the pinned tab), right-click menu, wheel scrolling of an overflowing strip and drag-reorder of regular tabs.
+- [ui/shell/tabs/TabStripView.md](ui/shell/tabs/TabStripView.md): the tab strip DOM: builds tab elements (CDP badge, favicon slot, title, persisted/audio flags, close button), places pinned and dashboard tabs, syncs each element with its entry, applies density classes and reads the strip order.
+- [ui/shell/window/WindowControls.md](ui/shell/window/WindowControls.md): wires the frameless title bar buttons to `windowAPI` and mirrors the maximized state onto the maximize glyph and `body.window-maximized`.
+
+## preload.md
+
+- [preload.md](preload.md): sandboxed main-window preload; exposes electronAPI, tabAPI and the other preload APIs.
+
+## cli/bin
+
+- [cli/bin/luma.md](cli/bin/luma.md): the `luma` npm bin entry: runs [AgentCli](cli/lib/AgentCli.md)`.main(process.argv.slice(2))`, sets the exit code it resolves and exits 50 ms later (so the last writes flush); an unexpected rejection prints `luma: <message>` and exits 1.
+- [cli/bin/lumabrowser.md](cli/bin/lumabrowser.md): the `lumabrowser` npm bin entry (`npx lumabrowser`): runs [LauncherCli](cli/lib/launcher/LauncherCli.md)`.main(process.argv.slice(2))`.
+
+## cli/lib
+
+- [cli/lib/AgentArgs.md](cli/lib/AgentArgs.md): parses `luma` arguments.
+- [cli/lib/AgentCli.md](cli/lib/AgentCli.md): `luma [agent] [prompt] [flags]`: drives a LumaBrowser agent as a coding harness over the current folder.
+- [cli/lib/BridgeLink.md](cli/lib/BridgeLink.md): the bridge socket as the small `link` the full-screen [App](cli/lib/tui/session/App.md) consumes, so the app can run in tests and replays without a socket.
+- [cli/lib/FrameWaiters.md](cli/lib/FrameWaiters.md): request and reply over the bridge's one-way frame stream, shared by both sessions.
+- [cli/lib/RollbackBuffer.md](cli/lib/RollbackBuffer.md): holds back streamed text that might turn out to be a tool call.
+- [cli/lib/connect/AppDiscovery.md](cli/lib/connect/AppDiscovery.md): finds the running LumaBrowser, or starts it hidden and waits for it.
+- [cli/lib/connect/AppExecutable.md](cli/lib/connect/AppExecutable.md): finds the LumaBrowser executable to start when the app is not running.
+- [cli/lib/connect/AppHealth.md](cli/lib/connect/AppHealth.md): tells a live app from a stale handshake file.
+- [cli/lib/connect/AppProcess.md](cli/lib/connect/AppProcess.md): starts LumaBrowser as a detached process that outlives the CLI.
+- [cli/lib/connect/BridgeConnector.md](cli/lib/connect/BridgeConnector.md): opens the app's terminal bridge.
+- [cli/lib/connect/HandshakeFile.md](cli/lib/connect/HandshakeFile.md): reads the per-launch handshake the running app writes ([CliHandshake](core/shell/CliHandshake.md)): `{ port, token, pid, version, writtenAt }`.
+- [cli/lib/connect/InstallRecord.md](cli/lib/connect/InstallRecord.md): the npm launcher's install record, `~/.lumabrowser/install.json`: `{ version, asset, executable, installedAt }`.
+- [cli/lib/connect/LumaHome.md](cli/lib/connect/LumaHome.md): the CLI's own folder, `~/.lumabrowser`: the app's handshake (`cli.json`), the launcher's install record (`install.json`), the trace pointer (`traces.json`) and downloaded installers.
+- [cli/lib/connect/WsClient.md](cli/lib/connect/WsClient.md): a small WebSocket client on Node's `http` module (the package has zero dependencies).
+- [cli/lib/connect/WsFrameCodec.md](cli/lib/connect/WsFrameCodec.md): rFC 6455 framing for [WsClient](cli/lib/connect/WsClient.md).
+- [cli/lib/connect/WsHandshake.md](cli/lib/connect/WsHandshake.md): the HTTP side of opening a WebSocket.
+- [cli/lib/docs/DocsCommand.md](cli/lib/docs/DocsCommand.md): `luma docs [topic]`: product documentation written for language models working through a terminal.
+- [cli/lib/docs/SkillCommand.md](cli/lib/docs/SkillCommand.md): `luma skill install`: writes the one-paragraph `luma` skill that points an agent at `luma docs`.
+- [cli/lib/launcher/AppInstaller.md](cli/lib/launcher/AppInstaller.md): downloads and prepares the LumaBrowser build for this platform.
+- [cli/lib/launcher/ConsoleOutput.md](cli/lib/launcher/ConsoleOutput.md): coloured status lines for the npm launcher.
+- [cli/lib/launcher/HttpsFetcher.md](cli/lib/launcher/HttpsFetcher.md): hTTPS for the npm launcher.
+- [cli/lib/launcher/LauncherCli.md](cli/lib/launcher/LauncherCli.md): `npx lumabrowser [command]`.
+- [cli/lib/plain/AgentList.md](cli/lib/plain/AgentList.md): prints the bridge's `agents` frame for `luma --agents` and `/agents` in a plain session.
+- [cli/lib/plain/AnsiCodes.md](cli/lib/plain/AnsiCodes.md): the 16-colour SGR codes the plain output uses, as statics: `reset`, `dim`, `bold`, `red`, `green`, `yellow`, `cyan`, `magenta`.
+- [cli/lib/plain/PlainRenderer.md](cli/lib/plain/PlainRenderer.md): paints the bridge's frames onto a stream that is not an interactive terminal.
+- [cli/lib/plain/PlainSession.md](cli/lib/plain/PlainSession.md): the line-oriented `luma` session: print mode, `--json`, piped stdin and `--plain`.
+- [cli/lib/trace/TraceArgs.md](cli/lib/trace/TraceArgs.md): arguments and usage text of `luma trace`.
+- [cli/lib/trace/TraceCommand.md](cli/lib/trace/TraceCommand.md): `luma trace`: reads the per-conversation LLM trace files the app writes ([LlmTrace](core/llm-server/chat/LlmTrace.md)).
+- [cli/lib/trace/TraceStore.md](cli/lib/trace/TraceStore.md): finds and reads the trace files.
+- [cli/lib/trace/TraceTable.md](cli/lib/trace/TraceTable.md): fixed-width rows for `luma trace`.
+- [cli/lib/tui/KeyParser.md](cli/lib/tui/KeyParser.md): turns raw stdin bytes into key events `{ name, ch, ctrl, alt, shift }`.
+- [cli/lib/tui/Screen.md](cli/lib/tui/Screen.md): a differential line renderer for the terminal's main screen.
+- [cli/lib/tui/Terminal.md](cli/lib/tui/Terminal.md): owns the real terminal for the full-screen session.
+- [cli/lib/tui/ToolGrammar.md](cli/lib/tui/ToolGrammar.md): the vocabulary every LumaBrowser client uses for a tool step: the verb, progressive form and glyph per tool, the one-line detail from its params, the status copy, and the token formatter.
+- [cli/lib/tui/ansi/AnsiEscape.md](cli/lib/tui/ansi/AnsiEscape.md): recognises terminal escape sequences inside a string.
+- [cli/lib/tui/ansi/AnsiFit.md](cli/lib/tui/ansi/AnsiFit.md): fits styled strings to a cell width.
+- [cli/lib/tui/ansi/AnsiWrap.md](cli/lib/tui/ansi/AnsiWrap.md): word-wraps styled text to a cell width.
+- [cli/lib/tui/ansi/CellWidth.md](cli/lib/tui/ansi/CellWidth.md): terminal cell widths, the one measure every painted line goes through.
+- [cli/lib/tui/ansi/LineFiller.md](cli/lib/tui/ansi/LineFiller.md): packs the tokens of one logical line into rows for [AnsiWrap](cli/lib/tui/ansi/AnsiWrap.md); one instance per line.
+- [cli/lib/tui/ansi/SgrState.md](cli/lib/tui/ansi/SgrState.md): tracks which SGR attributes, colours and OSC 8 hyperlink are open at a point in a string.
+- [cli/lib/tui/blocks/AgentBlock.md](cli/lib/tui/blocks/AgentBlock.md): a delegated sub-agent's run as one row: `◇ Agent <name>` with its tool count, characters streamed, time when done, and the error if it failed.
+- [cli/lib/tui/blocks/ArtifactBlock.md](cli/lib/tui/blocks/ArtifactBlock.md): an artifact the agent produced, as one row: `◆ <title> (<type>)`.
+- [cli/lib/tui/blocks/AssistantBlock.md](cli/lib/tui/blocks/AssistantBlock.md): one segment of the model's answer (`text`, appended as it streams), rendered through [MarkdownRenderer](cli/lib/tui/markdown/MarkdownRenderer.md), indented, after a blank line; nothing while the text is blank.
+- [cli/lib/tui/blocks/Block.md](cli/lib/tui/blocks/Block.md): base of every transcript block: plain state plus `render(width, theme, { spinner })` returning lines within `width`.
+- [cli/lib/tui/blocks/ErrorBlock.md](cli/lib/tui/blocks/ErrorBlock.md): something went wrong: a blank line, then the message behind the red bar.
+- [cli/lib/tui/blocks/HeaderBlock.md](cli/lib/tui/blocks/HeaderBlock.md): the session header: `new HeaderBlock({ title, sub, hint })` renders the title (truncated), then each non-empty sub line and the hint wrapped and indented by two.
+- [cli/lib/tui/blocks/NoteBlock.md](cli/lib/tui/blocks/NoteBlock.md): a line from the session itself (command output, queue notes, warnings): `· <text>`, wrapped and indented, in the muted, warn or bad colour (`new NoteBlock(text, level)`).
+- [cli/lib/tui/blocks/ReasoningBlock.md](cli/lib/tui/blocks/ReasoningBlock.md): the model's thinking.
+- [cli/lib/tui/blocks/SummaryBlock.md](cli/lib/tui/blocks/SummaryBlock.md): the line that closes a turn: `▣ done · 2 steps · 1.2k tokens · 41 tok/s · 8.4s` (`stopped` when aborted).
+- [cli/lib/tui/blocks/ToolBlock.md](cli/lib/tui/blocks/ToolBlock.md): one tool step as an inline row.
+- [cli/lib/tui/blocks/UserBlock.md](cli/lib/tui/blocks/UserBlock.md): what the user said: a blank line, then the wrapped text behind the accent bar (`┃`).
+- [cli/lib/tui/chrome/StatusLine.md](cli/lib/tui/chrome/StatusLine.md): the status line under the transcript while a turn runs, and the two-ended line layout.
+- [cli/lib/tui/chrome/ThinkingPreview.md](cli/lib/tui/chrome/ThinkingPreview.md): a small window onto the model's thinking while it streams folded.
+- [cli/lib/tui/editor/Editor.md](cli/lib/tui/editor/Editor.md): the prompt editor at the bottom of the session: a multi-line text model (one string with `\n` separators and a cursor offset), prompt history, a model-suggested follow-up, and the live slash command palette.
+- [cli/lib/tui/editor/EditorKeymap.md](cli/lib/tui/editor/EditorKeymap.md): what each key does to the [Editor](cli/lib/tui/editor/Editor.md).
+- [cli/lib/tui/editor/EditorPalette.md](cli/lib/tui/editor/EditorPalette.md): the editor's completion state.
+- [cli/lib/tui/editor/EditorView.md](cli/lib/tui/editor/EditorView.md): draws the [Editor](cli/lib/tui/editor/Editor.md) as a message box across the full width.
+- [cli/lib/tui/editor/PlainWrap.md](cli/lib/tui/editor/PlainWrap.md): wrapping for escape-free editor text that keeps character offsets.
+- [cli/lib/tui/markdown/MarkdownInline.md](cli/lib/tui/markdown/MarkdownInline.md): inline markdown to a styled, unwrapped string.
+- [cli/lib/tui/markdown/MarkdownRenderer.md](cli/lib/tui/markdown/MarkdownRenderer.md): markdown to terminal lines already wrapped to a width.
+- [cli/lib/tui/markdown/MarkdownTable.md](cli/lib/tui/markdown/MarkdownTable.md): a markdown table as terminal lines.
+- [cli/lib/tui/session/App.md](cli/lib/tui/session/App.md): the interactive `luma` session: owns the [Terminal](cli/lib/tui/Terminal.md), the [Screen](cli/lib/tui/Screen.md), the transcript (live `blocks` and `committed` ones), the [Editor](cli/lib/tui/editor/Editor.md) and the approval prompt.
+- [cli/lib/tui/session/HomePath.md](cli/lib/tui/session/HomePath.md): `HomePath.tildify(path, home = os.homedir())`: a path under the home folder as `~...` (case-insensitive prefix match), else unchanged.
+- [cli/lib/tui/session/SessionCommands.md](cli/lib/tui/session/SessionCommands.md): the full-screen session's slash commands.
+- [cli/lib/tui/session/SessionKeys.md](cli/lib/tui/session/SessionKeys.md): the session's own keys, ahead of the editor.
+- [cli/lib/tui/session/SessionView.md](cli/lib/tui/session/SessionView.md): paints the [App](cli/lib/tui/session/App.md) each frame.
+- [cli/lib/tui/session/TurnFrames.md](cli/lib/tui/session/TurnFrames.md): applies the bridge's host frames to the [App](cli/lib/tui/session/App.md)'s transcript.
+- [cli/lib/tui/session/TurnStatus.md](cli/lib/tui/session/TurnStatus.md): what the status line says during a turn.
+- [cli/lib/tui/theme/ColorDepth.md](cli/lib/tui/theme/ColorDepth.md): how many colours the terminal shows, and the 256-colour fallback.
+- [cli/lib/tui/theme/ColorScheme.md](cli/lib/tui/theme/ColorScheme.md): light or dark terminal background.
+- [cli/lib/tui/theme/Theme.md](cli/lib/tui/theme/Theme.md): the colours and glyphs one session paints with.
+- [cli/lib/tui/theme/ThemePalettes.md](cli/lib/tui/theme/ThemePalettes.md): lumaBrowser's terminal palette and glyph sets.
+
+## cli
+
+- [cli/package.md](cli/package.md): a standalone, zero-dependency npm package (`lumabrowser`) with two commands:.
+
+## ide/jetbrains
+
+- [ide/jetbrains/JetBrainsPlugin.md](ide/jetbrains/JetBrainsPlugin.md): `ide/jetbrains/` (Kotlin, Gradle 9.2.1, Kotlin 2.4.20, IntelliJ Platform Gradle Plugin 2.18.1, sinceBuild 243, JVM 21).
+
+## ide/vscode
+
+- [ide/vscode/extension.md](ide/vscode/extension.md): the entry VS Code loads (`package.json` "main"): exports `activate(context)` and `deactivate()` (the shape VS Code requires), loads the CLI connect library through [CliConnectLib](ide/vscode/src/CliConnectLib.md) (null when `lib/` was not built) and hands the work to [LumaExtension](ide/vscode/src/LumaExtension.md).
+- [ide/vscode/resources/host.md](ide/vscode/resources/host.md): the VS Code side of the shared page's two-function host contract, loaded before the tool grammar and `app.js`: `window.__lumaSend(json)` posts to the extension through `acquireVsCodeApi().postMessage`, and webview messages are handed to `window.__luma.dispatch`.
+- [ide/vscode/src/AppExecutableLocator.md](ide/vscode/src/AppExecutableLocator.md): where LumaBrowser is installed: the setting, `LUMA_APP_EXE`, the standard locations, then `~/.lumabrowser/install.json`.
+- [ide/vscode/src/ApprovalNotifier.md](ide/vscode/src/ApprovalNotifier.md): the editor approval prompt, only while the Luma view is hidden.
+- [ide/vscode/src/BridgeFramePayloads.md](ide/vscode/src/BridgeFramePayloads.md): type-checked readers for the bridge's `ready` and `agents` payloads.
+- [ide/vscode/src/CliConnectLib.md](ide/vscode/src/CliConnectLib.md): the `luma` CLI's discovery and socket (`cli/lib/connect`, copied into `lib/connect` by the build) in the session's shape, so the extension reaches the app exactly as the terminal does.
+- [ide/vscode/src/CommitMessageCommand.md](ide/vscode/src/CommitMessageCommand.md): "Generate Commit Message with Luma": the changes go to the app as a `commit-message` frame and the draft lands in the commit box; the box's current text is the hint.
+- [ide/vscode/src/CommitRequestBook.md](ide/vscode/src/CommitRequestBook.md): pending commit-message drafts, matched by requestId.
+- [ide/vscode/src/EditorContext.md](ide/vscode/src/EditorContext.md): context chips from the editor: the selection (1-based lines; an end at column 0 stops on the line before), a file, an explorer entry; file text read at send time.
+- [ide/vscode/src/FileSync.md](ide/vscode/src/FileSync.md): the editor side of a file-touching tool step: pre-write snapshots (served under `luma-before:` for the diff editor, 40 kept), open after write, diff, open at line, insert at caret.
+- [ide/vscode/src/GitChangeSet.md](ide/vscode/src/GitChangeSet.md): the changes about to be committed as one diff plus a file list: staged, else the working tree with untracked text files as new-file diffs (96000 chars total, 200 KB per untracked file).
+- [ide/vscode/src/LumaCommands.md](ide/vscode/src/LumaCommands.md): registers every `luma.*` command package.json declares.
+- [ide/vscode/src/LumaExtension.md](ide/vscode/src/LumaExtension.md): activates the extension: one session per window on the first workspace folder, the view, the status bar, the commands and the editor hooks.
+- [ide/vscode/src/LumaSession.md](ide/vscode/src/LumaSession.md): one workspace's conversation with the Code agent over the terminal bridge, the same wire as the JetBrains plugin's LumaSession.kt: discover (and start) the app, open the bridge, `hello { cwd, agent, conversationId, approval, suggest, origin: 'ide', client }`, relay frames.
+- [ide/vscode/src/LumaSettings.md](ide/vscode/src/LumaSettings.md): the `luma.*` settings and the workspace folder.
+- [ide/vscode/src/LumaStatusBar.md](ide/vscode/src/LumaStatusBar.md): the "Luma: ..." status bar item, and the `luma.streaming` context key.
+- [ide/vscode/src/LumaViewProvider.md](ide/vscode/src/LumaViewProvider.md): the Luma webview view: hosts the shared page and relays between it and the session in LumaWebView.kt's vocabulary.
+- [ide/vscode/src/PromptContext.md](ide/vscode/src/PromptContext.md): context chips in their outward shapes.
+- [ide/vscode/src/SessionStatus.md](ide/vscode/src/SessionStatus.md): the session's connection states.
+- [ide/vscode/src/ToolStepHooks.md](ide/vscode/src/ToolStepHooks.md): editor reactions to `tool` frames: snapshot before a write, refresh/open after a successful one, the editor approval prompt.
+- [ide/vscode/src/WebviewHtml.md](ide/vscode/src/WebviewHtml.md): assembles `ide/webview/index.html` for a webview: the placeholders become CSP-safe `<link>` and nonce'd `<script src>` tags (host.js first).
+
+## ide/webview
+
+- [ide/webview/ui/AgentBlock.md](ide/webview/ui/AgentBlock.md): a sub-agent run as one row counting its tool calls and streamed characters.
+- [ide/webview/ui/AnswerStream.md](ide/webview/ui/AnswerStream.md): the live turn's answer and reasoning.
+- [ide/webview/ui/ApprovalBar.md](ide/webview/ui/ApprovalBar.md): the approval bar: Allow once / Allow for this run / Deny, also on the y, a and n keys (Escape denies).
+- [ide/webview/ui/AssistantBlock.md](ide/webview/ui/AssistantBlock.md): the answer as rendered markdown, re-rendered at most once per animation frame.
+- [ide/webview/ui/CodeDecorator.md](ide/webview/ui/CodeDecorator.md): adds a header with "copy" and "insert" buttons to each rendered code block.
+- [ide/webview/ui/Composer.md](ide/webview/ui/Composer.md): the prompt box: auto-grow (to 160px), ghost suggestion (Tab takes it), history on the arrows, Enter sends, Escape stops or clears, and the hint line.
+- [ide/webview/ui/ContextChips.md](ide/webview/ui/ContextChips.md): the context chips above the composer, each with a remove button that asks the host to drop it.
+- [ide/webview/ui/FrameRouter.md](ide/webview/ui/FrameRouter.md): renders the terminal bridge's frames (the chat router's events, relayed verbatim by the host): `meta`, `status`, `delta`, `reasoning-delta`, `rollback`, `tool` (pending, run, done/result, cancel, approval, approval-done), `command:output`, `artifact`, `agent`, `queued`, `followup-start`, `busy`, `bridge-error`, `done`, `error`, `suggest`, `open-in-app-result`.
+- [ide/webview/ui/HeroCard.md](ide/webview/ui/HeroCard.md): the card in place of an empty transcript: starters when connected, a spinner while connecting, Start / Reconnect / Settings when offline.
+- [ide/webview/ui/HostLink.md](ide/webview/ui/HostLink.md): the page's way out to its IDE host, through `window.__lumaSend(json)`.
+- [ide/webview/ui/LumaPage.md](ide/webview/ui/LumaPage.md): the IDE chat page shared by the JetBrains plugin (JCEF) and the VS Code extension (webview): a DOM port of the `luma` terminal session that renders the same terminal-bridge frames with the same tool grammar.
+- [ide/webview/ui/PageChrome.md](ide/webview/ui/PageChrome.md): repaints what follows the session state: header, connection dot, send/stop buttons, placeholder, hint and hero.
+- [ide/webview/ui/PageDom.md](ide/webview/ui/PageDom.md): the page's one DOM helper.
+- [ide/webview/ui/PageIcons.md](ide/webview/ui/PageIcons.md): the page's inline SVG icons as markup strings.
+- [ide/webview/ui/PageState.md](ide/webview/ui/PageState.md): what the page knows about its session (pushed by the host as `state` messages) and about the turn in flight.
+- [ide/webview/ui/PageTheme.md](ide/webview/ui/PageTheme.md): applies the IDE theme: `--ide-*` custom properties and the `data-light` flag from `--ide-dark`.
+- [ide/webview/ui/ReasoningBlock.md](ide/webview/ui/ReasoningBlock.md): the model's reasoning as a collapsible block: "thinking..." while streaming, "thought for Ns" once sealed.
+- [ide/webview/ui/ToolBlock.md](ide/webview/ui/ToolBlock.md): one tool step as a row (`glyph verb detail · summary`) with an optional body: the command output tail (12 lines live, 60 when done, 400 kept) or an edit's -/+ diff (24 lines).
+- [ide/webview/ui/Transcript.md](ide/webview/ui/Transcript.md): the conversation column: appends blocks, keeps the view pinned to the bottom unless the user scrolled more than 40px away, paints the one-shot blocks and the live status line.
+- [ide/webview/ui/entry.md](ide/webview/ui/entry.md): the page's module entry: builds `new LumaPage(window.LumaToolGrammar)` and starts it.
+
+## scripts
+
+- [scripts/BuildScripts.md](scripts/BuildScripts.md): thin build entries under scripts/ and the .bat/.sh local builds.
+- [scripts/DevScripts.md](scripts/DevScripts.md): thin dev, diagnostics and website entries under scripts/ and the .ps1/.py crash helpers.
+
+## tools/catalogs
+
+- [tools/catalogs/CatalogUrlCollector.md](tools/catalogs/CatalogUrlCollector.md): collects every download URL in the curated catalogs as `{ catalog, model, file, url }` rows.
+- [tools/catalogs/CatalogUrlVerifier.md](tools/catalogs/CatalogUrlVerifier.md): the catalog smoke test (thin entry `scripts/verify-model-catalogs.js`): HEADs every URL from [CatalogUrlCollector](tools/catalogs/CatalogUrlCollector.md) through [UrlHeadProbe](tools/catalogs/UrlHeadProbe.md), four at a time so HF does not rate-limit the burst, and prints `OK [catalog] model · file (N.NN GB)` or `FAIL ...
+- [tools/catalogs/UrlHeadProbe.md](tools/catalogs/UrlHeadProbe.md): one HEAD request that follows redirects.
+
+## tools/gambit
+
+- [tools/gambit/GambitArgs.md](tools/gambit/GambitArgs.md): parses the `run-gambit` command line into run options and holds the `--help` text.
+- [tools/gambit/GambitCli.md](tools/gambit/GambitCli.md): the `run-gambit` command (thin entry `scripts/run-gambit.js`).
+- [tools/gambit/GambitCompareFormat.md](tools/gambit/GambitCompareFormat.md): number formatting for the gambit comparison.
+- [tools/gambit/GambitComparison.md](tools/gambit/GambitComparison.md): diffs two `run-gambit --out` files (thin entry `scripts/gambit-compare.js <baseline.json> <candidate.json>`).
+- [tools/gambit/GambitProgressFormatter.md](tools/gambit/GambitProgressFormatter.md): turns one `core.llmServer.gambitEvent` into the stderr progress line of `run-gambit`.
+- [tools/gambit/GambitRunMeta.md](tools/gambit/GambitRunMeta.md): the comparison's opening block: one line per run (`modelName`, `ctx=`, placement, `ranAt`) and the warnings that say the two runs did not measure the same configuration.
+- [tools/gambit/GambitSuiteLister.md](tools/gambit/GambitSuiteLister.md): renders the gambit suite for `run-gambit --list`: each group with its task count, one line per task (id padded to 34, turn count, `requires:` capabilities), then `N tasks, M turns total`.
+- [tools/gambit/GambitTaskCost.md](tools/gambit/GambitTaskCost.md): per-task cost read from the raw transcripts of a `run-gambit --out` file.
+
+## tools/site-replays
+
+- [tools/site-replays/CliDemoLink.md](tools/site-replays/CliDemoLink.md): a [FakeBridgeLink](tools/site-replays/FakeBridgeLink.md) with canned answers for the `luma` session demo ([CliTuiDemo](tools/site-replays/CliTuiDemo.md)): two agents (`reviewer`, `writer`) and one scripted turn per prompt: streamed reasoning long enough to scroll the preview box, `read_file` and `grep` calls, a tool fence the host rolls back, an `edit_file` approval, then either the rejection answer or the edit, `npm test` output, a markdown answer with a table, `done` and a suggestion.
+- [tools/site-replays/CliSessionRecorder.md](tools/site-replays/CliSessionRecorder.md): records the real `luma` full-screen session ([App](cli/lib/tui/session/App.md) with a [Terminal](cli/lib/tui/Terminal.md) on fake streams and `Theme.create` at truecolor dark) driven by a [ScenarioLink](tools/site-replays/ScenarioLink.md): every byte it writes, timestamped.
+- [tools/site-replays/CliTuiDemo.md](tools/site-replays/CliTuiDemo.md): runs the `luma` full-screen session ([App](cli/lib/tui/session/App.md)) in the real terminal against [CliDemoLink](tools/site-replays/CliDemoLink.md), so its visuals can be checked without LumaBrowser running.
+- [tools/site-replays/DevReplayScenario.md](tools/site-replays/DevReplayScenario.md): the one development task the lumabyte.com homepage replays on its "Terminal CLI" and "IDE plugins" tabs: a failing cart discount test, investigated, fixed with one approved edit and re-run.
+- [tools/site-replays/FakeBridgeLink.md](tools/site-replays/FakeBridgeLink.md): base class for scripted stand-ins of the `luma` session's bridge link (`send`, `onFrame`, `onClose`, `close`; see [App](cli/lib/tui/session/App.md)), so the real CLI session runs against canned frames with no LumaBrowser.
+- [tools/site-replays/IdeDemoTurn.md](tools/site-replays/IdeDemoTurn.md): one plausible turn (an off-by-one in a range helper, fixed with one approved edit) as bridge frames, for the IDE page demos ([JetBrainsWebviewDemo](tools/site-replays/JetBrainsWebviewDemo.md), [VscodeWebviewDemo](tools/site-replays/VscodeWebviewDemo.md)).
+- [tools/site-replays/IdePageInliner.md](tools/site-replays/IdePageInliner.md): assembles the IDE tool-window page as one self-contained HTML string, the way the JetBrains plugin's `LumaWebView.kt` does: `luma.css` into the CSS placeholder, `cli/lib/tui/ToolGrammar.js` into the tool grammar placeholder and the [WebviewAppBundler](tools/ide/WebviewAppBundler.md) bundle of `ide/webview/ui` into the app placeholder, each guarded against an early closing script tag.
+- [tools/site-replays/IdeWebviewDemo.md](tools/site-replays/IdeWebviewDemo.md): base class for the IDE page demos: renders the shared tool-window page (`ide/webview`) outside its IDE in Playwright's Edge (`channel: 'msedge'`, headless, 420x760), drives it through [IdeDemoTurn](tools/site-replays/IdeDemoTurn.md) and writes `1-offline.png`, `2-ready.png`, `3-approval.png`, `4-done.png`, `5-done-top.png`, `page.html` and `sent.json` (the messages the page sent its host).
+- [tools/site-replays/JetBrainsWebviewDemo.md](tools/site-replays/JetBrainsWebviewDemo.md): an [IdeWebviewDemo](tools/site-replays/IdeWebviewDemo.md) that loads the page the way `LumaWebView.kt` does: inlined into one string by [IdePageInliner](tools/site-replays/IdePageInliner.md) and set with `page.setContent`, `window.__luma.dispatch` in, `window.__lumaSend` out (bridged to a Playwright-exposed `__lumaSendNative`).
+- [tools/site-replays/ReplayTimeline.md](tools/site-replays/ReplayTimeline.md): builds a replay timeline of terminal-bridge frames, `[waitMsBefore, type, payload]`, paced like a local model (`TOKENS_PER_SEC` 70, `CHARS_PER_TOKEN` 4.2).
+- [tools/site-replays/ScenarioLink.md](tools/site-replays/ScenarioLink.md): a [FakeBridgeLink](tools/site-replays/FakeBridgeLink.md) that answers the session's handshake and plays a replay scenario's timeline as the turn.
+- [tools/site-replays/SiteReplayBuilder.md](tools/site-replays/SiteReplayBuilder.md): generates the data behind the lumabyte.com homepage's "Terminal CLI" and "IDE plugins" replay tabs.
+- [tools/site-replays/VscodeWebviewDemo.md](tools/site-replays/VscodeWebviewDemo.md): an [IdeWebviewDemo](tools/site-replays/IdeWebviewDemo.md) that assembles the page the way the VS Code extension does, which is what it tests: `ide/vscode/src/WebviewHtml.js` turning the placeholders into external scripts under a nonce-only CSP (a page that needed an inline script would come up blank and show CSP errors), `resources/host.js` carrying the host contract over the webview message channel (`acquireVsCodeApi` stubbed to record what it is sent), and `resources/vscode.css` fed with Dark+ or Light+ `--vscode-*` variables.
+
+## tools/crash
+
+- [tools/crash/CrashRepro.md](tools/crash/CrashRepro.md): relaunches the dev app in a loop until it dies on its own (`npm run crash:repro`).
+- [tools/crash/CrashReproLaunch.md](tools/crash/CrashReproLaunch.md): one crash-repro launch.
+- [tools/crash/CrashReproOptions.md](tools/crash/CrashReproOptions.md): parses the crash-repro command line into `{ runs, holdMs, pauseMs, stopOnCrash, interact, drive, dryRun, help, outDir, apiPort, exitGraceMs }`.
+- [tools/crash/CrashReproReport.md](tools/crash/CrashReproReport.md): the console text of a crash-repro session: the plan header, one verdict line per launch (`CRASH pid=7 exit=-1073741819 (0xC0000005) after 9.5s`), the reproduction details (last event, trace log and whether it has an END line, minidumps, artifacts folder) and the closing summary.
+- [tools/crash/CrashScripts.md](tools/crash/CrashScripts.md): the crash-investigation entries under `scripts/`.
+- [tools/crash/InteractionDriver.md](tools/crash/InteractionDriver.md): `--interact` for crash-repro (Windows only): runs `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/crash-repro-interact.ps1 -ProcId <pid> -Seconds <n>` against the launched app, where `n` is the hold minus 4 s (at least 5).
+- [tools/crash/ProcessTreeKiller.md](tools/crash/ProcessTreeKiller.md): stops the process tree of a child crash-repro spawned itself, identified by its PID: `taskkill /PID <pid> /T /F` on Windows, `SIGKILL` to the child's process group on POSIX (falling back to the child alone).
+- [tools/crash/RunArtifacts.md](tools/crash/RunArtifacts.md): what one crash-repro launch left behind.
+- [tools/crash/RunningInstanceCheck.md](tools/crash/RunningInstanceCheck.md): read-only check for a running instance before crash-repro launches against the real profile: `tasklist` for `electron.exe` and `LumaBrowser.exe` on Windows, `pgrep -fl "electron|LumaBrowser"` elsewhere (its own pgrep and crash-repro lines filtered out).
+- [tools/crash/TabChurnDriver.md](tools/crash/TabChurnDriver.md): `--drive` for crash-repro: churns tabs over the local REST gateway (`http://127.0.0.1:<port>/api/browser`) while the persisted tabs cold-load.
+- [tools/crash/UserDataLocator.md](tools/crash/UserDataLocator.md): the userData folder of the dev app: `LUMA_DATA_DIR` when set (an isolated run), else `%APPDATA%\<name>` (Windows), `~/Library/Application Support/<name>` (macOS) or `$XDG_CONFIG_HOME/<name>` / `~/.config/<name>`, where `<name>` is package.json `name` (what Electron uses for `electron .`).
+
+## tools/perf
+
+- [tools/perf/BoundsGeometryCheck.md](tools/perf/BoundsGeometryCheck.md): judges the native-view bounds the shell sent during the geometry probe: the settings modal and a dynamic `.lm-overlay` collapse the view to width 0, closing them restores it, a right-hand side panel shrinks it, growing the panel by 100 px shrinks it by exactly 100 px, and hiding the panel's ancestor restores it.
+- [tools/perf/MainPerfRecorder.md](tools/perf/MainPerfRecorder.md): the main-process side of a profiling run.
+- [tools/perf/ModuleLoadTimer.md](tools/perf/ModuleLoadTimer.md): times every `require()` during a profiled startup by wrapping `Module._load`.
+- [tools/perf/PerformanceEntry.md](tools/perf/PerformanceEntry.md): what `scripts/performance-entry.js` does inside the profiled Electron process.
+- [tools/perf/PerformanceProfiler.md](tools/perf/PerformanceProfiler.md): repeatable real-Electron startup, idle and shell-interaction profile.
+- [tools/perf/PerformanceSummary.md](tools/perf/PerformanceSummary.md): turns a [PerformanceProfiler](tools/perf/PerformanceProfiler.md) run folder into `summary.json`: startup headline, idle contents and process metrics, a per-thread map of outer task time (`ThreadControllerImpl::RunTask` events only, so nested JS/layout/paint is not double counted; elapsed task time, not CPU use), the top 40 main-process functions by sampled self time, and the rendering probe.
+- [tools/perf/ProfileEnvironment.md](tools/perf/ProfileEnvironment.md): the isolated environment and Electron arguments for one profiling run, so a profile never touches the owner's installed LumaBrowser.
+- [tools/perf/ProfileOptions.md](tools/perf/ProfileOptions.md): command-line options of [PerformanceProfiler](tools/perf/PerformanceProfiler.md): `<label> [--first-run] [--no-adblock]`.
+- [tools/perf/ProfileSettingsSeeder.md](tools/perf/ProfileSettingsSeeder.md): seeds a profiling run's `settings.db` through [SettingsDatabase](core/database/SettingsDatabase.md) before the app starts: `core.setupComplete` (false when `LUMA_PERF_FIRST_RUN=1`), `core.app.autoCheckUpdates` false, `core.adblocker.enabled` (false when `LUMA_PERF_NO_ADBLOCK=1`).
+- [tools/perf/RuntimeTraceSummaryCommand.md](tools/perf/RuntimeTraceSummaryCommand.md): `node scripts/summarize-runtime-trace.js <capture-dir>`: re-runs [RuntimeTraceSummary](core/diagnostics/RuntimeTraceSummary.md) over a RuntimeTracer capture (Ctrl+Shift+U in the shell), prints `summary.md` and `Wrote <dir>/summary.json and summary.md`.
+- [tools/perf/ShellPageScripts.md](tools/perf/ShellPageScripts.md): page functions [PerformanceProfiler](tools/perf/PerformanceProfiler.md) runs in the shell window through `page.evaluate`.
+
+## tools/dev
+
+- [tools/dev/PortListenerParser.md](tools/dev/PortListenerParser.md): picks the PIDs to reap for one port.
+- [tools/dev/ProcessCleanup.md](tools/dev/ProcessCleanup.md): reaps what tests or a dev session left behind (`npm run cleanup`, thin entry `scripts/cleanup.js`):.
+
+## tools/docs
+
+- [tools/docs/DocGlob.md](tools/docs/DocGlob.md): the glob dialect of doc front matter, over forward-slash, project-root-relative paths: `*` matches within one segment, `**` matches zero or more whole segments (so `core/a/**` also matches `core/a`), `?` one character.
+- [tools/docs/DocRepository.md](tools/docs/DocRepository.md): one project root as the docs tools see it.
+- [tools/docs/DocResolver.md](tools/docs/DocResolver.md): maps root-relative paths to the docs that govern them: for each path, every non-meta doc whose patterns match, reporting the first matching pattern of each doc as `{ doc, pattern }`.
+- [tools/docs/DocsForCli.md](tools/docs/DocsForCli.md): the `node scripts/docs-for.js` command: which docs under `Documentation/` govern a path.
+- [tools/docs/FrontMatterError.md](tools/docs/FrontMatterError.md): the error malformed doc front matter raises.
+- [tools/docs/FrontMatterParser.md](tools/docs/FrontMatterParser.md): reads the leading `---` block of a markdown doc.
+- [tools/docs/GitQuery.md](tools/docs/GitQuery.md): runs a read-only git command in a folder (stderr ignored) for the docs tools.
+
+## tools/build
+
+- [tools/build/BuildFs.md](tools/build/BuildFs.md): returns Electron's unpatched `original-fs` inside Electron (npm test runs Jest under ELECTRON_RUN_AS_NODE) and plain `fs` otherwise.
+- [tools/build/BuildHooks.md](tools/build/BuildHooks.md): electron-builder `onNodeModuleFile` hook (wired through `scripts/build-hooks.js`): force-includes `node_modules/typescript/lib/lib.*.d.ts`.
+- [tools/build/Packaging.md](tools/build/Packaging.md): how the app becomes an installer.
+- [tools/build/addons/AddonObfuscator.md](tools/build/addons/AddonObfuscator.md): obfuscates a staged private add-on in place with javascript-obfuscator (`OPTIONS`: string array, moderate control-flow flattening; selfDefending and debugProtection off because they break formatting-sensitive code and trap devtools).
+- [tools/build/addons/AddonPackager.md](tools/build/addons/AddonPackager.md): `npm run build:extensions`: for each `distributable: true` extension, stages a copy beside the output, obfuscates it with [AddonObfuscator](tools/build/addons/AddonObfuscator.md) when it is also `private: true`, writes `meta.json` (`id`, `name`, `version`, `description`, `private`, read by the LumaByte admin upload), zips it with [AddonZipper](tools/build/addons/AddonZipper.md) to `dist/extensions/<id>.zip`, and writes `dist/extensions/index.json`.
+- [tools/build/addons/AddonZipper.md](tools/build/addons/AddonZipper.md): zips a folder under a top-level `<id>/` folder (archiver, zlib level 9), the layout `core.shell.installExtension` and the extension exporter expect.
+- [tools/build/bytecode/AppAsarLocator.md](tools/build/bytecode/AppAsarLocator.md): finds the packed archive in an electron-builder output folder: `resources/app.asar` (Windows, Linux), `<ProductName>.app/Contents/Resources/app.asar`, or any `*.app` bundle (macOS).
+- [tools/build/bytecode/BytecodeCompiler.md](tools/build/bytecode/BytecodeCompiler.md): the electron-builder `afterPack` step (`scripts/compile-bytecode.js`):.
+- [tools/build/bytecode/BytecodeJob.md](tools/build/bytecode/BytecodeJob.md): the compile loop inside `scripts/bytecode-compiler/main.js`: reads the job file (`[{ input, output }]`), calls `bytenode.compileFile({ filename, compileAsModule: true, output })` for each (never `electron: true`; this already is the Electron main process) and writes `[{ input, ok, error }]`.
+- [tools/build/bytecode/BytecodeStub.md](tools/build/bytecode/BytecodeStub.md): the loader stub that replaces a compiled file: `'use strict'; require('bytenode'); module.exports = require('./X.jsc');`.
+- [tools/build/bytecode/ElectronBytecodeRunner.md](tools/build/bytecode/ElectronBytecodeRunner.md): compiles files to `.jsc` by launching `scripts/bytecode-compiler` (a GUI-less Electron app) with the project's Electron.
+- [tools/build/bytecode/EsModuleDetector.md](tools/build/bytecode/EsModuleDetector.md): tells an ES module from CommonJS: a top-level `import`/`export` statement and no `module.exports` / `exports.x =`.
+- [tools/build/bytecode/ExtensionManifests.md](tools/build/bytecode/ExtensionManifests.md): loads every `<root>/extensions/<dir>/manifest.js` (fresh, not from the require cache) for the build tools.
+- [tools/build/bytecode/HtmlScriptScanner.md](tools/build/bytecode/HtmlScriptScanner.md): collects the local `<script src>` targets of an HTML page as paths relative to a root folder.
+- [tools/build/bytecode/PathReferenceScanner.md](tools/build/bytecode/PathReferenceScanner.md): finds `.js` files the app loads by file path rather than `require()`:.
+- [tools/build/bytecode/RequireScanner.md](tools/build/bytecode/RequireScanner.md): finds relative `require()` targets (literal `./` or `../` specifiers, including lazy ones inside functions) and resolves them the way Node does (exact, `.js`, `/index.js`).
+- [tools/build/bytecode/SourceClassifier.md](tools/build/bytecode/SourceClassifier.md): decides, for every `.js` file of an app tree, whether the afterPack step may compile it to main-process V8 bytecode or must ship it as plain JS.
+- [tools/build/bytecode/SourceTree.md](tools/build/bytecode/SourceTree.md): a read-only view of an app source tree for the build tools.
+- [tools/build/bytecode/UnpackGlob.md](tools/build/bytecode/UnpackGlob.md): combines `build.asarUnpack` patterns into one brace glob for `@electron/asar`'s repack.
+- [tools/build/bytecode/UnpackedSnapshot.md](tools/build/bytecode/UnpackedSnapshot.md): turns what electron-builder put in `app.asar.unpacked` into unpack patterns (`node_modules/<pkg>/**` per package, exact paths otherwise) so the bytecode repack keeps them.
+- [tools/build/docs-rag/DocsRagBuilder.md](tools/build/docs-rag/DocsRagBuilder.md): `npm run build:docs-rag`: builds `dist/docs-rag/docs-rag.db`, the documentation knowledge base the app ships in `resources/docs-rag` (RagStore schema, scope `docs:lumabrowser`, path-prefixed chunks, prebuilt metadata); has `run`, `chunk`, `contentHash`, `defaultOutPath`.
+- [tools/build/docs-rag/DocsPageSet.md](tools/build/docs-rag/DocsPageSet.md): the Documentation pages the docs index is built from: the prod mirror's selection scrubbed (dev checkout) or the folder as is (prod checkout); has `list`, `detectMode`.
+- [tools/build/release/InstallerNshVerifier.md](tools/build/release/InstallerNshVerifier.md): `npm run verify:installer`: compiles `build/installer.nsh` the way electron-builder does, in both passes (installer, then uninstaller with `-DBUILD_UNINSTALLER`), with `makensis -WX`, so an unreferenced function (the 1.8.4 LumaStrStr failure) shows up in seconds instead of at the end of a packaging run.
+- [tools/build/release/VersionBumper.md](tools/build/release/VersionBumper.md): one version step with per-digit rollover (1.7.9 -> 1.8.0, 9.9.9 -> 10.0.0; a component already past 9 keeps counting: 1.10.0 -> 1.10.1) in `package.json`, `package-lock.json` (both `version` and `packages[""].version`) and `cli/package.json` (skipped when absent).
+- [tools/build/verify/AsarBytecodeVerifier.md](tools/build/verify/AsarBytecodeVerifier.md): checks a packed app.asar after the bytecode step:.
+- [tools/build/verify/FakeBytecodeRunner.md](tools/build/verify/FakeBytecodeRunner.md): stand-in for [ElectronBytecodeRunner](tools/build/bytecode/ElectronBytecodeRunner.md): writes `FAKE-JSC <name>` instead of bytecode so the bytecode step runs without Electron.
+- [tools/build/verify/SimulatedPack.md](tools/build/verify/SimulatedPack.md): rehearses afterPack without electron-builder: stages the shippable top-level entries of the project (everything except `NOT_SHIPPED`, dotfiles and `*.md`) plus stub node_modules (koffi with a `.node`, axios, the MCP SDK) into `<project>/tmp/asar-verify-*`, packs a fake `win-unpacked/resources/app.asar` with the anchored unpack glob, runs [BytecodeCompiler](tools/build/bytecode/BytecodeCompiler.md) with [FakeBytecodeRunner](tools/build/verify/FakeBytecodeRunner.md), then runs [AsarBytecodeVerifier](tools/build/verify/AsarBytecodeVerifier.md).
+
+## tools/ide
+
+- [tools/ide/BuildSidecar.md](tools/ide/BuildSidecar.md): the `{ version, builtAt, sourceMtime, ...
+- [tools/ide/FileTree.md](tools/ide/FileTree.md): folder walking for the IDE builds.
+- [tools/ide/GeneratedFileWriter.md](tools/ide/GeneratedFileWriter.md): writes generated files stamped with a do-not-edit note, only when the content changed.
+- [tools/ide/IdeWebviewFiles.md](tools/ide/IdeWebviewFiles.md): what the two IDE hosts share, in one list, and the one call both builds use to write the page: `index.html` and `luma.css` copied from `ide/webview`, the CLI's tool grammar under `shared/`, and `app.js` bundled from `ide/webview/ui/entry.js`.
+- [tools/ide/JavaHomeFinder.md](tools/ide/JavaHomeFinder.md): the JDK for Gradle: JAVA_HOME, an installed IDE's bundled JBR, or `java` on PATH.
+- [tools/ide/JetBrainsIdeFinder.md](tools/ide/JetBrainsIdeFinder.md): installed JetBrains IDEs (Toolbox and standalone locations), newest build first.
+- [tools/ide/JetBrainsPluginBuilder.md](tools/ide/JetBrainsPluginBuilder.md): builds `ide/jetbrains` into `ide/dist/luma-jetbrains`: writes the page into `src/main/resources/webview`, picks a JDK and an installed IDE (`LUMA_IDE_HOME` wins; no SDK download), runs `gradlew buildPlugin -PpluginVersion=<app version>`, unpacks the zip and writes `jetbrains.json`.
+- [tools/ide/RequireClosure.md](tools/ide/RequireClosure.md): the CommonJS files an entry set reaches through relative requires (packages and built-ins left out).
+- [tools/ide/VscodeExtensionBuilder.md](tools/ide/VscodeExtensionBuilder.md): builds `ide/vscode` into `ide/dist/luma-vscode.vsix`: syncs `media/` (the page, bundled app.js, tool grammar, icon) and `lib/` (the closure of `cli/lib/connect/AppDiscovery.js` and `BridgeConnector.js`), stages the shipped files with the app's version and `LICENSE.txt`, zips the VSIX and writes `vscode.json`.
+- [tools/ide/VsixArchiver.md](tools/ide/VsixArchiver.md): zips a staged extension into a VSIX with `archiver` (fixed entry date, atomic swap).
+- [tools/ide/VsixManifest.md](tools/ide/VsixManifest.md): the VSIX's `extension.vsixmanifest` and `[Content_Types].xml`.
+- [tools/ide/WebviewAppBundler.md](tools/ide/WebviewAppBundler.md): bundles the page's ES-module graph (with the markdown modules it imports) into one classic `app.js`, using core's [ModuleScriptBundler](core/llm-server/chat/ModuleScriptBundler.md); module URL paths map onto repo files.
+- [tools/ide/ZipExtractor.md](tools/ide/ZipExtractor.md): unpacks a zip with Expand-Archive (Windows) or unzip.
