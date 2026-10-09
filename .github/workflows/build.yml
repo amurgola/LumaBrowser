@@ -1,5 +1,9 @@
 name: Build Installers
 
+# PRE-CUTOVER: this workflow builds and uploads workflow artifacts only. Every
+# electron-builder call passes --publish never and there is no release job, so
+# nothing reaches GitHub Releases or the lumabyte.com update feed. The cutover
+# switch is documented in Documentation/Porting/Cutover.md.
 
 on:
   workflow_dispatch:
@@ -15,11 +19,21 @@ jobs:
             artifact_name: linux-appimage
             artifact_path: dist/*.AppImage
             asar_path: dist/linux-unpacked/resources/app.asar
+          # Pinned to windows-2022 (VS2022). `windows-latest` now maps to
+          # windows-2025, which ships Visual Studio 2026; older node-gyp
+          # releases cannot detect VS2026 and the native rebuild
+          # (better-sqlite3 / tree-sitter-powershell) fails with "Could not
+          # find any Visual Studio installation to use". Revisit once the
+          # bundled node-gyp knows about VS2026.
           - os: windows-2022
             build_cmd: npm run build:win -- --publish never
             artifact_name: windows-installer
             artifact_path: dist/*.exe
             asar_path: dist/win-unpacked/resources/app.asar
+          # macOS is Apple Silicon only. If x64 ever comes back it MUST build
+          # on an Intel host: the afterPack bytenode step compiles V8 bytecode
+          # with the HOST's Electron, and bytecode is not portable across CPU
+          # archs (see tools/build/bytecode/BytecodeCompiler.js).
           - os: macos-latest
             build_cmd: npm run build:mac -- --arm64 --publish never
             artifact_name: macos-arm64
@@ -37,15 +51,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
+      # xvfb: the afterPack bytenode step spawns a real Electron main process
+      # (scripts/bytecode-compiler), which needs a display on Linux.
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libnotify-dev libnss3 libxss1 libxtst6 xdg-utils libsecret-1-dev xvfb
 
+      # electron-builder downloads helper binaries (nsis, nsis-resources,
+      # winCodeSign, AppImage tools, ...) from GitHub releases at build time.
+      # Cache them so transient download failures can't kill repeat runs.
       - name: Cache electron-builder binaries
         uses: actions/cache@v4
         with:
@@ -58,6 +77,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The JetBrains IDE plugin (ide/jetbrains) is a Gradle/Kotlin build that
+      # ships inside the app as resources/ide. Needs a JDK; the IntelliJ SDK
+      # it compiles against is downloaded by Gradle (cached below). --if-present
+      # keeps the IDE steps no-ops until the IDE port adds the npm scripts.
       - name: Setup Java (JetBrains plugin)
         uses: actions/setup-java@v4
         with:
@@ -76,12 +99,18 @@ jobs:
       - name: Build JetBrains plugin
         run: npm run build:jetbrains --if-present -- --force --require
 
+      # Plain JS zipped as a .vsix: no JDK, no vsce, no network.
       - name: Build VS Code extension
         run: npm run build:vscode --if-present -- --force
 
+      # The documentation knowledge base the chat can search, shipped as resources/docs-rag/docs-rag.db.
       - name: Build documentation index
         run: npm run build:docs-rag
 
+      # Decode the base64 App Store Connect API key (secret APPLE_API_KEY) to a
+      # .p8 file; electron-builder's notarytool wants APPLE_API_KEY as a path.
+      # Skipped while the secret is unpopulated (we aren't signing yet): an
+      # empty APPLE_API_KEY path would break notarization setup.
       - name: Prepare macOS notarization key
         if: runner.os == 'macOS'
         env:
@@ -97,16 +126,31 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          # We aren't signing yet: the signing secrets are unpopulated, and
+          # electron-builder treats an EMPTY (but set) CSC_LINK as a certificate
+          # file path; it resolves "" to the project dir and dies with
+          # "<projectDir> not a file". Unset any empty signing vars so unsigned
+          # builds work now and signing kicks in automatically once the secrets
+          # are populated.
           for v in CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_ID APPLE_API_ISSUER APPLE_TEAM_ID; do
             if [ -z "${!v:-}" ]; then unset "$v"; fi
           done
 
           build_cmd='${{ matrix.build_cmd }}'
           if [ "$RUNNER_OS" = "Linux" ]; then
+            # The bytenode afterPack hook spawns a real Electron main process:
+            # it needs a display (xvfb) and can't use the SUID chrome-sandbox
+            # on a hosted runner (not root-owned 4755). Same recipe as
+            # scripts/build-linux.sh.
             export ELECTRON_DISABLE_SANDBOX=1
             build_cmd="xvfb-run -a $build_cmd"
           fi
 
+          # electron-builder fetches helper binaries (nsis-resources, etc.)
+          # from GitHub releases mid-build; those downloads occasionally die
+          # with a transient EOF on hosted runners. Retry the build: already
+          # downloaded artifacts are cached, so a retry only redoes the fetch
+          # that failed.
           for attempt in 1 2 3; do
             if $build_cmd; then
               exit 0
@@ -116,12 +160,15 @@ jobs:
           done
           exit 1
         env:
+          # macOS signing + notarization (empty/ignored on Windows + Linux legs).
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
+      # Every shipped .js is a stub or plain exactly as the classifier says,
+      # and the MCP server plus native modules sit in app.asar.unpacked.
       - name: Verify bytecode and asarUnpack
         shell: bash
         run: node scripts/_verify-bytecode-asar.js --asar "${{ matrix.asar_path }}"
@@ -133,6 +180,10 @@ jobs:
           path: ${{ matrix.artifact_path }}
           if-no-files-found: error
 
+  # Package extensions marked `distributable: true` as standalone .zip add-ons.
+  # Obfuscated (for `private` ones) at the JS source level, not bytecode, so the
+  # output is platform-independent: built ONCE here rather than per matrix leg.
+  # No electron needed, so we skip install scripts for a lean, fast job.
   addons:
     runs-on: ubuntu-latest
     steps:
@@ -142,7 +193,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: Install dependencies
