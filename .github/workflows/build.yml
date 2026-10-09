@@ -1,12 +1,15 @@
 name: Build Installers
 
-# PRE-CUTOVER: this workflow builds and uploads workflow artifacts only. Every
-# electron-builder call passes --publish never and there is no release job, so
-# nothing reaches GitHub Releases or the lumabyte.com update feed. The cutover
-# switch is documented in Documentation/Porting/Cutover.md.
+# A manual dispatch builds and uploads workflow artifacts only. Publishing a
+# GitHub release builds the release's tag and attaches every installer and
+# add-on zip to that release. Every electron-builder call passes
+# --publish never either way: the lumabyte.com update feed is filled by the
+# upload scripts, never by CI. See Documentation/Porting/Cutover.md.
 
 on:
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -208,3 +211,26 @@ jobs:
           name: addon-extensions
           path: dist/extensions/**
           if-no-files-found: ignore
+
+  # Only on a published release: attach the build outputs to it. Checkout on a
+  # release event builds the release's tag, so the assets match the tagged code.
+  # --clobber lets a re-run replace assets from an earlier attempt.
+  release:
+    if: github.event_name == 'release'
+    needs: [build, addons]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Attach artifacts to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          find artifacts -type f -print0 | xargs -0 gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber
