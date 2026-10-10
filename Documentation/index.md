@@ -3719,3 +3719,8 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 - [tools/ide/VsixManifest.md](tools/ide/VsixManifest.md): the VSIX's `extension.vsixmanifest` and `[Content_Types].xml`.
 - [tools/ide/WebviewAppBundler.md](tools/ide/WebviewAppBundler.md): bundles the page's ES-module graph (with the markdown modules it imports) into one classic `app.js`, using core's [ModuleScriptBundler](core/llm-server/chat/ModuleScriptBundler.md); module URL paths map onto repo files.
 - [tools/ide/ZipExtractor.md](tools/ide/ZipExtractor.md): unpacks a zip with Expand-Archive (Windows) or unzip.
+
+## Development launch
+
+- [scripts/MacDevApp.md](scripts/MacDevApp.md): prepares and caches a branded macOS development app bundle.
+- [scripts/launch.md](scripts/launch.md): launches the source app with macOS branding and forwards arguments and termination signals.
