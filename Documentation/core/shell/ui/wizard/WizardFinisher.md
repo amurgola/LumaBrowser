@@ -11,7 +11,8 @@ Applies the choices on Finish or Skip setup and closes the wizard.
   disabled set with `setDisabledExtensions` (known ids whose override is false),
   a re-run toggles each changed extension live (`core.shell.toggleExtension`);
   a remote provider is saved (`ipcBridge.saveProviderConfigs`, replacing the same
-  type) and empty slots routed to it; the webhook (`setWebhookUrlDirect` on
+  type, preserving its id or generating one for a new provider) and empty slots
+  routed to that provider id; the webhook (`setWebhookUrlDirect` on
   first run, else `saveWebhookUrl`); the update preference; `setSetupComplete({
   persona, workflow, enabledExtensions, hasLlm, hasWebhook })` (on first run
   this activates extensions and awaits it); then empty slots are routed to the
