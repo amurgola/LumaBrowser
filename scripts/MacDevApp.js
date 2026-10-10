@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
 class MacDevApp {
-  static NAME = 'LumaBrowser';
+  static NAME = 'LumaBrowser Dev';
 
   static prepare(electronPath, rootDir) {
     const source = path.resolve(electronPath, '../../..');

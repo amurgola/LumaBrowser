@@ -2,12 +2,12 @@
 
 `scripts/MacDevApp.js`
 
-Prepares a macOS development bundle named LumaBrowser without changing the
+Prepares a macOS development bundle named LumaBrowser Dev without changing the
 installed Electron dependency. OS-facing names come from bundle metadata;
 `app.setName()` alone does not change the name in the macOS app switcher.
 
 - `prepare(electronPath, rootDir)` returns the copied executable inside
-  `.cache/mac-dev-app/<key>/LumaBrowser.app`. Preserves relative framework
+  `.cache/mac-dev-app/<key>/LumaBrowser Dev.app`. Preserves relative framework
   symlinks and uses filesystem copy-on-write where supported.
 - `cacheKey(source, icon)` hashes the runtime path and Info.plist, project icon,
   and preparation code. A ready marker is written only after successful branding.

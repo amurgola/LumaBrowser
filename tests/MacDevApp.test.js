@@ -22,7 +22,7 @@ test('copies the runtime without modifying it and preserves relocatable framewor
   fs.symlinkSync('Resources', path.join(source, 'Contents', 'LinkedResources'));
   const brand = jest.spyOn(MacDevApp, 'brand').mockImplementation(() => {});
   const binary = MacDevApp.prepare(electron, root);
-  expect(binary).toContain('LumaBrowser.app');
+  expect(binary).toContain('LumaBrowser Dev.app');
   expect(fs.readFileSync(binary, 'utf8')).toBe('runtime');
   expect(fs.readlinkSync(path.resolve(binary, '../../LinkedResources'))).toBe('Resources');
   expect(fs.readFileSync(path.join(source, 'Contents', 'Info.plist'), 'utf8')).toBe('original metadata');
@@ -50,8 +50,8 @@ test('brands the bundle, generates a Retina icon, and retains signing entitlemen
   const run = jest.fn();
   MacDevApp.brand(source, icon, root, run);
   const plist = path.join(source, 'Contents', 'Info.plist');
-  expect(run).toHaveBeenCalledWith('/usr/bin/plutil', ['-replace', 'CFBundleName', '-string', 'LumaBrowser', plist]);
-  expect(run).toHaveBeenCalledWith('/usr/bin/plutil', ['-replace', 'CFBundleDisplayName', '-string', 'LumaBrowser', plist]);
+  expect(run).toHaveBeenCalledWith('/usr/bin/plutil', ['-replace', 'CFBundleName', '-string', 'LumaBrowser Dev', plist]);
+  expect(run).toHaveBeenCalledWith('/usr/bin/plutil', ['-replace', 'CFBundleDisplayName', '-string', 'LumaBrowser Dev', plist]);
   expect(run.mock.calls.filter(([cmd]) => cmd === '/usr/bin/sips')).toHaveLength(10);
   expect(run).toHaveBeenCalledWith('/usr/bin/iconutil', ['-c', 'icns', path.join(root, 'LumaBrowser.iconset'), '-o', path.join(source, 'Contents', 'Resources', 'lumabrowser.icns')]);
   expect(run).toHaveBeenCalledWith('/usr/bin/codesign', ['--force', '--sign', '-', '--preserve-metadata=entitlements,requirements,flags', source]);
