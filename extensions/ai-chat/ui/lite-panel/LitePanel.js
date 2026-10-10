@@ -30,7 +30,7 @@ export default class LitePanel {
       const res = await this.api.listModels();
       this.models = (res && res.models) || [];
       await this._pickModelRef(res);
-      LiteModelPicker.render(this.modelSelect, this.models, this.modelRef);
+      this._modelPicker.render(this.models, this.modelRef);
       this._applyServerState(await this._serverState());
       return this.models.length > 0;
     } catch (_) {
@@ -40,6 +40,7 @@ export default class LitePanel {
   }
 
   destroy() {
+    this._modelPicker.destroy();
     for (const key of ['_unsubChat', '_unsubState']) {
       if (!this[key]) continue;
       try { this[key](); } catch (_) {}
@@ -79,6 +80,7 @@ export default class LitePanel {
 
   _buildParts(opts) {
     const q = (id) => document.getElementById(id);
+    this._modelPicker = new LiteModelPicker(this.modelSelect, (ref) => this._onModelPicked(ref));
     this._thread = new LiteThreadView({ messagesEl: this.messagesEl, api: this.api });
     this._tools = new LiteToolsPopover({
       button: q('aiChatTools'),
@@ -114,7 +116,6 @@ export default class LitePanel {
     on(this.inputEl, 'keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this._onSend(); }
     });
-    on(this.modelSelect, 'change', () => this._onModelPicked());
     on(document.getElementById('aiChatTools'), 'click', (e) => { e.stopPropagation(); this._tools.toggle(); });
     on(document.getElementById('aiChatToolsPop'), 'click', (e) => e.stopPropagation());
     document.addEventListener('click', () => this._tools.close());
@@ -133,8 +134,7 @@ export default class LitePanel {
     else if (this.panel && this.panel.classList.contains('active')) this._closePanel();
   }
 
-  _onModelPicked() {
-    const ref = this.modelSelect.value || null;
+  _onModelPicked(ref) {
     if (!ref) return;
     this.modelRef = ref;
     LitePanel._quietly(() => this.api.setLastModelRef(ref));
@@ -149,12 +149,14 @@ export default class LitePanel {
     const open = this.panel.classList.toggle('active');
     if (this.toggleBtn) this.toggleBtn.classList.toggle('is-open', open);
     if (open && this.inputEl) this.inputEl.focus();
+    if (!open) this._modelPicker.close();
   }
 
   _closePanel() {
     if (this.panel) this.panel.classList.remove('active');
     if (this.toggleBtn) this.toggleBtn.classList.remove('is-open');
     this._tools.close();
+    this._modelPicker.close();
   }
 
   _openSetup() {

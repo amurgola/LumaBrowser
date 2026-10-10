@@ -21,7 +21,7 @@ versa.
   `defaultRef` or the first; fills the picker; paints `getState()` (or a
   state derived from the list when it fails). Resolves whether any model is
   listed; a throw paints an error state and resolves false.
-- `destroy()`: unsubscribes.
+- `destroy()`: unsubscribes and destroys the model picker.
 - Public fields read elsewhere: `api` (Export All), `state`, `thread`,
   `modelRef`, `disabledTools`, `serverState`, `reqId`.
 
@@ -43,7 +43,8 @@ thrown `chat2` becomes an error event. Stop calls `chatAbort()`.
 - Toggle button: with `configured === false` it calls
   `openSetup({ expand: 'models' })` instead of opening; Escape closes the tools
   popover, else the confirm modal, else the panel.
-- Picking a model stores it with `setLastModelRef`.
+- The searchable model picker filters without changing the active model.
+  Picking a model stores it with `setLastModelRef`.
 - Opening a conversation (not while running) shows its user and assistant
   messages and its `disabledTools`; New resets; Delete confirms through
   [LiteConfirm](LiteConfirm.md), then `conv.delete`.
