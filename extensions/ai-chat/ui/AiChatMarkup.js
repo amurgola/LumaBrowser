@@ -27,7 +27,7 @@ export default class AiChatMarkup {
       <div class="ai-chat-header">
         <div class="ai-chat-header-left">
           <h4>AI Assistant</h4>
-          <select class="ai-chat-model" id="aiChatModel" title="Model for this chat" aria-label="Model for this chat"></select>
+          <button type="button" class="ai-chat-model" id="aiChatModel" title="Model for this chat" aria-label="Model for this chat" aria-haspopup="listbox" aria-expanded="false" aria-controls="aiChatModelOptions"></button>
           <span class="ai-chat-tools-wrap">
             <button type="button" class="luma-btn" id="aiChatTools" title="Tools for this chat" aria-label="Tools for this chat" aria-haspopup="true">Tools</button>
             <div class="ai-chat-tools-pop" id="aiChatToolsPop" role="group" aria-label="Tools for this chat"></div>

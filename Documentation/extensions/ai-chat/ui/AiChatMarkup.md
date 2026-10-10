@@ -17,3 +17,6 @@ Static markup of the AI Chat extension.
 
 The ids are a contract with the shell (overlay selectors, the resize registry,
 the toolbar `#aiChatToggle`/`#aiChatStateDot` it owns) and the panel CSS.
+
+The chat header model control is a button with listbox popup semantics;
+LiteModelPicker attaches the search input and model options.

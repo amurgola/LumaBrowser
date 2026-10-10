@@ -3,7 +3,7 @@
 `extensions/ai-chat/ui/lite-panel/LitePanelStyles.js`
 
 The side panel's own style block (approval and takeover cards, header
-controls, the toolbar state dot), on base.css tokens.
+controls, searchable model popup with a bounded scrolling list, the toolbar state dot), on base.css tokens.
 
 ## Methods
 
