@@ -97,12 +97,15 @@ export default class WizardFinisher {
     if (llm.mode === 'local' || !llm.apiKey || !llm.selectedModel) return;
     if (!window.ipcBridge || !window.ipcBridge.saveProviderConfigs) return;
     const existing = (await window.ipcBridge.getProviderConfigs().catch(() => [])) || [];
-    await window.ipcBridge.saveProviderConfigs([...existing.filter((c) => c.type !== llm.type), WizardFinisher._providerEntry(llm)]);
-    await this._seedSlots(llm.type, llm.selectedModel, false);
+    const previous = existing.find((c) => c.type === llm.type);
+    const entry = WizardFinisher._providerEntry(llm, previous && previous.id);
+    await window.ipcBridge.saveProviderConfigs([...existing.filter((c) => c.type !== llm.type), entry]);
+    await this._seedSlots(entry.id, llm.selectedModel, false);
   }
 
-  static _providerEntry(llm) {
+  static _providerEntry(llm, id = null) {
     return {
+      id: id || 'provider_' + crypto.randomUUID(),
       type: llm.type,
       name: llm.type === 'anthropic' ? 'Anthropic' : 'OpenAI-Compatible',
       endpoint: llm.endpoint,
