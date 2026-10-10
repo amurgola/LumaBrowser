@@ -269,6 +269,13 @@ npm run test:e2e     # end-to-end suites
 npm run build        # installers for the current platform
 ```
 
+On macOS, the start and dev commands create a cached `LumaBrowser Dev.app` under
+`.cache/mac-dev-app` using the project icon. This gives source runs the correct
+Dock, app-switcher and menu-bar identity without modifying Electron or changing
+your existing profile. The native About window identifies it as an
+"Unofficial development build"; packaged release branding is unchanged. The bundle is refreshed when Electron, the icon, or the
+launcher preparation changes.
+
 ### Agentic developer docs
 
 The [Documentation](Documentation/index.md) folder is written for coding agents

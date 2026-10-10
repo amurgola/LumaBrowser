@@ -47,7 +47,7 @@ class ReadyPhase {
     } catch (err) {
       this._log.warn('[main] ContextMenu install failed:', err && err.message);
     }
-    AppMenu.apply(this._ctx.electron.Menu, this._ctx.proc.platform, this._log);
+    AppMenu.apply(this._ctx.electron.Menu, this._ctx.proc.platform, this._log, this._ctx.app);
   }
 
   _createWindow() {

@@ -17,7 +17,8 @@ Everything that waits for Electron's ready event.
   4. The setup gate: `core.setupComplete`.
   5. `SessionSetup.hookSessions()`.
   6. [ContextMenu](../../core/shell/ContextMenu.md) (before the window, it
-     attaches from `web-contents-created`) and [AppMenu](AppMenu.md).
+     attaches from `web-contents-created`) and [AppMenu](AppMenu.md), passing the app so source builds receive
+     the unofficial development About label.
   7. The main window ([MainWindow](../window/MainWindow.md)`.create()`).
   8. Setup complete: [DeferredServices](DeferredServices.md)`.start()`; else
      wait for the setup wizard's finish.
