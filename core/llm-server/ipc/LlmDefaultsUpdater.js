@@ -1,5 +1,5 @@
 class LlmDefaultsUpdater {
-  static LAUNCH_SHAPE_KEYS = ['modelPath', 'runtimeId', 'maxConcurrent', 'tensorSplit', 'cacheReuse', 'usePeerGpus', 'contextSize', 'kvCacheType'];
+  static LAUNCH_SHAPE_KEYS = ['modelPath', 'runtimeId', 'maxConcurrent', 'tensorSplit', 'cacheReuse', 'usePeerGpus', 'contextSize', 'kvCacheType', 'openvinoDevice'];
   static ROUTER_KEYS = ['groupRouter', 'groupRouterPinRam'];
 
   constructor(llmServerService, log = console) {

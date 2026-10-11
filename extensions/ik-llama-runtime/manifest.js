@@ -11,7 +11,6 @@ module.exports = {
     + 'matched to this CPU\'s instruction set; a self-built copy can be '
     + 'registered with Locate instead.',
 
-  private: true,
   distributable: true,
 
   dependencies: {},

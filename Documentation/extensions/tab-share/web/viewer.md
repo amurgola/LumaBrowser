@@ -5,8 +5,7 @@
 The page a guest opens from a `/tab/<token>` link, served by
 [TabShareWebRouter](../TabShareWebRouter.md) (`/tab/:token` sends
 `viewer.html`, `/tab/assets/*` serves this folder). It runs in the guest's
-own browser with no preload. Classic-script exception: the extension is `distributable: true`, so this stays one self-contained classic file (add-on scripts are injected as classic scripts, and the build obfuscates it as one file). (`manifest.browserScripts` names
-`./web/viewer.js` for the browser obfuscation target.)
+own browser with no preload. Classic-script exception: the extension is `distributable: true`, so this stays one self-contained classic file (add-on scripts are injected as classic scripts).
 
 ## Behaviour
 

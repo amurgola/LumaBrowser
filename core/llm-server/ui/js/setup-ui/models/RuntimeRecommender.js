@@ -1,6 +1,8 @@
 import HtmlEscaper from '../../format/HtmlEscaper.js';
 
 export default class RuntimeRecommender {
+  static OPT_IN = new Set(['llama-cpp-rocm', 'llama-cpp-sycl', 'llama-cpp-openvino']);
+
   constructor(runtimes, hostCaps) {
     this._runtimes = runtimes;
     this._hostCaps = hostCaps;
@@ -13,20 +15,29 @@ export default class RuntimeRecommender {
     }
     const compat = new Set(model.compatibleRuntimes || []);
     const order = this.hostOrder();
-    const installed = order.find((id) => compat.has(id) && this._runtimes.isInstalled(id));
+    const installed = order.find((id) => compat.has(id) && this._runtimes.isUsable(id));
     if (installed) return { id: installed, explicit: false };
-    const any = order.find((id) => compat.has(id));
+    const any = order.find((id) => compat.has(id) && !RuntimeRecommender.OPT_IN.has(id));
     return any ? { id: any, explicit: false } : null;
   }
 
   hostOrder() {
     const caps = this._hostCaps;
+    if (caps.platform === 'darwin') return ['llama-cpp-cpu'];
+    const hasVendor = (v) => typeof caps.hasVendor === 'function' && caps.hasVendor(v);
     const order = [];
     if (caps.cudaAvailable) {
       if (caps.cudaMajor() >= 13) order.push('llama-cpp-cuda13');
       order.push('llama-cpp-cuda12');
     }
+    const vendorBuilds = [];
+    if (hasVendor('AMD')) vendorBuilds.push('llama-cpp-rocm');
+    if (hasVendor('Intel')) vendorBuilds.push('llama-cpp-sycl');
+    const loaded = (id) => typeof this._runtimes.backendLoaded === 'function' && this._runtimes.backendLoaded(id);
+    order.push(...vendorBuilds.filter(loaded));
     if (caps.hasGpu || !caps.cudaAvailable) order.push('llama-cpp-vulkan');
+    order.push(...vendorBuilds.filter((id) => !loaded(id)));
+    if (hasVendor('Intel')) order.push('llama-cpp-openvino');
     order.push('llama-cpp-cpu');
     return order;
   }

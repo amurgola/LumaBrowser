@@ -1,6 +1,7 @@
 const KeyedSettings = require('./KeyedSettings');
 const KvCacheModes = require('../../shared/llm/KvCacheModes');
 const ReasoningEffort = require('../../shared/llm/ReasoningEffort');
+const OpenVinoDevice = require('../runtimes/OpenVinoDevice');
 
 class LlmDefaults extends KeyedSettings {
   static KEYS = {
@@ -16,6 +17,7 @@ class LlmDefaults extends KeyedSettings {
     reasoningEffort: 'core.llmServer.defaults.reasoningEffort',
     usePeerGpus: 'core.llmServer.defaults.usePeerGpus',
     pinModelRam: 'core.llmServer.defaults.pinModelRam',
+    openvinoDevice: 'core.llmServer.defaults.openvinoDevice',
   };
 
   static ID_FIELDS = Object.freeze(['runtimeId', 'modelPath']);
@@ -37,6 +39,7 @@ class LlmDefaults extends KeyedSettings {
       contextSize: this._readContextSize(),
       kvCacheType: this._readKvCacheType(),
       maxConcurrent: this._readMaxConcurrent(),
+      openvinoDevice: OpenVinoDevice.normalize(this._db.get(LlmDefaults.KEYS.openvinoDevice, null)),
       ...this._readFlags(),
       reasoningEffort: ReasoningEffort.normalizeEffort(this._db.get(LlmDefaults.KEYS.reasoningEffort, null)),
       groupRouter: !!this._groupRouter.isEnabled(),
@@ -82,7 +85,8 @@ class LlmDefaults extends KeyedSettings {
     }
   }
 
-  _writeLaunchShape({ contextSize, kvCacheType, maxConcurrent }) {
+  _writeLaunchShape({ contextSize, kvCacheType, maxConcurrent, openvinoDevice }) {
+    if (openvinoDevice !== undefined) this._setOrDelete(LlmDefaults.KEYS.openvinoDevice, OpenVinoDevice.normalize(openvinoDevice));
     if (contextSize !== undefined) {
       this._setOrDelete(LlmDefaults.KEYS.contextSize, Number(contextSize) > 0 ? Math.floor(Number(contextSize)) : null);
     }

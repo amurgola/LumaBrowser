@@ -10,7 +10,9 @@ The logic behind the LLM provider settings UI. Used by
 - `new ProviderConfigService({ db, lmStudioService, anthropicService, llmServerService = null })`.
 - `getDefaultProvider()`: `llm.provider`, default `'none'`. A removed
   provider (`webgpu`) is rewritten to `'none'` and saved.
-- `setDefaultProvider(provider)`: ignores `undefined`.
+- `setDefaultProvider(provider)`: ignores `undefined`. A changed default also deletes the chat's last-used model
+  (`CHAT_LAST_MODEL_KEY`, `core.llmServer.chat.lastModelRef`), so new chats and the page chat follow the new
+  default through [ChatModelList](../llm-server/chat/router/ChatModelList.md); re-saving the same default keeps it.
 - `ProviderConfigService.applyProviderSettings(provider, config)` (static):
   applies only the fields present (`endpoint`, `selectedModel`, `apiKey`,
   `models`); models go through `setModels` so memory never drifts from disk.

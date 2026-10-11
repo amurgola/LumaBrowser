@@ -9,7 +9,7 @@ plus the Windows fixes the Setup UI offers. The work lives in
 
 ## Methods
 
-- `SystemDiagnostics.gather({ savedNvidiaSmiPath? })` the full report; see
+- `SystemDiagnostics.gather({ savedNvidiaSmiPath?, runtimesRoot? })` the full report; see
   [DiagnosticsGatherer](diagnostics/DiagnosticsGatherer.md).
 - `SystemDiagnostics.addDirectoryToUserPath(directory)` see
   [UserPathEditor](diagnostics/UserPathEditor.md).
@@ -31,6 +31,12 @@ plus the Windows fixes the Setup UI offers. The work lives in
 | [GpuProbe](diagnostics/GpuProbe.md) | Chromium adapters plus VRAM and PCIe |
 | [GpuAdapterMatcher](diagnostics/GpuAdapterMatcher.md) | adapter pairing and de-duplication |
 | [RegistryVramProbe](diagnostics/RegistryVramProbe.md) | Windows 64-bit VRAM from the registry |
+| [LinuxDrmVramProbe](diagnostics/LinuxDrmVramProbe.md) | Linux GPU ids and VRAM from sysfs |
+| [LlamaDeviceProbe](diagnostics/LlamaDeviceProbe.md) | Linux GPU memory from an installed llama.cpp build |
+| [LlamaDeviceVram](diagnostics/LlamaDeviceVram.md) | that device list onto the adapters |
+| [UnifiedMemoryProbe](diagnostics/UnifiedMemoryProbe.md) | Apple Silicon unified memory as VRAM |
+| [SharedGpuMemory](diagnostics/SharedGpuMemory.md) | unified and integrated GPU VRAM from RAM |
+| [NpuProbe](diagnostics/NpuProbe.md) | Intel and other NPUs |
 | [GpuHealthProbe](diagnostics/GpuHealthProbe.md) | Windows PnP health of display adapters |
 | [PnpDisplayDevices](diagnostics/PnpDisplayDevices.md) | Display-class PnP enumeration |
 | [PcieAspm](diagnostics/PcieAspm.md) | PCIe ASPM read and off |

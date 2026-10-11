@@ -34,4 +34,4 @@ reaches Windows Hello.
 
 Injected with ChromeObjectShim by the identity layer in every frame (sign-in
 widgets are often cross-origin iframes) and by `webview-preload.js`, so it must
-stay a plain string with no requires and stay on the bytecode skip list.
+stay a plain string with no requires.

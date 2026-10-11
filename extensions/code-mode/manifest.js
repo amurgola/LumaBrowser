@@ -2,7 +2,6 @@ module.exports = {
   id: 'code-mode',
   name: 'Code',
   version: '0.1.1',
-  private: true,
   distributable: false,
   description:
     'A coding agent + playground in the LLM chat. Describe what you want and it '

@@ -10,7 +10,7 @@ export default class DiagnosticsPainter {
     doc.getElementById('hostMeta').textContent = DiagnosticsPainter.hostLine(d.platform);
     MemoryCard.render(doc, d.memory);
     CpuCard.render(doc, d.cpu);
-    GpuCard.render(doc, d.gpu);
+    GpuCard.render(doc, d.gpu, d.npu);
     CudaCard.render(doc, d.cuda);
     DiskCard.render(doc, d.disks);
     BudgetCard.render(doc, d.budget || { ram: {}, vram: {} });

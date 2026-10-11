@@ -24,5 +24,4 @@ It is injected twice: natively by the identity layer via
 frame including OOPIFs and same-origin about:blank iframes), and again by
 `webview-preload.js` for the main frame, because Electron replaces
 `window.chrome` there after the CDP script runs. The preload runs in a renderer
-process that cannot load main-process bytecode, so this file must stay a plain
-string with no requires and must stay on the bytecode compiler's skip list.
+process, so this file must stay a plain string with no requires.

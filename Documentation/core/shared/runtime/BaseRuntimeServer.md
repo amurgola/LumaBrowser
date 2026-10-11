@@ -32,9 +32,10 @@ Protected helpers subclasses call: `_setState(next, payload)`, `_forceKill()`,
 ## Methods and fields
 
 - `start(launch, { shouldCancel })` with `launch = { binaryPath, args, plan: { port },
-  cudaDevice?, healthTimeoutMs? }`. Throws `Cannot start: server is <state>.`
+  cudaDevice?, extraEnv?, healthTimeoutMs? }`. Throws `Cannot start: server is <state>.`
   unless idle or error. Spawns from the binary's dir with
-  [RuntimeSpawnEnv](server/RuntimeSpawnEnv.md), tracks the child in
+  [RuntimeSpawnEnv](server/RuntimeSpawnEnv.md) (passing `cudaDevice` and
+  `extraEnv`), tracks the child in
   ChildProcessRegistry, polls `_healthCheck` every 200 ms up to
   `healthTimeoutMs` (default 5 min), then `_afterHealthy`, `ready`, arms the
   idle timer and returns `getStatus()`. A failed wait appends the stderr tail

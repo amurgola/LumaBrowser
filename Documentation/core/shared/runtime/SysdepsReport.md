@@ -12,8 +12,9 @@ the UI renders.
 - `SysdepsReport.describeMissing(missing)` returns the plain sentence the UI
   shows: "One system library is missing: X." or "N system libraries are
   missing: ...", followed by the "Run the command below ... Check again"
-  instruction. Uses the package name, or the soname when no package is known.
-  Never includes linker text.
+  instruction. Uses `nameOf(entry)`: the package name, else the soname with
+  its vendor hint in parentheses, else the soname. Never includes linker text.
+- `SysdepsReport.nameOf(entry)` as above.
 - `SysdepsReport.build(missing, rawLog, extra, platform)` builds
   `{ ok, platform, missing, packages, aptLine, message, rawLog, ...extra }`.
 - `SysdepsReport.notApplicable(reason, platform)` is the ok, nothing-to-do
@@ -21,7 +22,8 @@ the UI renders.
 - `SysdepsReport.merge(results, platform)` unions the missing sonames of
   several results (null entries skipped) and joins their raw logs with
   newlines. For a duplicate soname the first entry wins, unless it has no
-  package and a later one does, so the apt line gains the package.
+  package and a later one does (or has a hint the first lacks), so the apt line
+  and the message gain what is known.
 - `SysdepsReport.ALL_PRESENT_MESSAGE` is the "all installed" sentence.
 
 `platform` defaults to `process.platform` everywhere.

@@ -2,7 +2,8 @@
 
 `core/llm-server/server/launcher/LaunchOverrides.js`
 
-Builds the planner overrides for a local start.
+Builds the planner overrides for a local start, and resolves the OpenVINO
+device.
 
 ## Methods
 
@@ -18,6 +19,9 @@ Builds the planner overrides for a local start.
   - `ramPin` is `{ freeBytes: freeMemory() }` when `service.ramPin.isActiveFor(path)`, else null.
   - `measuredVramBytes` is `ContextEstimator.measuredComboVram(fitEntry, contextSize, kvMode)`,
     plus `model.mmprojTotalBytes` for a vision start.
+  - Last, `ctx.openvinoDevice`: for the `llama-cpp-openvino` runtime,
+    [OpenVinoDevice](../../runtimes/OpenVinoDevice.md)`.resolve(defaults.openvinoDevice, ctx.diag)`,
+    else null; on the NPU `overrides.maxConcurrent` is forced to 1.
 
 ## Why
 
@@ -25,4 +29,5 @@ The measured fit is keyed by the mode id, not the K type: an asymmetric mode
 shares its K type with another mode. Fit tests measure text-only, so a vision
 start adds the projector bytes, or the placement could pin a card the projector
 does not fit. Forcing f16 for tensor split keeps the fit lookup and the probe
-sizing the same KV the launch will use.
+sizing the same KV the launch will use. The OpenVINO NPU runs stateless with a
+static graph, so llama-server `-np` above 1 is not supported there.

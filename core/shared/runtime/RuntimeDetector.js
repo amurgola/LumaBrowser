@@ -43,6 +43,9 @@ class RuntimeDetector {
   _rollUp({ entries, detectedById, results }) {
   }
 
+  async _afterDetect(detail, entry) {
+  }
+
   _detectableEntries(entries) {
     return entries.filter((entry) => entry.kind === this._expectedKind
       && (!Array.isArray(entry.platforms) || entry.platforms.includes(process.platform)));
@@ -54,6 +57,7 @@ class RuntimeDetector {
     const detail = await this._probeFor(entry, { runtimesRoot, manualBinaryPath, hooks }).detect({ cuda, gpu });
     RuntimeDetailFields.stamp(detail, { entry, catalog: this._catalog, manualBinaryPath, hooks, cuda, gpu });
     this._decorateDetail(detail, entry);
+    await this._afterDetect(detail, entry);
     return detail;
   }
 

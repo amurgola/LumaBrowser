@@ -25,6 +25,20 @@ export default class DefaultsOptions {
     { id: 'never', label: 'Never ask', title: 'Every enabled tool runs straight away' },
   ];
 
+  static OPENVINO_RUNTIME_ID = 'llama-cpp-openvino';
+
+  static openvinoDeviceOptions(npuNames = []) {
+    const npuTitle = npuNames.length > 0
+      ? `${npuNames.join(', ')}: lower power, one request at a time, small contexts`
+      : 'No Intel NPU detected yet; needs a Core Ultra chip and its NPU driver';
+    return [
+      { id: '', label: 'Auto (GPU)', title: 'The Intel GPU, the fastest OpenVINO device' },
+      { id: 'GPU', label: 'GPU', title: 'The Intel GPU' },
+      { id: 'NPU', label: npuNames.length > 0 ? 'NPU' : 'NPU (not detected)', title: npuTitle },
+      { id: 'CPU', label: 'CPU', title: 'The processor, through OpenVINO' },
+    ];
+  }
+
   static effortPosition(defaults) {
     return defaults.noThink ? 'off' : (defaults.reasoningEffort || 'default');
   }

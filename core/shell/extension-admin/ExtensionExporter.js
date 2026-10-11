@@ -37,7 +37,6 @@ class ExtensionExporter {
     const manifestPath = path.join(extDir, 'manifest.js');
     if (!fs.existsSync(manifestPath)) return { error: 'Extension manifest not found' };
     const manifest = require(manifestPath);
-    if (manifest.private) return { error: 'Cannot export a private extension' };
     return manifest;
   }
 }

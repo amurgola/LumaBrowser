@@ -91,6 +91,7 @@ class SettingsIpcHandlers {
     ipcMain.handle('core.settings.setRunOnStartup', (_e, enabled) => startup.setRunOnStartup(enabled));
     ipcMain.handle('core.settings.getStartupConfig', () => startup.getConfig());
     ipcMain.handle('core.settings.setStartHidden', (_e, hidden) => startup.setStartHidden(hidden));
+    ipcMain.handle('core.settings.setRestoreTabs', (_e, enabled) => startup.setRestoreTabs(enabled));
     ipcMain.handle('core.settings.relaunch', () => {
       app.relaunch();
       app.exit(0);

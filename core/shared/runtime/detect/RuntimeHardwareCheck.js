@@ -1,16 +1,30 @@
 const fs = require('fs');
+const IntelComputeRuntime = require('./IntelComputeRuntime');
 
 class RuntimeHardwareCheck {
   static READY = Object.freeze({ ready: true, note: null });
   static VULKAN_ICD_DIRS = ['/usr/share/vulkan/icd.d', '/etc/vulkan/icd.d'];
+  static SYCL_NOTE = `Intel GPU found, but the Intel Level Zero GPU driver (libze_intel_gpu) is not installed, so the SYCL backend cannot reach it. Install ${IntelComputeRuntime.PACKAGES.levelZeroGpu}; Mesa's Vulkan driver is not a substitute.`;
+  static OPENVINO_NOTE = `Intel GPU found, but Intel's OpenCL compute runtime is not installed (no intel.icd under /etc/OpenCL/vendors), so OpenVINO cannot open the GPU. Install ${IntelComputeRuntime.PACKAGES.openclIcd}; Mesa's rusticl is not a substitute. Panther Lake needs compute-runtime 26.18 or newer.`;
 
-  static evaluate(entry, { cuda, gpu } = {}) {
+  static evaluate(entry, { cuda, gpu, intel = null } = {}) {
     const req = entry && entry.requiresHw;
     if (!req) return { ...RuntimeHardwareCheck.READY };
     if (req.kind === 'nvidia-cuda') return RuntimeHardwareCheck._nvidiaCuda(req, cuda);
     if (req.kind === 'gpu-any') return RuntimeHardwareCheck._gpuAny(gpu);
     if (req.kind === 'apple-silicon') return RuntimeHardwareCheck._appleSilicon();
+    if (req.kind === 'amd-gpu') return RuntimeHardwareCheck._vendorGpu(gpu, 'AMD');
+    if (req.kind === 'intel-gpu') return RuntimeHardwareCheck._vendorGpu(gpu, 'Intel');
+    if (req.kind === 'intel-sycl') return RuntimeHardwareCheck._intelCompute(gpu, intel, 'levelZeroGpu', RuntimeHardwareCheck.SYCL_NOTE);
+    if (req.kind === 'intel-openvino') return RuntimeHardwareCheck._intelCompute(gpu, intel, 'openclIcd', RuntimeHardwareCheck.OPENVINO_NOTE);
     return { ...RuntimeHardwareCheck.READY };
+  }
+
+  static _intelCompute(gpu, intel, flag, note) {
+    const vendor = RuntimeHardwareCheck._vendorGpu(gpu, 'Intel');
+    if (!vendor.ready || process.platform !== 'linux') return vendor;
+    const probe = intel || IntelComputeRuntime.probe();
+    return probe[flag] === false ? { ready: false, note } : { ...RuntimeHardwareCheck.READY };
   }
 
   static linuxVulkanDeviceLikely(fsLike = fs) {
@@ -66,6 +80,11 @@ class RuntimeHardwareCheck {
   static _vulkanDevice(gpu) {
     if (gpu && typeof gpu.vulkanDevice === 'boolean') return gpu.vulkanDevice;
     return RuntimeHardwareCheck.linuxVulkanDeviceLikely();
+  }
+
+  static _vendorGpu(gpu, vendor) {
+    const found = !!(gpu && Array.isArray(gpu.adapters) && gpu.adapters.some((a) => a && a.vendor === vendor));
+    return { ready: found, note: found ? null : `No ${vendor} GPU detected.` };
   }
 
   static _appleSilicon() {

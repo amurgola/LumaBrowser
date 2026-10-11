@@ -15,11 +15,5 @@ posts the serialized bytes to the parent.
 - `filterWorker.js` is the entry the launcher loads by path. It just calls
   `run` and rethrows a failure so it reaches the parent as the worker's `error` event.
 
-## Why it stays plain JS
-
-Worker isolates reject bytecode compiled in the main process. The bytecode
-build skips any file whose name ends in `worker.js` (case-insensitive), so both
-files must keep names ending that way.
-
 `@ghostery/adblocker` is resolved through `@ghostery/adblocker-electron` so the
 engine is serialized by the same version the adapter later deserializes.

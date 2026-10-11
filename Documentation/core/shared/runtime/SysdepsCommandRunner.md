@@ -13,7 +13,8 @@ resolves a plain record. It is the default `exec` seam of `SysdepsChecker`.
   (e.g. command not installed) gives `ok: false, code: 'ENOENT'` (or the
   error code, else `'ERR'`) with empty stdout. `options` are merged over the
   defaults (hidden window, `TIMEOUT_MS`, `MAX_BUFFER_BYTES`), so callers can
-  pass `env` and `cwd`.
+  pass `env`, `cwd` and their own `timeout`. A child the timeout killed carries
+  `killed: true`, so a caller can tell "too slow" from "failed".
 - `SysdepsCommandRunner.TIMEOUT_MS` (10 s), `MAX_BUFFER_BYTES` (4 MiB).
 
 ## Why

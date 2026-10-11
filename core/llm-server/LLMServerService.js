@@ -268,6 +268,7 @@ class LLMServerService {
       smiPath: this._smiPath,
       gather: this._deps.gatherDiagnostics,
       invalidateRuntimes: () => this.invalidateRuntimesCache(),
+      getRuntimesDir: () => this.getRuntimesDir(),
     });
     this._installedModels = new InstalledChatModels({
       scanner: this._deps.scanner,

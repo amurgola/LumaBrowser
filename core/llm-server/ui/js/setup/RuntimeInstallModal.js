@@ -17,6 +17,7 @@ export default class RuntimeInstallModal {
       assetSupported: o.assetSupported !== false,
       installed,
       verb: installed ? 'Update' : 'Install',
+      hardwareNote: o.hardware && o.hardware.ready === false ? (o.hardware.note || 'This host does not meet its hardware requirement.') : null,
     };
   }
 
@@ -39,6 +40,11 @@ export default class RuntimeInstallModal {
       : '<button class="luma-btn luma-btn--sm" disabled title="No prebuilt for this platform">Unavailable</button>';
   }
 
+  static _hardwareWarning(view) {
+    if (!view.hardwareNote) return '';
+    return `<p class="rt-modal-warning" data-rt-hardware-warning style="margin:0 0 12px;padding:8px 10px;border-radius:6px;border:1px solid var(--warn-border, #c9a227);background:var(--warn-bg, rgba(201,162,39,0.12));"><b>This computer does not look ready for it.</b> ${HtmlEscaper.escape(view.hardwareNote)} You can still install it, but expect it to run on the CPU or fail to start until that is fixed.</p>`;
+  }
+
   static _html(view) {
     const name = HtmlEscaper.escape(view.name);
     return `
@@ -49,6 +55,7 @@ export default class RuntimeInstallModal {
                 </div>
                 <div class="rt-modal-body">
                     <p class="rt-modal-lead">How would you like to ${view.installed ? 'update' : 'set up'} ${name}?</p>
+                    ${RuntimeInstallModal._hardwareWarning(view)}
                     <div class="rt-opt${view.assetSupported ? '' : ' is-disabled'}">
                         <div class="rt-opt-title">Automatically download</div>
                         <p class="rt-opt-info">${RuntimeInstallModal._autoInfo(view)}</p>

@@ -17,7 +17,7 @@ its per-tab Live panel conversations in.
 
 ## Entry files
 
-- `manifest.js`: id `on-demand-mode`, `private: true`, `distributable: false`,
+- `manifest.js`: id `on-demand-mode`, `distributable: false`,
   optional `core:llm-service` and `core:browser`, `main: './main.js'`.
 - `main.js`: `{ MODE_ID, KB_SCOPE, ALLOWED_TOOLS, activate, deactivate }`, as legacy.
 - `docs/*.md`: the knowledge base (10 web-navigation notes), copied verbatim.

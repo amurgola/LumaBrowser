@@ -25,8 +25,7 @@ with the host's own TURN relay for guests outside the network.
 ## Entry files
 
 - `manifest.js`: id `tab-share`, requires `core:browser` and
-  `core:database`, `private` and `distributable`, `browserScripts:
-  ['./web/viewer.js']`, settings page `settings.html`, `renderer.js`.
+  `core:database`, `distributable`, settings page `settings.html`, `renderer.js`.
   The renderer, settings page, `web/` viewer and `rtc/` capturer page stay
   classic files ([renderer](renderer.md), [settings](settings.md),
   [viewer](web/viewer.md), [capturer](rtc/capturer.md)).

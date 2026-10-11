@@ -8,10 +8,15 @@ class SysdepsReport {
 
   static describeMissing(missing) {
     if (!missing || missing.length === 0) return SysdepsReport.ALL_PRESENT_MESSAGE;
-    const named = missing.map((entry) => entry.pkg || entry.soname);
+    const named = missing.map((entry) => SysdepsReport.nameOf(entry));
     const subject = named.length === 1 ? 'One system library is' : `${named.length} system libraries are`;
     return `${subject} missing: ${named.join(', ')}. `
       + 'Run the command below in a terminal, then click Check again.';
+  }
+
+  static nameOf(entry) {
+    if (entry.pkg) return entry.pkg;
+    return entry.hint ? `${entry.soname} (${entry.hint})` : entry.soname;
   }
 
   static build(missing, rawLog, extra = {}, platform = process.platform) {
@@ -55,7 +60,7 @@ class SysdepsReport {
   static _collectMissing(bySoname, missing) {
     for (const entry of missing) {
       const known = bySoname.get(entry.soname);
-      if (!known || (!known.pkg && entry.pkg)) bySoname.set(entry.soname, entry);
+      if (!known || (!known.pkg && (entry.pkg || (entry.hint && !known.hint)))) bySoname.set(entry.soname, entry);
     }
   }
 }

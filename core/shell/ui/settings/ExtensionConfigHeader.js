@@ -7,10 +7,8 @@ export default class ExtensionConfigHeader {
     header.className = 'ext-config-header';
     header.innerHTML = ExtensionConfigHeader._html(view);
     header.querySelector('.ext-config-back-btn').addEventListener('click', () => actions.onBack());
-    const editBtn = header.querySelector('.ext-edit-code-btn');
-    if (editBtn) editBtn.addEventListener('click', () => actions.onEdit());
-    const exportBtn = header.querySelector('.ext-export-zip-btn');
-    if (exportBtn) exportBtn.addEventListener('click', () => actions.onExport());
+    header.querySelector('.ext-edit-code-btn').addEventListener('click', () => actions.onEdit());
+    header.querySelector('.ext-export-zip-btn').addEventListener('click', () => actions.onExport());
     return header;
   }
 
@@ -25,8 +23,8 @@ export default class ExtensionConfigHeader {
         </div>
         <div style="flex:1;"></div>
         <div class="ext-config-actions">
-          ${view.isPrivate ? '' : `<button class="btn btn-secondary ext-export-zip-btn" style="font-size:11px; padding:4px 10px;">Export .zip</button>`}
-          ${view.isPrivate ? '' : `<button class="btn btn-secondary ext-edit-code-btn" style="font-size:11px; padding:4px 10px;">Edit code</button>`}
+          <button class="btn btn-secondary ext-export-zip-btn" style="font-size:11px; padding:4px 10px;">Export .zip</button>
+          <button class="btn btn-secondary ext-edit-code-btn" style="font-size:11px; padding:4px 10px;">Edit code</button>
         </div>
       </div>
       ${ExtensionConfigHeader._depsHtml(view.dependencies || [])}

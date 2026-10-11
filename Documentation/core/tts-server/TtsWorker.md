@@ -30,12 +30,3 @@ plain `child_process.fork` (tests):
 Synthesis is CPU-heavy native work and the addon links GPL espeak-ng (see
 THIRD-PARTY-LICENSES); the worker keeps both out of the main process. Killing
 the worker is also the one reliable way to reclaim the model's RAM.
-
-## Build constraint
-
-The file name must keep ending in `worker.js` (case-insensitive): the bytecode
-build ships `*worker.js` as plain JS because utilityProcess isolates reject
-main-process bytecode. Everything it requires must also load as plain JS inside
-the worker: `RamPinMessagePort`, `TtsWorkerSession`, `PocketVoices`,
-`TtsSynthesisRequest`, `SherpaAddon`, `WavCodec`, `PcmSamples`. The ported build
-script's exclusion list must name them.

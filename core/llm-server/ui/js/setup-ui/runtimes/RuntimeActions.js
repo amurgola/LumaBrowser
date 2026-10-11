@@ -49,7 +49,7 @@ export default class RuntimeActions {
   async _install(id) {
     const r = this._ctx.runtimes.get(id) || {};
     if (r.acquisition === 'extension') { await this.autoInstall(id); return; }
-    const choice = await RuntimeInstallModal.open({ name: r.name || id, assetSupported: r.assetSupported !== false, installed: !!r.installed });
+    const choice = await RuntimeInstallModal.open({ name: r.name || id, assetSupported: r.assetSupported !== false, installed: !!r.installed, hardware: r.hardware || null });
     if (!choice) return;
     if (choice === 'locate') { await this.locate(id); return; }
     await this.clearManualShadow(r, id);

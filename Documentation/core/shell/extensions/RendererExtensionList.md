@@ -8,7 +8,7 @@ The serialisable list of every discovered extension the renderer builds its UI f
 
 - `RendererExtensionList.build(ledger, disabled)` returns one row per manifest
   (HTML files inlined first): `id, name, version (default 1.0.0), description,
-  dir, userInstalled, debugOnly, private, distributable (classic renderer scripts), ui, renderer, navigationBar, settings,
+  dir, userInstalled, debugOnly, distributable (classic renderer scripts), ui, renderer, navigationBar, settings,
   setupTab ({ label } or null), extensionsAction, extensionsActions,
   dependencies, loadOrder (index or -1), enabled, loadable, unmetDependency`.
   Each dependency is `{ key, name, isCore, isRequired, installed, reason, hasSlots }`

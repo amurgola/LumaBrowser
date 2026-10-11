@@ -1,14 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const ExtensionManifests = require('../bytecode/ExtensionManifests');
-const AddonObfuscator = require('./AddonObfuscator');
+const ExtensionManifests = require('../shared/ExtensionManifests');
 const AddonZipper = require('./AddonZipper');
 
 class AddonPackager {
-  constructor({ rootDir, outDir, obfuscator, zipper, log = console.log }) {
+  constructor({ rootDir, outDir, zipper, log = console.log }) {
     this._rootDir = rootDir;
     this._outDir = outDir || path.join(rootDir, 'dist', 'extensions');
-    this._obfuscator = obfuscator || new AddonObfuscator({ log });
     this._zipper = zipper || new AddonZipper();
     this._log = log;
   }
@@ -26,12 +24,11 @@ class AddonPackager {
 
   async _packageOne({ dir, manifest }) {
     const meta = AddonPackager.metadata(manifest, dir);
-    this._log(`[build-extensions] packaging "${meta.id}"${meta.private ? ' (private, obfuscated)' : ''}`);
+    this._log(`[build-extensions] packaging "${meta.id}"`);
     fs.mkdirSync(this._outDir, { recursive: true });
     const stageRoot = fs.mkdtempSync(path.join(path.dirname(this._outDir), 'lumab-addon-'));
     try {
       const stageDir = this._stage(dir, stageRoot, meta.id);
-      if (meta.private) this._obfuscator.obfuscateTree(stageDir, manifest);
       fs.writeFileSync(path.join(stageDir, 'meta.json'), JSON.stringify(meta, null, 2));
       const zip = `${meta.id}.zip`;
       const bytes = await this._zipper.zip(stageDir, meta.id, path.join(this._outDir, zip));
@@ -48,7 +45,7 @@ class AddonPackager {
       name: manifest.name || manifest.id || dir,
       version: manifest.version || '1.0.0',
       description: manifest.description || '',
-      private: Boolean(manifest.private),
+      private: false,
     };
   }
 

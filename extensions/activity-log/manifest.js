@@ -3,7 +3,6 @@ module.exports = {
   name: 'Activity Log',
   version: '1.0.0',
   description: 'Universal log of actions performed by extensions and core services. Disabled by default; toggle per-caller to capture the runs you care about.',
-  private: true,
 
   dependencies: {
     required: {

@@ -7,6 +7,7 @@ const TabLayout = require('./tab-view/TabLayout');
 const TabActivation = require('./tab-view/TabActivation');
 const TabViewFactory = require('./tab-view/TabViewFactory');
 const PersistedTabs = require('./tab-view/PersistedTabs');
+const SessionTabs = require('./tab-view/SessionTabs');
 const KeepAliveSweep = require('./tab-view/KeepAliveSweep');
 const TabLifecycle = require('./tab-view/TabLifecycle');
 const TabZoom = require('./tab-view/TabZoom');
@@ -77,6 +78,7 @@ class TabViewManager extends EventEmitter {
   setBounds(bounds) { this._layout.setBounds(bounds); }
 
   destroyAll() {
+    this.sealSession();
     this.stopKeepAliveSweep();
     this._lifecycle.destroyAll();
   }
@@ -93,6 +95,11 @@ class TabViewManager extends EventEmitter {
   stopKeepAliveSweep() { this._keepAlive.stop(); }
 
   activatePersistedTabs() { return this._keepAlive.activateAll(); }
+
+
+  getSavedSession() { return this._session.saved(); }
+
+  sealSession() { this._session.seal(); }
 
 
   navigate(tabId, url) { return this._loader.navigate(tabId, url); }
@@ -183,6 +190,7 @@ class TabViewManager extends EventEmitter {
       createTab: (url, options) => this.createTab(url, options),
       destroyTab: (tabId) => this._lifecycle.destroy(tabId),
     });
+    this._session = new SessionTabs({ db: this.db, registry: this._registry, emitter: this });
   }
 
   _buildTabBehaviour() {

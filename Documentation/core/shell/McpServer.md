@@ -38,13 +38,11 @@ Built from `mcp-stdio/`: [StdioJsonRpc](mcp-stdio/StdioJsonRpc.md) (transport),
 Node built-ins only. The MCP client runs this file with its own `node` out of
 `app.asar.unpacked`; a stock Node cannot read `app.asar`, so any npm dependency
 (the MCP SDK pulls in zod and ajv) would have to be unpacked with its whole
-transitive closure. It must also ship as plain JS, not bytenode, since a stub
-needs `bytenode` and the exact V8 that compiled it. The stdio transport is
+transitive closure. The stdio transport is
 newline-delimited JSON-RPC, so it is spoken directly.
 
 **Packaging consequence of the split:** every file under `core/shell/mcp-stdio/`
-is now loaded by the stdio server, so the build's `asarUnpack` list and the
-bytecode compiler's skip list (`scripts/compile-bytecode.js`,
-`scripts/_verify-bytecode-asar.js` in legacy) must include them alongside
+is now loaded by the stdio server, so the build's `asarUnpack` list must
+include them alongside
 `core/shell/McpServer.js` and `mcp-server.js`. The test asserts this once
 `package.json` has a `build.asarUnpack` section.

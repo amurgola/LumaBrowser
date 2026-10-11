@@ -47,7 +47,5 @@ mtpCapable, mtpGrafted? }`.
 
 ## Why
 
-The worker entry is loaded by path from this directory and must keep its name:
-the bytecode build skips `*worker.js` files because worker isolates reject
-main-process bytecode. The scan output was verified byte-identical (JSON) to the
+The worker entry is loaded by path from this directory. The scan output was verified byte-identical (JSON) to the
 legacy scanner on a synthetic tree and on the real LumaBrowser models folder.

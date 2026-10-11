@@ -125,6 +125,8 @@ class LaunchRun {
     if (flagRescued) return flagRescued;
     const oomRescued = await this._parts.oomRescue.attempt(ctx, failure);
     if (oomRescued) return oomRescued;
+    const openvinoRescued = this._parts.openvinoRescue ? await this._parts.openvinoRescue.attempt(ctx, failure) : null;
+    if (openvinoRescued) return openvinoRescued;
     throw err;
   }
 }

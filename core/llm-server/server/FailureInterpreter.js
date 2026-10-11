@@ -18,6 +18,14 @@ class FailureInterpreter {
         + 'otherwise update or reinstall the runtime in the Inference Runtimes card, then start again.',
     },
     {
+      kind: 'openvino-device',
+      re: /ov::Exception|Incompatible OpenCL runtime|Patched Mesa libclc|Exception from src[\\/](?:inference|plugins)|GGML_OPENVINO_DEVICE|OpenVINO.*(?:not (?:available|registered|found)|unavailable|failed to (?:load|create))|(?:GPU|NPU)(?:\.\d+)? (?:device )?is not (?:available|registered)/i,
+      title: 'OpenVINO could not open the device it was asked for',
+      advice: 'On Linux the Intel GPU needs Intel\'s OpenCL compute runtime (intel-opencl-icd on Ubuntu, intel-compute-runtime on Arch; Mesa\'s rusticl does not work), and the NPU needs the Intel NPU user-space driver (intel-level-zero-npu) plus libze1. '
+        + 'Panther Lake needs compute-runtime 26.18 or newer. Check with clinfo -l, then start again; '
+        + 'or pick CPU as the OpenVINO device in Defaults, or the Vulkan runtime, to get the model up now.',
+    },
+    {
       kind: 'bad-model',
       re: /gguf_init_from_file|invalid magic|failed to load model|error loading model|unknown (?:model )?architecture|failed to read tensor|corrupt/i,
       title: 'The model file failed to load',
@@ -26,7 +34,7 @@ class FailureInterpreter {
     },
     {
       kind: 'driver',
-      re: /DLL load failed|LoadLibrary|error while loading shared libraries|CUDA driver version|no CUDA-capable device|cudaGetDeviceCount|failed to initialize CUDA|CUDA error: (?:unknown|initialization)|vk::|vulkan.*(?:failed|not found)/i,
+      re: /DLL load failed|LoadLibrary|error while loading shared libraries|cannot open shared object file|CUDA driver version|no CUDA-capable device|cudaGetDeviceCount|failed to initialize CUDA|CUDA error: (?:unknown|initialization)|vk::|vulkan.*(?:failed|not found)/i,
       title: 'A GPU library or driver problem stopped the runtime',
       advice: 'Check the CUDA card under Advanced > Server Info; a driver update or a reboot usually fixes this. '
         + 'The Vulkan or CPU runtime works without CUDA if you need the model up right now.',

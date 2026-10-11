@@ -12,7 +12,7 @@ The state of one local llama-server start, shared by the
 - Resolved by the steps: `diag`, `runtimeRow` (the detector row), `runtime` (with
   learned unsupported flags), `model`, `catalogEntry`, `launchKey`, `port`, `kvMode`,
   `userArgs`, `overrides`, `layout` ([LlmLayoutIntent](LlmLayoutIntent.md)),
-  `cudaDevice`, `tensorSplit`, `planDiag`, `rpcAcquired`, `launch`.
+  `openvinoDevice` (set by [LaunchOverrides](LaunchOverrides.md), null off OpenVINO), `cudaDevice`, `tensorSplit`, `planDiag`, `rpcAcquired`, `launch`.
 - `plan({ diagnostics, overrides, runtime })` calls `PlanFor#plan` with this start's
   model, catalog entry, port, key and user args; each argument defaults to the
   context's own value.

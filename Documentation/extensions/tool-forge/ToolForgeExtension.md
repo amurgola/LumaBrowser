@@ -28,7 +28,7 @@ Activation wiring of Tool Forge. `main.js` is a thin entry exporting
 
 ## Entry files
 
-- `manifest.js`: same id, fields and text as legacy (`private: true`). The renderer phase added the `ui/` modules to the `assets` lists, because the `/llm-ui/ext/` asset gate serves only declared files and the module entries import them.
+- `manifest.js`: same id, fields and text as legacy, minus `private: true` (the flag is gone). The renderer phase added the `ui/` modules to the `assets` lists, because the `/llm-ui/ext/` asset gate serves only declared files and the module entries import them.
 - `main.js`: `{ activate, deactivate }`.
 - `mcp-tools.js`: `{ tools, handler, setService }` as legacy; `tools` is
   [ForgeToolDefinitions](ForgeToolDefinitions.md)`.TOOLS`, `handler` and

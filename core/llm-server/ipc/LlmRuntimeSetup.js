@@ -4,6 +4,7 @@ const PathPicker = require('../../shared/ipc/PathPicker');
 const RuntimeUpdateChecker = require('../../shared/runtime/RuntimeUpdateChecker');
 const LlmRuntimeCatalog = require('../runtimes/LlmRuntimeCatalog');
 const LlmRuntimeInstaller = require('../runtimes/LlmRuntimeInstaller');
+const LlamaDeviceProbe = require('../diagnostics/LlamaDeviceProbe');
 const IpcFailure = require('./IpcFailure');
 
 class LlmRuntimeSetup {
@@ -72,6 +73,11 @@ class LlmRuntimeSetup {
     return { binaryPath, dir };
   }
 
+  _forgetDiagnosticsFor(id) {
+    if (this._platform !== 'linux' || !LlamaDeviceProbe.RUNTIME_IDS.includes(id)) return;
+    if (typeof this._svc.setCachedDiagnostics === 'function') this._svc.setCachedDiagnostics(null);
+  }
+
   async install(id, opts, send) {
     const stream = this._invalidatingStream(send);
     try {
@@ -81,6 +87,7 @@ class LlmRuntimeSetup {
         onEvent: stream,
         channel: LlmRuntimeSetup.channelOf(opts),
       });
+      this._forgetDiagnosticsFor(id);
       this._svc.invalidateRuntimesCache();
       return { result };
     } catch (err) {

@@ -5,7 +5,7 @@
 The Setup area's "Voice cloning" tab, registered with
 `window.LumaSetupExt.registerTab({ id: 'chatterbox-voice', label: 'Voice cloning', mount })`
 (logs "[chatterbox-voice] LumaSetupExt not present" without the host).
-Classic-script exception: the extension is `distributable: true`, so this stays one self-contained classic file (add-on scripts are injected as classic scripts, and the build obfuscates it as one file).
+Classic-script exception: the extension is `distributable: true`, so this stays one self-contained classic file (add-on scripts are injected as classic scripts).
 
 ## Behaviour
 

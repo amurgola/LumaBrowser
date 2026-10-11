@@ -2,6 +2,7 @@ const KvCacheModes = require('../../../shared/llm/KvCacheModes');
 const LaunchPlanner = require('../LaunchPlanner');
 const ContextEstimator = require('../../ContextEstimator');
 const LlmLayoutIntent = require('./LlmLayoutIntent');
+const OpenVinoDevice = require('../../runtimes/OpenVinoDevice');
 
 class LaunchOverrides {
   static apply(ctx, { freeMemory }) {
@@ -12,6 +13,13 @@ class LaunchOverrides {
     ctx.layout = LlmLayoutIntent.read(ctx.settingsDb);
     LaunchOverrides._applyLayout(ctx.overrides, ctx.layout);
     LaunchOverrides._applyMeasuredFit(ctx);
+    LaunchOverrides._applyOpenVinoDevice(ctx);
+  }
+
+  static _applyOpenVinoDevice(ctx) {
+    const runtimeId = ctx.runtime && ctx.runtime.id;
+    ctx.openvinoDevice = OpenVinoDevice.appliesTo(runtimeId) ? OpenVinoDevice.resolve(ctx.defaults.openvinoDevice, ctx.diag) : null;
+    if (ctx.openvinoDevice === OpenVinoDevice.NPU) ctx.overrides.maxConcurrent = 1;
   }
 
   static _userArgs(ctx) {

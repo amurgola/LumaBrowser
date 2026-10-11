@@ -33,7 +33,8 @@ class SysdepsCommandRunner {
   }
 
   static _fromCallback(err, stdout, stderr) {
-    return { ok: !err, code: err ? err.code : 0, stdout: String(stdout || ''), stderr: String(stderr || '') };
+    const base = { ok: !err, code: err ? err.code : 0, stdout: String(stdout || ''), stderr: String(stderr || '') };
+    return err && err.killed ? { ...base, killed: true } : base;
   }
 
   static _fromSpawnError(err) {

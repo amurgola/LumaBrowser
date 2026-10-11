@@ -9,7 +9,6 @@ module.exports = {
     + 'extra engine in the chat’s voice picker, plus a "Voice cloning" tab in '
     + 'the LLM Setup area to manage voices.',
 
-  private: true,
   distributable: true,
 
   dependencies: {},

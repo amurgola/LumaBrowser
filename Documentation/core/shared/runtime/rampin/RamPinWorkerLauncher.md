@@ -19,5 +19,3 @@ Starts the [RamPinWorker](RamPinWorker.md) process for
 ## Why
 
 The worker is loaded by path and must never be required: loading it starts it.
-Its name must keep ending in `worker.js` so the bytecode build ships it as
-plain JS (see RamPinWorker).

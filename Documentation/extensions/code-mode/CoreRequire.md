@@ -9,7 +9,7 @@ Resolves a core module from code-mode wherever the extension is installed.
 - `CoreRequire.require(relFromCoreRoot)` (e.g. `'llm-server/chat/ToolOutputTruncator'`)
   requires `<extension>/../../core/<rel>` (bundled or dev). Only on
   `MODULE_NOT_FOUND` does it fall back to `app.getAppPath()/core/<rel>` (the
-  app.asar in packaged builds, where bytecode core loads transparently). Any
+  app.asar in packaged builds). Any
   other load error is rethrown, never masked.
 
 ## Why

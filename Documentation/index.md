@@ -115,14 +115,16 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/runtime/detect/VersionProbe.md](core/shared/runtime/detect/VersionProbe.md): --version probe that never caches a loader error; has `read`, `normalize`.
 - [core/shared/runtime/detect/LlamaBuildNumber.md](core/shared/runtime/detect/LlamaBuildNumber.md): reads the llama.cpp build number; has `parse`.
 - [core/shared/runtime/detect/PathBinaryLookup.md](core/shared/runtime/detect/PathBinaryLookup.md): PATH lookup with PATHEXT; has `find`.
-- [core/shared/runtime/detect/RuntimeHardwareCheck.md](core/shared/runtime/detect/RuntimeHardwareCheck.md): hardware readiness for CUDA, Vulkan and Apple Silicon; has `evaluate`.
+- [core/shared/runtime/detect/RuntimeHardwareCheck.md](core/shared/runtime/detect/RuntimeHardwareCheck.md): hardware readiness for CUDA, Vulkan, AMD or Intel GPUs (with Intel's compute runtime for SYCL and OpenVINO) and Apple Silicon; has `evaluate`.
+- [core/shared/runtime/detect/BackendDeviceCheck.md](core/shared/runtime/detect/BackendDeviceCheck.md): asks an installed GPU build which devices its backend loaded (`--list-devices`), with the Linux ldd explanation; has `run`, `parse`.
+- [core/shared/runtime/detect/IntelComputeRuntime.md](core/shared/runtime/detect/IntelComputeRuntime.md): which of Intel's Linux compute pieces are installed (OpenCL ICD, Level Zero, NPU driver); has `probe`, `PACKAGES`.
 - [core/shared/runtime/detect/BinaryRuntimeProbe.md](core/shared/runtime/detect/BinaryRuntimeProbe.md): finds a runtime binary (registered, managed dir, PATH); has `detect`.
 - [core/shared/runtime/detect/ExtensionRuntimeProbe.md](core/shared/runtime/detect/ExtensionRuntimeProbe.md): fail-soft extension runtime detect hook; has `detect`.
-- [core/shared/runtime/detect/RuntimeDetailFields.md](core/shared/runtime/detect/RuntimeDetailFields.md): stamps entry and host fields onto a detection row; has `stamp`.
+- [core/shared/runtime/detect/RuntimeDetailFields.md](core/shared/runtime/detect/RuntimeDetailFields.md): stamps entry and host fields (host labels, spawn env) onto a detection row and folds in the backend device check; has `stamp`, `applyBackend`.
 - [core/shared/runtime/BaseRuntimeServer.md](core/shared/runtime/BaseRuntimeServer.md): base supervisor for one native inference child; has `start`, `stop`, `getStatus`, `setIdleTimeout`, `markActive`, `holdIdle`, `waitUntilSettled`.
 - [core/shared/runtime/server/ChildReaper.md](core/shared/runtime/server/ChildReaper.md): kills a child and resolves on its real exit; has `reap`, `killNow`.
 - [core/shared/runtime/server/RuntimeLogRing.md](core/shared/runtime/server/RuntimeLogRing.md): bounded child output log with the stderr tail; has `capture`, `snapshot`, `clear`, `errorTail`.
-- [core/shared/runtime/server/RuntimeSpawnEnv.md](core/shared/runtime/server/RuntimeSpawnEnv.md): spawn cwd and env for a runtime binary; has `build`, `isPinned`.
+- [core/shared/runtime/server/RuntimeSpawnEnv.md](core/shared/runtime/server/RuntimeSpawnEnv.md): spawn cwd and env (library path, CUDA pin, runtime extra env) for a runtime binary; has `build`, `isPinned`.
 - [core/shared/runtime/HotswapCoordinator.md](core/shared/runtime/HotswapCoordinator.md): single-occupancy eviction per hotswap pool; has `shared`, `configure`, `register`, `acquire`, `release`, `snapshot`.
 - [core/shared/runtime/placement/VramReleaseWaiter.md](core/shared/runtime/placement/VramReleaseWaiter.md): waits for a card's VRAM to be reclaimed after eviction; has `read`, `wait`.
 - [core/shared/runtime/PlacementLayout.md](core/shared/runtime/PlacementLayout.md): unified placement layout schema, normalizer and queries; has `emptyLayout`, `normalizeLayout`, `resourceById`, `orderedDevices`, `placedItems`, `hotswapPools`.
@@ -231,6 +233,8 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/tab-view/TabErrorPage.md](core/browser/tab-view/TabErrorPage.md): the branded tab error and crash page; has `isErrorPage`, `targetOf`, `show`.
 - [core/browser/tab-view/TabViewFactory.md](core/browser/tab-view/TabViewFactory.md): builds and parks tab views and attaches per-tab services; has `createView`, `attach`, `attachServices`.
 - [core/browser/tab-view/PersistedTabList.md](core/browser/tab-view/PersistedTabList.md): the persisted-tab list in settings; has `read`, `write`.
+- [core/browser/tab-view/SessionTabList.md](core/browser/tab-view/SessionTabList.md): the last session's strip snapshot in settings; has `read`, `write`.
+- [core/browser/tab-view/SessionTabs.md](core/browser/tab-view/SessionTabs.md): records the strip for "Restore tabs on restart"; has `saved`, `schedule`, `save`, `seal`.
 - [core/browser/tab-view/PersistedTabs.md](core/browser/tab-view/PersistedTabs.md): keep-alive tabs, reserved partitions, restore and revive; has `save`, `forget`, `list`, `restore`, `revive`.
 - [core/browser/tab-view/KeepAliveSweep.md](core/browser/tab-view/KeepAliveSweep.md): timed heartbeat, reload and revive of persisted tabs; has `start`, `stop`, `activateAll`.
 - [core/browser/tab-view/TabLayout.md](core/browser/tab-view/TabLayout.md): positions the active tab view; has `setBounds`, `applyTo`.
@@ -346,16 +350,22 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/validation/ICodeLanguageValidator.md](core/llm-server/validation/ICodeLanguageValidator.md): base class for per-language code validators; has `name`, `languages`, `validate`.
 - [core/llm-server/ChatStore.md](core/llm-server/ChatStore.md): repository for chat conversations, messages, variants and mode meta; has conversation CRUD, `restoreConversationTimestamps`, message CRUD, variants.
 - [core/llm-server/SystemDiagnostics.md](core/llm-server/SystemDiagnostics.md): facade over the hardware report and the Windows GPU fixes; has `gather`, `addDirectoryToUserPath`, `recoverDisplayDevice`, `setPcieAspmOff`.
-- [core/llm-server/diagnostics/DiagnosticsGatherer.md](core/llm-server/diagnostics/DiagnosticsGatherer.md): builds the full fail-soft diagnostics report; has `gather`.
+- [core/llm-server/diagnostics/DiagnosticsGatherer.md](core/llm-server/diagnostics/DiagnosticsGatherer.md): builds the full fail-soft diagnostics report, NPUs, shared GPU memory and Linux llama.cpp device VRAM included; has `gather`.
 - [core/llm-server/diagnostics/HostProbe.md](core/llm-server/diagnostics/HostProbe.md): platform, RAM totals and CPU; has `platform`, `memory`, `cpu`.
 - [core/llm-server/diagnostics/RamModuleProbe.md](core/llm-server/diagnostics/RamModuleProbe.md): per-DIMM RAM details on each platform; has `probe`.
 - [core/llm-server/diagnostics/RamModuleTextParser.md](core/llm-server/diagnostics/RamModuleTextParser.md): reads system_profiler and dmidecode text; has `parseSystemProfiler`, `parseDmidecode`.
 - [core/llm-server/diagnostics/WindowsRamModuleParser.md](core/llm-server/diagnostics/WindowsRamModuleParser.md): maps Win32_PhysicalMemory rows; has `parseRows`.
 - [core/llm-server/diagnostics/CudaProbe.md](core/llm-server/diagnostics/CudaProbe.md): finds nvidia-smi and reads CUDA; has `probe`.
 - [core/llm-server/diagnostics/CudaDeviceParser.md](core/llm-server/diagnostics/CudaDeviceParser.md): nvidia-smi CSV and XML parsing; has `parseDevices`, `parsePciDeviceId`, `parseCudaVersion`.
-- [core/llm-server/diagnostics/GpuProbe.md](core/llm-server/diagnostics/GpuProbe.md): GPU adapters with VRAM and PCIe details; has `probe`.
+- [core/llm-server/diagnostics/GpuProbe.md](core/llm-server/diagnostics/GpuProbe.md): GPU adapters with VRAM (nvidia-smi, Windows registry or Linux sysfs) and PCIe details; has `probe`.
 - [core/llm-server/diagnostics/GpuAdapterMatcher.md](core/llm-server/diagnostics/GpuAdapterMatcher.md): pairs and de-duplicates GPU adapters across sources; has `matchNvidiaByPci`, `matchNvidiaByName`, `matchRegistry`, `dedupe`.
 - [core/llm-server/diagnostics/RegistryVramProbe.md](core/llm-server/diagnostics/RegistryVramProbe.md): Windows 64-bit VRAM from the registry; has `probe`.
+- [core/llm-server/diagnostics/LinuxDrmVramProbe.md](core/llm-server/diagnostics/LinuxDrmVramProbe.md): Linux GPU ids, VRAM and iGPU placement from sysfs; has `probe`, `isIntegrated`.
+- [core/llm-server/diagnostics/UnifiedMemoryProbe.md](core/llm-server/diagnostics/UnifiedMemoryProbe.md): the Apple Silicon GPU's unified-memory working set as VRAM; has `applies`, `probe`, `workingSet`.
+- [core/llm-server/diagnostics/SharedGpuMemory.md](core/llm-server/diagnostics/SharedGpuMemory.md): VRAM figures for unified-memory and integrated GPUs from system RAM; has `apply`, `isIntegrated`.
+- [core/llm-server/diagnostics/LlamaDeviceProbe.md](core/llm-server/diagnostics/LlamaDeviceProbe.md): Linux GPU memory from an installed llama.cpp build's `--list-devices`; has `probe`, `parse`.
+- [core/llm-server/diagnostics/LlamaDeviceVram.md](core/llm-server/diagnostics/LlamaDeviceVram.md): folds the llama.cpp device list into Intel and AMD adapters missing VRAM; has `apply`, `vendorOf`, `pair`.
+- [core/llm-server/diagnostics/NpuProbe.md](core/llm-server/diagnostics/NpuProbe.md): Intel and other NPUs from Windows PnP or Linux accel devices, with whether OpenVINO can open them; has `probe`, `hasIntelNpu`, `usableIntelNpus`.
 - [core/llm-server/diagnostics/GpuHealthProbe.md](core/llm-server/diagnostics/GpuHealthProbe.md): Windows Plug-and-Play health of display adapters; has `probe`, `classify`.
 - [core/llm-server/diagnostics/PnpDisplayDevices.md](core/llm-server/diagnostics/PnpDisplayDevices.md): lists display-class Plug-and-Play devices; has `list`, `isNonGpu`.
 - [core/llm-server/diagnostics/PcieAspm.md](core/llm-server/diagnostics/PcieAspm.md): reads and turns off PCIe link power saving; has `read`, `setOff`, `parse`.
@@ -392,7 +402,8 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/models/libraries/GgufTreeWalker.md](core/llm-server/models/libraries/GgufTreeWalker.md): depth-bounded walk for adoptable GGUFs; has `walk`, `isAdoptableName`.
 - [core/llm-server/models/libraries/FileProbe.md](core/llm-server/models/libraries/FileProbe.md): never-throwing filesystem checks; has `stat`, `isDirectory`, `readDirectory`, `realPath`.
 - [core/llm-server/runtimes/LlmRuntimeCatalog.md](core/llm-server/runtimes/LlmRuntimeCatalog.md): LLM runtime catalog with extension runtimes merged at read time; has `shared`, `getCatalog`, `getById`, `fingerprint`, `cudaRuntimePreference`.
-- [core/llm-server/runtimes/LlmRuntimeDeclarations.md](core/llm-server/runtimes/LlmRuntimeDeclarations.md): data-only table of the llama.cpp, MLX and Harmony runtimes; has `RUNTIMES`.
+- [core/llm-server/runtimes/LlmRuntimeDeclarations.md](core/llm-server/runtimes/LlmRuntimeDeclarations.md): data-only table of the llama.cpp (CPU/Metal, CUDA, Vulkan, ROCm, SYCL, OpenVINO), MLX and Harmony runtimes; has `RUNTIMES`.
+- [core/llm-server/runtimes/OpenVinoDevice.md](core/llm-server/runtimes/OpenVinoDevice.md): the OpenVINO runtime's compute device (GPU, NPU or CPU) and its spawn variable; has `normalize`, `resolve`, `appliesTo`, `spawnEnv`.
 - [core/llm-server/server/chat/RequestProfile.md](core/llm-server/server/chat/RequestProfile.md): per-runtime chat body translation and effort rounding; has `apply`, `mapEffortLevel`, `fromThinking`.
 - [core/llm-server/server/ThinkingKnobs.md](core/llm-server/server/ThinkingKnobs.md): turns a client's thinking spellings into llama-server knobs; has `extra`, `apply`, `refusal`.
 - [core/llm-server/server/ModelIdRewriter.md](core/llm-server/server/ModelIdRewriter.md): stream transform that rewrites the model field in JSON and SSE; has `create`.
@@ -520,7 +531,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/gambit/GambitConversation.md](core/llm-server/gambit/GambitConversation.md): plays one gambit task as a conversation; has `play`.
 - [core/llm-server/gambit/GambitBridgeTurn.md](core/llm-server/gambit/GambitBridgeTurn.md): live gambit turns through the agent bridge; has `create`.
 - [core/llm-server/models/AddonModelSetup.md](core/llm-server/models/AddonModelSetup.md): one-click add-on model setup; has `execute`, `isInstalled`, `sha256File`.
-- [core/llm-server/runtimes/LlmRuntimeDetector.md](core/llm-server/runtimes/LlmRuntimeDetector.md): LLM runtime detector; has `shared`, `detectRuntimes`, `parseVersionOutput`.
+- [core/llm-server/runtimes/LlmRuntimeDetector.md](core/llm-server/runtimes/LlmRuntimeDetector.md): LLM runtime detector, with the backend device check on installed GPU builds; has `shared`, `detectRuntimes`, `parseVersionOutput`, `listBackendDevices`.
 - [core/llm-server/runtimes/LlmRuntimeInstaller.md](core/llm-server/runtimes/LlmRuntimeInstaller.md): LLM runtime installer; has `shared`, `installRuntime`, `uninstallRuntime`, `fetchLatestRelease`.
 - [core/llm-server/chat/ToolGroups.md](core/llm-server/chat/ToolGroups.md): lazy tool-group registry, the prose tool doc surface; has `staticGroups`, `extGroupsFor`, `extToolDoc`, `groupForTool`, `buildInactiveRegistry`.
 - [core/llm-server/chat/tool-groups/ScheduleBounds.md](core/llm-server/chat/tool-groups/ScheduleBounds.md): schedule bounds in minutes for tool docs; has `rangeText`.
@@ -760,16 +771,17 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/server/ServerLauncher.md](core/llm-server/server/ServerLauncher.md): starts the local llama-server from saved defaults; has `shared`, `resolveAndStart`.
 - [core/llm-server/server/FitTester.md](core/llm-server/server/FitTester.md): measured VRAM, RAM and speed fit test across contexts and KV modes; has `shared`, `run`.
 - [core/llm-server/server/launcher/LaunchRun.md](core/llm-server/server/launcher/LaunchRun.md): one llama-server start, step by step; has `execute`.
-- [core/llm-server/server/launcher/LaunchContext.md](core/llm-server/server/launcher/LaunchContext.md): per-start state plus the planning call; has `plan`, `syncQueue`, `succeed`.
+- [core/llm-server/server/launcher/LaunchContext.md](core/llm-server/server/launcher/LaunchContext.md): per-start state (OpenVINO device included) plus the planning call; has `plan`, `syncQueue`, `succeed`.
 - [core/llm-server/server/launcher/LaunchPreflight.md](core/llm-server/server/launcher/LaunchPreflight.md): pre-launch diagnostics, runtime, flags, model and key checks; has `resolve`.
 - [core/llm-server/server/launcher/ModelRuntimeMatch.md](core/llm-server/server/launcher/ModelRuntimeMatch.md): refuses a model the chosen runtime cannot run; has `refusal`.
-- [core/llm-server/server/launcher/LaunchOverrides.md](core/llm-server/server/launcher/LaunchOverrides.md): planner overrides from defaults, layout and measured fit; has `apply`.
+- [core/llm-server/server/launcher/LaunchOverrides.md](core/llm-server/server/launcher/LaunchOverrides.md): planner overrides from defaults, layout and measured fit, plus the OpenVINO device (one slot on the NPU); has `apply`.
 - [core/llm-server/server/launcher/LlmLayoutIntent.md](core/llm-server/server/launcher/LlmLayoutIntent.md): what the placement layout says about the LLM; has `read`.
 - [core/llm-server/server/launcher/PeerGpuBorrow.md](core/llm-server/server/launcher/PeerGpuBorrow.md): borrows peer GPUs over RPC when needed; has `borrow`, `release`.
 - [core/llm-server/server/launcher/LlmPlacement.md](core/llm-server/server/launcher/LlmPlacement.md): LLM VRAM reserve and device narrowing; has `place`, `placeForRescue`.
-- [core/llm-server/server/launcher/LaunchFinalizer.md](core/llm-server/server/launcher/LaunchFinalizer.md): auth key, pin, health budget and split for a launch; has `finalize`.
+- [core/llm-server/server/launcher/LaunchFinalizer.md](core/llm-server/server/launcher/LaunchFinalizer.md): auth key, pin, runtime env (OpenVINO device), health budget and split for a launch; has `finalize`.
 - [core/llm-server/server/launcher/FlagRescue.md](core/llm-server/server/launcher/FlagRescue.md): one-shot retry after an unknown flag; has `attempt`.
 - [core/llm-server/server/launcher/OomRescue.md](core/llm-server/server/launcher/OomRescue.md): one-shot retry after running out of memory; has `attempt`.
+- [core/llm-server/server/launcher/OpenVinoRescue.md](core/llm-server/server/launcher/OpenVinoRescue.md): one-shot retry on the CPU device after OpenVINO could not open its GPU or NPU; has `attempt`, `note`.
 - [core/llm-server/server/fit-test/FitComboRunner.md](core/llm-server/server/fit-test/FitComboRunner.md): measures one fit-test combination; has `run`.
 - [core/llm-server/server/fit-test/FitComboLadder.md](core/llm-server/server/fit-test/FitComboLadder.md): fit-test combinations and the depth probe pick; has `build`, `pickDepthProbe`.
 - [core/llm-server/server/fit-test/FitGenerationClient.md](core/llm-server/server/fit-test/FitGenerationClient.md): timed completions and token counts for fit tests; has `generateAndTime`, `countTokens`.
@@ -788,9 +800,9 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/service/KeyedSettings.md](core/llm-server/service/KeyedSettings.md): base for settings spread over several keys.
 - [core/llm-server/service/LlmServerSettings.md](core/llm-server/service/LlmServerSettings.md): local LLM feature settings; has `isEnabled`, `setEnabled`, `getModelsDirConfig`, `setAutoUnloadMs`.
 - [core/llm-server/service/LlmUiState.md](core/llm-server/service/LlmUiState.md): LLM tab UI state; has `getMode`, `setMode`, `takeChatIntent`.
-- [core/llm-server/service/LlmDefaults.md](core/llm-server/service/LlmDefaults.md): saved launch defaults; has `get`, `set`.
+- [core/llm-server/service/LlmDefaults.md](core/llm-server/service/LlmDefaults.md): saved launch defaults, OpenVINO device included; has `get`, `set`.
 - [core/llm-server/service/NvidiaSmiPathSettings.md](core/llm-server/service/NvidiaSmiPathSettings.md): saved nvidia-smi path; has `getSavedPath`, `setSavedPath`.
-- [core/llm-server/service/LlmDiagnosticsCache.md](core/llm-server/service/LlmDiagnosticsCache.md): cached hardware diagnostics; has `getCached`, `ensure`.
+- [core/llm-server/service/LlmDiagnosticsCache.md](core/llm-server/service/LlmDiagnosticsCache.md): cached hardware diagnostics, re-probed when the schema stamp is old; has `getCached`, `setCached`, `ensure`.
 - [core/llm-server/service/LocalRequestTracker.md](core/llm-server/service/LocalRequestTracker.md): in-flight local request counts; has `start`, `end`, `isBusy`.
 - [core/llm-server/service/LocalServerStarter.md](core/llm-server/service/LocalServerStarter.md): on-demand start and vision restart; has `ensureRunning`, `needsVisionLoad`.
 - [core/llm-server/service/RunningModelCaps.md](core/llm-server/service/RunningModelCaps.md): the running model's capabilities; has `get`, `runningThinking`.
@@ -1063,10 +1075,10 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/setup-ui/advanced/SplitEditorPanel.md](core/llm-server/ui/js/setup-ui/advanced/SplitEditorPanel.md): the LLM split editor panel: boundary slider, overflow target and Apply / Cancel.
 - [core/llm-server/ui/js/setup-ui/advanced/TestRenderPanel.md](core/llm-server/ui/js/setup-ui/advanced/TestRenderPanel.md): the "Test render" panel: runs the cat-and-hat test, streams its status, and shows each step plus where each model ran and its peak VRAM and RAM.
 - [core/llm-server/ui/js/setup-ui/advanced/TestRenderTables.md](core/llm-server/ui/js/setup-ui/advanced/TestRenderTables.md): the HTML of a test render's results, rows in PlacementItems order.
-- [core/llm-server/ui/js/setup-ui/defaults/DefaultsCard.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsCard.md): the LLM Setup "Defaults" card: the runtime, model and launch settings Start uses, which also gate the Chat surface.
-- [core/llm-server/ui/js/setup-ui/defaults/DefaultsCardHtml.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsCardHtml.md): the Defaults card body and all its help copy.
-- [core/llm-server/ui/js/setup-ui/defaults/DefaultsForm.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsForm.md): reads the Defaults card's controls into the setDefaults payload; optional rows are sent only when rendered.
-- [core/llm-server/ui/js/setup-ui/defaults/DefaultsOptions.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsOptions.md): the closed option sets of the Defaults card and its option lists.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsCard.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsCard.md): the LLM Setup "Defaults" card: the runtime, model and launch settings Start uses (plus the OpenVINO device), which also gate the Chat surface.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsCardHtml.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsCardHtml.md): the Defaults card body (OpenVINO device row included) and all its help copy.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsForm.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsForm.md): reads the Defaults card's controls into the setDefaults payload; optional rows (OpenVINO device included) are sent only when rendered.
+- [core/llm-server/ui/js/setup-ui/defaults/DefaultsOptions.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsOptions.md): the closed option sets of the Defaults card (OpenVINO device included) and its option lists.
 - [core/llm-server/ui/js/setup-ui/defaults/DefaultsPrefs.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsPrefs.md): the Defaults settings outside the launch payload (auto-unload, unload on VRAM pressure, tool approval, RAM-pin status), cached so a re-render never redraws one as unset.
 - [core/llm-server/ui/js/setup-ui/defaults/DefaultsRows.md](core/llm-server/ui/js/setup-ui/defaults/DefaultsRows.md): row builders of the Defaults card with a "?" help toggle whose open state survives re-renders.
 - [core/llm-server/ui/js/setup-ui/defaults/GroupRouterHint.md](core/llm-server/ui/js/setup-ui/defaults/GroupRouterHint.md): the "Tool router" row's caption: downloading, starting, ready with its last latency, or failed.
@@ -1083,9 +1095,9 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsPainter.md](core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsPainter.md): paints one diagnostics payload into every Server Info card and the header's host line.
 - [core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsText.md](core/llm-server/ui/js/setup-ui/diagnostics/DiagnosticsText.md): text helpers of the Server Info cards.
 - [core/llm-server/ui/js/setup-ui/diagnostics/DiskCard.md](core/llm-server/ui/js/setup-ui/diagnostics/DiskCard.md): the Server Info "Disks" card: each volume's free space, filesystem and a usage badge coloured by DiagnosticsText.
-- [core/llm-server/ui/js/setup-ui/diagnostics/GpuCard.md](core/llm-server/ui/js/setup-ui/diagnostics/GpuCard.md): the Server Info "GPU" card: every adapter Chromium reports with VRAM, driver and PCIe link, then the adapter health block (in every branch, since a faulted card is when Chromium reports nothing).
+- [core/llm-server/ui/js/setup-ui/diagnostics/GpuCard.md](core/llm-server/ui/js/setup-ui/diagnostics/GpuCard.md): the Server Info "GPU" card: every adapter Chromium reports with VRAM, driver and PCIe link, then the NPUs, then the adapter health block (in every branch, since a faulted card is when Chromium reports nothing).
 - [core/llm-server/ui/js/setup-ui/diagnostics/GpuHealthHtml.md](core/llm-server/ui/js/setup-ui/diagnostics/GpuHealthHtml.md): the Plug-and-Play display-adapter health block of the GPU card: faulted cards, a one-click elevated restart, and when something faulted, how to stop the PCIe link drop recurring (Windows power plan one-click, BIOS steps).
-- [core/llm-server/ui/js/setup-ui/diagnostics/HostCaps.md](core/llm-server/ui/js/setup-ui/diagnostics/HostCaps.md): host GPU capabilities captured from the diagnostics load, for the runtime recommendation.
+- [core/llm-server/ui/js/setup-ui/diagnostics/HostCaps.md](core/llm-server/ui/js/setup-ui/diagnostics/HostCaps.md): host GPU capabilities (CUDA, GPU vendors, platform, NPUs) captured from the diagnostics load, for the runtime recommendation and the OpenVINO device picker; has `update`, `hasVendor`, `intelNpuNames`, `cudaMajor`.
 - [core/llm-server/ui/js/setup-ui/diagnostics/HostFixActions.md](core/llm-server/ui/js/setup-ui/diagnostics/HostFixActions.md): the fixes the Server Info cards offer for host problems, each reporting next to its button and re-probing when it changed something.
 - [core/llm-server/ui/js/setup-ui/diagnostics/MemoryCard.md](core/llm-server/ui/js/setup-ui/diagnostics/MemoryCard.md): the Server Info "Memory" card: installed, used and free RAM, plus the DIMM modules when the host reports them (or why not).
 - [core/llm-server/ui/js/setup-ui/diagnostics/PathHintBanner.md](core/llm-server/ui/js/setup-ui/diagnostics/PathHintBanner.md): the "Found nvidia-smi at ..." banner of the CUDA card: a one-click PATH fix, a copyable PowerShell line and a permanent dismiss.
@@ -1110,7 +1122,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/setup-ui/models/ModelRename.md](core/llm-server/ui/js/setup-ui/models/ModelRename.md): the per-model display-name override: the pencil swaps a row head for an input with Save and Cancel.
 - [core/llm-server/ui/js/setup-ui/models/ModelsCard.md](core/llm-server/ui/js/setup-ui/models/ModelsCard.md): the LLM Setup "Models Directory" card: directory controls, installed models through the shared model list (each with its fit matrix and fit-test block), the add-on models fold, and directory changes.
 - [core/llm-server/ui/js/setup-ui/models/ModelsCardHtml.md](core/llm-server/ui/js/setup-ui/models/ModelsCardHtml.md): the fixed markup of the Models Directory card: the list scaffold, the directory controls, the empty or unavailable note and the "Where models come from" callout.
-- [core/llm-server/ui/js/setup-ui/models/RuntimeRecommender.md](core/llm-server/ui/js/setup-ui/models/RuntimeRecommender.md): picks the runtime to recommend for a model on this host and renders its runtime tags.
+- [core/llm-server/ui/js/setup-ui/models/RuntimeRecommender.md](core/llm-server/ui/js/setup-ui/models/RuntimeRecommender.md): picks the runtime to recommend for a model on this host (vendor builds only once installed) and renders its runtime tags; has `recommend`, `hostOrder`, `tagsHtml`.
 - [core/llm-server/ui/js/setup-ui/nav/SetupNavigator.md](core/llm-server/ui/js/setup-ui/nav/SetupNavigator.md): switches the Setup surface's sub-views (LLM, Image, Music, Advanced and extension tabs): the active nav button, the page header, which panes and card groups show, and each view's lazy init.
 - [core/llm-server/ui/js/setup-ui/plan/PlanExplainer.md](core/llm-server/ui/js/setup-ui/plan/PlanExplainer.md): the "How your model is running" card: the launch planner's decision notes for the current or last start, the interpreted failure, a live server-log tail and Start / Stop.
 - [core/llm-server/ui/js/setup-ui/plan/PlanExplainerHtml.md](core/llm-server/ui/js/setup-ui/plan/PlanExplainerHtml.md): the markup of the launch-plan card: headline, promoted decision, failure block, notes, log drawer and the Start or Stop button.
@@ -1975,7 +1987,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shell/settings/ApiServerSettings.md](core/shell/settings/ApiServerSettings.md): REST and MCP port and on/off settings; has `getApiPort`, `setApiPort`, `getApiEnabled`, `getMcpEnabled`.
 - [core/shell/settings/OnboardingPersona.md](core/shell/settings/OnboardingPersona.md): first-run persona; has `get`, `set`.
 - [core/shell/settings/AppPreferences.md](core/shell/settings/AppPreferences.md): update checks, bookmarks bar and DNS provider; has getters and setters.
-- [core/shell/settings/StartupSettings.md](core/shell/settings/StartupSettings.md): run on startup and start hidden; has `getRunOnStartup`, `setRunOnStartup`, `setStartHidden`.
+- [core/shell/settings/StartupSettings.md](core/shell/settings/StartupSettings.md): run on startup, start hidden and restore tabs; has `getRunOnStartup`, `setRunOnStartup`, `setStartHidden`, `setRestoreTabs`.
 - [core/shell/settings/McpServerEntry.md](core/shell/settings/McpServerEntry.md): MCP server entry and config export; has `build`, `clientConfig`, `exportConfig`.
 - [core/shell/settings/AgentHarnessSettings.md](core/shell/settings/AgentHarnessSettings.md): connect your coding agent settings; has `list`, `connect`, `disconnect`, `preview`, `writeSkills`.
 - [core/shell/settings/EndpointSettings.md](core/shell/settings/EndpointSettings.md): disabled API groups and tools; has `getAvailable`, `setConfig`.
@@ -2500,7 +2512,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ipc/ConversationExporter.md](core/llm-server/ipc/ConversationExporter.md): downloads a conversation as a PDF or a full-page PNG.
 - [core/llm-server/ipc/DebugLogsView.md](core/llm-server/ipc/DebugLogsView.md): the chat's dev-only "Copy Logs" source.
 - [core/llm-server/ipc/ExistingLlmModels.md](core/llm-server/ipc/ExistingLlmModels.md): adopts GGUF models the user already has (LM Studio, the Hugging Face cache, Ollama) instead of downloading them again.
-- [core/llm-server/ipc/FitRuntimePicker.md](core/llm-server/ipc/FitRuntimePicker.md): picks the installed runtime a model is measured (fit test) or estimated (picker options) with.
+- [core/llm-server/ipc/FitRuntimePicker.md](core/llm-server/ipc/FitRuntimePicker.md): picks the installed runtime a model is measured (fit test) or estimated (picker options) with, in a vendor-aware host order; has `pick`, `hostOrder`.
 - [core/llm-server/ipc/FitTestLive.md](core/llm-server/ipc/FitTestLive.md): the live snapshot of an in-flight fit test, read by a reloaded LLM tab.
 - [core/llm-server/ipc/FitTestSession.md](core/llm-server/ipc/FitTestSession.md): runs the empirical fit test from the LLM tab, one at a time.
 - [core/llm-server/ipc/GambitLive.md](core/llm-server/ipc/GambitLive.md): the live snapshot of an in-flight compatibility gambit, read by a reloaded LLM tab.
@@ -2518,7 +2530,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ipc/LlmIpcDeps.md](core/llm-server/ipc/LlmIpcDeps.md): the optional collaborators main.js hands [LlmServerIpcHandlers](core/llm-server/LlmServerIpcHandlers.md), plus the lazy lookups several services share.
 - [core/llm-server/ipc/PageContextActions.md](core/llm-server/ipc/PageContextActions.md): the chat composer's "ask about a tab" and "@dashboard": lists open web tabs (last viewed first), reads one page as capped markdown or text, and reads the Dashboard's placed widgets as text.
 - [core/llm-server/ipc/LlmModelsView.md](core/llm-server/ipc/LlmModelsView.md): the LLM Setup models view.
-- [core/llm-server/ipc/LlmRuntimeSetup.md](core/llm-server/ipc/LlmRuntimeSetup.md): the LLM runtimes section: cached view, update and pre-release checks, registering or locating a llama.cpp build, install and uninstall.
+- [core/llm-server/ipc/LlmRuntimeSetup.md](core/llm-server/ipc/LlmRuntimeSetup.md): the LLM runtimes section: cached view, update and pre-release checks, registering or locating a llama.cpp build, install (a Linux Vulkan, SYCL or ROCm install drops the cached diagnostics) and uninstall.
 - [core/llm-server/ipc/LlmServerBroadcast.md](core/llm-server/ipc/LlmServerBroadcast.md): pushes LLM server events to every live renderer.
 - [core/llm-server/ipc/LocalModelOptions.md](core/llm-server/ipc/LocalModelOptions.md): the chat model picker's list of local models with per-context options.
 - [core/llm-server/ipc/MlxRepoInstall.md](core/llm-server/ipc/MlxRepoInstall.md): downloads an MLX model (a whole repo snapshot) into a managed `owner__repo` folder.
@@ -2600,7 +2612,7 @@ Small building blocks shared by more than one subsystem.
 - [extensions/tab-share/TabViewer.md](extensions/tab-share/TabViewer.md): one guest connected to a shared tab: its socket, whether it is on the WebRTC video stream, its peer, and its input rate limit.
 - [extensions/tab-share/TurnRelay.md](extensions/tab-share/TurnRelay.md): the host's own TURN server (node-turn, UDP), so a guest outside the LAN can still get WebRTC media once the relay port is reachable (port-forwarded or a routed VPN).
 - [extensions/tab-share/UdpPortProbe.md](extensions/tab-share/UdpPortProbe.md): checks a UDP port can be bound (bind and close a throwaway socket on `0.0.0.0`), so the relay settings can show a real error: node-turn reports bind failures only through its log.
-- [extensions/tab-share/renderer.md](extensions/tab-share/renderer.md): classic-script exception: the extension is `distributable: true`, so this stays one self-contained classic file (add-on scripts are injected as classic scripts, and the build obfuscates it as one file).
+- [extensions/tab-share/renderer.md](extensions/tab-share/renderer.md): classic-script exception: the extension is `distributable: true`, so this stays one self-contained classic file (add-on scripts are injected as classic scripts).
 - [extensions/tab-share/rtc/capturer-preload.md](extensions/tab-share/rtc/capturer-preload.md): preload of the hidden capturer window.
 - [extensions/tab-share/rtc/capturer.md](extensions/tab-share/rtc/capturer.md): `extensions/tab-share/rtc/capturer.html`, `extensions/tab-share/rtc/capturer.js`.
 - [extensions/tab-share/settings.md](extensions/tab-share/settings.md): the Tab Share settings page fragment the shell mounts for `manifest.settings.htmlFile`: how it works, the availability callout (`#ext-ts-availability`), the shared-tab list (`#ext-ts-list`, `#ext-ts-stopAll`), the streaming controls (`#ext-ts-rtcEnabled`, `#ext-ts-turnEnabled`, `#ext-ts-turnPort`, `#ext-ts-turnHost` and their status lines) and "Good to know".
@@ -3679,30 +3691,20 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 - [tools/build/BuildFs.md](tools/build/BuildFs.md): returns Electron's unpatched `original-fs` inside Electron (npm test runs Jest under ELECTRON_RUN_AS_NODE) and plain `fs` otherwise.
 - [tools/build/BuildHooks.md](tools/build/BuildHooks.md): electron-builder `onNodeModuleFile` hook (wired through `scripts/build-hooks.js`): force-includes `node_modules/typescript/lib/lib.*.d.ts`.
 - [tools/build/Packaging.md](tools/build/Packaging.md): how the app becomes an installer.
-- [tools/build/addons/AddonObfuscator.md](tools/build/addons/AddonObfuscator.md): obfuscates a staged private add-on in place with javascript-obfuscator (`OPTIONS`: string array, moderate control-flow flattening; selfDefending and debugProtection off because they break formatting-sensitive code and trap devtools).
-- [tools/build/addons/AddonPackager.md](tools/build/addons/AddonPackager.md): `npm run build:extensions`: for each `distributable: true` extension, stages a copy beside the output, obfuscates it with [AddonObfuscator](tools/build/addons/AddonObfuscator.md) when it is also `private: true`, writes `meta.json` (`id`, `name`, `version`, `description`, `private`, read by the LumaByte admin upload), zips it with [AddonZipper](tools/build/addons/AddonZipper.md) to `dist/extensions/<id>.zip`, and writes `dist/extensions/index.json`.
+- [tools/build/addons/AddonPackager.md](tools/build/addons/AddonPackager.md): `npm run build:extensions`: for each `distributable: true` extension, stages a copy beside the output, writes `meta.json` (`id`, `name`, `version`, `description`, `private` always false, read by the LumaByte admin upload), zips it with [AddonZipper](tools/build/addons/AddonZipper.md) to `dist/extensions/<id>.zip`, and writes `dist/extensions/index.json`.
 - [tools/build/addons/AddonZipper.md](tools/build/addons/AddonZipper.md): zips a folder under a top-level `<id>/` folder (archiver, zlib level 9), the layout `core.shell.installExtension` and the extension exporter expect.
-- [tools/build/bytecode/AppAsarLocator.md](tools/build/bytecode/AppAsarLocator.md): finds the packed archive in an electron-builder output folder: `resources/app.asar` (Windows, Linux), `<ProductName>.app/Contents/Resources/app.asar`, or any `*.app` bundle (macOS).
-- [tools/build/bytecode/BytecodeCompiler.md](tools/build/bytecode/BytecodeCompiler.md): the electron-builder `afterPack` step (`scripts/compile-bytecode.js`):.
-- [tools/build/bytecode/BytecodeJob.md](tools/build/bytecode/BytecodeJob.md): the compile loop inside `scripts/bytecode-compiler/main.js`: reads the job file (`[{ input, output }]`), calls `bytenode.compileFile({ filename, compileAsModule: true, output })` for each (never `electron: true`; this already is the Electron main process) and writes `[{ input, ok, error }]`.
-- [tools/build/bytecode/BytecodeStub.md](tools/build/bytecode/BytecodeStub.md): the loader stub that replaces a compiled file: `'use strict'; require('bytenode'); module.exports = require('./X.jsc');`.
-- [tools/build/bytecode/ElectronBytecodeRunner.md](tools/build/bytecode/ElectronBytecodeRunner.md): compiles files to `.jsc` by launching `scripts/bytecode-compiler` (a GUI-less Electron app) with the project's Electron.
-- [tools/build/bytecode/EsModuleDetector.md](tools/build/bytecode/EsModuleDetector.md): tells an ES module from CommonJS: a top-level `import`/`export` statement and no `module.exports` / `exports.x =`.
-- [tools/build/bytecode/ExtensionManifests.md](tools/build/bytecode/ExtensionManifests.md): loads every `<root>/extensions/<dir>/manifest.js` (fresh, not from the require cache) for the build tools.
-- [tools/build/bytecode/HtmlScriptScanner.md](tools/build/bytecode/HtmlScriptScanner.md): collects the local `<script src>` targets of an HTML page as paths relative to a root folder.
-- [tools/build/bytecode/PathReferenceScanner.md](tools/build/bytecode/PathReferenceScanner.md): finds `.js` files the app loads by file path rather than `require()`:.
-- [tools/build/bytecode/RequireScanner.md](tools/build/bytecode/RequireScanner.md): finds relative `require()` targets (literal `./` or `../` specifiers, including lazy ones inside functions) and resolves them the way Node does (exact, `.js`, `/index.js`).
-- [tools/build/bytecode/SourceClassifier.md](tools/build/bytecode/SourceClassifier.md): decides, for every `.js` file of an app tree, whether the afterPack step may compile it to main-process V8 bytecode or must ship it as plain JS.
-- [tools/build/bytecode/SourceTree.md](tools/build/bytecode/SourceTree.md): a read-only view of an app source tree for the build tools.
-- [tools/build/bytecode/UnpackGlob.md](tools/build/bytecode/UnpackGlob.md): combines `build.asarUnpack` patterns into one brace glob for `@electron/asar`'s repack.
-- [tools/build/bytecode/UnpackedSnapshot.md](tools/build/bytecode/UnpackedSnapshot.md): turns what electron-builder put in `app.asar.unpacked` into unpack patterns (`node_modules/<pkg>/**` per package, exact paths otherwise) so the bytecode repack keeps them.
 - [tools/build/docs-rag/DocsRagBuilder.md](tools/build/docs-rag/DocsRagBuilder.md): `npm run build:docs-rag`: builds `dist/docs-rag/docs-rag.db`, the documentation knowledge base the app ships in `resources/docs-rag` (RagStore schema, scope `docs:lumabrowser`, path-prefixed chunks, prebuilt metadata); has `run`, `chunk`, `contentHash`, `defaultOutPath`.
 - [tools/build/docs-rag/DocsPageSet.md](tools/build/docs-rag/DocsPageSet.md): the Documentation pages the docs index is built from: the prod mirror's selection scrubbed (dev checkout) or the folder as is (prod checkout); has `list`, `detectMode`.
+- [tools/build/pack/AppAsarLocator.md](tools/build/pack/AppAsarLocator.md): finds the packed archive in an electron-builder output folder: `resources/app.asar` (Windows, Linux), `<ProductName>.app/Contents/Resources/app.asar`, or any `*.app` bundle (macOS).
+- [tools/build/pack/DistributableExtensionPruner.md](tools/build/pack/DistributableExtensionPruner.md): the electron-builder `afterPack` step (`scripts/after-pack.js`): removes every `distributable: true` extension (read from the manifests inside the archive) from app.asar and repacks with `build.asarUnpack` plus what electron-builder already unpacked; no distributables, no repack.
+- [tools/build/pack/UnpackGlob.md](tools/build/pack/UnpackGlob.md): combines `build.asarUnpack` patterns into one brace glob for `@electron/asar`'s repack, each anchored with `**/` because the repack matches absolute crawl paths.
+- [tools/build/pack/UnpackedSnapshot.md](tools/build/pack/UnpackedSnapshot.md): turns what electron-builder put in `app.asar.unpacked` into unpack patterns (`node_modules/<pkg>/**` per package, exact paths otherwise) so the afterPack repack keeps them.
 - [tools/build/release/InstallerNshVerifier.md](tools/build/release/InstallerNshVerifier.md): `npm run verify:installer`: compiles `build/installer.nsh` the way electron-builder does, in both passes (installer, then uninstaller with `-DBUILD_UNINSTALLER`), with `makensis -WX`, so an unreferenced function (the 1.8.4 LumaStrStr failure) shows up in seconds instead of at the end of a packaging run.
 - [tools/build/release/VersionBumper.md](tools/build/release/VersionBumper.md): one version step with per-digit rollover (1.7.9 -> 1.8.0, 9.9.9 -> 10.0.0; a component already past 9 keeps counting: 1.10.0 -> 1.10.1) in `package.json`, `package-lock.json` (both `version` and `packages[""].version`) and `cli/package.json` (skipped when absent).
-- [tools/build/verify/AsarBytecodeVerifier.md](tools/build/verify/AsarBytecodeVerifier.md): checks a packed app.asar after the bytecode step:.
-- [tools/build/verify/FakeBytecodeRunner.md](tools/build/verify/FakeBytecodeRunner.md): stand-in for [ElectronBytecodeRunner](tools/build/bytecode/ElectronBytecodeRunner.md): writes `FAKE-JSC <name>` instead of bytecode so the bytecode step runs without Electron.
-- [tools/build/verify/SimulatedPack.md](tools/build/verify/SimulatedPack.md): rehearses afterPack without electron-builder: stages the shippable top-level entries of the project (everything except `NOT_SHIPPED`, dotfiles and `*.md`) plus stub node_modules (koffi with a `.node`, axios, the MCP SDK) into `<project>/tmp/asar-verify-*`, packs a fake `win-unpacked/resources/app.asar` with the anchored unpack glob, runs [BytecodeCompiler](tools/build/bytecode/BytecodeCompiler.md) with [FakeBytecodeRunner](tools/build/verify/FakeBytecodeRunner.md), then runs [AsarBytecodeVerifier](tools/build/verify/AsarBytecodeVerifier.md).
+- [tools/build/shared/ExtensionManifests.md](tools/build/shared/ExtensionManifests.md): loads every `<root>/extensions/<dir>/manifest.js` (fresh, not from the require cache) for the build tools; `list()`, `distributableDirs()`.
+- [tools/build/shared/RequireScanner.md](tools/build/shared/RequireScanner.md): finds relative `require()` targets (literal `./` or `../` specifiers, including lazy ones inside functions) and resolves them the way Node does (exact, `.js`, `/index.js`).
+- [tools/build/shared/SourceTree.md](tools/build/shared/SourceTree.md): a read-only view of an app source tree for the build tools.
+- [tools/build/verify/AsarLayoutVerifier.md](tools/build/verify/AsarLayoutVerifier.md): `npm run verify:asar -- --asar <path>` (`scripts/verify-asar.js`, CI on every leg): distributable extensions absent from app.asar, the `mcp-server.js` require closure in `app.asar.unpacked` and `core/shell/McpServer.js` loading under plain Node from there, every native `.node` file (and koffi) unpacked.
 
 ## tools/ide
 

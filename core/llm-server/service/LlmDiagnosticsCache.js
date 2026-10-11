@@ -2,8 +2,10 @@ const CudaSnapshot = require('../../shared/runtime/CudaSnapshot');
 
 class LlmDiagnosticsCache {
   static STORAGE_KEY = 'core.llmServer.diagnosticsCache';
+  static SCHEMA = 3;
 
-  constructor({ settingsDb, smiPath, gather, invalidateRuntimes }) {
+  constructor({ settingsDb, smiPath, gather, invalidateRuntimes, getRuntimesDir = null }) {
+    this._getRuntimesDir = getRuntimesDir;
     this._db = settingsDb;
     this._smiPath = smiPath;
     this._gather = gather;
@@ -18,7 +20,7 @@ class LlmDiagnosticsCache {
 
   setCached(data) {
     if (data == null) this._db.delete(LlmDiagnosticsCache.STORAGE_KEY);
-    else this._db.set(LlmDiagnosticsCache.STORAGE_KEY, { ...data, _cachedAt: new Date().toISOString() });
+    else this._db.set(LlmDiagnosticsCache.STORAGE_KEY, { ...data, _cachedAt: new Date().toISOString(), _schema: LlmDiagnosticsCache.SCHEMA });
   }
 
   async ensure({ force = false } = {}) {
@@ -40,14 +42,15 @@ class LlmDiagnosticsCache {
 
   _servableCache() {
     const cached = this.getCached();
-    if (!cached || CudaSnapshot.isTransientCudaFailure(cached.cuda)) return null;
+    if (!cached || cached._schema !== LlmDiagnosticsCache.SCHEMA || CudaSnapshot.isTransientCudaFailure(cached.cuda)) return null;
     this._overlayHintFlag(cached);
     return cached;
   }
 
   async _probe() {
     const wasCudaAvailable = this._cachedCudaAvailable();
-    const data = await this._gather({ savedNvidiaSmiPath: this._smiPath.getSavedPath() });
+    const runtimesRoot = this._getRuntimesDir ? this._getRuntimesDir() : null;
+    const data = await this._gather({ savedNvidiaSmiPath: this._smiPath.getSavedPath(), runtimesRoot });
     if (LlmDiagnosticsCache._cudaAvailable(data) !== wasCudaAvailable) this._invalidateRuntimes();
     this._rememberDiscoveredSmiPath(data);
     this._overlayHintFlag(data);

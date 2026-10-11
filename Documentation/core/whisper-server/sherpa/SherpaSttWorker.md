@@ -25,10 +25,3 @@ Voice mode re-transcribes the utterance so far about every 1.2 s while the user
 talks, and speaks sentence by sentence while the model answers. One shared FIFO
 would make each side wait behind the other; two workers keep both latencies
 independent.
-
-## Build constraint
-
-The name must keep ending in `worker.js` (bytecode build skips those). Its
-requires (`RamPinMessagePort`, `SherpaSttWorkerSession`, `SherpaAddon`,
-`WavCodec`) must also ship as plain JS, since a utilityProcess cannot load
-main-process `.jsc` modules.

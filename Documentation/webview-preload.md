@@ -11,6 +11,4 @@ local files. It is a thin entry: it builds a
 [PasskeyShim](core/browser/PasskeyShim.md), and installs it.
 
 The path is unchanged (`app/browser/TabSurfaces` passes `<root>/webview-preload.js`).
-Its classes live in `core/browser/tab-preload/`. Packaging: the preload and its
-three classes must stay plain JS (bytecode skip list and asarUnpack), like the
-two shims.
+Its classes live in `core/browser/tab-preload/`.

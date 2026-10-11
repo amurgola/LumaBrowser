@@ -4,11 +4,12 @@ const GpuAdapterMatcher = require('./GpuAdapterMatcher');
 class GpuProbe {
   static MIB = 1024 * 1024;
 
-  static async probe({ nvidiaByName, nvidiaByPci, winRegistryVram } = {}) {
+  static async probe({ nvidiaByName, nvidiaByPci, winRegistryVram, linuxDrm } = {}) {
     try {
       const info = await app.getGPUInfo('complete');
       const devices = Array.isArray(info && info.gpuDevice) ? info.gpuDevice : [];
-      const enriched = devices.map((d) => GpuProbe._enrich(GpuProbe._baseAdapter(d), { nvidiaByName, nvidiaByPci, winRegistryVram }));
+      const sources = { nvidiaByName, nvidiaByPci, winRegistryVram, linuxDrm };
+      const enriched = devices.map((d) => GpuProbe._enrich(GpuProbe._baseAdapter(d), sources));
       return GpuProbe._summary(GpuAdapterMatcher.dedupe(enriched), info);
     } catch (err) {
       return { available: false, reason: err.message };
@@ -33,12 +34,13 @@ class GpuProbe {
     };
   }
 
-  static _enrich(adapter, { nvidiaByName, nvidiaByPci, winRegistryVram }) {
+  static _enrich(adapter, { nvidiaByName, nvidiaByPci, winRegistryVram, linuxDrm }) {
     const name = adapter.displayName || '';
     const nvidia = GpuAdapterMatcher.matchNvidiaByPci(adapter, nvidiaByPci)
       || GpuAdapterMatcher.matchNvidiaByName(name, nvidiaByName);
     if (nvidia) GpuProbe._applyNvidia(adapter, nvidia);
     else if (winRegistryVram) GpuProbe._applyRegistry(adapter, GpuAdapterMatcher.matchRegistry(name, winRegistryVram));
+    else if (linuxDrm) GpuProbe._applyLinuxDrm(adapter, GpuProbe._matchDrm(adapter, linuxDrm));
     return adapter;
   }
 
@@ -55,6 +57,20 @@ class GpuProbe {
     adapter.vramTotalBytes = Number(row.MemBytes);
     adapter.vramSource = 'win-registry';
     if (!adapter.displayName && row.DriverDesc) adapter.displayName = row.DriverDesc;
+  }
+
+  static _matchDrm(adapter, rows) {
+    if (adapter.vendorId == null || adapter.deviceId == null) return null;
+    return rows.find((row) => row.vendorId === adapter.vendorId && row.deviceId === adapter.deviceId) || null;
+  }
+
+  static _applyLinuxDrm(adapter, row) {
+    if (!row) return;
+    if (row.integrated) adapter.integrated = true;
+    if (!row.vramTotalBytes) return;
+    adapter.vramTotalBytes = row.vramTotalBytes;
+    if (row.vramUsedBytes != null) adapter.vramFreeBytes = Math.max(0, row.vramTotalBytes - row.vramUsedBytes);
+    adapter.vramSource = 'linux-sysfs';
   }
 
   static _summary(adapters, info) {

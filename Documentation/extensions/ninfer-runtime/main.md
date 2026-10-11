@@ -5,7 +5,7 @@
 The NInfer runtime add-on: NInfer, a from-scratch C++/CUDA inference server
 compiled for the RTX 5090 only (sm_120a), as an optional LLM runtime, plus the
 Qwen NInfer artifacts it loads as one-click add-on models. On Windows the server
-runs inside WSL2; on Linux it runs natively. `private` and `distributable`.
+runs inside WSL2; on Linux it runs natively. `distributable`.
 
 ## Entry
 

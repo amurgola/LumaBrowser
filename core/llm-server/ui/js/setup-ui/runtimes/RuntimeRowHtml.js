@@ -44,11 +44,26 @@ export default class RuntimeRowHtml {
     const esc = HtmlEscaper.escape;
     const out = [`<span class="luma-badge ${r.installed ? 'ok' : 'muted'}">${RuntimeRowHtml.statusLabel(r)}</span>`];
     if (r.staleManualRegistration && !r.installed) out.push('<span class="luma-badge bad" title="Registered binary no longer exists at its saved path">registered path missing</span>');
-    if (r.hardware && !r.hardware.ready) out.push(`<span class="luma-badge bad" title="${esc(r.hardware.note || '')}">hardware: not ready</span>`);
+    if (RuntimeRowHtml.backendFailed(r)) out.push(`<span class="luma-badge bad" title="${esc((r.hardware && r.hardware.note) || r.backend.error || '')}">backend failed to load</span>`);
+    else if (r.hardware && !r.hardware.ready) out.push(`<span class="luma-badge bad" title="${esc(r.hardware.note || '')}">hardware: not ready</span>`);
     if (r.installed && r.probeError) out.push(`<span class="luma-badge warn" title="${esc(r.probeError)}">could not run: check system libraries</span>`);
     const release = r.manifest && r.manifest.release;
     if (r.installed && release && release.channel === 'prerelease') out.push('<span class="luma-badge accent" title="Installed from the pre-release channel: a build newer than the stable release">pre-release</span>');
     return out;
+  }
+
+  static backendFailed(r) {
+    return !!(r.installed && r.backend && r.backend.checked && r.backend.ok === false);
+  }
+
+  static _backendRow(r) {
+    const esc = HtmlEscaper.escape;
+    if (!r.installed || !r.backend || !r.backend.checked) return '';
+    if (r.backend.ok) {
+      const names = (r.backend.devices || []).filter((d) => d && !d.software).map((d) => `${d.id}: ${d.name}`);
+      return `<div class="runtime-detail-row"><span>Devices</span><span>${esc(names.join('; ') || 'none listed')}</span></div>`;
+    }
+    return `<div class="runtime-detail-row"><span>Backend</span><span>${esc((r.hardware && r.hardware.note) || r.backend.error || 'did not load')}</span></div>`;
   }
 
   static secondaryActions(r) {
@@ -93,6 +108,7 @@ export default class RuntimeRowHtml {
       rows.push(`<div class="runtime-detail-row"><span>Provided by</span><span><b>${esc(r.providedBy.map((p) => p.id + (p.version ? ' (' + p.version + ')' : '')).join(', '))}</b></span></div>`);
     }
     if (r.requirementNote) rows.push(`<div class="runtime-detail-row"><span>Requires</span><span>${esc(r.requirementNote)}</span></div>`);
+    rows.push(RuntimeRowHtml._backendRow(r));
     rows.push(RuntimeProvenanceHtml.html(r));
     return rows.join('');
   }

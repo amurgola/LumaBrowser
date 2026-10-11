@@ -10,7 +10,7 @@ enveloped), the shapes the renderer has always read.
 
 - `new SettingsIpcHandlers({ db, restGateway, mcpAggregator, apiSecurity,
   mainWindowGetter, rootDir, onSetupFinalized?, cliShim?, idePlugin?, vscodeExtension? })`.
-- `register()` registers the 52 channels below.
+- `register()` registers the 53 channels below.
 
 ## Channels
 
@@ -23,7 +23,7 @@ enveloped), the shapes the renderer has always read.
 | `getPersona`, `setPersona` | [OnboardingPersona](settings/OnboardingPersona.md) |
 | `get/setAutoCheckUpdates`, `get/setDnsProvider`, `get/setShowBookmarksBar` | [AppPreferences](settings/AppPreferences.md) |
 | `getGuide(type)` | [SettingsGuides](settings/SettingsGuides.md) |
-| `get/setRunOnStartup`, `getStartupConfig`, `setStartHidden` | [StartupSettings](settings/StartupSettings.md) |
+| `get/setRunOnStartup`, `getStartupConfig`, `setStartHidden`, `setRestoreTabs` | [StartupSettings](settings/StartupSettings.md) |
 | `relaunch` | `app.relaunch()` then `app.exit(0)`; the "Restart now" link |
 | `exportMcpConfig` | [McpServerEntry](settings/McpServerEntry.md) with a save dialog (`luma-mcp-config.json`) |
 | `harness.list/connect(id)/disconnect(id)/writeSkills` | [AgentHarnessSettings](settings/AgentHarnessSettings.md) |

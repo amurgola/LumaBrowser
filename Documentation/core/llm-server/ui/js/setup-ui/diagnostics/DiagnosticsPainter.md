@@ -6,7 +6,7 @@ Paints one diagnostics payload into every Server Info card and the header's host
 
 ## Methods
 
-- `paint(doc, d)`; `hostLine(platform)`: `<os> <arch> · kernel <release> · <hostname>`.
+- `paint(doc, d)` (the GPU card also gets `d.npu`); `hostLine(platform)`: `<os> <arch> · kernel <release> · <hostname>`.
 
 ## Globals
 

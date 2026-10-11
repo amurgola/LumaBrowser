@@ -18,6 +18,16 @@ export default class RuntimeStatusStore {
     return !!(r && r.installed);
   }
 
+  isUsable(id) {
+    const r = this._byId.get(id);
+    return !!(r && r.installed && !(r.backend && r.backend.checked && r.backend.ok === false));
+  }
+
+  backendLoaded(id) {
+    const r = this._byId.get(id);
+    return !!(r && r.installed && r.backend && r.backend.checked && r.backend.ok === true);
+  }
+
   all() {
     return [...this._byId.values()];
   }

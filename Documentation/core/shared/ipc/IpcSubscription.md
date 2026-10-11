@@ -14,8 +14,3 @@ tab's [PreloadSection](../../llm-server/preload/PreloadSection.md).
   removes exactly that listener (not every listener on the channel). `cb`
   receives `map(event, ...args)`; the default map is
   `IpcSubscription.payload` (the first payload after the event).
-
-## Packaging
-
-Required by preloads: must ship as plain JS (bytecode SKIP_FILES and
-asarUnpack).

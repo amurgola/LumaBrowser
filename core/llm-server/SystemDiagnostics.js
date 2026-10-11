@@ -4,8 +4,8 @@ const DisplayDeviceRecovery = require('./diagnostics/DisplayDeviceRecovery');
 const PcieAspm = require('./diagnostics/PcieAspm');
 
 class SystemDiagnostics {
-  static gather({ savedNvidiaSmiPath } = {}) {
-    return DiagnosticsGatherer.gather({ savedNvidiaSmiPath });
+  static gather({ savedNvidiaSmiPath, runtimesRoot } = {}) {
+    return DiagnosticsGatherer.gather({ savedNvidiaSmiPath, runtimesRoot });
   }
 
   static addDirectoryToUserPath(directory) {

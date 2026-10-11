@@ -2,7 +2,6 @@ module.exports = {
   id: 'tool-forge',
   name: 'Tool Forge',
   version: '1.0.0',
-  private: true,
   description:
     'Lets the AI build new chat tools on request: gather a spec, research the '
     + 'API, write sandboxed JavaScript, test it, and publish it as a reusable '

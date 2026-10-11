@@ -1,4 +1,6 @@
 const ChatModelRef = require('./ChatModelRef');
+const ProviderConfigService = require('../../../llm-service/ProviderConfigService');
+const StoredProviderConfigs = require('../../../llm-service/service/StoredProviderConfigs');
 
 class ChatModelList {
   constructor({ llmServerService, db }) {
@@ -63,7 +65,28 @@ class ChatModelList {
   _defaultRef(models) {
     const last = this._lastRef();
     if (last && models.some((m) => m.ref === last)) return last;
+    const preferred = this._defaultProviderRef(models);
+    if (preferred) return preferred;
     return models.length ? models[0].ref : null;
+  }
+
+  _defaultProviderRef(models) {
+    const key = this._db.get(ProviderConfigService.DEFAULT_PROVIDER_KEY, ProviderConfigService.NO_PROVIDER);
+    if (!key || key === ProviderConfigService.NO_PROVIDER) return null;
+    if (key === ProviderConfigService.MANAGED_LOCAL_ID) {
+      const local = models.find((m) => m.isLocal);
+      return local ? local.ref : null;
+    }
+    const config = this._configForDefault(key);
+    const modelId = config ? StoredProviderConfigs.defaultModelOf(config) : null;
+    const ref = modelId ? `${config.id}::${modelId}` : null;
+    return ref && models.some((m) => m.ref === ref) ? ref : null;
+  }
+
+  _configForDefault(key) {
+    const configs = StoredProviderConfigs.userConfigs(this._db);
+    if (StoredProviderConfigs.TYPE_KEYS.has(key)) return configs.find((c) => c && c.type === key && c.endpoint && c.selectedModel) || null;
+    return StoredProviderConfigs.findById(this._db, key);
   }
 
   _lastRef() {

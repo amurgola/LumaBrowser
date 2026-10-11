@@ -2,7 +2,6 @@ module.exports = {
   id: 'on-demand-mode',
   name: 'Luma On Demand',
   version: '0.1.0',
-  private: true,
   distributable: false,
   description:
     'The agent behind Luma On Demand, the floating Live panel on every web '

@@ -132,11 +132,6 @@
 .ext-dep-optional { font-size: 10px; color: var(--warn); font-style: italic; }
 .gs-item-card { border: 1px solid var(--border); border-radius: var(--radius-md); background: rgba(11, 18, 32, 0.45); }
 
-.ext-private-badge {
-    display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.4px; padding: 1px 6px; border-radius: 8px; vertical-align: middle;
-    background: rgba(245,144,52,0.15); color: var(--accent, #f59034); margin-left: 6px;
-}
 .ext-default-config { margin-top: 4px; }
 .ext-default-config-note { font-size: 13px; color: var(--text-secondary, #888); margin-bottom: 14px; }
 .ext-default-config-meta { display: flex; flex-direction: column; gap: 6px; }

@@ -36,7 +36,6 @@ class RendererExtensionList {
       dir: manifest._dir,
       userInstalled: !!manifest._userInstalled,
       debugOnly: manifest.debugOnly || false,
-      private: manifest.private || false,
       distributable: !!manifest.distributable,
     };
   }

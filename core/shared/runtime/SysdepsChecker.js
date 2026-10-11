@@ -28,7 +28,17 @@ class SysdepsChecker {
     'libgtk-3.so.0': 'libgtk-3-0',
     'libxss.so.1': 'libxss1',
     'libsecret-1.so.0': 'libsecret-1-0',
+    'libOpenCL.so.1': 'ocl-icd-libopencl1',
+    'libze_loader.so.1': 'libze1',
+    'libze_intel_gpu.so.1': 'libze-intel-gpu1',
+    'libtbb.so.12': 'libtbb12',
   };
+
+  static LDD_FAMILY_HINTS = [
+    [/^lib(?:amdhip64|hipblas|hipblaslt|rocblas|rocsolver|rocsparse|amd_comgr|hsa-runtime64|rocm_kpack|roctx|hiprtc)\b/, 'AMD ROCm: install ROCm from AMD, the release does not bundle it'],
+    [/^lib(?:sycl|ur_loader|ur_adapter|mkl_|dnnl|svml|imf|intlc|irng|iomp5|tcm|umf|hwloc)/, 'Intel oneAPI runtime: install intel-oneapi-runtime-libs from the Intel apt repository, or source /opt/intel/oneapi/setvars.sh'],
+    [/^libze_intel_npu|^libze_intel_vpu/, 'Intel NPU user-space driver (intel-level-zero-npu from intel/linux-npu-driver)'],
+  ];
 
   static COMMON_LIB_DIRS = [
     '/lib', '/usr/lib', '/lib64', '/usr/lib64', '/usr/local/lib',
@@ -108,7 +118,11 @@ class SysdepsChecker {
   }
 
   static _withPackage(soname) {
-    return { soname, pkg: SysdepsChecker.LDD_PACKAGE_MAP[soname] || null };
+    const mapped = SysdepsChecker.LDD_PACKAGE_MAP[soname];
+    if (typeof mapped === 'string') return { soname, pkg: mapped };
+    if (mapped && mapped.hint) return { soname, pkg: null, hint: mapped.hint };
+    const family = SysdepsChecker.LDD_FAMILY_HINTS.find(([pattern]) => pattern.test(soname));
+    return family ? { soname, pkg: null, hint: family[1] } : { soname, pkg: null };
   }
 
   static _lddFailure(result) {

@@ -32,7 +32,6 @@ export default class ExtensionConfigView {
     this._pane.innerHTML = '';
     this._pane.appendChild(this._header(extensionId, meta, {
       titleHtml: `${esc(displayName)}${subtitle ? ` <span class="luma-badge muted">${esc(subtitle)}</span>` : ''}`,
-      isPrivate: !!(meta && meta.private),
     }));
     entry.element.style.display = '';
     this._pane.appendChild(entry.element);
@@ -54,11 +53,9 @@ export default class ExtensionConfigView {
 
   _showDefault(extensionId, meta) {
     const name = (meta && meta.name) || extensionId;
-    const isPrivate = !!(meta && meta.private);
     this._pane.innerHTML = '';
     this._pane.appendChild(this._header(extensionId, meta, {
-      titleHtml: `${HtmlEscaper.escape(name)}${isPrivate ? ' <span class="ext-private-badge">Private</span>' : ''}`,
-      isPrivate,
+      titleHtml: HtmlEscaper.escape(name),
     }));
     this._pane.appendChild(this._defaultBody(extensionId, meta, name));
   }

@@ -19,7 +19,8 @@ placement and peer choices and fail with the same messages.
   `console`.
 - `resolveAndStart(llmServerService, { withVision })` resolves:
   - `{ success: true, status, plan }` after `runtimeServer.start(launch)`, plus
-    `flagRescue: '<flag>'` or `oomRescue: true` when a rescue relaunched;
+    `flagRescue: '<flag>'`, `oomRescue: true` or `openvinoRescue: '<GPU|NPU>'`
+    when a rescue relaunched;
   - a refusal `{ success: false, error }`, with `code: 'RUNTIME_NOT_INSTALLED'`
     (and `runtimeId`, `runtimeName`, `installable`) or
     `code: 'MODEL_RUNTIME_MISMATCH'` where the UI acts on it.
@@ -53,8 +54,9 @@ The service needs `getDefaults`, `settingsDb`, `runtimeServer`
 10. Expert offload beats borrowing: a plan with `cpuMoe` after a borrow returns the
     peers and replans local-only (`rpcSkippedMoeOffload`).
 11. [LaunchFinalizer](launcher/LaunchFinalizer.md), start, sync the queue.
-12. On a start failure: return borrowed GPUs, then [FlagRescue](launcher/FlagRescue.md)
-    or [OomRescue](launcher/OomRescue.md) (one attempt each), else rethrow.
+12. On a start failure: return borrowed GPUs, then [FlagRescue](launcher/FlagRescue.md),
+    [OomRescue](launcher/OomRescue.md) or [OpenVinoRescue](launcher/OpenVinoRescue.md)
+    (one attempt each), else rethrow.
 
 ## Why
 

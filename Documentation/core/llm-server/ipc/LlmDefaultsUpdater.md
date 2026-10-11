@@ -11,7 +11,7 @@ Saves the LLM launch defaults and stops a running server the change made stale.
   when present in the payload and different after the save.
   - A change to any of `LAUNCH_SHAPE_KEYS` (`modelPath`, `runtimeId`,
     `maxConcurrent`, `tensorSplit`, `cacheReuse`, `usePeerGpus`, `contextSize`,
-    `kvCacheType`) or to `launchFlags` (compared as strings) stops a non-idle
+    `kvCacheType`, `openvinoDevice`) or to `launchFlags` (compared as strings) stops a non-idle
     server; `serverStopped` is true only when the stop succeeded (a failure is logged).
   - `ramPin.apply()` runs when `pinModelRam` changed, or `modelPath` changed while
     pinning is on; it never stops the server.
@@ -21,6 +21,7 @@ Saves the LLM launch defaults and stops a running server the change made stale.
 ## Why
 
 A running llama-server is bound to the argv it started with (`-m`, `--parallel`,
-`--split-mode`, `--cache-reuse`, `--rpc`, `-c`, `--cache-type-k`, extra flags),
+`--split-mode`, `--cache-reuse`, `--rpc`, `-c`, `--cache-type-k`, extra flags)
+and the environment it started with (`GGML_OPENVINO_DEVICE`),
 so a save must never leave a silently stale server; the renderer reports the
 stop. The RAM pin lives in its own worker, so it is reconciled instead.

@@ -7,11 +7,13 @@ missing tool is an answer rather than a throw.
 
 ## Methods
 
-- `DiagnosticsCommand.run(cmd, args, timeoutMs = 4000)` resolves
+- `DiagnosticsCommand.run(cmd, args, timeoutMs = 4000, spawn = {})` resolves
   `{ ok: true, stdout, stderr }` or `{ ok: false, reason, stdout?, stderr? }`.
   A missing binary's reason is `<cmd> not found on PATH`; otherwise the exec
-  error message. Hidden window, 4 MB output buffer. Settles once even when
-  both the spawn `error` event and the callback fire.
+  error message. Hidden window, 4 MB output buffer. `spawn` is an optional
+  `{ cwd, env }` passed to the child when set, for a binary that needs its own
+  directory on the library path ([LlamaDeviceProbe](LlamaDeviceProbe.md)).
+  Settles once even when both the spawn `error` event and the callback fire.
 - `DiagnosticsCommand.isBinaryMissing(reason)` is true for `not found`,
   `ENOENT` or `cannot find`; the probes use it to decide whether a fallback
   (next PowerShell host, nvidia-smi on disk) is worth trying.

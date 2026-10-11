@@ -1,5 +1,8 @@
 const RuntimeDetector = require('../../shared/runtime/RuntimeDetector');
 const LlamaBuildNumber = require('../../shared/runtime/detect/LlamaBuildNumber');
+const RuntimeDetailFields = require('../../shared/runtime/detect/RuntimeDetailFields');
+const BackendDeviceCheck = require('../../shared/runtime/detect/BackendDeviceCheck');
+const SysdepsChecker = require('../../shared/runtime/SysdepsChecker');
 const LlmRuntimeCatalog = require('./LlmRuntimeCatalog');
 
 class LlmRuntimeDetector extends RuntimeDetector {
@@ -9,8 +12,9 @@ class LlmRuntimeDetector extends RuntimeDetector {
 
   static shared = new LlmRuntimeDetector();
 
-  constructor(catalog = LlmRuntimeCatalog.shared) {
+  constructor(catalog = LlmRuntimeCatalog.shared, { sysdeps = new SysdepsChecker() } = {}) {
     super({ catalog, expectedKind: 'inference' });
+    this._sysdeps = sysdeps;
   }
 
   parseVersionOutput(stdout, stderr) {
@@ -19,6 +23,21 @@ class LlmRuntimeDetector extends RuntimeDetector {
     if (match) return LlmRuntimeDetector._buildLabel(match[1], match[2]);
     if (LlmRuntimeDetector.ARGPARSE_NOISE.test(text)) return null;
     return LlmRuntimeDetector._firstLine(text);
+  }
+
+  async _afterDetect(detail, entry) {
+    if (!entry.backendDevice || !detail.installed || !detail.binaryPath || detail.probeError) return;
+    let backend;
+    try {
+      backend = await this.listBackendDevices(detail.binaryPath, entry);
+    } catch (err) {
+      backend = { checked: false, ok: null, devices: [], error: (err && err.message) || 'device listing failed' };
+    }
+    RuntimeDetailFields.applyBackend(detail, backend);
+  }
+
+  listBackendDevices(binaryPath, entry) {
+    return BackendDeviceCheck.run({ binaryPath, entry, sysdeps: this._sysdeps });
   }
 
   _rollUp({ entries, detectedById, results }) {

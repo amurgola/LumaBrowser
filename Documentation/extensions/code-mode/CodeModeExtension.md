@@ -19,8 +19,7 @@ returns the terminal bridge as the extension API.
 ## Entry files
 
 - `manifest.js`: same id, fields, `extensionsActions` (Vibe, Code a project) and
-  text as legacy; comments lost their em-dashes. `private: true`,
-  `distributable: false`.
+  text as legacy; comments lost their em-dashes. `distributable: false`.
 - `main.js`: `{ _buildStateFor(sessions, conversationId), activate, deactivate }`.
   `_buildStateFor` is the legacy test seam, now
   [SessionSnapshot](SessionSnapshot.md)`.forConversation`.

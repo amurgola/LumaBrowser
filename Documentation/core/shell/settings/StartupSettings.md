@@ -2,7 +2,7 @@
 
 `core/shell/settings/StartupSettings.js`
 
-Run on startup and "start hidden".
+Run on startup, "start hidden" and "restore tabs on restart".
 
 ## Methods
 
@@ -10,9 +10,11 @@ Run on startup and "start hidden".
 - `getRunOnStartup()` `app.getLoginItemSettings().openAtLogin`.
 - `setRunOnStartup(enabled)` registers the login item with the stored hidden
   choice: `{ openAtLogin, openAsHidden, args: hidden ? ['--hidden'] : [] }`.
-- `getConfig()` `{ openAtLogin, startHidden }` as booleans.
+- `getConfig()` `{ openAtLogin, startHidden, restoreTabs }` as booleans.
 - `setStartHidden(hidden)` stores `core.app.startHidden` and re-registers the
   login item only when it is on.
+- `setRestoreTabs(enabled)` stores `core.app.restoreTabs`
+  ([SessionTabs](../../browser/tab-view/SessionTabs.md)`.ENABLED_KEY`, default off).
 - Statics: `START_HIDDEN_KEY`, `HIDDEN_ARG`.
 
 ## Why

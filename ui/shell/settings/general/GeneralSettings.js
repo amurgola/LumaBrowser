@@ -61,6 +61,7 @@ export default class GeneralSettings {
       runOnStartup: $('gsRunOnStartup'),
       startHidden: $('gsStartHidden'),
       startHiddenRow: $('gsStartHiddenRow'),
+      restoreTabs: $('gsRestoreTabs'),
       adblocker: $('gsAdblockerEnabled'),
       dns: $('gsDnsProvider'),
       exportBtn: $('gsExportMcpConfig'),
@@ -84,12 +85,13 @@ export default class GeneralSettings {
   }
 
   _wireSwitches() {
-    const { apiEnabled, mcpEnabled, runOnStartup, startHidden, adblocker } = this._el;
+    const { apiEnabled, mcpEnabled, runOnStartup, startHidden, restoreTabs, adblocker } = this._el;
     const api = window.electronAPI;
     SettingToggle.wire(apiEnabled, (v) => api.setApiEnabled(v), this._feedback, () => RestartNotes.show('gsApiRestartNote'));
     SettingToggle.wire(mcpEnabled, (v) => api.setMcpEnabled(v), this._feedback, () => RestartNotes.show('gsMcpRestartNote'));
     SettingToggle.wire(runOnStartup, (v) => api.setRunOnStartup(v), this._feedback, () => this._syncStartHiddenRow());
     SettingToggle.wire(startHidden, (v) => window.ipcBridge.invoke('core.settings.setStartHidden', v), this._feedback);
+    SettingToggle.wire(restoreTabs, (v) => window.ipcBridge.invoke('core.settings.setRestoreTabs', v), this._feedback);
     SettingToggle.wire(adblocker, (v) => window.ipcBridge.invoke('core.adblocker.setEnabled', v), this._feedback);
     if (this._el.dns) this._el.dns.addEventListener('change', () => this._saveDns());
   }
@@ -112,11 +114,12 @@ export default class GeneralSettings {
   }
 
   async _loadStartup() {
-    const { runOnStartup, startHidden } = this._el;
+    const { runOnStartup, startHidden, restoreTabs } = this._el;
     try {
       const st = await window.ipcBridge.invoke('core.settings.getStartupConfig');
       runOnStartup.checked = !!(st && st.openAtLogin);
       if (startHidden) startHidden.checked = !st || st.startHidden !== false;
+      if (restoreTabs) restoreTabs.checked = !!(st && st.restoreTabs);
     } catch (_) {
       runOnStartup.checked = await window.electronAPI.getRunOnStartup();
     }

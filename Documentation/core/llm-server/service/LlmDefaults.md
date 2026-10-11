@@ -10,10 +10,11 @@ The persisted LLM launch defaults. Extends [KeyedSettings](KeyedSettings.md).
   [ModelLaunchFlags](ModelLaunchFlags.md), `groupRouter` has `isEnabled`,
   `isPinEnabled`, `setEnabled`, `setPinEnabled`.
 - `get()` returns
-  `{ runtimeId, modelPath, contextSize, kvCacheType, maxConcurrent, tensorSplit, cacheReuse, cpuMoe, noThink, reasoningEffort, usePeerGpus, pinModelRam, groupRouter, groupRouterPinRam, launchFlags }`:
+  `{ runtimeId, modelPath, contextSize, kvCacheType, maxConcurrent, openvinoDevice, tensorSplit, cacheReuse, cpuMoe, noThink, reasoningEffort, usePeerGpus, pinModelRam, groupRouter, groupRouterPinRam, launchFlags }`:
   - `contextSize` a floored positive number, else null (the planner's own default);
   - `kvCacheType` one of `KvCacheModes.MODE_IDS`, else null;
   - `maxConcurrent` 1 to 64 (`DEFAULT_PARALLEL`, `MAX_PARALLEL`), else 1;
+  - `openvinoDevice` `GPU`, `NPU` or `CPU` ([OpenVinoDevice](../runtimes/OpenVinoDevice.md)`.normalize`), else null (Auto);
   - the six `FLAG_FIELDS` booleans, off by default;
   - `reasoningEffort` `ReasoningEffort.normalizeEffort` of the stored level (`'default'` when none);
   - `groupRouter`, `groupRouterPinRam` from the router;
@@ -23,6 +24,7 @@ The persisted LLM launch defaults. Extends [KeyedSettings](KeyedSettings.md).
   - ids stored as strings, a falsy id deletes;
   - `contextSize` floored when positive, else deleted; `kvCacheType` kept only
     when known; `maxConcurrent` floored and capped at 64 when at least 1, else deleted;
+  - `openvinoDevice` normalized; null, `''` and unknown values (Auto) delete;
   - flags store `true` or delete;
   - `reasoningEffort` normalized, `'default'` (and garbage) deletes;
   - `groupRouter`, `groupRouterPinRam` forwarded to the router's setters;

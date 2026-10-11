@@ -40,6 +40,7 @@ class AppLifecycle {
     if (controller.isQuitting) return null;
     this._log.log('App before-quit, cleaning up...');
     try { this._s.cliHandshake.remove(); } catch (_) {}
+    try { if (this._ctx.tabViewManager) this._ctx.tabViewManager.sealSession(); } catch (_) {}
     return controller.requestQuit().then((outcome) => {
       if (outcome === 'kept-open') this._log.warn('[quit] kept open after a hung shutdown; services may be partially stopped until the next quit');
       return outcome;

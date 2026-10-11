@@ -30,7 +30,7 @@ if [ "$DO_SETUP" = 1 ]; then
   log "installing system dependencies (sudo will prompt)"
   sudo apt-get update
   sudo apt-get install -y \
-    build-essential python3 pkg-config git rsync xvfb curl ca-certificates \
+    build-essential python3 pkg-config git rsync curl ca-certificates \
     libgtk-3-dev libnotify-dev libnss3 libxss1 libxtst6 xdg-utils \
     libsecret-1-dev libgbm1 libxkbcommon0 libdrm2
   for pkg in libasound2t64 libasound2 libatk1.0-0t64 libatk1.0-0 \
@@ -47,7 +47,7 @@ if [ "$DO_SETUP" = 1 ]; then
 fi
 
 missing=""
-for tool in node npm rsync xvfb-run make g++ python3; do
+for tool in node npm rsync make g++ python3; do
   command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"
 done
 if [ -n "$missing" ]; then
@@ -62,7 +62,6 @@ log "syncing source -> $WORK"
 mkdir -p "$WORK"
 rsync -a --delete \
   --exclude '/node_modules/' \
-  --exclude '/.git/' \
   --exclude '/dist/' \
   --exclude '/models/' \
   --exclude '/runtimes/' \
@@ -85,8 +84,6 @@ fi
 for v in CSC_LINK CSC_KEY_PASSWORD; do
   if [ -z "${!v:-}" ]; then unset "$v" || true; fi
 done
-export ELECTRON_DISABLE_SANDBOX=1
-
 rm -f dist/*.AppImage dist/*.deb dist/latest-linux.yml
 
 log "npm run build:vscode ..."
@@ -95,8 +92,8 @@ npm run build:vscode --if-present
 log "npm run build:docs-rag ..."
 npm run build:docs-rag
 
-log "npm run build:linux (under xvfb) ..."
-xvfb-run -a npm run build:linux
+log "npm run build:linux ..."
+npm run build:linux
 
 mkdir -p "$SRC/dist"
 shopt -s nullglob

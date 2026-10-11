@@ -239,12 +239,6 @@ class ExtensionAutocompleteData {
       documentation: 'Load order priority (lower = earlier). Default: 100.',
     },
     {
-      label: 'private',
-      kind: CompletionKind.FIELD,
-      detail: 'boolean',
-      documentation: 'If true, extension cannot be exported. Default: false.',
-    },
-    {
       label: 'debugOnly',
       kind: CompletionKind.FIELD,
       detail: 'boolean',

@@ -15,7 +15,7 @@ and MTP capability.
   - otherwise: `harmony` for `gpt-oss`; preferred = runtimes whose
     `nativeQuantPattern` matches the name, directory and weight file names
     (`runtimesPreferringQuant`); compatible = `LLAMA_CPP_RUNTIMES`
-    (cuda13, cuda12, vulkan, cpu); MTP-capable when an `mtp` token appears or a
+    (cuda13, cuda12, rocm, sycl, vulkan, openvino, cpu); MTP-capable when an `mtp` token appears or a
     detached head was paired. A throwing registry means no preference.
 - `ModelClassifier.augmentFromGguf(model)` corrects from a parsed header: a
   `gptoss`/`gpt-oss` architecture or `gpt-oss` general name adds `harmony` once;

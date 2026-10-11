@@ -1,3 +1,5 @@
+const OpenVinoDevice = require('../../runtimes/OpenVinoDevice');
+
 class LaunchFinalizer {
   static HEALTH_TIMEOUT_MIN_MS = 5 * 60 * 1000;
   static HEALTH_TIMEOUT_MAX_MS = 20 * 60 * 1000;
@@ -11,6 +13,7 @@ class LaunchFinalizer {
   finalize(ctx, launch) {
     launch.authKey = ctx.launchKey;
     launch.cudaDevice = ctx.cudaDevice;
+    launch.extraEnv = OpenVinoDevice.spawnEnv((ctx.runtime && ctx.runtime.spawnEnv) || null, ctx.openvinoDevice);
     launch.healthTimeoutMs = LaunchFinalizer.healthTimeoutMs(ctx.model.weightsTotalBytes);
     LaunchFinalizer._applyLayoutSplit(ctx, launch);
     this._weightLedgerBySplit(launch);

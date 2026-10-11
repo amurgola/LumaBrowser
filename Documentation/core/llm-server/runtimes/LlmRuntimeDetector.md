@@ -11,9 +11,19 @@ the llama.cpp version parser and the format roll-up (Harmony).
 
 - `LlmRuntimeDetector.shared` is the instance over `LlmRuntimeCatalog.shared`.
 - `new LlmRuntimeDetector(catalog?)` (default `LlmRuntimeCatalog.shared`).
+- `new LlmRuntimeDetector(catalog?, { sysdeps? })`; `sysdeps` (default a
+  `SysdepsChecker`) names what a backend library cannot find on Linux.
 - `detectRuntimes({ runtimesRoot, cuda, gpu, manualBinaries })`: inherited;
   resolves `{ runtimesRoot, platformKey, runtimes }` with one row per
   inference runtime for this host plus one row per non-inference entry.
+- `_afterDetect(detail, entry)`: for an installed GPU build (an entry with
+  `backendDevice`) that ran `--version` cleanly, `listBackendDevices` runs
+  [BackendDeviceCheck](../../shared/runtime/detect/BackendDeviceCheck.md) and
+  [RuntimeDetailFields](../../shared/runtime/detect/RuntimeDetailFields.md)`.applyBackend`
+  stores the result as `row.backend`; a backend that loaded no device flips the
+  row to `hardware.ready: false` with the cause. A throwing check leaves the
+  verdict open (`checked: false`).
+- `listBackendDevices(binaryPath, entry)`: the seam tests override.
 - `parseVersionOutput(stdout, stderr)` returns the version label:
   - nested scheme (b10400+): `version: 0.1.0-dev (build 10430, commit 4c1a0af40)`
     -> `b10430 (4c1a0af40)`;
@@ -37,3 +47,8 @@ that would parse as build 1 and wrongly disqualify a current build.
 `--version` stays the fallback for PATH and manual runtimes, which have no
 manifest. Build numbers come from
 [LlamaBuildNumber](../../shared/runtime/detect/LlamaBuildNumber.md).
+
+The device check exists because the ggml backends are loaded with `dlopen`
+and release builds load them silently: a ROCm build without the HIP SDK, or a
+Linux SYCL build without the oneAPI runtime, installs fine, reports its
+version, and then computes on the CPU.

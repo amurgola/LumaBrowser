@@ -33,5 +33,7 @@ export default class DefaultsForm {
     if (router) payload.groupRouter = !!router.checked;
     const routerPin = doc.getElementById('defaultGroupRouterPin');
     if (routerPin) payload.groupRouterPinRam = !!routerPin.checked;
+    const openvino = doc.getElementById('defaultOpenVinoDevice');
+    if (openvino) payload.openvinoDevice = openvino.value || null;
   }
 }

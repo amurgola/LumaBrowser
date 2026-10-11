@@ -18,6 +18,7 @@ class LaunchContext {
     this.userArgs = '';
     this.overrides = null;
     this.layout = null;
+    this.openvinoDevice = null;
 
     this.cudaDevice = null;
     this.tensorSplit = null;

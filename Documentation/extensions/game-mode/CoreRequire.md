@@ -6,7 +6,7 @@ Loads a LumaBrowser core module from game-mode wherever the extension is install
 
 ## Methods
 
-- `CoreRequire.load(relFromCoreRoot)` requires `core/<rel>` beside the extension (`../../core`, dev and bundled); on `MODULE_NOT_FOUND` only, it retries under `app.getAppPath()/core` (packaged builds load the `.jsc` bytecode through bytenode). Any other load error is rethrown, never masked.
+- `CoreRequire.load(relFromCoreRoot)` requires `core/<rel>` beside the extension (`../../core`, dev and bundled); on `MODULE_NOT_FOUND` only, it retries under `app.getAppPath()/core` (the app.asar in packaged builds). Any other load error is rethrown, never masked.
 
 ## Why
 

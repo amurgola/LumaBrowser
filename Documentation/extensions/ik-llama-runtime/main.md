@@ -3,7 +3,7 @@
 `extensions/ik-llama-runtime/manifest.js`, `extensions/ik-llama-runtime/main.js`
 
 The ik_llama.cpp runtime add-on: adds ikawrakow's llama.cpp fork (CUDA 13, CUDA 12,
-Vulkan, CPU) as optional LLM runtime rows. `private` and `distributable`, so it
+Vulkan, CPU) as optional LLM runtime rows. `distributable`, so it
 ships as a standalone add-on zip.
 
 ## Entry

@@ -4,7 +4,7 @@ import GpuHealthHtml from './GpuHealthHtml.js';
 import PcieText from './PcieText.js';
 
 export default class GpuCard {
-  static render(doc, gpu) {
+  static render(doc, gpu, npu = null) {
     const pill = doc.getElementById('gpuPill');
     const body = doc.getElementById('gpuBody');
     const adapters = (gpu && gpu.adapters) || [];
@@ -22,7 +22,31 @@ export default class GpuCard {
       body.innerHTML = '<div class="luma-empty" style="margin-bottom:10px;">Chromium reports no GPU adapters.</div>' + healthHtml;
       return;
     }
-    body.innerHTML = GpuCard._totalsHtml(gpu) + adapters.map(GpuCard._adapterHtml).join('') + healthHtml;
+    body.innerHTML = GpuCard._totalsHtml(gpu) + adapters.map(GpuCard._adapterHtml).join('') + GpuCard._npuHtml(npu) + healthHtml;
+  }
+
+  static npuRunsModels(n) {
+    if (n.vendor !== 'Intel') return 'not supported by llama.cpp';
+    return n.usable === false ? 'not yet: the OpenVINO runtime needs the NPU user-space driver (see Status)' : 'with the OpenVINO runtime, device NPU';
+  }
+
+  static _npuHtml(npu) {
+    const devices = (npu && Array.isArray(npu.devices)) ? npu.devices.filter(Boolean) : [];
+    if (devices.length === 0) return '';
+    const esc = HtmlEscaper.escape;
+    return devices.map((n) => `
+                    <div class="gpu-item">
+                        <div class="gpu-head">
+                            <span class="gpu-name">${esc(n.name || 'NPU')}</span>
+                            <span class="luma-badge muted" style="color:var(--text-muted);border:1px solid var(--border-strong);">NPU</span>
+                        </div>
+                        <div class="kv-list">
+                            <div class="kv-row"><span class="kv-key">Vendor</span><span class="kv-val">${esc(n.vendor || 'n/a')}</span></div>
+                            ${n.status ? `<div class="kv-row"><span class="kv-key">Status</span><span class="kv-val">${esc(n.status)}</span></div>` : ''}
+                            <div class="kv-row"><span class="kv-key">Runs models</span><span class="kv-val">${esc(GpuCard.npuRunsModels(n))}</span></div>
+                        </div>
+                    </div>
+                `).join('');
   }
 
   static pillText(gpu, adapters) {
@@ -41,7 +65,7 @@ export default class GpuCard {
                 <div class="gpu-totals">
                     <div class="kv-row"><span class="kv-key">Total VRAM</span><span class="kv-val">${fmt(total)}</span></div>
                     ${free > 0 ? `<div class="kv-row"><span class="kv-key">Free VRAM</span><span class="kv-val">${fmt(free)}${total ? ' (' + Math.round((free / total) * 100) + '%)' : ''}</span></div>` : ''}
-                    <div class="kv-row" style="color:var(--text-muted);font-size:11px;"><span>VRAM and PCIe details come from nvidia-smi (NVIDIA) and the display-adapter registry (Windows non-NVIDIA).</span></div>
+                    <div class="kv-row" style="color:var(--text-muted);font-size:11px;"><span>VRAM and PCIe details come from nvidia-smi (NVIDIA), the display-adapter registry (Windows), sysfs or an installed llama.cpp build (Linux), and unified or shared system memory (Apple Silicon, integrated GPUs).</span></div>
                 </div>
             `;
   }

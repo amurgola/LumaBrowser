@@ -3,6 +3,7 @@ class ProviderConfigService {
   static PROVIDER_CONFIGS_KEY = 'llm.providerConfigs';
   static NO_PROVIDER = 'none';
   static MANAGED_LOCAL_ID = 'core.llmServer.local';
+  static CHAT_LAST_MODEL_KEY = 'core.llmServer.chat.lastModelRef';
   static REMOVED_PROVIDERS = new Set(['webgpu']);
 
   constructor({ db, lmStudioService, anthropicService, llmServerService = null }) {
@@ -19,7 +20,10 @@ class ProviderConfigService {
   }
 
   setDefaultProvider(provider) {
-    if (provider !== undefined) this._db.set(ProviderConfigService.DEFAULT_PROVIDER_KEY, provider);
+    if (provider === undefined) return;
+    const changed = this._db.get(ProviderConfigService.DEFAULT_PROVIDER_KEY, ProviderConfigService.NO_PROVIDER) !== provider;
+    this._db.set(ProviderConfigService.DEFAULT_PROVIDER_KEY, provider);
+    if (changed) this._db.delete(ProviderConfigService.CHAT_LAST_MODEL_KEY);
   }
 
   static applyProviderSettings(provider, config) {

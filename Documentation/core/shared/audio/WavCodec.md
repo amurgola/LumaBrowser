@@ -24,8 +24,4 @@ It handles PCM 8/16/24/32-bit and IEEE float32, any channel count,
 `WAVE_FORMAT_EXTENSIBLE` (real tag read from the sub-format GUID), odd chunk
 padding, and the `0xffffffff` data length streaming encoders write.
 
-Workers (`ttsWorker.js`, `sherpaSttWorker.js`) require this file, and
-`*Worker.js` entries are not bytecode compiled, so the build's bytecode
-exclusion list must name `core/shared/audio/WavCodec.js` and
-`core/shared/audio/PcmSamples.js` (legacy listed `core/shared/audio/wav.js` in
-`scripts/compile-bytecode.js`).
+Workers (`ttsWorker.js`, `sherpaSttWorker.js`) require this file.

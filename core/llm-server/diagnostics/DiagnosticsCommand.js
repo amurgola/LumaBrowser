@@ -4,10 +4,10 @@ class DiagnosticsCommand {
   static TIMEOUT_MS = 4000;
   static MAX_BUFFER_BYTES = 4 * 1024 * 1024;
 
-  static run(cmd, args, timeoutMs = DiagnosticsCommand.TIMEOUT_MS) {
+  static run(cmd, args, timeoutMs = DiagnosticsCommand.TIMEOUT_MS, spawn = {}) {
     return new Promise((resolve) => {
       const settleOnce = DiagnosticsCommand._once(resolve);
-      const child = execFile(cmd, args, DiagnosticsCommand._options(timeoutMs), (err, stdout, stderr) => {
+      const child = execFile(cmd, args, DiagnosticsCommand._options(timeoutMs, spawn), (err, stdout, stderr) => {
         settleOnce(DiagnosticsCommand._fromCallback(cmd, err, stdout, stderr));
       });
       child.on('error', (err) => settleOnce({ ok: false, reason: DiagnosticsCommand._reason(cmd, err) }));
@@ -19,8 +19,11 @@ class DiagnosticsCommand {
     return /not found|ENOENT|cannot find/i.test(reason);
   }
 
-  static _options(timeoutMs) {
-    return { windowsHide: true, timeout: timeoutMs, maxBuffer: DiagnosticsCommand.MAX_BUFFER_BYTES };
+  static _options(timeoutMs, { cwd, env } = {}) {
+    const options = { windowsHide: true, timeout: timeoutMs, maxBuffer: DiagnosticsCommand.MAX_BUFFER_BYTES };
+    if (cwd) options.cwd = cwd;
+    if (env) options.env = env;
+    return options;
   }
 
   static _fromCallback(cmd, err, stdout, stderr) {

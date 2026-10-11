@@ -9,7 +9,6 @@ module.exports = {
     + '(context.imageCatalog). Disabling it just removes the catalog entry; any '
     + 'already-installed Anima keeps working from its own manifest.',
 
-  private: true,
   distributable: true,
 
   dependencies: {},

@@ -2,7 +2,6 @@ module.exports = {
   id: 'game-mode',
   name: 'Game',
   version: '0.1.0',
-  private: true,
   distributable: false,
   description:
     'A game studio in the LLM chat. Describe a game and an agent designs and '

@@ -14,6 +14,5 @@ Loads a LumaBrowser core module from this add-on wherever it is installed.
 
 A distributable add-on is sideloaded into the writable userData extensions dir,
 where `../../core/...` points at nothing. `app.getAppPath()` is the app.asar
-path in packaged builds (core ships as bytecode there; bytenode is registered
-process-wide) and the project root in dev. Paths are rebuild class files, for
+path in packaged builds and the project root in dev. Paths are rebuild class files, for
 example `music-server/runtimes/Wsl`.

@@ -23,7 +23,7 @@ their registration into `context.imageCatalog`
 
 ## Entry files
 
-- `manifest.js`: id `anima-model`, `private: true`, `distributable: true`
+- `manifest.js`: id `anima-model`, `distributable: true`
   (ships as a standalone add-on zip), no dependencies. It has no core
   requires, so the distributable core-require rule does not apply.
 - `main.js`: `activate(context)` -> `registerInto(context.imageCatalog)`,

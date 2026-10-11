@@ -9,7 +9,11 @@ names the launch flag an argparser rejected.
 
 - `FailureInterpreter.interpret(text)` returns `{ kind, title, advice }` for the
   first matching rule, or `null` when nothing matches (callers then show the raw
-  text). Kinds: `oom`, `unknown-flag`, `bad-model`, `driver`.
+  text). Kinds: `oom`, `unknown-flag`, `openvino-device` (OpenVINO could not
+  open the device `GGML_OPENVINO_DEVICE` names: `ov::Exception`, "Incompatible
+  OpenCL runtime", the rusticl "Patched Mesa libclc" line; the advice names
+  the Intel compute runtime and NPU driver packages and the CPU device as the
+  way out), `bad-model`, `driver` (now also "cannot open shared object file").
 - `FailureInterpreter.extractUnknownFlag(text)` returns the flag named by an
   unknown-flag failure (`--no-mmap`, `-lm`), or `null`.
 - `FailureInterpreter.RULES` is the ordered rule table.

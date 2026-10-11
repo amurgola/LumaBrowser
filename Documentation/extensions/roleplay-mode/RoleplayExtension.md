@@ -25,7 +25,7 @@ the Lab service for the core `core.rpLab.*` IPC controller.
 
 ## Entry files
 
-- `manifest.js`: unchanged id `roleplay-mode`, `private: true`,
+- `manifest.js`: unchanged id `roleplay-mode`,
   `distributable: true`, optional `core:llm-service` and `core:database`,
   `chatUi: { file: './chat-ui.js', assets: ['./roleplay.css', './rp-lab.js', './shared.js'] }`,
   `settings` tab `roleplay-mode` with `./settings.html`, `main`, `renderer`.

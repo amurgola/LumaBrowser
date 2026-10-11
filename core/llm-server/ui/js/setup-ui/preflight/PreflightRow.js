@@ -56,7 +56,7 @@ export default class PreflightRow {
 
   static _sysdepsHtml(fix) {
     const esc = HtmlEscaper.escape;
-    const unmapped = (fix.missing || []).filter((m) => !m.pkg).map((m) => m.soname);
+    const unmapped = (fix.missing || []).filter((m) => !m.pkg).map((m) => (m.hint ? `${m.soname} (${m.hint})` : m.soname));
     const command = fix.aptLine
       ? `<div class="preflight-cmd"><code data-pf-cmd>${esc(fix.aptLine)}</code>
                      <button class="luma-btn luma-btn--sm" data-pf-action="copy" type="button">Copy</button></div>`
@@ -64,7 +64,8 @@ export default class PreflightRow {
     const extra = unmapped.length
       ? `<div class="preflight-detail">Also needed but not in a known package: ${esc(unmapped.join(', '))}</div>`
       : '';
-    return command + extra;
+    const perRuntime = (fix.byRuntime || []).map((r) => `<div class="preflight-detail">${esc(r.name)}: ${esc((r.missing || []).map((m) => m.soname).join(', '))}</div>`).join('');
+    return command + extra + perRuntime;
   }
 
   static _wire(row, issue, handlers) {

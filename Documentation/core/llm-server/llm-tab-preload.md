@@ -15,9 +15,3 @@ unsandboxed preload may require local files, so the surface is one class per
 section under `preload/` (the renderer-phase rule) instead of legacy's single
 file. Only this tab loads this preload; other tabs get `webview-preload.js`, so
 an arbitrary page can never reach these channels.
-
-## Packaging
-
-The entry, every file in `core/llm-server/preload/` and
-`core/shared/ipc/IpcSubscription.js` / `VoiceChannels.js` must ship as plain JS
-(bytecode SKIP_FILES and asarUnpack).

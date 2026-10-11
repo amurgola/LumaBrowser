@@ -14,6 +14,7 @@ const LlmPlacement = require('./launcher/LlmPlacement');
 const LaunchFinalizer = require('./launcher/LaunchFinalizer');
 const FlagRescue = require('./launcher/FlagRescue');
 const OomRescue = require('./launcher/OomRescue');
+const OpenVinoRescue = require('./launcher/OpenVinoRescue');
 const LaunchRun = require('./launcher/LaunchRun');
 
 class ServerLauncher {
@@ -43,6 +44,7 @@ class ServerLauncher {
       finalizer,
       flagRescue: new FlagRescue({ finalizer, log }),
       oomRescue: new OomRescue({ placement, log }),
+      openvinoRescue: new OpenVinoRescue({ finalizer, log }),
     };
   }
 

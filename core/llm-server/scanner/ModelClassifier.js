@@ -1,7 +1,7 @@
 const RuntimeCatalogRegistry = require('../runtimes/RuntimeCatalogRegistry');
 
 class ModelClassifier {
-  static LLAMA_CPP_RUNTIMES = ['llama-cpp-cuda13', 'llama-cpp-cuda12', 'llama-cpp-vulkan', 'llama-cpp-cpu'];
+  static LLAMA_CPP_RUNTIMES = ['llama-cpp-cuda13', 'llama-cpp-cuda12', 'llama-cpp-rocm', 'llama-cpp-sycl', 'llama-cpp-vulkan', 'llama-cpp-openvino', 'llama-cpp-cpu'];
 
   static classify(model, registry = RuntimeCatalogRegistry.shared) {
     if (model.kind === 'mlx') return ModelClassifier._bound(['mlx-lm']);

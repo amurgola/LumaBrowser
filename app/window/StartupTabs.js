@@ -19,27 +19,53 @@ class StartupTabs {
     if (!tvm || tvm.tabs.size !== 0) return false;
     const llmAsDefault = this._llm.isEnabled() && this._llm.getOpenTabOnLoad();
     const startPageUrl = this._db.get('startPageUrl', BrowserDataPreferences.DEFAULT_START_PAGE);
-    if (llmAsDefault) this._setImmediate(() => this._spawnLlmFirst(startPageUrl));
-    else this._setImmediate(() => this._spawnHomeFirst(startPageUrl));
+    const session = this._savedSession(tvm);
+    if (llmAsDefault) this._setImmediate(() => this._spawnLlmFirst(startPageUrl, session));
+    else this._setImmediate(() => this._spawnHomeFirst(startPageUrl, session));
     this._setTimeout(() => this._restorePersisted(), StartupTabs.RESTORE_DELAY_MS);
     return true;
   }
 
-  _spawnLlmFirst(startPageUrl) {
+  _spawnLlmFirst(startPageUrl, session) {
     const tvm = this._tvm();
     if (!tvm || tvm.tabs.size !== 0) return;
     this._llm.ensurePinnedTab({ activate: true });
+    if (session) {
+      this._openSession(tvm, session, { focus: false });
+      return;
+    }
     tvm.createTab(startPageUrl, { activate: false });
     this._openStartupBookmarks(tvm);
   }
 
-  _spawnHomeFirst(startPageUrl) {
+  _spawnHomeFirst(startPageUrl, session) {
     const tvm = this._tvm();
     if (!tvm) return;
-    tvm.createTab(startPageUrl);
-    this._openStartupBookmarks(tvm);
+    if (session) {
+      this._openSession(tvm, session, { focus: true });
+    } else {
+      tvm.createTab(startPageUrl);
+      this._openStartupBookmarks(tvm);
+    }
     if (!this._llm.isEnabled()) return;
     this._setTimeout(() => this._llm.ensurePinnedTab({ activate: false }), StartupTabs.LLM_TAB_DELAY_MS);
+  }
+
+  _savedSession(tvm) {
+    try {
+      return tvm.getSavedSession();
+    } catch (err) {
+      this._log.warn('Failed to read the saved session tabs:', err.message);
+      return null;
+    }
+  }
+
+  _openSession(tvm, session, { focus }) {
+    const created = session.tabs.map((tab) => tvm.createTab(tab.url, { activate: false, title: tab.title }));
+    this._log.log(`Restored ${created.length} tab(s) from the last session`);
+    if (!focus) return;
+    const target = created[session.activeIndex] || created[0];
+    if (target) tvm.switchToTab(target.id);
   }
 
   _openStartupBookmarks(tvm) {

@@ -224,7 +224,7 @@ What does leave the machine, and how to turn it off:
 
 | What | Sent to | Default | Turn off |
 |---|---|---|---|
-| Usage ping: version, platform, machine id, every 5 minutes | lumabyte.com | On | Settings > About > Privacy |
+| Usage ping: version, platform, machine id, every 5 minutes | lumabyte.com | On | Settings > General |
 | Update check | lumabyte.com | On | Settings: automatic update checks |
 | Extension catalog | lumabyte.com | Only when you open Extensions | |
 | Ad-block lists, runtimes, models | Ghostery, GitHub, Hugging Face and model hosts | When needed | |

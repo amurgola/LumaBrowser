@@ -153,7 +153,7 @@ class BaseRuntimeServer extends EventEmitter {
 
   _spawnChild(launch) {
     try {
-      const { cwd, env } = RuntimeSpawnEnv.build(launch.binaryPath, { cudaDevice: launch.cudaDevice });
+      const { cwd, env } = RuntimeSpawnEnv.build(launch.binaryPath, { cudaDevice: launch.cudaDevice, extraEnv: launch.extraEnv });
       if (RuntimeSpawnEnv.isPinned(launch.cudaDevice)) {
         console.log(`${this._logTag()} pinned to CUDA device ${launch.cudaDevice}`);
       }

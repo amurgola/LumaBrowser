@@ -37,9 +37,3 @@ Live-module code runs in the page's global scope and can read this object.
 
 Each invoke forwards at most its declared number of arguments (legacy used
 fixed-arity arrows, so extra arguments never reached main).
-
-## Packaging
-
-Required by a preload, so it must ship as plain JS (bytecode SKIP_FILES and
-asarUnpack), together with `core/shared/ipc/IpcSubscription.js`: see the change
-requests in the wave reports.

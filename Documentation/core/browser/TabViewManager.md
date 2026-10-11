@@ -48,6 +48,12 @@ Persisted tabs ([PersistedTabs](tab-view/PersistedTabs.md), [KeepAliveSweep](tab
   `startKeepAliveSweep({ initialDelayMs, intervalMs })`, `stopKeepAliveSweep()`,
   `activatePersistedTabs()`.
 
+Restore tabs on restart ([SessionTabs](tab-view/SessionTabs.md)):
+
+- `getSavedSession()`: `{ tabs: [{ url, title }], activeIndex }` from the last session, or `null` when the
+  preference is off or nothing was saved.
+- `sealSession()`: snapshots the strip and stops recording; `destroyAll()` calls it first.
+
 Navigation and page tools ([TabLoader](tab-view/TabLoader.md), [TabHistory](tab-view/TabHistory.md), [TabZoom](tab-view/TabZoom.md), [TabPageTools](tab-view/TabPageTools.md)):
 
 - `navigate(tabId, url)` -> `{ success, data: { navigatedTo, loaded, finalUrl, title, httpStatus?, redirected?, loadError?, loadState? } }`.

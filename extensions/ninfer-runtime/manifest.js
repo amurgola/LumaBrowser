@@ -10,7 +10,6 @@ module.exports = {
     + 'Measured on one 5090 against llama.cpp: about 2x speculative decode '
     + 'and 1.3x deeper-context prefill; the trade is a closed model set.',
 
-  private: true,
   distributable: true,
 
   dependencies: {},

@@ -26,10 +26,6 @@ worker cannot spawn or exits unexpectedly. Merging split-model shards
 (`GgufTensorLayout.merge`) and deriving the layout (`GgufTensorLayout.derive`)
 stay in the scanner, on the main side.
 
-Worker isolates reject bytecode compiled in the main process. The bytecode
-build skips any file whose name ends in `worker.js` (case-insensitive), so both
-files must keep that ending. The entry keeps its legacy path so the scanner and
-the build scripts (`scripts/compile-bytecode.js`,
-`scripts/_verify-bytecode-asar.js`) need no change. The class cannot be named
-`GgufParseWorker.js`: on a case-insensitive filesystem it would collide with
-the entry.
+The entry keeps its legacy path so the scanner needs no change. The class
+cannot be named `GgufParseWorker.js`: on a case-insensitive filesystem it would
+collide with the entry.

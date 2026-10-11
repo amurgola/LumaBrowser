@@ -10,7 +10,11 @@ Finds llama.cpp's rpc-server binary for [RpcLendingService](../RpcLendingService
 - `RpcServerBinary.resolve(llmServerService, { platform })` the first existing
   binary directly inside `<runtimesDir>/<id>`, trying the default runtime
   (`getDefaults().runtimeId`) first, then `RUNTIME_PREFERENCE`
-  (`llama-cpp-cuda13`, `llama-cpp-cuda12`, `llama-cpp-vulkan`, `llama-cpp-cpu`).
+  (`llama-cpp-cuda13`, `llama-cpp-cuda12`, `llama-cpp-vulkan`, `llama-cpp-rocm`,
+  `llama-cpp-sycl`, `llama-cpp-cpu`); a ROCm or SYCL build moves ahead of Vulkan
+  when the service's optional `getCachedRuntimesView()` shows its backend check
+  listed a device, since a vendor build whose backend did not load would lend
+  CPU compute.
   Null without a service, a runtimes dir, or a binary; never throws.
 
 ## Why

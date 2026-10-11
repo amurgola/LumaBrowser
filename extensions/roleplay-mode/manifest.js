@@ -7,7 +7,6 @@ module.exports = {
     + 'scenarios, characters with generated/uploaded avatars, navigable scene '
     + 'backgrounds, and auto-generated images with character responses.',
 
-  private: true,
   distributable: true,
 
   dependencies: {

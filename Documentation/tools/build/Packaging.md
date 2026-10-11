@@ -1,6 +1,6 @@
 # Packaging
 
-How the app becomes an installer. Everything here mirrors the legacy repo's release pipeline; the only intended difference before cutover is that nothing is published.
+How the app becomes an installer. Everything here mirrors the legacy repo's release pipeline; the only intended difference before cutover is that nothing reaches the update feed from CI.
 
 ## electron-builder config (package.json "build")
 
@@ -9,7 +9,7 @@ Identical to legacy except where the rebuild's layout needs it:
 - `appId` `com.lumabyte.lumabrowser`, `productName` `LumaBrowser`,
   `publish` generic `https://lumabyte.com/install/` (kept for cutover; it is what
   electron-builder writes into `resources/app-update.yml`).
-- `afterPack` `./scripts/compile-bytecode.js` ([BytecodeCompiler](bytecode/BytecodeCompiler.md)),
+- `afterPack` `./scripts/after-pack.js` ([DistributableExtensionPruner](pack/DistributableExtensionPruner.md)),
   `onNodeModuleFile` `./scripts/build-hooks.js` ([BuildHooks](BuildHooks.md)).
 - `extraResources`: `cli` (bin, lib, package.json, README.md, LICENSE) to
   `resources/cli`, `ide/dist` (JetBrains plugin, VS Code vsix) to `resources/ide`,
@@ -22,22 +22,18 @@ Identical to legacy except where the rebuild's layout needs it:
   @koromix, ripgrep, web-tree-sitter, tree-sitter-powershell, the MCP SDK and
   axios with its dependency chain) plus the three `core/shell/mcp-stdio/*.js` files the
   stand-alone MCP server now requires. Natives electron-builder unpacks on its
-  own (better-sqlite3, @napi-rs/canvas) are kept by the bytecode repack.
+  own (better-sqlite3, @napi-rs/canvas) are kept by the afterPack repack.
   Preloads and workers are not unpacked: Electron loads them through the archive.
 - Targets: win nsis + portable (x64), linux AppImage + deb (x64), mac dmg + zip
   (hardened runtime, notarize, `build/entitlements.mac.plist`); NSIS includes
   `build/installer.nsh` and shows `LICENSE`.
 
-## Bytecode
+## Plain source
 
-Main-process CommonJS ships as V8 bytecode behind bytenode stubs; everything that
-runs elsewhere ships plain. [SourceClassifier](bytecode/SourceClassifier.md)
-derives the plain set; [AsarBytecodeVerifier](verify/AsarBytecodeVerifier.md)
-checks a build. Rules that must hold:
-
-- compile inside a real Electron main process (never `electron: true`),
-- compile on a host of the target CPU arch,
-- a headless Linux build needs `xvfb-run` and `ELECTRON_DISABLE_SANDBOX=1`.
+The app ships as plain JavaScript inside app.asar: no bytecode compilation and
+no obfuscation, for the app or for add-ons. The afterPack step only removes
+`distributable: true` extensions ([DistributableExtensionPruner](pack/DistributableExtensionPruner.md));
+[AsarLayoutVerifier](verify/AsarLayoutVerifier.md) checks the packed layout.
 
 ## Static files
 
@@ -54,8 +50,7 @@ byte-identical from legacy.
 | `npm run build:win` / `build:linux` / `build:mac` / `build:portable` | electron-builder per platform |
 | `npm run build:extensions` | add-on zips ([AddonPackager](addons/AddonPackager.md)) |
 | `npm run build:docs-rag` | the documentation knowledge base, `dist/docs-rag/docs-rag.db` ([DocsRagBuilder](docs-rag/DocsRagBuilder.md)); CI and the local build scripts run it before electron-builder |
-| `npm run verify:bytecode` | rehearse afterPack on a fake pack ([SimulatedPack](verify/SimulatedPack.md)) |
-| `node scripts/_verify-bytecode-asar.js --asar <app.asar>` | verify a real build |
+| `npm run verify:asar -- --asar <app.asar>` | verify a real build's layout ([AsarLayoutVerifier](verify/AsarLayoutVerifier.md)) |
 | `npm run verify:installer` | compile installer.nsh in both NSIS passes |
 | `node scripts/bump-version.js` | one version step ([VersionBumper](release/VersionBumper.md)) |
 | `scripts\build-local.bat [--ci]` | Windows installer + portable, CI's windows leg |
@@ -67,12 +62,14 @@ with `--if-present` until the IDE port adds their npm scripts.
 
 ## CI (.github/workflows/build.yml)
 
-Manual dispatch. Matrix ubuntu-latest / windows-2022 / macos-latest (arm64 only),
-Node 20, electron-builder cache, `npm ci`, optional IDE plugins, unsigned unless
+Manual dispatch, or a published GitHub release. Matrix ubuntu-latest / windows-2022 / macos-latest (arm64 only),
+Node 24 (better-sqlite3 13, used by the docs index build, needs 22+), electron-builder cache, `npm ci`, optional IDE plugins, unsigned unless
 the signing secrets are set, three build attempts, then
-`_verify-bytecode-asar.js --asar` on the leg's output and an artifact upload. A
+`verify-asar.js --asar` on the leg's output and an artifact upload. A
 separate `addons` job builds the add-on zips once. Every build runs with
-`--publish never` and there is no release job before cutover.
+`--publish never`. On a release event the build checks out the release's tag and
+a `release` job downloads every artifact and attaches the files to that release
+(`gh release upload --clobber`, so a re-run replaces them).
 
 ## Docker (docker/, docker-compose*.yml)
 

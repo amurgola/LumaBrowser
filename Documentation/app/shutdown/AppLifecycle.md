@@ -18,7 +18,8 @@ The app's lifecycle events.
   index.
 - `onBeforeQuit(event)`: always `preventDefault()` (the controller owns the
   exit); a second Quit while quitting is absorbed; removes the CLI handshake (a
-  stale one would send the CLI to a dead port); `requestQuit()`, warning when the
+  stale one would send the CLI to a dead port); seals the tab manager's session
+  snapshot before any tab closes; `requestQuit()`, warning when the
   user kept the app open; a controller failure forces `app.exit(1)`.
 - `onChildProcessGone(details)` logs a non-clean GPU or utility process exit.
 - `onAllWindowsClosed()` stops the gateway and quits.

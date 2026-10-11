@@ -6,7 +6,7 @@ The Chatterbox voice-cloning add-on: clone a voice from a short recording and
 have voice conversations and read-aloud speak with it. Resemble AI's open
 Chatterbox models (MIT) run on the audio.cpp engine (Apache-2.0, GPU or CPU) as
 an extra engine in the chat's voice picker, with a "Voice cloning" tab in LLM
-Setup to manage voices. `private` and `distributable`.
+Setup to manage voices. `distributable`.
 
 ## Entry
 

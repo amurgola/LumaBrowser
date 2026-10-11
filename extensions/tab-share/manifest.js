@@ -10,9 +10,7 @@ module.exports = {
       'core:database': { reason: 'Persist active shares across restarts (keyed to the persisted tab)' },
     },
   },
-  private: true,
   distributable: true,
-  browserScripts: ['./web/viewer.js'],
 
   settings: {
     label: 'Tab Share',

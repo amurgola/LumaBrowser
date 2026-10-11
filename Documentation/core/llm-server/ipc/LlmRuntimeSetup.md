@@ -22,7 +22,9 @@ registering or locating a llama.cpp build, install and uninstall.
   `{ canceled: true }`, or throws `runtimeId is required`, `Unknown runtime: <id>`,
   or `No <name> executable (<names>) found in that folder.` with `notFound: true`.
 - `install(id, opts, send)` sends `start`, streams installer events (cache dropped
-  before `finalize` goes out and again after), `opts.channel === 'prerelease'`
+  before `finalize` goes out and again after); on Linux, a successful install of
+  one of `LlamaDeviceProbe.RUNTIME_IDS` (Vulkan, SYCL, ROCm) also clears the
+  cached diagnostics (`setCachedDiagnostics(null)`); `opts.channel === 'prerelease'`
   selects the pre-release build; resolves `{ result }`. A failure sends
   `error { message, code, detail }` and throws with `code` and `detail` (null when absent).
 - `uninstall(id)` the installer's result; cache dropped.
@@ -31,5 +33,7 @@ registering or locating a llama.cpp build, install and uninstall.
 ## Why
 
 `finalize` is the renderer's cue to refetch, so the cached view must already be
-gone when it goes out. Registering skips a `--version` probe because that can
+gone when it goes out. On Linux a fresh Vulkan, SYCL or ROCm build is a new
+VRAM source ([LlamaDeviceProbe](../diagnostics/LlamaDeviceProbe.md)), so the
+next diagnostics read re-probes with it. Registering skips a `--version` probe because that can
 fail for non-fatal reasons (DLL search order, working directory).

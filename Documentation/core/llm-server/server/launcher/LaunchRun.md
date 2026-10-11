@@ -9,7 +9,7 @@ Runs one local llama-server start step by step for [ServerLauncher](../ServerLau
 - `new LaunchRun(parts, service, { withVision })`; `parts` is the launcher's set of
   collaborators (`planFor`, `catalog`, `hotswap`, `findFreePort`, `freeMemory`,
   `lending`, `log`, `preflight`, `borrow`, `placement`, `finalizer`, `flagRescue`,
-  `oomRescue`).
+  `oomRescue`, `openvinoRescue`).
 - `execute()` resolves the launcher's result; the step order is listed in
   [ServerLauncher](../ServerLauncher.md) under Flow.
 - `LaunchRun.LENDING_WAIT_MS` (30000).

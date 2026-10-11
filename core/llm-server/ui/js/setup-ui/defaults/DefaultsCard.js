@@ -13,7 +13,7 @@ export default class DefaultsCard {
 
   static SHARED_CONTROLS = ['defaultRuntimeSelect', 'defaultModelSelect', 'defaultContextSelect', 'defaultKvSelect',
     'defaultParallelSelect', 'defaultTensorSplit', 'defaultCacheReuse', 'defaultReasoningEffort', 'defaultUsePeerGpus',
-    'defaultLaunchFlags', 'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin'];
+    'defaultLaunchFlags', 'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin', 'defaultOpenVinoDevice'];
 
   constructor(ctx) {
     this._ctx = ctx;
@@ -82,6 +82,8 @@ export default class DefaultsCard {
       defaults,
       prefs: this.prefs,
       runtimeOptions: DefaultsOptions.runtimeOptionsHtml(runtimes, defaults.runtimeId),
+      openvino: defaults.runtimeId === DefaultsOptions.OPENVINO_RUNTIME_ID
+        ? { options: DefaultsOptions.openvinoDeviceOptions(ctx.hostCaps.intelNpuNames()) } : null,
       modelOptions: DefaultsOptions.modelOptionsHtml(scoped, modelPath, (path) => ctx.ctxFit.summary(path)),
       lockModel: scoped.locked,
       hasRuntime,
