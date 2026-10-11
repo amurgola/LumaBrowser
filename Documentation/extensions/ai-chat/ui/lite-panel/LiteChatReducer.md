@@ -8,7 +8,7 @@ panel's view state. No DOM, timers or api calls.
 ## Methods
 
 - `createInitialState()`: `{ conversationId: null, running: false, content:
-  '', hasReasoning: false, statusPhase: null, tools: [], done: false,
+  '', hasReasoning: false, statusPhase: null, context: null, tools: [], done: false,
   finishReason: null, error: null }`.
 - `startTurn(state)`: a fresh state keeping `conversationId`, `running: true`.
 - `reduce(state, evt)` never mutates: `meta` (conversation id), `status`
@@ -23,3 +23,5 @@ panel's view state. No DOM, timers or api calls.
   dashes as spaces plus an ellipsis; `''` for none.
 
 The methods are static and do not use `this`, so they can be destructured.
+
+`context` events store the resolved allocation/source or safety-fallback notice. `contextLabel(context)` formats it for the sidebar. It survives completion but resets at the next turn. `loading-context` is the cold-model preparation status.

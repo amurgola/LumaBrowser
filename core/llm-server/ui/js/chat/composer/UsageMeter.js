@@ -31,7 +31,8 @@ export default class UsageMeter {
     return {
       html: bar + '<span class="cm-ctx-pct"><b>' + pct + '%</b>'
         + ' <span class="cm-ctx-num">' + UsageMeter.num(used) + '/' + UsageMeter.num(win) + '</span></span>',
-      title: used + ' of ' + win + ' tokens of context used (' + pct + '%): ↑' + (u.in || 0) + ' prompt, ↓' + (u.out || 0) + ' completion',
+      title: (u.estimated ? 'Backend context unknown; safety budget: ' : '')
+        + used + ' of ' + win + ' tokens of context used (' + pct + '%): ↑' + (u.in || 0) + ' prompt, ↓' + (u.out || 0) + ' completion',
     };
   }
 }

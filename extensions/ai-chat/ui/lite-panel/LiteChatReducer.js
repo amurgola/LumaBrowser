@@ -7,6 +7,7 @@ export default class LiteChatReducer {
     'loading-vision': 'Loading vision…',
     'unloading-vision': 'Unloading vision…',
     'waiting-for-slot': 'Waiting for a free slot…',
+    'loading-context': 'Loading model to check context...',
   };
 
   static createInitialState() {
@@ -16,6 +17,7 @@ export default class LiteChatReducer {
       content: '',
       hasReasoning: false,
       statusPhase: null,
+      context: null,
       tools: [],
       done: false,
       finishReason: null,
@@ -35,6 +37,12 @@ export default class LiteChatReducer {
     if (!phase) return '';
     return LiteChatReducer.STATUS_LABELS[phase]
       || (phase.charAt(0).toUpperCase() + phase.slice(1).replace(/-/g, ' ') + '…');
+  }
+
+  static contextLabel(context) {
+    if (!context) return '';
+    if (context.estimated) return context.notice || 'Context unknown; using a safety budget.';
+    return `Context: ${context.tokens.toLocaleString()} tokens (${context.source})`;
   }
 
   static reduce(state, evt) {
@@ -102,6 +110,7 @@ export default class LiteChatReducer {
   }
 
   static _EVENTS = {
+    context: (state, p) => ({ ...state, context: p }),
     meta: LiteChatReducer._meta,
     status: LiteChatReducer._status,
     delta: LiteChatReducer._delta,

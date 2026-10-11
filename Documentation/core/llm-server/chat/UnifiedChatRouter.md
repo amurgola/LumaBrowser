@@ -50,7 +50,7 @@ Agent tools:
 Chat:
 - `chat(args)` -> a fresh [ChatTurn](router/ChatTurn.md)`#run(args)`. Events
   through `args.send(type, payload)`: `meta`, `delta`, `reasoning-delta`,
-  `status`, `tool`, `artifact`, `artifact-stream`, `agent` (or a mode's own
+  `status`, `context`, `tool`, `artifact`, `artifact-stream`, `agent` (or a mode's own
   type), `rollback`, `done`, `error` (see [TurnStream](router/TurnStream.md)).
 - `abort()`: stops every agent run on the bridge and the in-flight turn
   (`done { aborted: true }`); a local turn's slot is reclaimed
@@ -102,3 +102,5 @@ clobber the user's global provider config. Remote turns get an ephemeral
 provider over a non-persisting settings view instead. One in-flight turn is the
 legacy contract: a new turn supersedes the old, and schedulers, triggers and
 the terminal bridge defer while `active` is set.
+
+The shared ModelContextWindow resolver is also passed to ProxyTurns so network-shared agent runs receive the selected backend model's budget.

@@ -4,7 +4,6 @@ const ChatModelRef = require('./ChatModelRef');
 class CompactionGate {
   static SETTING = 'core.llmServer.chat.compaction';
   static MIN_MESSAGES = 6;
-  static FALLBACK_WINDOW = 4096;
   static READY_WAIT_MS = 20000;
   static READY_POLL_MS = 500;
   static SUMMARY_TIMEOUT_MS = 180000;
@@ -18,10 +17,10 @@ class CompactionGate {
     this._complete = complete;
   }
 
-  async maybeCompact(messages, modelRef, modeTurn, hooks = null, conversationId = null) {
+  async maybeCompact(messages, modelRef, modeTurn, hooks = null, conversationId = null, context = null) {
     try {
       if (!this._enabled(modeTurn) || !Array.isArray(messages) || messages.length < CompactionGate.MIN_MESSAGES) return messages;
-      const window = this._windowFor(modelRef);
+      const window = context?.tokens || this._windowFor(modelRef);
       if (!this._overBudget(messages, window)) return messages;
       if (!(await this._serverReady(modelRef))) {
         console.log('[llm-chat] compaction skipped: local server not serving this model yet.');
@@ -40,7 +39,7 @@ class CompactionGate {
   }
 
   _windowFor(modelRef) {
-    return this._window.forRef(modelRef) || this._window.localPerSlot() || CompactionGate.FALLBACK_WINDOW;
+    return this._window.budgetFor(modelRef);
   }
 
   _overBudget(messages, window) {

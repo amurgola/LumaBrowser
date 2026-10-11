@@ -10,6 +10,8 @@ export default class EditableProviderCard {
     card.querySelector('.provider-fetch-btn').addEventListener('click', () => EditableProviderCard._fetchModels(card, config, ctx));
     card.querySelector('.provider-save-btn').addEventListener('click', () => EditableProviderCard._save(card, config, ctx));
     card.querySelector('.provider-delete-btn').addEventListener('click', () => EditableProviderCard._remove(config, ctx));
+    card.querySelector('.provider-model-select').addEventListener('change', () => EditableProviderCard._showContext(card, config));
+    EditableProviderCard._field(card, 'endpoint').addEventListener('input', () => EditableProviderCard._showContext(card, config));
     return card;
   }
 
@@ -50,6 +52,12 @@ export default class EditableProviderCard {
             ${EditableProviderCard.modelOptions(config.models, config.selectedModel)}
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Context budget for selected model (tokens)</label>
+          <input type="number" min="1" step="1" class="form-input" data-field="contextWindow" placeholder="Auto-detect"
+            value="${esc(String(EditableProviderCard._contextValue(config, config.selectedModel)))}">
+          <div class="form-hint">Leave blank to detect the backend's active context before each turn. A custom budget is used when detection is unavailable, or as a smaller budget. This does not change backend settings.</div>
+        </div>
         <div class="form-buttons" style="display:flex; gap:8px; margin-top:8px;">
           <button class="btn btn-primary provider-save-btn">Save</button>
           <button class="btn btn-danger provider-delete-btn">Remove</button>
@@ -60,6 +68,16 @@ export default class EditableProviderCard {
 
   static _field(card, name) {
     return card.querySelector(`[data-field="${name}"]`);
+  }
+
+  static _contextValue(config, model) {
+    return config.contextWindows && Object.hasOwn(config.contextWindows, model) ? config.contextWindows[model] : '';
+  }
+
+  static _showContext(card, config) {
+    const model = EditableProviderCard._field(card, 'selectedModel').value;
+    const sameEndpoint = EditableProviderCard._field(card, 'endpoint').value.trim() === config.endpoint;
+    EditableProviderCard._field(card, 'contextWindow').value = sameEndpoint ? EditableProviderCard._contextValue(config, model) : '';
   }
 
   static async _fetchModels(card, config, ctx) {
@@ -76,6 +94,7 @@ export default class EditableProviderCard {
         const select = card.querySelector('.provider-model-select');
         select.innerHTML = EditableProviderCard.modelOptions(result.models, null);
         select.disabled = false;
+        EditableProviderCard._showContext(card, config);
       } else {
         ctx.feedback.toast('Could not fetch models: ' + (result.error || 'Unknown error'), 'bad');
       }
@@ -88,7 +107,19 @@ export default class EditableProviderCard {
   }
 
   static async _save(card, config, ctx) {
-    config.endpoint = EditableProviderCard._field(card, 'endpoint').value.trim();
+    const endpoint = EditableProviderCard._field(card, 'endpoint').value.trim();
+    const model = EditableProviderCard._field(card, 'selectedModel').value;
+    const rawContext = EditableProviderCard._field(card, 'contextWindow').value.trim();
+    const context = Number(rawContext);
+    if (rawContext && (!model || !Number.isSafeInteger(context) || context < 1)) {
+      ctx.feedback.toast('Select a model and enter a positive whole number of context tokens, or leave it blank for auto-detection.', 'bad');
+      return;
+    }
+    const contextWindows = endpoint === config.endpoint ? { ...(config.contextWindows || {}) } : {};
+    if (rawContext) Object.defineProperty(contextWindows, model, { value: context, enumerable: true, configurable: true, writable: true });
+    else delete contextWindows[model];
+    config.contextWindows = contextWindows;
+    config.endpoint = endpoint;
     config.apiKey = EditableProviderCard._field(card, 'apiKey').value.trim();
     config.selectedModel = EditableProviderCard._field(card, 'selectedModel').value;
     try {

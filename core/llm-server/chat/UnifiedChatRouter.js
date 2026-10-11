@@ -148,6 +148,7 @@ class UnifiedChatRouter {
     this._preview = new SystemPromptPreview({ policy: this._policy, agentBridge: this.agentBridge, getAgentDeps });
     this._artifacts = new ArtifactAccess({ getAgentDeps });
     this._proxy = new ProxyTurns({
+      contextWindow: this._window,
       llmServerService: this.llmServerService,
       dispatch: this._dispatch,
       agentBridge: this.agentBridge,

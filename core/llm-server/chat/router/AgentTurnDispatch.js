@@ -31,7 +31,7 @@ class AgentTurnDispatch {
       images: t.images,
       ...tools,
       ...AgentTurnDispatch._modeSeams(t.modeTurn, t.evalOverrides, t.docsGrant),
-      ctxPerSlot: this._window.forRef(t.modelRef) || this._window.localPerSlot(),
+      ctxPerSlot: t.context?.tokens || this._window.budgetFor(t.modelRef),
       llmExtra: t.llmExtra,
       ...AgentTurnDispatch._evalExtras(t.evalOverrides),
       approvalOverride: t.approvalOverride,

@@ -11,3 +11,5 @@ the window is unknown, with the breakdown in the tooltip.
 - `render()`: the window falls back to the active model's chosen context.
 - `UsageMeter.view(usage, window)`: `{ html, title }`.
 - `UsageMeter.num(n)`: locale-grouped number.
+
+When usage carries `estimated: true`, the tooltip labels the denominator as a safety budget because backend context is unknown.

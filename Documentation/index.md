@@ -2469,7 +2469,8 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/router/MessageImages.md](core/llm-server/chat/router/MessageImages.md): puts a turn's attached images in front of the model: OpenAI `image_url` parts on the newest user turn, or a blunt note that the loaded model cannot see.
 - [core/llm-server/chat/router/ModeReaction.md](core/llm-server/chat/router/ModeReaction.md): runs a chat mode's optional postProcess reaction after a turn ends.
 - [core/llm-server/chat/router/ModelCapabilities.md](core/llm-server/chat/router/ModelCapabilities.md): what the model behind a chat model ref can do this turn, read from the LIVE launch plan.
-- [core/llm-server/chat/router/ModelContextWindow.md](core/llm-server/chat/router/ModelContextWindow.md): the context window ONE request gets from the model behind a chat model ref, in tokens.
+- [core/llm-server/chat/router/ModelContextWindow.md](core/llm-server/chat/router/ModelContextWindow.md): fresh per-model backend context resolution, custom budgets, and explicit fallback snapshots.
+- [core/llm-server/chat/router/BackendContextProbe.md](core/llm-server/chat/router/BackendContextProbe.md): active context discovery for Ollama, LM Studio, llama.cpp, and sharing providers.
 - [core/llm-server/chat/router/ModelDispatcher.md](core/llm-server/chat/router/ModelDispatcher.md): the one choke point every chat model call passes through.
 - [core/llm-server/chat/router/ProxyTurns.md](core/llm-server/chat/router/ProxyTurns.md): turns run for a paired Network Sharing client: never persisted, never touching the host user's in-flight turn.
 - [core/llm-server/chat/router/RemoteStream.md](core/llm-server/chat/router/RemoteStream.md): streams one chat request to a remote provider config through an ephemeral provider that never writes the user's settings.
@@ -3426,7 +3427,7 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 - [ui/shell/settings/providers/AddProviderForm.md](ui/shell/settings/providers/AddProviderForm.md): the "+ Add Provider" form, including pairing with another LumaBrowser by address and PIN.
 - [ui/shell/settings/providers/DefaultProviderControl.md](ui/shell/settings/providers/DefaultProviderControl.md): the Defaults control: default LLM provider and default image generation / editor servers (plus a shared server's model).
 - [ui/shell/settings/providers/DefaultProviderOptions.md](ui/shell/settings/providers/DefaultProviderOptions.md): the resolvable choices of the Default LLM picker.
-- [ui/shell/settings/providers/EditableProviderCard.md](ui/shell/settings/providers/EditableProviderCard.md): card of a user-added provider: endpoint, key, model with Fetch Models, Save, Remove.
+- [ui/shell/settings/providers/EditableProviderCard.md](ui/shell/settings/providers/EditableProviderCard.md): card of a user-added provider: endpoint, key, model, per-model context budget, Fetch Models, Save, Remove.
 - [ui/shell/settings/providers/ImageDefaultRows.md](ui/shell/settings/providers/ImageDefaultRows.md): markup of the default image server rows and a shared server's model picker.
 - [ui/shell/settings/providers/ManagedProviderCard.md](ui/shell/settings/providers/ManagedProviderCard.md): read-only card of the auto-managed local LLM server with Copy buttons.
 - [ui/shell/settings/providers/PeerDiscovery.md](ui/shell/settings/providers/PeerDiscovery.md): discovered-hosts list of the peer form, refreshed every 2.5 s while in peer mode.
@@ -3719,3 +3720,10 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 - [tools/ide/VsixManifest.md](tools/ide/VsixManifest.md): the VSIX's `extension.vsixmanifest` and `[Content_Types].xml`.
 - [tools/ide/WebviewAppBundler.md](tools/ide/WebviewAppBundler.md): bundles the page's ES-module graph (with the markdown modules it imports) into one classic `app.js`, using core's [ModuleScriptBundler](core/llm-server/chat/ModuleScriptBundler.md); module URL paths map onto repo files.
 - [tools/ide/ZipExtractor.md](tools/ide/ZipExtractor.md): unpacks a zip with Expand-Archive (Windows) or unzip.
+
+## Backend context regression tests
+
+- [tests/unit/llm-server/BackendContextProbe.test.md](tests/unit/llm-server/BackendContextProbe.test.md): Backend schemas, cold Ollama loading, exact model identities, transport limits, authentication, cancellation, timeouts, and rejection of theoretical context limits.
+- [tests/unit/llm-server/ModelContextWindow.test.md](tests/unit/llm-server/ModelContextWindow.test.md): Fresh per-turn resolution, provider/model isolation, custom budgets, labeled fallback, and managed-local behavior.
+- [tests/unit/llm-server/ContextBudgetFlow.test.md](tests/unit/llm-server/ContextBudgetFlow.test.md): Shared context snapshots across compaction, agent dispatch and stream metadata; cancellation and superseding turns; network-shared agents.
+- [tests/unit/llm-server/ContextSettings.test.md](tests/unit/llm-server/ContextSettings.test.md): Per-model budget saving and validation, endpoint changes, model selection, and user-visible context/fallback labels.

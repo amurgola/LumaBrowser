@@ -10,6 +10,7 @@ export default class ChatEventRouter {
     this._ctx = ctx;
     this._handlers = {
       meta: (p) => this._meta(p),
+      context: (p) => this._context(p),
       status: (p) => this._status(p),
       delta: (p) => this._delta(p),
       'reasoning-delta': (p) => this._reasoning(p),
@@ -39,6 +40,17 @@ export default class ChatEventRouter {
       if (el) el.dataset.msgId = p.assistantMessageId;
     }
     if (p && p.userMessageId) this._adoptUserTurn(p);
+  }
+
+  _context(p) {
+    const turnEl = this._ctx.stream.turnEl();
+    if (!turnEl || !p) return;
+    let notice = turnEl.querySelector('.cm-context-notice');
+    if (!notice) {
+      notice = Dom.el('div', 'cm-context-notice');
+      turnEl.appendChild(notice);
+    }
+    notice.textContent = p.notice || `Context: ${Number(p.tokens).toLocaleString()} tokens (${p.source})`;
   }
 
   _adoptConversation(cid) {
@@ -159,7 +171,9 @@ export default class ChatEventRouter {
     const { state } = this._ctx;
     const inTok = u.prompt_tokens != null ? u.prompt_tokens : u.input_tokens;
     const outTok = u.completion_tokens != null ? u.completion_tokens : u.output_tokens;
-    if (state.streamOnScreen()) state.lastUsage = { in: inTok, out: outTok, window: (p && p.contextWindow) || null };
+    if (state.streamOnScreen()) state.lastUsage = {
+      in: inTok, out: outTok, window: (p && p.contextWindow) || null, estimated: !!p?.contextEstimated,
+    };
     if (state.streamMsg) {
       state.streamMsg.tokensIn = inTok;
       state.streamMsg.tokensOut = outTok;

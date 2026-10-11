@@ -8,6 +8,6 @@ compaction pill's text.
 ## Methods
 
 - `StatusText.forPhase(phase)`: `switching-model`, `starting-server`,
-  `loading-vision`, `unloading-vision`, `compacting`, `waiting-for-slot`
+  `loading-context` (loading a backend model to check context), `loading-vision`, `unloading-vision`, `compacting`, `waiting-for-slot`
   ("Waiting for processing..."), else "Working...".
 - `StatusText.COMPACTED`, `StatusText.compactedTitle(removed)`.

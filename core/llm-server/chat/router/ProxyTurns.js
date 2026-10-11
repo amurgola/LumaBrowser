@@ -2,12 +2,13 @@ const ChatModelRef = require('./ChatModelRef');
 const AgentTurnDispatch = require('./AgentTurnDispatch');
 
 class ProxyTurns {
-  constructor({ llmServerService, dispatch, agentBridge, getAgentDeps, reclaimer }) {
+  constructor({ llmServerService, dispatch, agentBridge, getAgentDeps, reclaimer, contextWindow }) {
     this._service = llmServerService;
     this._dispatch = dispatch;
     this._bridge = agentBridge;
     this._getAgentDeps = getAgentDeps;
     this._reclaimer = reclaimer;
+    this._window = contextWindow;
   }
 
   async stream({ modelRef, messages, temperature, hooks, images = [], extra = null }) {
@@ -21,21 +22,32 @@ class ProxyTurns {
     modeSystemPrompt = null, kbScope = null }) {
     const ref = this.resolveRef(modelRef);
     const deps = AgentTurnDispatch.requireDeps(this._getAgentDeps);
-    return this.wrapHandle(ref, this._bridge.run({
-      modelRef: ref,
-      messages,
-      temperature,
-      conversationId: ProxyTurns._ephemeralId(),
-      assistantMessageId: ProxyTurns._ephemeralId(),
-      deps,
-      hooks,
-      priorMessages: ProxyTurns._priorMessages(priorArtifacts),
-      images,
-      allowedTools,
-      llmExtra: extra,
-      modeSystemPrompt,
-      kbScope,
-    }));
+    const controller = new AbortController();
+    let handle = null;
+    const ready = this._window.resolve(ref, { signal: controller.signal, onStatus: hooks?.onStatus }).then((context) => {
+      if (controller.signal.aborted) return;
+      if (context.notice) hooks?.onStatus?.({ phase: 'context-fallback', message: context.notice });
+      handle = this._bridge.run({
+        modelRef: ref,
+        messages,
+        temperature,
+        conversationId: ProxyTurns._ephemeralId(),
+        assistantMessageId: ProxyTurns._ephemeralId(),
+        deps,
+        hooks,
+        priorMessages: ProxyTurns._priorMessages(priorArtifacts),
+        images,
+        allowedTools,
+        llmExtra: extra,
+        modeSystemPrompt,
+        kbScope,
+        ctxPerSlot: context.tokens,
+      });
+    }).catch((error) => {
+      if (!controller.signal.aborted) hooks?.onError?.(error);
+    });
+    const done = ready.then(() => handle?.done);
+    return this.wrapHandle(ref, { ready, done, abort: () => { controller.abort(); handle?.abort?.(); } });
   }
 
   resolveRef(modelRef) {

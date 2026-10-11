@@ -11,3 +11,5 @@ Card of a user-added provider: endpoint, key, model with Fetch Models, Save, Rem
 ## Globals
 
 Reads `window.ipcBridge.invoke('core.llm.fetchModelsForEndpoint')`.
+
+The context-budget input applies to the selected model only. Blank means auto-detect; a positive safe integer supplies a fallback or smaller budget, never a backend configuration change. Budgets are saved in `config.contextWindows[modelId]`, survive model-list refresh, and are cleared when the endpoint changes. Switching the selected model displays its saved budget. Invalid values are rejected before saving.

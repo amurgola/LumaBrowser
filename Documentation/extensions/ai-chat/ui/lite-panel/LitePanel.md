@@ -55,3 +55,5 @@ thrown `chat2` becomes an error event. Stop calls `chatAbort()`.
 Reads `window.ipcBridge`, `window.tabAPI`, and the shell's active tab id
 (`activeTabId` resolved through the global lexical scope, else
 `window.activeTabId`); listens on `document` for click and keydown.
+
+The status area displays the active preparation phase, then the resolved context window/source (or explicit unknown-context notice). Context remains visible after the turn completes and clears when selecting another model, without probing or loading it.

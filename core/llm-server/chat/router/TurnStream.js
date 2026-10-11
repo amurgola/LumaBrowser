@@ -25,8 +25,16 @@ class TurnStream {
     return { message, hints };
   }
 
+  setContext(context) {
+    if (this.finished) return;
+    this._context = context;
+    this._ctxWindow = context.tokens;
+    this._send('context', { ...context, contextWindow: context.tokens });
+  }
+
   abort(handle) {
     const alreadyFinished = this.finished;
+    if (!alreadyFinished) this.aborted = true;
     this._finalize({ error: 'aborted' }, 'done', {
       aborted: true,
       conversationId: this._convId,
@@ -93,6 +101,8 @@ class TurnStream {
       usage: this._usage || undefined,
       timings: s.timings || undefined,
       contextWindow: this._ctxWindow || undefined,
+      contextSource: this._context?.source,
+      contextEstimated: this._context?.estimated,
       conversationId: this._convId,
       assistantMessageId: this._asstId,
       iterations: typeof s.iterations === 'number' ? s.iterations : undefined,

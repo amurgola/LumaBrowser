@@ -137,6 +137,8 @@ export default class LitePanel {
     const ref = this.modelSelect.value || null;
     if (!ref) return;
     this.modelRef = ref;
+    this.state = { ...this.state, context: null };
+    this._renderStreaming();
     LitePanel._quietly(() => this.api.setLastModelRef(ref));
   }
 
@@ -368,7 +370,8 @@ export default class LitePanel {
   }
 
   _renderStreaming() {
-    this._setStatus(this.state.running ? LiteChatReducer.statusLabel(this.state.statusPhase) : '');
+    const phase = this.state.running ? LiteChatReducer.statusLabel(this.state.statusPhase) : '';
+    this._setStatus(phase || LiteChatReducer.contextLabel(this.state.context));
     this._thread.renderTurn(this.state);
   }
 

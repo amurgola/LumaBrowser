@@ -2,14 +2,16 @@
 
 `core/llm-server/chat/router/ModelContextWindow.js`
 
-The context window ONE request gets from the model behind a chat model ref, in tokens.
+Resolves the per-request context budget for a specific provider and model.
 
 ## Methods
 
-- `new ModelContextWindow({ llmServerService, db })`.
-- `forRef(ref)`: local refs -> `localPerSlot()`; a remote ref -> the floored `luma_context` of its model entry in `llm.providerConfigs`; null otherwise (unknown config, no separator, empty provider id, not a string).
-- `localPerSlot()`: `llmServerService.getEffectiveContext().ctxPerSlot` when positive, else null (also when the service is missing or throws).
+- `resolve(ref, { signal, onStatus })`: fresh asynchronous resolution before each turn. Returns a frozen `{ tokens, source, estimated, notice? }` snapshot. Managed local refs retain `getEffectiveContext().ctxPerSlot`; external OpenAI-compatible providers use [BackendContextProbe](BackendContextProbe.md).
+- No detected allocations are cached across turns. Changes to backend configuration, endpoint, credentials, or model are picked up on the next turn. A failed lookup never reuses an old allocation or this machine's local runtime defaults.
+- `llm.providerConfigs[].contextWindows[modelId]` is an optional positive integer budget. It is a fallback when detection is unavailable and a cap when smaller than a detected allocation. It never changes the backend's configuration.
+- Unknown context uses an explicitly estimated 4096-token safety budget with a user-facing notice. This is not reported as the model's actual context. Model training limits and maximum output tokens are not allocation metadata.
+- `forRef(ref)` is the synchronous legacy metadata lookup: local per-slot context, or the saved custom/advertised `luma_context` (the smaller if both exist), else null. It performs no network requests or model loads.
+- `budgetFor(ref)` adds the explicit safety fallback to `forRef`. Remote refs never fall back to `localPerSlot()`.
+- `localPerSlot()` returns the managed server's effective per-slot context when positive, otherwise null.
 
-## Why
-
-Bug M4: the meter, the compaction trigger and the agent's tool budgets each divided the persisted request, ignoring the planner's clamp and its slot downgrade. A paired peer's model runs in the HOST's server, so this machine's local settings say nothing about it; the host advertises `luma_context` instead.
+ChatTurn passes the same resolved snapshot to compaction, the agent bridge's tool/reply budgets, and stream metadata. Shared agent turns resolve independently. The backend can still be reconfigured externally during a turn; detection is a pre-turn observation, not a reservation of backend capacity.

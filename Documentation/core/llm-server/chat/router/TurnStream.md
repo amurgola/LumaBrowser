@@ -16,3 +16,5 @@ The live side of one chat turn: accumulates the stream into the assistant placeh
 ## Why
 
 Tearing down first let an adapter's own onDone win the latch and present a cut-off answer as finished (seen live 2026-08-10). Some adapters fire onDone twice; a second reaction aborted the first one's image generation.
+
+`setContext(context)` emits a `context` event with the resolved `{ tokens, source, estimated, notice?, contextWindow }`. The same value supplies `done.contextWindow`, with `contextSource` and `contextEstimated`. `aborted` distinguishes cancellation from successful completion when a late dispatch handle arrives.

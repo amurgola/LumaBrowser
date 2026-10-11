@@ -1,5 +1,6 @@
 export default class StatusText {
   static PHASES = {
+    'loading-context': 'Loading model to check its context window...',
     'switching-model': 'Loading the selected model...',
     'starting-server': 'Starting the local model...',
     'loading-vision': 'Loading vision (image support)...',

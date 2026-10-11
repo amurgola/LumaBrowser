@@ -30,9 +30,24 @@ class ChatTurn {
     if (!asst) return { success: false, error: 'Message to regenerate was not found.' };
     this._announce(asst, userRow, userArtifacts);
     this._openStream(asst);
-    runMessages = await this._d.compaction.maybeCompact(runMessages, this._modelRef, this._mode.turn, this._stream.hooks, this._convId);
+    const controller = new AbortController();
+    this._track({ abort: () => controller.abort() });
+    try {
+      this._context = await this._d.contextWindow.resolve(this._modelRef, {
+        signal: controller.signal, onStatus: this._stream.hooks.onStatus,
+      });
+      if (this._stream.finished) return { success: true, aborted: true };
+      this._stream.setContext(this._context);
+    } catch (err) {
+      if (this._stream.finished) return { success: true, aborted: true };
+      const { message } = this._stream.fail(err);
+      return { success: false, error: message };
+    }
+    runMessages = await this._d.compaction.maybeCompact(runMessages, this._modelRef, this._mode.turn, this._stream.hooks, this._convId, this._context);
+    if (this._stream.finished) return { success: true, aborted: true };
     runMessages = this._withStyleDocs(runMessages, choicesOn);
     runMessages = await this._withDocsSource(runMessages);
+    if (this._stream.finished) return { success: true, aborted: true };
     return this._dispatch(asst, runMessages, images, choicesOn);
   }
 
@@ -190,6 +205,7 @@ class ChatTurn {
     return this._d.agentDispatch.run({
       modelRef: this._modelRef,
       messages: dial.messages,
+      context: this._context,
       temperature: this._temperature,
       convId: this._convId,
       asstId: asst.id,
@@ -212,7 +228,10 @@ class ChatTurn {
   }
 
   _track(handle) {
-    if (this._stream.finished) return;
+    if (this._stream.finished) {
+      try { if (this._stream.aborted) handle?.abort?.(); } catch (_) {}
+      return;
+    }
     const stream = this._stream;
     this._d.inFlight.begin({ abort: () => stream.abort(handle) }, ChatModelRef.isLocal(this._modelRef));
   }
