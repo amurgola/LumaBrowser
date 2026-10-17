@@ -30,15 +30,15 @@ export default class ToolGroupsView {
     const allLocked = tools.length > 0 && tools.every((t) => t.locked);
     const detail = isOpen ? ToolGroupsView._detail(tools, onSet, esc) : '';
     return `
-        <div class="gs-item-card" data-gs-group-card="${esc(g.id)}">
-          <div style="display:flex;gap:8px;align-items:center;padding:8px 10px;">
+        <div class="gs-item-card gs-tool-group" data-gs-group-card="${esc(g.id)}">
+          <div class="gs-tool-group-head">
             <input type="checkbox" data-gs-group="${esc(g.id)}" ${all ? 'checked' : ''} ${(!all && !none) ? 'data-indeterminate="1"' : ''} ${allLocked ? 'disabled title="Always on"' : 'title="Turn every tool in this group on or off"'}>
-            <div style="flex:1;cursor:pointer;min-width:0;" data-gs-expand="${esc(g.id)}">
-              <div style="font-size:12.5px;color:var(--text-primary);font-weight:600;">${esc(g.label || g.id)}</div>
-              ${g.description ? `<div style="font-size:11px;color:var(--text-muted);">${esc(g.description)}</div>` : ''}
+            <div class="gs-tool-group-text" data-gs-expand="${esc(g.id)}">
+              <div class="gs-tool-group-name">${esc(g.label || g.id)}</div>
+              ${g.description ? `<div class="gs-tool-group-desc">${esc(g.description)}</div>` : ''}
             </div>
-            <span class="luma-badge ${none ? 'muted' : (all ? 'ok' : 'warn')}">${onCount}/${names.length}</span>
-            <button type="button" class="gs-copy-btn" data-gs-expand="${esc(g.id)}">${isOpen ? 'Hide' : 'Customize'}</button>
+            <span class="luma-badge gs-tool-count" title="Tools on">${onCount}/${names.length}</span>
+            <button type="button" class="gs-copy-btn btn-sm" data-gs-expand="${esc(g.id)}">${isOpen ? 'Hide' : 'Customize'}</button>
           </div>
           ${detail}
         </div>`;
@@ -46,12 +46,12 @@ export default class ToolGroupsView {
 
   static _detail(tools, onSet, esc) {
     return `
-        <div style="display:flex;flex-direction:column;gap:6px;padding:0 12px 10px 32px;">
+        <div class="gs-tool-list">
           ${tools.map((t) => `
-            <label class="luma-check" style="font-size:12px;color:var(--text-secondary);">
+            <label class="luma-check gs-tool-item">
               <input type="checkbox" data-gs-tool="${esc(t.name)}" ${onSet.has(t.name) ? 'checked' : ''} ${t.locked ? 'disabled title="Always on"' : ''}>
               <span>${esc(t.label || t.name)}</span>
-              <span class="gs-endpoint-desc" style="margin-left:auto;" title="${esc(t.hint != null ? t.hint : t.name)}">${esc(t.hint != null ? t.hint : t.name)}</span>
+              <span class="gs-endpoint-desc" title="${esc(t.hint != null ? t.hint : t.name)}">${esc(t.hint != null ? t.hint : t.name)}</span>
             </label>`).join('')}
         </div>`;
   }

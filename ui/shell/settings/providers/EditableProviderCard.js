@@ -35,13 +35,13 @@ export default class EditableProviderCard {
       <div class="provider-card-body">
         <div class="form-group">
           <label class="form-label">Endpoint</label>
-          <div style="display:flex; gap:8px;">
+          <div class="gs-inline-controls">
             <input type="text" class="form-input" value="${esc(config.endpoint || '')}" data-field="endpoint" placeholder="${config.type === 'anthropic' ? 'https://api.anthropic.com' : 'http://localhost:1234'}">
-            <button class="btn btn-fetch provider-fetch-btn">Fetch Models</button>
+            <button class="btn btn-fetch provider-fetch-btn">Fetch models</button>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">API Key ${config.type === 'openai' ? '(optional)' : ''}</label>
+          <label class="form-label">API key ${config.type === 'openai' ? '(optional)' : ''}</label>
           <input type="password" class="form-input" value="${esc(config.apiKey || '')}" data-field="apiKey" placeholder="sk-...">
         </div>
         <div class="form-group">
@@ -50,7 +50,7 @@ export default class EditableProviderCard {
             ${EditableProviderCard.modelOptions(config.models, config.selectedModel)}
           </select>
         </div>
-        <div class="form-buttons" style="display:flex; gap:8px; margin-top:8px;">
+        <div class="form-buttons provider-card-actions">
           <button class="btn btn-primary provider-save-btn">Save</button>
           <button class="btn btn-danger provider-delete-btn">Remove</button>
         </div>
@@ -83,7 +83,7 @@ export default class EditableProviderCard {
       ctx.feedback.toast('Could not fetch models: ' + e.message, 'bad');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Fetch Models';
+      btn.textContent = 'Fetch models';
     }
   }
 

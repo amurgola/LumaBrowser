@@ -353,7 +353,10 @@ export default class LitePanel {
 
   _setRunning(running) {
     if (this.sendBtn) this.sendBtn.style.display = running ? 'none' : '';
-    if (this.stopBtn) this.stopBtn.style.display = running ? '' : 'none';
+    if (this.stopBtn) {
+      this.stopBtn.style.display = running ? '' : 'none';
+      this.stopBtn.classList.toggle('active', running);
+    }
     if (this.inputEl) this.inputEl.disabled = running;
     this._zoom.set(running);
     if (!running) this._setStatus('');

@@ -8,10 +8,12 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 ## Members
 
 - `ImageModelEntries.ENTRIES`: Z-Image Turbo, Qwen-Image-Edit 2509,
-  Qwen-Image 2.1, SD 1.5, SDXL base, Sprite Shaper XL, FLUX.1 Schnell,
+  Qwen-Image 2.1, Qwen-Image 2.1 Turbo, SD 1.5, SDXL base, Sprite Shaper XL, FLUX.1 Schnell,
   Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B (images), then Wan 2.2 T2V, Wan 2.2
   I2V, AniSora V3.2, LTX-Video 2B and MiniMax-H3 (video).
-- Shared companions `FLUX_VAE`, `T5XXL_Q8`, `WAN_VAE`, `UMT5_Q8`, plus
+- Shared companions `FLUX_VAE`, `T5XXL_Q8`, `WAN_VAE`, `UMT5_Q8`,
+  `QWEN_21_VAE`, `QWEN3_VL_8B_LLM`, `QWEN3_VL_8B_VISION`, the shared
+  `QWEN_21_PROMPT_GUIDE`, plus
   `WAN_VIDEO_DEFAULTS` and `WAN_CONSTRAINTS`. Rows copy the file and default
   objects (spread), so one row cannot mutate another; `WAN_CONSTRAINTS` is
   shared, as in legacy.
@@ -22,7 +24,7 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 supportsI2V?, licenseNote?, files: { <role>: { role, repo, file, url,
 approxBytes, loaderFlag?, quants?, supersedes?, updateNote? } }, minVramBytes,
 defaults: { width, height, steps, cfgScale, sampler, scheduler?,
-negativePrompt?, promptGuide?, videoFrames?, fps?, flowShift? }, constraints?,
+negativePrompt?, promptGuide?, fixedSigmas?, videoFrames?, fps?, flowShift? }, constraints?,
 launchArgs, protocol: 'sd-cpp-http'|'sd-cpp-video', compatibleRuntimes }`.
 
 Roles map to sd-server flags in the launch planner: `diffusion`, `vae`, `llm`,
@@ -44,6 +46,12 @@ comfortable GPU-resident size with the encoders on the CPU.
   with the stock file (see [ModelFileUpdates](ModelFileUpdates.md)). Canvases
   must be /32; the runtime picks its own flow schedule (no `--flow-shift`).
   Needs an sd.cpp build from 2026-09-20 or newer.
+- Qwen-Image 2.1 Turbo: Qwen's official 8-step distill, same architecture and
+  companions as the base (each row still downloads into its own folder). Quants
+  are unsloth's (leejet has no Turbo repo; the card documents sd-cli use).
+  `fixedSigmas` is the checkpoint's `sample_sigmas`, run unshifted because its
+  scheduler has shift 1.0 and no dynamic shifting; cfg 1 (cfg 3 blows highlights
+  per community tests). Below Q4_K_M unsloth reports visible drift at 8 steps.
 - FLUX.1 Schnell: 8 steps because 4 leaves distillation noise; 1024 native;
   cfg 1. T5-XXL is a Q8_0 GGUF because sd.cpp's CPU and Vulkan backends segfault
   on the fp8 safetensors.

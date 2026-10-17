@@ -12,7 +12,7 @@ Routes the in-flight turn's chat events (only those for the current request id):
 | `tool` | [ToolEventReducer](ToolEventReducer.md); window `luma-chat-tool` for approval, run and done; a frozen tab releases the slot and is cached |
 | `artifact-stream`, `artifact` | the panel (only while the stream's conversation is on screen; live modules stay inline), the artifact views and count |
 | `done`, `error` | usage, timings, then [StreamFinisher](StreamFinisher.md) |
-| `agent` | [AgentEventReducer](AgentEventReducer.md) |
+| `agent` | [AgentEventReducer](AgentEventReducer.md); a `start` naming a `conversationId` (a delegation) refreshes the sidebar so the sub-conversation nests at once |
 | anything else | the active mode's `onChatEvent(event, ctx)` with DOM helpers, while its conversation is on screen |
 
 ## Methods

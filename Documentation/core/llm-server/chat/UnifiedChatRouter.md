@@ -27,7 +27,7 @@ host, the placement test, Luma On Demand and the extension chat surface.
   `compaction` (new Compaction), `launcher` (`ServerLauncher.shared`), `scanner`
   (`LlmModelsScanner.shared`), `runtimeCatalog` (`LlmRuntimeCatalog.shared`),
   `adapterRegistry` (ChatAdapterRegistry), `dispatcher` (a ModelDispatcher over
-  LocalStream and RemoteStream; anything with `dispatch(...)`),
+  LocalStream and RemoteStream with the service's `modelSettings`; anything with `dispatch(...)`),
   `imageServerService` (a getter, default `global.__lumaImageServerService`).
 - Sets `global.__lumaChatRouter = this`.
 - Public fields: `llmServerService`, `db`, `agentBridge`. Getters: `chatStore`
@@ -86,8 +86,10 @@ Artifacts ([ArtifactAccess](router/ArtifactAccess.md)):
 [ThinkingDial](router/ThinkingDial.md) and dispatches: Tools-on through
 [AgentTurnDispatch](router/AgentTurnDispatch.md) to the bridge, whose
 iterations come back through `_completeOnce`; plain turns through the
-[ModelDispatcher](router/ModelDispatcher.md), which records the LLM trace and
-routes to [LocalStream](router/LocalStream.md)
+[ModelDispatcher](router/ModelDispatcher.md), which resolves a model profile to
+its base model and applies the model's or profile's overrides
+([ModelSettings](../service/ModelSettings.md), [RequestSettings](router/RequestSettings.md)),
+records the LLM trace and routes to [LocalStream](router/LocalStream.md)
 ([LocalServerPrep](router/LocalServerPrep.md),
 [LocalRestartDecision](router/LocalRestartDecision.md),
 [LocalRequest](router/LocalRequest.md)) or

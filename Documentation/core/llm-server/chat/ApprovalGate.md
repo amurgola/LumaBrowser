@@ -7,7 +7,8 @@ model-facing result when one is refused. The rest of the gate lives in
 [approval/](approval/): [ApprovalPolicy](approval/ApprovalPolicy.md) (is the
 gate on for this run), [CommandCallAssessor](approval/CommandCallAssessor.md)
 (how dangerous is this shell command), [CallDescriber](approval/CallDescriber.md)
-(the card sentence) and [CardText](approval/CardText.md) (one-line clipping).
+(the card sentence, with [DesktopCallText](approval/DesktopCallText.md) for the
+desktop tools) and [CardText](approval/CardText.md) (one-line clipping).
 
 ## Methods (all static)
 
@@ -27,6 +28,15 @@ gate on for this run), [CommandCallAssessor](approval/CommandCallAssessor.md)
   `send_notification_ntfy`, `timed_tasks_create`, `timed_tasks_delete`,
   `timed_tasks_trigger`, `create_scheduled_task`, `update_scheduled_task`,
   `run_scheduled_task`, `schedule_artifact_updates`.
+- `GRANT_FAMILIES`: tools one "allow for this run" grants together, each
+  `{ key, label, carry, test }`. Today one: `family:desktop-input` ("desktop
+  control", `carry: true`), every `desktop_*` tool except `desktop_launch`, which
+  starts programs and keeps its own grant.
+- `isCarried(key)`: true for a family marked `carry`, whose grant outlives the
+  run and lasts for the conversation ([ConversationGrants](approval/ConversationGrants.md)).
+- `familyOf(toolName)`: the tool's family, or null.
+- `grantKeyOf(toolName)`: the key a run grant is stored under: the family key,
+  else the tool's own name.
 
 ## How a call is gated
 
@@ -45,7 +55,11 @@ The agent runs unattended: write_file overwrites, install_extension puts code
 the app will load on disk, send_webhook leaves the machine. The design is
 deliberately small: no rule language and no persisted grants, because a
 remembered rule silently authorises a different project months later. A
-decision covers one call or, with "allow for this run", one run.
+decision covers one call or, with "allow for this run", one run. A grant family
+exists so a desktop task asks once instead of once per kind of input, since every
+answer also pulls the focus back to LumaBrowser. The one exception to run-only
+grants is a carried family, kept for its conversation only and lapsing after 30
+idle minutes.
 
 An unknown tool is NOT gated, the opposite of the concurrency classifier's
 default: a gate that interrupts harmless calls gets turned off. The flag

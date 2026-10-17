@@ -267,6 +267,7 @@ npm run dev          # start the app in developer mode
 npm test             # unit tests under Electron
 npm run test:e2e     # end-to-end suites
 npm run build        # installers for the current platform
+npm run shots:readme # retake the screenshots in this README from a blank-slate app
 ```
 
 ### Agentic developer docs

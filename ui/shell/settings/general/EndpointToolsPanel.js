@@ -96,7 +96,7 @@ export default class EndpointToolsPanel {
     if (!badge) {
       badge = document.createElement('span');
       badge.className = 'gs-saved';
-      badge.style.cssText = 'position:sticky;bottom:6px;float:right;';
+      badge.classList.add('gs-saved--sticky');
       anchor.appendChild(badge);
     }
     SettingsFeedback.flashBadge(badge, true);

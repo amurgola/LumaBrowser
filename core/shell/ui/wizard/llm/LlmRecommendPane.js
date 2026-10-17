@@ -55,7 +55,7 @@ export default class LlmRecommendPane {
             value="${esc(advanced)}">
           <div class="setup-wizard__help">Leave blank to use the recommendation above.</div>
         </details>
-        <div style="display:flex; gap:10px; margin-top:14px;">
+        <div class="setup-wizard__actions">
           <button class="setup-wizard__btn setup-wizard__btn--primary" id="llmGoBtn" type="button">Download &amp; set up</button>
           <button class="setup-wizard__btn setup-wizard__btn--secondary" id="llmBackQ" type="button">Change answers</button>
         </div>

@@ -25,7 +25,7 @@ export default class ManagedProviderCard {
           </div>
           ${ManagedProviderCard._valueGroup('Endpoint', config.endpoint, 'Copy endpoint')}
           ${ManagedProviderCard._valueGroup('Model', config.selectedModel, 'Copy model')}
-          ${config.managedRuntimeId ? `<div class="form-help" style="margin-top:6px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">runtime: ${esc(config.managedRuntimeId)}</div>` : ''}
+          ${config.managedRuntimeId ? `<div class="form-help provider-runtime-id">Runtime: <code>${esc(config.managedRuntimeId)}</code></div>` : ''}
         </div>
       `;
   }
@@ -33,7 +33,7 @@ export default class ManagedProviderCard {
   static _valueGroup(label, value, copyTitle) {
     return `<div class="form-group">
             <label class="form-label">${label}</label>
-            <div style="display:flex; gap:8px; align-items:center;">
+            <div class="gs-inline-controls">
               <span class="gs-url-display provider-managed-value">${value ? HtmlEscaper.escape(value) : 'not set'}</span>
               <button class="gs-copy-btn provider-copy-btn" title="${copyTitle}"${value ? '' : ' disabled'}>Copy</button>
             </div>

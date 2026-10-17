@@ -11,6 +11,8 @@ Subscribes the chat to the host's pushes. Every push is optional on the API.
   - `tabPreview.onFrame` to [TabPreviewCard](turns/TabPreviewCard.md), and
     `tabPreview.getEnabled()` into `state.tabPreviewEnabled`;
   - `onOpenConversation(id)` opens it (the Dashboard's deep link);
+  - window `luma-open-conversation` `{ conversationId }` opens it (a
+    delegation card's "Open conversation");
   - `onSchedTasksEvent` / `onTriggersEvent`: refresh the sidebar, re-open the
     runs view showing that task or trigger, mirror a renamed setup chat in the
     top bar; a trigger `'open'` event deep-links to its runs view;

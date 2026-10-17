@@ -5,9 +5,18 @@ class ImageFamilyScaffold {
 
   static ANIMA_DISTILLED = /anima.*(?:8|12)[-_\s]*step|miaomiao.*8[-_\s]*step/i;
 
+  static QWEN_21_TURBO = /qwen[-_\s]*image[-_\s]*2[._-]?1[-_\s]*turbo/i;
+
   static RAPID_AIO_RECIPE = { steps: 4, cfgScale: 1.0, sampler: 'euler_a', scheduler: 'sgm_uniform' };
 
   static ANIMA_DISTILLED_RECIPE = { steps: 12, cfgScale: 1.0, sampler: 'euler', scheduler: 'sgm_uniform' };
+
+  static QWEN_21_TURBO_RECIPE = {
+    steps: 8,
+    cfgScale: 1.0,
+    sampler: 'euler',
+    fixedSigmas: [1.0, 0.978453, 0.95418, 0.926626, 0.89508, 0.845148, 0.704534, 0.414568],
+  };
 
   static fromProfile(id) {
     const profile = ImagePromptProfiles.getProfile(id) || {};
@@ -51,6 +60,7 @@ class ImageFamilyScaffold {
     const out = Object.assign({}, family || {}, own);
     if (ImageFamilyScaffold.isQwenRapidAio(model)) Object.assign(out, ImageFamilyScaffold.RAPID_AIO_RECIPE);
     if (ImageFamilyScaffold.isAnimaDistilled(model)) Object.assign(out, ImageFamilyScaffold.ANIMA_DISTILLED_RECIPE);
+    if (ImageFamilyScaffold.isQwen21Turbo(model) && !own.distilledPreset) Object.assign(out, ImageFamilyScaffold.QWEN_21_TURBO_RECIPE);
     return out;
   }
 
@@ -62,6 +72,11 @@ class ImageFamilyScaffold {
   static isAnimaDistilled(model) {
     if (!model || model.family !== 'anima') return false;
     return ImageFamilyScaffold.ANIMA_DISTILLED.test(ImageFamilyScaffold._haystack(model));
+  }
+
+  static isQwen21Turbo(model) {
+    if (!model || model.family !== 'qwen-image-2') return false;
+    return ImageFamilyScaffold.QWEN_21_TURBO.test(ImageFamilyScaffold._haystack(model));
   }
 
   static buildPrompt(prompt, md) {

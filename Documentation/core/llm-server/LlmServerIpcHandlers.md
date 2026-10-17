@@ -13,7 +13,7 @@ IPC controller for the LLM server and the chat (`core.llmServer.*`, plus
   [UnifiedChatRouter](chat/UnifiedChatRouter.md) (which publishes itself as
   `global.__lumaChatRouter`), wires [LlmServerBroadcast](ipc/LlmServerBroadcast.md)
   and [LlmAvailability](ipc/LlmAvailability.md) to the supervisor, registers the
-  170 channels below on `ipcMain` (168 without `deps.artifactDataStore`; the legacy 169 plus `liveApi.extCall`) and
+  178 channels below on `ipcMain` (176 without `deps.artifactDataStore`) and
   returns `{ router }`.
 - `deps` is what main.js passes, wrapped in [LlmIpcDeps](ipc/LlmIpcDeps.md):
   `db`, `getAgentDeps`, `artifactDataStore`, `artifactTaskStore`,
@@ -65,6 +65,7 @@ a check: `getModelCaps` `{ caps: null }`, `getPeerGpus` `{ peers: [], active: fa
 | `chat2` | [ChatTurnRequest](ipc/ChatTurnRequest.md) |
 | `chat.complete`, `chat.completeStream`, `chat.completeAbort` | [SideCompletions](ipc/SideCompletions.md) |
 | `chat.takeoverRespond`, `chat.approvalRespond`, `listModels`, `chat.previewSystemPrompt`, `conv.autotitle`, `chat.agentTools`, `chat.setGlobalToolEnabled` | the router |
+| `modelSettings.get(ref)`, `modelSettings.setModel(ref, payload)`, `modelSettings.saveProfile(input)`, `modelSettings.deleteProfile(id)` | the service's [ModelSettings](service/ModelSettings.md): `{ view }`, `{ view }`, `{ profile }`, `{ deleted }` (the Tune panel) |
 | `core.debug.getLogs` | [DebugLogsView](ipc/DebugLogsView.md) |
 | `schedTasks.*` | [ScheduledTaskActions](ipc/ScheduledTaskActions.md) |
 | `triggers.*` | [TriggerActions](ipc/TriggerActions.md) ([TriggerDetails](ipc/TriggerDetails.md) for `get`) |

@@ -2,9 +2,9 @@ export default class SetupNavigator {
   static GRID_VIEWS = new Set(['settings', 'image', 'music']);
 
   static HEADERS = {
-    settings: { eyebrow: 'LLM Server', title: 'LLM Setup' },
-    image: { eyebrow: 'Image Server', title: 'Image Generation' },
-    music: { eyebrow: 'Music Server', title: 'Music Generation' },
+    settings: { eyebrow: 'LLM Server', title: 'LLM setup' },
+    image: { eyebrow: 'Image Server', title: 'Image generation' },
+    music: { eyebrow: 'Music Server', title: 'Music generation' },
     advanced: { eyebrow: 'LLM Server', title: 'Advanced' },
   };
 

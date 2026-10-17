@@ -1,5 +1,6 @@
 const MessageImages = require('./MessageImages');
 const FamilySampler = require('./FamilySampler');
+const RequestSettings = require('./RequestSettings');
 const RequestProfile = require('../../server/chat/RequestProfile');
 
 class LocalRequest {
@@ -71,7 +72,7 @@ class LocalRequest {
       tools: (tools && tools.length) ? tools : undefined,
       chatTemplateKwargs: extra && extra.chatTemplateKwargs,
       reasoningBudget: extra && extra.reasoningBudget,
-      maxTokens: extra && extra.maxTokens,
+      maxTokens: RequestSettings.maxTokens(extra),
       onDelta: (t) => {
         if (!firstToken) { firstToken = true; log.line(`first token after ${Date.now() - sentAt}ms`); }
         hooks.onDelta(t);

@@ -1,5 +1,5 @@
 export default class AdvancedSubtabs {
-  static TITLES = { server: 'System Diagnostics', data: 'Chat Data', placement: 'Model Placement' };
+  static TITLES = { server: 'System diagnostics', data: 'Chat data', placement: 'Model placement' };
 
   constructor(doc = document) {
     this._doc = doc;

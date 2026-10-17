@@ -11,6 +11,8 @@ class DocsSourceGrant {
     'tools, extensions API, build and internals) as a source for this conversation. Before answering anything',
     `about LumaBrowser itself, call ${'search_lumabrowser_docs'} with a focused query and ground your answer in the`,
     'passages it returns, naming the page (source) you drew from. If they do not cover the question, say so.',
+    'When the user wants an extension actually made, not explained, hand it to the extension builder with',
+    'delegate_task (the Delegation tools) when you have it, instead of writing the files into your answer.',
   ].join(' ');
 
   static DESCRIPTION = 'Search the LumaBrowser documentation (this app\'s own manual: features, settings, chat tools, '

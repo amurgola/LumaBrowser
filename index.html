@@ -3,38 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <title>LumaBrowser</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
-          media="print"
-          onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
-    </noscript>
+    <link rel="stylesheet" href="core/llm-server/ui/css/tokens.css">
     <link rel="stylesheet" href="ui/shell/css/base.css">
     <link rel="stylesheet" href="ui/shell/css/forms-base.css">
     <link rel="stylesheet" href="ui/shell/css/notification-log.css">
-    <link rel="stylesheet" href="ui/shell/css/settings-base.css">
     <link rel="stylesheet" href="ui/shell/css/network-watcher.css">
-    <link rel="stylesheet" href="ui/shell/css/ai-chat-panel.css">
     <link rel="stylesheet" href="ui/shell/css/theme.css">
     <link rel="stylesheet" href="ui/shell/css/chrome-layout.css">
-    <link rel="stylesheet" href="ui/shell/css/settings-dark.css">
     <link rel="stylesheet" href="ui/shell/css/general-settings.css">
-    <link rel="stylesheet" href="ui/shell/css/dark-overrides.css">
     <link rel="stylesheet" href="ui/shell/css/ai-activity.css">
-    <link rel="stylesheet" href="ui/shell/css/ai-chat-dark.css">
+    <link rel="stylesheet" href="ui/shell/css/ai-chat-panel.css">
     <link rel="stylesheet" href="ui/shell/css/responsive.css">
     <link rel="stylesheet" href="ui/shell/css/titlebar.css">
     <link rel="stylesheet" href="ui/shell/css/url-bar.css">
     <link rel="stylesheet" href="ui/shell/css/tab-strip.css">
     <link rel="stylesheet" href="ui/shell/css/icon-buttons.css">
-    <link rel="stylesheet" href="ui/shell/css/polish.css">
     <link rel="stylesheet" href="ui/shell/css/right-panel.css">
     <link rel="stylesheet" href="ui/shell/css/settings-modal.css">
     <link rel="stylesheet" href="ui/shell/css/settings-content.css">
-    <link rel="stylesheet" href="ui/shell/css/right-panel-refined.css">
     <link rel="stylesheet" href="ui/shell/css/setup-wizard.css">
     <link rel="stylesheet" href="core/llm-server/ui/css/luma-components.css">
     <link rel="stylesheet" href="extensions/extension-styles.css">
@@ -50,32 +36,38 @@
 <body>
     <svg xmlns="http://www.w3.org/2000/svg" class="icon-sprite" aria-hidden="true" style="display:none;">
       <defs>
-        <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
-        <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
-        <symbol id="i-rotate-cw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
-        <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
-        <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
-        <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
-        <symbol id="i-square" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1"/></symbol>
-        <symbol id="i-squares" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="13" height="13" rx="1"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></symbol>
-        <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
-        <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
-        <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
-        <symbol id="i-panel-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></symbol>
-        <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+        <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+        <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+        <symbol id="i-rotate-cw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+        <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+        <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+        <symbol id="i-square" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1"/></symbol>
+        <symbol id="i-squares" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="13" height="13" rx="1"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></symbol>
+        <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+        <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+        <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+        <symbol id="i-panel-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
         <symbol id="i-circle" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></symbol>
-        <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></symbol>
-        <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
-        <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></symbol>
-        <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
-        <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
-        <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="14" x2="22" y2="14"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="14" x2="4" y2="14"/></symbol>
-        <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
-        <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
-        <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
-        <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
-        <symbol id="i-chevron-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></symbol>
-        <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+        <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+        <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></symbol>
+        <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+        <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+        <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="14" x2="22" y2="14"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="14" x2="4" y2="14"/></symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+        <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+        <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+        <symbol id="i-chevron-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></symbol>
+        <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+        <symbol id="i-star-filled" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+        <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><path d="M9 13v2"/><path d="M15 13v2"/></symbol>
+        <symbol id="i-win-min" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" shape-rendering="crispEdges"><path d="M0 5.5h10"/></symbol>
+        <symbol id="i-win-max" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" shape-rendering="crispEdges"><rect x="0.5" y="0.5" width="9" height="9"/></symbol>
+        <symbol id="i-win-restore" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter" shape-rendering="crispEdges"><rect x="0.5" y="2.5" width="7" height="7"/><path d="M2.5 2.5v-2h7v7h-2"/></symbol>
+        <symbol id="i-win-close" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square"><path d="M0.5 0.5l9 9M9.5 0.5l-9 9"/></symbol>
       </defs>
     </svg>
 
@@ -83,18 +75,18 @@
         <div class="tab-strip" id="tabStrip">
             <div class="tab-bar" role="tablist" aria-label="Open tabs"></div>
             <div class="tab-strip-tools">
-                <button class="new-tab-btn" id="newTabBtn" title="New tab (Ctrl+T)" aria-label="New tab">+</button>
+                <button class="new-tab-btn" id="newTabBtn" title="New tab (Ctrl+T)" aria-label="New tab"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></button>
                 <button class="persisted-tabs-btn" id="persistedTabsBtn" title="Persisted tabs running in the background" aria-label="Persisted tabs" hidden>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                    <svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg>
                     <span class="persisted-count" id="persistedTabsCount">0</span>
                 </button>
             </div>
             <div class="app-titlebar-drag"></div>
         </div>
         <div class="app-titlebar-controls" id="appWindowControls">
-            <button class="win-ctrl" id="winMinimize" title="Minimize" aria-label="Minimize">&#x2014;</button>
-            <button class="win-ctrl" id="winMaximize" title="Maximize" aria-label="Maximize">&#x25A1;</button>
-            <button class="win-ctrl win-ctrl--close" id="winClose" title="Close" aria-label="Close">&#x2715;</button>
+            <button class="win-ctrl" id="winMinimize" title="Minimize" aria-label="Minimize"><svg class="icon" aria-hidden="true"><use href="#i-win-min"/></svg></button>
+            <button class="win-ctrl" id="winMaximize" title="Maximize" aria-label="Maximize"><svg class="icon" aria-hidden="true"><use href="#i-win-max"/></svg></button>
+            <button class="win-ctrl win-ctrl--close" id="winClose" title="Close" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-win-close"/></svg></button>
         </div>
     </div>
 
@@ -108,7 +100,7 @@
             <span class="url-bar-security" id="urlBarSecurity" data-state="" hidden><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span>
             <input type="text" class="url-bar" id="urlBar" placeholder="Search or enter address" autocomplete="off" spellcheck="false" aria-label="Address and search bar">
         </div>
-        <button class="bookmark-star-btn icon-btn" id="bookmarkStarBtn" title="Bookmark this page (Ctrl+D)" aria-label="Bookmark this page" aria-pressed="false">&#9734;</button>
+        <button class="bookmark-star-btn icon-btn" id="bookmarkStarBtn" title="Bookmark this page (Ctrl+D)" aria-label="Bookmark this page" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></button>
         <button class="ai-chat-toggle icon-btn" id="aiChatToggle" title="AI Chat" aria-label="AI Chat"><svg class="icon"><use href="#i-chat"/></svg><span class="luma-dot ai-chat-state-dot" id="aiChatStateDot" aria-hidden="true"></span></button>
         <button class="dashboard-toggle icon-btn" id="dashboardBtn" title="Dashboard" aria-label="Dashboard"><svg class="icon"><use href="#i-grid"/></svg></button>
         <div data-slot="toolbar-button" id="extensionToolbarButtons" class="toolbar-slot-inline"></div>
@@ -216,357 +208,471 @@
 
             <div class="settings-section active" id="generalSettings">
 
-                <div class="gs-subsection">
-                    <h4 class="gs-subsection-title">Application</h4>
+                <section class="gs-subsection">
+                    <h4 class="gs-subsection-title">Startup</h4>
                     <div class="gs-body">
                         <div class="gs-row">
-                            <label class="luma-switch" title="Launch LumaBrowser when you log in">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Run on startup</span>
+                                <span class="gs-row-help">Launch LumaBrowser when you log in.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Run on startup">
                                 <input type="checkbox" id="gsRunOnStartup">
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Run on startup</span>
                         </div>
                         <div class="gs-row gs-row--nested" id="gsStartHiddenRow">
-                            <label class="luma-switch" title="Open only the tray icon at login instead of a window">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Start hidden at login</span>
+                                <span class="gs-row-help">Only the tray icon appears until you open a window.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Start hidden at login">
                                 <input type="checkbox" id="gsStartHidden" checked>
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Start hidden at login</span>
-                            <span class="gs-row-help">Only the tray icon appears until you open a window.</span>
                         </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Reopen the tabs you had open when LumaBrowser last closed">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Restore tabs on restart</span>
+                                <span class="gs-row-help">Reopens your last session's tabs instead of the start page.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Restore tabs on restart">
                                 <input type="checkbox" id="gsRestoreTabs">
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Restore tabs on restart</span>
-                            <span class="gs-row-help">Reopens your last session's tabs instead of the start page.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="gs-subsection">
+                    <h4 class="gs-subsection-title">Browsing</h4>
+                    <div class="gs-body">
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Start page</span>
+                                <span class="gs-row-help">Opens in every new tab.</span>
+                            </div>
+                            <input type="text" class="form-input gs-input-wide" id="gsStartPage" placeholder="https://duckduckgo.com" aria-label="Start page" autocomplete="off" spellcheck="false">
                         </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Block ads and trackers in every tab using EasyList/EasyPrivacy. Replaces uBlock Origin since Electron does not implement chrome.webRequest.">
-                                <input type="checkbox" id="gsAdblockerEnabled">
-                                <span class="luma-switch-track"></span>
-                            </label>
-                            <span class="gs-row-label">Block ads &amp; trackers</span>
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Search engine</span>
+                                <span class="gs-row-help">Used when you type a search into the address bar.</span>
+                            </div>
+                            <select class="form-select gs-input-select" id="gsSearchEngine" aria-label="Search engine"></select>
                         </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Pin a non-closeable 'LLM' tab as the first tab. Hosts the local LLM Server control surface.">
-                                <input type="checkbox" id="gsLlmServerEnabled">
-                                <span class="luma-switch-track"></span>
-                            </label>
-                            <span class="gs-row-label">Enable LLM Server</span>
-                        </div>
-                        <div class="gs-row gs-row--nested" id="gsLlmDefaultTabRow" style="display:none;">
-                            <label class="luma-switch" title="When the browser opens, spawn and focus the LLM tab as the default tab (skipping the regular home tab). Off by default to keep startup fast.">
-                                <input type="checkbox" id="gsLlmDefaultTabOnLoad">
-                                <span class="luma-switch-track"></span>
-                            </label>
-                            <span class="gs-row-label">Open the LLM tab on launch</span>
-                        </div>
-                        <div class="gs-row gs-row--nested" id="gsLlmTraceRow" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;">
-                            <label class="luma-switch" title="Write every model call (full prompt, response, tool calls, token counts, timings) to a per-conversation file under the app data folder. Read it with: luma trace last. The file is deleted with the conversation. Off by default because it is a second copy of everything you and the model said.">
-                                <input type="checkbox" id="gsLlmTraceCalls">
-                                <span class="luma-switch-track"></span>
-                            </label>
-                            <span class="gs-row-label">Trace model calls to disk</span>
-                            <button type="button" class="gs-action-btn" id="gsLlmTraceClear" title="Delete every trace file now">Clear traces</button>
-                            <span class="gs-row-help" id="gsLlmTraceForced" style="display:none;">Forced on for this run by the --trace-llm launch flag.</span>
-                        </div>
-                        <div class="gs-row" style="align-items:center;gap:10px;">
-                            <span class="gs-row-label" style="min-width:120px;">Start page</span>
-                            <input type="text" class="form-input" id="gsStartPage" placeholder="https://duckduckgo.com" style="flex:1;min-width:0;" autocomplete="off" spellcheck="false">
-                        </div>
-                        <div class="gs-row" style="align-items:center;gap:10px;">
-                            <span class="gs-row-label" style="min-width:120px;" title="Used when you type a search into the address bar.">Search engine</span>
-                            <select class="form-select" id="gsSearchEngine" style="flex:0 1 220px;min-width:0;" aria-label="Search engine"></select>
-                        </div>
-                        <div class="gs-row" style="align-items:center;gap:10px;">
-                            <span class="gs-row-label" style="min-width:120px;" title="Resolve all website addresses through the selected DNS provider using encrypted DNS-over-HTTPS. Default uses your system's resolver. Applies immediately to new page loads.">DNS provider</span>
-                            <select class="form-select" id="gsDnsProvider" style="flex:0 1 220px;min-width:0;">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">DNS provider</span>
+                                <span class="gs-row-help">Resolves addresses with encrypted DNS-over-HTTPS. Applies to new page loads.</span>
+                            </div>
+                            <select class="form-select gs-input-select" id="gsDnsProvider" aria-label="DNS provider">
                                 <option value="default">Default (system resolver)</option>
                                 <option value="google">Google (8.8.8.8, DNS-over-HTTPS)</option>
                                 <option value="cloudflare">Cloudflare (1.1.1.1, DNS-over-HTTPS)</option>
                             </select>
                         </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Show the bookmarks bar beneath the address bar.">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Block ads and trackers</span>
+                                <span class="gs-row-help">Uses EasyList and EasyPrivacy in every tab.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Block ads and trackers">
+                                <input type="checkbox" id="gsAdblockerEnabled">
+                                <span class="luma-switch-track"></span>
+                            </label>
+                        </div>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Show bookmarks bar</span>
+                                <span class="gs-row-help">Shows your bookmarks beneath the address bar.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Show bookmarks bar">
                                 <input type="checkbox" id="gsShowBookmarksBar" checked>
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Show bookmarks bar</span>
                         </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Show the Luma On Demand tile on web pages: click it to talk to the page you are on.">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Luma On Demand</span>
+                                <span class="gs-row-help">Shows a tile on web pages: click it to talk to the page you are on.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Luma On Demand">
                                 <input type="checkbox" id="gsOnDemand" checked>
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Luma On Demand</span>
                         </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Tell websites you prefer a dark color scheme (prefers-color-scheme: dark). Sites that support dark mode render dark. The browser chrome is always dark.">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Force dark mode on websites</span>
+                                <span class="gs-row-help">Sites that support a dark scheme render dark. The browser itself is always dark.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Force dark mode on websites">
                                 <input type="checkbox" id="gsDarkMode" checked>
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Force dark mode on websites</span>
-                            <span class="gs-row-help">Sites that support a dark scheme render dark. The browser itself is always dark.</span>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
+                    <h4 class="gs-subsection-title">LLM server</h4>
+                    <div class="gs-body">
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Enable LLM server</span>
+                                <span class="gs-row-help">Pins an LLM tab first in the tab strip for running local models.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Enable LLM server">
+                                <input type="checkbox" id="gsLlmServerEnabled">
+                                <span class="luma-switch-track"></span>
+                            </label>
+                        </div>
+                        <div class="gs-row gs-row--nested" id="gsLlmDefaultTabRow" style="display:none;">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Open the LLM tab on launch</span>
+                                <span class="gs-row-help">Focuses the LLM tab instead of the home tab. Off keeps startup fast.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Open the LLM tab on launch">
+                                <input type="checkbox" id="gsLlmDefaultTabOnLoad">
+                                <span class="luma-switch-track"></span>
+                            </label>
+                        </div>
+                        <div class="gs-row gs-row--nested" id="gsLlmTraceRow" style="display:none;">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Trace model calls to disk</span>
+                                <span class="gs-row-help">Keeps a full copy of every prompt and reply per conversation. Read it with <code>luma trace last</code>.</span>
+                                <span class="gs-row-help" id="gsLlmTraceForced" style="display:none;">Forced on for this run by the --trace-llm launch flag.</span>
+                            </div>
+                            <div class="gs-row-control">
+                                <button type="button" class="gs-action-btn" id="gsLlmTraceClear" title="Delete every trace file now">Clear traces</button>
+                                <label class="luma-switch" aria-label="Trace model calls to disk">
+                                    <input type="checkbox" id="gsLlmTraceCalls">
+                                    <span class="luma-switch-track"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="gs-subsection">
                     <h4 class="gs-subsection-title">Privacy</h4>
                     <div class="gs-body">
                         <div class="gs-row">
-                            <label class="luma-switch" title="Send an anonymous once-a-day check-in to lumabyte.com. No page content or prompts are ever sent.">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Anonymous check-in</span>
+                                <span class="gs-row-help" id="gsTelemetryHelp">A once-a-day version and platform ping to lumabyte.com. Nothing you browse or type is sent.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Anonymous check-in">
                                 <input type="checkbox" id="gsTelemetryEnabled">
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Anonymous check-in</span>
-                            <span class="gs-row-help" id="gsTelemetryHelp">A once-a-day version and platform ping to lumabyte.com. Nothing you browse or type is sent.</span>
                         </div>
-                        <div class="gs-btn-row ext-mt-8">
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Browsing history</span>
+                                <span class="gs-row-help">Removes every page from your history.</span>
+                            </div>
                             <button class="gs-action-btn" id="gsClearHistoryBtn">Clear browsing history</button>
+                        </div>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Cache</span>
+                                <span class="gs-row-help">Frees disk space. Sites load a little slower the next time.</span>
+                            </div>
                             <button class="gs-action-btn" id="gsClearCacheBtn">Clear cache</button>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
                     <h4 class="gs-subsection-title">Terminal</h4>
                     <div class="gs-body">
                         <div class="gs-row">
-                            <label class="luma-switch" title="Put the luma command on your PATH so any terminal can talk to your agents about the folder it is in.">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Add the <code>luma</code> command to your terminal</span>
+                                <span class="gs-row-help" id="gsCliShimHelp">Run <code>luma &lt;agent&gt;</code> in any folder to work there with one of your agents. No separate install needed.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Add the luma command to your terminal">
                                 <input type="checkbox" id="gsCliShim">
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Add the <code>luma</code> command to your terminal</span>
-                            <span class="gs-row-help" id="gsCliShimHelp">Run <code>luma &lt;agent&gt;</code> in any folder to work there with one of your agents. No separate install needed.</span>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
                     <h4 class="gs-subsection-title">JetBrains IDEs</h4>
+                    <p class="gs-group-desc" id="gsIdePluginHelp">The LumaBrowser plugin adds a Luma tool window to WebStorm, IntelliJ IDEA, PyCharm, Rider, GoLand and the other JetBrains IDEs: the Code agent works on the open project with your local models, and edits land in the editor. Installing copies the plugin into each IDE found on this machine; restart the IDE afterwards.</p>
                     <div class="gs-body">
-                        <div class="gs-row-help ext-mb-8" id="gsIdePluginHelp">The LumaBrowser plugin adds a Luma tool window to WebStorm, IntelliJ IDEA, PyCharm, Rider, GoLand and the other JetBrains IDEs: the Code agent works on the open project with your local models, and edits land in the editor. Installing copies the plugin into each IDE found on this machine; restart the IDE afterwards.</div>
                         <div id="gsIdePluginList" class="gs-ide-list"></div>
-                        <div class="gs-btn-row ext-mt-8">
-                            <button class="gs-action-btn" id="gsIdePluginInstallAll">Install in all detected IDEs</button>
-                            <button class="gs-action-btn" id="gsIdePluginRefresh">Rescan</button>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Install everywhere</span>
+                                <span class="gs-row-help">Adds the plugin to every IDE listed above.</span>
+                            </div>
+                            <div class="gs-row-control">
+                                <button class="gs-action-btn" id="gsIdePluginRefresh">Rescan</button>
+                                <button class="gs-action-btn" id="gsIdePluginInstallAll">Install in all detected IDEs</button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
                     <h4 class="gs-subsection-title">VS Code</h4>
+                    <p class="gs-group-desc" id="gsVscodeExtHelp">The LumaBrowser extension adds a Luma view to VS Code, VS Code Insiders, VSCodium, Cursor and Windsurf: the same Code agent and the same chat as the JetBrains plugin, working on the open folder with your local models. Installing runs the editor's own extension installer for each editor found on this machine; reload the editor window afterwards.</p>
                     <div class="gs-body">
-                        <div class="gs-row-help ext-mb-8" id="gsVscodeExtHelp">The LumaBrowser extension adds a Luma view to VS Code, VS Code Insiders, VSCodium, Cursor and Windsurf: the same Code agent and the same chat as the JetBrains plugin, working on the open folder with your local models. Installing runs the editor's own extension installer for each editor found on this machine; reload the editor window afterwards.</div>
                         <div id="gsVscodeExtList" class="gs-ide-list"></div>
-                        <div class="gs-btn-row ext-mt-8">
-                            <button class="gs-action-btn" id="gsVscodeExtInstallAll">Install in all detected editors</button>
-                            <button class="gs-action-btn" id="gsVscodeExtRefresh">Rescan</button>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Install everywhere</span>
+                                <span class="gs-row-help">Adds the extension to every editor listed above.</span>
+                            </div>
+                            <div class="gs-row-control">
+                                <button class="gs-action-btn" id="gsVscodeExtRefresh">Rescan</button>
+                                <button class="gs-action-btn" id="gsVscodeExtInstallAll">Install in all detected editors</button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
                     <h4 class="gs-subsection-title">Documentation</h4>
                     <div class="gs-body">
-                        <div class="gs-btn-row">
-                            <button class="gs-action-btn" id="gsViewApiGuide">View API Guide</button>
-                            <button class="gs-action-btn" id="gsViewExtGuide">View Extensions Guide</button>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">API guide</span>
+                                <span class="gs-row-help">REST endpoints and MCP tools, with examples.</span>
+                            </div>
+                            <button class="gs-action-btn" id="gsViewApiGuide">View API guide</button>
+                        </div>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Extensions guide</span>
+                                <span class="gs-row-help">How to build and package a LumaBrowser extension.</span>
+                            </div>
+                            <button class="gs-action-btn" id="gsViewExtGuide">View extensions guide</button>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
 
             <div class="settings-section" id="aiprovidersSettings">
 
-                <h3 class="luma-section-label">LLM Providers</h3>
-                <div class="form-help ext-mb-16">Cloud and remote LLM providers the chat, extensions and scheduled runs can use. Local runtimes and models are set up in the LLM tab.</div>
+                <section class="gs-subsection">
+                    <div class="gs-subsection-head">
+                        <h4 class="gs-subsection-title">LLM providers</h4>
+                        <button class="btn btn-primary" id="addProviderBtn">Add provider</button>
+                    </div>
+                    <p class="gs-group-desc">Cloud and remote LLM providers the chat, extensions and scheduled runs can use. Local runtimes and models are set up in the LLM tab.</p>
 
-                <div id="providerList">
-                </div>
+                    <div id="providerList">
+                    </div>
 
-                <div class="ext-mt-12">
-                    <button class="btn btn-primary" id="addProviderBtn">+ Add Provider</button>
-                </div>
-
-                <div id="addProviderForm" class="ext-panel ext-mt-16 ext-hidden">
-                    <div class="form-group">
-                        <label class="form-label">Provider Type</label>
-                        <select class="form-select" id="newProviderType">
-                            <option value="">Select type...</option>
-                            <option value="openai">OpenAI-Compatible API</option>
-                            <option value="anthropic">Anthropic API</option>
-                            <option value="peer">Another LumaBrowser (Network Sharing)</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="newProviderNameGroup">
-                        <label class="form-label">Name</label>
-                        <input type="text" class="form-input" id="newProviderName" placeholder="e.g., LM Studio Local, OpenRouter, Claude">
-                    </div>
-                    <div class="form-group" id="newProviderEndpointGroup">
-                        <label class="form-label">API Endpoint</label>
-                        <input type="text" class="form-input" id="newProviderEndpoint" placeholder="http://localhost:1234">
-                    </div>
-                    <div class="form-group" id="newProviderApiKeyGroup">
-                        <label class="form-label">API Key (optional for local servers)</label>
-                        <input type="password" class="form-input" id="newProviderApiKey" placeholder="sk-...">
-                    </div>
-                    <div id="newProviderPeerBlock" class="ext-hidden">
-                        <div class="form-help" style="margin-bottom:10px;">
-                            Connect to another LumaBrowser on your network that has Network Sharing enabled.
-                            Enter its address and PIN, or pick a discovered host below. Its shared LLM,
-                            image generation and image editor become usable on this computer.
-                        </div>
+                    <div id="addProviderForm" class="ext-panel gs-form-panel ext-hidden">
                         <div class="form-group">
-                            <label class="form-label">Host address</label>
-                            <input type="text" class="form-input" id="newPeerAddress" placeholder="IP address (e.g. 192.168.1.50), hostname, or https://host">
+                            <label class="form-label" for="newProviderType">Provider type</label>
+                            <select class="form-select" id="newProviderType">
+                                <option value="">Select type...</option>
+                                <option value="openai">OpenAI-compatible API</option>
+                                <option value="anthropic">Anthropic API</option>
+                                <option value="peer">Another LumaBrowser (Network Sharing)</option>
+                            </select>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">PIN</label>
-                            <input type="text" class="form-input" id="newPeerPin" inputmode="numeric" maxlength="8" placeholder="PIN set on the host" style="max-width:160px;">
+                        <div class="form-group" id="newProviderNameGroup">
+                            <label class="form-label" for="newProviderName">Name</label>
+                            <input type="text" class="form-input" id="newProviderName" placeholder="e.g., LM Studio Local, OpenRouter, Claude">
                         </div>
-                        <div id="newPeerDiscovered" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;"></div>
-                        <div id="newPeerMsg" class="form-help"></div>
+                        <div class="form-group" id="newProviderEndpointGroup">
+                            <label class="form-label" for="newProviderEndpoint">API endpoint</label>
+                            <input type="text" class="form-input" id="newProviderEndpoint" placeholder="http://localhost:1234">
+                        </div>
+                        <div class="form-group" id="newProviderApiKeyGroup">
+                            <label class="form-label" for="newProviderApiKey">API key</label>
+                            <input type="password" class="form-input" id="newProviderApiKey" placeholder="sk-...">
+                            <div class="form-help">Optional for local servers.</div>
+                        </div>
+                        <div id="newProviderPeerBlock" class="ext-hidden">
+                            <p class="form-help">
+                                Connect to another LumaBrowser on your network that has Network Sharing enabled.
+                                Enter its address and PIN, or pick a discovered host below. Its shared LLM,
+                                image generation and image editor become usable on this computer.
+                            </p>
+                            <div class="form-group">
+                                <label class="form-label" for="newPeerAddress">Host address</label>
+                                <input type="text" class="form-input" id="newPeerAddress" placeholder="IP address (e.g. 192.168.1.50), hostname, or https://host">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="newPeerPin">PIN</label>
+                                <input type="text" class="form-input gs-input-narrow" id="newPeerPin" inputmode="numeric" maxlength="8" placeholder="PIN set on the host">
+                            </div>
+                            <div id="newPeerDiscovered" class="gs-discovery"></div>
+                            <div id="newPeerMsg" class="form-help"></div>
+                        </div>
+                        <div class="form-buttons provider-card-actions">
+                            <button class="btn btn-secondary" id="cancelNewProviderBtn">Cancel</button>
+                            <button class="btn btn-primary" id="saveNewProviderBtn">Save provider</button>
+                        </div>
                     </div>
-                    <div class="form-buttons ext-mt-12">
-                        <button class="btn btn-primary" id="saveNewProviderBtn">Save Provider</button>
-                        <button class="btn btn-secondary" id="cancelNewProviderBtn">Cancel</button>
-                    </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
                     <h4 class="gs-subsection-title">Local API</h4>
+                    <p class="gs-group-desc">
+                        Serves the running chat model as an OpenAI-compatible API on this computer only. Point Cline, Continue, or any OpenAI client at <code id="gsLocalApiUrlText">http://127.0.0.1:8317/v1</code>.
+                        No API key is needed. Start a model in the LLM tab first; this never starts one for you.
+                    </p>
                     <div class="gs-body">
-                        <div class="form-help ext-mb-16" style="font-size:12px;color:var(--text-secondary);">
-                            Serves the running chat model as an OpenAI-compatible API on this computer only. Point Cline, Continue, or any OpenAI client at <code id="gsLocalApiUrlText">http://127.0.0.1:8317/v1</code>.
-                            Listens on 127.0.0.1 only, so other machines cannot reach it and no API key is needed. Start a model in the LLM tab first; this never starts one for you.
-                        </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Serve the running chat model on 127.0.0.1 as an OpenAI-compatible API">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Serve on 127.0.0.1</span>
+                                <span class="gs-row-help">Other machines cannot reach it.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Serve on 127.0.0.1">
                                 <input type="checkbox" id="gsLocalApiEnabled">
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label" style="min-width:auto;">Serve on 127.0.0.1</span>
                         </div>
                         <div class="gs-row">
-                            <span class="gs-row-label">Port</span>
-                            <div style="display:flex;gap:8px;flex:1;align-items:center;">
-                                <input type="number" id="gsLocalApiPort" class="form-input" min="1" max="65535" placeholder="8317" style="width:96px;">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Port</span>
                                 <span id="gsLocalApiStatus" class="gs-row-help"></span>
                             </div>
+                            <input type="number" id="gsLocalApiPort" class="form-input gs-input-port" min="1" max="65535" placeholder="8317" aria-label="Local API port">
                         </div>
                         <div class="gs-row" id="gsLocalApiErrorRow" style="display:none;">
-                            <span class="gs-row-label"></span>
                             <span id="gsLocalApiError" class="gs-inline-error"></span>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection" id="gsHarnessSection">
+                <section class="gs-subsection" id="gsHarnessSection">
                     <h4 class="gs-subsection-title">Connect your agent</h4>
+                    <p class="gs-group-desc">
+                        One click points a coding agent you already use at the Local API and adds the LumaBrowser MCP tools. Each agent's own config file is edited in place and put back on disconnect.
+                        <span id="gsHarnessApiHint"></span>
+                    </p>
                     <div class="gs-body">
-                        <div class="form-help ext-mb-16" style="font-size:12px;color:var(--text-secondary);">
-                            One click points a coding agent you already use at the Local API and adds the LumaBrowser MCP tools. Each agent's own config file is edited in place and put back on disconnect.
-                            <span id="gsHarnessApiHint"></span>
-                        </div>
                         <div id="gsHarnessRows"></div>
-                        <div class="gs-row" style="margin-top:8px;">
-                            <span class="gs-row-label">Agent skill</span>
-                            <div style="display:flex;gap:8px;flex:1;align-items:center;flex-wrap:wrap;">
-                                <button class="btn btn-secondary btn-sm" id="gsHarnessSkillBtn">Install luma skill</button>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Agent skill</span>
                                 <span id="gsHarnessSkillStatus" class="gs-row-help"></span>
                             </div>
+                            <button class="btn btn-secondary" id="gsHarnessSkillBtn">Install luma skill</button>
                         </div>
                         <div class="gs-row">
-                            <span class="gs-row-label"></span>
-                            <span class="gs-row-help">Other MCP clients: <a href="#" id="gsHarnessExportLink">export the MCP config</a> as JSON, or run <code>luma docs</code> in a terminal.</span>
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Other MCP clients</span>
+                                <span class="gs-row-help">Export the MCP config as JSON, or run <code>luma docs</code> in a terminal.</span>
+                            </div>
+                            <a href="#" class="gs-action-btn" id="gsHarnessExportLink">Export MCP config</a>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
 
             <div class="settings-section" id="apimcpSettings">
 
-                <div class="gs-subsection">
-                    <h4 class="gs-subsection-title">API &amp; MCP</h4>
+                <section class="gs-subsection">
+                    <h4 class="gs-subsection-title">API and MCP server</h4>
                     <div class="gs-body">
                         <div class="gs-row">
-                            <span class="gs-row-label">Port</span>
-                            <input type="number" class="gs-port-input" id="gsApiPort" min="1024" max="65535" value="3000">
-                            <span class="gs-restart-note" id="gsPortRestartNote">Restart required</span>
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Port</span>
+                                <span class="gs-restart-note" id="gsPortRestartNote">Restart required</span>
+                            </div>
+                            <input type="number" class="gs-port-input" id="gsApiPort" min="1024" max="65535" value="3000" aria-label="API port">
                         </div>
                         <div class="gs-row">
-                            <span class="gs-row-label">API URL</span>
-                            <span class="gs-url-display" id="gsApiUrl">http://localhost:3000</span>
-                            <button class="gs-copy-btn" id="gsCopyApiUrl" title="Copy API URL">Copy</button>
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">API URL</span>
+                            </div>
+                            <div class="gs-row-control">
+                                <span class="gs-url-display" id="gsApiUrl">http://localhost:3000</span>
+                                <button class="gs-copy-btn" id="gsCopyApiUrl" title="Copy API URL">Copy</button>
+                            </div>
                         </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Enable the REST API server">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Enable REST API</span>
+                                <span class="gs-row-help">Lets local programs drive the browser over HTTP.</span>
+                                <span class="gs-restart-note" id="gsApiRestartNote">Restart required</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Enable REST API">
                                 <input type="checkbox" id="gsApiEnabled" checked>
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Enable REST API</span>
-                            <span class="gs-restart-note" id="gsApiRestartNote">Restart required</span>
                         </div>
                         <div class="gs-row">
-                            <label class="luma-switch" title="Enable MCP tools for AI assistants">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Enable MCP tools</span>
+                                <span class="gs-row-help">Lets AI assistants use LumaBrowser through MCP.</span>
+                                <span class="gs-restart-note" id="gsMcpRestartNote">Restart required</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Enable MCP tools">
                                 <input type="checkbox" id="gsMcpEnabled" checked>
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label">Enable MCP Tools</span>
-                            <span class="gs-restart-note" id="gsMcpRestartNote">Restart required</span>
                         </div>
-                        <div class="gs-btn-row ext-mt-8">
-                            <button class="gs-action-btn" id="gsExportMcpConfig">Export MCP Config</button>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">MCP config</span>
+                                <span class="gs-row-help">A JSON file for Claude Desktop, Cursor and other MCP clients.</span>
+                            </div>
+                            <button class="gs-action-btn" id="gsExportMcpConfig">Export MCP config</button>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
                     <h4 class="gs-subsection-title">Tools</h4>
                     <div class="gs-body">
-                        <div>
-                            <div class="gs-endpoint-group-title">API / MCP Tools</div>
-                            <div class="gs-form-help" style="margin:2px 0 8px;">What external callers can reach over the REST API and MCP. One card per source: toggle the whole source, or expand it to switch individual routes and tools. Core browser routes stay on.</div>
+                        <div class="gs-tools-block">
+                            <h5 class="gs-endpoint-group-title">API and MCP tools</h5>
+                            <p class="gs-form-help">What external callers can reach over the REST API and MCP. Toggle a whole source, or open Customize to switch single routes and tools. Core browser routes stay on.</p>
                             <div class="gs-endpoint-list" id="gsApiMcpTools">
                             </div>
                         </div>
-                        <div style="margin-top:14px;">
-                            <div class="gs-endpoint-group-title">Chat Agent Tools</div>
-                            <div class="gs-form-help" style="margin:2px 0 8px;">Tools the in-app chat agent may call at all. Unchecking here disables a tool everywhere. Network Sharing narrows this list further for connected web clients, and each chat can turn tools off for itself in its gear menu.</div>
+                        <div class="gs-tools-block">
+                            <h5 class="gs-endpoint-group-title">Chat agent tools</h5>
+                            <p class="gs-form-help">Tools the in-app chat agent may call at all. Unchecking here disables a tool everywhere. Network Sharing narrows this list further for web clients, and each chat can turn tools off in its gear menu.</p>
                             <div class="gs-endpoint-list" id="gsAgentTools">
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
 
             <div class="settings-section" id="securitySettings">
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
                     <h4 class="gs-subsection-title">Site permissions</h4>
+                    <p class="gs-group-desc">Websites ask before they can use your camera or microphone. Answers you chose to remember are listed here. Clear one to be asked again.</p>
                     <div class="gs-body">
-                        <div class="gs-row-help ext-mb-8">Websites ask before they can use your camera or microphone. Answers you chose to remember are listed here. Clear one to be asked again.</div>
                         <div id="gsSitePermList" class="gs-ide-list"></div>
-                        <div class="gs-row-help" id="gsSitePermEmpty">No remembered answers yet.</div>
-                        <div class="gs-btn-row ext-mt-8">
+                        <div class="gs-row-help gs-empty-line" id="gsSitePermEmpty">No remembered answers yet.</div>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Forget all answers</span>
+                                <span class="gs-row-help">Every site asks again next time.</span>
+                            </div>
                             <button class="gs-action-btn" id="gsSitePermClearAll">Clear all</button>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
-                    <h4 class="gs-subsection-title">API Security</h4>
+                <section class="gs-subsection">
+                    <h4 class="gs-subsection-title">API security</h4>
+                    <p class="gs-group-desc">Who can reach the REST API and MCP endpoints. Network mode and API keys are independent: combine them for stricter access.</p>
                     <div class="gs-body">
-                        <div class="form-help ext-mb-16" style="font-size:12px;color:var(--text-secondary);">
-                            Who can reach the REST API and MCP endpoints. Network mode and API keys are independent: combine them for stricter access.
-                        </div>
-                        <div class="gs-row" style="align-items:flex-start;">
-                            <span class="gs-row-label" style="padding-top:6px;">Network mode</span>
-                            <div id="gsApiSecModeGroup" style="display:flex;flex-direction:column;gap:6px;flex:1;">
+                        <div class="gs-row gs-row--top">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Network mode</span>
+                                <span class="gs-row-help">Which addresses may call the API.</span>
+                            </div>
+                            <div id="gsApiSecModeGroup" class="gs-choice-list">
                                 <label class="luma-check">
                                     <input type="radio" name="gsApiSecMode" value="system"> System only (localhost)
                                 </label>
@@ -579,176 +685,182 @@
                                 <label class="luma-check">
                                     <input type="radio" name="gsApiSecMode" value="any"> Any (no restriction)
                                 </label>
-                                <div class="luma-callout warn" id="gsApiSecAnyWarning" style="display:none;margin-top:4px;">
-                                    Any device that can reach this computer can drive the browser and read its data through the API. Turn on "Require API key" below or pick a narrower mode.
-                                </div>
+                            </div>
+                            <div class="luma-callout warn gs-row-notice" id="gsApiSecAnyWarning" style="display:none;">
+                                Any device that can reach this computer can drive the browser and read its data through the API. Turn on "Require API key" below or pick a narrower mode.
                             </div>
                         </div>
-                        <div class="gs-row" id="gsApiSecWhitelistWrap" style="align-items:flex-start;display:none;">
-                            <span class="gs-row-label" style="padding-top:6px;">Allowed IPs</span>
-                            <div style="flex:1;">
-                                <div id="gsApiSecWhitelist" style="display:flex;flex-direction:column;gap:6px;"></div>
-                                <div style="display:flex;gap:6px;margin-top:8px;">
-                                    <input type="text" id="gsApiSecWhitelistInput" class="form-input" placeholder="e.g. 192.168.1.10 or 10.0.0.0/24" style="flex:1;">
-                                    <button class="gs-action-btn" id="gsApiSecWhitelistAdd">Add</button>
-                                </div>
-                                <div class="form-help" style="font-size:11px;color:var(--text-muted);margin-top:6px;">
-                                    Accepts plain IPs and CIDR ranges (IPv4 and IPv6).
-                                </div>
+                        <div class="gs-row gs-row--stack gs-row--nested" id="gsApiSecWhitelistWrap" style="display:none;">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Allowed IPs</span>
+                                <span class="gs-row-help">Plain IPs and CIDR ranges, IPv4 and IPv6.</span>
+                            </div>
+                            <div id="gsApiSecWhitelist" class="gs-item-list"></div>
+                            <div class="gs-inline-controls">
+                                <input type="text" id="gsApiSecWhitelistInput" class="form-input" placeholder="e.g. 192.168.1.10 or 10.0.0.0/24" aria-label="IP or CIDR range">
+                                <button class="gs-action-btn" id="gsApiSecWhitelistAdd">Add</button>
                             </div>
                         </div>
-                        <hr class="gs-divider" style="margin:14px 0;">
                         <div class="gs-row">
-                            <label class="luma-switch" title="Require a valid API key on every request">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Require API key</span>
+                                <span class="gs-row-help">Every request must carry a valid key.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Require API key">
                                 <input type="checkbox" id="gsApiSecRequireKey">
                                 <span class="luma-switch-track"></span>
                             </label>
-                            <span class="gs-row-label" style="min-width:auto;">Require API key</span>
                         </div>
-                        <div id="gsApiSecKeysWrap" style="display:none;">
-                            <div class="form-help" style="font-size:11px;color:var(--text-muted);margin:4px 0 10px;">
-                                Send the key as <code>Authorization: Bearer &lt;key&gt;</code> or as an <code>X-Api-Key</code> header. External MCP clients must set the <code>LUMA_API_KEY</code> environment variable.
+                        <div class="gs-row gs-row--stack gs-row--nested" id="gsApiSecKeysWrap" style="display:none;">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">API keys</span>
+                                <span class="gs-row-help">Send the key as <code>Authorization: Bearer &lt;key&gt;</code> or as an <code>X-Api-Key</code> header. External MCP clients must set the <code>LUMA_API_KEY</code> environment variable.</span>
                             </div>
-                            <div id="gsApiSecKeysList" style="display:flex;flex-direction:column;gap:8px;"></div>
-                            <div style="display:flex;gap:6px;margin-top:10px;">
-                                <input type="text" id="gsApiSecKeyLabel" class="form-input" placeholder="Key label (e.g. My phone)" style="flex:1;">
-                                <button class="gs-action-btn" id="gsApiSecKeyCreate">+ New key</button>
+                            <div id="gsApiSecKeysList" class="gs-item-list"></div>
+                            <div class="gs-inline-controls">
+                                <input type="text" id="gsApiSecKeyLabel" class="form-input" placeholder="Key label (e.g. My phone)" aria-label="Key label">
+                                <button class="gs-action-btn" id="gsApiSecKeyCreate">New key</button>
                             </div>
-                            <div id="gsApiSecNewKeyReveal" class="luma-callout" style="display:none;margin-top:10px;">
-                                <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">Copy this key now. It is shown masked from here on; use Reveal on a key to see it again.</div>
-                                <div style="display:flex;gap:6px;align-items:center;">
-                                    <code id="gsApiSecNewKeyValue" style="flex:1;font-family:var(--font-mono);font-size:12px;word-break:break-all;color:var(--text-primary);"></code>
+                            <div id="gsApiSecNewKeyReveal" class="luma-callout gs-key-reveal" style="display:none;">
+                                <div class="gs-row-help">Copy this key now. It is shown masked from here on; use Reveal on a key to see it again.</div>
+                                <div class="gs-inline-controls">
+                                    <code id="gsApiSecNewKeyValue" class="gs-key-value"></code>
                                     <button class="gs-copy-btn" id="gsApiSecNewKeyCopy">Copy</button>
                                     <button class="gs-copy-btn" id="gsApiSecNewKeyDismiss">Done</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="gs-subsection">
+                <section class="gs-subsection">
                     <div class="gs-collapsible-header" data-gs-section="network-sharing">
                         <svg class="gs-chevron" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M4 2.5l4 3.5-4 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <h4 class="gs-subsection-title" style="border:none;padding:0;margin:0;">Network Sharing</h4>
+                        <h4 class="gs-subsection-title">Network Sharing</h4>
                         <span class="gs-row-help" id="gsShareSummary"></span>
                     </div>
                     <div class="gs-collapsible-body" data-gs-body="network-sharing">
-                        <div class="form-help ext-mb-16" style="font-size:12px;color:var(--text-secondary);">
+                        <p class="gs-group-desc">
                             Share this computer's LLM and image servers with other LumaBrowsers on your network. Sharing is gated by a PIN.
-                            To use another LumaBrowser's resources, add it with "+ Add Provider" under <button type="button" class="luma-btn link gs-inline-link" data-gs-goto="aiproviders">AI &amp; Providers</button>; manage the connection here.
-                        </div>
+                            To use another LumaBrowser's resources, add it with Add provider under <button type="button" class="luma-btn link gs-inline-link" data-gs-goto="aiproviders">AI &amp; Providers</button>; manage the connection here.
+                        </p>
 
-                        <h5 style="font-size:12.5px;font-weight:600;color:var(--text-primary);margin:0 0 8px;">Share my resources (host)</h5>
-                        <div class="gs-row">
-                            <label class="luma-switch" title="Advertise this computer and accept paired clients">
-                                <input type="checkbox" id="gsShareEnabled">
-                                <span class="luma-switch-track"></span>
-                            </label>
-                            <span class="gs-row-label" style="min-width:auto;">Enable sharing host</span>
-                        </div>
-                        <div id="gsShareHostBody">
+                        <h5 class="gs-group-subtitle">Share my resources (host)</h5>
+                        <div class="gs-body">
                             <div class="gs-row">
-                                <span class="gs-row-label">Name on network</span>
-                                <input type="text" id="gsShareName" class="form-input" placeholder="This computer" style="flex:1;">
-                            </div>
-                            <div class="gs-row">
-                                <span class="gs-row-label">PIN (4 to 8 digits)</span>
-                                <div style="display:flex;gap:6px;flex:1;">
-                                    <input type="text" id="gsSharePin" class="form-input" inputmode="numeric" maxlength="8" placeholder="e.g. 1234" style="flex:1;">
-                                    <button class="gs-action-btn" id="gsSharePinSet">Set PIN</button>
-                                    <button class="gs-action-btn" id="gsSharePinClear" title="Remove the PIN">Clear</button>
+                                <div class="gs-row-text">
+                                    <span class="gs-row-label">Enable sharing host</span>
+                                    <span class="gs-row-help">Advertise this computer and accept paired clients.</span>
                                 </div>
-                            </div>
-                            <div class="gs-row" id="gsSharePinStatus" style="display:none;">
-                                <span class="gs-row-label"></span>
-                                <span style="font-size:11.5px;color:var(--text-muted);">A PIN is set. Clients need it to pair.</span>
-                            </div>
-                            <div class="gs-row">
-                                <label class="luma-switch" title="Serve a browser chat client other devices can open, no install needed">
-                                    <input type="checkbox" id="gsShareWebEnabled">
+                                <label class="luma-switch" aria-label="Enable sharing host">
+                                    <input type="checkbox" id="gsShareEnabled">
                                     <span class="luma-switch-track"></span>
                                 </label>
-                                <span class="gs-row-label" style="min-width:auto;">Host web accessible backend</span>
                             </div>
-                            <div class="gs-row" id="gsShareWebRow">
-                                <span class="gs-row-label">Web port</span>
-                                <div style="display:flex;gap:8px;flex:1;align-items:center;">
-                                    <input type="number" id="gsShareWebPort" class="form-input" min="1" max="65535" placeholder="80" style="width:96px;">
-                                    <span id="gsShareWebUrl" style="font-size:11.5px;color:var(--text-muted);"></span>
-                                </div>
-                            </div>
-                            <div class="gs-row" id="gsSharePublicUrlRow">
-                                <span class="gs-row-label">URL</span>
-                                <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
-                                    <input type="text" id="gsSharePublicUrl" class="form-input" placeholder="Optional, e.g. https://chat.example.com" autocomplete="off" spellcheck="false">
-                                    <span style="font-size:11.5px;color:var(--text-muted);">Overrides the base URL used for share links (a domain or tunnel in front of the web backend). Leave blank to use this PC's LAN address.</span>
-                                </div>
-                            </div>
-                            <div class="gs-row" style="align-items:flex-start;">
-                                <span class="gs-row-label" style="padding-top:2px;">Chat tools</span>
-                                <div style="flex:1;">
-                                    <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:8px;">
-                                        Which agent tools connected web clients may use. This narrows the global list from API &amp; MCP; a tool disabled there never appears here. Toggle a group, or expand it for per-tool control.
+                            <div id="gsShareHostBody">
+                                <div class="gs-row">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">Name on network</span>
                                     </div>
-                                    <div id="gsShareWebTools" style="display:flex;flex-direction:column;gap:8px;"></div>
+                                    <input type="text" id="gsShareName" class="form-input gs-input-wide" placeholder="This computer" aria-label="Name on network">
                                 </div>
-                            </div>
-                            <div class="gs-row" style="align-items:flex-start;">
-                                <span class="gs-row-label" style="padding-top:6px;">Allowed callers</span>
-                                <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
-                                    <label class="luma-check">
-                                        <input type="radio" name="gsShareBindMode" value="lan"> Local network only (recommended)
-                                    </label>
-                                    <label class="luma-check">
-                                        <input type="radio" name="gsShareBindMode" value="any"> Any address
+                                <div class="gs-row">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">PIN</span>
+                                        <span class="gs-row-help">4 to 8 digits. Clients need it to pair.</span>
+                                        <span class="gs-row-help" id="gsSharePinStatus" style="display:none;">A PIN is set. Clients need it to pair.</span>
+                                    </div>
+                                    <div class="gs-row-control">
+                                        <input type="text" id="gsSharePin" class="form-input gs-input-narrow" inputmode="numeric" maxlength="8" placeholder="e.g. 1234" aria-label="PIN">
+                                        <button class="gs-action-btn" id="gsSharePinSet">Set PIN</button>
+                                        <button class="gs-action-btn" id="gsSharePinClear" title="Remove the PIN">Clear</button>
+                                    </div>
+                                </div>
+                                <div class="gs-row">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">Host web accessible backend</span>
+                                        <span class="gs-row-help">Serves a browser chat client other devices can open, no install needed.</span>
+                                    </div>
+                                    <label class="luma-switch" aria-label="Host web accessible backend">
+                                        <input type="checkbox" id="gsShareWebEnabled">
+                                        <span class="luma-switch-track"></span>
                                     </label>
                                 </div>
-                            </div>
-                            <div class="gs-row" style="align-items:flex-start;">
-                                <span class="gs-row-label" style="padding-top:6px;">Network access</span>
-                                <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
-                                    <div id="gsShareFirewallNote" style="font-size:11.5px;color:var(--text-muted);">
-                                        If other devices cannot connect, your OS firewall may be blocking incoming connections.
+                                <div class="gs-row gs-row--nested" id="gsShareWebRow">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">Web port</span>
+                                        <span id="gsShareWebUrl" class="gs-row-help"></span>
                                     </div>
-                                    <div style="display:flex;gap:10px;align-items:center;">
-                                        <button id="gsShareFirewallBtn" class="btn btn-secondary" style="font-size:12px;padding:5px 12px;">Allow through firewall</button>
-                                        <span id="gsShareFirewallStatus" style="font-size:11.5px;color:var(--text-muted);"></span>
+                                    <input type="number" id="gsShareWebPort" class="form-input gs-input-port" min="1" max="65535" placeholder="80" aria-label="Web port">
+                                </div>
+                                <div class="gs-row gs-row--nested" id="gsSharePublicUrlRow">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">Public URL</span>
+                                        <span class="gs-row-help">Base URL for share links, such as a domain or tunnel in front of the web backend. Leave blank to use this PC's LAN address.</span>
+                                    </div>
+                                    <input type="text" id="gsSharePublicUrl" class="form-input gs-input-wide" placeholder="https://chat.example.com" aria-label="Public URL" autocomplete="off" spellcheck="false">
+                                </div>
+                                <div class="gs-row gs-row--stack gs-row--nested">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">Chat tools</span>
+                                        <span class="gs-row-help">Which agent tools connected web clients may use. This narrows the global list from API &amp; MCP; a tool disabled there never appears here.</span>
+                                    </div>
+                                    <div id="gsShareWebTools" class="gs-item-list"></div>
+                                </div>
+                                <div class="gs-row gs-row--top">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">Allowed callers</span>
+                                    </div>
+                                    <div class="gs-choice-list">
+                                        <label class="luma-check">
+                                            <input type="radio" name="gsShareBindMode" value="lan"> Local network only (recommended)
+                                        </label>
+                                        <label class="luma-check">
+                                            <input type="radio" name="gsShareBindMode" value="any"> Any address
+                                        </label>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="gs-row" style="align-items:flex-start;">
-                                <span class="gs-row-label" style="padding-top:2px;">What to share</span>
-                                <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
-                                    <label class="luma-check"><input type="checkbox" id="gsShareLocalLlm"> Local LLM (current model only)</label>
-                                    <label class="luma-check"><input type="checkbox" id="gsShareRemoteLlms"> Remote-setup LLMs (proxied, keys stay here)</label>
-                                    <label class="luma-check"><input type="checkbox" id="gsShareImageGen"> Local AI image generation</label>
-                                    <label class="luma-check"><input type="checkbox" id="gsShareImageEdit"> Local AI image editor</label>
-                                    <label class="luma-check" title="Lets a paired peer run one model across both machines using llama.cpp RPC. One borrower at a time; local model launches wait while the GPUs are lent."><input type="checkbox" id="gsShareGpus"> GPUs for distributed inference (experimental)</label>
-                                    <label class="luma-check" title="Offers your custom agents (Setup > Agents) to web and paired chat clients as Chat with agent. An agent brings its own instructions, tool grants and knowledge base, so turn this off to share the model without them."><input type="checkbox" id="gsShareAgents"> Custom agents (Chat with agent)</label>
-                                    <label class="luma-check" title="Lets web and paired chat clients talk to the model and hear replies using this computer's speech engines (whisper.cpp and sherpa-onnx). Audio is transcribed and synthesized here; set voice up in this chat's microphone menu first."><input type="checkbox" id="gsShareVoice"> Voice (speech to text and read aloud)</label>
+                                <div class="gs-row">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">Network access</span>
+                                        <span class="gs-row-help" id="gsShareFirewallNote">If other devices cannot connect, your OS firewall may be blocking incoming connections.</span>
+                                        <span id="gsShareFirewallStatus" class="gs-row-help"></span>
+                                    </div>
+                                    <button id="gsShareFirewallBtn" class="btn btn-secondary">Allow through firewall</button>
                                 </div>
-                            </div>
-                            <div class="gs-row" style="align-items:flex-start;">
-                                <span class="gs-row-label" style="padding-top:2px;">Paired clients</span>
-                                <div style="flex:1;">
-                                    <div id="gsShareTokens" style="display:flex;flex-direction:column;gap:6px;"></div>
-                                    <button class="gs-action-btn" id="gsShareRevokeAll" style="margin-top:8px;">Revoke all</button>
+                                <div class="gs-row gs-row--top">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">What to share</span>
+                                    </div>
+                                    <div class="gs-choice-list">
+                                        <label class="luma-check"><input type="checkbox" id="gsShareLocalLlm"> Local LLM (current model only)</label>
+                                        <label class="luma-check"><input type="checkbox" id="gsShareRemoteLlms"> Remote-setup LLMs (proxied, keys stay here)</label>
+                                        <label class="luma-check"><input type="checkbox" id="gsShareImageGen"> Local AI image generation</label>
+                                        <label class="luma-check"><input type="checkbox" id="gsShareImageEdit"> Local AI image editor</label>
+                                        <label class="luma-check" title="Lets a paired peer run one model across both machines using llama.cpp RPC. One borrower at a time; local model launches wait while the GPUs are lent."><input type="checkbox" id="gsShareGpus"> GPUs for distributed inference (experimental)</label>
+                                        <label class="luma-check" title="Offers your custom agents (Setup > Agents) to web and paired chat clients as Chat with agent. An agent brings its own instructions, tool grants and knowledge base, so turn this off to share the model without them."><input type="checkbox" id="gsShareAgents"> Custom agents (Chat with agent)</label>
+                                        <label class="luma-check" title="Lets web and paired chat clients talk to the model and hear replies using this computer's speech engines (whisper.cpp and sherpa-onnx). Audio is transcribed and synthesized here; set voice up in this chat's microphone menu first."><input type="checkbox" id="gsShareVoice"> Voice (speech to text and read aloud)</label>
+                                    </div>
+                                </div>
+                                <div class="gs-row gs-row--stack">
+                                    <div class="gs-row-text">
+                                        <span class="gs-row-label">Paired clients</span>
+                                    </div>
+                                    <div id="gsShareTokens" class="gs-item-list"></div>
+                                    <div class="gs-inline-controls">
+                                        <button class="gs-action-btn" id="gsShareRevokeAll">Revoke all</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <hr class="gs-divider" style="margin:16px 0;">
-
-                        <h5 style="font-size:12.5px;font-weight:600;color:var(--text-primary);margin:0 0 8px;">Paired peers (client)</h5>
-                        <div class="form-help" style="font-size:11.5px;color:var(--text-muted);margin:0 0 8px;">
-                            Hosts this computer is paired with. To pair with a new host, use "+ Add Provider" under <button type="button" class="luma-btn link gs-inline-link" data-gs-goto="aiproviders">AI &amp; Providers</button> and choose "Another LumaBrowser".
-                        </div>
-                        <div class="gs-row" style="align-items:flex-start;">
-                            <span class="gs-row-label" style="padding-top:2px;">Paired peers</span>
-                            <div id="gsPeersList" style="flex:1;display:flex;flex-direction:column;gap:8px;"></div>
-                        </div>
+                        <h5 class="gs-group-subtitle">Paired peers (client)</h5>
+                        <p class="gs-group-desc">
+                            Hosts this computer is paired with. To pair with a new host, use Add provider under <button type="button" class="luma-btn link gs-inline-link" data-gs-goto="aiproviders">AI &amp; Providers</button> and choose "Another LumaBrowser".
+                        </p>
+                        <div id="gsPeersList" class="gs-item-list"></div>
                     </div>
-                </div>
+                </section>
             </div>
 
 
@@ -759,40 +871,38 @@
                         <h3 id="aboutAppName" class="about-name">LumaBrowser</h3>
                         <span id="aboutAppVersion" class="luma-badge muted"></span>
                     </div>
-                    <div class="gs-subsection">
+                    <section class="gs-subsection">
                         <h4 class="gs-subsection-title">Updates</h4>
                         <div class="gs-body">
-                            <div class="gs-row" style="align-items:flex-start;">
-                                <label class="luma-switch" title="Check lumabyte.com for a new version on launch">
-                                    <input type="checkbox" id="aboutAutoUpdateToggle">
-                                    <span class="luma-switch-track"></span>
-                                </label>
-                                <div style="flex:1;min-width:0;">
-                                    <label for="aboutAutoUpdateToggle" class="gs-row-label" style="cursor:pointer;">Check for updates automatically</label>
-                                    <div class="gs-row-help" style="display:block;margin-top:2px;">When off, LumaBrowser never contacts the update server. You can still check manually.</div>
+                            <div class="gs-row">
+                                <div class="gs-row-text">
+                                    <label for="aboutAutoUpdateToggle" class="gs-row-label">Check for updates automatically</label>
+                                    <span class="gs-row-help">When off, LumaBrowser never contacts the update server. You can still check manually.</span>
                                 </div>
-                                <button class="gs-action-btn" id="aboutCheckUpdatesBtn">Check now</button>
+                                <div class="gs-row-control">
+                                    <button class="gs-action-btn" id="aboutCheckUpdatesBtn">Check now</button>
+                                    <label class="luma-switch" aria-label="Check for updates automatically">
+                                        <input type="checkbox" id="aboutAutoUpdateToggle">
+                                        <span class="luma-switch-track"></span>
+                                    </label>
+                                </div>
                             </div>
                             <div class="gs-row" id="aboutUpdateStatusRow" style="display:none;">
                                 <span class="luma-dot" id="aboutUpdateDot"></span>
-                                <span id="aboutUpdateStatus" class="gs-row-help"></span>
-                                <div class="luma-progress" id="aboutUpdateProgress" style="display:none;flex:1;max-width:220px;"><div class="luma-progress-fill" id="aboutUpdateProgressFill" style="width:0%"></div></div>
-                                <button class="gs-action-btn" id="aboutInstallUpdateBtn" style="display:none;">Restart to install</button>
+                                <span id="aboutUpdateStatus" class="gs-row-help gs-update-status"></span>
+                                <div class="luma-progress gs-update-progress" id="aboutUpdateProgress" style="display:none;"><div class="luma-progress-fill" id="aboutUpdateProgressFill" style="width:0%"></div></div>
+                                <button class="btn btn-primary" id="aboutInstallUpdateBtn" style="display:none;">Restart to install</button>
                             </div>
                         </div>
-                    </div>
-                    <div class="gs-subsection">
+                    </section>
+                    <section class="gs-subsection">
                         <h4 class="gs-subsection-title">License</h4>
-                        <div class="gs-body">
-                            <pre id="aboutAppLicense" class="luma-scrollbox about-license"></pre>
-                        </div>
-                    </div>
-                    <div class="gs-subsection">
-                        <h4 class="gs-subsection-title">Third-Party Licenses</h4>
-                        <div class="gs-body">
-                            <pre id="aboutThirdParty" class="luma-scrollbox about-license about-license--tall"></pre>
-                        </div>
-                    </div>
+                        <pre id="aboutAppLicense" class="luma-scrollbox about-license"></pre>
+                    </section>
+                    <section class="gs-subsection">
+                        <h4 class="gs-subsection-title">Third-party licenses</h4>
+                        <pre id="aboutThirdParty" class="luma-scrollbox about-license about-license--tall"></pre>
+                    </section>
                 </div>
                 <div class="settings-subpane" id="aboutSubpaneLicense"></div>
             </div>
@@ -839,9 +949,8 @@
         <div class="setup-wizard" id="setupWizard">
             <aside class="setup-wizard__sidebar">
                 <div class="setup-wizard__sidebar-header">
-                    <div class="setup-wizard__eyebrow">First-Run Setup</div>
-                    <div class="setup-wizard__brand">LumaBrowser</div>
-                    <div class="setup-wizard__brand-sub">Let's get you configured.</div>
+                    <div class="setup-wizard__brand">Set up LumaBrowser</div>
+                    <div class="setup-wizard__brand-sub">A few choices before you start.</div>
                 </div>
                 <div class="setup-wizard__steps" id="setupWizardSteps"></div>
             </aside>

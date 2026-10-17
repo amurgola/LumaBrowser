@@ -26,7 +26,7 @@ export default class AutoStatusPanes {
           <div class="setup-wizard__rec-name">${HtmlEscaper.escape(A.modelName || 'Your local model')}</div>
           <p class="setup-wizard__rec-why">
             Downloaded and running. Click <strong>Continue</strong>, then
-            <strong>Finish Setup</strong>, and you will land right in the chat.
+            <strong>Finish setup</strong>, and you will land right in the chat.
           </p>
           ${AutoStatusPanes._imageLine(A)}
         </div>

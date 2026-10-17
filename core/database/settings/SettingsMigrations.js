@@ -21,6 +21,7 @@ class SettingsMigrations {
     ['llm_conversations', 'choices_enabled', 'INTEGER'],
     ['llm_conversations', 'reasoning_effort', 'TEXT'],
     ['llm_messages', 'parent_id', 'TEXT'],
+    ['llm_conversations', 'parent_conversation_id', 'TEXT'],
   ];
 
   static ARTIFACT_VERSION_COLUMNS = ['root_id', 'version'];

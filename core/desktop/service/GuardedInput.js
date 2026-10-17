@@ -5,7 +5,8 @@ class GuardedInput {
   }
 
   send(w, inputs) {
-    this._guards.checkForeground(w);
+    const popup = this._guards.checkForeground(w);
+    if (popup) w.popupInFront = popup;
     try {
       return this._win.sendInputs(inputs);
     } catch (e) {

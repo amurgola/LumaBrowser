@@ -32,8 +32,8 @@ export default class PeerProviderCard {
         <div class="provider-card-body">
           <div class="form-help">
             Another LumaBrowser shared over your network. ${esc(PeerProviderCard.summary(config, peer))}.
-            <span style="color:${secure ? '#4ade80' : '#fbbf24'};" title="${secure ? 'Traffic is encrypted with a certificate pinned at pair time' : 'This host does not offer an encrypted listener'}">${secure ? 'Encrypted' : 'Unencrypted'}</span>
-            ${peer && peer.error ? `<span style="color:#f87171;"> ${esc(peer.error)}</span>` : ''}
+            <span class="${secure ? 'gs-status-ok' : 'gs-status-warn'}" title="${secure ? 'Traffic is encrypted with a certificate pinned at pair time' : 'This host does not offer an encrypted listener'}">${secure ? 'Encrypted' : 'Unencrypted'}</span>
+            ${peer && peer.error ? `<span class="gs-status-bad"> ${esc(peer.error)}</span>` : ''}
           </div>
           <div class="form-group">
             <label class="form-label">Endpoint</label>
@@ -45,11 +45,11 @@ export default class PeerProviderCard {
               ${(config.models || []).map((m) => `<option value="${esc(m.id)}" ${m.id === config.selectedModel ? 'selected' : ''}>${esc(m.luma_label || m.id)}</option>`).join('')}
             </select>
           </div>
-          <div class="form-buttons" style="display:flex; gap:8px; margin-top:8px;">
+          <div class="form-buttons provider-card-actions">
             <button class="btn btn-secondary provider-peer-refresh-btn">Refresh</button>
-            <button class="btn btn-secondary provider-peer-remove-btn" style="color:#e74c3c;">Remove</button>
+            <button class="btn btn-danger provider-peer-remove-btn">Remove</button>
           </div>
-          <div class="form-help" style="margin-top:6px;">
+          <div class="form-help">
             Enable/disable or inspect this connection in Settings, Network Sharing.
           </div>
         </div>

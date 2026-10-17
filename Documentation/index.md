@@ -61,6 +61,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/ipc/VoiceChannels.md](core/shared/ipc/VoiceChannels.md): voice IPC channel names; has `VOICE_EVENT_CHANNEL`, `TTS_STREAM_CHANNEL`.
 - [core/shared/llm/BalancedJson.md](core/shared/llm/BalancedJson.md): finds where a JSON object really ends; has `extractObject`.
 - [core/shared/llm/KvCacheModes.md](core/shared/llm/KvCacheModes.md): KV cache precision table; has `mode`, `pair`, `idFor`, `shortLabel`.
+- [core/shared/llm/ModelOverrides.md](core/shared/llm/ModelOverrides.md): the settings a model or a model profile may override and how sparse override layers stack; has `clean`, `merge`, `isEmpty`.
 - [core/shared/llm/OpenAiChatBody.md](core/shared/llm/OpenAiChatBody.md): single builder for OpenAI-compatible chat bodies; has `build`.
 - [core/shared/llm/ReasoningEffort.md](core/shared/llm/ReasoningEffort.md): the thinking dial; has `normalizeDial`, `normalizeEffort`, `extraFor`, `resolveDial`, `nearestEffort`, `dialPositionsFor`.
 - [core/shared/lumabyte/LumaRequestSigner.md](core/shared/lumabyte/LumaRequestSigner.md): lumabyte.com rolling token and identity headers; has `computeToken`, `buildAuthHeaders`.
@@ -416,6 +417,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/server/decode/GpuLayerAssignment.md](core/llm-server/server/decode/GpuLayerAssignment.md): maps offloaded blocks to GPUs; has `assign`.
 - [core/llm-server/server/decode/PlanDecodeEstimator.md](core/llm-server/server/decode/PlanDecodeEstimator.md): decode speed prediction for a resolved launch plan; has `estimate`.
 - [core/llm-server/server/decode/CatalogDecodeEstimator.md](core/llm-server/server/decode/CatalogDecodeEstimator.md): pre-download decode speed guess for a catalog row; has `estimate`.
+- [core/llm-server/validation/validators/EmbeddedScriptCheck.md](core/llm-server/validation/validators/EmbeddedScriptCheck.md): compiles page scripts carried in template literals (handed to executeJs, or IIFE-shaped), which ESLint never parses; has `check`.
 - [core/llm-server/validation/validators/JavaScriptValidator.md](core/llm-server/validation/validators/JavaScriptValidator.md): ESLint validator for JS and JSX; has `validate`.
 - [core/llm-server/validation/validators/TypeScriptValidator.md](core/llm-server/validation/validators/TypeScriptValidator.md): TypeScript compiler validator for TS and TSX; has `validate`.
 - [core/llm-server/validation/validators/JsonValidator.md](core/llm-server/validation/validators/JsonValidator.md): JSON and JSONC validator; has `validate`, `locateError`.
@@ -662,6 +664,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/agent/AgentLoopText.md](core/llm-server/agent/AgentLoopText.md): model-facing agent loop strings (data).
 - [core/llm-server/agent/AgentPromptText.md](core/llm-server/agent/AgentPromptText.md): browser tool lines for the agent prompt (data); has `browserToolLines`.
 - [core/llm-server/agent/AgentSystemPromptBuilder.md](core/llm-server/agent/AgentSystemPromptBuilder.md): builds the agent system prompt with overrides; has `build`.
+- [core/llm-server/agent/InterstitialWait.md](core/llm-server/agent/InterstitialWait.md): waits out a "please wait" / redirecting / browser-check page after a navigation instead of letting the agent navigate again; has `settle`, `isInterstitial`.
 - [core/llm-server/agent/AgentToolExecutor.md](core/llm-server/agent/AgentToolExecutor.md): executes one tool call on the working tab; has `execute`.
 - [core/llm-server/agent/CarriedNotesLedger.md](core/llm-server/agent/CarriedNotesLedger.md): eviction order for carried reasoning notes; has `track`, `remap`.
 - [core/llm-server/agent/CarriedReasoning.md](core/llm-server/agent/CarriedReasoning.md): carried-reasoning budgets; has `resolveBudget`, `tail`.
@@ -738,10 +741,13 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/trigger-mode/TriggerUpdatePatch.md](core/llm-server/chat/trigger-mode/TriggerUpdatePatch.md): update_trigger store patch; has `build`, `hasChanges`.
 - [core/llm-server/chat/trigger-mode/TriggerTools.md](core/llm-server/chat/trigger-mode/TriggerTools.md): the trigger setup tool handlers; has `build`, `create`, `test`, `update`.
 - [core/llm-server/chat/trigger-mode/TriggerSummary.md](core/llm-server/chat/trigger-mode/TriggerSummary.md): compact trigger summary; has `of`.
-- [core/llm-server/chat/ApprovalGate.md](core/llm-server/chat/ApprovalGate.md): which agent tool calls need a human yes, and the refusal text; has `requiresApproval`, `mutatingNamesOf`, `deniedResult`, `deniedCommandResult`.
+- [core/llm-server/chat/ApprovalGate.md](core/llm-server/chat/ApprovalGate.md): which agent tool calls need a human yes, the refusal text, and run-grant families; has `requiresApproval`, `mutatingNamesOf`, `deniedResult`, `deniedCommandResult`, `familyOf`, `grantKeyOf`.
 - [core/llm-server/chat/approval/ApprovalPolicy.md](core/llm-server/chat/approval/ApprovalPolicy.md): whether the approval gate is on for a run; has `resolve`, `resolveRun`.
 - [core/llm-server/chat/approval/CommandCallAssessor.md](core/llm-server/chat/approval/CommandCallAssessor.md): shell-command verdict from the classifier and write boundary; has `assess`, `isEnabled`, `isCommandTool`.
+- [core/llm-server/chat/approval/ApprovalAttention.md](core/llm-server/chat/approval/ApprovalAttention.md): flashes the window and notifies when an approval card waits while LumaBrowser is not focused; has `request`, `clear`.
 - [core/llm-server/chat/approval/CallDescriber.md](core/llm-server/chat/approval/CallDescriber.md): the approval card's description of a call; has `describe`.
+- [core/llm-server/chat/approval/DesktopCallText.md](core/llm-server/chat/approval/DesktopCallText.md): approval card sentences for the desktop_* tools; has `launch`, `click`, `type`, `pressKey`, `scroll`, `DESCRIBERS`.
+- [core/llm-server/chat/approval/ConversationGrants.md](core/llm-server/chat/approval/ConversationGrants.md): carries the desktop control grant across a conversation's turns until 30 idle minutes; has `live`, `touch`, `runApprovals`.
 - [core/llm-server/chat/approval/CardText.md](core/llm-server/chat/approval/CardText.md): one-line clipping for approval cards; has `clip`.
 - [core/llm-server/chat/LiveApi.md](core/llm-server/chat/LiveApi.md): host side of a live artifact's `luma` bridge (page fetch, open tab, guarded extension API calls); has `fetchPage`, `openTab`, `extCall`.
 - [core/llm-server/chat/live-api/FetchQueue.md](core/llm-server/chat/live-api/FetchQueue.md): concurrency and queue cap for live page fetches; has `run`.
@@ -794,6 +800,9 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/service/ModelTextOverrides.md](core/llm-server/service/ModelTextOverrides.md): base for per-model text overrides; has `get`, `set`.
 - [core/llm-server/service/LlmModelDisplayNames.md](core/llm-server/service/LlmModelDisplayNames.md): display-name overrides for local models; has `all`, `set`, `resolve`.
 - [core/llm-server/service/ModelLaunchFlags.md](core/llm-server/service/ModelLaunchFlags.md): extra llama-server flags per model; has `resolve`, `setForModel`.
+- [core/llm-server/service/ModelOverrideStore.md](core/llm-server/service/ModelOverrideStore.md): sparse per-model setting overrides keyed by chat model ref; has `get`, `set`.
+- [core/llm-server/service/ModelProfileStore.md](core/llm-server/service/ModelProfileStore.md): named model profiles (a base model plus request overrides); has `listFor`, `create`, `update`.
+- [core/llm-server/service/ModelSettings.md](core/llm-server/service/ModelSettings.md): the global, model and profile setting layers; resolves profile refs to their base model and backs the Tune panel; has `resolve`, `baseRef`, `view`, `setModel`, `saveProfile`, `deleteProfile`, `launchDefaults`.
 - [core/llm-server/service/ModelResultStore.md](core/llm-server/service/ModelResultStore.md): base for saved per-model run results; has `get`, `save`.
 - [core/llm-server/service/FitResultStore.md](core/llm-server/service/FitResultStore.md): saved fit-test results; has `all`, `get`, `save`.
 - [core/llm-server/service/GambitResultStore.md](core/llm-server/service/GambitResultStore.md): saved model compatibility results; has `all`, `get`, `save`.
@@ -1164,7 +1173,8 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/chat/composer/DashboardContext.md](core/llm-server/ui/js/chat/composer/DashboardContext.md): ask about the Dashboard: "@dashboard" or "/dashboard" reads every placed widget on the host and stages the text as one chip (a second mention refreshes it; a failed read is a red chip with the reason); has `available`, `attach`, `attachment`.
 - [core/llm-server/ui/js/chat/composer/GearPanel.md](core/llm-server/ui/js/chat/composer/GearPanel.md): the composer's gear panel, this chat's options: Attach a file (desktop), the model row (keeps the `cm-model-pill` class the picker anchors to and the PWA's info intercept reads) with a one-line launch-plan summary, Suggest replies, Watch the browser tab live (a global preference), and the per-chat tool list.
 - [core/llm-server/ui/js/chat/composer/GearToolList.md](core/llm-server/ui/js/chat/composer/GearToolList.md): the gear panel's per-chat agent tool checklist: collapsible groups (collapsed by default) with a tri-state group box and an on/total count.
-- [core/llm-server/ui/js/chat/composer/ModelPicker.md](core/llm-server/ui/js/chat/composer/ModelPicker.md): the model selection: the listed models, local models with per-context options (fit-measured or estimated), the pill label ("Local · Qwen3-8B · 16k"), the picker popover, and the context window the usage meter divides by.
+- [core/llm-server/ui/js/chat/composer/ModelPicker.md](core/llm-server/ui/js/chat/composer/ModelPicker.md): the model selection: the listed models, local models with per-context options (fit-measured or estimated), each model's profiles, the pill label ("Local · Qwen3-8B · Precise · 16k"), the picker popover with a Tune button per row, and the context window the usage meter divides by.
+- [core/llm-server/ui/js/chat/composer/ModelTunePanel.md](core/llm-server/ui/js/chat/composer/ModelTunePanel.md): the Tune dialog for one model or profile: inherit-or-override settings (thinking, temperature, reply limit; KV cache and extra flags for a local model), save as profile, rename or delete a profile.
 - [core/llm-server/ui/js/chat/composer/TabContext.md](core/llm-server/ui/js/chat/composer/TabContext.md): ask about an open browser tab: the composer's tab picker and the dashed suggestion chip for the tab just viewed; a picked page is staged as a text attachment with its host and URL.
 - [core/llm-server/ui/js/chat/composer/ThinkPill.md](core/llm-server/ui/js/chat/composer/ThinkPill.md): the composer's thinking dial for THIS chat.
 - [core/llm-server/ui/js/chat/composer/UsageMeter.md](core/llm-server/ui/js/chat/composer/UsageMeter.md): the composer's context meter: how full the window is (a bar coloured warm at 75% and hot at 90%, the percent, used/window) or raw prompt/completion counts when the window is unknown, with the breakdown in the tooltip.
@@ -1172,8 +1182,9 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/chat/conversation/ConversationMarkdown.md](core/llm-server/ui/js/chat/conversation/ConversationMarkdown.md): the full-fidelity Markdown dump behind Copy as Markdown: header facts, then per message its role and model, reasoning in a `<details>`, tool calls with params, status and errors, artifacts, content and error.
 - [core/llm-server/ui/js/chat/conversation/ConversationMenu.md](core/llm-server/ui/js/chat/conversation/ConversationMenu.md): a conversation's menu: Rename (themed prompt), Pin/Unpin, Share (a flyout that opens on hover or click: Copy as Markdown, a public Link while the web backend runs, Download as PDF or PNG through `api.conv.export`), Copy Logs in dev builds, Restart and Delete.
 - [core/llm-server/ui/js/chat/conversation/ConversationView.md](core/llm-server/ui/js/chat/conversation/ConversationView.md): opens and renders a conversation: leaves the current one (mode hook, popovers, reading, panel, live modules, parked tab), loads its messages (session timings and tab frames re-attached), restores its model, mode, tools, choices and thinking position, re-attaches a turn that is still streaming, paints the thread with the reply composer in the bottom bar, and re-applies the mode's theme and hooks.
-- [core/llm-server/ui/js/chat/conversation/LandingView.md](core/llm-server/ui/js/chat/conversation/LandingView.md): the landing screen: a greeting over the big centred composer and the starter chips (a click fills the composer).
-- [core/llm-server/ui/js/chat/conversation/PersonaSeeds.md](core/llm-server/ui/js/chat/conversation/PersonaSeeds.md): the landing's starter chips per first-run persona (chat, create, build, tune) and the greeting by hour.
+- [core/llm-server/ui/js/chat/conversation/LandingStarts.md](core/llm-server/ui/js/chat/conversation/LandingStarts.md): the landing's start cards from what the browser knows: open web pages, the last conversation, the guided setup starters.
+- [core/llm-server/ui/js/chat/conversation/LandingView.md](core/llm-server/ui/js/chat/conversation/LandingView.md): the landing screen in the guided setup's language: a left-aligned question, where the model runs, the composer, then start cards.
+- [core/llm-server/ui/js/chat/conversation/PersonaSeeds.md](core/llm-server/ui/js/chat/conversation/PersonaSeeds.md): the landing's starters (label, seed, description) per guided setup choice (chat, create, build, tune), shown as start cards.
 - [core/llm-server/ui/js/chat/main/CodeBlockBar.md](core/llm-server/ui/js/chat/main/CodeBlockBar.md): one floating Copy / Insert bar placed over whichever reply code block the pointer is on (buttons baked into the markdown would be dropped by a streaming re-render).
 - [core/llm-server/ui/js/chat/main/FileDrop.md](core/llm-server/ui/js/chat/main/FileDrop.md): drag-and-drop attach: files dropped anywhere on the chat are read through `api.readDroppedAttachments` and staged like picked ones, with a "Drop to attach" veil while dragging.
 - [core/llm-server/ui/js/chat/main/MainColumn.md](core/llm-server/ui/js/chat/main/MainColumn.md): the chat column: the top bar (the conversation title, which opens its menu, and the conversation-scoped Artifacts button), the message scroller with its auto-follow, and the "New text" pill that re-pins it after the user scrolls up mid-stream.
@@ -2143,20 +2154,21 @@ Small building blocks shared by more than one subsystem.
 - [core/desktop/DesktopIpcHandlers.md](core/desktop/DesktopIpcHandlers.md): IPC controller for the desktop-control opt-in; has `register`.
 - [core/desktop/uia/UiaHostScript.md](core/desktop/uia/UiaHostScript.md): the PowerShell UI Automation sidecar script; has `SCRIPT`.
 - [core/desktop/Win32.md](core/desktop/Win32.md): the Windows desktop-control surface, routing to the win32 classes; has window, process, capture and input statics.
-- [core/desktop/win32/Win32Api.md](core/desktop/win32/Win32Api.md): cached koffi bindings for user32, gdi32 and kernel32; has `load`, `loadDesktop`.
+- [core/desktop/win32/Win32Api.md](core/desktop/win32/Win32Api.md): cached koffi bindings for user32, gdi32, kernel32 and shell32; has `load`, `loadDesktop`, `loadShell`.
 - [core/desktop/win32/Win32Buffers.md](core/desktop/win32/Win32Buffers.md): UTF-16 and RECT buffer readers; has `readWide`, `readWideZ`, `rectFrom`.
-- [core/desktop/win32/Win32Windows.md](core/desktop/win32/Win32Windows.md): top-level windows and focus; has `listTopLevelWindows`, `windowRect`, `focusWindow`, `virtualScreen`.
+- [core/desktop/win32/Win32Windows.md](core/desktop/win32/Win32Windows.md): top-level windows (owned dialogs optional) and focus; has `listTopLevelWindows`, `rootWindowAt`, `windowRect`, `focusWindow`, `virtualScreen`.
 - [core/desktop/win32/Win32Process.md](core/desktop/win32/Win32Process.md): process exe path and elevation; has `imagePath`, `isElevated`.
 - [core/desktop/win32/Win32Capture.md](core/desktop/win32/Win32Capture.md): window and screen capture as BGRA; has `captureBGRA`, `isBlank`.
 - [core/desktop/win32/Win32Input.md](core/desktop/win32/Win32Input.md): SendInput records and sending; has `mouseInput`, `keyInput`, `keyInputScan`, `relativeMoveInput`, `sendInputs`.
 - [core/desktop/win32/Win32ScanCodes.md](core/desktop/win32/Win32ScanCodes.md): keyboard layout scan codes with a US fallback; has `scanCodeFor`.
 - [core/desktop/win32/Win32InputDesktop.md](core/desktop/win32/Win32InputDesktop.md): names the input desktop to detect the secure desktop; has `name`.
+- [core/desktop/win32/Win32Shell.md](core/desktop/win32/Win32Shell.md): opens a program, file, folder or URL via ShellExecute for desktop_launch; has `open`.
 - [core/desktop/uia/UiaHost.md](core/desktop/uia/UiaHost.md): Node side of the UI Automation PowerShell sidecar; has `request`, `tree`, `act`, `wake`, `hit`, `close`.
 - [core/desktop/uia/JsonLineReader.md](core/desktop/uia/JsonLineReader.md): chunked text to JSON-line messages; has `push`.
-- [core/desktop/DesktopMcpTools.md](core/desktop/DesktopMcpTools.md): desktop_* MCP tool controller; has `TOOLS`, `handler`, `handle`.
-- [core/desktop/DesktopService.md](core/desktop/DesktopService.md): Windows desktop control, accessibility tree first then vision, behind the guard rails; has `listWindows`, `focus`, `screenshot`, `observe`, `click`, `type`, `pressKey`, `scroll`, `drag`, `setValue`, `gate`, `inputRefusal`.
+- [core/desktop/DesktopMcpTools.md](core/desktop/DesktopMcpTools.md): desktop_* MCP tool controller, including desktop_launch; has `TOOLS`, `handler`, `handle`.
+- [core/desktop/DesktopService.md](core/desktop/DesktopService.md): Windows desktop control, accessibility tree first then vision, behind the guard rails, hwnd 0 as the whole desktop; has `listWindows`, `focus`, `screenshot`, `observe`, `click`, `type`, `pressKey`, `scroll`, `drag`, `setValue`, `launch`, `gate`, `inputRefusal`.
 - [core/desktop/DesktopError.md](core/desktop/DesktopError.md): desktop control error with a refusal code; has `toResult`.
-- [core/desktop/service/DesktopGuards.md](core/desktop/service/DesktopGuards.md): desktop control refusals (anti-cheat, elevated, system prompts, secure desktop, stolen foreground); has `inputRefusal`, `promptRefusal`, `targetRefusal`, `checkForeground`, `preInput`.
+- [core/desktop/service/DesktopGuards.md](core/desktop/service/DesktopGuards.md): desktop control refusals (anti-cheat, elevated, system prompts, secure desktop, stolen foreground, whole-desktop landing window); has `inputRefusal`, `promptRefusal`, `targetRefusal`, `checkForeground`, `checkDesktop`, `landingRefusal`, `foregroundWindow`, `preInput`.
 - [core/desktop/service/GuardedInput.md](core/desktop/service/GuardedInput.md): the only path to SendInput, with a foreground check on every send; has `send`, `release`.
 - [core/desktop/service/DesktopKeyboard.md](core/desktop/service/DesktopKeyboard.md): key combos, Unicode keystrokes and clipboard pastes; has `combo`, `typeKeys`, `enter`, `paste`.
 - [core/desktop/service/ClipboardSnapshot.md](core/desktop/service/ClipboardSnapshot.md): saves and restores the user's clipboard around a paste; has `take`, `restore`.
@@ -2169,10 +2181,11 @@ Small building blocks shared by more than one subsystem.
 - [core/desktop/service/SavedCursor.md](core/desktop/service/SavedCursor.md): saves and restores the user's cursor position; has `saved`, `restore`.
 - [core/desktop/service/PointerClicker.md](core/desktop/service/PointerClicker.md): a real click with a pre-click hit test; has `click`.
 - [core/desktop/service/RefLocator.md](core/desktop/service/RefLocator.md): finds an element's current position and drag points; has `rectOf`, `pointOf`.
-- [core/desktop/service/DesktopClickLadder.md](core/desktop/service/DesktopClickLadder.md): desktop_click by ref, coordinates or description; has `click`.
+- [core/desktop/service/DesktopClickLadder.md](core/desktop/service/DesktopClickLadder.md): desktop_click by ref, coordinates or description, a failed ref falling back to the description; has `click`.
+- [core/desktop/service/VisionLocator.md](core/desktop/service/VisionLocator.md): finds a described thing on a window or the desktop by visual grounding; has `locate`, `available`.
 - [core/desktop/service/DesktopTyping.md](core/desktop/service/DesktopTyping.md): desktop_type via value pattern, keystrokes or paste; has `type`.
 - [core/desktop/service/DesktopDrag.md](core/desktop/service/DesktopDrag.md): desktop_drag with real input that always releases the button; has `drag`.
-- [core/desktop/service/DesktopScroll.md](core/desktop/service/DesktopScroll.md): desktop_scroll wheel notches; has `scroll`.
+- [core/desktop/service/DesktopScroll.md](core/desktop/service/DesktopScroll.md): desktop_scroll wheel notches at x/y, a description or the centre; has `scroll`.
 
 ## core/diagnostics
 
@@ -2459,6 +2472,9 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/router/AgentToolPolicy.md](core/llm-server/chat/router/AgentToolPolicy.md): the user's agent-tool policy: the global denylist plus a conversation's gear-panel denylist as an allow-list, the gear panel's catalog, and its opt-in toggle channel.
 - [core/llm-server/chat/router/AgentTurnDispatch.md](core/llm-server/chat/router/AgentTurnDispatch.md): routes a Tools-on chat turn through the agent bridge.
 - [core/llm-server/chat/router/DocsSourceGrant.md](core/llm-server/chat/router/DocsSourceGrant.md): what a turn with the "@lumabrowser-documentation" source on gets: the `search_lumabrowser_docs` session tool and prompt note (Tools on) or a retrieval pre-pass into the system head (Tools off); has `forTurn`, `extraTool`, `note`, `allowing`, `prepass`.
+- [core/llm-server/chat/delegation/DelegationTools.md](core/llm-server/chat/delegation/DelegationTools.md): the chat agent's `list_delegates` and `delegate_task` (source `core.delegation`): hand a task to a chat mode or custom agent as a sub-conversation nested under the chat; has `handle`, `handler`.
+- [core/llm-server/chat/delegation/DelegateTargets.md](core/llm-server/chat/delegation/DelegateTargets.md): the targets of every chat mode with a `delegate` block, read live; has `list`, `find`, `start`.
+- [core/llm-server/chat/delegation/SubConversationRun.md](core/llm-server/chat/delegation/SubConversationRun.md): one nested sub-conversation turn relayed to the parent as an agent card, approvals on the parent turn; has `run`.
 - [core/llm-server/chat/router/ArtifactAccess.md](core/llm-server/chat/router/ArtifactAccess.md): read and data access to stored artifacts for the sharing host, share links and the web client.
 - [core/llm-server/chat/router/AttachmentArtifacts.md](core/llm-server/chat/router/AttachmentArtifacts.md): promotes a turn's attached images to persisted artifacts linked to the user message.
 - [core/llm-server/chat/router/ChatModeTurn.md](core/llm-server/chat/router/ChatModeTurn.md): resolves a conversation's extension chat mode for one turn.
@@ -2485,6 +2501,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/router/ModelDispatcher.md](core/llm-server/chat/router/ModelDispatcher.md): the one choke point every chat model call passes through.
 - [core/llm-server/chat/router/ProxyTurns.md](core/llm-server/chat/router/ProxyTurns.md): turns run for a paired Network Sharing client: never persisted, never touching the host user's in-flight turn.
 - [core/llm-server/chat/router/RemoteStream.md](core/llm-server/chat/router/RemoteStream.md): streams one chat request to a remote provider config through an ephemeral provider that never writes the user's settings.
+- [core/llm-server/chat/router/RequestSettings.md](core/llm-server/chat/router/RequestSettings.md): applies a model's or profile's temperature and reply cap to one model call; has `apply`, `maxTokens`.
 - [core/llm-server/chat/router/SideCompletion.md](core/llm-server/chat/router/SideCompletion.md): one-shot side completions for extension chat modes and AI-fill fields (`context.chat.complete` and its streaming twin).
 - [core/llm-server/chat/router/StreamPhaseLog.md](core/llm-server/chat/router/StreamPhaseLog.md): timestamped terminal lines for one local chat request.
 - [core/llm-server/chat/router/SystemPromptPreview.md](core/llm-server/chat/router/SystemPromptPreview.md): the Advanced tab's system prompt preview: the exact Tools-on prompt for the current settings, without running a turn.
@@ -2991,6 +3008,7 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 
 ## extensions/code-mode
 
+- [extensions/code-mode/CodeDelegate.md](extensions/code-mode/CodeDelegate.md): the Code mode's `delegate_task` targets (build an extension, work on a project folder); has `spec`, `start`.
 - [extensions/code-mode/CodeModeDescriptor.md](extensions/code-mode/CodeModeDescriptor.md): the `code` chat mode descriptor handed to `context.chat.registerMode`.
 - [extensions/code-mode/CodeModeExtension.md](extensions/code-mode/CodeModeExtension.md): activation of the Code extension: registers the `code` chat mode ([CodeModeDescriptor](extensions/code-mode/CodeModeDescriptor.md)) over a per-run session map and returns the terminal bridge as the extension API.
 - [extensions/code-mode/CoreRequire.md](extensions/code-mode/CoreRequire.md): resolves a core module from code-mode wherever the extension is installed.
@@ -3215,6 +3233,7 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 - [extensions/game-mode/lint/PhaserLintRules.md](extensions/game-mode/lint/PhaserLintRules.md): the regex rules of the phantom Phaser API check, each a hallucination a local model actually shipped: `geom-path`, `fillpath-arg`, `body-refresh`, `keyevent-concat`, `v2-game-global`, `v2-anchor`, `v2-arcade-const`, `v2-keyboard-isdown`, `stroke-arg-order` (colour where the line width goes: the black-screen bug), `v2-constructor`.
 - [extensions/game-mode/lint/ShapeStyleCheck.md](extensions/game-mode/lint/ShapeStyleCheck.md): the Shape versus Graphics style mixup: `add.rectangle()` and friends return Shapes (`setFillStyle`/`setStrokeStyle`), `fillStyle`/`lineStyle` exist only on Graphics; both directions throw.
 - [extensions/game-mode/mode/GameAiSurface.md](extensions/game-mode/mode/GameAiSurface.md): the in-game AI surface routes reach through `extensionApi.ai`, working from the persisted setup since routes have no turn.
+- [extensions/game-mode/mode/GameDelegate.md](extensions/game-mode/mode/GameDelegate.md): the Game mode's `delegate_task` target (build a game from a premise); has `spec`, `start`.
 - [extensions/game-mode/mode/GameModeDescriptor.md](extensions/game-mode/mode/GameModeDescriptor.md): the `game` chat mode descriptor registered through `context.chat.registerMode`.
 - [extensions/game-mode/mode/GameSetupSchema.md](extensions/game-mode/mode/GameSetupSchema.md): the "New game" setup form: game type (web or AI), premise (required), world notes (AI games only), name and genre.
 - [extensions/game-mode/mode/GameTurnBuilder.md](extensions/game-mode/mode/GameTurnBuilder.md): the server-side config of one Game turn.
@@ -3363,6 +3382,7 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 
 ## ui/shell
 
+- [ui/DesignSystem.md](ui/DesignSystem.md): the design rules every surface follows (neutral first, one accent, three surface levels, five type sizes, radius by role, no template chrome) and the tells checklist; tokens in `core/llm-server/ui/css/tokens.css`.
 - [ui/shell/MainWindowShell.md](ui/shell/MainWindowShell.md): `index.html`, `ui/shell/`, `ui/shell/css/`, `preload.js`.
 - [ui/shell/activity/AiActivityHtml.md](ui/shell/activity/AiActivityHtml.md): markup of the AI Activity body: background runs first, then each model's tasks with timers.
 - [ui/shell/activity/AiActivityPanel.md](ui/shell/activity/AiActivityPanel.md): the AI Activity toolbar count and panel: LLM queue work plus background agent runs, renders coalesced per frame, timers tick only while open.
@@ -3686,6 +3706,18 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 - [tools/docs/FrontMatterParser.md](tools/docs/FrontMatterParser.md): reads the leading `---` block of a markdown doc.
 - [tools/docs/GitQuery.md](tools/docs/GitQuery.md): runs a read-only git command in a folder (stderr ignored) for the docs tools.
 
+## tools/docs/readme-shots
+
+- [tools/docs/readme-shots/ReadmeShotsCli.md](tools/docs/readme-shots/ReadmeShotsCli.md): the `node scripts/readme-shots.js` command (`npm run shots:readme`): boots a blank-slate copy of the app on the e2e AppLauncher, captures Setup and model-fit first, then one local-model chat with web search, and writes llm-setup.png, model-fit.png and chat.png to Documentation/images.
+- [tools/docs/readme-shots/ShotOptions.md](tools/docs/readme-shots/ShotOptions.md): the command line (`--out`, `--only`, `--prompt`, `--query`, `--quant`, `--model`, `--size`, `--timeout`, `--capture`, `--keep`); unknown flags throw with usage.
+- [tools/docs/readme-shots/BlankSlate.md](tools/docs/readme-shots/BlankSlate.md): the settings.db edits that make the seeded copy a blank slate (chat, artifact, task, trigger, history and bookmark tables cleared; no restored or persisted tabs; no remembered chat model; setup complete; update check off).
+- [tools/docs/readme-shots/LocalModelPick.md](tools/docs/readme-shots/LocalModelPick.md): picks a `local::` model from `llmDiagAPI.listModels()` (preferred substring, else the default, else the first) and makes it the remembered chat model; throws when none is local.
+- [tools/docs/readme-shots/PageSanitizer.md](tools/docs/readme-shots/PageSanitizer.md): replaces the machine name with DESKTOP and the home dir with a generic one in text nodes, input values and titles before a capture.
+- [tools/docs/readme-shots/WindowCapture.md](tools/docs/readme-shots/WindowCapture.md): whole-window capture (tab strip plus active view) through desktopCapturer in the main process at physical size, with a Windows CopyFromScreen fallback; also sizes and raises the LumaBrowser window.
+- [tools/docs/readme-shots/ChatScene.md](tools/docs/readme-shots/ChatScene.md): one agent turn through `llmDiagAPI.chat2` (tools on), the conversation opened in the UI, run card leading unless the thread barely overflows.
+- [tools/docs/readme-shots/SetupScene.md](tools/docs/readme-shots/SetupScene.md): the Setup toggle, folds closed, scrolled to top, identity scrubbed; runs before any model server starts.
+- [tools/docs/readme-shots/ModelFitScene.md](tools/docs/readme-shots/ModelFitScene.md): the Search models dialog on the query's own result row with the chosen quantization, clipped from the top through the Download row.
+
 ## tools/build
 
 - [tools/build/BuildFs.md](tools/build/BuildFs.md): returns Electron's unpatched `original-fs` inside Electron (npm test runs Jest under ELECTRON_RUN_AS_NODE) and plain `fs` otherwise.
@@ -3700,7 +3732,7 @@ The Hub: the user's calendars (Google, Microsoft 365, ICS feeds), the conversati
 - [tools/build/pack/UnpackGlob.md](tools/build/pack/UnpackGlob.md): combines `build.asarUnpack` patterns into one brace glob for `@electron/asar`'s repack, each anchored with `**/` because the repack matches absolute crawl paths.
 - [tools/build/pack/UnpackedSnapshot.md](tools/build/pack/UnpackedSnapshot.md): turns what electron-builder put in `app.asar.unpacked` into unpack patterns (`node_modules/<pkg>/**` per package, exact paths otherwise) so the afterPack repack keeps them.
 - [tools/build/release/InstallerNshVerifier.md](tools/build/release/InstallerNshVerifier.md): `npm run verify:installer`: compiles `build/installer.nsh` the way electron-builder does, in both passes (installer, then uninstaller with `-DBUILD_UNINSTALLER`), with `makensis -WX`, so an unreferenced function (the 1.8.4 LumaStrStr failure) shows up in seconds instead of at the end of a packaging run.
-- [tools/build/release/VersionBumper.md](tools/build/release/VersionBumper.md): one version step with per-digit rollover (1.7.9 -> 1.8.0, 9.9.9 -> 10.0.0; a component already past 9 keeps counting: 1.10.0 -> 1.10.1) in `package.json`, `package-lock.json` (both `version` and `packages[""].version`) and `cli/package.json` (skipped when absent).
+- [tools/build/release/VersionBumper.md](tools/build/release/VersionBumper.md): one version step with per-digit rollover (1.7.9 -> 1.8.0, 9.9.9 -> 10.0.0; a component already past 9 keeps counting: 1.10.0 -> 1.10.1), an explicit `execute('x.y.z')`, or a read-only `current()` report, in `package.json`, `package-lock.json` (both `version` and `packages[""].version`) and `cli/package.json` (skipped when absent). Entries: `scripts/bump-version.js` (`--to`, `--current`) and `scripts/sync-prod.bat`.
 - [tools/build/shared/ExtensionManifests.md](tools/build/shared/ExtensionManifests.md): loads every `<root>/extensions/<dir>/manifest.js` (fresh, not from the require cache) for the build tools; `list()`, `distributableDirs()`.
 - [tools/build/shared/RequireScanner.md](tools/build/shared/RequireScanner.md): finds relative `require()` targets (literal `./` or `../` specifiers, including lazy ones inside functions) and resolves them the way Node does (exact, `.js`, `/index.js`).
 - [tools/build/shared/SourceTree.md](tools/build/shared/SourceTree.md): a read-only view of an app source tree for the build tools.

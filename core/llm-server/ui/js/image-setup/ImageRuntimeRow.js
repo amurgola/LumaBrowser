@@ -44,7 +44,7 @@ export default class ImageRuntimeRow {
 
   static _primary(r, progress) {
     if (progress && progress.phase !== 'failed') return '';
-    return `<button class="luma-btn primary luma-btn--sm" data-act="install" data-id="${HtmlEscaper.escape(r.id)}">${r.installed ? 'Update' : 'Install'}</button>`;
+    return `<button class="luma-btn luma-btn--sm" data-act="install" data-id="${HtmlEscaper.escape(r.id)}">${r.installed ? 'Update' : 'Install'}</button>`;
   }
 
   static _secondary(r) {

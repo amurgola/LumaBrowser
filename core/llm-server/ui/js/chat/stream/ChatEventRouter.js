@@ -179,6 +179,7 @@ export default class ChatEventRouter {
     const msg = this._ctx.state.streamMsg;
     if (!msg) return;
     AgentEventReducer.apply(msg, p);
+    if (p && p.phase === 'start' && p.conversationId) this._ctx.convList.refresh();
     this._ctx.stream.scheduleRender();
   }
 

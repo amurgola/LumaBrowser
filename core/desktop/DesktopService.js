@@ -15,6 +15,7 @@ const RefLocator = require('./service/RefLocator');
 const ScreenFrames = require('./service/ScreenFrames');
 const ScreenshotImage = require('./service/ScreenshotImage');
 const UiaObservation = require('./service/UiaObservation');
+const VisionLocator = require('./service/VisionLocator');
 const WindowObserver = require('./service/WindowObserver');
 
 class DesktopService {
@@ -24,6 +25,11 @@ class DesktopService {
   static COVERED = DesktopError.COVERED;
   static FOCUS_SETTLE_MS = 150;
   static ALREADY_FRONT_SETTLE_MS = 20;
+  static LAUNCH_WAIT_MS = 10000;
+  static LOOK_SETTLE_MS = 800;
+  static LAUNCH_POLL_MS = 250;
+  static LAUNCH_MAX_CHARS = 1024;
+  static DESKTOP_HWND = 0;
 
   constructor({ db, nativeImage, visualGrounding = null, uia = null, win = Win32, clipboard = null, sleep = DesktopService._realSleep } = {}) {
     this.win = win;
@@ -67,8 +73,13 @@ class DesktopService {
     return null;
   }
 
-  resolve({ hwnd, window: title } = {}) {
+  resolve({ hwnd, window: title } = {}, { allowDesktop = false } = {}) {
     if (hwnd == null && !title) return { error: 'hwnd or window (title text) is required. Call desktop_list_windows first.' };
+    if (hwnd != null && Number(hwnd) === DesktopService.DESKTOP_HWND) {
+      return allowDesktop
+        ? { w: this._desktopTarget() }
+        : { error: 'hwnd 0 (the whole desktop) works with desktop_screenshot, desktop_click, desktop_type, desktop_press_key and desktop_scroll only. Pass a window hwnd here.' };
+    }
     const found = hwnd != null ? this._byHwnd(hwnd) : this._byTitle(title);
     if (found.error) return found;
     if (!found.w) return { error: `No such window (${hwnd != null ? `hwnd ${hwnd}` : `"${title}"`}). It may have closed; call desktop_list_windows.` };
@@ -81,11 +92,22 @@ class DesktopService {
   }
 
   async bringToFront(w) {
+    if (w.desktop) return true;
     const api = this.win.load();
     const already = typeof api.GetForegroundWindow === 'function' && api.GetForegroundWindow() === w.hwnd;
-    if (!this.win.focusWindow(w.hwnd)) return false;
+    if (!this.win.focusWindow(w.hwnd) && !this._ownPopupInFront(w)) return false;
     await this._sleep(already ? DesktopService.ALREADY_FRONT_SETTLE_MS : DesktopService.FOCUS_SETTLE_MS);
     return true;
+  }
+
+  _ownPopupInFront(w) {
+    try {
+      const popup = this._guards.checkForeground(w);
+      if (popup) w.popupInFront = popup;
+      return !!popup;
+    } catch (_) {
+      return false;
+    }
   }
 
   send(w, inputs) {
@@ -93,7 +115,7 @@ class DesktopService {
   }
 
   capture(w) {
-    if (!w) {
+    if (!w || w.desktop) {
       const rect = this.win.virtualScreen();
       return { rect, shot: this.win.captureBGRA({ rect }), method: 'screen' };
     }
@@ -106,7 +128,7 @@ class DesktopService {
   listWindows() {
     const gate = this.gate();
     if (gate) return { success: false, error: gate };
-    const windows = this.win.listTopLevelWindows().filter((w) => w.pid !== process.pid).map((w) => this._describeWindow(w));
+    const windows = this.win.listTopLevelWindows({ includeOwned: true }).filter((w) => w.pid !== process.pid).map((w) => this._describeWindow(w));
     const human = this._guards.humanNeeded();
     return { success: true, data: { windows, ...(human ? { humanNeeded: human.message } : {}) } };
   }
@@ -124,7 +146,7 @@ class DesktopService {
   screenshot(args = {}) {
     const gate = this.gate();
     if (gate) return { success: false, error: gate };
-    const target = args.hwnd != null || args.window ? this.resolve(args) : { w: null };
+    const target = args.hwnd != null || args.window ? this.resolve(args, { allowDesktop: true }) : { w: null };
     if (target.error) return { success: false, error: target.error };
     try {
       return this._screenshotOf(target.w);
@@ -146,37 +168,66 @@ class DesktopService {
   }
 
   async click(args = {}) {
-    const { w, result } = this._target(args);
-    return result || this._clickLadder.click(w, args);
+    const { w, result } = this._target(args, { allowDesktop: true });
+    return result || DesktopService._notePopup(w, await this._clickLadder.click(w, args));
   }
 
   async type(args = {}) {
-    const { w, result } = this._target(args);
-    return result || this._typing.type(w, args);
+    const { w, result } = this._target(args, { allowDesktop: true });
+    return result || DesktopService._notePopup(w, await this._typing.type(w, args));
+  }
+
+  async lookAfter(args = {}, r = null) {
+    if (!r || !r.success || args.look === false) return null;
+    await this._sleep(DesktopService.LOOK_SETTLE_MS);
+    const opened = r.data && r.data.nowInFront;
+    return this.screenshot(opened ? { hwnd: opened.hwnd } : { hwnd: args.hwnd, window: args.window });
   }
 
   async pressKey(args = {}) {
-    const { w, result } = this._target(args);
+    const { w, result } = this._target(args, { allowDesktop: true });
     if (result) return result;
     try {
       DesktopKeys.comboEvents(args.keys);
       this._guards.preInput(w);
       if (!(await this.bringToFront(w))) return { success: false, error: `Could not bring "${w.title}" to the front.` };
-      await this._keyboard.combo(w, args.keys);
-      return { success: true, data: { keys: args.keys } };
+      const outcome = await this._keyboard.combo(w, args.keys);
+      const opened = outcome.foregroundChanged ? this._guards.foregroundWindow() : null;
+      return DesktopService._notePopup(w, { success: true, data: { keys: args.keys, ...(opened ? { nowInFront: DesktopService._brief(opened) } : {}) } });
     } catch (e) {
       return DesktopError.toResult(e);
     }
   }
 
+  async launch(args = {}) {
+    const gate = this.gate();
+    if (gate) return { success: false, error: gate };
+    const problem = DesktopService._launchProblem(args);
+    if (problem) return { success: false, error: problem };
+    const app = String(args.app).trim();
+    const before = new Set(this.win.listTopLevelWindows().map((w) => w.hwnd));
+    try {
+      this.win.shellOpen(app, args.args ? String(args.args) : null);
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+    const windows = await this._newWindows(before);
+    return {
+      success: true,
+      data: windows.length
+        ? { app, windows: windows.map((w) => this._describeWindow(w)) }
+        : { app, windows: [], note: 'No new window appeared yet. It may still be starting or have opened in an existing window: call desktop_list_windows.' },
+    };
+  }
+
   async scroll(args = {}) {
-    const { w, result } = this._target(args);
-    return result || this._scroll.scroll(w, args);
+    const { w, result } = this._target(args, { allowDesktop: true });
+    return result || DesktopService._notePopup(w, await this._scroll.scroll(w, args));
   }
 
   async drag(args = {}) {
     const { w, result } = this._target(args);
-    return result || this._drag.drag(w, args);
+    return result || DesktopService._notePopup(w, await this._drag.drag(w, args));
   }
 
   async setValue(args = {}) {
@@ -209,6 +260,7 @@ class DesktopService {
       bringToFront: (w) => this.bringToFront(w),
       capture: (w) => this.capture(w),
     };
+    parts.vision = new VisionLocator(parts);
     parts.locator = new RefLocator(parts);
     parts.pointer = new PointerClicker(parts);
     this._clickLadder = new DesktopClickLadder(parts);
@@ -217,20 +269,20 @@ class DesktopService {
     this._drag = new DesktopDrag(parts);
   }
 
-  _target(args = {}) {
+  _target(args = {}, opts = {}) {
     const gate = this.gate();
     if (gate) return { result: { success: false, error: gate } };
-    const { w, error } = this.resolve(args);
+    const { w, error } = this.resolve(args, opts);
     return error ? { result: { success: false, error } } : { w };
   }
 
   _byHwnd(hwnd) {
-    return { w: this.win.listTopLevelWindows().find((x) => x.hwnd === Number(hwnd)) || null };
+    return { w: this.win.listTopLevelWindows({ includeOwned: true }).find((x) => x.hwnd === Number(hwnd)) || null };
   }
 
   _byTitle(title) {
     const t = String(title).toLowerCase();
-    const hits = this.win.listTopLevelWindows().filter((x) => x.title.toLowerCase().includes(t));
+    const hits = this.win.listTopLevelWindows({ includeOwned: true }).filter((x) => x.title.toLowerCase().includes(t));
     if (hits.length > 1) {
       return { error: `"${title}" matches ${hits.length} windows (${hits.slice(0, 5).map((x) => `${x.hwnd} "${x.title}"`).join(', ')}). Pass hwnd.` };
     }
@@ -248,6 +300,7 @@ class DesktopService {
       app: exe ? path.basename(exe) : null,
       rect: w.rect,
       minimized: w.minimized,
+      ...(w.owned ? { dialog: true } : {}),
       ...(elevated ? { elevated: true } : {}),
       ...(antiCheat ? { antiCheat } : {}),
       ...(prompt ? { systemPrompt: prompt.kind } : {}),
@@ -284,6 +337,40 @@ class DesktopService {
         ...(r.min !== undefined ? { min: r.min, max: r.max } : {}),
       },
     };
+  }
+
+  _desktopTarget() {
+    return { hwnd: DesktopService.DESKTOP_HWND, title: 'the desktop', desktop: true, pid: null, rect: this.win.virtualScreen(), minimized: false };
+  }
+
+  async _newWindows(before) {
+    const fresh = () => this.win.listTopLevelWindows().filter((w) => !before.has(w.hwnd) && w.pid !== process.pid);
+    for (let waited = 0; waited < DesktopService.LAUNCH_WAIT_MS; waited += DesktopService.LAUNCH_POLL_MS) {
+      await this._sleep(DesktopService.LAUNCH_POLL_MS);
+      if (fresh().length) {
+        await this._sleep(DesktopService.LAUNCH_POLL_MS);
+        return fresh();
+      }
+    }
+    return [];
+  }
+
+  static _launchProblem(args) {
+    const app = typeof args.app === 'string' ? args.app.trim() : '';
+    if (!app) return 'app is required: a program name such as "msedge", a full path, a file or a URL.';
+    const all = app + (args.args == null ? '' : String(args.args));
+    if (all.length > DesktopService.LAUNCH_MAX_CHARS) return 'app and args are too long.';
+    if (/[\u0000-\u001f]/.test(all)) return 'app and args must be one line of plain text.';
+    return null;
+  }
+
+  static _notePopup(w, r) {
+    if (!w.popupInFront || !r || !r.success) return r;
+    return { ...r, data: { ...r.data, popupInFront: DesktopService._brief(w.popupInFront) } };
+  }
+
+  static _brief(w) {
+    return { hwnd: w.hwnd, title: w.title || '' };
   }
 
   static _realSleep(ms) {

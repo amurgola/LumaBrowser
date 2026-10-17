@@ -50,8 +50,8 @@ that stays in the shell entry.
 
 ## Behaviour
 
-- Footer: Back hidden on the first step; Next reads Get Started, Continue or
-  Finish Setup and is enabled only when the step is valid; Skip setup shows on
+- Footer: Back hidden on the first step; Next reads Get started, Continue or
+  Finish setup and is enabled only when the step is valid; Skip setup shows on
   every step but Finish. A local LLM, image or Automatic Setup install in flight
   disables Back and hides Skip.
 - Skip setup asks `window.LumaModal.confirm` ("You can run setup later from the

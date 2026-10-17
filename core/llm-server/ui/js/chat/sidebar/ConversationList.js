@@ -8,6 +8,7 @@ export default class ConversationList {
   constructor(ctx) {
     this._ctx = ctx;
     this._source = [];
+    this._shownGroups = new Map();
   }
 
   registerTemplates() {
@@ -66,7 +67,8 @@ export default class ConversationList {
 
   async deleteGroup(label) {
     if (!label) return;
-    const items = this._source.filter((c) => ConversationGroups.groupOf(c) === label);
+    const shown = this._shownGroups.get(label) || [];
+    const items = this._source.filter((c) => shown.includes(c.id));
     if (!items.length) return;
     const n = items.length;
     const ok = await ChatModals.confirm(this._ctx.root,
@@ -93,6 +95,7 @@ export default class ConversationList {
     +     '<button type="button" class="cm-recents-head-del" res-display="_canDel" res-onclick="res.groupdel" title="Delete group">' + ChatIcons.trash + '</button>'
     +   '</div>'
     +   '<div class="cm-conv" res-style="active ? \'active\' : \'\'" res-onclick="res.open">'
+    +     '<span class="cm-conv-nest" res-display="_child"></span>'
     +     '<span class="cm-conv-title" res-prop="title" res-format="cmConvTitle"></span>'
     +     '<span class="cm-conv-badge" res-display="badge" res-prop="badge"></span>'
     +     '<span class="cm-conv-tag" res-display="tag" res-prop="tag"></span>'
@@ -116,7 +119,7 @@ export default class ConversationList {
       title: t.title + (t.enabled ? '' : ' (paused)'),
       pinned: false, badge: String(t.runCount || 0), tag: '',
       active: t.id === state.activeTaskId,
-      _head: i === 0 ? 'Scheduled' : '', _canDel: false,
+      _head: i === 0 ? 'Scheduled' : '', _canDel: false, _child: false,
     }));
   }
 
@@ -127,20 +130,51 @@ export default class ConversationList {
       title: t.title + TriggerText.suffix(t),
       pinned: false, badge: String(t.enabled ? (t.fireCount || 0) : (t.runCount || 0)), tag: '',
       active: t.id === state.activeTriggerId,
-      _head: i === 0 ? 'Triggers' : '', _canDel: false,
+      _head: i === 0 ? 'Triggers' : '', _canDel: false, _child: false,
     }));
   }
 
   _conversationRows() {
     const rows = [];
-    for (const [g, items] of ConversationGroups.group(this._source)) {
-      items.forEach((c, i) => rows.push({
-        id: c.id, title: c.title, pinned: !!c.pinned, badge: '', tag: this.modeTag(c.mode),
-        active: c.id === this._ctx.state.activeId,
-        _head: i === 0 ? g : '', _canDel: i === 0 && g !== ConversationGroups.PINNED,
-      }));
+    const { top, children } = ConversationList.nest(this._source);
+    this._shownGroups = new Map();
+    for (const [g, items] of ConversationGroups.group(top)) {
+      const ids = [];
+      items.forEach((c, i) => {
+        rows.push(this._row(c, { _head: i === 0 ? g : '', _canDel: i === 0 && g !== ConversationGroups.PINNED, _child: false }));
+        ids.push(c.id);
+        for (const child of children.get(c.id) || []) {
+          rows.push(this._row(child, { _head: '', _canDel: false, _child: true }));
+          ids.push(child.id);
+        }
+      });
+      this._shownGroups.set(g, ids);
     }
     return rows;
+  }
+
+  _row(c, extra) {
+    return {
+      id: c.id, title: c.title, pinned: !!c.pinned, badge: '', tag: this.modeTag(c.mode),
+      active: c.id === this._ctx.state.activeId,
+      ...extra,
+    };
+  }
+
+  static nest(list) {
+    const ids = new Set((list || []).map((c) => c.id));
+    const top = [];
+    const children = new Map();
+    for (const c of list || []) {
+      const parent = c.parentConversationId;
+      if (parent && parent !== c.id && ids.has(parent)) {
+        if (!children.has(parent)) children.set(parent, []);
+        children.get(parent).push(c);
+      } else {
+        top.push(c);
+      }
+    }
+    return { top, children };
   }
 
   _open(item) {

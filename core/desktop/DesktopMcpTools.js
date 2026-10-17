@@ -2,14 +2,20 @@ const McpResult = require('../shell/McpResult');
 
 class DesktopMcpTools {
   static WINDOW = {
-    hwnd: { type: 'number', description: 'Window handle from desktop_list_windows (preferred)' },
+    hwnd: { type: 'number', description: 'Window handle from desktop_list_windows (preferred). 0 = the whole desktop (taskbar, Start menu, tray), for screenshot, click, type, press_key and scroll' },
     window: { type: 'string', description: 'Or: text that appears in the window title (must match exactly one window)' },
   };
+
+  static LOOK = {
+    look: { type: 'boolean', description: 'Reply with a screenshot of the window after the action (default true). false skips it.' },
+  };
+
+  static LOOKING = new Set(['desktop_click', 'desktop_type', 'desktop_drag', 'desktop_press_key', 'desktop_scroll']);
 
   static TOOLS = [
     {
       name: 'desktop_list_windows',
-      description: 'List the open application windows on the user\'s desktop (hwnd, title, app, position). Windows marked antiCheat or elevated cannot be controlled. Windows marked systemPrompt (UAC, Windows Security sign-in, lock screen) are for the user to answer; humanNeeded means Windows is waiting for the user and no input is possible until they deal with it.',
+      description: 'List the open application windows on the user\'s desktop (hwnd, title, app, position). Dialogs such as Run or Save As are included, marked dialog. Windows marked antiCheat or elevated cannot be controlled. Windows marked systemPrompt (UAC, Windows Security sign-in, lock screen) are for the user to answer; humanNeeded means Windows is waiting for the user and no input is possible until they deal with it.',
       inputSchema: { type: 'object', properties: {}, required: [] },
     },
     {
@@ -19,13 +25,13 @@ class DesktopMcpTools {
     },
     {
       name: 'desktop_screenshot',
-      description: 'Screenshot one window (or the whole desktop when no window is given). Pixel coordinates on the image can be passed to desktop_click x/y for that window.',
+      description: 'Screenshot one window (or the whole desktop when no window is given, or hwnd 0). Pixel coordinates on the image can be passed to desktop_click / desktop_scroll x/y with the same hwnd (0 for a whole-desktop screenshot). Click, type, press_key, scroll and drag already reply with a fresh screenshot: call this only to look without acting. Act on what you see: when what you need is not on screen, scroll and look again before searching. When the screen asks a personal choice the user did not make (which profile or account), ask them.',
       inputSchema: { type: 'object', properties: { ...DesktopMcpTools.WINDOW }, required: [] },
     },
     {
       name: 'desktop_click',
       mutating: true,
-      description: 'Click in a window by ref (from desktop_observe, preferred), by x/y (pixels of the latest desktop_screenshot of that window), or by description (a vision model finds it on the window, e.g. "the Play button"). x/y and description clicks bring the window to the front and briefly move the mouse; the result\'s hit says what was under the pointer. A ref click is refused (code COVERED) when something else is on top of the element. Code HUMAN_NEEDED means a UAC / sign-in prompt or the lock screen is up: ask the user.',
+      description: 'Click in a window by ref (from desktop_observe, preferred), by x/y (pixels of the latest screenshot of that window, from desktop_screenshot or an action reply), or by description (a vision model finds it on the window, e.g. "the Play button"). Use description whenever desktop_observe has no ref for what you want: video players, canvases, games, custom-drawn apps. Pass ref AND description to have the description tried when the ref fails. hwnd 0 clicks anywhere on the desktop (taskbar, Start menu, tray icons) by x/y of a whole-desktop screenshot or by description. x/y and description clicks bring the window to the front and briefly move the mouse; the result\'s hit says what was under the pointer. A ref click is refused (code COVERED) when something else is on top of the element. Code HUMAN_NEEDED means a UAC / sign-in prompt or the lock screen is up: ask the user. The reply includes a screenshot of the window after the click.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -36,6 +42,7 @@ class DesktopMcpTools {
           description: { type: 'string', description: 'What to click, described visually' },
           button: { type: 'string', enum: ['left', 'right', 'middle'], description: 'Mouse button (default left)' },
           double: { type: 'boolean', description: 'Double click' },
+          ...DesktopMcpTools.LOOK,
         },
         required: [],
       },
@@ -43,7 +50,7 @@ class DesktopMcpTools {
     {
       name: 'desktop_type',
       mutating: true,
-      description: 'Type text into a window. With ref (a text field from desktop_observe) the value is set directly; otherwise the window is brought to the front and the text is typed as keystrokes into whatever has focus (long text and Chinese/Japanese/Korean are pasted via the clipboard, which is restored after). submit=true presses Enter after.',
+      description: 'Type text into a window. With ref (a text field from desktop_observe) the value is set directly; otherwise the window is brought to the front and the text is typed as keystrokes into whatever has focus (long text and Chinese/Japanese/Korean are pasted via the clipboard, which is restored after). hwnd 0 types into whatever window is already in front without changing it. submit=true presses Enter after. On a website, type into the site\'s own search box: a URL you made up typed into the address bar is still a guess. navigate / click / type with a tabId act on LumaBrowser\'s own tabs, never on this window.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -52,6 +59,7 @@ class DesktopMcpTools {
           ref: { type: 'number', description: 'Text field ref from desktop_observe' },
           submit: { type: 'boolean', description: 'Press Enter after typing' },
           mode: { type: 'string', enum: ['auto', 'keys', 'paste'], description: 'auto (default): set the value by ref, else keystrokes, else paste for long/CJK text. keys: always keystrokes. paste: always clipboard paste.' },
+          ...DesktopMcpTools.LOOK,
         },
         required: ['text'],
       },
@@ -69,6 +77,7 @@ class DesktopMcpTools {
           button: { type: 'string', enum: ['left', 'right', 'middle'], description: 'Mouse button (default left)' },
           steps: { type: 'number', description: 'Intermediate moves (default 15)' },
           durationMs: { type: 'number', description: 'Time spent moving (default 300)' },
+          ...DesktopMcpTools.LOOK,
         },
         required: ['from', 'to'],
       },
@@ -90,23 +99,38 @@ class DesktopMcpTools {
     {
       name: 'desktop_press_key',
       mutating: true,
-      description: 'Press a key or combination in a window, e.g. "enter", "esc", "ctrl+s", "alt+f", "ctrl+shift+t", "f5", "down".',
-      inputSchema: { type: 'object', properties: { ...DesktopMcpTools.WINDOW, keys: { type: 'string', description: 'Key combo joined with +' } }, required: ['keys'] },
+      description: 'Press a key or combination in a window, e.g. "enter", "esc", "ctrl+s", "alt+f", "ctrl+shift+t", "f5", "down". When the combo brings up another window (a dialog, a new window), the reply\'s nowInFront names it: target that hwnd next.',
+      inputSchema: { type: 'object', properties: { ...DesktopMcpTools.WINDOW, keys: { type: 'string', description: 'Key combo joined with +' }, ...DesktopMcpTools.LOOK }, required: ['keys'] },
     },
     {
       name: 'desktop_scroll',
       mutating: true,
-      description: 'Scroll with the mouse wheel over a window (at x/y from its latest screenshot, else its centre).',
+      description: 'Scroll with the mouse wheel over a window: at x/y from its latest screenshot, over a description a vision model finds (e.g. "the episode list"), else its centre. At most 10 notches per call; the reply shows where it landed. Before scrolling through a long list, look for its sort, season or filter controls.',
       inputSchema: {
         type: 'object',
         properties: {
           ...DesktopMcpTools.WINDOW,
           direction: { type: 'string', enum: ['up', 'down', 'left', 'right'], description: 'Default down' },
-          amount: { type: 'number', description: 'Wheel notches (default 3)' },
+          amount: { type: 'number', description: 'Wheel notches (default 3, at most 10)' },
           x: { type: 'number' },
           y: { type: 'number' },
+          description: { type: 'string', description: 'What to scroll over, described visually' },
+          ...DesktopMcpTools.LOOK,
         },
         required: [],
+      },
+    },
+    {
+      name: 'desktop_launch',
+      mutating: true,
+      description: 'Open an app on the user\'s desktop, the way the Run dialog does: a program name ("msedge", "notepad", "spotify"), a full path, a file, a folder or a URL. args are passed to the program (e.g. a URL for a browser). Replies with the new window(s) and their hwnd. Use this instead of the Start menu or Win+R. For a website pass its home page and work from there with the site\'s own search box and menus, like a person would: never guess deep links or search-URL parameters.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          app: { type: 'string', description: 'Program name, path, file or URL' },
+          args: { type: 'string', description: 'Command-line arguments, e.g. "https://www.crunchyroll.com"' },
+        },
+        required: ['app'],
       },
     },
     {
@@ -142,14 +166,25 @@ class DesktopMcpTools {
       desktop_list_windows: () => DesktopMcpTools._reply(d.listWindows()),
       desktop_observe: async (args) => DesktopMcpTools._observeReply(await d.observe(args)),
       desktop_screenshot: (args) => DesktopMcpTools._screenshotReply(d.screenshot(args)),
-      desktop_click: async (args) => DesktopMcpTools._reply(await d.click(args)),
-      desktop_type: async (args) => DesktopMcpTools._reply(await d.type(args)),
-      desktop_drag: async (args) => DesktopMcpTools._reply(await d.drag(args)),
+      desktop_click: async (args) => this._acted(args, await d.click(args)),
+      desktop_type: async (args) => this._acted(args, await d.type(args)),
+      desktop_drag: async (args) => this._acted(args, await d.drag(args)),
       desktop_set_value: async (args) => DesktopMcpTools._reply(await d.setValue(args)),
-      desktop_press_key: async (args) => DesktopMcpTools._reply(await d.pressKey(args)),
-      desktop_scroll: async (args) => DesktopMcpTools._reply(await d.scroll(args)),
+      desktop_press_key: async (args) => this._acted(args, await d.pressKey(args)),
+      desktop_scroll: async (args) => this._acted(args, await d.scroll(args)),
       desktop_focus: (args) => DesktopMcpTools._reply(d.focus(args)),
+      desktop_launch: async (args) => DesktopMcpTools._reply(await d.launch(args)),
     };
+  }
+
+  async _acted(args, r) {
+    const reply = DesktopMcpTools._reply(r);
+    if (!r.success) return reply;
+    let look = null;
+    try { look = await this._desktop.lookAfter(args, r); } catch (_) { look = null; }
+    if (!look || !look.success) return reply;
+    const shot = DesktopMcpTools._screenshotReply(look, 'After the action: screenshot');
+    return { ...reply, content: [...reply.content, ...shot.content] };
   }
 
   static _reply(r) {
@@ -169,14 +204,14 @@ class DesktopMcpTools {
     return r.success ? { content: [{ type: 'text', text: r.data.text }] } : McpResult.error(r.error);
   }
 
-  static _screenshotReply(r) {
+  static _screenshotReply(r, lead = 'Screenshot') {
     if (!r.success) return McpResult.error(r.error);
     const f = r.data.frame;
-    const hint = f.hwnd ? ` (hwnd ${f.hwnd}); desktop_click x/y use these pixels` : '';
+    const hint = f.hwnd ? ` (hwnd ${f.hwnd}); desktop_click x/y use these pixels` : ' (hwnd 0); desktop_click x/y with hwnd 0 use these pixels';
     return {
       content: [
         { type: 'image', data: r.data.screenshot, mimeType: 'image/png' },
-        { type: 'text', text: `Screenshot of ${r.data.title}: ${f.imageWidth}x${f.imageHeight} px${hint}.` },
+        { type: 'text', text: `${lead} of ${r.data.title}: ${f.imageWidth}x${f.imageHeight} px${hint}.` },
       ],
     };
   }

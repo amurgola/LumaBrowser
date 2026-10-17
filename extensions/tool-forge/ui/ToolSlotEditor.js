@@ -25,7 +25,10 @@ export default class ToolSlotEditor {
     row.appendChild(ToolSlotEditor._input('label', slot.label, (v) => { slot.label = v; }));
     row.appendChild(ToolSlotEditor._check('required', slot.required, (v) => { slot.required = v; }));
     row.appendChild(ToolSlotEditor._check('secret', slot.secret, (v) => { slot.secret = v; }));
-    const del = Dom.el('button', 'luma-btn link', '✕');
+    const del = Dom.el('button', 'luma-icon-btn luma-icon-btn--sq');
+    del.title = 'Remove field';
+    del.setAttribute('aria-label', 'Remove field');
+    del.innerHTML = '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
     del.addEventListener('click', () => { this._slots.splice(i, 1); this.render(); });
     row.appendChild(del);
     return row;

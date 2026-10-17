@@ -9,17 +9,17 @@
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #00030a;
+    background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background-color: var(--accent, #f59034);
-    border-radius: 4px;
+    background-color: var(--border-strong);
+    border-radius: var(--radius-sm);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #ffb06b;
+    background-color: var(--text-muted);
 }
 ::-webkit-scrollbar-corner {
-    background: #00030a;
+    background: transparent;
 }
 
 body {

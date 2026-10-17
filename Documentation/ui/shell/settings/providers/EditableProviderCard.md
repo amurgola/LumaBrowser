@@ -2,7 +2,7 @@
 
 `ui/shell/settings/providers/EditableProviderCard.js`
 
-Card of a user-added provider: endpoint, key, model with Fetch Models, Save, Remove.
+Card of a user-added provider: endpoint, key, model with Fetch models, Save, Remove.
 
 ## Methods
 

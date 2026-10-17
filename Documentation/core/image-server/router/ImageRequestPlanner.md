@@ -23,7 +23,9 @@ the adapter receives.
   4. With references, [EditProfiles](../prompt/EditProfiles.md)`.applyEditProfile` rewords the prompt.
   5. Sigma nodes (caller's, else the model's) become
      [FlowSchedule](../FlowSchedule.md) sigmas when the caller passed nodes, named
-     no step count, or named the node count; steps become `sigmas - 1`.
+     no step count, or named the node count; steps become `sigmas - 1`. With no
+     nodes, the model's `fixedSigmas` (a checkpoint's own final grid) run
+     unshifted under the same step-count rule, so a speed LoRA's nodes win.
   6. Families with `presizeRefs` presize the references (refArea: caller, model,
      profile; grid: the model's, else 32); a fully sized result sends
      `refImageArgs: 'resize_before_vae=false'`.

@@ -3,14 +3,18 @@
     flex: 1;
     display: flex;
     align-items: center;
+    margin: 0 var(--space-1);
 }
 .url-bar-wrap .url-bar {
     width: 100%;
-    padding-left: 30px;
+    padding-left: 32px;
+}
+.url-bar-wrap .url-bar:hover:not(:focus) {
+    background: var(--bg-elevated);
 }
 .url-bar-security {
     position: absolute;
-    left: 9px;
+    left: 11px;
     top: 50%;
     transform: translateY(-50%);
     display: inline-flex;
@@ -21,6 +25,6 @@
 }
 .url-bar-security[hidden] { display: none; }
 .url-bar-security .icon { width: 14px; height: 14px; }
-.url-bar-security[data-state="secure"] { color: var(--success); }
-.url-bar-security[data-state="insecure"] { color: var(--warning, #f5c518); }
-.url-bar-wrap:has(.url-bar-security[hidden]) .url-bar { padding-left: 12px; }
+.url-bar-security[data-state="secure"] { color: var(--text-secondary); }
+.url-bar-security[data-state="insecure"] { color: var(--warning); }
+.url-bar-wrap:has(.url-bar-security[hidden]) .url-bar { padding-left: var(--space-3); }

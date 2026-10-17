@@ -3,6 +3,7 @@ const EvalTurn = require('./bridge/eval/EvalTurn');
 const PreviewSystemPrompt = require('./bridge/prompt/PreviewSystemPrompt');
 const ApprovalWait = require('./bridge/waits/ApprovalWait');
 const TakeoverWait = require('./bridge/waits/TakeoverWait');
+const ApprovalAttention = require('./approval/ApprovalAttention');
 
 class AgentChatBridge {
   constructor({ router }) {
@@ -11,6 +12,7 @@ class AgentChatBridge {
     this._aborted = false;
     this._runs = new Set();
     this._approvalWait = new ApprovalWait();
+    this._approvalAttention = new ApprovalAttention({ getWindow: () => AgentChatBridge._mainWindow(router) });
     this._takeoverWait = new TakeoverWait();
   }
 
@@ -70,6 +72,12 @@ class AgentChatBridge {
     return new EvalTurn(this.router).run(options || {});
   }
 
+  static _mainWindow(router) {
+    const deps = router && typeof router.getAgentDeps === 'function' ? router.getAgentDeps() : null;
+    const browser = deps && deps.browserService;
+    return browser && typeof browser.getMainWindow === 'function' ? browser.getMainWindow() : null;
+  }
+
   _runHost() {
     return {
       router: this.router,
@@ -77,6 +85,7 @@ class AgentChatBridge {
       isBridgeAborted: () => this._aborted,
       approvalWait: this._approvalWait,
       takeoverWait: this._takeoverWait,
+      approvalAttention: this._approvalAttention,
     };
   }
 }

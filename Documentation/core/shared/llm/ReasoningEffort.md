@@ -23,9 +23,10 @@ the effort levels.
   unrecognised (including `'off'`) becomes `'default'`.
 - `ReasoningEffort.extraFor(level)` returns
   `{ chatTemplateKwargs: { reasoning_effort } }` for a real level, or `null`.
-- `ReasoningEffort.resolveDial({ turn, conversation, fallback })` returns the
-  dial id that applies: the first layer that is not `null`, `undefined` or
-  `''`, normalised; `'default'` if none is set.
+- `ReasoningEffort.resolveDial({ turn, conversation, model, fallback })` returns the
+  dial id that applies: the first layer, in that order, that is not `null`,
+  `undefined` or `''`, normalised; `'default'` if none is set. `model` is the
+  picked model's or profile's own setting.
 - `ReasoningEffort.nearestEffort(level, levels)` maps a level onto a model's
   levels: exact, else the nearest rung up, else down. `levels` null means the
   common four; an empty array means the model has none, so everything is `null`.

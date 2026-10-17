@@ -34,7 +34,8 @@ export default class AgentRunCards {
     card.dataset.aid = run.invocationId;
     card.dataset.done = '';
     const head = Dom.el('button', 'cm-agent-head');
-    head.addEventListener('click', () => {
+    head.addEventListener('click', (e) => {
+      if (AgentRunCards._openLinkClicked(e)) return;
       const willOpen = !card.classList.contains('open');
       card.classList.toggle('open', willOpen);
       run._open = willOpen;
@@ -76,12 +77,24 @@ export default class AgentRunCards {
     if (card.dataset.done === doneFlag) return;
     card.dataset.done = doneFlag;
     const ic = doneFlag === 'run' ? '<span class="cm-tc-spin"></span>'
-      : doneFlag === 'err' ? '<span class="cm-chain-bang">!</span>' : ChatIcons.check;
+      : doneFlag === 'err' ? '<span class="cm-chain-bang">' + ChatIcons.alert + '</span>' : ChatIcons.check;
     const name = HtmlEscaper.escape(run.agentName || 'Agent');
     const label = running ? name + ' is working…' : run.error ? name + ' failed' : 'Used ' + name;
+    const open = run.conversationId
+      ? '<span class="cm-agent-open" data-conv="' + HtmlEscaper.escape(run.conversationId) + '">Open conversation</span>'
+      : '';
     card.querySelector('.cm-agent-head').innerHTML = '<span class="cm-agent-ic">' + ic + '</span>'
-      + '<span class="cm-agent-label">' + label + '</span>'
+      + '<span class="cm-agent-label">' + label + '</span>' + open
       + '<span class="cm-chain-caret">' + ChatIcons.chevron + '</span>';
+  }
+
+  static _openLinkClicked(e) {
+    const link = e && e.target && e.target.closest && e.target.closest('.cm-agent-open');
+    if (!link) return false;
+    e.stopPropagation();
+    const id = link.getAttribute('data-conv');
+    if (id) window.dispatchEvent(new CustomEvent('luma-open-conversation', { detail: { conversationId: id } }));
+    return true;
   }
 
   static _updateThinking(card, run, running) {

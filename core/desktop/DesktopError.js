@@ -2,6 +2,7 @@ class DesktopError extends Error {
   static HUMAN_NEEDED = 'HUMAN_NEEDED';
   static COVERED = 'COVERED';
   static REFUSED = 'REFUSED';
+  static FOREGROUND_CHANGED = 'FOREGROUND_CHANGED';
 
   constructor(message, code) {
     super(message);

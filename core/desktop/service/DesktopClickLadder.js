@@ -1,6 +1,5 @@
 const DesktopError = require('../DesktopError');
 const RefLocator = require('./RefLocator');
-const ScreenshotImage = require('./ScreenshotImage');
 const UiaObservation = require('./UiaObservation');
 
 class DesktopClickLadder {
@@ -12,11 +11,22 @@ class DesktopClickLadder {
     const opts = DesktopClickLadder._options(args);
     const refusal = this._parts.guards.targetRefusal(w);
     if (refusal) return DesktopError.toResult(refusal);
+    const first = await this._attempt(() => this._dispatch(w, args, opts));
+    if (first.success || !DesktopClickLadder._fallsBackToVision(args, first)) return first;
+    const seen = await this._attempt(() => this._byDescription(w, args, opts));
+    return seen.success ? { ...seen, data: { ...seen.data, refFailed: first.error } } : seen;
+  }
+
+  async _attempt(fn) {
     try {
-      return await this._dispatch(w, args, opts);
+      return await fn();
     } catch (e) {
       return DesktopError.toResult(e);
     }
+  }
+
+  static _fallsBackToVision(args, result) {
+    return args.ref != null && !!args.description && !result.code;
   }
 
   _dispatch(w, args, opts) {
@@ -58,19 +68,13 @@ class DesktopClickLadder {
   }
 
   async _byDescription(w, args, opts) {
-    const { nativeImage, visualGrounding } = this._parts;
-    if (!visualGrounding) return { success: false, error: 'Visual grounding is not available.' };
-    const { rect, shot } = this._parts.capture(w);
-    const png = ScreenshotImage.fullSize(nativeImage, shot).toPNG();
-    const found = await visualGrounding.locateInImage(nativeImage.createFromBuffer(png), args.description,
-      { zoom: args.zoom === true, what: `the "${w.title}" window`, skipVisionCheck: false });
-    if (!found.success) return found;
-    const sx = rect.x + found.data.point.x * (rect.width / shot.width);
-    const sy = rect.y + found.data.point.y * (rect.height / shot.height);
+    const found = await this._parts.vision.locate(w, args.description, { zoom: args.zoom === true });
+    if (found.result) return found.result;
+    const { sx, sy } = found.point;
     const hit = await this._parts.pointer.click(w, sx, sy, opts);
     return {
       success: true,
-      data: { method: 'vision+pointer', screen: DesktopClickLadder._rounded(sx, sy), profile: found.data.profile, ms: found.data.ms, ...(hit ? { hit } : {}) },
+      data: { method: 'vision+pointer', screen: DesktopClickLadder._rounded(sx, sy), ms: found.ms, ...(hit ? { hit } : {}) },
     };
   }
 

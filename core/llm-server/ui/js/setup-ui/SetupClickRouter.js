@@ -1,3 +1,5 @@
+import ModelTunePanel from '../chat/composer/ModelTunePanel.js';
+
 export default class SetupClickRouter {
   constructor(ctx, parts) {
     this._ctx = ctx;
@@ -15,6 +17,7 @@ export default class SetupClickRouter {
     if (!target || !target.closest) return;
     if (this._parts.rows.handleClick(target, this._ctx.doc)) return;
     if (this._hostFix(target)) return;
+    if (this._tune(target)) return;
     if (await this._directory(target)) return;
     if (this._fitOrGambit(target)) return;
     const runtimeBtn = target.closest('[data-runtime-action]');
@@ -41,6 +44,19 @@ export default class SetupClickRouter {
       return;
     }
     this._parts.rename.handleEnter(target, e);
+  }
+
+  _tune(target) {
+    const btn = target.closest('[data-tune-model]');
+    if (!btn) return false;
+    const api = this._ctx.api;
+    if (!ModelTunePanel.available(api)) return true;
+    const refresh = async () => { const card = this._ctx.cards.defaults; if (card) await card.render(); };
+    const ctx = { api, root: this._ctx.doc.body, state: { models: [] }, models: { refresh, selectRef: () => {} } };
+    const select = this._ctx.doc.getElementById('defaultModelSelect');
+    const label = select && select.selectedIndex >= 0 ? select.options[select.selectedIndex].text : btn.dataset.tuneModel;
+    new ModelTunePanel(ctx).open(btn.dataset.tuneModel, label);
+    return true;
   }
 
   _hostFix(target) {

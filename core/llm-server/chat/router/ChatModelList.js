@@ -9,7 +9,7 @@ class ChatModelList {
   }
 
   list() {
-    const models = [...this._localModels(), ...this._remoteModels()];
+    const models = this._withProfiles([...this._localModels(), ...this._remoteModels()]);
     return { models, defaultRef: this._defaultRef(models) };
   }
 
@@ -42,6 +42,36 @@ class ChatModelList {
       for (const modelId of ChatModelList._modelIdsOf(config)) out.push(ChatModelList._remoteRow(config, modelId));
     }
     return out;
+  }
+
+  _withProfiles(models) {
+    const settings = this._service.modelSettings;
+    const profiles = settings ? settings.listProfiles() : [];
+    if (!profiles.length) return models;
+    const out = [];
+    for (const m of models) out.push(m, ...profiles.filter((p) => p.baseRef === m.ref).map((p) => ChatModelList._profileRow(p, m)));
+    for (const p of profiles) {
+      if (ChatModelRef.isLocal(p.baseRef) && !models.some((m) => m.ref === p.baseRef)) out.push(ChatModelList._profileRow(p, this._unlistedLocal(p.baseRef)));
+    }
+    return out;
+  }
+
+  _unlistedLocal(baseRef) {
+    const stem = ChatModelRef.localName(baseRef);
+    const label = (this._service.resolveModelDisplayName && this._service.resolveModelDisplayName(stem)) || stem;
+    return { ref: baseRef, label: `Local · ${label}`, displayName: label, providerId: 'local', providerType: 'openai', isLocal: true, ready: false };
+  }
+
+  static _profileRow(profile, base) {
+    return {
+      ...base,
+      ref: ChatModelRef.profileRef(profile.id),
+      label: `${base.label} · ${profile.name}`,
+      isProfile: true,
+      profileId: profile.id,
+      profileName: profile.name,
+      baseRef: base.ref,
+    };
   }
 
   static _modelIdsOf(config) {

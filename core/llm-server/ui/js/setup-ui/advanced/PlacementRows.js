@@ -12,7 +12,7 @@ export default class PlacementRows {
       return Dom.el('div', 'adv-gate ok', 'Measured footprints on file. This layout can be allocated.');
     }
     return Dom.el('div', 'adv-gate warn',
-      '⚠ Run a test render before allocating. Placed models need a measured VRAM/RAM footprint first (see “Test render” below).');
+      'Run a test render before allocating. Placed models need a measured VRAM/RAM footprint first (see “Test render” below).');
   }
 
   contextRow() {

@@ -2,7 +2,7 @@
 
 `core/shell/ui/settings/TelemetryPanel.js` (ES module)
 
-Settings > About > Privacy: the build status, the anonymous lumabyte.com check-in state, and Re-run first-run setup.
+Settings > About > Privacy: the build status as a title line, then two settings rows: the anonymous lumabyte.com check-in state (with a link to General) and "Re-run setup".
 
 ## Methods
 

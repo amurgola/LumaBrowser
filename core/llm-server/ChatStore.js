@@ -13,10 +13,11 @@ class ChatStore {
   static SQL = {
     insertConversation: `
       INSERT INTO llm_conversations
-        (id, title, model_ref, provider, pinned, archived, hidden, tools_enabled, disabled_tools, choices_enabled, mode, created_at, updated_at)
+        (id, title, model_ref, provider, pinned, archived, hidden, tools_enabled, disabled_tools, choices_enabled, mode, parent_conversation_id, created_at, updated_at)
       VALUES
-        (@id, @title, @model_ref, @provider, @pinned, @archived, @hidden, @tools_enabled, @disabled_tools, @choices_enabled, @mode, @created_at, @updated_at)`,
+        (@id, @title, @model_ref, @provider, @pinned, @archived, @hidden, @tools_enabled, @disabled_tools, @choices_enabled, @mode, @parent_conversation_id, @created_at, @updated_at)`,
     getConversation: 'SELECT * FROM llm_conversations WHERE id = ?',
+    listSubConversations: 'SELECT * FROM llm_conversations WHERE parent_conversation_id = ? ORDER BY created_at ASC, rowid ASC',
     listConversations: `
       SELECT * FROM llm_conversations
       WHERE (@include_archived = 1 OR archived = 0) AND (@include_hidden = 1 OR hidden = 0)
@@ -77,7 +78,7 @@ class ChatStore {
   }
 
 
-  createConversation({ id, title, modelRef, provider, toolsEnabled, disabledTools, choicesEnabled, mode, hidden } = {}) {
+  createConversation({ id, title, modelRef, provider, toolsEnabled, disabledTools, choicesEnabled, mode, hidden, parentConversationId } = {}) {
     const now = ChatStore._now();
     const row = {
       id: id || RecordId.create('conv'),
@@ -91,6 +92,7 @@ class ChatStore {
       disabled_tools: ChatStore._serializeDisabledTools(disabledTools),
       choices_enabled: ChatStore._toTriState(choicesEnabled),
       mode: ChatStore._cleanMode(mode),
+      parent_conversation_id: parentConversationId || null,
       created_at: now,
       updated_at: now,
     };
@@ -101,6 +103,11 @@ class ChatStore {
   getConversation(id) {
     const row = this._statements.getConversation.get(id);
     return row ? ChatStore._hydrateConversation(row) : null;
+  }
+
+  listSubConversations(parentConversationId) {
+    if (!parentConversationId) return [];
+    return this._statements.listSubConversations.all(parentConversationId).map(ChatStore._hydrateConversation);
   }
 
   listConversations({ includeArchived = false, includeHidden = false, limit = 200, offset = 0 } = {}) {
@@ -334,6 +341,7 @@ class ChatStore {
       choicesEnabled: row.choices_enabled == null ? null : !!row.choices_enabled,
       reasoningEffort: row.reasoning_effort || null,
       mode: row.mode || ChatStore.DEFAULT_MODE,
+      parentConversationId: row.parent_conversation_id || null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

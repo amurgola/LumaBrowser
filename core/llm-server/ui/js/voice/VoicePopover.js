@@ -3,6 +3,7 @@ export default class VoicePopover {
   static LEFT_SHIFT = 150;
   static MARGIN = 8;
   static GAP = 10;
+  static MIN_HEIGHT = 120;
   static TOGGLE_BUTTONS = '.cm-mic, [data-tact="speak"]';
 
   constructor({ onClose = () => {} } = {}) {
@@ -42,6 +43,7 @@ export default class VoicePopover {
     const r = anchor.getBoundingClientRect();
     pop.style.left = Math.max(VoicePopover.MARGIN, Math.min(window.innerWidth - VoicePopover.WIDTH_ROOM, r.left - VoicePopover.LEFT_SHIFT)) + 'px';
     pop.style.bottom = (window.innerHeight - r.top + VoicePopover.GAP) + 'px';
+    pop.style.maxHeight = Math.max(VoicePopover.MIN_HEIGHT, r.top - VoicePopover.GAP - VoicePopover.MARGIN) + 'px';
   }
 
   _armDismiss(pop) {

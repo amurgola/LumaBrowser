@@ -10,4 +10,5 @@ padding (`--cm-foot-slack` / `--cm-bar-slack`, consumed in chat.css).
 
 - `install()`: a ResizeObserver on both (skipped where there is none).
 - `sync()`: clears both slacks while the composer bar is hidden (landing); while
-  the Settings tray is out the composer keeps its slack instead of chasing it.
+  the Settings tray is out (its `open` class is set, or it is still folding
+  away) the composer keeps its slack instead of chasing it.

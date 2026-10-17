@@ -7,4 +7,4 @@ The "MCP Servers" Setup-tab entry, loaded as a module: registers
 `window.LumaSetupExt`, mounting [McpServersTab](ui/McpServersTab.md); logs
 "[mcp-connector] LumaSetupExt not present" without the host. The manifest's
 `setupTab.assets` lists the `ui/` modules for the asset gate.
-`setup-ui.css` is unchanged apart from the header em-dash.
+`setup-ui.css` is on tokens.css per the [design system](../../ui/DesignSystem.md); discovered tool names are neutral mono tags.

@@ -1,5 +1,5 @@
 export default class PersistedTabsMenu {
-  static WIDTH = 260;
+  static WIDTH = 320;
 
   constructor({ store, popupMenu }) {
     this._store = store;

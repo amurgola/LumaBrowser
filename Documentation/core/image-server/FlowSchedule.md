@@ -16,6 +16,10 @@ sd-server accepts verbatim as `sample_params.custom_sigmas`.
   shifted nodes rounded to 6 decimals plus a closing `0`, or `null` when the
   nodes are not a strictly descending list in (0, 1] or the family is unknown.
   `null` means "keep the runtime's own schedule".
+- `FlowSchedule.fixedSigmas(nodes)` returns a checkpoint's own final schedule
+  unshifted plus a closing `0`, or `null` under the same validity rule. Used
+  for Qwen-Image 2.1 Turbo, whose `model_index.json` ships `sample_sigmas` and
+  whose scheduler config has `shift: 1.0` with dynamic shifting off.
 - `FlowSchedule.FAMILIES` holds the per-family shift constants (base/max shift,
   base/max sequence length, patch pixel size).
 

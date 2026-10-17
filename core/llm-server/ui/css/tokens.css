@@ -1,0 +1,112 @@
+@font-face {
+    font-family: "Luma UI";
+    src: local("Segoe UI Variable Text"), local("SegoeUIVariableText-Regular"), local("Segoe UI");
+    font-weight: 100 549;
+}
+@font-face {
+    font-family: "Luma UI";
+    src: local("Segoe UI Variable Text Semibold"), local("SegoeUIVariableText-Semibold"), local("Segoe UI Semibold");
+    font-weight: 550 900;
+}
+
+:root {
+    color-scheme: dark;
+
+    --bg-root: #0b1220;
+    --bg-surface: #0f1627;
+    --bg-canvas: #121a2c;
+    --bg-surface-2: #172038;
+    --surface-pop: #141b2c;
+    --bg-elevated: #1a2340;
+    --surface-input: rgba(0, 0, 0, 0.25);
+    --surface-hover: rgba(255, 255, 255, 0.04);
+    --surface-active: rgba(255, 255, 255, 0.07);
+    --surface-sunken: rgba(0, 0, 0, 0.22);
+    --code-bg: #161a23;
+
+    --border-soft: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.14);
+
+    --text-primary: #e6e9f2;
+    --text-secondary: #8a95ad;
+    --text-muted: #76819b;
+
+    --accent: #f59034;
+    --accent-hover: #e07d22;
+    --accent-2: #ffb06b;
+    --accent-dim: rgba(245, 144, 52, 0.14);
+    --on-accent: #1a1206;
+
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --success-dim: rgba(74, 222, 128, 0.12);
+    --warning-dim: rgba(251, 191, 36, 0.12);
+    --danger-dim: rgba(248, 113, 113, 0.12);
+
+    --font-sans: "Luma UI", "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --text-xs: 11px;
+    --text-sm: 12px;
+    --text-md: 13px;
+    --text-lg: 15px;
+    --text-xl: 20px;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --leading-tight: 1.25;
+    --leading: 1.45;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-pill: 999px;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --scrim: rgba(0, 0, 0, 0.5);
+    --focus-ring:0 0 0 2px var(--accent-dim), 0 0 0 1px var(--accent);
+
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --dur-fast: 120ms;
+    --dur: 180ms;
+    --transition: var(--dur) var(--ease);
+
+    --z-base: 1;
+    --z-dropdown: 100;
+    --z-overlay: 1000;
+    --z-modal: 1100;
+    --z-toast: 1200;
+
+    --bg: var(--bg-root);
+    --bg-card: var(--bg-surface);
+    --border: var(--border-soft);
+    --text: var(--text-primary);
+    --text-dim: var(--text-secondary);
+    --accent-soft: var(--accent-dim);
+    --accent-strong: var(--accent);
+    --accent-warm: var(--accent);
+    --accent-warm-hover: var(--accent-hover);
+    --accent-deep: var(--accent-hover);
+    --accent-grad: var(--accent);
+    --on-accent-warm: var(--on-accent);
+    --good: var(--success);
+    --warn: var(--warning);
+    --bad: var(--danger);
+    --mono: var(--font-mono);
+    --shadow-soft: var(--shadow-md);
+
+    --cm-live-bg: #f6f7f9;
+    --cm-live-fg: #1a2230;
+}

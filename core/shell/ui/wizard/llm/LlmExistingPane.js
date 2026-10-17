@@ -34,7 +34,7 @@ export default class LlmExistingPane {
           No LM Studio, Ollama or Hugging Face cache library was found on this machine.
           Pick a model to download, or point your models folder at your library later in Setup.
         </div>
-        <div style="display:flex; gap:10px; margin-top:14px; align-items:center;">
+        <div class="setup-wizard__actions">
           <button class="setup-wizard__btn setup-wizard__btn--primary" id="llmExistingDownload" type="button">Pick a model to download</button>
           <button class="setup-wizard__btn setup-wizard__btn--link" id="llmExistingRescan" type="button">Rescan</button>
         </div>`;
@@ -55,7 +55,7 @@ export default class LlmExistingPane {
         <div class="setup-wizard__help">Found ${esc(view.bySource)}. Nothing is copied or moved: LumaBrowser links to the file where it already is.</div>
         <div class="setup-wizard__existing-list">${rows}</div>
         ${view.more > 0 ? `<div class="setup-wizard__help">...and ${view.more} more. Point your models folder at that library in Setup to use them all.</div>` : ''}
-        <div style="display:flex; gap:10px; margin-top:14px; align-items:center;">
+        <div class="setup-wizard__actions">
           <button class="setup-wizard__btn setup-wizard__btn--secondary" id="llmExistingDownload" type="button">Download a model from the catalog instead</button>
           <button class="setup-wizard__btn setup-wizard__btn--link" id="llmExistingRescan" type="button">Rescan</button>
         </div>`;

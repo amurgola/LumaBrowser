@@ -5,10 +5,12 @@ const GamesMcpTools = require('../../core/games/GamesMcpTools');
 const GameController = require('../../core/games/GameController');
 const GameSessionStore = require('../../core/games/GameSessionStore');
 const GameService = require('../../core/games/GameService');
+const DelegationTools = require('../../core/llm-server/chat/delegation/DelegationTools');
+const ChatModeRegistry = require('../../core/llm-server/chat/ChatModeRegistry');
 const AppGlobals = require('../AppGlobals');
 
 class CoreMcpTools {
-  static SOURCES = ['core.browser', 'core.desktop', 'core.games'];
+  static SOURCES = ['core.browser', 'core.desktop', 'core.games', 'core.delegation'];
   static GAMES_DIR = 'games';
 
   constructor(ctx) {
@@ -24,6 +26,8 @@ class CoreMcpTools {
     });
     mcp.registerCore('core.desktop', { tools: DesktopMcpTools.TOOLS, handler: new DesktopMcpTools(desktopService).handler() });
     mcp.registerCore('core.games', { tools: GamesMcpTools.TOOLS, handler: new GamesMcpTools(this._buildGames(desktopService)).handler() });
+    const delegation = new DelegationTools({ getRouter: () => global.__lumaChatRouter || null, registry: ChatModeRegistry.shared });
+    mcp.registerCore(DelegationTools.SOURCE, { tools: DelegationTools.TOOLS, handler: delegation.handler() });
     this._s.restGateway.mountMcpProxy(mcp);
     this._applyDisabledApiGroups();
   }

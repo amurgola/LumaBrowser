@@ -1,4 +1,5 @@
 const AgentLoopText = require('./AgentLoopText');
+const InterstitialWait = require('./InterstitialWait');
 const TabLookup = require('./TabLookup');
 const WorkTab = require('./WorkTab');
 
@@ -12,6 +13,8 @@ class AgentToolExecutor {
     this._screenshotVision = !!options.screenshotVision;
     this._wait = options.wait || AgentToolExecutor._sleep;
     this._tabLookup = new TabLookup(options.browserService);
+    this._interstitial = options.interstitialWait
+      || new InterstitialWait({ browserService: options.browserService, sleep: this._wait });
   }
 
   async execute(tool, params, defaultTabId) {
@@ -65,7 +68,19 @@ class AgentToolExecutor {
 
   async _afterPageLoad(result, digestTabId, settleMs) {
     await this._wait(settleMs);
+    await this._waitOutInterstitial(result, digestTabId);
     await this._tabLookup.attachDigest(result, digestTabId);
+  }
+
+  async _waitOutInterstitial(result, tabId) {
+    if (tabId == null || !this._browserService || typeof this._browserService.executeJs !== 'function') return;
+    let waited = null;
+    try { waited = await this._interstitial.settle(tabId); } catch (_) { waited = null; }
+    if (!waited) return;
+    const seconds = Math.round(waited.waitedMs / 100) / 10;
+    result.note = waited.moved
+      ? `The page asked to wait; after ${seconds}s it moved on by itself to ${waited.to}. The elements below are that page.`
+      : InterstitialWait.STILL_WAITING_NOTE;
   }
 
   async _screenshot(params) {

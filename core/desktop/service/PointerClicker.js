@@ -16,7 +16,8 @@ class PointerClicker {
     this._sleep = sleep;
   }
 
-  async click(w, sx, sy, { button = 'left', double = false, ref = null, refRect = null } = {}) {
+  async click(target, sx, sy, { button = 'left', double = false, ref = null, refRect = null } = {}) {
+    const w = target.desktop ? { ...target, point: { sx, sy } } : target;
     this._guards.preInput(w);
     if (!(await this._bringToFront(w))) throw new Error(`Could not bring "${w.title}" to the front to click it.`);
     const hit = await this._hitTest(sx, sy, ref);

@@ -18,7 +18,7 @@ export default class SharingTokensList {
   render(tokens) {
     if (!this._wrap) return;
     if (!tokens.length) {
-      this._wrap.innerHTML = '<div class="luma-empty luma-empty--plain" style="text-align:left;padding:4px 0;">No clients paired yet.</div>';
+      this._wrap.innerHTML = '<div class="gs-list-empty">No clients paired yet.</div>';
       return;
     }
     this._wrap.innerHTML = tokens.map((t) => SharingTokensList.rowHtml(t)).join('');
@@ -43,10 +43,10 @@ export default class SharingTokensList {
     const esc = HtmlEscaper.escape;
     const usage = SharingTokensList.usageLine(t.usage);
     return `
-      <div class="gs-item-card" style="display:flex;gap:8px;align-items:center;padding:6px 10px;${t.revoked ? 'opacity:0.5;' : ''}">
-        <span style="flex:1;font-size:12px;color:var(--text-primary);">${esc(t.label)}${t.revoked ? ' (revoked)' : ''}</span>
-        ${usage ? `<span style="font-size:10px;color:var(--text-secondary);" title="Total consumed by this client">${esc(usage)}</span>` : ''}
-        <span style="font-size:10px;color:var(--text-muted);">${t.lastUsedAt ? 'used ' + esc(new Date(t.lastUsedAt).toLocaleDateString()) : 'never used'}</span>
+      <div class="gs-item-card gs-item-row${t.revoked ? ' is-revoked' : ''}">
+        <span class="gs-item-main">${esc(t.label)}${t.revoked ? ' (revoked)' : ''}</span>
+        ${usage ? `<span class="gs-item-meta" title="Total consumed by this client">${esc(usage)}</span>` : ''}
+        <span class="gs-item-meta">${t.lastUsedAt ? 'used ' + esc(new Date(t.lastUsedAt).toLocaleDateString()) : 'never used'}</span>
         ${t.revoked ? '' : `<button class="gs-copy-btn" data-share-revoke="${esc(t.id)}">Revoke</button>`}
         <button class="gs-copy-btn" data-share-remove="${esc(t.id)}">Remove</button>
       </div>`;

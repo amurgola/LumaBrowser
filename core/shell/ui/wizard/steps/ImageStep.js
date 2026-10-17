@@ -16,7 +16,6 @@ export default class ImageStep extends WizardStepView {
   render() {
     this._body.innerHTML = `
         <div class="setup-wizard__panel">
-          <div class="setup-wizard__step-eyebrow">Local AI · Optional</div>
           <h2 class="setup-wizard__step-title">Add local image generation?</h2>
           <p class="setup-wizard__step-desc">
             Generate images locally with <strong>stable-diffusion.cpp</strong>. Like the

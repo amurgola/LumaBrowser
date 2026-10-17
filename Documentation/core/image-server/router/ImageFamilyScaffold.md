@@ -16,6 +16,11 @@ defaults, plus the quality-tag wrapper applied to the prompt.
 - `ImageFamilyScaffold.isAnimaDistilled(model)`: an `anima` model whose names
   mention an 8/12-step checkpoint (MiaoMiao Anima 8-Step). Forced to
   `ANIMA_DISTILLED_RECIPE` (12 steps, cfg 1, euler, sgm_uniform).
+- `ImageFamilyScaffold.isQwen21Turbo(model)`: a `qwen-image-2` model whose
+  names contain "qwen image 2.1 turbo" (Qwen's official distill; Viggle merges
+  put "viggle" in between and do not match). Forced to `QWEN_21_TURBO_RECIPE`
+  (8 steps, cfg 1, euler, the checkpoint's `fixedSigmas`) unless a speed LoRA
+  preset is attached (`defaults.distilledPreset`).
 - `ImageFamilyScaffold.buildPrompt(prompt, md)` trims the prompt and adds
   `md.promptPrefix` / `md.promptSuffix` only when the prompt does not already
   contain them (case-insensitive).
@@ -30,7 +35,7 @@ defaults, plus the quality-tag wrapper applied to the prompt.
 Model-card cues (Anima's quality tags, Phr00t's Rapid-AIO recipe, Qwen-Image
 2.1's natural-language guide) are applied automatically so neither the chat
 model nor roleplay has to know each model's quirks. They only fill gaps, except
-the two distilled recipes: imported manifests commonly inherit the generic
+the distilled recipes: imported manifests commonly inherit the generic
 30-step / CFG-4 recipe, which throws away the point of a distilled checkpoint.
 
 sd.cpp has no `beta` scheduler (it silently falls back to a default that warbles

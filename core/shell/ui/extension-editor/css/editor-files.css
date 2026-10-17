@@ -1,6 +1,18 @@
 .editor-body { display: flex; flex: 1; overflow: hidden; }
-.file-tree { width: 220px; background: var(--surface-pop); border-right: 1px solid var(--border-strong); overflow-y: auto; flex-shrink: 0; }
-.file-item { padding: 8px 12px; font-size: 12px; color: var(--text-dim); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.file-item:hover { background: var(--bg-card); color: var(--text); }
-.file-item.active { background: var(--accent-soft); color: var(--accent); }
+.file-tree { width: 220px; padding: var(--space-2); background: var(--bg-root); border-right: 1px solid var(--border-soft); overflow-y: auto; flex-shrink: 0; }
+.file-item {
+    padding: 0 var(--space-2);
+    line-height: 28px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.file-item:hover { background: var(--surface-hover); color: var(--text-primary); }
+.file-item.active { background: var(--bg-surface-2); color: var(--text-primary); }
 .editor-container { flex: 1; overflow: hidden; }

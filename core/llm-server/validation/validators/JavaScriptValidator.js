@@ -1,4 +1,5 @@
 const ICodeLanguageValidator = require('../ICodeLanguageValidator');
+const EmbeddedScriptCheck = require('./EmbeddedScriptCheck');
 
 class JavaScriptValidator extends ICodeLanguageValidator {
   static GLOBALS = {
@@ -29,7 +30,20 @@ class JavaScriptValidator extends ICodeLanguageValidator {
     const jsx = !!(context && context.language === 'jsx');
     const rules = JavaScriptValidator._rules();
     const messages = JavaScriptValidator._lintPreferringFewerFatals(code, jsx, rules);
-    return messages.map((message) => this._toDiagnostic(message));
+    const diagnostics = messages.map((message) => this._toDiagnostic(message));
+    if (JavaScriptValidator._fatalCount(messages) > 0) return diagnostics;
+    return diagnostics.concat(JavaScriptValidator._embeddedScripts(code, jsx));
+  }
+
+  static _embeddedScripts(code, jsx) {
+    const espree = require('espree');
+    for (const sourceType of ['module', 'script']) {
+      try {
+        const ast = espree.parse(code, { ecmaVersion: 'latest', sourceType, loc: true, ecmaFeatures: { jsx } });
+        return EmbeddedScriptCheck.check(ast);
+      } catch (_) {}
+    }
+    return [];
   }
 
   _toDiagnostic(message) {

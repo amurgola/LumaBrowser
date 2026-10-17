@@ -4,7 +4,7 @@ export default class ProgressPane {
         <div class="setup-wizard__prog-phase" id="${prefix}Phase">Preparing…</div>
         <div class="setup-wizard__bar"><div class="setup-wizard__bar-fill" id="${prefix}Bar"></div></div>
         <div class="setup-wizard__prog-sub" id="${prefix}Sub"></div>
-        <div style="display:flex; gap:10px; margin-top:14px;">
+        <div class="setup-wizard__actions">
           <button class="setup-wizard__btn setup-wizard__btn--secondary" id="${prefix}Cancel" type="button">Cancel</button>
         </div>
       `;

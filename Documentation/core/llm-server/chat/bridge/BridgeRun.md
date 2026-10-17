@@ -27,7 +27,8 @@ normalises its output onto the chat router's hooks.
    -> [ToolDispatch](tools/ToolDispatch.md), in a [BridgeToolbox](tools/BridgeToolbox.md).
    The approval policy is `ApprovalPolicy.resolveRun` over the
    `core.llmServer.chat.approvalPolicy` setting, interactive when
-   `allowTakeover`.
+   `allowTakeover`; `approvedTools`, `onRunApproval` and `onRunApprovalUsed`
+   become its `granted`, `onGranted` and `onUsed`.
 2. Streaming: [StreamMirror](turn/StreamMirror.md), [RunImages](turn/RunImages.md),
    [CompletionDriver](turn/CompletionDriver.md), [AgentEventRelay](turn/AgentEventRelay.md).
 3. Agent: `new AgentRunner({ browserTools, sendCompletion }, { browserService },

@@ -44,7 +44,7 @@ export default class AddProviderForm {
     if (el.endpointGroup) el.endpointGroup.classList.toggle('ext-hidden', isPeer);
     if (el.keyGroup) el.keyGroup.classList.toggle('ext-hidden', isPeer);
     if (el.peerBlock) el.peerBlock.classList.toggle('ext-hidden', !isPeer);
-    el.saveBtn.textContent = isPeer ? 'Pair' : 'Save Provider';
+    el.saveBtn.textContent = isPeer ? 'Pair' : 'Save provider';
     if (isPeer) this._discovery.start(); else this._discovery.stop();
   }
 

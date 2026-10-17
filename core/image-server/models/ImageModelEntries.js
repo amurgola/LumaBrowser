@@ -41,6 +41,44 @@ class ImageModelEntries {
     approxBytes: 6.0 * GB,
   };
 
+  static QWEN_21_VAE = {
+    role: 'vae',
+    repo: 'madebyollin/texture-fix-vae-for-qwen-image-2.1',
+    file: 'texture_fix_vae_for_qwen_image_2.1_bf16.safetensors',
+    url: `${HF}/madebyollin/texture-fix-vae-for-qwen-image-2.1/resolve/main/texture_fix_vae_for_qwen_image_2.1_bf16.safetensors?download=true`,
+    approxBytes: 675509688,
+    supersedes: ['qwen_image_2.1_vae_bf16.safetensors'],
+    updateNote: 'Texture-fix VAE: removes the checkerboard mesh the stock Qwen-Image 2.1 decoder leaves on fine textures. Same size, drop-in.',
+  };
+
+  static QWEN3_VL_8B_LLM = {
+    role: 'llm',
+    repo: 'Qwen/Qwen3-VL-8B-Instruct-GGUF',
+    file: 'Qwen3VL-8B-Instruct-Q4_K_M.gguf',
+    url: `${HF}/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/main/Qwen3VL-8B-Instruct-Q4_K_M.gguf?download=true`,
+    approxBytes: 5027784800,
+  };
+
+  static QWEN3_VL_8B_VISION = {
+    role: 'vision',
+    repo: 'Qwen/Qwen3-VL-8B-Instruct-GGUF',
+    file: 'mmproj-Qwen3VL-8B-Instruct-F16.gguf',
+    url: `${HF}/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-8B-Instruct-F16.gguf?download=true`,
+    approxBytes: 1159029824,
+    loaderFlag: '--llm_vision',
+  };
+
+  static QWEN_21_PROMPT_GUIDE =
+    'This is Qwen-Image 2.1 (LLM-conditioned via Qwen3-VL). Write the positive '
+    + 'prompt as a NATURAL-LANGUAGE description: subject, setting, style, '
+    + 'lighting, composition, in full sentences. It renders text very well, so '
+    + 'spell out any lettering to draw inside quotes. cfg is 1.0, so negative '
+    + 'prompts have no effect. For a transparent background start the prompt '
+    + 'with: "This is an RGBA image with transparency." and end it with "The '
+    + 'image has alpha channel and the background is transparent." When '
+    + 'editing, describe the CHANGE as an instruction ("change the sign to say '
+    + '…", "make it night") and refer to the reference as the subject.';
+
   static WAN_VIDEO_DEFAULTS = {
     width: 832,
     height: 480,
@@ -173,30 +211,9 @@ class ImageModelEntries {
             { id: 'Q4_0', label: 'Q4_0 - smallest (safe)', file: 'qwen_image_2.1-Q4_0.gguf', url: `${HF}/leejet/Qwen-Image-2.1-GGUF/resolve/main/qwen_image_2.1-Q4_0.gguf?download=true`, approxBytes: 4197494816, recVramBytes: 8 * GB },
           ],
         },
-        vae: {
-          role: 'vae',
-          repo: 'madebyollin/texture-fix-vae-for-qwen-image-2.1',
-          file: 'texture_fix_vae_for_qwen_image_2.1_bf16.safetensors',
-          url: `${HF}/madebyollin/texture-fix-vae-for-qwen-image-2.1/resolve/main/texture_fix_vae_for_qwen_image_2.1_bf16.safetensors?download=true`,
-          approxBytes: 675509688,
-          supersedes: ['qwen_image_2.1_vae_bf16.safetensors'],
-          updateNote: 'Texture-fix VAE: removes the checkerboard mesh the stock Qwen-Image 2.1 decoder leaves on fine textures. Same size, drop-in.',
-        },
-        llm: {
-          role: 'llm',
-          repo: 'Qwen/Qwen3-VL-8B-Instruct-GGUF',
-          file: 'Qwen3VL-8B-Instruct-Q4_K_M.gguf',
-          url: `${HF}/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/main/Qwen3VL-8B-Instruct-Q4_K_M.gguf?download=true`,
-          approxBytes: 5027784800,
-        },
-        vision: {
-          role: 'vision',
-          repo: 'Qwen/Qwen3-VL-8B-Instruct-GGUF',
-          file: 'mmproj-Qwen3VL-8B-Instruct-F16.gguf',
-          url: `${HF}/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-8B-Instruct-F16.gguf?download=true`,
-          approxBytes: 1159029824,
-          loaderFlag: '--llm_vision',
-        },
+        vae: { ...ImageModelEntries.QWEN_21_VAE },
+        llm: { ...ImageModelEntries.QWEN3_VL_8B_LLM },
+        vision: { ...ImageModelEntries.QWEN3_VL_8B_VISION },
       },
       minVramBytes: 12 * GB,
       defaults: {
@@ -205,16 +222,53 @@ class ImageModelEntries {
         steps: 25,
         cfgScale: 1.0,
         sampler: 'euler',
-        promptGuide:
-          'This is Qwen-Image 2.1 (LLM-conditioned via Qwen3-VL). Write the positive '
-          + 'prompt as a NATURAL-LANGUAGE description: subject, setting, style, '
-          + 'lighting, composition, in full sentences. It renders text very well, so '
-          + 'spell out any lettering to draw inside quotes. cfg is 1.0, so negative '
-          + 'prompts have no effect. For a transparent background start the prompt '
-          + 'with: "This is an RGBA image with transparency." and end it with "The '
-          + 'image has alpha channel and the background is transparent." When '
-          + 'editing, describe the CHANGE as an instruction ("change the sign to say '
-          + '…", "make it night") and refer to the reference as the subject.',
+        promptGuide: ImageModelEntries.QWEN_21_PROMPT_GUIDE,
+      },
+      constraints: { dimensionMultiple: 32 },
+      launchArgs: ['--clip-on-cpu'],
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
+      id: 'qwen-image-2-1-turbo',
+      label: 'Qwen-Image 2.1 Turbo',
+      blurb:
+        'Qwen\'s official accelerated Qwen-Image 2.1 (Oct 2026): the same 7B '
+        + 'generate + edit model distilled to 8 steps at cfg 1 (~3-4x faster than '
+        + 'the base at 25). Same encoder, VAE and prompt style; LoRAs trained on '
+        + 'the base keep working. Community reports put edits on par with the '
+        + 'base and text-to-image slightly flatter. ~14.5 GB total at Q8_0.',
+      family: 'qwen-image-2',
+      kind: 'generate',
+      supportsEdit: true,
+      licenseNote: 'Qwen Research License: research and non-commercial use only. Check the model card before commercial use.',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'unsloth/Qwen-Image-2.1-Turbo-GGUF',
+          file: 'qwen-image-2.1-turbo-Q8_0.gguf',
+          url: `${HF}/unsloth/Qwen-Image-2.1-Turbo-GGUF/resolve/main/qwen-image-2.1-turbo-Q8_0.gguf?download=true`,
+          approxBytes: 7640860480,
+          quants: [
+            { id: 'Q8_0', label: 'Q8_0 - recommended (closest to bf16)', file: 'qwen-image-2.1-turbo-Q8_0.gguf', url: `${HF}/unsloth/Qwen-Image-2.1-Turbo-GGUF/resolve/main/qwen-image-2.1-turbo-Q8_0.gguf?download=true`, approxBytes: 7640860480, recVramBytes: 12 * GB, default: true },
+            { id: 'Q6_K', label: 'Q6_K - high quality', file: 'qwen-image-2.1-turbo-Q6_K.gguf', url: `${HF}/unsloth/Qwen-Image-2.1-Turbo-GGUF/resolve/main/qwen-image-2.1-turbo-Q6_K.gguf?download=true`, approxBytes: 6271551296, recVramBytes: 10 * GB },
+            { id: 'Q5_K_M', label: 'Q5_K_M - balanced', file: 'qwen-image-2.1-turbo-Q5_K_M.gguf', url: `${HF}/unsloth/Qwen-Image-2.1-Turbo-GGUF/resolve/main/qwen-image-2.1-turbo-Q5_K_M.gguf?download=true`, approxBytes: 5390223168, recVramBytes: 10 * GB },
+            { id: 'Q4_K_M', label: 'Q4_K_M - smallest (below this drifts visibly at 8 steps)', file: 'qwen-image-2.1-turbo-Q4_K_M.gguf', url: `${HF}/unsloth/Qwen-Image-2.1-Turbo-GGUF/resolve/main/qwen-image-2.1-turbo-Q4_K_M.gguf?download=true`, approxBytes: 4199565120, recVramBytes: 8 * GB },
+          ],
+        },
+        vae: { ...ImageModelEntries.QWEN_21_VAE },
+        llm: { ...ImageModelEntries.QWEN3_VL_8B_LLM },
+        vision: { ...ImageModelEntries.QWEN3_VL_8B_VISION },
+      },
+      minVramBytes: 12 * GB,
+      defaults: {
+        width: 1024,
+        height: 1024,
+        steps: 8,
+        cfgScale: 1.0,
+        sampler: 'euler',
+        fixedSigmas: [1.0, 0.978453, 0.95418, 0.926626, 0.89508, 0.845148, 0.704534, 0.414568],
+        promptGuide: ImageModelEntries.QWEN_21_PROMPT_GUIDE,
       },
       constraints: { dimensionMultiple: 32 },
       launchArgs: ['--clip-on-cpu'],

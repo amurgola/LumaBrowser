@@ -6,7 +6,8 @@ class ModelContextWindow {
     this._db = db;
   }
 
-  forRef(modelRef) {
+  forRef(rawRef) {
+    const modelRef = this._base(rawRef);
     if (typeof modelRef !== 'string') return null;
     if (ChatModelRef.isLocal(modelRef)) return this.localPerSlot();
     try {
@@ -33,6 +34,11 @@ class ModelContextWindow {
     const entry = config && Array.isArray(config.models) ? config.models.find((m) => m && m.id === parts.modelId) : null;
     const n = ModelContextWindow._positive(entry && Number(entry.luma_context));
     return n == null ? null : Math.floor(n);
+  }
+
+  _base(modelRef) {
+    const settings = this._service && this._service.modelSettings;
+    return settings && ChatModelRef.isProfile(modelRef) ? settings.baseRef(modelRef) : modelRef;
   }
 
   static _positive(n) {

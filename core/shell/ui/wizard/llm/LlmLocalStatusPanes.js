@@ -35,7 +35,7 @@ export default class LlmLocalStatusPanes {
   error(pane) {
     pane.innerHTML = `
         <div class="setup-wizard__status setup-wizard__status--err" style="margin-bottom:14px;">${HtmlEscaper.escape(this._w.state.llm.local.error || 'Setup failed.')}</div>
-        <div style="display:flex; gap:10px;">
+        <div class="setup-wizard__actions setup-wizard__actions--flush">
           <button class="setup-wizard__btn setup-wizard__btn--primary" id="llmRetry" type="button">Try again</button>
           <button class="setup-wizard__btn setup-wizard__btn--secondary" id="llmToRemote" type="button">Use a hosted API instead</button>
         </div>

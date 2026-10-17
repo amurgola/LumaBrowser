@@ -6,7 +6,7 @@ Reads the Defaults card's controls into the setDefaults payload; optional rows a
 
 ## Methods
 
-- `read(doc)`; `thinking(position)`: `'off'` is `noThink`, any other position clears it. The optional rows are extra flags, RAM pin, tool router and the OpenVINO device (`openvinoDevice`, `''` sent as null for Auto).
+- `read(doc)`; `thinking(position)`: `'off'` is `noThink`, any other position clears it. The optional rows are RAM pin, tool router and the OpenVINO device (extra flags are no longer in the card; the per-model Tune dialog saves them) (`openvinoDevice`, `''` sent as null for Auto).
 
 ## Globals
 

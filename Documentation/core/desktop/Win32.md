@@ -11,9 +11,9 @@ under `core/desktop/win32/`; the class holds no logic.
 
 - `load()` the raw koffi function table ([Win32Api](win32/Win32Api.md)); DesktopService
   calls `GetCursorPos`, `SetCursorPos`, `GetForegroundWindow`, `WindowFromPoint` on it directly.
-- Windows ([Win32Windows](win32/Win32Windows.md)): `listTopLevelWindows()`,
-  `windowText(hwnd)`, `className(hwnd)`, `processIdOf(hwnd)`, `windowRect(hwnd)`,
-  `focusWindow(hwnd)`, `virtualScreen()`.
+- Windows ([Win32Windows](win32/Win32Windows.md)): `listTopLevelWindows({ includeOwned? })`,
+  `rootWindowAt(x, y)`, `popupInfo(hwnd)`, `windowText(hwnd)`, `className(hwnd)`, `processIdOf(hwnd)`,
+  `windowRect(hwnd)`, `focusWindow(hwnd)`, `virtualScreen()`.
 - Processes ([Win32Process](win32/Win32Process.md)): `processImagePath(pid)`, `isElevated(pid)`.
 - Capture ([Win32Capture](win32/Win32Capture.md)): `captureBGRA({ hwnd?, rect })`, `isBlank(bgra)`.
 - Input ([Win32Input](win32/Win32Input.md)): `mouseInput(flags, mouseData?)`,
@@ -22,6 +22,7 @@ under `core/desktop/win32/`; the class holds no logic.
   `KEYEVENTF`, `INPUT_SIZE`, `KEYEVENTF_SCANCODE`, `MOUSEEVENTF_MOVE`.
 - `scanCodeFor(vk)` ([Win32ScanCodes](win32/Win32ScanCodes.md)).
 - `inputDesktopName()` ([Win32InputDesktop](win32/Win32InputDesktop.md)).
+- `shellOpen(file, params)` ([Win32Shell](win32/Win32Shell.md)), for `desktop_launch`.
 
 ## Coordinates
 

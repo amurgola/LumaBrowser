@@ -10,14 +10,16 @@ class ModelCapabilities {
     this._db = db;
   }
 
-  visionActive(modelRef) {
+  visionActive(rawRef) {
+    const modelRef = this._base(rawRef);
     if (typeof modelRef !== 'string') return false;
     if (!ChatModelRef.isLocal(modelRef)) return true;
     const plan = this._livePlan();
     return !!(plan && plan.mmprojPath);
   }
 
-  nativeToolsActive(modelRef) {
+  nativeToolsActive(rawRef) {
+    const modelRef = this._base(rawRef);
     if (typeof modelRef !== 'string') return false;
     if (HarmonyModel.matches(modelRef)) return true;
     if (!ChatModelRef.isLocal(modelRef)) return true;
@@ -28,11 +30,17 @@ class ModelCapabilities {
     return setting === true ? ModelFamilies.nativeToolCallsCapable(family) : ModelFamilies.nativeToolCalls(family);
   }
 
-  nativeToolExclude(modelRef) {
+  nativeToolExclude(rawRef) {
+    const modelRef = this._base(rawRef);
     if (!this.nativeToolsActive(modelRef)) return [];
     if (!ChatModelRef.isLocal(modelRef)) return [];
     const plan = this._livePlan();
     return ModelFamilies.nativeToolExclude(plan && plan.modelFamily);
+  }
+
+  _base(modelRef) {
+    const settings = this._service && this._service.modelSettings;
+    return settings && ChatModelRef.isProfile(modelRef) ? settings.baseRef(modelRef) : modelRef;
   }
 
   _livePlan() {

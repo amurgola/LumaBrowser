@@ -24,11 +24,11 @@
     <div id="setupRoot">
     <div class="page-head">
         <span class="page-eyebrow" id="pageEyebrow">LLM Server</span>
-        <h1 class="page-title" id="pageTitle">LLM Setup</h1>
+        <h1 class="page-title" id="pageTitle">LLM setup</h1>
     </div>
     <p class="page-sub">
         <span id="hostMeta">Probing host…</span>
-        <button class="luma-btn pill luma-btn--sm" id="reloadBtn" type="button">Refresh</button>
+        <button class="luma-btn luma-btn--sm" id="reloadBtn" type="button">Refresh</button>
     </p>
 
     <div class="luma-segmented" id="pageNav">
@@ -41,7 +41,7 @@
     <div class="grid" data-view-pane="settings">
         <section class="card" id="cardDefaults" data-card-group="settings">
             <div class="card-head">
-                <h2 class="card-title">Defaults · Chat</h2>
+                <h2 class="card-title">Chat defaults</h2>
                 <span class="luma-badge accent" id="defaultsPill">…</span>
             </div>
             <div id="defaultsBody" class="luma-muted">Loading…</div>
@@ -57,7 +57,7 @@
 
         <section class="card" id="cardRuntimes" data-card-group="settings">
             <div class="card-head">
-                <h2 class="card-title">Inference Runtimes</h2>
+                <h2 class="card-title">Inference runtimes</h2>
                 <span class="luma-badge accent" id="runtimesPill">…</span>
             </div>
             <div id="runtimesBody" class="luma-muted">Loading…</div>
@@ -65,7 +65,7 @@
 
         <section class="card" id="cardModels" data-card-group="settings">
             <div class="card-head">
-                <h2 class="card-title">Models Directory</h2>
+                <h2 class="card-title">Models directory</h2>
                 <button type="button" class="luma-icon-btn card-head-icon" data-open-model-search title="Search for models to download" aria-label="Search for models to download">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
                 </button>
@@ -85,7 +85,7 @@
 
         <section class="card" id="cardImageDefaults" data-card-group="image">
             <div class="card-head">
-                <h2 class="card-title">Image Server</h2>
+                <h2 class="card-title">Image server</h2>
                 <span class="luma-badge accent" id="imageDefaultsPill">…</span>
             </div>
             <div id="imageDefaultsBody" class="luma-muted">Loading…</div>
@@ -93,7 +93,7 @@
 
         <section class="card" id="cardImageRuntimes" data-card-group="image">
             <div class="card-head">
-                <h2 class="card-title">Image Runtimes</h2>
+                <h2 class="card-title">Image runtimes</h2>
                 <span class="luma-badge accent" id="imageRuntimesPill">…</span>
             </div>
             <div id="imageRuntimesBody" class="luma-muted">Loading…</div>
@@ -101,7 +101,7 @@
 
         <section class="card" id="cardImageModels" data-card-group="image">
             <div class="card-head">
-                <h2 class="card-title">Image Models</h2>
+                <h2 class="card-title">Image models</h2>
                 <span class="luma-badge accent" id="imageModelsPill">…</span>
             </div>
             <div id="imageModelsBody" class="luma-muted">Loading…</div>
@@ -109,7 +109,7 @@
 
         <section class="card" id="cardMusicRuntime" data-card-group="music">
             <div class="card-head">
-                <h2 class="card-title">Music Server</h2>
+                <h2 class="card-title">Music server</h2>
                 <span class="luma-badge accent" id="musicRuntimePill">…</span>
             </div>
             <div id="musicRuntimeBody" class="luma-muted">Loading…</div>
@@ -117,7 +117,7 @@
 
         <section class="card" id="cardMusicModels" data-card-group="music">
             <div class="card-head">
-                <h2 class="card-title">Music Models</h2>
+                <h2 class="card-title">Music models</h2>
                 <span class="luma-badge accent" id="musicModelsPill">…</span>
             </div>
             <div id="musicModelsBody" class="luma-muted">Loading…</div>
@@ -125,7 +125,7 @@
 
         <section class="card" id="cardMusicDefaults" data-card-group="music">
             <div class="card-head">
-                <h2 class="card-title">Defaults · Music</h2>
+                <h2 class="card-title">Music defaults</h2>
                 <span class="luma-badge accent" id="musicDefaultsPill">…</span>
             </div>
             <div id="musicDefaultsBody" class="luma-muted">Loading…</div>
@@ -133,7 +133,7 @@
 
         <section class="card" id="cardMusicTry" data-card-group="music">
             <div class="card-head">
-                <h2 class="card-title">Try It</h2>
+                <h2 class="card-title">Try it</h2>
                 <span class="luma-badge accent" id="musicTryPill">…</span>
             </div>
             <div id="musicTryBody" class="luma-muted">Loading…</div>
@@ -142,15 +142,15 @@
 
     <div id="advancedRoot" data-view-pane="advanced" hidden>
         <div class="luma-tabs adv-subtabs" id="advSubtabs">
-            <button type="button" data-subtab="placement" class="active">Model Placement</button>
-            <button type="button" data-subtab="server">Server Info</button>
+            <button type="button" data-subtab="placement" class="active">Model placement</button>
+            <button type="button" data-subtab="server">Server info</button>
             <button type="button" data-subtab="data">Data</button>
         </div>
 
         <div data-subtab-pane="placement">
             <div class="adv-head">
                 <div>
-                    <h2 class="adv-title">Model Placement</h2>
+                    <h2 class="adv-title">Model placement</h2>
                     <p class="adv-sub">Drag each model onto a GPU, an ordered GPU group, or System RAM. Combine cards into a group for overflow, or into a singularity to share one card. Leave a model in the Automatic tray to let the coordinator decide.</p>
                 </div>
                 <div class="adv-head-actions">
@@ -180,7 +180,7 @@
 
                 <section class="card" id="cardGpu" data-card-group="info" style="grid-column: span 2;">
                     <div class="card-head">
-                        <h2 class="card-title">Graphics Adapters</h2>
+                        <h2 class="card-title">Graphics adapters</h2>
                         <span class="luma-badge accent" id="gpuPill">…</span>
                     </div>
                     <div id="gpuBody" class="luma-muted">Loading…</div>
@@ -204,7 +204,7 @@
 
                 <section class="card" id="cardBudget" data-card-group="info" style="grid-column: span 2;">
                     <div class="card-head">
-                        <h2 class="card-title">Local Model Budget</h2>
+                        <h2 class="card-title">Local model budget</h2>
                         <span class="luma-badge accent" id="budgetPill">…</span>
                     </div>
                     <div id="budgetBody" class="luma-muted">Loading…</div>
@@ -212,7 +212,7 @@
 
                 <section class="card" id="cardApiSecurity" data-card-group="info" style="grid-column: span 2;">
                     <div class="card-head">
-                        <h2 class="card-title">API Security</h2>
+                        <h2 class="card-title">API security</h2>
                         <span class="luma-badge accent" id="apiSecurityPill">…</span>
                     </div>
                     <div id="apiSecurityBody" class="luma-muted">Loading…</div>
@@ -225,11 +225,11 @@
                 <section class="card" id="cardChatData" data-card-group="data" style="grid-column: span 2;">
                     <div class="card-head">
                         <h2 class="card-title">Conversations &amp; artifacts</h2>
-                        <span class="luma-badge" id="chatDataPill">Danger zone</span>
+                        <span class="luma-badge" id="chatDataPill"></span>
                     </div>
                     <p class="luma-muted">Deletes every chat conversation, its messages, and every artifact (including live modules pinned to the Dashboard and any scheduled tasks). Files in project folders you selected for Code mode are not touched. This cannot be undone.</p>
                     <div class="adv-head-actions" style="margin-top:12px;">
-                        <button class="luma-btn danger" id="chatDataWipe">Clear conversations &amp; artifacts</button>
+                        <button class="luma-btn danger" id="chatDataWipe">Clear conversations and artifacts</button>
                         <span class="adv-status" id="chatDataStatus"></span>
                     </div>
                 </section>

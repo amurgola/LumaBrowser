@@ -2,7 +2,7 @@ class LaunchContext {
   constructor({ service, planFor, withVision = false }) {
     this.service = service;
     this.withVision = !!withVision;
-    this.defaults = service.getDefaults();
+    this.defaults = service.getLaunchDefaults ? service.getLaunchDefaults() : service.getDefaults();
     this.settingsDb = service.settingsDb;
     this._planFor = planFor;
 

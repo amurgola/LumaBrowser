@@ -2,8 +2,7 @@
     display: flex;
     align-items: flex-end;
     height: 38px;
-    background: rgba(11, 18, 32, 0.92);
-    backdrop-filter: blur(12px);
+    background: var(--bg-root);
     border-bottom: none;
     -webkit-app-region: drag;
     user-select: none;
@@ -42,24 +41,30 @@ body.platform-linux .app-titlebar {
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
 }
+
 .win-ctrl {
     width: 46px;
     height: 38px;
+    padding: 0;
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-size: 12px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background var(--transition), color var(--transition);
+    transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.win-ctrl .icon {
+    width: 10px;
+    height: 10px;
+    flex: none;
 }
 .win-ctrl:hover {
-    background: var(--bg-surface-2);
+    background: var(--surface-active);
     color: var(--text-primary);
 }
 .win-ctrl--close:hover {
-    background: #e81123;
+    background: #c42b1c;
     color: #fff;
 }

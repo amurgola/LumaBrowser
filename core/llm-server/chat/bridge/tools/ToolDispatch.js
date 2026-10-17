@@ -44,6 +44,7 @@ class ToolDispatch {
           conversationId: ctx.conversationId,
           assistantMessageId: ctx.assistantMessageId,
           onArtifact: (a) => this._adoptArtifact(a),
+          isAborted: () => !!(ctx.isAborted && ctx.isAborted()),
         },
       });
       return McpResultUnwrapper.unwrap(res);

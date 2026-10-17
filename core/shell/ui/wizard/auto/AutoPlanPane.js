@@ -71,7 +71,7 @@ export default class AutoPlanPane {
           <div id="autoImageChoice"></div>
           ${hwLine ? `<div class="setup-wizard__rec-hw">${esc(hwLine)}</div>` : ''}
         </div>
-        <div style="display:flex; gap:10px; margin-top:14px; align-items:center;">
+        <div class="setup-wizard__actions">
           <button class="setup-wizard__btn setup-wizard__btn--primary" id="autoGoBtn" type="button">Set it up</button>
           ${this._secondaryHtml()}
           <button class="setup-wizard__btn setup-wizard__btn--link" id="autoToGuided" type="button">Customize instead</button>

@@ -9,8 +9,7 @@ export default class GuidedSteps {
 
   static welcome(w, body) {
     body.appendChild(Dom.el('div', 'wz-hero',
-      '<div class="wz-hero-mark">✨</div>'
-      + '<h2>Let’s set up your local AI</h2>'
+      '<h2>Set up a local model</h2>'
       + '<p>Everything runs locally. This takes one model download (a few GB) '
       + 'and a couple of minutes.</p>'));
     const grid = Dom.el('div', 'wz-cards');

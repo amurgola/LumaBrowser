@@ -8,10 +8,9 @@ export default class DoneStep extends WizardStepView {
     const enabledIds = this._w.enabledExtensions();
     this._body.innerHTML = `
         <div class="setup-wizard__panel">
-          <div class="setup-wizard__step-eyebrow">Review</div>
           <h2 class="setup-wizard__step-title">Ready to launch</h2>
           <p class="setup-wizard__step-desc">
-            Here's what you picked. Click <strong>Finish Setup</strong> to apply and open LumaBrowser.
+            Here's what you picked. Click <strong>Finish setup</strong> to apply and open LumaBrowser.
           </p>
 
           <div class="setup-wizard__summary">

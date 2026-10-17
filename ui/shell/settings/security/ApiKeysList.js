@@ -39,7 +39,7 @@ export default class ApiKeysList {
   render() {
     const keys = this._state.apiKeys;
     if (!keys.length) {
-      this._list.innerHTML = '<div class="luma-empty luma-empty--plain" style="text-align:left;padding:4px 0;">No keys yet. Create one below.</div>';
+      this._list.innerHTML = '<div class="gs-list-empty">No keys yet. Create one below.</div>';
       return;
     }
     this._list.innerHTML = keys.map((k) => ApiKeysList.rowHtml(k)).join('');
@@ -48,13 +48,13 @@ export default class ApiKeysList {
   static rowHtml(k) {
     const esc = HtmlEscaper.escape;
     return `
-      <div class="api-sec-key-row gs-item-card" data-api-sec-key-id="${esc(k.id)}" style="padding:10px;display:flex;flex-direction:column;gap:6px;">
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="text" class="form-input" data-api-sec-key-label value="${esc(k.label)}" style="flex:1;padding:6px 10px !important;font-size:12px !important;">
-          <span style="font-size:10px;color:var(--text-muted);">${esc(new Date(k.createdAt).toLocaleDateString())}</span>
+      <div class="api-sec-key-row gs-item-card" data-api-sec-key-id="${esc(k.id)}">
+        <div class="gs-item-row">
+          <input type="text" class="form-input" data-api-sec-key-label value="${esc(k.label)}" aria-label="Key label">
+          <span class="gs-item-meta">${esc(new Date(k.createdAt).toLocaleDateString())}</span>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <code data-api-sec-key-value data-masked="${esc(k.key)}" style="flex:1;font-family:var(--font-mono);font-size:11.5px;color:var(--text-secondary);word-break:break-all;">${esc(k.key)}</code>
+        <div class="gs-item-row">
+          <code class="gs-item-code is-masked" data-api-sec-key-value data-masked="${esc(k.key)}">${esc(k.key)}</code>
           <button class="gs-copy-btn" data-api-sec-key-reveal>Reveal</button>
           <button class="gs-copy-btn" data-api-sec-key-copy>Copy</button>
           <button class="gs-copy-btn" data-api-sec-key-refresh>Refresh</button>

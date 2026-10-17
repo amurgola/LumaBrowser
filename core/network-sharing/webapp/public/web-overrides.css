@@ -4,11 +4,11 @@
   .cm-sidebar.expanded {
     position: fixed; top: 0; left: 0; bottom: 0;
     width: min(84vw, 300px); flex-basis: auto;
-    background: var(--bg);
-    z-index: 1000; box-shadow: 0 0 50px rgba(0, 0, 0, 0.7);
+    background: var(--bg-root);
+    z-index: 1000; box-shadow: var(--shadow-pop);
   }
 
-  .cm-greet { font-size: 30px; }
+  .cm-landing { padding: var(--space-8) var(--space-4); }
   .cm-composer-wrap,
   .cm-landing .cm-composer-wrap { max-width: 100%; }
 
@@ -17,10 +17,10 @@
   .cm-composer-row { gap: 6px; }
   .cm-composer-left { gap: 6px; }
   .cm-composer-right { gap: 6px; min-width: 0; }
-  .cm-tools { padding: 0 10px 0 9px; font-size: 12px; }
+  .cm-tools { padding: 0 10px 0 9px; font-size: var(--text-sm); }
   .cm-model-pill { border-color: var(--border-strong); padding: 5px 11px; }
   .cm-model-pill b, .cm-model-pill .cm-caret { display: none; }
-  .cm-model-pill::after { content: "Info"; color: var(--text-dim); font-size: 12.5px; }
+  .cm-model-pill::after { content: "Info"; color: var(--text-secondary); font-size: var(--text-sm); }
 
   #chatRoot.cm-has-panel .cm-artifact-panel {
     position: fixed; inset: 0; z-index: 70;

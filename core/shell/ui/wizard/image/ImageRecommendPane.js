@@ -75,7 +75,7 @@ export default class ImageRecommendPane {
         <div class="setup-wizard__rec">${found ? ImageRecommendPane._foundCard(rec, found) : ImageRecommendPane._catalogCard(rec)}
           ${ImageRecommendPane._hardwareNote(rec.runtime)}
         </div>
-        <div style="display:flex; gap:10px; margin-top:14px;">
+        <div class="setup-wizard__actions">
           <button class="setup-wizard__btn setup-wizard__btn--primary" id="imgGoBtn" type="button">${found ? 'Link &amp; set up' : 'Download &amp; set up'}</button>
           <button class="setup-wizard__btn setup-wizard__btn--secondary" id="imgBackAsk" type="button">Back</button>
         </div>

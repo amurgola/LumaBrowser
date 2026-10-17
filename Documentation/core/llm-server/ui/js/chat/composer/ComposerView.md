@@ -10,22 +10,24 @@ Escape while its menu is open; Up in an empty box edits the last prompt through
 [ClipboardAttach](ClipboardAttach.md)), the Send button that is Stop while
 streaming (titled "Stop (Esc)"),
 the gear, the open-tab picker ([TabContext](TabContext.md); hidden without a
-browser), thinking pill and mic on the left, the token meter on the right, the
-no-model callout and the attachment strip above, and the AI disclaimer under the
-reply composer.
+browser), thinking pill and mic on the left (28px ghost icon buttons,
+`cm-tool-btn`), the token meter on the right, the no-model notice (one plain
+line with a secondary Open Setup button) and the attachment strip above, and the
+AI disclaimer under the reply composer.
 
 ## Methods
 
-- `ComposerView.html(big)`: `big` is the landing's centred composer ("How can I
-  help you today? Type / for commands", no disclaimer); otherwise "Reply...".
+- `ComposerView.html(big)`: `big` is the landing's centred composer ("Ask
+  anything, or type / for commands", no disclaimer); otherwise "Reply".
 - `wire(scope)`: textarea, Send/Stop (Stop only aborts the stream on screen),
   thinking pill, gear, mic (hidden without a voice surface), Open Setup
   (switches to Setup and asks `setupNav.go('settings')`), usage, attachments,
   availability.
 - `setSendStop(streaming)`, `refreshSendState()`: disabled with nothing to send
   or no model; while streaming, disabled except in the conversation that is
-  streaming (one stream at a time).
+  streaming (one stream at a time). An enabled Send (not Stop) gets
+  `cm-send-ready`, the only state with the accent fill.
 - `focus()`, `clearReplyBox()`.
 - `openSetup()`: switches to Setup and asks `setupNav.go('settings')`; the
-  no-model callout and an [ErrorCard](../turns/ErrorCard.md) use it.
+  no-model notice and an [ErrorCard](../turns/ErrorCard.md) use it.
 - `ComposerView.NO_MODEL`, `SEND_TITLE`.

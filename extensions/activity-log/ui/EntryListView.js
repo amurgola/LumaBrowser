@@ -28,7 +28,7 @@ export default class EntryListView {
 
   static _emptyHtml(loggingOn) {
     return `
-          <div class="luma-empty" style="padding:20px; text-align:center;">
+          <div class="luma-empty al-empty-pad">
             No entries yet.${!loggingOn ? '<br><small>Logging is off. Turn on the master switch above to start recording.</small>' : ''}
           </div>`;
   }

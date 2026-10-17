@@ -13,9 +13,12 @@ export default class ImageDefaultRows {
     if (!opts) return '';
     const activeServer = imageCfg.servers.find((s) => s && s.id === active) || null;
     return `
-      <div class="provider-default-row" style="margin-top:8px;">
-        <label class="form-label" for="${selectId}" style="margin:0;">${label}</label>
-        <select class="form-select" id="${selectId}" data-image-role="${roleKey}" style="max-width:280px;">${opts}</select>
+      <div class="provider-default-row gs-row">
+        <div class="gs-row-text">
+          <label class="gs-row-label" for="${selectId}">${label}</label>
+          <span class="gs-row-help">Runs on this server, local or shared by a paired LumaBrowser.</span>
+        </div>
+        <select class="form-select gs-input-select" id="${selectId}" data-image-role="${roleKey}">${opts}</select>
       </div>${ImageDefaultRows._modelRow(activeServer, label)}`;
   }
 
@@ -27,9 +30,11 @@ export default class ImageDefaultRows {
       .concat(server.models.map((m) => `<option value="${esc(m.id)}"${m.id === server.selectedModel ? ' selected' : ''}>${esc(m.label || m.id)}</option>`))
       .join('');
     return `
-      <div class="provider-default-row" style="margin-top:4px;">
-        <label class="form-label" style="margin:0;">${label} model</label>
-        <select class="form-select" data-image-model-server="${esc(server.id)}" style="max-width:280px;">${modelOpts}</select>
+      <div class="provider-default-row gs-row gs-row--nested">
+        <div class="gs-row-text">
+          <span class="gs-row-label">${label} model</span>
+        </div>
+        <select class="form-select gs-input-select" data-image-model-server="${esc(server.id)}" aria-label="${esc(label)} model">${modelOpts}</select>
       </div>`;
   }
 }

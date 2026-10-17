@@ -50,12 +50,12 @@ export default class SettingsFeedback {
   }
 
   static _badgeIn(row) {
-    let badge = row.querySelector(':scope > .gs-saved');
+    let badge = row.querySelector(':scope > .gs-saved, :scope > .gs-row-text > .gs-saved');
     if (badge) return badge;
     badge = document.createElement('span');
     badge.className = 'gs-saved';
-    const label = row.querySelector(':scope > .gs-row-label');
-    if (label && label.nextSibling) row.insertBefore(badge, label.nextSibling);
+    const label = row.querySelector(':scope > .gs-row-label, :scope > .gs-row-text > .gs-row-label');
+    if (label) label.after(badge);
     else row.appendChild(badge);
     return badge;
   }

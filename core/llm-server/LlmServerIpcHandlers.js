@@ -231,12 +231,20 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('chat.approvalRespond', (_e, decision) => ({ success: router.respondApproval(String(decision || 'reject')) }));
     LlmServerIpcHandlers._handle('chatAbort', () => quickChat.abortAll());
     LlmServerIpcHandlers._handle('listModels', () => router.listModels());
+    LlmServerIpcHandlers._registerModelSettings(router.llmServerService.modelSettings);
     LlmServerIpcHandlers._handle('chat.previewSystemPrompt', (_e, opts) => router.previewSystemPrompt(opts || {}));
     LlmServerIpcHandlers._handleChannel(LlmServerIpcHandlers.DEBUG_LOGS_CHANNEL, () => DebugLogsView.read({ app }));
     LlmServerIpcHandlers._handle('chat2', (event, args) => ChatTurnRequest.run(router, args, chatEvents(event, args)));
     LlmServerIpcHandlers._handle('chat.complete', (_e, args) => side.complete(args));
     LlmServerIpcHandlers._handle('chat.completeStream', (event, args) => side.start(args, chatEvents(event, args)));
     LlmServerIpcHandlers._handle('chat.completeAbort', (_e, requestId) => side.abort(requestId));
+  }
+
+  static _registerModelSettings(settings) {
+    LlmServerIpcHandlers._handle('modelSettings.get', (_e, ref) => ({ view: settings.view(ref) }));
+    LlmServerIpcHandlers._handle('modelSettings.setModel', (_e, ref, payload) => ({ view: settings.setModel(ref, payload || {}) }));
+    LlmServerIpcHandlers._handle('modelSettings.saveProfile', (_e, input) => ({ profile: settings.saveProfile(input || {}) }));
+    LlmServerIpcHandlers._handle('modelSettings.deleteProfile', (_e, id) => ({ deleted: settings.deleteProfile(id) }));
   }
 
   static _registerScheduledTasks({ schedTasks }) {

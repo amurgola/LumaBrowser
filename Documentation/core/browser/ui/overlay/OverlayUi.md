@@ -7,7 +7,8 @@ A display-only layer: [OverlayView](OverlayView.md) renders what main pushes,
 The inline `<style>` became `css/overlay-base.css`,
 `overlay-notification-log.css`, `overlay-favicon.css`,
 `overlay-url-suggestions.css` and `overlay-menus.css` (same rules, linked in
-the original order). The page still does not load base.css (its body padding
-and background would break the edge-to-edge transparent popup).
+the original order), after the shared `core/llm-server/ui/css/tokens.css`,
+which is the page's only palette. The page still does not load base.css (its
+body padding and background would break the edge-to-edge transparent popup).
 
 Globals: reads `window.overlayAPI`, `getSelection`, animation frames.

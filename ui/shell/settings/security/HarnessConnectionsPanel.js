@@ -45,13 +45,13 @@ export default class HarnessConnectionsPanel {
     const esc = HtmlEscaper.escape;
     const { status, cls, action, label } = HarnessConnectionsPanel.describe(h);
     const disabled = h.state === 'unavailable' ? 'disabled' : '';
-    const color = cls === 'ok' ? ' style="color:var(--good);"' : cls === 'warn' ? ' style="color:var(--warn, #c98a00);"' : '';
     return '<div class="gs-row" data-harness="' + esc(h.id) + '">'
+      + '<div class="gs-row-text">'
       + '<span class="gs-row-label">' + esc(h.name) + '</span>'
-      + '<div style="display:flex;gap:8px;flex:1;align-items:center;flex-wrap:wrap;">'
-      + '<button class="btn btn-secondary btn-sm" data-action="' + action + '" ' + disabled + '>' + label + '</button>'
-      + '<span class="gs-row-help' + (cls ? ' gs-harness-' + cls : '') + '"' + color + '>' + esc(status) + '</span>'
-      + '</div></div>';
+      + '<span class="gs-row-help' + (cls ? ' gs-harness-' + cls : '') + '">' + esc(status) + '</span>'
+      + '</div>'
+      + '<button class="btn btn-secondary" data-action="' + action + '" ' + disabled + '>' + label + '</button>'
+      + '</div>';
   }
 
   static disconnectMessage(r) {

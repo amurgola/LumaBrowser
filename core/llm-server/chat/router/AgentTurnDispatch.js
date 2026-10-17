@@ -1,5 +1,6 @@
 const ChatStyleDocs = require('./ChatStyleDocs');
 const DocsSourceGrant = require('./DocsSourceGrant');
+const ConversationGrants = require('../approval/ConversationGrants');
 
 class AgentTurnDispatch {
   static NOT_READY = 'Tools aren’t ready yet: the browser is still starting up. Try again in a moment.';
@@ -15,6 +16,7 @@ class AgentTurnDispatch {
   run(turn) {
     const deps = AgentTurnDispatch.requireDeps(this._getAgentDeps);
     const t = AgentTurnDispatch._withDefaults(turn);
+    const grants = t.runApprovals || this._conversationGrants(t);
     const tools = AgentTurnDispatch._withDocs(this._toolAccess(t.modeTurn, t.evalOverrides, t.convId, deps), t.docsGrant);
     return this._bridge.run({
       modelRef: t.modelRef,
@@ -35,21 +37,29 @@ class AgentTurnDispatch {
       llmExtra: t.llmExtra,
       ...AgentTurnDispatch._evalExtras(t.evalOverrides),
       approvalOverride: t.approvalOverride,
+      approvedTools: grants && Array.isArray(grants.granted) ? grants.granted.slice() : null,
+      onRunApproval: grants && typeof grants.onGranted === 'function' ? grants.onGranted : null,
+      onRunApprovalUsed: grants && typeof grants.onUsed === 'function' ? grants.onUsed : null,
     });
   }
 
   static _withDefaults(turn) {
     const {
       modeTurn = null, images = [], llmExtra = null, choicesOn = false, voiceOn = false, docsGrant = null,
-      evalOverrides = null, approvalOverride = null,
+      evalOverrides = null, approvalOverride = null, runApprovals = null,
     } = turn;
-    return { ...turn, modeTurn, images, llmExtra, choicesOn, voiceOn, docsGrant, evalOverrides, approvalOverride };
+    return { ...turn, modeTurn, images, llmExtra, choicesOn, voiceOn, docsGrant, evalOverrides, approvalOverride, runApprovals };
   }
 
   static requireDeps(getAgentDeps) {
     const deps = getAgentDeps ? getAgentDeps() : null;
     if (!deps || !deps.browserService || !deps.artifactStore) throw new Error(AgentTurnDispatch.NOT_READY);
     return deps;
+  }
+
+  _conversationGrants(t) {
+    if (!t.convId || t.evalOverrides || !this._store || typeof this._store.getMeta !== 'function') return null;
+    return new ConversationGrants(this._store, t.convId).runApprovals();
   }
 
   _priorMessages(convId, asstId) {

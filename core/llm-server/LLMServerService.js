@@ -21,6 +21,9 @@ const LlmServerSettings = require('./service/LlmServerSettings');
 const LlmUiState = require('./service/LlmUiState');
 const LlmDefaults = require('./service/LlmDefaults');
 const ModelLaunchFlags = require('./service/ModelLaunchFlags');
+const ModelOverrideStore = require('./service/ModelOverrideStore');
+const ModelProfileStore = require('./service/ModelProfileStore');
+const ModelSettings = require('./service/ModelSettings');
 const LlmModelDisplayNames = require('./service/LlmModelDisplayNames');
 const FitResultStore = require('./service/FitResultStore');
 const GambitResultStore = require('./service/GambitResultStore');
@@ -148,6 +151,7 @@ class LLMServerService {
 
 
   getDefaults() { return this._defaults.get(); }
+  getLaunchDefaults() { return this.modelSettings.launchDefaults(this.getDefaults()); }
   setDefaults(patch) { return this._defaults.set(patch); }
 
 
@@ -258,6 +262,13 @@ class LLMServerService {
     this._settings = new LlmServerSettings(this.settingsDb, { defaultModelsDir: () => this.getDefaultModelsDir() });
     this._ui = new LlmUiState(this.settingsDb, { isConfigured: () => LLMServerService._isConfigured(this.getDefaults()) });
     this._launchFlags = new ModelLaunchFlags(this.settingsDb);
+    this.modelSettings = new ModelSettings({
+      overrides: new ModelOverrideStore(this.settingsDb),
+      profiles: new ModelProfileStore(this.settingsDb),
+      launchFlags: this._launchFlags,
+      getDefaults: () => this.getDefaults(),
+      lastModelRef: { get: () => this.getLastModelRef(), set: (ref) => this.setLastModelRef(ref) },
+    });
     this._displayNames = new LlmModelDisplayNames(this.settingsDb);
     this._fitResults = new FitResultStore(this.settingsDb);
     this._gambitResults = new GambitResultStore(this.settingsDb);

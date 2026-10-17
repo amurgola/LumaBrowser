@@ -1,3 +1,4 @@
+const DesktopError = require('../DesktopError');
 const DesktopKeys = require('../DesktopKeys');
 const ClipboardSnapshot = require('./ClipboardSnapshot');
 
@@ -13,13 +14,21 @@ class DesktopKeyboard {
   }
 
   async combo(w, combo) {
+    const events = DesktopKeys.comboEvents(combo);
+    const downs = events.filter((e) => !e.up).length;
     const held = [];
+    let sent = 0;
     try {
-      for (const e of DesktopKeys.comboEvents(combo)) {
+      for (const e of events) {
         this._input.send(w, [this._keyEvent(e, e.up)]);
+        sent++;
         DesktopKeyboard._trackHeld(held, e);
         await this._sleep(DesktopKeyboard.KEY_GAP_MS);
       }
+      return { foregroundChanged: false };
+    } catch (e) {
+      if (sent >= downs && e && e.code === DesktopError.FOREGROUND_CHANGED) return { foregroundChanged: true };
+      throw e;
     } finally {
       if (held.length) this._input.release(held.reverse().map((h) => this._keyEvent(h, true)));
     }

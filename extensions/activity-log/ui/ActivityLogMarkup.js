@@ -1,12 +1,12 @@
 export default class ActivityLogMarkup {
   static SETTINGS_HTML = `
-    <div class="al-root" style="display:flex; flex-direction:column; gap:18px; max-width:960px;">
+    <div class="al-root">
 
-      <section class="ext-panel al-controls">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+      <section class="al-section al-controls">
+        <div class="al-head">
           <div>
-            <div style="font-size:14px; font-weight:600;">Activity Logging</div>
-            <div class="luma-field-help" style="margin-top:4px;">Records timed spans of actions performed by extensions and core services. All writes are off when the master toggle is off, so leaving it disabled costs nothing.</div>
+            <div class="al-title">Activity logging</div>
+            <div class="luma-field-help al-lead">Records timed spans of actions performed by extensions and core services. All writes are off when the master toggle is off, so leaving it disabled costs nothing.</div>
           </div>
           <label class="luma-switch" title="Master enable">
             <input type="checkbox" id="al-master-toggle">
@@ -14,43 +14,43 @@ export default class ActivityLogMarkup {
           </label>
         </div>
 
-        <div class="ext-form-row-inline" style="display:flex; gap:12px; margin-top:14px; flex-wrap:wrap;">
-          <div class="luma-field" style="flex:1; min-width:180px; margin-bottom:0;">
+        <div class="ext-form-row-inline al-retention">
+          <div class="luma-field al-retention-field">
             <label class="luma-field-label">Retention (days)</label>
             <input type="number" min="0" step="1" class="luma-field-input" id="al-retention-days">
-            <div class="luma-field-help">Entries older than this are auto-pruned. 0 = keep forever.</div>
+            <div class="luma-field-help">Entries older than this are pruned automatically. 0 keeps them forever.</div>
           </div>
-          <div class="luma-field" style="flex:1; min-width:180px; margin-bottom:0;">
+          <div class="luma-field al-retention-field">
             <label class="luma-field-label">Max entries</label>
             <input type="number" min="0" step="100" class="luma-field-input" id="al-retention-rows">
-            <div class="luma-field-help">Oldest entries are dropped once this count is exceeded. 0 = unlimited.</div>
+            <div class="luma-field-help">The oldest entries are dropped once this count is exceeded. 0 is unlimited.</div>
           </div>
         </div>
 
-        <div class="luma-form-actions ext-form-buttons--start ext-mt-12" style="gap:8px;">
+        <div class="luma-form-actions ext-form-buttons--start ext-mt-12 al-actions">
           <button class="luma-btn" id="al-refresh-callers-btn">Refresh callers</button>
-          <button class="luma-btn danger" id="al-clear-btn" style="margin-left:auto;">Clear all logs</button>
+          <button class="luma-btn danger al-push-right" id="al-clear-btn">Clear all logs</button>
         </div>
-        <div id="al-save-status" style="font-size:12px; margin-top:6px; min-height:16px; opacity:0.7;">Changes save automatically.</div>
+        <div id="al-save-status" class="al-save-status">Changes save automatically.</div>
       </section>
 
-      <section class="ext-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <div style="font-size:13px; font-weight:600;">Per-caller toggles</div>
-          <div style="font-size:11px; opacity:0.6;" id="al-caller-count">0 callers</div>
+      <section class="al-section">
+        <div class="al-head">
+          <div class="al-title">Per-caller toggles</div>
+          <div class="al-count" id="al-caller-count">0 callers</div>
         </div>
-        <div class="luma-field-help" style="margin-bottom:10px;">Individual extensions and core services. Toggle off to silence a noisy caller while keeping the rest enabled. Callers appear here automatically when they register with the logger.</div>
-        <div id="al-caller-list" class="al-caller-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+        <div class="luma-field-help al-lead al-lead--gap">Individual extensions and core services. Turn one off to silence a noisy caller while keeping the rest enabled. Callers appear here automatically when they register with the logger.</div>
+        <div id="al-caller-list" class="al-caller-list"></div>
       </section>
 
-      <section class="ext-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
-          <div style="font-size:13px; font-weight:600;">Log viewer</div>
-          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-            <select id="al-filter-caller" class="luma-field-input" style="font-size:12px; padding:4px 8px; min-width:140px;">
+      <section class="al-section">
+        <div class="al-head al-head--gap">
+          <div class="al-title">Log viewer</div>
+          <div class="al-filters">
+            <select id="al-filter-caller" class="luma-field-input al-filter al-filter--caller">
               <option value="">All callers</option>
             </select>
-            <select id="al-filter-result" class="luma-field-input" style="font-size:12px; padding:4px 8px;">
+            <select id="al-filter-result" class="luma-field-input al-filter">
               <option value="">All results</option>
               <option value="success">success</option>
               <option value="failure">failure</option>
@@ -58,82 +58,116 @@ export default class ActivityLogMarkup {
               <option value="info">info</option>
               <option value="in_progress">in_progress</option>
             </select>
-            <input type="text" id="al-filter-search" class="luma-field-input" placeholder="Search summary/details"
-              style="font-size:12px; padding:4px 8px; width:200px;">
+            <input type="text" id="al-filter-search" class="luma-field-input al-filter al-filter--search" placeholder="Search summary or details">
             <button class="luma-btn luma-btn--sm" id="al-refresh-entries-btn">Refresh</button>
           </div>
         </div>
 
-        <div class="al-viewer" style="display:grid; grid-template-columns: minmax(320px, 2fr) minmax(280px, 3fr); gap:12px; min-height:320px;">
-          <div class="al-list" id="al-entry-list" style="
-              background: var(--surface-sunken);
-              border: 1px solid var(--border);
-              border-radius: 6px; max-height: 480px; overflow:auto;">
-          </div>
-          <div class="al-detail" id="al-entry-detail" style="
-              background: var(--surface-sunken);
-              border: 1px solid var(--border);
-              border-radius: 6px; padding:12px; overflow:auto; max-height: 480px;
-              font-size: 12px; line-height: 1.55;">
-            <div style="opacity:0.5; font-style:italic;">Select an entry to see the full details.</div>
+        <div class="al-viewer">
+          <div class="al-list" id="al-entry-list"></div>
+          <div class="al-detail" id="al-entry-detail">
+            <div class="al-placeholder">Select an entry to see the full details.</div>
           </div>
         </div>
       </section>
     </div>
 
     <style>
+      .al-root { display: flex; flex-direction: column; gap: var(--space-6); max-width: 960px; }
+      .al-section + .al-section { padding-top: var(--space-6); border-top: 1px solid var(--border-soft); }
+      .al-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+      .al-head--gap { margin-bottom: var(--space-3); }
+      .al-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); }
+      .al-lead { margin-top: var(--space-1); }
+      .al-lead--gap { margin-bottom: var(--space-3); }
+      .al-count { font-size: var(--text-xs); color: var(--text-muted); }
 
+      .al-retention { display: flex; gap: var(--space-3); margin-top: var(--space-4); flex-wrap: wrap; }
+      .al-retention-field { flex: 1; min-width: 180px; margin-bottom: 0; }
+      .al-actions { gap: var(--space-2); }
+      .al-push-right { margin-left: auto; }
+      .al-save-status { min-height: 16px; margin-top: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); }
+
+      .al-filters { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+      .al-filters .al-filter { width: auto; height: 28px; padding: 0 var(--space-2); font-size: var(--text-sm); }
+      .al-filters .al-filter--caller { min-width: 140px; }
+      .al-filters .al-filter--search { width: 200px; }
+
+      .al-viewer { display: grid; grid-template-columns: minmax(320px, 2fr) minmax(280px, 3fr); gap: var(--space-3); min-height: 320px; }
+      .al-list,
+      .al-detail {
+        max-height: 480px;
+        overflow: auto;
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-lg);
+      }
+      .al-detail { padding: var(--space-3); font-size: var(--text-sm); line-height: var(--leading); }
+      .al-placeholder { color: var(--text-muted); }
+      .al-empty-pad { padding: var(--space-5); text-align: center; }
+
+      .al-caller-list { display: flex; flex-direction: column; }
       .al-caller-row {
-        display:flex; align-items:center; gap:10px;
-        padding:8px 10px; background: var(--surface-sunken);
-        border-radius:6px; border:1px solid var(--border);
+        display: flex; align-items: center; gap: var(--space-3);
+        padding: var(--space-2) 0;
+        border-top: 1px solid var(--border-soft);
       }
-      .al-caller-row--disabled { opacity:0.55; }
-      .al-caller-row-name { font-weight:600; font-size:13px; }
-      .al-caller-row-id { font-family: monospace; font-size:11px; opacity:0.55; margin-left:6px; }
-      .al-caller-row-desc { font-size:11px; opacity:0.65; margin-top:2px; }
+      .al-caller-row:first-child { border-top: 0; }
+      .al-caller-row--disabled { opacity: 0.55; }
+      .al-caller-row-main { flex: 1; min-width: 0; }
+      .al-caller-row-name { font-size: var(--text-md); font-weight: var(--weight-medium); color: var(--text-primary); }
+      .al-caller-row-id { margin-left: var(--space-2); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); }
+      .al-caller-row-desc { margin-top: 2px; font-size: var(--text-sm); color: var(--text-secondary); }
       .al-caller-row-source {
-        font-size:10px; padding:1px 6px; border-radius:10px;
-        background: rgba(255,255,255,0.06); opacity:0.7; margin-left:6px;
+        margin-left: var(--space-2); padding: 1px 6px; border-radius: var(--radius-sm);
+        background: var(--bg-surface-2); color: var(--text-secondary); font-size: var(--text-xs);
       }
+      .al-caller-row-source:empty { display: none; }
 
       .al-entry-row {
-        padding:8px 10px; cursor:pointer;
-        border-bottom:1px solid var(--border);
-        display:flex; align-items:center; gap:8px;
+        display: flex; align-items: center; gap: var(--space-2);
+        padding: var(--space-2) var(--space-3);
+        border-bottom: 1px solid var(--border-soft);
+        cursor: pointer;
+        transition: background-color var(--dur-fast) var(--ease);
       }
-      .al-entry-row:hover { background: rgba(255,255,255,0.03); }
-      .al-entry-row--selected { background: var(--accent-soft) !important; }
-      .al-entry-time  { font-family: monospace; font-size:10px; opacity:0.55; width:60px; flex-shrink:0; }
-      .al-entry-caller { font-size:11px; opacity:0.75; width:120px; flex-shrink:0;
-        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      .al-entry-action { font-size:12px; font-weight:500; flex:1;
-        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      .al-entry-duration { font-family: monospace; font-size:10px; opacity:0.6; width:55px; text-align:right; }
+      .al-entry-row:hover { background: var(--surface-hover); }
+      .al-entry-row--selected,
+      .al-entry-row--selected:hover { background: var(--bg-surface-2); }
+      .al-entry-time { width: 64px; flex-shrink: 0; font-size: var(--text-xs); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+      .al-entry-caller {
+        width: 96px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        font-size: var(--text-xs); color: var(--text-secondary);
+      }
+      .al-entry-action {
+        flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        font-size: var(--text-sm); color: var(--text-primary);
+      }
+      .al-entry-duration { width: 56px; text-align: right; font-size: var(--text-xs); font-variant-numeric: tabular-nums; color: var(--text-muted); }
       .al-entry-result {
-        font-size:10px; padding:1px 6px; border-radius:10px; flex-shrink:0;
-        font-weight:600; text-transform:uppercase; letter-spacing:0.02em;
+        flex-shrink: 0; padding: 1px 6px; border-radius: var(--radius-sm);
+        background: var(--bg-surface-2); color: var(--text-secondary);
+        font-size: var(--text-xs); font-weight: var(--weight-medium);
       }
-      .al-result-success    { background: rgba(74,222,128,0.14);  color: var(--good); }
-      .al-result-failure    { background: rgba(248,113,113,0.14); color: var(--bad); }
-      .al-result-warning    { background: rgba(251,191,36,0.14);  color: var(--warn); }
-      .al-result-info       { background: var(--surface-hover);   color: var(--text-dim); }
-      .al-result-in_progress { background: var(--accent-soft);    color: var(--accent); }
+      .al-result-failure { background: var(--danger-dim); color: var(--danger); }
+      .al-result-warning { background: var(--warning-dim); color: var(--warning); }
 
+      .al-detail-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-1); }
+      .al-detail-title { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text-primary); }
+      .al-detail-meta { font-size: var(--text-sm); color: var(--text-secondary); }
+      .al-detail-mono { font-family: var(--font-mono); font-size: var(--text-xs); word-break: break-all; }
       .al-detail pre {
-        background: rgba(0,0,0,0.3); padding:8px; border-radius:4px;
-        overflow:auto; font-size:11px; max-height:200px;
+        max-height: 200px; overflow: auto; padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-md); background: var(--code-bg);
+        font-family: var(--font-mono); font-size: var(--text-xs);
         white-space: pre-wrap; word-break: break-word;
       }
-      .al-detail-section { margin-top:10px; }
-      .al-detail-label {
-        font-size:10px; text-transform:uppercase; letter-spacing:0.05em;
-        opacity:0.55; margin-bottom:3px;
-      }
-      .al-detail-child {
-        margin-left:12px; padding:4px 8px; border-left:2px solid rgba(255,255,255,0.08);
-        font-size:11px; margin-bottom:2px;
-      }
+      .al-detail-section { margin-top: var(--space-3); }
+      .al-detail-label { margin-bottom: 2px; font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--text-secondary); }
+      .al-detail-child { margin-bottom: 2px; padding: var(--space-1) 0; border-top: 1px solid var(--border-soft); font-size: var(--text-sm); }
+      .al-detail-child:first-of-type { border-top: 0; }
+      .al-detail-child .al-entry-result { margin-right: var(--space-2); }
+      .al-detail-child-dur { font-variant-numeric: tabular-nums; color: var(--text-muted); }
+      .al-detail-child-summary { margin-top: 2px; color: var(--text-secondary); }
     </style>
   `;
 }

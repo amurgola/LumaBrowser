@@ -72,6 +72,7 @@ Settings ([LlmServerSettings](service/LlmServerSettings.md)): `isEnabled`,
 (also applied to the live supervisor).
 
 Defaults and caps: `getDefaults()`, `setDefaults(patch)` ([LlmDefaults](service/LlmDefaults.md));
+`getLaunchDefaults()` (the defaults plus the loaded model's own launch overrides, via `modelSettings.launchDefaults`; what a launch reads);
 `getModelCaps(modelPath?)`, `getRunningThinking()` ([RunningModelCaps](service/RunningModelCaps.md)).
 
 Diagnostics and runtimes ([LlmDiagnosticsCache](service/LlmDiagnosticsCache.md),
@@ -91,7 +92,10 @@ Per-model stores: `getAllFitResults`, `getFitResults`, `saveFitResults`
 `getModelDisplayNames`, `setModelDisplayName`, `resolveModelDisplayName`
 ([LlmModelDisplayNames](service/LlmModelDisplayNames.md)); `getModelLaunchFlags`,
 `setModelLaunchFlags`, `resolveModelLaunchFlags` ([ModelLaunchFlags](service/ModelLaunchFlags.md));
-`listInstalledChatModels()` ([InstalledChatModels](service/InstalledChatModels.md)).
+`listInstalledChatModels()` ([InstalledChatModels](service/InstalledChatModels.md)); the public
+`modelSettings` field ([ModelSettings](service/ModelSettings.md) over
+[ModelOverrideStore](service/ModelOverrideStore.md), [ModelProfileStore](service/ModelProfileStore.md)
+and the launch flags store) holds the per-model overrides and model profiles.
 
 Pinned tab ([PinnedLlmTab](service/PinnedLlmTab.md)):
 - `attach(tabViewManager)`, `setWebBaseUrl(baseUrl)`, `ensurePinnedTab({ activate })`,

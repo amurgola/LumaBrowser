@@ -20,3 +20,6 @@ A real mouse click at a screen point.
 
 A hit test that fails or is unavailable never blocks a click; x/y clicks report
 the hit but are never refused by it.
+
+On the whole desktop (hwnd 0) nothing is brought forward: the target carries the
+point, so [DesktopGuards](DesktopGuards.md) vets the window under it before every send.

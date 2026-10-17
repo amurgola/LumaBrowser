@@ -13,7 +13,7 @@ export default class DefaultsCard {
 
   static SHARED_CONTROLS = ['defaultRuntimeSelect', 'defaultModelSelect', 'defaultContextSelect', 'defaultKvSelect',
     'defaultParallelSelect', 'defaultTensorSplit', 'defaultCacheReuse', 'defaultReasoningEffort', 'defaultUsePeerGpus',
-    'defaultLaunchFlags', 'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin', 'defaultOpenVinoDevice'];
+    'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin', 'defaultOpenVinoDevice'];
 
   constructor(ctx) {
     this._ctx = ctx;
@@ -164,7 +164,7 @@ export default class DefaultsCard {
   _paintPill(ready) {
     const pill = this._ctx.doc.getElementById('defaultsPill');
     pill.className = 'luma-badge ' + (ready ? 'ok' : 'warn');
-    pill.textContent = ready ? 'ready' : 'set defaults to enable chat';
+    pill.textContent = ready ? 'Ready' : 'Set defaults to enable chat';
   }
 
   _body() {

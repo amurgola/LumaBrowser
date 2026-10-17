@@ -27,7 +27,7 @@ export default class RunDetailView {
     const esc = HtmlEscaper.escape;
     return '<div><strong>Assertions:</strong></div>' + assertions.map((a) => `
           <div class="th-assertion">
-            <span class="th-assertion-badge ${a.passed ? 'pass' : 'fail'}">${a.passed ? 'PASS' : 'FAIL'}</span>
+            <span class="th-assertion-badge ${a.passed ? 'pass' : 'fail'}">${a.passed ? 'Passed' : 'Failed'}</span>
             <span>${esc(a.name)}</span>
             ${a.detail ? `<span style="opacity:0.5;font-size:10px">${esc(String(a.detail).substring(0, 100))}</span>` : ''}
           </div>

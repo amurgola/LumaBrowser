@@ -41,7 +41,14 @@ mode's sub-agent, GambitBridgeTurn and the eval adapter.
   [false], `agentBudget` [null] (see [AgentBudget](bridge/AgentBudget.md)),
   `shouldAbort` [null], `nativeHistory` [false], `nativeToolsOverride` [null,
   eval `'off'`], `promptExperiments` [null], `approvalOverride` [null],
-  `pinnedTabId` [null], `approvalTimeoutMs` [null = 2 minutes].
+  `pinnedTabId` [null], `approvalTimeoutMs` [null = 2 minutes], `approvedTools`
+  [null], `onRunApproval` [null] and `onRunApprovalUsed` [null] (a conversation's
+  carried "for this run" grants, their reporter and the carried-grant use
+  reporter, passed to [ApprovalCheck](bridge/tools/ApprovalCheck.md) as
+  `granted`, `onGranted` and `onUsed`).
+  Every run's approval questions raise the bridge's
+  [ApprovalAttention](approval/ApprovalAttention.md) (the main window from
+  `router.getAgentDeps().browserService.getMainWindow()`).
 - Hooks contract:
   - `onDelta(text)`, `onReasoningDelta(text)`, `onContentRollback(chars)`: the
     live bubble and thinking pane; a tool iteration's text is rolled back and

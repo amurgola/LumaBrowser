@@ -42,6 +42,7 @@ class BridgeRun {
     extraTools: null, llmExtra: null, noBrowser: false, ctxPerSlot: null, kbScope: null, allowTakeover: false,
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
     approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null,
+    approvedTools: null, onRunApproval: null, onRunApprovalUsed: null,
   };
 
   constructor(host, options) {
@@ -90,6 +91,10 @@ class BridgeRun {
       hooks: this._hooks,
       wait: this._host.approvalWait,
       timeoutMs: o.approvalTimeoutMs,
+      granted: o.approvedTools,
+      onGranted: o.onRunApproval,
+      onUsed: o.onRunApprovalUsed,
+      attention: this._host.approvalAttention || null,
     });
     const loopMonitor = new ToolLoopMonitor();
     this._health.watchToolLoop(loopMonitor);

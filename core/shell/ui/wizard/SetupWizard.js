@@ -138,7 +138,7 @@ export default class SetupWizard {
     const busy = this._installBusy(id);
     this.backBtn.disabled = this._currentIdx === 0 || busy;
     this.backBtn.hidden = id === 'persona';
-    this.nextBtn.textContent = id === 'done' ? 'Finish Setup' : (id === 'persona' ? 'Get Started' : 'Continue');
+    this.nextBtn.textContent = id === 'done' ? 'Finish setup' : (id === 'persona' ? 'Get started' : 'Continue');
     this.skipBtn.hidden = !(id && id !== 'done' && !busy);
     this.skipBtn.textContent = 'Skip setup';
     this.nextBtn.disabled = !this.isCurrentStepValid();

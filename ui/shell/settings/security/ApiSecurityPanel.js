@@ -70,7 +70,6 @@ export default class ApiSecurityPanel {
   _insertWhitelistError() {
     const el = document.createElement('div');
     el.className = 'gs-inline-error';
-    el.style.marginTop = '6px';
     el.hidden = true;
     const input = this._el.whitelistInput;
     if (input && input.parentElement) input.parentElement.insertAdjacentElement('afterend', el);
@@ -108,12 +107,12 @@ export default class ApiSecurityPanel {
   _renderWhitelist() {
     const list = this._el.whitelistList;
     if (!this.state.ipWhitelist.length) {
-      list.innerHTML = '<div class="luma-empty luma-empty--plain" style="text-align:left;padding:4px 0;">No IPs added yet.</div>';
+      list.innerHTML = '<div class="gs-list-empty">No IPs added yet.</div>';
       return;
     }
     list.innerHTML = this.state.ipWhitelist.map((ip, i) => `
-      <div class="gs-item-card" style="display:flex;gap:8px;align-items:center;padding:6px 10px;">
-        <code style="flex:1;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);">${HtmlEscaper.escape(ip)}</code>
+      <div class="gs-item-card gs-item-row">
+        <code class="gs-item-code">${HtmlEscaper.escape(ip)}</code>
         <button class="gs-copy-btn" data-api-sec-wl-del="${i}">Delete</button>
       </div>`).join('');
   }

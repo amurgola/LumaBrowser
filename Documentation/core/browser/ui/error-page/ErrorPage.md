@@ -4,7 +4,8 @@
 
 The page a tab shows when a navigation fails or its renderer crashes (see
 [TabErrorPage](../../tab-view/TabErrorPage.md)). Styles moved from the inline
-block to `error-page.css` unchanged; it still inlines its colour tokens.
+block to `error-page.css`; `error.html` links the shared
+`core/llm-server/ui/css/tokens.css` first, so the page has no palette of its own.
 
 ## Methods
 

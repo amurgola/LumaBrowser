@@ -22,6 +22,11 @@ ESLint severity 2 and fatal parse errors become `'error'`, everything else
 Linter itself throws, one error diagnostic reads `ESLint could not parse the
 source: <message>`.
 
+When the file itself parses (no fatal message), the
+[EmbeddedScriptCheck](EmbeddedScriptCheck.md) diagnostics for the page scripts
+it carries in template literals are appended (the file is re-parsed with
+`espree`, module first, then script).
+
 ## Why
 
 The linter runs in-process with the flat-config `Linter` (no config files, no

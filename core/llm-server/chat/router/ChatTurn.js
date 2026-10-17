@@ -8,7 +8,9 @@ class ChatTurn {
   constructor(deps) {
     this._d = deps;
     this._args = null;
+    this._selectedRef = null;
     this._modelRef = null;
+    this._modelOverrides = {};
     this._temperature = undefined;
     this._agentMode = false;
     this._docsGrant = null;
@@ -20,8 +22,8 @@ class ChatTurn {
   async run(args) {
     const invalid = ChatTurn._validate(args);
     if (invalid) return invalid;
-    this._setup(args);
-    this._supersedePrevious();
+    try { this._setup(args); } catch (err) { return { success: false, error: err.message }; }
+    if (!args.nested) this._supersedePrevious();
     const opened = this._openConversation();
     if (opened.error) return { success: false, error: opened.error };
     const { choicesOn, userRow, userArtifacts, images } = this._persistUserSide();
@@ -44,10 +46,18 @@ class ChatTurn {
 
   _setup(args) {
     this._args = args;
-    this._modelRef = args.modelRef;
+    this._useModel(args.modelRef);
     this._agentMode = !!args.agent;
     this._temperature = args.temperature;
     this._docsGrant = DocsSourceGrant.forTurn(this._d.getDocs ? this._d.getDocs() : null, args.docsSource);
+  }
+
+  _useModel(selectedRef) {
+    const settings = this._d.modelSettings;
+    const target = settings ? settings.resolve(selectedRef) : { ref: selectedRef, settings: {} };
+    this._selectedRef = selectedRef;
+    this._modelRef = target.ref;
+    this._modelOverrides = target.settings || {};
   }
 
   _supersedePrevious() {
@@ -63,7 +73,7 @@ class ChatTurn {
       editMessageId: a.editMessageId,
       userMessage: a.userMessage,
       messages: a.messages,
-      modelRef: this._modelRef,
+      modelRef: this._selectedRef,
       agentMode: this._agentMode,
       disabledTools: a.disabledTools,
       choicesEnabled: a.choicesEnabled,
@@ -81,7 +91,7 @@ class ChatTurn {
     const images = MessageImages.imagesOf(a.attachments);
     const userRow = conversation.addUserMessage(this._convId, a.userMessage, this._modelRef, !!a.regenerateMessageId, a.editMessageId);
     const userArtifacts = this._d.attachments.persist(images, this._convId, userRow);
-    conversation.rememberModel(this._convId, this._modelRef);
+    conversation.rememberModel(this._convId, this._selectedRef);
     return { choicesOn, userRow, userArtifacts, images };
   }
 
@@ -94,12 +104,14 @@ class ChatTurn {
       this._d.conversation.syncTools(this._convId, true);
     }
     if (typeof turn.temperature === 'number' && this._temperature == null) this._temperature = turn.temperature;
-    if (turn.modelRef && typeof turn.modelRef === 'string' && turn.modelRef !== this._modelRef) {
-      this._modelRef = turn.modelRef;
-      this._d.conversation.pinModel(this._convId, this._modelRef);
-    }
+    if (turn.modelRef && typeof turn.modelRef === 'string' && turn.modelRef !== this._selectedRef) this._pinModeModel(turn.modelRef);
     if (turn.systemPrompt && !this._agentMode) return [{ role: 'system', content: String(turn.systemPrompt) }, ...this._args.messages];
     return this._args.messages;
+  }
+
+  _pinModeModel(ref) {
+    try { this._useModel(ref); } catch (_) { return; }
+    this._d.conversation.pinModel(this._convId, this._selectedRef);
   }
 
   _addPlaceholder() {
@@ -142,7 +154,7 @@ class ChatTurn {
       conversationId: this._convId,
       assistantMessageId: asst.id,
       contextWindow: this._d.contextWindow.forRef(this._modelRef),
-      onSettled: () => this._d.inFlight.clear(),
+      onSettled: () => { if (!this._args.nested) this._d.inFlight.clear(); },
       react: (content, aborted) => this._d.reaction.run(descriptor, {
         content, conversationId: this._convId, assistantMessageId: asst.id, send, aborted,
       }),
@@ -172,6 +184,7 @@ class ChatTurn {
     const dial = this._d.thinking.resolve({
       modelRef: this._modelRef, messages, conversationId: this._convId, noThink: a.noThink,
       reasoningEffort: a.reasoningEffort, agentMode: this._agentMode, evalOverrides: a.evalOverrides || null,
+      modelEffort: this._modelOverrides.reasoningEffort,
     });
     try {
       const handle = this._agentMode
@@ -196,25 +209,41 @@ class ChatTurn {
       hooks: this._stream.hooks,
       modeTurn: this._mode.turn,
       images,
-      llmExtra: dial.agentExtra,
+      llmExtra: this._withSettingsRef(dial.agentExtra),
       choicesOn,
       voiceOn: a.voice === true,
       docsGrant: this._docsGrant,
       evalOverrides: a.evalOverrides || null,
       approvalOverride: a.approvalOverride || null,
+      runApprovals: a.runApprovals || null,
     });
   }
 
   _dispatchPlain(asst, dial, images) {
     const trace = { conversationId: this._convId, turnId: asst.id, callType: 'chat' };
     return this._d.dispatcher.dispatch(this._modelRef, dial.messages, this._temperature, this._stream.hooks, images, null,
-      { ...(dial.plainExtra || {}), trace });
+      { ...(this._withSettingsRef(dial.plainExtra) || {}), trace });
+  }
+
+  _withSettingsRef(extra) {
+    if (this._selectedRef === this._modelRef) return extra;
+    return { ...(extra || {}), settingsRef: this._selectedRef };
   }
 
   _track(handle) {
     if (this._stream.finished) return;
     const stream = this._stream;
+    if (this._args.nested) {
+      ChatTurn._abortOn(this._args.nested.signal, () => stream.abort(handle));
+      return;
+    }
     this._d.inFlight.begin({ abort: () => stream.abort(handle) }, ChatModelRef.isLocal(this._modelRef));
+  }
+
+  static _abortOn(signal, abort) {
+    if (!signal) return;
+    if (signal.aborted) { abort(); return; }
+    signal.addEventListener('abort', abort, { once: true });
   }
 }
 

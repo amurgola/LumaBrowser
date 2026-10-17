@@ -13,6 +13,7 @@ The conversation side of starting a chat turn.
 - `resolveChoices(convId, choicesEnabled)`: persists a boolean and returns it; otherwise the row's value, NULL as off.
 - `addUserMessage(convId, userMessage, modelRef, regenerating, editMessageId?)`: the row, or null when regenerating or empty. With `editMessageId` the new wording is added as a variant of that prompt (`startVariant`: same group, parent and slot), so the edit is a branch with its own reply.
 - `rememberModel(convId, ref)`: conversation and `setLastModelRef`. `pinModel(convId, ref)`: conversation only.
+- The provider column written by `open` (new conversation), `addUserMessage`, `rememberModel` and `pinModel` is the base model's: a `profile::` ref is mapped through `llmServerService.modelSettings.baseRef` first.
 
 ## Why
 

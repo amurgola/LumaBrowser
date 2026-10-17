@@ -4,6 +4,8 @@ import SchemaField from './SchemaField.js';
 import AssistField from '../AssistField.js';
 
 export default class RepeaterField extends SchemaField {
+  static PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+
   static get types() {
     return ['repeater'];
   }
@@ -40,7 +42,7 @@ export default class RepeaterField extends SchemaField {
   }
 
   static _addButton(field, model, redraw) {
-    const add = Dom.el('button', 'cm-xrep-add', '+ Add ' + (field.itemLabel || 'item'));
+    const add = Dom.el('button', 'cm-xrep-add', RepeaterField.PLUS_ICON + '<span>' + HtmlEscaper.escape('Add ' + (field.itemLabel || 'item')) + '</span>');
     add.type = 'button';
     add.addEventListener('click', () => { model[field.key].push({}); redraw(); });
     return add;

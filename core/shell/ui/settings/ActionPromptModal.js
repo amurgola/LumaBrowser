@@ -34,7 +34,7 @@ export default class ActionPromptModal {
           ${spec.subtitle ? `<div class="luma-modal-sub">${esc(spec.subtitle)}</div>` : ''}
         </div>
         <div class="luma-modal-body luma-form">${fields.map((f, i) => ActionPromptModal._fieldHtml(f, i)).join('')}</div>
-        <div class="luma-modal-foot" style="display:flex;justify-content:flex-end;gap:8px;">
+        <div class="luma-modal-foot">
           <button class="luma-btn" id="ext-action-cancel">Cancel</button>
           <button class="luma-btn primary" id="ext-action-submit">${esc(spec.submitLabel || 'Start')}</button>
         </div>`;
@@ -48,13 +48,13 @@ export default class ActionPromptModal {
     const ph = esc(f.placeholder || '');
     let ctrl;
     if (f.type === 'textarea') {
-      ctrl = `<textarea id="${id}" class="luma-field-textarea" rows="${Number(f.rows) || 4}" style="width:100%;box-sizing:border-box;" placeholder="${ph}"></textarea>`;
+      ctrl = `<textarea id="${id}" class="luma-field-textarea" rows="${Number(f.rows) || 4}" placeholder="${ph}"></textarea>`;
     } else if (f.browse === 'directory') {
-      ctrl = `<div style="display:flex;gap:8px;align-items:center;">`
-        + `<input id="${id}" type="text" class="luma-field-input" style="flex:1;box-sizing:border-box;" placeholder="${ph}" />`
-        + `<button type="button" id="${id}-browse" class="luma-btn" style="white-space:nowrap;">Browse...</button></div>`;
+      ctrl = `<div class="gs-inline-controls">`
+        + `<input id="${id}" type="text" class="luma-field-input" placeholder="${ph}" />`
+        + `<button type="button" id="${id}-browse" class="luma-btn">Browse...</button></div>`;
     } else {
-      ctrl = `<input id="${id}" type="text" class="luma-field-input" style="width:100%;box-sizing:border-box;" placeholder="${ph}" />`;
+      ctrl = `<input id="${id}" type="text" class="luma-field-input" placeholder="${ph}" />`;
     }
     return `<div class="luma-field"><label class="luma-field-label" for="${id}">${esc(f.label || f.key)}</label>${ctrl}</div>`;
   }

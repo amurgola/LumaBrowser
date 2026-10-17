@@ -6,4 +6,4 @@ The "Agents" Setup-tab entry, loaded as a module: registers
 `{ id: 'agent-manager', label: 'Agents', mount }` with `window.LumaSetupExt`,
 mounting [AgentsTab](ui/AgentsTab.md); logs "[agent-manager] LumaSetupExt not
 present" without the host. `setupTab.assets` lists the `ui/` modules.
-`setup-ui.css` is unchanged apart from em-dashes in comments.
+`setup-ui.css` is on tokens.css per the [design system](../../ui/DesignSystem.md): neutral notice (`warn` uses `--warning-dim`), sentence-case tool group labels.

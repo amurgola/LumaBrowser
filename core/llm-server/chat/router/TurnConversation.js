@@ -60,7 +60,7 @@ class TurnConversation {
       role: 'user',
       content: String(userMessage),
       modelRef,
-      provider: ChatModelRef.providerTag(modelRef),
+      provider: this._providerTag(modelRef),
     };
     const v = editMessageId ? this._store.startVariant(editMessageId) : null;
     if (v) Object.assign(row, { variantGroup: v.group, createdAt: v.createdAt, parentId: v.parentId });
@@ -68,24 +68,30 @@ class TurnConversation {
   }
 
   rememberModel(convId, modelRef) {
-    this._store.setConversationModel(convId, modelRef, ChatModelRef.providerTag(modelRef));
+    this._store.setConversationModel(convId, modelRef, this._providerTag(modelRef));
     if (this._service && this._service.setLastModelRef) this._service.setLastModelRef(modelRef);
   }
 
   pinModel(convId, modelRef) {
-    try { this._store.setConversationModel(convId, modelRef, ChatModelRef.providerTag(modelRef)); } catch (_) {}
+    try { this._store.setConversationModel(convId, modelRef, this._providerTag(modelRef)); } catch (_) {}
   }
 
   _create({ userMessage, messages, modelRef, agentMode, disabledTools, choicesEnabled }) {
     const conv = this._store.createConversation({
       title: ConversationTitle.fromText(userMessage || ConversationTitle.firstUserText(messages)),
       modelRef,
-      provider: ChatModelRef.providerTag(modelRef),
+      provider: this._providerTag(modelRef),
       toolsEnabled: agentMode,
       disabledTools: Array.isArray(disabledTools) ? disabledTools : null,
       choicesEnabled: typeof choicesEnabled === 'boolean' ? choicesEnabled : null,
     });
     return conv.id;
+  }
+
+  _providerTag(modelRef) {
+    const settings = this._service && this._service.modelSettings;
+    const base = settings ? settings.baseRef(modelRef) : modelRef;
+    return ChatModelRef.providerTag(base || modelRef);
   }
 }
 

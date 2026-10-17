@@ -1,9 +1,12 @@
 const path = require('path');
 const CodeTurnBuilder = require('./turn/CodeTurnBuilder');
 const BuildStatePersister = require('./turn/BuildStatePersister');
+const CodeDelegate = require('./CodeDelegate');
 
 class CodeModeDescriptor {
   static MODE_ID = 'code';
+
+  static ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>';
 
   static SETUP_SCHEMA = {
     title: 'New Code session',
@@ -62,7 +65,7 @@ class CodeModeDescriptor {
     return {
       id: CodeModeDescriptor.MODE_ID,
       label: 'Code',
-      icon: '🛠️',
+      icon: CodeModeDescriptor.ICON,
       description: 'Build a LumaBrowser extension (or write code) with an agent that validates as it goes.',
       requirements: ['llm'],
       chatUiUrl: context.chat.uiUrl('chat-ui.js'),
@@ -70,6 +73,7 @@ class CodeModeDescriptor {
       workspaceRoot: (args) => CodeModeDescriptor.workspaceRoot(sessions, args),
       buildTurn: (args) => turns.build(args),
       postProcess: (args) => persister.run(args),
+      delegate: CodeDelegate.spec(),
     };
   }
 }

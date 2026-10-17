@@ -78,9 +78,13 @@ export default class Sidebar {
     }
   }
 
-  static iconButton(icon, act, label, cls) {
+  static iconButton(icon, act, label, cls, hint) {
+    const esc = HtmlEscaper.escape;
     return '<button type="button" class="cm-icon-btn' + (cls ? ' ' + cls : '') + '" data-act="'
-      + act + '" title="' + label + '">' + icon + '<span class="cm-label">' + HtmlEscaper.escape(label) + '</span></button>';
+      + act + '" title="' + esc(hint ? label + ' (' + hint + ')' : label) + '">' + icon
+      + '<span class="cm-label">' + esc(label) + '</span>'
+      + (hint ? '<span class="cm-kbd-hint">' + esc(hint) + '</span>' : '')
+      + '</button>';
   }
 
   _markup() {
@@ -91,7 +95,7 @@ export default class Sidebar {
       + '</div>'
       + '<div class="cm-side-top">'
       +   '<div class="cm-new-row">'
-      +     ib(ChatIcons.plus, 'new', 'New chat (Ctrl+Shift+N)', 'cm-accent')
+      +     ib(ChatIcons.plus, 'new', 'New chat', 'cm-new-btn', 'Ctrl+Shift+N')
       +     '<button type="button" class="cm-new-chev" data-act="newModes" title="Start in a mode" aria-expanded="false">' + ChatIcons.chevron + '</button>'
       +   '</div>'
       + '</div>'

@@ -26,30 +26,31 @@ export default class TelemetryPanel {
   static _html(status) {
     const esc = HtmlEscaper.escape;
     const devMode = !!status.developerMode;
-    const checkInOn = !!status.allowed && !devMode;
     return `
-      <div style="max-width: 520px;">
-        <div class="luma-field">
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-            <span class="luma-dot ${devMode ? 'ok' : ''}" style="width:10px;height:10px;"></span>
-            <span style="font-size:16px; font-weight:600;">${esc(devMode ? 'Developer Mode' : 'Community (Free)')}</span>
-            ${devMode ? `<span class="luma-badge accent">Debug build</span>` : ''}
-          </div>
-          ${devMode ? `<div class="luma-muted" style="margin:0 0 8px;">Running a local development build. The lumabyte.com check-in is disabled for this session.</div>` : ''}
-        </div>
-
-        <div class="luma-kv gs-item-card" style="padding:12px 16px; margin-bottom:16px;">
-          <div class="luma-kv-row" style="align-items:center;">
-            <span class="luma-kv-key" style="min-width:150px;">Anonymous check-in</span>
-            <span class="luma-badge ${checkInOn ? 'ok' : 'muted'}">${esc(TelemetryPanel.checkInText(status))}</span>
-            <button type="button" class="luma-btn link gs-inline-link" data-gs-goto="general" style="margin-left:auto;">Change in General</button>
-          </div>
-        </div>
-
-        <div class="luma-form-actions ext-form-buttons--start ext-mt-12">
-          <button class="luma-btn" id="licRerunSetupBtn">Re-run first-run setup</button>
-        </div>
+      <div class="about-hero">
+        <span class="luma-dot ${devMode ? 'ok' : ''}"></span>
+        <h3 class="about-name">${esc(devMode ? 'Developer mode' : 'Community (Free)')}</h3>
+        ${devMode ? '<span class="luma-badge">Debug build</span>' : ''}
       </div>
+      ${devMode ? '<p class="gs-group-desc">Running a local development build. The lumabyte.com check-in is disabled for this session.</p>' : ''}
+      <section class="gs-subsection">
+        <div class="gs-body">
+          <div class="gs-row">
+            <div class="gs-row-text">
+              <span class="gs-row-label">Anonymous check-in</span>
+              <span class="gs-row-help">${esc(TelemetryPanel.checkInText(status))}</span>
+            </div>
+            <button type="button" class="luma-btn ghost" data-gs-goto="general">Change in General</button>
+          </div>
+          <div class="gs-row">
+            <div class="gs-row-text">
+              <span class="gs-row-label">First-run setup</span>
+              <span class="gs-row-help">Walk through the setup wizard again. Settings closes first.</span>
+            </div>
+            <button class="luma-btn" id="licRerunSetupBtn">Re-run setup</button>
+          </div>
+        </div>
+      </section>
     `;
   }
 

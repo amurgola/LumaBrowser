@@ -9,7 +9,6 @@ export default class FeaturesStep extends WizardStepView {
     }
     this._body.innerHTML = `
         <div class="setup-wizard__panel">
-          <div class="setup-wizard__step-eyebrow">Custom</div>
           <h2 class="setup-wizard__step-title">Pick your features</h2>
           <p class="setup-wizard__step-desc">
             Turn on what you'll use. Each one can be toggled again later under Settings → Extensions.
@@ -29,7 +28,6 @@ export default class FeaturesStep extends WizardStepView {
   _renderLoading() {
     this._body.innerHTML = `
           <div class="setup-wizard__panel">
-            <div class="setup-wizard__step-eyebrow">Custom</div>
             <h2 class="setup-wizard__step-title">Loading feature list…</h2>
             <p class="setup-wizard__step-desc">Discovering installed extensions.</p>
           </div>

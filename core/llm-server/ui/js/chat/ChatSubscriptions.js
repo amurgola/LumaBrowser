@@ -14,6 +14,10 @@ export default class ChatSubscriptions {
         if (conversationId) this._ctx.conversation.open(conversationId).catch(() => {});
       });
     }
+    window.addEventListener('luma-open-conversation', (e) => {
+      const id = e && e.detail && e.detail.conversationId;
+      if (id) this._ctx.conversation.open(id).catch(() => {});
+    });
     if (api.onSchedTasksEvent) api.onSchedTasksEvent((ev) => this._onTaskEvent(ev));
     if (api.onTriggersEvent) api.onTriggersEvent((ev) => this._onTriggerEvent(ev));
     if (api.onServerEvent) this._unsubServer = api.onServerEvent((ev) => this._onServerEvent(ev));

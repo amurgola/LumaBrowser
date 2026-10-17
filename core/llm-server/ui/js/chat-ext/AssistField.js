@@ -1,7 +1,11 @@
 import Dom from '../dom/Dom.js';
 
 export default class AssistField {
-  static ASSIST_ICON = '<span class="cm-xassist-ico" aria-hidden="true">✨</span>';
+  static ASSIST_ICON = '<span class="cm-xassist-ico" aria-hidden="true">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">'
+    + '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0'
+    + 'l1.58 6.13a2 2 0 0 0 1.44 1.44l6.13 1.58a.5.5 0 0 1 0 .96l-6.13 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/>'
+    + '<path d="M20 3v4M22 5h-4"/></svg></span>';
   static STOP_ICON = '<svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="currentColor"/></svg>';
   static STOP_SAFETY_MS = 1500;
   static FAILED = 'Generation failed.';

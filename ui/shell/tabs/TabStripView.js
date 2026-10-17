@@ -4,14 +4,16 @@ import FaviconCache from '../favicons/FaviconCache.js';
 export default class TabStripView {
   static CLOSE_BUTTON = '<button class="tab-close" title="Close tab" aria-label="Close tab"><svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true"><path d="M3.5 3.5l7 7m0-7l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></button>';
 
-  static CDP_BADGE = '<span class="tab-kind-badge" title="CDP-owned automation tab">CDP</span>';
+  static CDP_BADGE = '<span class="tab-kind-badge" title="Automation tab, driven by a CDP client"><svg class="icon" aria-hidden="true"><use href="#i-bot"/></svg></span>';
+
+  static KIND_ICONS = { llm: 'i-cpu', dashboard: 'i-grid' };
 
   static ICON_SLOT = '<span class="tab-icon" aria-hidden="true"></span>';
 
   static FLAGS = '<span class="tab-flags" aria-hidden="true">'
-    + '<svg class="tab-flag tab-flag-persist" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>'
-    + '<svg class="tab-flag tab-flag-audio" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>'
-    + '<svg class="tab-flag tab-flag-muted" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>'
+    + '<svg class="tab-flag tab-flag-persist" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>'
+    + '<svg class="tab-flag tab-flag-audio" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>'
+    + '<svg class="tab-flag tab-flag-muted" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>'
     + '</span>';
 
   static DENSE_AT = 8;
@@ -87,7 +89,9 @@ export default class TabStripView {
     const kind = state.kind || 'user';
     const pinned = !!state.pinned;
     const badge = kind === 'cdp' ? TabStripView.CDP_BADGE : '';
-    const iconSlot = kind === 'user' ? TabStripView.ICON_SLOT : '';
+    const kindIcon = TabStripView.KIND_ICONS[kind];
+    const iconSlot = kind === 'user' ? TabStripView.ICON_SLOT
+      : (kindIcon ? `<span class="tab-kind-icon" aria-hidden="true"><svg class="icon"><use href="#${kindIcon}"/></svg></span>` : '');
     const closeBtn = pinned ? '' : TabStripView.CLOSE_BUTTON;
     return `
     ${badge}${iconSlot}

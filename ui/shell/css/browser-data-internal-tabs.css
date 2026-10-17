@@ -2,7 +2,7 @@ body.is-llm-tab .toolbar,
 body.is-llm-tab #findBar,
 body.is-llm-tab #bookmarkEditBar,
 body.is-llm-tab #bookmarksBar {
-    display: none !important;
+    display: none;
 }
 
-#reloadBtn.is-stop { color: var(--accent); }
+#reloadBtn.is-stop { color: var(--text-primary); }

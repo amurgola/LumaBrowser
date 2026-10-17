@@ -37,7 +37,7 @@ export default class LlmSetupFlow {
     if (result.paused) { PausedView.show(w, body, () => this.run(body)); return; }
     if (!result.ok) {
       this._fail(body, result.canceled
-        ? 'Setup canceled. Your progress is saved: run Easy Setup again to resume.'
+        ? 'Setup canceled. Your progress is saved: run Guided setup again to resume.'
         : (result.message || 'Setup failed'));
       return;
     }

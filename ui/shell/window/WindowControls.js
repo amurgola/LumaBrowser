@@ -1,7 +1,7 @@
 export default class WindowControls {
-  static MAXIMIZED_GLYPH = '&#x2750;';
+  static MAXIMIZED_GLYPH = '<svg class="icon" aria-hidden="true"><use href="#i-win-restore"/></svg>';
 
-  static RESTORED_GLYPH = '&#x25A1;';
+  static RESTORED_GLYPH = '<svg class="icon" aria-hidden="true"><use href="#i-win-max"/></svg>';
 
   install() {
     const api = window.windowAPI;
@@ -20,7 +20,12 @@ export default class WindowControls {
 
   _applyState(state) {
     const maximized = !!(state && state.maximized);
-    if (this._maxBtn) this._maxBtn.innerHTML = maximized ? WindowControls.MAXIMIZED_GLYPH : WindowControls.RESTORED_GLYPH;
+    if (this._maxBtn) {
+      this._maxBtn.innerHTML = maximized ? WindowControls.MAXIMIZED_GLYPH : WindowControls.RESTORED_GLYPH;
+      const label = maximized ? 'Restore' : 'Maximize';
+      this._maxBtn.title = label;
+      this._maxBtn.setAttribute('aria-label', label);
+    }
     document.body.classList.toggle('window-maximized', maximized);
   }
 }

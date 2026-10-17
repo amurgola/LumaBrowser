@@ -11,7 +11,10 @@ control stopped, plus the failure-result shape every desktop action returns.
 - `DesktopError.HUMAN_NEEDED` only the person at the machine can proceed (UAC,
   sign-in prompt, lock screen, secure desktop).
 - `DesktopError.COVERED` a ref's element is hidden under something else at click time.
-- `DesktopError.REFUSED` anti-cheat or elevated target.
+- `DesktopError.REFUSED` anti-cheat or elevated target (or, on the whole desktop,
+  LumaBrowser itself under the pointer or in front).
+- `DesktopError.FOREGROUND_CHANGED` another window came to the front mid-action;
+  the rest of the input was not sent.
 - `DesktopError.toResult(error)` `{ success: false, error: message, code? }` from
   any thrown value; `code` only when the error has one.
 

@@ -34,8 +34,8 @@ class ReasoningEffort {
     return { chatTemplateKwargs: { reasoning_effort: normalized } };
   }
 
-  static resolveDial({ turn, conversation, fallback } = {}) {
-    const chosen = [turn, conversation, fallback].find((layer) => !ReasoningEffort._isAbsent(layer));
+  static resolveDial({ turn, conversation, model, fallback } = {}) {
+    const chosen = [turn, conversation, model, fallback].find((layer) => !ReasoningEffort._isAbsent(layer));
     return chosen === undefined ? 'default' : ReasoningEffort.normalizeDial(chosen);
   }
 

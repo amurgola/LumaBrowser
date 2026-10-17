@@ -4,15 +4,18 @@
 
 The composer's thinking dial for THIS chat. It appears only when the selected
 model's chat template reads the hint (asked of the host per model, else the live
-server status; never guessed from the name). Untouched it follows the Setup
-default (an install with "Disable thinking" inherits Off) and stores nothing;
+server status; never guessed from the name). Untouched it follows the selected
+model's (or profile's) Thinking setting from [ModelTunePanel](ModelTunePanel.md)
+when one is set, else the Setup default (an install with "Disable thinking"
+inherits Off), and stores nothing; the tooltip names which one it follows;
 touching it writes to this conversation only, and clicking the chosen position
 again returns to the default. Positions the host marks unavailable stay visible,
 greyed, with the reason as tooltip.
 
 ## Methods
 
-- `syncToModel()`: re-asks when the selection (model ref plus local path) moved.
+- `syncToModel()`: re-asks when the selection (model ref plus local path, a
+  profile's base model included) moved.
 - `load({ onlyIfUnknown }?)`: newer requests supersede older ones;
   `onlyIfUnknown` keeps a dial the host already answered definitively.
 - `render()`.

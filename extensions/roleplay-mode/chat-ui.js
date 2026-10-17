@@ -1312,7 +1312,7 @@
       const items = collectArtifacts(d);
       const groups = {};
       for (const it of items) { (groups[it.group] = groups[it.group] || []).push(it); }
-      let html = '<div class="rp-gallery-head"><b>Gallery</b><span>' + items.length + ' image' + (items.length === 1 ? '' : 's') + '</span><button class="luma-icon-btn luma-icon-btn--sq rp-gallery-x" title="Close">✕</button></div>';
+      let html = '<div class="rp-gallery-head"><b>Gallery</b><span>' + items.length + ' image' + (items.length === 1 ? '' : 's') + '</span><button class="luma-icon-btn luma-icon-btn--sq rp-gallery-x" title="Close" aria-label="Close"><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>';
       if (!items.length) html += '<div class="luma-empty rp-gallery-empty">No images yet.</div>';
       for (const gname of Object.keys(groups)) {
         html += '<div class="rp-gallery-group">' + escHtml(gname) + '</div><div class="rp-gallery-grid" data-group="' + escAttr(gname) + '"></div>';

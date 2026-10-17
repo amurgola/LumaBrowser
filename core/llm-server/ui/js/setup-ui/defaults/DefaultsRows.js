@@ -52,6 +52,15 @@ export default class DefaultsRows {
                 </div>`;
   }
 
+  action(id, label, controlHtml, help) {
+    return `
+                <div class="defaults-row">
+                    <label>${label}</label>
+                    ${controlHtml}
+                    ${this._helpPair(id, help, true)}
+                </div>`;
+  }
+
   toggle(id, label, checked, caption, help) {
     return `
                 <div class="defaults-opt">

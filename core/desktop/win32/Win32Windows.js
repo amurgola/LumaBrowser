@@ -5,6 +5,7 @@ const Win32Input = require('./Win32Input');
 class Win32Windows {
   static GWL_EXSTYLE = -20;
   static WS_EX_TOOLWINDOW = 0x80;
+  static GA_ROOT = 2;
   static GA_ROOTOWNER = 3;
   static DWMWA_EXTENDED_FRAME_BOUNDS = 9;
   static DWMWA_CLOAKED = 14;
@@ -17,8 +18,16 @@ class Win32Windows {
   static MIN_HEIGHT = 30;
   static FOCUS_ATTEMPTS = 3;
 
-  static listTopLevelWindows() {
-    return Win32Windows._enumerate().map(Win32Windows._describeIfListed).filter(Boolean);
+  static listTopLevelWindows({ includeOwned = false } = {}) {
+    return Win32Windows._enumerate().map((hwnd) => Win32Windows._describeIfListed(hwnd, includeOwned)).filter(Boolean);
+  }
+
+  static rootWindowAt(x, y) {
+    const a = Win32Api.load();
+    const hit = a.WindowFromPoint(Win32Windows._packPoint(x, y));
+    if (!hit) return null;
+    const root = a.GetAncestor(hit, Win32Windows.GA_ROOT) || hit;
+    return { hwnd: root, title: Win32Windows.windowText(root), className: Win32Windows.className(root), pid: Win32Windows.processIdOf(root).pid };
   }
 
   static windowText(hwnd) {
@@ -62,6 +71,11 @@ class Win32Windows {
     return a.GetForegroundWindow() === hwnd;
   }
 
+  static popupInfo(hwnd) {
+    const a = Win32Api.load();
+    return { rootOwner: a.GetAncestor(hwnd, Win32Windows.GA_ROOTOWNER) || hwnd, toolWindow: Win32Windows._isToolWindow(a, hwnd) };
+  }
+
   static virtualScreen() {
     const a = Win32Api.load();
     return {
@@ -78,17 +92,26 @@ class Win32Windows {
     return hwnds;
   }
 
-  static _describeIfListed(hwnd) {
+  static _describeIfListed(hwnd, includeOwned = false) {
     const a = Win32Api.load();
     if (!a.IsWindowVisible(hwnd) || Win32Windows.isCloaked(hwnd)) return null;
-    if (Number(a.GetWindowLongPtrW(hwnd, Win32Windows.GWL_EXSTYLE)) & Win32Windows.WS_EX_TOOLWINDOW) return null;
-    if (a.GetAncestor(hwnd, Win32Windows.GA_ROOTOWNER) !== hwnd) return null;
+    const owned = a.GetAncestor(hwnd, Win32Windows.GA_ROOTOWNER) !== hwnd;
+    if (owned && !includeOwned) return null;
+    if (!owned && Win32Windows._isToolWindow(a, hwnd)) return null;
     const title = Win32Windows.windowText(hwnd);
     if (!title) return null;
     const rect = Win32Windows.windowRect(hwnd);
     if (!rect || rect.width < Win32Windows.MIN_WIDTH || rect.height < Win32Windows.MIN_HEIGHT) return null;
     const { pid } = Win32Windows.processIdOf(hwnd);
-    return { hwnd, title, className: Win32Windows.className(hwnd), pid, rect, minimized: !!a.IsIconic(hwnd) };
+    return { hwnd, title, className: Win32Windows.className(hwnd), pid, rect, minimized: !!a.IsIconic(hwnd), ...(owned ? { owned: true } : {}) };
+  }
+
+  static _isToolWindow(a, hwnd) {
+    return !!(Number(a.GetWindowLongPtrW(hwnd, Win32Windows.GWL_EXSTYLE)) & Win32Windows.WS_EX_TOOLWINDOW);
+  }
+
+  static _packPoint(x, y) {
+    return (BigInt(Math.round(y)) << 32n) | (BigInt(Math.round(x)) & 0xffffffffn);
   }
 
   static _raiseAttachedToForeground(a, hwnd) {

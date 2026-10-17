@@ -1,8 +1,6 @@
 import HtmlEscaper from '../../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 
 export default class SitePermissionsPanel {
-  static CELL_STYLE = 'color:var(--text-muted);font-size:12px;white-space:nowrap;';
-
   install() {
     this._api = window.electronAPI && window.electronAPI.sitePermissions;
     this._list = document.getElementById('gsSitePermList');
@@ -24,11 +22,10 @@ export default class SitePermissionsPanel {
 
   static rowsHtml(rows) {
     const esc = HtmlEscaper.escape;
-    const cell = SitePermissionsPanel.CELL_STYLE;
     return rows.map((r) => `<div class="gs-ide-row" data-origin="${esc(r.origin)}">`
-      + `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.origin)}</span>`
-      + `<span style="${cell}">Camera: ${SitePermissionsPanel.answerLabel(r.camera)}</span>`
-      + `<span style="${cell}">Microphone: ${SitePermissionsPanel.answerLabel(r.microphone)}</span>`
+      + `<span class="gs-ide-cell gs-ide-cell--grow gs-ide-name">${esc(r.origin)}</span>`
+      + `<span class="gs-ide-state">Camera: ${SitePermissionsPanel.answerLabel(r.camera)}</span>`
+      + `<span class="gs-ide-state">Microphone: ${SitePermissionsPanel.answerLabel(r.microphone)}</span>`
       + '<button class="gs-action-btn" data-act="clear">Clear</button>'
       + '</div>').join('');
   }

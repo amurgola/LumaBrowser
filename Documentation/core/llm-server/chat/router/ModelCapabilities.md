@@ -7,6 +7,7 @@ What the model behind a chat model ref can do this turn, read from the LIVE laun
 ## Methods
 
 - `new ModelCapabilities({ llmServerService, db })`.
+- Every method first maps a `profile::` ref to its base model through `llmServerService.modelSettings.baseRef` when the service has one.
 - `visionActive(ref)`: remote true; local only when the running plan has `mmprojPath`; false for non-strings or a failing status.
 - `nativeToolsActive(ref)`: false for non-strings; true for harmony refs (`HarmonyModel.matches`) and remote refs; else the tri-state `NATIVE_TOOLS_SETTING` (`core.llmServer.chat.nativeToolCalls`): false -> off, true -> `ModelFamilies.nativeToolCallsCapable(family)`, unset -> `ModelFamilies.nativeToolCalls(family)` of the plan's `modelFamily`.
 - `nativeToolExclude(ref)`: `ModelFamilies.nativeToolExclude(family)` for a local ref on the native route, else `[]`.

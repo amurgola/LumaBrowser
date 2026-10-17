@@ -13,10 +13,11 @@ review, snooze, done, open and to-task actions. Extends
 - Loads `listThreads({ state: 'open' })` and sorts by `lastAt` descending.
   The head shows the open count and, with more than one app present, filter
   chips (`All`, then each app's short name).
-- Rows: an app badge (`APPS`: slack, teams, gmail, outlook, messages,
-  clickup, proton, discord with their colours; unknown apps show their name
-  on grey), the title (participants, then `(untitled)` as fallbacks), a
-  priority chip when not `normal`, a count badge when more than one
+- Rows: an app tag (`APPS`: slack, teams, gmail, outlook, messages,
+  clickup, proton, discord; the tag is neutral and the app's colour, passed
+  as the `--hub-app` custom property, shows as a small dot; unknown apps get
+  a grey dot), the title (participants, then `(untitled)` as fallbacks), a
+  priority chip when not `normal`, a plain count when more than one
   notification, the relative time, the participants line, and the summary
   or the last notification's body (two-line clamp).
 - Actions: `Reviewed` -> `setThreadState(id, 'reviewed', {})`;

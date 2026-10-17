@@ -17,15 +17,25 @@ Main loads it with `MainWindow` (`loadFile('index.html')`, preload `preload.js`)
   src="ui/shell/entry.js">`.
 - `ui/shell/css/` holds the legacy inline `<style>` blocks split by component
   with identical selectors and rules (verified at port time: the joined rules
-  equal the legacy text, comments aside): `base`, `forms-base`, `notification-log`, `settings-base`,
-  `network-watcher`, `ai-chat-panel`, `theme`,
-  `chrome-layout`, `settings-dark`, `general-settings`, `dark-overrides`,
-  `ai-activity`, `ai-chat-dark`, `responsive`, `titlebar`, `url-bar`,
-  `tab-strip`, `icon-buttons`, `polish`, `right-panel`, `settings-modal`,
-  `settings-content`, `right-panel-refined`, `setup-wizard`, and from the
+  equal the legacy text, comments aside): `base`, `forms-base`, `notification-log`,
+  `network-watcher`, `theme`,
+  `chrome-layout`, `general-settings`,
+  `ai-activity`, `ai-chat-panel`, `responsive`, `titlebar`, `url-bar`,
+  `tab-strip`, `icon-buttons`, `right-panel`, `settings-modal`,
+  `settings-content`, `setup-wizard`, and from the
   `bd-styles` block `browser-data-internal-tabs`, `-find-edit-bars`,
   `-downloads-button`, `-bookmarks-bar`, `-url-autocomplete`, `-modals`,
-  `-context-menu`.
+  `-context-menu`. `ai-chat-panel` (which absorbed the old `ai-chat-dark`
+  patch), `ai-activity` and `right-panel` (which absorbed `right-panel-refined`)
+  have since been rewritten on `tokens.css` per the design system, as have the
+  browser chrome files (`titlebar`, `tab-strip`, `url-bar`, `chrome-layout`,
+  `icon-buttons`, `base`, `responsive`, the `browser-data-*` bar and menu files).
+  The old `polish` override sheet was merged into `chrome-layout` and `base`
+  and removed. The Settings and setup files (`settings-modal`,
+  `settings-content`, `general-settings`, `forms-base`, `network-watcher`,
+  `notification-log`, `setup-wizard`, `browser-data-modals`) were rewritten
+  the same way; `settings-base`, `settings-dark` and `dark-overrides` were
+  merged into them and removed, and the settings files carry no `!important`.
 - The page is loaded from `file://`, where module imports into `core/` and
   `extensions/ui-kit/ui/` resolve as file paths.
 

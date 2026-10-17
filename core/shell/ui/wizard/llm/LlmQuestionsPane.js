@@ -20,7 +20,7 @@ export default class LlmQuestionsPane {
         ${a.useCase ? LlmQuestionsPane._speedHtml(Q.tkPref, a) : ''}
         ${(a.useCase && a.tkPref) ? LlmQuestionsPane._groupHtml('ctxPref', Q.ctxPref, a) : ''}
         ${(a.useCase && a.tkPref && a.ctxPref) ? `
-        <div style="display:flex; gap:10px; margin-top:6px;">
+        <div class="setup-wizard__actions setup-wizard__actions--tight">
           <button class="setup-wizard__btn setup-wizard__btn--primary" id="llmRecBtn" type="button">See recommendation</button>
         </div>` : ''}
       `;

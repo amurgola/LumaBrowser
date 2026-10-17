@@ -15,20 +15,26 @@
     overflow-y: auto;
     background: var(--bg-surface);
     border-left: 1px solid var(--border-soft);
+    color: var(--text-primary);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
 }
 .right-panel.ext-hidden {
     display: none !important;
 }
+.right-panel .slot-content {
+    padding: var(--space-4);
+}
 
 .resize-handle {
     background: transparent;
-    transition: background 0.12s ease;
+    transition: background-color var(--dur-fast) var(--ease);
     user-select: none;
     z-index: 60;
 }
 .resize-handle:hover,
 .resize-handle.is-dragging {
-    background: rgba(245, 144, 52, 0.5);
+    background: var(--border-strong);
 }
 .resize-handle--col {
     width: 4px;
@@ -46,11 +52,6 @@
     height: 4px;
     cursor: row-resize;
     z-index: 60;
-    background: transparent;
-}
-.resize-handle--row:hover,
-.resize-handle--row.is-dragging {
-    background: rgba(245, 144, 52, 0.5);
 }
 body.pcd-resizing,
 body.pcd-resizing * {
@@ -60,14 +61,13 @@ body.pcd-resizing * {
 
 .icon-btn.is-open,
 .toolbar-btn.is-open {
-    background: rgba(245, 144, 52, 0.18) !important;
-    color: var(--accent, #f59034) !important;
-    box-shadow: inset 0 0 0 1px rgba(245, 144, 52, 0.45);
+    background: var(--surface-active) !important;
+    color: var(--accent) !important;
 }
 .icon-btn.is-open:hover,
 .toolbar-btn.is-open:hover {
-    background: rgba(245, 144, 52, 0.26) !important;
+    background: var(--bg-surface-2) !important;
 }
-.right-panel .slot-content {
-    padding: 10px 12px;
-}
+
+#webhookStatus, #notificationStatus,
+#webhookStatusText, #notificationStatusText { display: none; }

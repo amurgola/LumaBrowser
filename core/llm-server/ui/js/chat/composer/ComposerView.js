@@ -14,19 +14,19 @@ export default class ComposerView {
   static html(big) {
     return ''
       + '<div class="cm-composer-wrap">'
-      + '  <div class="cm-nomodel luma-callout warn" data-cm-nomodel role="status" hidden>'
+      + '  <div class="cm-nomodel" data-cm-nomodel role="status" hidden>'
       + '    <span class="cm-nomodel-text">' + ComposerView.NO_MODEL + '</span>'
       + '    <button class="luma-btn luma-btn--sm" type="button" data-cm-open-setup>Open Setup</button>'
       + '  </div>'
       + '  <div class="cm-attachments" data-cm-attachments hidden></div>'
       + '  <div class="cm-composer">'
-      + '    <textarea rows="1" placeholder="' + (big ? 'How can I help you today? Type / for commands' : 'Reply...') + '"></textarea>'
+      + '    <textarea rows="1" placeholder="' + (big ? 'Ask anything, or type / for commands' : 'Reply') + '"></textarea>'
       + '    <div class="cm-composer-row">'
       + '      <div class="cm-composer-left">'
-      + '        <button class="cm-gear" type="button" title="Chat options: model, tools, attachments">' + ChatIcons.gear + '</button>'
-      + '        <button class="cm-tabs-btn" type="button" title="Ask about an open tab" hidden>' + ChatIcons.globe + '</button>'
+      + '        <button class="cm-gear cm-tool-btn" type="button" title="Chat options: model, tools, attachments">' + ChatIcons.gear + '</button>'
+      + '        <button class="cm-tabs-btn cm-tool-btn" type="button" title="Ask about an open tab" hidden>' + ChatIcons.globe + '</button>'
       + '        <span class="cm-effort" data-cm-effort hidden></span>'
-      + '        <button class="cm-mic" type="button" title="Voice conversation">' + ChatIcons.mic + '</button>'
+      + '        <button class="cm-mic cm-tool-btn" type="button" title="Voice conversation">' + ChatIcons.mic + '</button>'
       + '      </div>'
       + '      <div class="cm-composer-right">'
       + '        <span class="cm-usage" title="Tokens used by the last turn"></span>'
@@ -69,6 +69,7 @@ export default class ComposerView {
       send.disabled = state.streaming
         ? !state.streamOnScreen()
         : (!state.aiAvailable || (!(ta && ta.value.trim()) && state.attachments.length === 0));
+      send.classList.toggle('cm-send-ready', !state.streaming && !send.disabled);
     });
   }
 

@@ -6,7 +6,6 @@ export default class PersonaStep extends WizardStepView {
   render() {
     this._body.innerHTML = `
         <div class="setup-wizard__panel">
-          <div class="setup-wizard__step-eyebrow">Get started</div>
           <h2 class="setup-wizard__step-title">What do you want to do?</h2>
           <p class="setup-wizard__step-desc">
             Pick the one closest to you. It only decides how much we ask; everything

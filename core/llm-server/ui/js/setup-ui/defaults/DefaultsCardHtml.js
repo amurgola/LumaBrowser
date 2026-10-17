@@ -1,4 +1,5 @@
 import FoldMemory from '../../setup/FoldMemory.js';
+import HtmlEscaper from '../../format/HtmlEscaper.js';
 import DefaultsOptions from './DefaultsOptions.js';
 import MoreSettingsChips from './MoreSettingsChips.js';
 
@@ -11,7 +12,7 @@ export default class DefaultsCardHtml {
     parallel: 'How many requests the server works on at once (<code>--parallel</code>). Values above 1 split the context window across slots, so each request gets a smaller share; leave it at 1 unless several chats or agents run at the same time.',
     thinking: 'How long a thinking model reasons before answering. Off skips the reasoning preamble entirely (Qwen3, DeepSeek-R1 and friends); the rest set a budget. Sent per request, so it is a per-task choice rather than something baked into the running server, and each chat can override it from the pill on its composer. Newer models can default to their longest setting, which is right for work you walk away from and slow for a quick question. Models with no reasoning mode ignore this.',
     approval: 'Risky tools are the ones that write files, send messages or webhooks, or create and delete scheduled work. With Always ask, the chat shows an approval card (Allow once / Allow for this run / Decline) before such a tool runs and declines it after two minutes of silence. Never ask lets every enabled tool run straight away. Auto asks in an interactive chat and runs unattended for scheduled tasks and API callers. Shell commands are classified before the card: read-only ones (ls, git status, grep) run without asking, recursive deletes and history rewrites always ask, and commands that would wreck the machine (rm -rf /, format, a download piped into a shell) are refused outright. Set <code>core.agent.shellClassifier</code> to false to turn that off.',
-    flags: 'Anything you type here is split like a shell command line (double quotes keep a path with spaces together) and appended to the <code>llama-server</code> argv after every flag the launcher derived, so a flag you repeat here wins. Saved per model: switching the default model shows the flags stored for that model. Blank means no extra flags. The launch preview lists them under &quot;User flags appended&quot;.',
+    tune: 'Settings for this one model on top of these defaults: thinking, temperature, reply limit, KV cache and extra <code>llama-server</code> flags (split like a shell command line and appended after the launcher\'s own, so a flag repeated there wins). The same Tune button sits next to every model in the chat\'s model picker, which is also where a model\'s settings can be saved as a named profile.',
     tensorSplit: 'Uses <code>--split-mode tensor</code> instead of splitting by layer. Faster decode on a fully-resident dense model spread across two or more NVIDIA cards. Forces f16 KV cache and slows prompt processing.',
     cacheReuse: 'Passes <code>--cache-reuse 256</code>. Follow-up replies skip re-processing chat history, even after earlier turns are trimmed or edited. Not supported by every model architecture.',
     peerGpus: 'Distributed inference over <code>--rpc</code>: at server start the model splits across this machine and every attached peer. Attach a peer\'s GPUs in Settings &gt; Network Sharing.',
@@ -54,8 +55,15 @@ export default class DefaultsCardHtml {
       rows.segmented('defaultParallelSelect', 'Concurrent predictions', DefaultsOptions.parallelOptions(parallel), String(parallel), H.parallel),
       rows.segmented('defaultReasoningEffort', 'Thinking', DefaultsOptions.EFFORT, DefaultsOptions.effortPosition(d), H.thinking),
       v.prefs.approvalPolicy != null ? rows.segmented('defaultToolApproval', 'Tool approval', DefaultsOptions.APPROVAL, v.prefs.approvalPolicy, H.approval) : '',
-      rows.text('defaultLaunchFlags', 'Extra llama.cpp flags', d.launchFlags || '', '--flash-attn on --n-gpu-layers 40', H.flags),
+      d.modelPath ? DefaultsCardHtml._tuneRow(rows, d, H.tune) : '',
     ].join('\n                        ');
+  }
+
+  static _tuneRow(rows, d, help) {
+    const stem = String(d.modelPath).replace(/\\/g, '/').split('/').pop().replace(/\.[^.]+$/, '');
+    const button = '<button type="button" class="luma-btn luma-btn--sm" data-tune-model="local::'
+      + HtmlEscaper.escape(stem) + '">Tune this model…</button>';
+    return rows.action('defaultTune', 'This model only', button, help);
   }
 
   static _toggles(rows, v) {

@@ -138,6 +138,7 @@ class UnifiedChatRouter {
       db: this.db,
       localStream: new LocalStream({ llmServerService: service, prep, request }),
       remoteStream: new RemoteStream({ db: this.db }),
+      modelSettings: this._modelSettings(),
     });
     this._dispatch = (...args) => this._dispatcher.dispatch(...args);
     this._reclaimer = new LocalSlotReclaimer({ llmServerService: service, isLocalTurnLive: () => this._inFlight.isLocalLive() });
@@ -189,9 +190,14 @@ class UnifiedChatRouter {
         agentBridge: this.agentBridge, chatStore, getAgentDeps, policy: this._policy, contextWindow: this._window,
       }),
       dispatcher: this._dispatcher,
+      modelSettings: this._modelSettings(),
       inFlight: this._inFlight,
       reclaimer: this._reclaimer,
     };
+  }
+
+  _modelSettings() {
+    return (this.llmServerService && this.llmServerService.modelSettings) || null;
   }
 
   _store() {

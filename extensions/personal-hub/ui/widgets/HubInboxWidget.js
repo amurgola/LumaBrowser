@@ -86,7 +86,7 @@ export default class HubInboxWidget extends HubWidgetBase {
     return WidgetDom.el('div', { class: 'hub-thread', data: { thread: thread.id } }, [
       WidgetDom.el('div', { class: 'hub-thread-main' }, [
         WidgetDom.el('div', { class: 'hub-thread-top' }, [
-          WidgetDom.el('span', { class: 'hub-badge hub-app', style: `background:${meta.color}`, text: meta.short }),
+          WidgetDom.el('span', { class: 'hub-badge hub-app', style: `--hub-app:${meta.color}`, text: meta.short }),
           WidgetDom.el('span', { class: 'hub-thread-title', text: thread.title || people || '(untitled)' }),
           thread.priority && thread.priority !== 'normal' ? WidgetDom.el('span', { class: `hub-prio p-${thread.priority}`, text: thread.priority }) : null,
           thread.count > 1 ? WidgetDom.el('span', { class: 'hub-count', text: String(thread.count) }) : null,

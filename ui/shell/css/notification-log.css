@@ -2,59 +2,51 @@
     position: fixed;
     bottom: 40px;
     right: 20px;
-    width: 300px;
-    max-height: 200px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    padding: 15px;
-    overflow-y: auto;
     display: none;
+    width: min(360px, calc(100vw - 24px));
+    max-height: 240px;
+    overflow-y: auto;
+    padding: var(--space-3);
+    color: var(--text-primary);
+    background: var(--surface-pop);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-pop);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
 }
-
-.notification-log.active {
-    display: block;
-}
+.notification-log.active { display: block; }
 
 .log-title {
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: #2c3e50;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: var(--space-2);
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
 }
-
 .log-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    color: var(--text-secondary);
     background: none;
-    border: none;
-    color: inherit;
-    font-size: 18px;
+    border: 0;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    padding: 0 4px;
-    line-height: 1;
-    opacity: 0.6;
 }
-
-.log-close-btn:hover {
-    opacity: 1;
-}
+.log-close-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
 
 .log-item {
-    font-size: 12px;
-    padding: 5px;
-    margin-bottom: 5px;
-    background: #f8f9fa;
-    border-radius: 4px;
+    margin-bottom: var(--space-1);
+    padding: 6px var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    background: var(--bg-surface-2);
+    border-radius: var(--radius-md);
 }
-
-.log-item.success {
-    background: #d4edda;
-    color: #155724;
-}
-
-.log-item.error {
-    background: #f8d7da;
-    color: #721c24;
-}
+.log-item.success { color: var(--text-primary); }
+.log-item.error { color: var(--danger); background: var(--danger-dim); }

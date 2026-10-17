@@ -7,6 +7,7 @@ Build entries are in [BuildScripts](BuildScripts.md).
 |---|---|---|
 | `scripts/docs-for.js` | [DocsForCli](../tools/docs/DocsForCli.md) | `<path...> \| --changed \| --all [--explain] [--json]`; exit 1 on malformed front matter |
 | `scripts/cleanup.js` | [ProcessCleanup](../tools/dev/ProcessCleanup.md) | `npm run cleanup [-- --dry-run]`; kills electron.exe and listeners on 3000/3001 |
+| `scripts/readme-shots.js` | [ReadmeShotsCli](../tools/docs/readme-shots/ReadmeShotsCli.md) | `npm run shots:readme [-- --only chat,setup,fit --out <dir> --keep]`; e2e AppLauncher on a blank-slate seeded temp dir; writes the three README PNGs; exit 0 done, 2 bad options |
 | `scripts/profile-performance.js` | [PerformanceProfiler](../tools/perf/PerformanceProfiler.md) | `npm run profile:performance -- <label> [--first-run] [--no-adblock]`; Playwright `_electron`; output test-data/performance/<label>; isolated data dir, handshake and port |
 | `scripts/performance-entry.js` | [PerformanceEntry](../tools/perf/PerformanceEntry.md) | Electron entry launched only by profile-performance; refuses to run without LUMA_PERF_OUTPUT and LUMA_DATA_DIR |
 | `scripts/summarize-performance.js` | [PerformanceSummary](../tools/perf/PerformanceSummary.md) | `[dir]` (default test-data/performance/run); writes summary.json |

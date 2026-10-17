@@ -10,89 +10,78 @@
     static CSS = `
 .lm-overlay {
   position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   z-index: 2147483640;
   opacity: 0;
-  transition: opacity 0.12s ease-out;
-  font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  transition: opacity var(--dur-fast, 120ms) var(--ease, ease-out);
+  font-family: var(--font-sans, "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif);
   -webkit-font-smoothing: antialiased;
-  backdrop-filter: blur(2px);
 }
 .lm-overlay.is-open { opacity: 1; }
 .lm-modal {
   min-width: 320px; max-width: 480px;
-  background: var(--bg-card, #1a1f2e);
-  color: var(--text, #e6e8ee);
-  border: 1px solid var(--border, rgba(255,255,255,0.08));
-  border-radius: 12px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), 0 2px 0 rgba(255, 255, 255, 0.03) inset;
-  padding: 22px 22px 18px;
-  transform: translateY(6px) scale(0.985);
-  transition: transform 0.12s ease-out;
+  background: var(--surface-pop, #141b2c);
+  color: var(--text-primary, #e6e9f2);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-pop, 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06));
+  padding: 20px;
   display: flex; flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
-.lm-overlay.is-open .lm-modal { transform: none; }
 .lm-title {
-  font-size: 14px; font-weight: 600;
-  color: var(--text, #e6e8ee);
-  letter-spacing: 0.01em;
+  font-size: var(--text-lg, 15px); font-weight: 600;
+  color: var(--text-primary, #e6e9f2);
 }
 .lm-msg {
-  font-size: 13px; line-height: 1.55;
-  color: var(--text-muted, #a8aebd);
+  font-size: var(--text-md, 13px); line-height: 1.45;
+  color: var(--text-secondary, #8a95ad);
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 50vh; overflow-y: auto;
 }
 .lm-input {
-  width: 100%;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Consolas, monospace);
-  font-size: 13px;
-  color: var(--text, #e6e8ee);
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border-strong, rgba(255,255,255,0.12));
-  border-radius: 8px;
-  padding: 9px 11px;
+  width: 100%; height: 32px;
+  font-family: var(--font-mono, "Cascadia Mono", ui-monospace, Consolas, monospace);
+  font-size: var(--text-md, 13px);
+  color: var(--text-primary, #e6e9f2);
+  background: var(--bg-surface-2, #172038);
+  border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.07));
+  border-radius: var(--radius-md, 6px);
+  padding: 0 12px;
   outline: none;
-  transition: border-color 0.1s;
+  transition: border-color var(--dur-fast, 120ms) var(--ease, ease-out);
 }
-.lm-input:focus { border-color: var(--accent, #f59034); }
+.lm-input:focus { border-color: var(--accent, #f59034); box-shadow: var(--focus-ring, 0 0 0 1px #f59034); }
 .lm-actions {
   display: flex; justify-content: flex-end; gap: 8px;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .lm-btn {
   font: inherit;
-  font-size: 12px; font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border-strong, rgba(255,255,255,0.12));
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text, #e6e8ee);
+  font-size: var(--text-md, 13px); font-weight: 500;
+  min-height: 32px; min-width: 80px;
+  padding: 0 12px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.07));
+  background: var(--bg-surface-2, #172038);
+  color: var(--text-primary, #e6e9f2);
   cursor: pointer;
-  transition: background 0.08s, border-color 0.08s, color 0.08s;
-  min-width: 84px;
+  transition: background-color var(--dur-fast, 120ms) var(--ease, ease-out), border-color var(--dur-fast, 120ms) var(--ease, ease-out);
 }
-.lm-btn:hover { background: rgba(255, 255, 255, 0.07); }
-.lm-btn:focus-visible { outline: 2px solid var(--accent, #f59034); outline-offset: 2px; }
+.lm-btn:hover { background: var(--bg-elevated, #1a2340); border-color: var(--border-strong, rgba(255, 255, 255, 0.14)); }
+.lm-btn:focus-visible { outline: none; box-shadow: var(--focus-ring, 0 0 0 1px #f59034); }
 .lm-btn.is-primary {
   background: var(--accent, #f59034);
   border-color: var(--accent, #f59034);
-  color: #0a0d14;
-  font-weight: 600;
+  color: var(--on-accent, #1a1206);
 }
-.lm-btn.is-primary:hover { background: var(--accent-hover, #ffb06b); border-color: var(--accent-hover, #ffb06b); }
-.lm-btn.is-danger {
-  background: #b91c1c;
-  border-color: #b91c1c;
-  color: #fff;
-  font-weight: 600;
-}
-.lm-btn.is-danger:hover { background: #dc2626; border-color: #dc2626; }
+.lm-btn.is-primary:hover { background: var(--accent-hover, #e07d22); border-color: var(--accent-hover, #e07d22); }
+.lm-btn.is-danger { color: var(--danger, #f87171); }
+.lm-btn.is-danger:hover { background: var(--danger-dim, rgba(248, 113, 113, 0.12)); color: var(--danger, #f87171); }
+@media (prefers-reduced-motion: reduce) { .lm-overlay { transition: none; } }
 `;
-
     static install(win) {
       const modal = new LumaModal(win.document);
       LumaModal._injectStyles(win.document);

@@ -27,7 +27,6 @@ export default class AutoStep extends WizardStepView {
     const view = this._state.auto.view;
     this._body.innerHTML = `
         <div class="setup-wizard__panel">
-          <div class="setup-wizard__step-eyebrow">Automatic Local Setup</div>
           <h2 class="setup-wizard__step-title">${AutoStep.TITLES[view] || AutoStep.ERROR_TITLE}</h2>
           <div id="setupAutoPane"></div>
         </div>

@@ -98,12 +98,17 @@ class ImageRequestPlanner {
 
   _resolveSigmas() {
     const own = this._request.sigmaNodes;
-    const nodes = Array.isArray(own) ? own : (Array.isArray(this._md.sigmaNodes) ? this._md.sigmaNodes : null);
-    if (!nodes || !nodes.length) return;
+    const md = this._md;
+    const nodes = Array.isArray(own) ? own : (Array.isArray(md.sigmaNodes) ? md.sigmaNodes : null);
+    const fixed = !nodes && Array.isArray(md.fixedSigmas) ? md.fixedSigmas : null;
+    const list = nodes || fixed;
+    if (!list || !list.length) return;
     const steps = this._request.steps;
-    if (!(Array.isArray(own) || !steps || steps === nodes.length)) return;
+    if (!(Array.isArray(own) || !steps || steps === list.length)) return;
     const e = this._effective;
-    this._customSigmas = FlowSchedule.sigmasFromNodes({ nodes, family: this._model.family, width: e.width, height: e.height });
+    this._customSigmas = fixed
+      ? FlowSchedule.fixedSigmas(fixed)
+      : FlowSchedule.sigmasFromNodes({ nodes, family: this._model.family, width: e.width, height: e.height });
     if (this._customSigmas) e.steps = this._customSigmas.length - 1;
   }
 

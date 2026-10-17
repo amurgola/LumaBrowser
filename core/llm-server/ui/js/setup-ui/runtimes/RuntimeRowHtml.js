@@ -95,7 +95,7 @@ export default class RuntimeRowHtml {
 
   static _primaryAction(r) {
     if (r.kind === 'format') return '';
-    return `<button class="luma-btn primary luma-btn--sm" data-runtime-action="install" data-runtime-id="${HtmlEscaper.escape(r.id)}">${r.installed ? 'Update' : 'Install'}</button>`;
+    return `<button class="luma-btn luma-btn--sm" data-runtime-action="install" data-runtime-id="${HtmlEscaper.escape(r.id)}">${r.installed ? 'Update' : 'Install'}</button>`;
   }
 
   static _detailRows(r) {

@@ -149,9 +149,9 @@ export default class EasySetupWizard {
   injectButton() {
     const sub = document.querySelector('#setupRoot .page-sub');
     if (!sub || sub.querySelector('.wz-launch')) return;
-    const button = Dom.el('button', 'wz-launch', '✨ Easy Setup');
+    const button = Dom.el('button', 'luma-btn luma-btn--sm wz-launch', 'Guided setup');
     button.type = 'button';
-    button.title = 'Guided setup: pick & download a local model for your hardware';
+    button.title = 'Pick and download a local model for your hardware';
     button.addEventListener('click', () => this.open());
     sub.appendChild(button);
   }

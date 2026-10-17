@@ -25,4 +25,4 @@ Classic-script exception: the extension is `distributable: true`, so this stays 
 
 Reads `window.LumaSetupExt`, `window.LumaModal`, `AudioContext`,
 `MediaRecorder`, `navigator.mediaDevices`. Injects
-`<link id="cv-css" href="/llm-ui/ext/chatterbox-voice/setup-ui.css">`.
+`<link id="cv-css" href="/llm-ui/ext/chatterbox-voice/setup-ui.css">`, which is on tokens.css per the [design system](../../ui/DesignSystem.md) (no fallback greys or greens; the active chip is neutral).

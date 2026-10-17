@@ -60,9 +60,11 @@ non-existent method silently does nothing).
   static BROWSER_API = `<browser_api>
 To read or change the web pages the user browses, declare dependency \`core:browser\` and use
 \`context.browser\` (a BrowserService). The REAL methods (use these EXACTLY; others do not exist):
-- \`await browser.getTabs()\` → array of { id, url, title, ... } for the open tabs.
+- \`await browser.getTabs()\` → { success, tabs: [{ id, url, title, ... }] } for the open tabs
+  (an OBJECT: loop over \`.tabs\`, not the result itself).
 - \`await browser.executeJs(tabId, codeString)\` → { success, data: { result } }. Runs JS INSIDE
-  that page (it has document/window) and returns the value. codeString is a STRING of JS.
+  that page (it has document/window) and returns the value. codeString is a STRING of JS; it
+  REJECTS when the string does not compile, so log the error instead of swallowing it.
 - \`browser.onTabNavigated((tabId, url) => { ... })\` → returns an unsubscribe function; fires on
   every page load/navigation. Use it to (re)run your script on each new page.
 - \`browser.onTabCreated((tab) => { ... })\` → returns an unsubscribe function.
@@ -70,15 +72,24 @@ There is NO \`browser.on(...)\`, NO \`browser.getWebContents()\`, NO \`browser.e
 and main.js is the MAIN process (no document/window there): do the DOM work inside the
 executeJs string, which runs in the page. To affect EVERY page: on activate, executeJs into each
 current tab AND subscribe with onTabNavigated to executeJs on future navigations; keep the
-unsubscribe fn and call it in deactivate(). Working example: replace a word on every page:
+unsubscribe fn and call it in deactivate().
+Write the page code as a REAL function in main.js and send its source, never as JS hand-written
+inside a template literal or string: there '\\n' turns into a real newline and the page script
+silently fails to compile. Pass data (CSS text, settings) in as a JSON argument. Working example:
+replace a word on every page:
+  function pageScript(word, replacement) {
+    var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false), n;
+    var re = new RegExp(word, 'gi');
+    while ((n = w.nextNode())) { if (re.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(re, replacement); }
+  }
   module.exports = {
     async activate(context) {
-      const { browser } = context;
-      const script = "(function(){var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false),n;while(n=w.nextNode()){if(/textbook/i.test(n.nodeValue)){n.nodeValue=n.nodeValue.replace(/textbook/gi,'pizza');}}})();";
-      const inject = function (id) { return browser.executeJs(id, script).catch(function(){}); };
-      const tabs = await browser.getTabs();
-      for (var i = 0; i < tabs.length; i++) inject(tabs[i].id);
-      this._off = browser.onTabNavigated(function (id) { inject(id); });
+      const { browser, logger } = context;
+      const script = '(' + pageScript.toString() + ')(' + JSON.stringify('textbook') + ',' + JSON.stringify('pizza') + ');';
+      const inject = (id) => browser.executeJs(id, script).catch((err) => logger.warn('inject failed', { tabId: id, error: err.message }));
+      const { tabs = [] } = await browser.getTabs();
+      for (const tab of tabs) inject(tab.id);
+      this._off = browser.onTabNavigated((id) => inject(id));
     },
     async deactivate() { if (this._off) this._off(); }
   };

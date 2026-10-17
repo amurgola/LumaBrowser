@@ -21,7 +21,9 @@ wired by `data-act`.
 - `toggleSearch()`: leaving either artifacts view first; closing clears the term
   and restores the full list.
 - `applySettingsMenu(open)`.
-- `Sidebar.iconButton(icon, act, label, cls?)`: the labelled icon button markup.
+- `Sidebar.iconButton(icon, act, label, cls?, hint?)`: the labelled icon button
+  markup; `hint` is a shortcut shown muted at the row's right edge
+  (`cm-kbd-hint`) and appended to the title. New chat uses it for Ctrl+Shift+N.
 
 The web shim has no `openAppSettings` or `openDashboard`: the footer then shows
 the plain Advanced / Setup button and no Dashboard.

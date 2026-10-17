@@ -21,5 +21,5 @@ The failed URL rides along as a query parameter. When the error page commits,
 history row and emits no `tabNavigated`; the serialized tab reports `errorPage: true`.
 Reloading from the error page retries the original URL ([TabLoader](TabLoader.md)).
 The page classifies Chromium net error codes (not found, refused, timeout,
-certificate, blocked, offline) and `desc=CRASHED`; it inlines its colour tokens
-because a file:// page in a tab session cannot load the shared CSS.
+certificate, blocked, offline) and `desc=CRASHED`; its colors come from the
+shared `core/llm-server/ui/css/tokens.css`, linked by relative file:// path.

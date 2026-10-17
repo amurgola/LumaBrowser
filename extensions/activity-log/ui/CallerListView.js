@@ -47,7 +47,7 @@ export default class CallerListView {
     const row = document.createElement('label');
     row.className = 'al-caller-row' + (masterOn ? '' : ' al-caller-row--disabled');
     row.innerHTML = `
-          <div style="flex:1;">
+          <div class="al-caller-row-main">
             <span class="al-caller-row-name">${esc(c.label || c.caller)}</span>
             <span class="al-caller-row-id">${esc(c.caller)}</span>
             <span class="al-caller-row-source">${esc(c.source || '')}</span>

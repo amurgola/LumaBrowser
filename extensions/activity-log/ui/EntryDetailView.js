@@ -7,7 +7,7 @@ export default class EntryDetailView {
   }
 
   showLoading() {
-    this._el.innerHTML = '<div style="opacity:0.5;">Loading...</div>';
+    this._el.innerHTML = '<div class="al-placeholder">Loading...</div>';
   }
 
   showError() {
@@ -19,11 +19,11 @@ export default class EntryDetailView {
     const dur = entry.durationMs != null ? ActivityText.duration(entry.durationMs) : 'n/a';
     const start = new Date(entry.tsStart).toLocaleString();
     this._el.innerHTML = `
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <div class="al-detail-head">
           <span class="al-entry-result ${ActivityText.resultClass(entry.result)}">${esc(entry.result || 'info')}</span>
-          <strong style="font-size:14px;">${esc(entry.action)}</strong>
+          <strong class="al-detail-title">${esc(entry.action)}</strong>
         </div>
-        <div style="opacity:0.7; font-size:12px;">${esc(entry.caller)} · ${esc(start)} · ${esc(dur)}</div>
+        <div class="al-detail-meta">${esc(entry.caller)} · ${esc(start)} · ${esc(dur)}</div>
 
         ${EntryDetailView._optionalSections(entry)}
 
@@ -42,29 +42,29 @@ export default class EntryDetailView {
   static _optionalSections(entry) {
     return [
       entry.summary ? EntryDetailView._section('Summary', '', entry.summary) : '',
-      entry.url ? EntryDetailView._section('URL', ' style="font-family:monospace; font-size:11px; word-break:break-all;"', entry.url) : '',
+      entry.url ? EntryDetailView._section('URL', ' class="al-detail-mono"', entry.url) : '',
       entry.tabId != null ? EntryDetailView._section('Tab', '', entry.tabId) : '',
-      entry.correlation ? EntryDetailView._section('Correlation', ' style="font-family:monospace; font-size:11px;"', entry.correlation) : '',
+      entry.correlation ? EntryDetailView._section('Correlation', ' class="al-detail-mono"', entry.correlation) : '',
     ].join('\n\n        ');
   }
 
-  static _section(label, valueStyle, value) {
+  static _section(label, valueAttrs, value) {
     return `
           <div class="al-detail-section">
             <div class="al-detail-label">${label}</div>
-            <div${valueStyle}>${HtmlEscaper.escape(value)}</div>
+            <div${valueAttrs}>${HtmlEscaper.escape(value)}</div>
           </div>`;
   }
 
   static _childrenHtml(children) {
-    if (!children || !children.length) return '<div style="opacity:0.5; font-style:italic;">No child entries.</div>';
+    if (!children || !children.length) return '<div class="al-placeholder">No child entries.</div>';
     const esc = HtmlEscaper.escape;
     return children.map((c) => `
             <div class="al-detail-child">
-              <span class="al-entry-result ${ActivityText.resultClass(c.result)}" style="margin-right:6px;">${esc(c.result || 'info')}</span>
+              <span class="al-entry-result ${ActivityText.resultClass(c.result)}">${esc(c.result || 'info')}</span>
               <strong>${esc(c.action)}</strong>
-              ${c.durationMs != null ? `<span style="opacity:0.6; font-family:monospace;"> · ${ActivityText.duration(c.durationMs)}</span>` : ''}
-              ${c.summary ? `<div style="opacity:0.75; margin-top:2px;">${esc(c.summary)}</div>` : ''}
+              ${c.durationMs != null ? `<span class="al-detail-child-dur"> · ${ActivityText.duration(c.durationMs)}</span>` : ''}
+              ${c.summary ? `<div class="al-detail-child-summary">${esc(c.summary)}</div>` : ''}
             </div>
           `).join('');
   }

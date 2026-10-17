@@ -28,11 +28,11 @@ export default class AddonsBrowser {
   _renderShell() {
     this._pane.innerHTML = `
       <div class="ext-addons-view">
-        <div class="ext-addons-header" style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        <div class="ext-addons-header">
           <button class="ext-config-back-btn" id="ext-addons-back">${ManifestCopy.BACK_ICON} Back</button>
-          <h3 style="margin:0;">Optional Add-ons</h3>
+          <h3 class="ext-config-title">Optional add-ons</h3>
         </div>
-        <div id="ext-addons-list" class="luma-muted" style="padding:12px 0;"><span class="luma-spinner"></span> Loading add-ons...</div>
+        <div id="ext-addons-list" class="luma-muted ext-addons-loading"><span class="luma-spinner"></span> Loading add-ons...</div>
       </div>
     `;
     this._pane.querySelector('#ext-addons-back').addEventListener('click', () => this._onBack());

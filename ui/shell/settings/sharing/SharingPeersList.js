@@ -19,7 +19,7 @@ export default class SharingPeersList {
       const peers = await this._api.listPeers();
       this._list.innerHTML = peers.length
         ? peers.map((p) => SharingPeersList.rowHtml(p)).join('')
-        : '<div class="luma-empty luma-empty--plain" style="text-align:left;padding:4px 0;">No peers paired yet.</div>';
+        : '<div class="gs-list-empty">No peers paired yet.</div>';
     } catch (e) { console.error('sharing peers load failed:', e); }
   }
 
@@ -31,10 +31,10 @@ export default class SharingPeersList {
   static rowHtml(p) {
     const esc = HtmlEscaper.escape;
     return `
-          <div class="gs-item-card" style="padding:8px 10px;">
-            <div style="display:flex;gap:8px;align-items:center;">
-              <span style="flex:1;font-size:12.5px;color:var(--text-primary);font-weight:600;">${esc(p.name)}</span>
-              ${p.gpuCount ? `<label class="luma-check" style="font-size:11px;color:var(--text-secondary);" title="Borrow this peer's GPUs for local model runs (llama.cpp RPC). The next server start splits the model across both machines.">
+          <div class="gs-item-card">
+            <div class="gs-item-row">
+              <span class="gs-item-main gs-item-title">${esc(p.name)}</span>
+              ${p.gpuCount ? `<label class="luma-check gs-item-meta" title="Borrow this peer's GPUs for local model runs (llama.cpp RPC). The next server start splits the model across both machines.">
                 <input type="checkbox" data-peer-gpus="${esc(p.id)}" ${p.gpusAttached ? 'checked' : ''}> Attach GPUs</label>` : ''}
               <label class="luma-switch" title="Use this peer's resources">
                 <input type="checkbox" data-peer-enabled="${esc(p.id)}" ${p.enabled ? 'checked' : ''}>
@@ -43,7 +43,7 @@ export default class SharingPeersList {
               <button class="gs-copy-btn" data-peer-refresh="${esc(p.id)}">Refresh</button>
               <button class="gs-copy-btn" data-peer-remove="${esc(p.id)}">Remove</button>
             </div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;">
+            <div class="gs-item-details">
               <span>${esc(p.endpoint)}</span>
               <span>${SharingPeersList.capabilities(p)}</span>
               ${SharingPeersList._securityBadge(p)}

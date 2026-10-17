@@ -35,7 +35,7 @@ export default class ImageStatusPanes {
   error(pane) {
     pane.innerHTML = `
         <div class="setup-wizard__status setup-wizard__status--err" style="margin-bottom:14px;">${HtmlEscaper.escape(this._w.state.image.error || 'Image setup failed.')}</div>
-        <div style="display:flex; gap:10px;">
+        <div class="setup-wizard__actions setup-wizard__actions--flush">
           <button class="setup-wizard__btn setup-wizard__btn--primary" id="imgRetry" type="button">Try again</button>
           <button class="setup-wizard__btn setup-wizard__btn--secondary" id="imgSkipFromErr" type="button">Skip this step</button>
         </div>

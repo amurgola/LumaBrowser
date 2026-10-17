@@ -24,9 +24,9 @@ export default class RuntimeUpdateBadge {
     const head = row.querySelector('.runtime-head');
     if (!info.updateAvailable || !head) return;
     const pill = doc.createElement('span');
-    pill.className = 'luma-badge accent';
+    pill.className = 'luma-badge';
     pill.setAttribute('data-update-pill', '');
-    pill.textContent = info.latest ? `update: ${info.latest}` : 'update available';
+    pill.textContent = 'Update available';
     pill.title = info.latest ? `Installed ${info.current} → ${info.latest}` : '';
     head.appendChild(pill);
   }

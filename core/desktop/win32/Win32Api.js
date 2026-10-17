@@ -1,6 +1,7 @@
 class Win32Api {
   static _api = null;
   static _desktopApi = null;
+  static _shellApi = null;
 
   static load() {
     if (Win32Api._api) return Win32Api._api;
@@ -19,6 +20,15 @@ class Win32Api {
       GetUserObjectInformationW: f('GetUserObjectInformationW', 'bool', ['intptr_t', 'int', 'void *', 'uint32', 'void *']),
     };
     return Win32Api._desktopApi;
+  }
+
+  static loadShell() {
+    if (Win32Api._shellApi) return Win32Api._shellApi;
+    const shell32 = Win32Api.load().koffi.load('shell32.dll');
+    Win32Api._shellApi = {
+      ShellExecuteW: shell32.func('__stdcall', 'ShellExecuteW', 'intptr_t', ['intptr_t', 'str16', 'str16', 'str16', 'str16', 'int']),
+    };
+    return Win32Api._shellApi;
   }
 
   static _bind(koffi) {

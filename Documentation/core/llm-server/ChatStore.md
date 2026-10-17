@@ -15,12 +15,15 @@ better-sqlite3 handle SettingsDatabase owns; rows come back camelCase.
 
 Conversations:
 
-- `createConversation({ id?, title?, modelRef?, provider?, toolsEnabled?, disabledTools?, choicesEnabled?, mode?, hidden? })`
+- `createConversation({ id?, title?, modelRef?, provider?, toolsEnabled?, disabledTools?, choicesEnabled?, mode?, hidden?, parentConversationId? })`
   returns the hydrated conversation. A caller id is kept (the renderer's
   optimistic id), otherwise `conv_<ms>_<rand>`. Title defaults to `New chat`,
-  mode to `chat`.
+  mode to `chat`. `parentConversationId` (hydrated as such, else `null`) marks a
+  sub-conversation a chat delegated to; the sidebar nests it under that chat.
 - `getConversation(id)` returns the conversation or `null`. Not filtered by
   hidden or archived (the run-history viewer reads hidden rows by id).
+- `listSubConversations(parentConversationId)` the conversations delegated from
+  that chat, oldest first, hidden and archived included; `[]` for a falsy id.
 - `listConversations({ includeArchived = false, includeHidden = false, limit = 200, offset = 0 })`
   pinned first, then newest `updated_at`; limit capped at 1000.
 - `searchConversations(q, { limit = 50, includeArchived = false })` matches the

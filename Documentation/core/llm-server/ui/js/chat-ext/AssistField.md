@@ -3,8 +3,9 @@
 `core/llm-server/ui/js/chat-ext/AssistField.js`
 
 The AI-fill button inside a text box: the field's `assist()` says what to
-generate, this streams the draft in while the box is locked and shimmering, and
-the sparkle becomes a stop button that keeps the partial draft.
+generate, this streams the draft in while the box is locked with an accent border,
+and the stroked sparkles icon (`ASSIST_ICON`, an inline SVG) becomes a stop button
+that keeps the partial draft.
 
 ## Methods
 

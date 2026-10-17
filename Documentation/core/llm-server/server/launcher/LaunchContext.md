@@ -7,8 +7,10 @@ The state of one local llama-server start, shared by the
 
 ## Fields and methods
 
-- `new LaunchContext({ service, planFor, withVision })` reads `service.getDefaults()`
-  and `service.settingsDb` once.
+- `new LaunchContext({ service, planFor, withVision })` reads
+  `service.getLaunchDefaults()` (the defaults plus the loaded model's own launch
+  overrides, such as its KV cache; `getDefaults()` on a service without it) and
+  `service.settingsDb` once.
 - Resolved by the steps: `diag`, `runtimeRow` (the detector row), `runtime` (with
   learned unsupported flags), `model`, `catalogEntry`, `launchKey`, `port`, `kvMode`,
   `userArgs`, `overrides`, `layout` ([LlmLayoutIntent](LlmLayoutIntent.md)),

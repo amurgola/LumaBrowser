@@ -1,20 +1,33 @@
 const LlmTrace = require('../LlmTrace');
 const ChatModelRef = require('./ChatModelRef');
 const MessageImages = require('./MessageImages');
+const RequestSettings = require('./RequestSettings');
 
 class ModelDispatcher {
   static UNTAGGED = { conversationId: null, turnId: null, callType: 'side' };
 
-  constructor({ db, localStream, remoteStream }) {
+  constructor({ db, localStream, remoteStream, modelSettings = null }) {
     this._db = db;
     this._local = localStream;
     this._remote = remoteStream;
+    this._settings = modelSettings;
   }
 
   async dispatch(modelRef, messages, temperature, hooks, images = [], tools = null, extra = null) {
     const { tag, rest } = ModelDispatcher._splitTrace(extra);
-    const runHooks = this._traced(hooks, tag, modelRef, { messages, temperature, tools, extra: rest, images });
-    return this._route(modelRef, messages, temperature, runHooks, images, tools, rest);
+    const target = this._target(modelRef, rest);
+    const applied = RequestSettings.apply({ settings: target.settings, temperature, extra: target.extra, callType: tag && tag.callType });
+    const runHooks = this._traced(hooks, tag, modelRef, { messages, temperature: applied.temperature, tools, extra: applied.extra, images });
+    return this._route(target.ref, messages, applied.temperature, runHooks, images, tools, applied.extra);
+  }
+
+  _target(modelRef, extra) {
+    const { settingsRef, ...rest } = extra || {};
+    const clean = settingsRef === undefined ? extra : (Object.keys(rest).length ? rest : null);
+    if (!this._settings) return { ref: modelRef, settings: null, extra: clean };
+    const routed = this._settings.resolve(modelRef);
+    const settings = settingsRef && settingsRef !== modelRef ? this._settings.resolve(settingsRef).settings : routed.settings;
+    return { ref: routed.ref, settings, extra: clean };
   }
 
   static _splitTrace(extra) {

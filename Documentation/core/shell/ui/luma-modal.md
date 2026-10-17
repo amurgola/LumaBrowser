@@ -39,8 +39,9 @@ Loading also replaces `window.alert/confirm/prompt` with these (so legacy
 (never HTML); a click on the dim surround cancels; Escape closes only the
 topmost of stacked dialogs; each dialog resolves once, fades out for 120 ms and
 returns focus to the element that opened it. Styles are one injected
-`<style id="lm-styles">`, scoped to `.lm-*` and built on the theme tokens with
-fallbacks. Loading twice is a no-op.
+`<style id="lm-styles">`, scoped to `.lm-*` and built on the design tokens
+(fallbacks equal the token values): the shared dialog look of `--surface-pop`,
+`--radius-xl`, `--shadow-pop` over a plain scrim with a 4px blur. Loading twice is a no-op.
 
 ## Globals
 

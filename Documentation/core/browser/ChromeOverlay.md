@@ -22,8 +22,9 @@ the page.
 - `destroy()` removes and destroys every layer.
 - `layers` is a public `Map<id, { id, view, visible, pending, ready, pendingContent }>`;
   main.js reads it for the view-stack debug dump.
-- `ChromeOverlay.SURFACE_COLOR` (`#141b2c`) must equal `--surface-pop` in
-  `overlay/overlay.html`.
+- `ChromeOverlay.BACKGROUND` (`#00000000`): every layer composites transparently, so
+  the page shows outside a panel's rounded corners. The overlay page must not paint
+  a background on html/body.
 
 IPC: `chrome-overlay:show`, `:set-active`, `:hide`, `:measure` route to the methods
 above; `chrome-overlay:action` and `:hover` from a layer are forwarded to the main

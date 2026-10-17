@@ -5,6 +5,8 @@ import ImageGenerator from '../ImageGenerator.js';
 import CharArtPrompts from './CharArtPrompts.js';
 
 export default class CharArtSections {
+  static REMOVE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+
   static FULL_BODY = 'fullBody';
 
   constructor({ art, field, siblingModel, onGenerate }) {
@@ -36,7 +38,7 @@ export default class CharArtSections {
     this._extraEmotions().forEach((item, idx) => this._addCell(grid, CharArtSections._emotionDerivative(item, idx),
       () => this._extraEmotions().splice(idx, 1)));
     section.appendChild(grid);
-    section.appendChild(this._addButton('+ Add emotion', 'Emotion name (e.g. nervous, surprised, embarrassed)', (name) => {
+    section.appendChild(this._addButton('Add emotion', 'Emotion name (e.g. nervous, surprised, embarrassed)', (name) => {
       this._extraEmotions().push({ id: 'emotion_' + Date.now().toString(36), name: String(name).trim(), b64: null, mime: 'image/png' });
     }));
     return section;
@@ -60,7 +62,7 @@ export default class CharArtSections {
     this._outfits().forEach((item, idx) => this._addCell(grid, CharArtSections._outfitDerivative(item, idx),
       () => this._outfits().splice(idx, 1)));
     section.appendChild(grid);
-    section.appendChild(this._addButton('+ Add outfit', 'Describe the outfit', (desc) => {
+    section.appendChild(this._addButton('Add outfit', 'Describe the outfit', (desc) => {
       const clean = String(desc).trim();
       this._outfits().push({ id: 'outfit_' + Date.now().toString(36), name: clean.split(',')[0].slice(0, 28) || 'Outfit', desc: clean, b64: null, mime: 'image/png' });
     }));
@@ -86,7 +88,7 @@ export default class CharArtSections {
   }
 
   _deleteButton(onDelete) {
-    const del = Dom.el('button', 'cm-charart-re cm-charart-del', '×');
+    const del = Dom.el('button', 'cm-charart-re cm-charart-del', CharArtSections.REMOVE_ICON);
     del.type = 'button';
     del.title = 'Remove';
     del.addEventListener('click', () => { onDelete(); this.draw(); });

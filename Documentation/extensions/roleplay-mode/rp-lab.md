@@ -13,7 +13,7 @@ and registered only when [RoleplayExtension](RoleplayExtension.md) adds the
 
 Calls `window.LumaSetupExt.registerTab({ id: 'roleplay-lab', label: 'Roleplay
 Lab', mount })`. `mount(pane)` builds the `#rpLabRoot` scaffold (title, Run
-pipeline button, body) and opens the Lab: injects its `#rplab-styles` CSS,
+pipeline button, body) and opens the Lab: injects its `#rplab-styles` CSS (built on the shared design tokens),
 loads `rpLab.getScenario()` (scenario and production `imageProfiles`, with
 built-in fallbacks), and adds the production console (Fast / Balanced /
 Quality profiles, recipe chips, run switches, relighting mode and strength),

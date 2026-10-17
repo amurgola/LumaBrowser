@@ -52,7 +52,8 @@ byte-identical from legacy.
 | `npm run build:docs-rag` | the documentation knowledge base, `dist/docs-rag/docs-rag.db` ([DocsRagBuilder](docs-rag/DocsRagBuilder.md)); CI and the local build scripts run it before electron-builder |
 | `npm run verify:asar -- --asar <app.asar>` | verify a real build's layout ([AsarLayoutVerifier](verify/AsarLayoutVerifier.md)) |
 | `npm run verify:installer` | compile installer.nsh in both NSIS passes |
-| `node scripts/bump-version.js` | one version step ([VersionBumper](release/VersionBumper.md)) |
+| `node scripts/bump-version.js [--to x.y.z | --current]` | one version step, an explicit version, or a read-only report ([VersionBumper](release/VersionBumper.md)) |
+| `scripts\sync-prod.bat [x.y.z]` | prompt for the version to ship (writes it to the three package files), then `npm run sync:prod` |
 | `scripts\build-local.bat [--ci]` | Windows installer + portable, CI's windows leg |
 | `scripts\build-linux.bat [--setup] [--fast]` | AppImage + deb inside WSL |
 

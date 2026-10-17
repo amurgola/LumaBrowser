@@ -52,7 +52,7 @@ export default class ToolChainView {
     const label = running
       ? (active ? ToolLabels.stepLabel(active) : 'Working…')
       : 'Ran ' + tools.length + ' step' + (tools.length === 1 ? '' : 's') + (errs ? ' · ' + errs + ' failed' : '');
-    const icon = running ? '<span class="cm-tc-spin"></span>' : errs ? '<span class="cm-chain-bang">!</span>' : ChatIcons.check;
+    const icon = running ? '<span class="cm-tc-spin"></span>' : errs ? '<span class="cm-chain-bang">' + ChatIcons.alert + '</span>' : ChatIcons.check;
     const head = Dom.el('button', 'cm-chain-head',
       '<span class="cm-chain-ic">' + icon + '</span><span class="cm-chain-label">' + HtmlEscaper.escape(label) + '</span>'
       + '<span class="cm-chain-caret">' + ChatIcons.chevron + '</span>');
@@ -84,8 +84,10 @@ export default class ToolChainView {
 
   _approvalCard(tc) {
     const detail = String(tc._approval.detail || ToolLabels.labelOf(tc.tool)).slice(0, ToolChainView.REASON_MAX);
+    const scope = tc._approval.grantScope === 'chat' ? 'chat' : 'run';
+    const runLabel = tc._approval.grants ? `Allow ${tc._approval.grants} for this ${scope}` : 'Allow for this run';
     return this._waitCard('Approve this?', detail, 'approval', [
-      ['once', 'Allow once', true], ['run', 'Allow for this run', false], ['reject', 'Decline', false],
+      ['once', 'Allow once', true], ['run', runLabel, false], ['reject', 'Decline', false],
     ], (answer) => this._ctx.api.approvalRespond(answer));
   }
 
@@ -121,9 +123,15 @@ export default class ToolChainView {
       + '<span class="cm-tc-ic">' + ToolChainView._icon(tc.tool) + '</span>'
       + '<span class="cm-tc-main"><b>' + HtmlEscaper.escape(tc._pending ? ToolLabels.stepLabel(tc) : ToolLabels.labelOf(tc.tool)) + '</b>'
       + (det || tc._pending ? '<span class="cm-tc-det">' + det + '</span>' : '') + '</span>'
-      + '<span class="cm-tc-st">' + (st === 'ok' ? ChatIcons.check : st === 'err' ? '!' : '<span class="cm-tc-spin"></span>') + '</span>';
+      + '<span class="cm-tc-st">' + ToolChainView._status(st) + '</span>';
     this._addViewFile(card, tc, st);
     return card;
+  }
+
+  static _status(st) {
+    if (st === 'ok') return ChatIcons.check;
+    if (st === 'err') return '<span class="cm-tc-st-word">Failed</span>' + ChatIcons.alert;
+    return '<span class="cm-tc-spin"></span>';
   }
 
   static _icon(tool) {

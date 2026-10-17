@@ -2,7 +2,7 @@
 
 `core/llm-server/ui/js/setup-ui/runtimes/RuntimeRowHtml.js`
 
-One collapsible runtime row: status badges, the primary Install/Update button that stays visible collapsed, and the details panel with version, path, provenance and the secondary actions.
+One collapsible runtime row: status badges, the Install/Update button (a compact secondary `.luma-btn`, since every row has one) that stays visible collapsed, and the details panel with version, path, provenance and the secondary actions.
 
 ## Methods
 

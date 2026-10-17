@@ -25,8 +25,6 @@ export default class DefaultsForm {
   }
 
   static _optional(doc, payload) {
-    const flags = doc.getElementById('defaultLaunchFlags');
-    if (flags) payload.launchFlags = String(flags.value || '');
     const ramPin = doc.getElementById('defaultRamPin');
     if (ramPin) payload.pinModelRam = !!ramPin.checked;
     const router = doc.getElementById('defaultGroupRouter');

@@ -5,7 +5,10 @@
 Sub-agent cards: when a tool delegates to a named agent, its thinking, steps and
 answer stream into a collapsible card above the main answer, open while it works
 and collapsed when it finishes (unless toggled). Built once and updated in place
-so the spinner never restarts.
+so the spinner never restarts. A run with a `conversationId` (a delegated
+sub-conversation) shows an "Open conversation" link in its header; clicking it
+dispatches window `luma-open-conversation` `{ conversationId }` (opened by
+[ChatSubscriptions](../ChatSubscriptions.md)) without toggling the card.
 
 ## Methods
 

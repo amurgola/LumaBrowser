@@ -4,7 +4,8 @@
 
 Folds one `tool` event into the live message's steps. `pending` shows an instant
 placeholder (filled with the tool name, target and a live byte count as they
-arrive), `run` reconciles it, `approval` adds a held step, `approval-done`
+arrive), `run` reconciles it, `approval` adds a held step (keeping `detail`,
+the `grants` family label and `grantScope`, default `'run'`), `approval-done`
 fails it on reject or timeout ("Declined", "No answer") or drops it when
 approved (the real run follows), `done` settles the newest open non-approval
 step, `tab` and `tab-end` drive the live tab preview, `cancel` drops

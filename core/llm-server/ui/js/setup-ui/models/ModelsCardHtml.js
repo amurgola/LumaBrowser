@@ -75,7 +75,7 @@ export default class ModelsCardHtml {
     return `
                 <details class="source-callout">
                     <summary>Where models come from</summary>
-                    Easy Setup downloads curated
+                    Guided setup downloads curated
                     <code>.gguf</code> weights directly from <strong>Hugging Face</strong> public
                     repositories (e.g. <code>bartowski</code>) using each file's official
                     <code>/resolve/</code> download URL: no account or token, and no
@@ -83,7 +83,7 @@ export default class ModelsCardHtml {
                     <ul>
                         <li>Downloads are <strong>resumable</strong> (a <code>.partial</code> file
                             is kept and continued on retry) and land in the models directory above.</li>
-                        <li>The <em>Advanced</em> option in Easy Setup accepts any specific
+                        <li>The <em>Advanced</em> option in Guided setup accepts any specific
                             Hugging Face <code>.gguf</code> URL or <code>owner/repo/file.gguf</code>.</li>
                         <li>Nothing leaves your machine: these are plain HTTPS GETs to
                             <button class="src-link" data-runtime-action="open-external"

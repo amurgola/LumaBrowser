@@ -37,8 +37,16 @@ Extends [ContributionRegistry](../../shared/registry/ContributionRegistry.md).
   buildTurn({ meta, messages, conversationId, modelRef }),  // -> { systemPrompt?, tools?, temperature?, reactions? }
   tools: { name: async (params, ctx) => ... },              // ctx = { conversationId, meta, send, emit }
   onConversationDeleted({ conversationId, meta }),
+  delegate: {                  // optional: targets the regular chat's delegate_task can start
+    targets: [{ id, label, description, params }] | () => [...],
+    start({ targetId, args }), // -> { data (meta.data), message (first user turn), title? } | { error }
+  },
 }
 ```
+
+`delegate` is read by [DelegateTargets](delegation/DelegateTargets.md); the
+conversation it starts is created with that mode, `data` as its meta, and the
+delegating chat as its parent ([DelegationTools](delegation/DelegationTools.md)).
 
 ## Why
 

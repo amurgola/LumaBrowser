@@ -2,7 +2,7 @@ const { WebContentsView, ipcMain, session } = require('electron');
 const path = require('path');
 
 class ChromeOverlay {
-  static SURFACE_COLOR = '#141b2c';
+  static BACKGROUND = '#00000000';
   static DEFAULT_MAX_HEIGHT = 600;
   static DEFAULT_EST_HEIGHT = 220;
   static WARM_LAYERS = ['popup', 'notif'];
@@ -85,7 +85,7 @@ class ChromeOverlay {
         sandbox: false,
       },
     });
-    try { view.setBackgroundColor(ChromeOverlay.SURFACE_COLOR); } catch (_) {}
+    try { view.setBackgroundColor(ChromeOverlay.BACKGROUND); } catch (_) {}
     view.setVisible(false);
     view.setBounds(ChromeOverlay.HIDDEN_BOUNDS);
     this.mainWindow.contentView.addChildView(view);

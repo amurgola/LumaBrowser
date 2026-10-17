@@ -13,6 +13,7 @@ class ChatTablesSchema {
       choices_enabled  INTEGER,
       reasoning_effort TEXT,
       mode             TEXT NOT NULL DEFAULT 'chat',
+      parent_conversation_id TEXT,
       created_at       TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
     );

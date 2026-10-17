@@ -6,7 +6,6 @@ export default class WorkflowStep extends WizardStepView {
   render() {
     this._body.innerHTML = `
         <div class="setup-wizard__panel">
-          <div class="setup-wizard__step-eyebrow">Pick a starting point</div>
           <h2 class="setup-wizard__step-title">What do you want to use LumaBrowser for?</h2>
           <p class="setup-wizard__step-desc">
             Each preset toggles a specific set of built-in extensions. You can fine-tune the selection

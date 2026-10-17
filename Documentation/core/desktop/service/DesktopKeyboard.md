@@ -10,6 +10,9 @@ Keyboard input for desktop control, all through [GuardedInput](GuardedInput.md).
 - `combo(w, combo)` presses a combo from [DesktopKeys](../DesktopKeys.md)
   (`ctrl+s`), 15 ms between events. Keys still down when it stops (the foreground
   changed mid-way) are released in reverse, so Ctrl or Alt never stay logically held.
+  Resolves `{ foregroundChanged }`: a `FOREGROUND_CHANGED` after every key went
+  down means the combo itself brought another window up (win+r opening Run), so
+  it counts as delivered and resolves `true`; any earlier steal still throws.
 - `typeKeys(w, text)` one KEYEVENTF_UNICODE down/up batch per character (both
   UTF-16 units for astral characters), Enter for `\n`.
 - `enter(w)` VK_RETURN down and up.

@@ -40,10 +40,10 @@ export default class LocalApiPanel {
   static _applyStatus(el, cfg) {
     if (cfg.running && cfg.modelLoaded) {
       el.textContent = `Live, serving ${cfg.model}`;
-      el.style.color = 'var(--good)';
+      el.className = 'gs-row-help gs-status-ok';
     } else if (cfg.running) {
       el.textContent = 'Listening. No model loaded yet, requests get a 503 until one starts.';
-      el.style.color = 'var(--text-muted)';
+      el.className = 'gs-row-help';
     } else {
       el.textContent = '';
     }

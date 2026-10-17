@@ -1,7 +1,7 @@
 export default class BookmarkStar {
-  static FILLED = String.fromCharCode(0x2605);
+  static FILLED = 'i-star-filled';
 
-  static EMPTY = String.fromCharCode(0x2606);
+  static EMPTY = 'i-star';
 
   constructor({ tree, store, editBar }) {
     this._tree = tree;
@@ -32,7 +32,7 @@ export default class BookmarkStar {
     try {
       const on = await window.bookmarksAPI.isBookmarked(target);
       this._setPressed(!!on);
-      this.btn.textContent = on ? BookmarkStar.FILLED : BookmarkStar.EMPTY;
+      this._setIcon(on ? BookmarkStar.FILLED : BookmarkStar.EMPTY);
     } catch (_) {}
   }
 
@@ -53,6 +53,15 @@ export default class BookmarkStar {
     }
     await this.refresh(tab.url);
     this._editBar.open(node, tab, added);
+  }
+
+  _setIcon(id) {
+    let use = this.btn.querySelector('use');
+    if (!use) {
+      this.btn.innerHTML = '<svg class="icon" aria-hidden="true"><use/></svg>';
+      use = this.btn.querySelector('use');
+    }
+    use.setAttribute('href', `#${id}`);
   }
 
   _setPressed(on) {

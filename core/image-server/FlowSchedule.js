@@ -30,6 +30,12 @@ class FlowSchedule {
     return [...shifted, 0];
   }
 
+  static fixedSigmas(nodes) {
+    const list = Array.isArray(nodes) ? nodes.map(Number) : [];
+    if (!FlowSchedule._isUsableSchedule(list)) return null;
+    return [...list, 0];
+  }
+
   static _sequenceLength(shape, width, height) {
     return Math.floor(Number(width) / shape.patch) * Math.floor(Number(height) / shape.patch);
   }

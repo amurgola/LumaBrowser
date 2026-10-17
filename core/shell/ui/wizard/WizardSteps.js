@@ -3,7 +3,7 @@ import WorkflowPresets from './WorkflowPresets.js';
 export default class WizardSteps {
   static build(state, enabledIds) {
     if (state.flow === 'auto') {
-      return [{ id: 'persona', label: 'Start' }, { id: 'auto', label: 'Automatic Setup' }, { id: 'done', label: 'Finish' }];
+      return [{ id: 'persona', label: 'Start' }, { id: 'auto', label: 'Automatic setup' }, { id: 'done', label: 'Finish' }];
     }
     const steps = [{ id: 'persona', label: 'Start' }];
     if (state.flow === 'guided') steps.push(...WizardSteps._guided(state, enabledIds));
@@ -18,8 +18,8 @@ export default class WizardSteps {
     if (scanFirst) steps.push({ id: 'llm', label: 'Your models' });
     steps.push({ id: 'workflow', label: 'Workflow' });
     if (state.workflow === 'custom') steps.push({ id: 'features', label: 'Features' });
-    if (picked && WorkflowPresets.needsLlm(enabledIds) && !scanFirst) steps.push({ id: 'llm', label: 'LLM Provider' });
-    if (picked) steps.push({ id: 'image', label: 'Image Gen' });
+    if (picked && WorkflowPresets.needsLlm(enabledIds) && !scanFirst) steps.push({ id: 'llm', label: 'LLM provider' });
+    if (picked) steps.push({ id: 'image', label: 'Image generation' });
     if (picked && enabledIds.includes('notification-interceptor')) steps.push({ id: 'webhook', label: 'Webhook' });
     return steps;
   }

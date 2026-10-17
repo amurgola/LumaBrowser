@@ -24,20 +24,18 @@ export default class DefaultProviderControl {
   static html(options, activeKey, imageCfg) {
     const esc = HtmlEscaper.escape;
     return `
-    <div class="provider-default-row">
-      <label class="form-label" for="defaultProviderSelect" style="margin:0;">Default LLM</label>
-      <select class="form-select" id="defaultProviderSelect" style="max-width:280px;">
+    <div class="provider-default-row gs-row">
+      <div class="gs-row-text">
+        <label class="gs-row-label" for="defaultProviderSelect">Default LLM</label>
+        <span class="gs-row-help">Used by extensions and slots set to "Use active provider (default)". Now: <strong id="defaultProviderActiveLabel">${esc(DefaultProviderOptions.labelFor(activeKey, options))}</strong>.</span>
+      </div>
+      <select class="form-select gs-input-select" id="defaultProviderSelect">
         <option value="none"${activeKey === 'none' || !activeKey ? ' selected' : ''}>None (disabled)</option>
         ${options.map((o) => `<option value="${esc(o.value)}"${o.value === activeKey ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}
       </select>
     </div>
     ${ImageDefaultRows.html(imageCfg, 'image-generate', 'Default image generation', 'defaultImageGenSelect')}
     ${ImageDefaultRows.html(imageCfg, 'image-edit', 'Default image editor', 'defaultImageEditSelect')}
-    <div class="form-help" style="margin-top:6px;">
-      Active default: <strong id="defaultProviderActiveLabel">${esc(DefaultProviderOptions.labelFor(activeKey, options))}</strong>.
-      Extensions and slots set to "Use active provider (default)" route here.
-      Image generation and editing run on their selected server, local or shared by a paired LumaBrowser.
-    </div>
   `;
   }
 

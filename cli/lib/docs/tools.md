@@ -13,7 +13,7 @@ LumaBrowser exposes its browser and automation features as MCP tools through `mc
 | Page monitors | `page_monitor_create`, `page_monitor_check`, `page_monitor_list`, `page_monitor_history`, `page_monitor_set_paused`, `page_monitor_delete` | Watch a page for changes on a schedule. |
 | Timed tasks | `timed_tasks_create`, `timed_tasks_list`, `timed_tasks_trigger`, `timed_tasks_get_runs`, `timed_tasks_set_paused`, `timed_tasks_delete` | Scheduled automations with run history. |
 | Watchers | `watcher_add`, `watcher_list`, `watcher_toggle`, `watcher_remove` | Network watchers that fire on matching requests. |
-| Desktop control | `desktop_list_windows`, `desktop_focus`, `desktop_observe`, `desktop_screenshot`, `desktop_click`, `desktop_type`, `desktop_set_value`, `desktop_press_key`, `desktop_scroll`, `desktop_drag` | Native windows outside the browser (Windows first, accessibility tree first). |
+| Desktop control | `desktop_list_windows`, `desktop_focus`, `desktop_observe`, `desktop_screenshot`, `desktop_click`, `desktop_type`, `desktop_set_value`, `desktop_press_key`, `desktop_scroll`, `desktop_drag`, `desktop_launch` | Native windows outside the browser (Windows first, accessibility tree first); `desktop_launch` opens an app, file or URL. |
 | Game play | `game_start_session`, `game_status`, `game_set_goals`, `game_press`, `game_hold`, `game_click`, `game_mouse_move`, `game_wait`, `game_note`, `game_save_macro`, `game_run_macro`, `game_calibrate_mouse`, `game_allow` | Input into a running game with macros and goals. |
 | Agents | `list_agents`, `chat_with_agent` | Talk to a LumaBrowser agent (its own model, tools and knowledge base). |
 | Tool forge | `create_tool`, `test_tool`, `publish_tool` | Build a sandboxed chat tool from a description. |

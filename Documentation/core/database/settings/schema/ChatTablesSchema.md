@@ -25,6 +25,9 @@ handle.
   `'default'` (an explicit "let the model decide").
 - `mode`: `'chat'` or an extension chat mode id; a cheap list-time
   discriminator. The mode's payload lives in `llm_conversation_meta.data`.
+- `parent_conversation_id`: the chat that delegated this conversation
+  (`delegate_task`), or NULL. No foreign key: deleting the parent leaves the
+  sub-conversation as an ordinary top-level chat.
 
 `llm_conversation_meta`: one row per conversation in a non-default mode; `data`
 is a JSON blob owned by the mode. Core stores it and never interprets it.

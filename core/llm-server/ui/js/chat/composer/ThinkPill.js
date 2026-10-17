@@ -42,14 +42,14 @@ export default class ThinkPill {
 
   _key() {
     const { state } = this._ctx;
-    const lm = state.localModels.find((m) => m.ref === state.modelRef);
+    const lm = this._ctx.models.selectedLocal();
     return String(state.modelRef || '') + '|' + (lm ? lm.path : '');
   }
 
   async _fetchCaps() {
     const { api, state } = this._ctx;
     try {
-      const lm = state.localModels.find((m) => m.ref === state.modelRef);
+      const lm = this._ctx.models.selectedLocal();
       const sel = state.models.find((m) => m.ref === state.modelRef);
       if (api.getModelCaps && (lm || (sel && sel.isLocal))) {
         try {
@@ -77,9 +77,22 @@ export default class ThinkPill {
     try {
       const d = api.getDefaults ? await api.getDefaults() : null;
       state.thinkDefault = (d && d.noThink) ? 'off' : ((d && d.reasoningEffort) || 'default');
+      state.thinkDefaultFrom = 'Setup';
+      const tuned = await this._tunedEffort();
+      if (tuned) { state.thinkDefault = tuned; state.thinkDefaultFrom = 'this model\'s Tune settings'; }
     } catch (_) {
       state.thinkDefault = 'default';
     }
+  }
+
+  async _tunedEffort() {
+    const { api, state } = this._ctx;
+    if (!(api.modelSettings && api.modelSettings.get && state.modelRef)) return null;
+    const r = await api.modelSettings.get(state.modelRef);
+    const v = r && r.success ? r.view : null;
+    if (!v) return null;
+    const own = v.profile ? v.profile.overrides.reasoningEffort : undefined;
+    return own || v.model.overrides.reasoningEffort || null;
   }
 
   _paint(host, dial) {
@@ -90,7 +103,7 @@ export default class ThinkPill {
     host.hidden = false;
     host.className = 'cm-effort' + (inherited ? ' cm-effort-inherited' : '');
     host.title = inherited
-      ? 'Thinking budget for this chat. Following your default (' + ThinkPill.labelFor(dial, active) + ') from Setup.'
+      ? 'Thinking budget for this chat. Following your default (' + ThinkPill.labelFor(dial, active) + ') from ' + (state.thinkDefaultFrom || 'Setup') + '.'
       : 'Thinking budget for this chat only. Your default is ' + ThinkPill.labelFor(dial, state.thinkDefault) + '.';
     host.innerHTML = dial.map((d) => {
       const off = d.enabled === false;

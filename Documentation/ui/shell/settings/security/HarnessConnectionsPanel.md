@@ -2,7 +2,7 @@
 
 `ui/shell/settings/security/HarnessConnectionsPanel.js`
 
-"Connect your agent" rows (Claude Code, Codex, OpenCode, Cline), the luma skill install and MCP export; reloads on gear click.
+"Connect your agent" rows (Claude Code, Codex, OpenCode, Cline): the agent name with its status as help text on the left (green when connected, amber when it needs repair) and the Connect/Disconnect button right-aligned. Also the luma skill install and MCP export; reloads on gear click.
 
 ## Methods
 

@@ -29,7 +29,7 @@ export default class ToolEventReducer {
   }
 
   static _approval(msg, p) {
-    msg.tools.push({ tool: p.tool, params: p.params, status: 'run', _approval: { detail: p.detail || '' } });
+    msg.tools.push({ tool: p.tool, params: p.params, status: 'run', _approval: { detail: p.detail || '', grants: p.grants || '', grantScope: p.grantScope || 'run' } });
   }
 
   static _approvalDone(msg, p) {

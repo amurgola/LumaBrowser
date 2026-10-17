@@ -21,10 +21,9 @@ export default class ExtensionConfigHeader {
           <span class="ext-config-title">${view.titleHtml}</span>
           ${view.description ? `<span class="ext-config-desc">${esc(ManifestCopy.clean(view.description))}</span>` : ''}
         </div>
-        <div style="flex:1;"></div>
         <div class="ext-config-actions">
-          <button class="btn btn-secondary ext-export-zip-btn" style="font-size:11px; padding:4px 10px;">Export .zip</button>
-          <button class="btn btn-secondary ext-edit-code-btn" style="font-size:11px; padding:4px 10px;">Edit code</button>
+          <button class="btn btn-secondary btn-sm ext-export-zip-btn">Export .zip</button>
+          <button class="btn btn-secondary btn-sm ext-edit-code-btn">Edit code</button>
         </div>
       </div>
       ${ExtensionConfigHeader._depsHtml(view.dependencies || [])}

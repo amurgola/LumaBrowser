@@ -58,7 +58,6 @@ export default class LlmStep extends WizardStepView {
       && (local.busy || local.view === 'progress' || local.view === 'done' || local.view === 'error');
     this._body.innerHTML = `
         <div class="setup-wizard__panel">
-          <div class="setup-wizard__step-eyebrow">AI Provider</div>
           <h2 class="setup-wizard__step-title">Connect your LLM</h2>
           <p class="setup-wizard__step-desc">
             ${this._state.persona === 'switch'

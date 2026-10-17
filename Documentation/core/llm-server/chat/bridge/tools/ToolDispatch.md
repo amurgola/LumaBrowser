@@ -14,7 +14,8 @@ Runs one admitted tool call on whatever owns it.
   artifacts, onArtifact })` (a falsy result reads `{ success: true }`); else an
   allowed extension/MCP tool through `mcpAggregator.handleToolCall(name,
   params, { ignoreDisabled: true, emit, chat: { conversationId,
-  assistantMessageId, onArtifact } })`, unwrapped by
+  assistantMessageId, onArtifact, isAborted } })` (`isAborted()` reads the
+  run's Stop, so a delegation can stop its sub-conversation), unwrapped by
   [McpResultUnwrapper](McpResultUnwrapper.md); else `BrowserTools.executeTool`.
   Mode and MCP failures become `<name> failed: <message>`. `emit` and the
   artifact channel go quiet after a Stop.

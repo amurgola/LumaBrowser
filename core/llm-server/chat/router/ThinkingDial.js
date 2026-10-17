@@ -29,6 +29,7 @@ class ThinkingDial {
     return ReasoningEffort.resolveDial({
       turn: turn.reasoningEffort,
       conversation: conv ? conv.reasoningEffort : null,
+      model: turn.modelEffort,
       fallback: defaults.noThink ? 'off' : defaults.reasoningEffort,
     });
   }

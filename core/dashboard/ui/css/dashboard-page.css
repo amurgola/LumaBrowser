@@ -2,10 +2,11 @@ html, body {
     margin: 0;
     height: 100%;
     overflow: hidden;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
-    font-size: 14px;
+    background: var(--bg-root);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    line-height: var(--leading);
 }
 
 .db-grid-wrap::-webkit-scrollbar,
@@ -14,8 +15,8 @@ html, body {
 .db-grid-wrap::-webkit-scrollbar-thumb,
 .db-dock-list::-webkit-scrollbar-thumb,
 .db-modal-body::-webkit-scrollbar-thumb {
-    background: rgba(245, 144, 52, 0.15);
-    border-radius: 10px;
+    background: var(--border-strong);
+    border-radius: var(--radius-pill);
     border: 3px solid transparent;
     background-clip: content-box;
 }
@@ -23,71 +24,65 @@ html, body {
 #dbRoot { display: flex; flex-direction: column; height: 100vh; width: 100%; }
 
 .db-page-head {
-    padding: 22px 24px 4px;
+    padding: var(--space-5) var(--space-6) var(--space-1);
 }
 .db-page-head-row {
     display: flex;
     align-items: baseline;
-    gap: 14px;
-}
-.db-eyebrow {
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent);
-    font-weight: 600;
+    gap: var(--space-3);
 }
 .db-title {
     margin: 0;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
 }
 .db-sub {
-    margin: 4px 0 0;
-    color: var(--text-dim);
-    font-size: 12.5px;
+    margin: var(--space-1) 0 0;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
     min-height: 17px;
 }
 .db-sub[hidden] { display: none; }
 
 .db-mode-slider {
     position: fixed;
-    top: 14px;
-    right: 18px;
-    z-index: var(--z-dropdown, 50);
+    top: var(--space-4);
+    right: var(--space-6);
+    z-index: var(--z-dropdown);
     display: inline-flex;
     gap: 2px;
-    padding: 3px;
-    border-radius: 999px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-strong);
-    backdrop-filter: blur(8px);
-    transition: right 0.18s ease;
+    padding: 2px;
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-soft);
+    transition: right var(--dur) var(--ease);
 }
 .db-mode-slider button {
     appearance: none;
     border: 0;
     background: transparent;
-    color: var(--text-dim);
+    color: var(--text-secondary);
     font: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 5px 16px;
-    border-radius: 999px;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    height: 24px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: color 0.15s, background 0.15s;
+    transition: color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
 }
-.db-mode-slider button:hover { color: var(--text); }
+.db-mode-slider button:hover { color: var(--text-primary); }
+.db-mode-slider button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .db-mode-slider button.active {
-    color: var(--on-accent-warm, #1a1208);
-    background: var(--accent-grad, var(--accent));
+    color: var(--text-primary);
+    background: var(--bg-elevated);
 }
-#dbRoot.db-edit .db-mode-slider { right: calc(260px + 18px); }
+#dbRoot.db-edit .db-mode-slider { right: calc(260px + var(--space-6)); }
 
 .db-main { display: flex; flex: 1; min-height: 0; }
-.db-grid-wrap { flex: 1; overflow: auto; padding: 14px; position: relative; }
+.db-grid-wrap { flex: 1; overflow: auto; padding: var(--space-3) var(--space-4); position: relative; }
 
 .db-empty[hidden],
 .db-dock[hidden],
@@ -101,8 +96,18 @@ html, body {
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: var(--text-dim);
+    color: var(--text-secondary);
     pointer-events: none;
 }
-.db-empty h2 { margin: 0 0 6px; font-size: 17px; color: var(--text); }
-.db-empty p { margin: 0; max-width: 420px; font-size: 13px; line-height: 1.5; }
+.db-empty h2 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+}
+.db-empty p { margin: 0; max-width: 420px; font-size: var(--text-md); line-height: var(--leading); }
+
+@media (prefers-reduced-motion: reduce) {
+    .db-mode-slider,
+    .db-mode-slider button { transition: none; }
+}

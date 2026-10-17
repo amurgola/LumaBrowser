@@ -1,14 +1,16 @@
 .bd-context-menu {
-    position: fixed; z-index: 9600; min-width: 180px; padding: 5px;
-    background: var(--bg-elevated, #16202e); border: 1px solid var(--border-soft, #2c3e50);
-    border-radius: var(--radius-md, 8px); box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+    position: fixed; z-index: 9600; min-width: 200px; padding: var(--space-1);
+    background: var(--surface-pop); border: none;
+    border-radius: var(--radius-xl); box-shadow: var(--shadow-pop);
 }
 .bd-context-menu button {
-    display: flex; width: 100%; align-items: center; gap: 8px; padding: 7px 10px;
-    background: transparent; border: none; color: var(--text-primary, #e6edf3);
-    font-size: 13px; text-align: left; cursor: pointer; border-radius: 5px;
+    display: flex; width: 100%; box-sizing: border-box; align-items: center; gap: var(--space-2);
+    height: 28px; padding: 0 var(--space-2);
+    background: transparent; border: none; color: var(--text-primary);
+    font-family: var(--font-sans); font-size: var(--text-md); text-align: left; cursor: pointer; border-radius: var(--radius-md);
 }
-.bd-context-menu button:hover { background: rgba(255,255,255,0.08); }
-.bd-context-menu button.bd-danger:hover { background: rgba(255,107,107,0.15); color: #ff8a8a; }
-.bd-context-menu .bd-menu-sep { height: 1px; margin: 4px 2px; background: var(--border-soft, #2c3e50); }
-.bd-context-menu .bd-menu-check { margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--accent, #f59034); opacity: 0.9; }
+.bd-context-menu button:hover, .bd-context-menu button.bd-active { background: var(--bg-elevated); }
+.bd-context-menu button.bd-danger:hover, .bd-context-menu button.bd-danger.bd-active { background: var(--danger-dim); color: var(--danger); }
+.bd-context-menu .bd-menu-sep { height: 1px; margin: var(--space-1) var(--space-2); background: var(--border-soft); }
+.bd-context-menu .bd-menu-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bd-context-menu .bd-menu-check { flex: none; margin-left: auto; padding-left: var(--space-4); font-size: var(--text-xs); color: var(--text-muted); }

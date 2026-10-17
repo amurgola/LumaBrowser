@@ -3,7 +3,9 @@
 `core/llm-server/ui/js/chat/sidebar/SidebarModes.js`
 
 The sidebar's extension chat-mode launcher: landing modes (Code, Game,
-Roleplay...) in a tray under New chat that unfolds only on demand, then the
+Roleplay...) in a tray under New chat that unfolds only on demand (open, the lit
+row and the sunken tray panel form one rounded block, so the modes read as its
+contents and not as more top-level rows), then the
 always-visible utility rows (`launcher: 'sidebar'`, such as Chat with agent).
 Hidden modes (system-owned conversations) are never offered.
 

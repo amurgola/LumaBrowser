@@ -12,7 +12,9 @@ Writes the one sentence an approval card shows for a tool call.
   Otherwise one sentence per gated tool, for example
   `Overwrite src/a.js with 4 characters`, `Edit src/a.js (2 replacements)`,
   ``Run `npm test` in sub``, `Send a webhook to <url>`,
-  `Create the scheduled task "<title>" (every N min)`. Unknown tools (including
+  `Create the scheduled task "<title>" (every N min)`. The `desktop_*` sentences
+  come from [DesktopCallText](DesktopCallText.md) (`Click "the Play button" in
+  window 42`). Unknown tools (including
   prototype keys such as `constructor`) give `Run <name>`. Missing parameters
   degrade to readable text (`Overwrite  with 0 characters`, `this build`,
   `untitled`). Values are clipped with [CardText](CardText.md).

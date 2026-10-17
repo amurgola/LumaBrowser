@@ -19,7 +19,6 @@ export default class WebhookStep extends WizardStepView {
   render() {
     this._body.innerHTML = `
         <div class="setup-wizard__panel">
-          <div class="setup-wizard__step-eyebrow">Notification Interceptor</div>
           <h2 class="setup-wizard__step-title">Where should notifications go?</h2>
           <p class="setup-wizard__step-desc">
             Every intercepted web notification gets POSTed to this URL as JSON.
@@ -34,7 +33,7 @@ export default class WebhookStep extends WizardStepView {
             <div class="setup-wizard__help">Slack, Discord, Zapier, n8n, or any HTTP endpoint that accepts JSON POST.</div>
             <div class="setup-wizard__status" id="setupWebhookStatus"></div>
           </div>
-          <div style="display:flex; gap:10px;">
+          <div class="setup-wizard__actions setup-wizard__actions--flush">
             <button class="setup-wizard__btn setup-wizard__btn--secondary" id="setupWebhookTest" type="button">Send test notification</button>
           </div>
         </div>

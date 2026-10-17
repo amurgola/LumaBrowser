@@ -94,7 +94,7 @@ export default class AutoSetupFlow {
   _failed(A, result) {
     A.sysdeps = result.sysdeps || null;
     A.error = result.canceled
-      ? 'Setup canceled. Your download progress is saved; run Easy Setup again to resume.'
+      ? 'Setup canceled. Your download progress is saved; run Guided setup again to resume.'
       : (result.message || 'Automatic setup failed');
     A.view = 'error';
     this._wizard.render();

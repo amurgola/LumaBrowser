@@ -48,13 +48,13 @@ export default class PeerDiscovery {
 
   static html(found) {
     if (!found || !found.length) {
-      return '<div style="font-size:11px;color:var(--text-muted);">Searching for LumaBrowsers on your network...</div>';
+      return '<div class="gs-discovery-note">Searching for LumaBrowsers on your network...</div>';
     }
     const esc = HtmlEscaper.escape;
-    return '<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Discovered on your network:</div>'
+    return '<div class="gs-discovery-note">Discovered on your network:</div>'
       + found.map((d) => `
-            <div style="display:flex;gap:8px;align-items:center;font-size:11.5px;">
-              <span style="flex:1;color:var(--text-secondary);">${esc(d.name)} <span style="color:var(--text-muted);">${esc(d.address || '')}:${esc(d.port || '')}</span></span>
+            <div class="gs-discovery-row">
+              <span class="gs-discovery-name">${esc(d.name)} <span class="gs-discovery-addr">${esc(d.address || '')}:${esc(d.port || '')}</span></span>
               <button class="gs-copy-btn" data-new-peer-pick="${esc(d.address || '')}" data-new-peer-pick-port="${esc(d.port || '')}">Use</button>
             </div>`).join('');
   }

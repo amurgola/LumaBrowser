@@ -33,7 +33,9 @@ untagged chat never pays for it.
   the message carrying the `[S1]`-tagged passages or a "no passages" nudge. `q` is
   accepted for `query`; a bare-string call is wrapped as `{ query }` by
   [BareArgumentRepair](../BareArgumentRepair.md) from this schema.
-- `note`: the prompt note (`DocsSourceGrant.NOTE`).
+- `note`: the prompt note (`DocsSourceGrant.NOTE`): search before answering about LumaBrowser, cite the page, and
+  hand an extension the user wants made to `delegate_task` ([DelegationTools](../delegation/DelegationTools.md))
+  rather than writing its files into the answer.
 - `DocsSourceGrant.allowing(allowedTools, grant)`: the allow-list with the tool
   added when it is an array and a grant exists; `null` stays `null`.
 - `prepass(messages)`: the plain-path messages with the matching passages in the

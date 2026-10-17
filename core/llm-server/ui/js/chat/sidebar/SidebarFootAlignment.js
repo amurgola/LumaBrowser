@@ -37,7 +37,7 @@ export default class SidebarFootAlignment {
 
   _trayOut(foot) {
     const tray = foot.querySelector('.cm-settings-tray');
-    return !!tray && tray.getBoundingClientRect().height > 4;
+    return !!tray && (tray.classList.contains('open') || tray.getBoundingClientRect().height > 4);
   }
 
   _setBar(next) {

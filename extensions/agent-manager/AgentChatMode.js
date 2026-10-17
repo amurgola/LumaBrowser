@@ -3,6 +3,7 @@ const AgentModels = require('./AgentModels');
 
 class AgentChatMode {
   static MODE_ID = 'agent-chat';
+  static TARGET_PREFIX = 'agent:';
   static DELETED_PROMPT = 'The custom agent this conversation was created for has been deleted. '
     + 'Tell the user that and suggest starting a new chat (or recreating the agent in Setup → Agents).';
 
@@ -41,7 +42,25 @@ class AgentChatMode {
       launcher: 'sidebar',
       chatUiUrl: this._chat.uiUrl('chat-ui.js'),
       buildTurn: ({ meta }) => this.buildTurn(meta),
+      delegate: { targets: () => this.delegateTargets(), start: ({ targetId, args }) => this.startDelegated(targetId, args) },
     };
+  }
+
+  delegateTargets() {
+    return this._store.list().map((a) => ({
+      id: AgentChatMode.TARGET_PREFIX + a.id,
+      label: `Agent: ${a.name}`,
+      description: a.description || 'A custom agent.',
+      params: { task: { type: 'string', required: true, description: 'The first message for the agent, with all the context it needs.' } },
+    }));
+  }
+
+  startDelegated(targetId, args) {
+    const id = String(targetId || '').slice(AgentChatMode.TARGET_PREFIX.length);
+    const agent = id ? this._store.get(id) : null;
+    if (!agent) return { error: `No agent "${id}". Call list_delegates to see the current ones.` };
+    const task = (args && args.task && String(args.task).trim()) || '';
+    return { data: { agentId: agent.id, agentName: agent.name }, message: task, title: `${agent.name}: ${task}` };
   }
 }
 

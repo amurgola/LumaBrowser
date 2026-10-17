@@ -13,6 +13,8 @@ shipped for RAM pinning, so no native build), once per process.
   input, capture and processes, all `__stdcall`.
 - `Win32Api.loadDesktop()` `OpenInputDesktop`, `CloseDesktop`,
   `GetUserObjectInformationW`, bound separately on first use.
+- `Win32Api.loadShell()` shell32's `ShellExecuteW` for [Win32Shell](Win32Shell.md)
+  (`desktop_launch`), bound separately on first use and cached.
 
 ## Why intptr_t and raw Buffers
 

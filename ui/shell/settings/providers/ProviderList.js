@@ -5,7 +5,7 @@ import EditableProviderCard from './EditableProviderCard.js';
 import AddProviderForm from './AddProviderForm.js';
 
 export default class ProviderList {
-  static EMPTY = '<div class="luma-empty">No providers configured. Click "+ Add Provider" to get started.</div>';
+  static EMPTY = '<div class="luma-empty luma-empty--plain">No providers yet. Use Add provider to connect one.</div>';
 
   constructor({ log, feedback }) {
     this.configs = [];

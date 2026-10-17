@@ -1,31 +1,32 @@
 .pair-view {
   position: fixed; inset: 0; z-index: 9999;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
-  padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom));
-  background: radial-gradient(1100px 560px at 50% -10%, var(--accent-soft), transparent 62%), var(--bg);
-  color: var(--text);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4);
+  padding: var(--space-6); padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+  background: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
 }
 .pair-card {
   width: 100%; max-width: 360px; text-align: center;
-  background: var(--bg-card); border: 1px solid var(--border-strong);
-  border-radius: 16px; padding: 30px 26px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  background: var(--bg-surface); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-xl); padding: var(--space-8) var(--space-6) var(--space-6);
 }
 .pair-logo {
-  width: 56px; height: 56px; border-radius: 14px; object-fit: cover;
-  display: block; margin: 0 auto 14px;
-  box-shadow: 0 8px 28px rgba(245, 144, 52, 0.25);
+  width: 48px; height: 48px; border-radius: var(--radius-xl); object-fit: cover;
+  display: block; margin: 0 auto var(--space-4);
 }
-.pair-card h1 { font-size: 19px; margin: 0 0 6px; font-weight: 650; color: var(--text); }
-.pair-card h1 span { color: var(--accent); }
-.pair-sub { font-size: 13px; color: var(--text-dim); margin: 0 0 18px; line-height: 1.5; }
+.pair-card h1 { font-size: var(--text-xl); margin: 0 0 var(--space-2); font-weight: var(--weight-semibold); line-height: var(--leading-tight); color: var(--text-primary); }
+.pair-card h1 span { color: inherit; }
+.pair-sub { font-size: var(--text-md); color: var(--text-secondary); margin: 0 0 var(--space-5); line-height: var(--leading); }
 .pair-pin {
-  width: 100%; text-align: center; letter-spacing: 8px; font-size: 22px; padding: 12px;
-  border-radius: 12px; border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.03); color: var(--text); outline: none; margin-bottom: 12px;
+  width: 100%; height: 48px; text-align: center; letter-spacing: 0.3em;
+  font-family: var(--font-mono); font-size: var(--text-xl); padding: 0 var(--space-3);
+  border-radius: var(--radius-md); border: 1px solid var(--border-soft);
+  background: var(--bg-surface-2); color: var(--text-primary); outline: none; margin-bottom: var(--space-3);
+  transition: border-color var(--dur-fast) var(--ease);
 }
-.pair-pin::placeholder { color: var(--text-muted); letter-spacing: normal; }
-.pair-pin:focus { border-color: var(--accent); }
-.pair-btn { border-radius: var(--radius-pill); padding: 12px; font-size: 14.5px; }
-.pair-error { margin-top: 12px; }
-.pair-foot { max-width: 340px; text-align: center; margin-top: 0; }
+.pair-pin::placeholder { color: var(--text-muted); letter-spacing: normal; font-family: var(--font-sans); font-size: var(--text-md); }
+.pair-pin:focus { border-color: var(--accent); box-shadow: var(--focus-ring); }
+.pair-btn { height: 40px; border-radius: var(--radius-md); font-size: var(--text-md); }
+.pair-error { margin-top: var(--space-3); }
+.pair-foot { max-width: 340px; text-align: center; margin-top: 0; font-size: var(--text-sm); }

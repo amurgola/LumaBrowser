@@ -36,7 +36,8 @@ this request run through [LiteChatReducer](LiteChatReducer.md) and are painted
 on the next animation frame by [LiteThreadView](LiteThreadView.md); `done` or
 `error` ends the turn (restores the composer and zoom, appends the assistant
 text, autotitles a new conversation, refreshes the history). A refused or
-thrown `chat2` becomes an error event. Stop calls `chatAbort()`.
+thrown `chat2` becomes an error event. Stop calls `chatAbort()`. While a turn runs Send is hidden and Stop gets
+`.active` (`.ai-chat-stop` is `display: none` until then).
 
 ## Other behaviour
 

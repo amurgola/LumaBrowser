@@ -5,6 +5,7 @@ const Win32Capture = require('./win32/Win32Capture');
 const Win32Input = require('./win32/Win32Input');
 const Win32ScanCodes = require('./win32/Win32ScanCodes');
 const Win32InputDesktop = require('./win32/Win32InputDesktop');
+const Win32Shell = require('./win32/Win32Shell');
 
 class Win32 {
   static MOUSEEVENTF = Win32Input.MOUSEEVENTF;
@@ -15,7 +16,9 @@ class Win32 {
 
   static load() { return Win32Api.load(); }
 
-  static listTopLevelWindows() { return Win32Windows.listTopLevelWindows(); }
+  static listTopLevelWindows(opts) { return Win32Windows.listTopLevelWindows(opts); }
+  static rootWindowAt(x, y) { return Win32Windows.rootWindowAt(x, y); }
+  static popupInfo(hwnd) { return Win32Windows.popupInfo(hwnd); }
   static windowText(hwnd) { return Win32Windows.windowText(hwnd); }
   static className(hwnd) { return Win32Windows.className(hwnd); }
   static processIdOf(hwnd) { return Win32Windows.processIdOf(hwnd); }
@@ -37,6 +40,8 @@ class Win32 {
   static scanCodeFor(vk) { return Win32ScanCodes.scanCodeFor(vk); }
 
   static inputDesktopName() { return Win32InputDesktop.name(); }
+
+  static shellOpen(file, params) { return Win32Shell.open(file, params); }
 }
 
 module.exports = Win32;

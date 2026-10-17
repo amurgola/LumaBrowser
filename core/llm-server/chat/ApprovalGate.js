@@ -17,6 +17,24 @@ class ApprovalGate {
     'schedule_artifact_updates',
   ]);
 
+  static GRANT_FAMILIES = Object.freeze([
+    Object.freeze({ key: 'family:desktop-input', label: 'desktop control', carry: true, test: (n) => n.startsWith('desktop_') && n !== 'desktop_launch' }),
+  ]);
+
+  static isCarried(key) {
+    return ApprovalGate.GRANT_FAMILIES.some((f) => f.carry && f.key === key);
+  }
+
+  static grantKeyOf(toolName) {
+    const family = ApprovalGate.familyOf(toolName);
+    return family ? family.key : String(toolName || '');
+  }
+
+  static familyOf(toolName) {
+    const name = String(toolName || '');
+    return ApprovalGate.GRANT_FAMILIES.find((f) => f.test(name)) || null;
+  }
+
   static mutatingNamesOf(toolDefs) {
     const names = new Set();
     for (const def of (Array.isArray(toolDefs) ? toolDefs : [])) {
