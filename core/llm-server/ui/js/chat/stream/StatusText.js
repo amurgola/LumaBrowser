@@ -6,6 +6,7 @@ export default class StatusText {
     'unloading-vision': 'Switching back to fast text mode...',
     compacting: 'Summarizing earlier conversation to free context...',
     'waiting-for-slot': 'Waiting for processing...',
+    retrying: 'Reconnecting to the model...',
   };
 
   static forPhase(phase) {

@@ -2,6 +2,7 @@ const CrashTracer = require('../../core/diagnostics/CrashTracer');
 const DebugLog = require('../../core/DebugLog');
 const ChromeIdentity = require('../../core/browser/ChromeIdentity');
 const UnhandledRejectionTap = require('./UnhandledRejectionTap');
+const ExtensionLoadWarnings = require('../../core/chrome-extensions/ExtensionLoadWarnings');
 
 class ProcessSetup {
   static SWITCHES = [['enable-features', 'UseSkiaRenderer'], ['force-color-profile', 'srgb'], ['disable-features', 'CalculateNativeWinOcclusion']];
@@ -20,6 +21,7 @@ class ProcessSetup {
     if (!this._takeInstanceLock()) return false;
     if (this._ctx.isDev) this._installDevConsoleBuffer();
     UnhandledRejectionTap.install(this._ctx.proc, this._log);
+    ExtensionLoadWarnings.install(this._ctx.proc);
     this._ctx.app.userAgentFallback = ChromeIdentity.USER_AGENT;
     this._appendSwitches();
     return true;

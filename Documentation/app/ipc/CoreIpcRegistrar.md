@@ -26,7 +26,8 @@ Registers every core IPC controller once, at boot. Wiring only.
   6. SharingIpcHandlers (with [SharingPorts](../sharing/SharingPorts.md)),
      LocalApiIpcHandlers, PlacementIpcHandlers,
      `new LabIpcHandlers(() => global.__lumaRpLabService || null)`;
-  7. [WindowControlIpc](WindowControlIpc.md);
+  7. [WindowControlIpc](WindowControlIpc.md), finding the sender's window with
+     `BrowserWindow.fromWebContents`;
   8. LlmIpcHandlers and ProviderConfigIpcHandlers;
   9. [ShellIpcHandlers](../../core/shell/ShellIpcHandlers.md) with
      `identity: machineIdentity` and `waitForExtensions` (starts the deferred

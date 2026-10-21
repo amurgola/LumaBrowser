@@ -1,6 +1,7 @@
 const RendererRecovery = require('../../core/shell/RendererRecovery');
 const MainWindowOptions = require('./MainWindowOptions');
 const WindowKeys = require('./WindowKeys');
+const WindowStateRelay = require('./WindowStateRelay');
 const StartupTabs = require('./StartupTabs');
 const AppTray = require('./AppTray');
 
@@ -29,7 +30,7 @@ class MainWindow {
     this._createTray();
     this._wireFirstLoad(win);
     this._wireClosed(win);
-    this._wireWindowState(win);
+    WindowStateRelay.attach(win);
     this._wireMinimizeToTray(win);
     this._windowServices.wire(win);
     return win;
@@ -137,15 +138,6 @@ class MainWindow {
       this._ctx.mainWindow = null;
       this._ctx.services.restGateway.stop();
     });
-  }
-
-  _wireWindowState(win) {
-    const send = () => {
-      const live = this._ctx.liveWindow();
-      if (live) live.webContents.send('window:state', { maximized: live.isMaximized() || live.isFullScreen() });
-    };
-    for (const event of ['maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen']) win.on(event, send);
-    win.webContents.on('did-finish-load', send);
   }
 
   _wireMinimizeToTray(win) {

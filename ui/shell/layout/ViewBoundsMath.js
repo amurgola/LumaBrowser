@@ -47,11 +47,9 @@ export default class ViewBoundsMath {
   }
 
   static _rounded(rect) {
-    return {
-      x: Math.round(rect.left),
-      y: Math.round(rect.top),
-      width: Math.round(Math.max(0, rect.right - rect.left)),
-      height: Math.round(Math.max(0, rect.bottom - rect.top)),
-    };
+    const width = Math.round(Math.max(0, rect.right - rect.left));
+    const height = Math.round(Math.max(0, rect.bottom - rect.top));
+    if (width === 0 || height === 0) return { ...ViewBoundsMath.COLLAPSED };
+    return { x: Math.round(rect.left), y: Math.round(rect.top), width, height };
   }
 }

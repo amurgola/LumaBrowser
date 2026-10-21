@@ -3,7 +3,7 @@ const fs = require('fs');
 class GgufHeaderCache {
   static MAX_ENTRIES = 256;
 
-  static SCHEMA_VERSION = 8;
+  static SCHEMA_VERSION = 9;
 
   constructor({ parse, persistPath = () => '' }) {
     this._parse = parse;
@@ -15,15 +15,20 @@ class GgufHeaderCache {
     this._flushing = false;
   }
 
-  async get(filePath, sizeBytes) {
+  async get(filePath, sizeBytes, modifiedAt) {
     this._hydrate();
-    const key = `${filePath}|${sizeBytes}`;
+    const key = GgufHeaderCache.keyOf(filePath, sizeBytes, modifiedAt);
     if (this._entries.has(key)) return this._entries.get(key);
     const result = await this._parse(filePath);
     if (result) result._v = GgufHeaderCache.SCHEMA_VERSION;
     this._store(key, result);
     if (result && result.ok) this._dirty = true;
     return result;
+  }
+
+  static keyOf(filePath, sizeBytes, modifiedAt) {
+    const base = `${filePath}|${sizeBytes}`;
+    return modifiedAt === undefined || modifiedAt === null || modifiedAt === '' ? base : `${base}|${modifiedAt}`;
   }
 
   async flush() {

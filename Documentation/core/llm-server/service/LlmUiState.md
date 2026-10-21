@@ -26,4 +26,4 @@ The LLM tab's remembered UI state. Extends [KeyedSettings](KeyedSettings.md).
 The expand hint is persisted, not only sent live: on first run the tab is created
 before the REST gateway is up, fails its load and is reloaded later, so a live
 `showSetup` message sent in between is lost. The chat intent is set by an
-external launcher (the Vibe button) and consumed when the chat UI next shows.
+external launcher (the `startModeIntent` IPC) and consumed when the chat UI next shows.

@@ -21,7 +21,7 @@ class AnthropicProvider extends BaseLlmProvider {
 
   static get capabilities() {
     return {
-      supportsTools: false,
+      supportsTools: true,
       supportsCachePrefix: true,
       supportsReasoningStream: true,
       defaultMaxTokens: AnthropicModelLimits.DEFAULT_MAX_TOKENS,
@@ -130,15 +130,34 @@ class AnthropicProvider extends BaseLlmProvider {
   }
 
   _completionFromStream(reader) {
+    const toolCalls = AnthropicProvider._toolCalls(reader.toolCalls);
+    const message = AnthropicResponseMapper.messageWithReasoning(reader.content, reader.reasoning)
+      || { role: 'assistant', content: reader.content };
+    if (toolCalls.length) message.tool_calls = toolCalls.map(({ id, type, function: fn }) => ({ id, type, function: fn }));
     return this._openAiResponse({
       id: reader.id,
       idPrefix: 'msg',
       model: reader.model,
       content: reader.content,
-      message: AnthropicResponseMapper.messageWithReasoning(reader.content, reader.reasoning),
+      message,
       finishReason: reader.finishReason,
       usage: reader.usage,
+      extra: toolCalls.length ? { toolCalls } : null,
     });
+  }
+
+  static _toolCalls(calls) {
+    return (calls || []).map((call, i) => ({
+      id: call.id || `toolu_${Date.now()}_${i}`,
+      type: 'function',
+      function: { name: call.name, arguments: call.args || '{}' },
+      parsedArguments: AnthropicProvider._parsedArguments(call.args),
+    }));
+  }
+
+  static _parsedArguments(args) {
+    if (!args) return {};
+    try { return JSON.parse(args); } catch (_) { return { _raw: args }; }
   }
 
   static _toModelEntry(model) {

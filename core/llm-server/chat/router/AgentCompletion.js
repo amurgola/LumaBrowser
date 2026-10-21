@@ -13,8 +13,8 @@ class AgentCompletion {
   }
 
   async completeOnce(modelRef, messages, temperature, onStatus, onToken, onReasoningToken, onUsage, onTimings,
-    images = [], tools = null, extra = null, ctl = null) {
-    const sinks = { onStatus, onToken, onReasoningToken, onUsage, onTimings };
+    images = [], tools = null, extra = null, ctl = null, onToolCallDelta = null) {
+    const sinks = { onStatus, onToken, onReasoningToken, onUsage, onTimings, onToolCallDelta };
     let last = { success: false, error: 'completion failed' };
     for (let attempt = 1; attempt <= AgentCompletion.MAX_ATTEMPTS; attempt++) {
       if (this._aborted(ctl)) return { success: false, error: 'aborted' };

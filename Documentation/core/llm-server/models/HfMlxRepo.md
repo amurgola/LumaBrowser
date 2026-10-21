@@ -7,12 +7,15 @@ downloader and the music server.
 
 ## Methods
 
-- `HfMlxRepo.fetchInfo(repoId, { signal })` returns `{ repoId, author, name,
-  gated, paramsB, maxContext, architecture, quantization, totalBytes,
-  weightsBytes, files }` with `files` as `[{ path, size }]` (directories
-  excluded). Throws `HF_BAD_ID` for a malformed id and `HF_NOT_FOUND` ("No such
-  model: <id>") when the model page is unreadable. A missing `config.json` is
-  not an error.
+- `HfMlxRepo.fetchInfo(repoId, { signal, revision })` returns `{ repoId, author,
+  name, gated, paramsB, maxContext, architecture, quantization, totalBytes,
+  weightsBytes, revision, files }` with `files` as `[{ path, size, sha256 }]`
+  (directories and unsafe paths excluded; `sha256` from the LFS pointer, null
+  for plain blobs) read at the commit [HfPinnedRepo](HfPinnedRepo.md) pinned
+  (`revision` is its `{ requested, sha, pinned, fallbackReason }`). Throws
+  `HF_BAD_ID` for a malformed id, `HF_NOT_FOUND` ("No such model: <id>") when
+  the model page is missing, and the `HF_ACCESS_DENIED` access error for a
+  gated or private repo. A missing `config.json` is not an error.
 - `HfMlxRepo.quantFromName(repoId)` reads `4bit` -> `4-bit`, `bf16` -> `BF16`
   style tokens from a repo id, else `null`.
 

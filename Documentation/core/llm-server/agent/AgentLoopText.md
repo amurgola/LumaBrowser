@@ -16,7 +16,8 @@ Every model-facing line the agent loop writes into the conversation. Data only
   Compaction relies on), `notAllowed(tool, allowed)`, `evicted(tool, chars)`,
   `overflowShrunk(dropped, tool)`, `truncatedField(kept, length)`,
   `spillHeader(size, path)`, `SPILL_READABLE_HINT`, `SPILL_REQUERY_HINT`,
-  `DEFERRED_CALL`.
+  `DEFERRED_CALL`, `ONE_CALL_PER_REPLY` (a later call of a reply at a pool of
+  one: not executed, re-issue it on its own).
 - Tabs: `NO_BROWSER_TAB_INFO`, `LAZY_TAB_INFO`.
 - Run end: `timedOut(timeoutMs, done, max, toolCalls)`, `SUMMARY_INSTRUCTION`,
   `summaryRequest(toolCalls, final)`, `SUMMARY_FALLBACK`.

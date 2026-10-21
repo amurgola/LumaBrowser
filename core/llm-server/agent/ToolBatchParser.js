@@ -1,7 +1,12 @@
 class ToolBatchParser {
   static parse(browserTools, content, maxParallel) {
+    return ToolBatchParser.split(browserTools, content, maxParallel).batch;
+  }
+
+  static split(browserTools, content, maxParallel) {
     const calls = ToolBatchParser._allCalls(browserTools, content).filter((call) => call && typeof call === 'object');
-    return maxParallel > 1 ? calls : calls.slice(0, 1);
+    if (maxParallel > 1) return { batch: calls, dropped: [] };
+    return { batch: calls.slice(0, 1), dropped: calls.slice(1) };
   }
 
   static _allCalls(browserTools, content) {

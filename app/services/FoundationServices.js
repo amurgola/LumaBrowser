@@ -12,6 +12,7 @@ const MachineIdentity = require('../../core/install/MachineIdentity');
 const TelemetryConsent = require('../../core/telemetry/TelemetryConsent');
 const PulseService = require('../../core/pulse/PulseService');
 const ChromeExtensionService = require('../../core/chrome-extensions/ChromeExtensionService');
+const ShimBridge = require('../../core/chrome-extensions/bridge/ShimBridge');
 const AdblockerService = require('../../core/adblocker/AdblockerService');
 const ApiSecurity = require('../../core/shell/ApiSecurity');
 const ActivityLogStore = require('../../core/activity-log/ActivityLogStore');
@@ -71,7 +72,7 @@ class FoundationServices {
   }
 
   _buildBrowserAddOns() {
-    this._s.chromeExtensionService = new ChromeExtensionService(this._db, this._ctx.dataDir);
+    this._s.chromeExtensionService = new ChromeExtensionService(this._db, this._ctx.dataDir, { bridge: new ShimBridge() });
     this._s.adblockerService = new AdblockerService(this._db, this._ctx.dataDir);
   }
 

@@ -10,7 +10,32 @@ export default class CodeHighlighter {
     [/\b([A-Za-z_]\w*)(?=\s*\()/g, 'fn'],
   ];
 
+  static CACHE_MAX = 64;
+  static CACHE_MAX_CHARS = 200000;
+  static _cache = new Map();
+
   static highlight(code) {
+    const key = String(code == null ? '' : code);
+    const hit = CodeHighlighter._cache.get(key);
+    if (hit !== undefined) return hit;
+    const html = CodeHighlighter._highlight(key);
+    CodeHighlighter._remember(key, html);
+    return html;
+  }
+
+  static isCached(code) {
+    return CodeHighlighter._cache.has(String(code == null ? '' : code));
+  }
+
+  static _remember(key, html) {
+    if (key.length > CodeHighlighter.CACHE_MAX_CHARS) return;
+    if (CodeHighlighter._cache.size >= CodeHighlighter.CACHE_MAX) {
+      CodeHighlighter._cache.delete(CodeHighlighter._cache.keys().next().value);
+    }
+    CodeHighlighter._cache.set(key, html);
+  }
+
+  static _highlight(code) {
     const src = HtmlEscaper.escapeKeepingApostrophes(code);
     let out = '';
     let i = 0;

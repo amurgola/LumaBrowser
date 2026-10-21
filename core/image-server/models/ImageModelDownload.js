@@ -36,6 +36,8 @@ class ImageModelDownload {
       controller: this._controller,
       isCanceled: () => this._canceled,
       label: file.role,
+      ...(file.expectedSize > 0 ? { expectedSize: file.expectedSize } : {}),
+      ...(file.expectedSha256 ? { expectedSha256: file.expectedSha256 } : {}),
       onResume: (have) => this._emit('resume', { role: file.role, have }),
       onProgress: (received, total, stats) => this._emit('download', ImageModelDownload._progressPayload(file.role, received, total, stats)),
       onVerify: (read, total) => this._emit('verify', { role: file.role, read, total }),

@@ -1,15 +1,16 @@
 const ResumableDownload = require('../../shared/download/ResumableDownload');
 
 class ModelDownload {
-  static start({ url, destPath, onEvent }) {
-    const download = new ModelDownload({ url, destPath, onEvent });
+  static start({ url, destPath, onEvent, expectedSize, expectedSha256, headers }) {
+    const download = new ModelDownload({ url, destPath, onEvent, expectedSize, expectedSha256, headers });
     return { promise: download.run(), cancel: () => download.cancel(), pause: () => download.pause() };
   }
 
-  constructor({ url, destPath, onEvent }) {
+  constructor({ url, destPath, onEvent, expectedSize, expectedSha256, headers }) {
     this._url = url;
     this._destPath = destPath;
     this._onEvent = typeof onEvent === 'function' ? onEvent : () => {};
+    this._expected = { expectedSize, expectedSha256, headers };
     this._controller = new AbortController();
     this._halted = false;
     this._paused = false;
@@ -37,7 +38,7 @@ class ModelDownload {
   }
 
   _transferOptions() {
-    return {
+    const options = {
       url: this._url,
       destPath: this._destPath,
       controller: this._controller,
@@ -46,6 +47,8 @@ class ModelDownload {
       onProgress: (received, total, stats) => this._onEvent('download', ModelDownload._progressPayload(received, total, stats)),
       onVerify: (read, total) => this._onEvent('verify', { read, total }),
     };
+    for (const [key, value] of Object.entries(this._expected)) if (value != null) options[key] = value;
+    return options;
   }
 
   _successResult(result) {

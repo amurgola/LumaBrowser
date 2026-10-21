@@ -12,7 +12,8 @@ profile ([ProfileEnvironment](ProfileEnvironment.md)), then:
 3. starts a `contentTracing` recording, installs the bounds hook and runs the page probes from
    [ShellPageScripts](ShellPageScripts.md): background updates in the hidden settings modal, five settings
    opens (`openSettings()` then `#settingsCloseBtn`), the bounds geometry (judged by
-   [BoundsGeometryCheck](BoundsGeometryCheck.md); a failure throws), twelve tab switches and the paint and
+   [BoundsGeometryCheck](BoundsGeometryCheck.md); a failure is recorded as `geometry.problem` and the run
+   still writes its report, then `execute` rejects with it), twelve tab switches and the paint and
    long-task timings (`--first-run` skips settings opens, geometry and tab switches);
 4. stops the runtime trace, takes a screenshot, waits up to 30 s for the startup trace file, writes
    `report.json` and prints the headline JSON. `console.log` is written and the launched app closed even on failure.
@@ -23,6 +24,7 @@ Thin entry: `scripts/profile-performance.js` (`npm run profile:performance -- <l
 
 ## Methods
 
-- `new PerformanceProfiler(root, { electron, electronPath, log, sleep })`; `execute(argv)` resolves the report.
+- `new PerformanceProfiler(root, { electron, electronPath, log, sleep })`; `execute(argv)` resolves the report,
+  or rejects after writing it when the geometry gate failed.
 - Report keys: `shellReadyMs`, `startup`, `idle`, `interactions`, `renderer`, `rendering`, `geometry`,
   `tabSwitches`, and new `boundsHooked` (whether the bounds probe reached the shell's reporter).

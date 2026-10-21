@@ -2,7 +2,7 @@
 
 `ui/shell/tabs/TabStripInput.js`
 
-Mouse input on the strip: the + button, click to switch, close button and middle-click to close (not the pinned tab), right-click menu, wheel scrolling of an overflowing strip and drag-reorder of regular tabs.
+Mouse input on the strip: the + button, click to switch, close button and middle-click to close (not the pinned tab), right-click menu, wheel scrolling of an overflowing strip, and dragging regular tabs through [TabStripDrag](TabStripDrag.md) (reorder, or move to another window).
 
 ## Methods
 
@@ -10,4 +10,4 @@ Mouse input on the strip: the + button, click to switch, close button and middle
 
 ## Globals
 
-Reads `window.tabAPI` (for the order commit).
+None directly; TabStripDrag reads `window.tabAPI`.

@@ -42,7 +42,9 @@ class MusicModelDownload {
   async run() {
     const info = await HfMlxRepo.fetchInfo(this._row.hfRepo);
     if (this._canceled) return { success: false, canceled: true };
-    this._inner = MlxRepoDownload.start({ repoId: this._row.hfRepo, files: info.files, destDir: this._destDir, onEvent: this._onEvent });
+    this._inner = MlxRepoDownload.start({
+      repoId: this._row.hfRepo, files: info.files, destDir: this._destDir, onEvent: this._onEvent, revision: info.revision || null,
+    });
     const result = await this._inner.promise;
     if (result && result.success) await this._writeMarker(result, info);
     return result;

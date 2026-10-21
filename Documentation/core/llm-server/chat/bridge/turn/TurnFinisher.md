@@ -11,5 +11,6 @@ Ends a turn on exactly one terminal hook.
 - `finish({ result, runError })`: reports usage; a thrown run -> trace,
   `onError`; aborted -> trace, `onDone({ finishReason: 'stop', aborted: true })`;
   an error with no answer -> trace, `onError` (`aborted` reads `stopped`);
-  otherwise [FinalTextResolver](FinalTextResolver.md), trace, `settleFinal`,
+  otherwise [FinalTextResolver](FinalTextResolver.md), trace,
+  `settleFinal(text, isAborted, { charsPerSecond: health.charsPerSecond() })`,
   `onDone(health.doneFields(result))`. `closeWork` runs last each time.

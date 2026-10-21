@@ -1,5 +1,6 @@
 const TabEntry = require('./TabEntry');
 const TabKinds = require('./TabKinds');
+const TabHosts = require('./TabHosts');
 const TabRegistry = require('./TabRegistry');
 const TabViewFactory = require('./TabViewFactory');
 const HiddenTabState = require('./HiddenTabState');
@@ -13,8 +14,8 @@ class TabLifecycle {
   static DEFAULT_TITLE = 'New Tab';
   static RECENTLY_CLOSED_LIMIT = 25;
 
-  constructor({ mainWindow, db, registry, channel, factory, activation, persisted, wireEvents, emitter }) {
-    this._mainWindow = mainWindow;
+  constructor({ hosts, db, registry, channel, factory, activation, persisted, wireEvents, emitter }) {
+    this._hosts = hosts;
     this._db = db;
     this._registry = registry;
     this._channel = channel;
@@ -48,10 +49,10 @@ class TabLifecycle {
     return entry.keepAlive ? this.hide(tabId) : this.destroy(tabId);
   }
 
-  reopenClosed() {
+  reopenClosed(hostId = TabHosts.MAIN_ID) {
     const last = this.recentlyClosed.pop();
     if (!last) return { success: false, error: 'No recently closed tab' };
-    return { success: true, tab: this.create(last.url, { activate: true, title: last.title }) };
+    return { success: true, tab: this.create(last.url, { activate: true, title: last.title, windowId: hostId }) };
   }
 
   move(tabId, toIndex) {
@@ -60,7 +61,7 @@ class TabLifecycle {
     const order = this._registry.order.slice();
     if (moved.from === moved.to) return { success: true, order };
     this._emitter.emit('tabMoved', tabId, moved.to);
-    this._channel.send('tab:moved', { id: tabId, index: moved.to, order });
+    this._channel.sendForTab(this._registry.get(tabId), 'tab:moved', { id: tabId, index: moved.to, order });
     return { success: true, order };
   }
 
@@ -70,9 +71,10 @@ class TabLifecycle {
     const next = this._registry.isActive(tabId) ? this._registry.neighbourOf(tabId) : null;
     CrashTracer.mark('tab:hide', { id: tabId, active: this._registry.isActive(tabId) });
     this._markHidden(entry);
-    this._handOffActive(tabId, next);
+    this._handOffActive(entry, next);
     this._emitter.emit('tabHidden', tabId);
-    this._channel.send('tab:hidden', { id: tabId });
+    this._channel.sendForTab(entry, 'tab:hidden', { id: tabId });
+    this._returnToMain(entry);
     return { success: true, hidden: true };
   }
 
@@ -84,10 +86,22 @@ class TabLifecycle {
     this._detachView(entry);
     const next = this._registry.isActive(tabId) ? this._registry.neighbourOf(tabId) : null;
     this._unregister(entry);
-    this._handOffActive(tabId, next);
+    this._handOffActive(entry, next);
     this._emitter.emit('tabClosed', tabId);
-    this._channel.send('tab:closed', { id: tabId });
+    this._channel.sendForTab(entry, 'tab:closed', { id: tabId });
+    this.reportIfEmptied(entry.hostId);
     return { success: true };
+  }
+
+  reportIfEmptied(hostId) {
+    if (hostId === TabHosts.MAIN_ID || !this._hosts.has(hostId)) return false;
+    if (this._registry.inStrip(hostId).length > 0) return false;
+    this._emitter.emit('windowEmptied', hostId);
+    return true;
+  }
+
+  remember(entry) {
+    this._rememberClosed(entry);
   }
 
   destroyAll() {
@@ -110,8 +124,15 @@ class TabLifecycle {
     return new TabEntry({
       id: this._registry.allocateId(kind), view, partition, url, kind, silent, keepAlive,
       title: TabLifecycle._initialTitle(options.title), pinned: options.pinned, hidden: options.hidden,
-      openerTabId: options.openerTabId,
+      openerTabId: options.openerTabId, hostId: this._hostFor(kind, silent, options),
     });
+  }
+
+  _hostFor(kind, silent, options) {
+    if (silent || options.hidden || options.pinned || TabKinds.isInternal(kind) || TabKinds.isAutomation(kind)) return TabHosts.MAIN_ID;
+    if (Number.isInteger(options.windowId)) return this._hosts.resolve(options.windowId);
+    const opener = Number.isFinite(options.openerTabId) ? this._registry.get(options.openerTabId) : null;
+    return opener ? opener.hostId : TabHosts.MAIN_ID;
   }
 
   static _initialTitle(title) {
@@ -130,6 +151,21 @@ class TabLifecycle {
   }
 
   _startLoading(entry, url) {
+    const settling = this._factory.extensionsSettling(entry);
+    if (!settling) {
+      this._load(entry, url);
+      return;
+    }
+    CrashTracer.mark('tab:load-held', { id: entry.id });
+    settling.then(() => {
+      const wc = entry.webContents;
+      const go = !wc.isDestroyed() && !wc.isLoading() && !wc.getURL();
+      CrashTracer.mark('tab:load-released', { id: entry.id, go });
+      if (go) this._load(entry, url);
+    });
+  }
+
+  _load(entry, url) {
     entry.webContents.loadURL(TabUrl.normalize(url)).catch((err) => {
       if (/ERR_ABORTED/.test((err && err.message) || '')) return;
       console.warn(`[TabViewManager] loadURL failed for tab ${entry.id}:`, err.message);
@@ -143,8 +179,8 @@ class TabLifecycle {
   }
 
   _keepStripNonEmpty(entry) {
-    if (!entry.isInStrip() || entry.isInternal()) return;
-    const others = this._registry.inStrip().filter((tab) => tab.id !== entry.id && !tab.isInternal());
+    if (!entry.isInStrip() || entry.isInternal() || entry.hostId !== TabHosts.MAIN_ID) return;
+    const others = this._registry.inStrip(TabHosts.MAIN_ID).filter((tab) => tab.id !== entry.id && !tab.isInternal());
     if (others.length > 0) return;
     this.create(this._startPageUrl(), { activate: true, index: this._registry.indexOf(entry.id) + 1 });
   }
@@ -171,14 +207,22 @@ class TabLifecycle {
     try { entry.view.setVisible(false); } catch (_) {}
   }
 
-  _handOffActive(tabId, next) {
-    if (!this._registry.isActive(tabId)) return;
-    this._registry.activeTabId = null;
+  _handOffActive(entry, next) {
+    if (!this._registry.isActive(entry.id)) return;
+    this._registry.setActive(entry.hostId, null);
     if (next) this._activation.switchTo(next.id);
   }
 
+  _returnToMain(entry) {
+    const from = entry.hostId;
+    if (from === TabHosts.MAIN_ID) return;
+    this._factory.reparent(entry, TabHosts.MAIN_ID);
+    this._channel.broadcast(entry);
+    this.reportIfEmptied(from);
+  }
+
   _detachView(entry) {
-    try { this._mainWindow.contentView.removeChildView(entry.view); } catch (_) {}
+    this._factory.detach(entry);
     try { if (!entry.webContents.isDestroyed()) entry.webContents.close(); } catch (_) {}
   }
 

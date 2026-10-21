@@ -8,9 +8,13 @@ stops runaway repetition and fires the terminal callback exactly once.
 
 ## Methods
 
-- `new OpenAiChatStream({ onDelta, onReasoningDelta, onDone, onError }, stopRequest)`;
+- `new OpenAiChatStream({ onDelta, onReasoningDelta, onToolCallDelta, onDone, onError }, stopRequest)`;
   `stopRequest()` cancels the HTTP request (the adapter passes its
   AbortController). Throwing callbacks are swallowed.
+  `onToolCallDelta({ index, id, name, argsDelta })` fires for every
+  `tool_calls` fragment as it arrives (the slot's id and name so far), so a
+  card can show the call being written instead of a silent bubble until the
+  stream ends.
 - `handleLines(lines)` processes complete lines (a trailing `\r` is stripped)
   and returns true when the rest of the stream must be dropped (aborted or
   stopped for repetition). Only `data:` lines count; bad JSON and choice-less

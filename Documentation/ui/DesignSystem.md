@@ -83,6 +83,7 @@ Rules:
 
 - **Buttons:** primary (accent fill, `--on-accent` text, at most one per view), secondary (`--bg-surface-2` fill, `--border-soft` line), ghost (no fill until hover). Height 28px (compact) or 32px; `--radius-md`; 500 weight. Icon buttons are 28px square ghosts.
 - **Settings rows:** label on the left (13px/500) with optional helper text under it (12px, `--text-secondary`), and the control right-aligned. Rows are separated by `--border-soft` hairlines inside a group. A group has a 15px/600 title above it and no box around each row. Advanced options collapse behind a plain "Advanced" disclosure.
+- **Extension lists:** every Settings > Extensions pane draws extensions with `ExtCard` (core/shell/ui/settings/ExtCard.md): one bordered card per extension, a single folded line (active checkbox, icon or initial, name and version, one-line summary, a state word, one primary action, chevron) and a sunken tray for the rest. Checked means active, as in the tools lists. Offer Update only when a newer version is known; otherwise Reinstall lives in the tray.
 - **Badges:** only when they carry state the user acts on. Neutral by default (`--bg-surface-2` fill, `--text-secondary`, 11px, `--radius-sm`); status color only for warnings and errors. Counts are plain text, not pills.
 - **Navigation:**
   - The selected item gets an `--bg-surface-2` fill and primary text.

@@ -1,17 +1,32 @@
 class NvidiaSmiOutputParser {
   static MIB = 1024 * 1024;
+  static GPU_ROW_MIN_FIELDS = 5;
 
   static parseGpuCount(stdout) {
     return (String(stdout).match(/^GPU \d+:/gm) || []).length;
   }
 
   static parseGpuRows(stdout) {
-    const rows = [];
-    NvidiaSmiOutputParser._lines(stdout).forEach((line, index) => {
-      const row = NvidiaSmiOutputParser._parseGpuRow(line, index);
-      if (row) rows.push(row);
-    });
-    return rows;
+    const byIndex = new Map();
+    for (const line of NvidiaSmiOutputParser._lines(stdout)) {
+      const row = NvidiaSmiOutputParser.parseGpuRow(line);
+      if (row) byIndex.set(row.index, row);
+    }
+    return [...byIndex.values()].sort((a, b) => a.index - b.index);
+  }
+
+  static parseGpuRow(line) {
+    const parts = NvidiaSmiOutputParser._fields(line);
+    if (parts.length < NvidiaSmiOutputParser.GPU_ROW_MIN_FIELDS) return null;
+    const index = Number(parts[0]);
+    if (!Number.isInteger(index) || index < 0) return null;
+    return {
+      index,
+      busId: parts[1] || null,
+      name: parts.slice(2, parts.length - 2).join(', '),
+      totalBytes: NvidiaSmiOutputParser._mibToBytes(parts[parts.length - 2]),
+      freeBytes: NvidiaSmiOutputParser._mibToBytes(parts[parts.length - 1]),
+    };
   }
 
   static parseComputeApps(stdout) {
@@ -23,17 +38,6 @@ class NvidiaSmiOutputParser {
       }
     }
     return map;
-  }
-
-  static _parseGpuRow(line, index) {
-    const parts = NvidiaSmiOutputParser._fields(line);
-    if (parts.length < 3) return null;
-    return {
-      index,
-      name: parts.slice(0, parts.length - 2).join(', '),
-      totalBytes: NvidiaSmiOutputParser._mibToBytes(parts[parts.length - 2]),
-      freeBytes: NvidiaSmiOutputParser._mibToBytes(parts[parts.length - 1]),
-    };
   }
 
   static _mibToBytes(text) {

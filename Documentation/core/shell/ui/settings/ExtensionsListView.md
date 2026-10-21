@@ -6,15 +6,22 @@ Settings > Extensions list split into the Extensions (enabled) and Inactive pane
 
 ## Methods
 
-- `new ExtensionsListView({ panes, meta, rowFactory, onShown })`.
+- `new ExtensionsListView({ panes, meta, rowFactory })`.
 - `show()`: reads `core.shell.getToggleConstraints` and
   `core.shell.getExtensionErrors` (each failure logged, treated as empty), sorts
   enabled first then by load order, splits by the constraint's `enabled`, sets
   `#extActiveCountBadge`, swaps both panes only after every await (two racing
-  refreshes cannot duplicate the list), then `onShown()`. Empty texts: "No
-  extensions installed", "No active extensions", "No inactive extensions".
+  refreshes cannot duplicate the list). Empty texts: "No extensions installed",
+  "No active extensions", "No inactive extensions".
 - `isVisible()`, `refreshIfVisible()`.
 
 ## Globals
 
 Reads `window.ipcBridge.invoke`.
+
+## Pane layout
+
+Each pane is an `.ext-pane-section`: one intro line (`INTRO.active` /
+`INTRO.inactive`, saying what the checkbox does there) above an
+`.ext-item-list` of [ExtCard](ExtCard.md)s, with folding wired by
+`ExtCard.wireFolding`.

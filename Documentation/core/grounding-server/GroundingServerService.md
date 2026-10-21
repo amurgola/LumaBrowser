@@ -12,7 +12,11 @@ offers it as provider `core.groundingServer`; choosing a model routes the
 ## Construction
 
 `new GroundingServerService({ settingsDb, llmServerService, createModelDownload?,
-runtimeServer?, vramCoordinator?, hotswap?, findFreePort? })`
+runtimeServer?, vramCoordinator?, hotswap?, findFreePort?, gpuReady? })`
+
+- `gpuReady()` defaults to `CudaDeviceProbe.whenReady()`; `_reserveCard` awaits
+  it (bounded, failures ignored) before the ledger reserve, so a launch right
+  after boot waits for the nvidia-smi stream's first reading.
 
 - `llmServerService` supplies `ensureRuntimesView()`, `getDefaults().runtimeId`
   and `getModelsDirConfig().effectivePath`.

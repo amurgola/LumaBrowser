@@ -10,10 +10,13 @@ tensor scan.
 - `ShardScanMerger.merge(model, firstResult, headerCache)` (async) mutates
   `model.gguf`. It runs only for a complete split (2+ shards, the expected count
   present, a parsed header with `blockCount`, a first-shard `tensorScan`). Each
-  other shard is read through the [GgufHeaderCache](GgufHeaderCache.md); the
-  scans go through `GgufTensorLayout.merge` and `.derive`. On success it sets
-  `attnKvPerLayer`, `attnKvLayerCount`, `mtpGrafted`, `tensorLayout` and clears
-  `attnScanError`. Otherwise `attnScanError` says why:
+  other shard is read through the [GgufHeaderCache](GgufHeaderCache.md) (path,
+  size, `modifiedAt`); the scans go through `GgufTensorLayout.merge` and
+  `.derive`. On success it sets `attnKvPerLayer`, `attnKvLayerCount`,
+  `mtpGrafted`, `tensorLayout`, clears `attnScanError`, and replaces a
+  `parameterCount` that was counted from the first shard's tensors alone with
+  the merged element total (a count the publisher declared in the header
+  stands). Otherwise `attnScanError` says why:
   `shard <name> tensor scan unavailable (<error>)`, the derive error (or
   `merged tensor scan incomplete`), or `merged tensor scan covers X of Y weight bytes`.
 - `TOLERANCE_FRACTION` (1%), `TOLERANCE_FLOOR_BYTES` (64 MB).

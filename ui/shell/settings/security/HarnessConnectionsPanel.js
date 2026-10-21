@@ -9,15 +9,13 @@ export default class HarnessConnectionsPanel {
   install() {
     this._api = window.electronAPI;
     this._rows = document.getElementById('gsHarnessRows');
-    const settingsBtn = document.getElementById('settingsBtn');
-    if (!this._api || !this._api.harnessList || !this._rows || !settingsBtn) return;
+    if (!this._api || !this._api.harnessList || !this._rows) return;
     this._apiHint = document.getElementById('gsHarnessApiHint');
     this._skillStatus = document.getElementById('gsHarnessSkillStatus');
     this._rows.addEventListener('click', (ev) => this._onRowClick(ev));
     document.getElementById('gsHarnessSkillBtn')?.addEventListener('click', () => this._writeSkills());
     document.getElementById('gsHarnessExportLink')?.addEventListener('click', (ev) => this._export(ev));
-    settingsBtn.addEventListener('click', () => this.load());
-    this.load();
+    document.addEventListener('settings:open', () => this.load());
   }
 
   async load() {

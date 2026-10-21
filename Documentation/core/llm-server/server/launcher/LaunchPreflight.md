@@ -7,9 +7,12 @@ the launch API key, or into a refusal.
 
 ## Methods
 
-- `new LaunchPreflight({ diagnostics, detector, scanner, catalog })`.
-- `resolve(ctx, timings)` fills `ctx.diag`, `runtimeRow`, `runtime`, `model`,
-  `launchKey` and returns null, or returns the first refusal:
+- `new LaunchPreflight({ diagnostics, detector, scanner, catalog, gpuReady? })`;
+  `gpuReady()` defaults to `CudaDeviceProbe.whenReady(GPU_READY_MS)` (3 s).
+- `resolve(ctx, timings)` fills `ctx.diag`, then awaits `gpuReady()` (bounded)
+  so a launch right after boot waits for the nvidia-smi stream's first reading
+  instead of placing as if there were no cards, then fills `runtimeRow`,
+  `runtime`, `model`, `launchKey` and returns null, or returns the first refusal:
   1. `Runtime <id> not found in detector view.`
   2. `Runtime <name> is not installed.` with `code: 'RUNTIME_NOT_INSTALLED'`,
      `runtimeId`, `runtimeName`, `installable` (the row's own flag, else: the

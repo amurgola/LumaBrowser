@@ -111,6 +111,7 @@ class BridgeRun {
       deps: o.deps,
       hooks: this._hooks,
       artifacts: this._artifacts,
+      trace: this._trace,
       isAborted: this.control.isAborted,
       ctxPerSlot: o.ctxPerSlot,
       kbScope: this._toolSet.kbScope,

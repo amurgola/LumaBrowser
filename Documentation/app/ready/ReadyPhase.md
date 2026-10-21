@@ -22,3 +22,10 @@ Everything that waits for Electron's ready event.
   8. Setup complete: [DeferredServices](DeferredServices.md)`.start()`; else
      wait for the setup wizard's finish.
   9. [BackgroundStarts](BackgroundStarts.md).
+
+## Extension menu and navigation
+
+`_installMenus()` hands the ContextMenu an `extensionItems` provider backed by
+`ShimBridge.contextMenus.templateFor`, and calls
+`bridge.installNavigation(app, () => tabViewManager)` so tab navigations reach
+extension workers as `chrome.webNavigation` events.

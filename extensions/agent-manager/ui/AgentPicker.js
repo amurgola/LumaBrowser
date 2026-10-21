@@ -15,7 +15,7 @@ export default class AgentPicker {
 
   static _popover(agents) {
     const pop = document.createElement('div');
-    pop.className = 'cm-model-pop';
+    pop.className = 'cm-model-pop cm-agent-pop';
     pop.style.position = 'fixed';
     pop.style.bottom = 'auto';
     pop.style.right = 'auto';
@@ -26,10 +26,11 @@ export default class AgentPicker {
 
   static _option(a) {
     const esc = HtmlEscaper.escape;
-    return '<div class="cm-model-opt" data-agent="' + esc(a.id) + '"><div>'
-      + esc(a.name)
+    return '<div class="cm-model-opt cm-agent-opt" data-agent="' + esc(a.id) + '"><div class="cm-agent-text">'
+      + '<div class="cm-agent-name">' + esc(a.name)
       + (a.kbDocs ? ' <span class="cm-model-sub">' + a.kbDocs + ' knowledge doc' + (a.kbDocs === 1 ? '' : 's') + '</span>' : '')
-      + (a.description ? '<div class="cm-model-sub">' + esc(a.description) + '</div>' : '')
+      + '</div>'
+      + (a.description ? '<div class="cm-model-sub cm-agent-desc">' + esc(a.description) + '</div>' : '')
       + '</div></div>';
   }
 

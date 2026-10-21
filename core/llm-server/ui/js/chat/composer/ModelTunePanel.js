@@ -8,6 +8,9 @@ export default class ModelTunePanel {
     { id: 'reasoningEffort', label: 'Thinking', kind: 'select', options: DefaultsOptions.EFFORT },
     { id: 'temperature', label: 'Temperature', kind: 'number', min: 0, max: 2, step: 0.05 },
     { id: 'maxReplyTokens', label: 'Reply limit', kind: 'number', min: 1, step: 256, suffix: 'tokens' },
+    { id: 'maxParallelToolCalls', label: 'Parallel tools', kind: 'number', min: 1, max: 8, step: 1, suffix: 'at once',
+      hint: 'How many tool calls from one reply may run together (only reads overlap; writes still go one by one). '
+        + 'One is the measured default: on a 27B model, more made runs slower and less accurate.' },
   ];
 
   static LAUNCH_FIELDS = [
@@ -95,7 +98,8 @@ export default class ModelTunePanel {
       : '<input id="' + id + '" class="cm-modal-input" type="number" data-field="' + field.id + '"'
         + ' min="' + field.min + '"' + (field.max != null ? ' max="' + field.max + '"' : '') + ' step="' + field.step + '"'
         + ' placeholder="' + esc(this._inheritText(field)) + '" value="' + (set ? esc(String(value)) : '') + '" />';
-    return '<div class="cm-tune-row' + (set ? ' set' : '') + '">'
+    const hint = field.hint ? ' title="' + esc(field.hint) + '"' : '';
+    return '<div class="cm-tune-row' + (set ? ' set' : '') + '"' + hint + '>'
       + '<label class="cm-tune-label" for="' + id + '">' + esc(field.label) + '</label>'
       + control + (field.suffix ? '<span class="cm-tune-suffix">' + esc(field.suffix) + '</span>' : '')
       + '</div>';
@@ -112,6 +116,7 @@ export default class ModelTunePanel {
   static _valueText(field, value) {
     if (field.id === 'temperature' && value == null) return 'chat mode decides';
     if (field.id === 'maxReplyTokens' && value == null) return 'no limit';
+    if (field.id === 'maxParallelToolCalls' && value == null) return 'one at a time';
     if (field.id === 'kvCacheType' && value == null) return 'Full (f16)';
     if (field.kind === 'select') {
       const hit = field.options.find((o) => o.id === value);

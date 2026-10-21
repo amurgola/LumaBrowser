@@ -30,3 +30,11 @@ Builds the Electron menu template for one right click, Chrome style.
 - Search `<engine>` for "<selection>": tab pages with a selection, opens a
   foreground tab via [SearchEngines](../../browser/SearchEngines.md).
 - Inspect element: non-internal tab pages; focuses devtools if open.
+
+## Extension block
+
+`_addExtensions()` runs after search and before inspect, on browsing pages
+only, when the template was given `extensionItems`. It calls it with the
+webContents, params, the MenuTab's `entry` and `order`, and pushes a
+separator plus the returned items. Errors are caught and logged as
+`[ContextMenu] extension items failed:`.

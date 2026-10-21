@@ -9,8 +9,9 @@ and reports progress in the image server's multi-file event vocabulary.
 ## Methods
 
 - `ImageModelDownload.create({ files, dir, onEvent })` returns
-  `{ promise, cancel }`. `files` is `[{ role, url, destPath }]` (throws
-  `ImageModelDownload: files[] is required` when empty or missing); `dir` is
+  `{ promise, cancel }`. `files` is `[{ role, url, destPath, expectedSize?, expectedSha256? }]`
+  (throws `ImageModelDownload: files[] is required` when empty or missing;
+  the expectations, when present, go to ResumableDownload's verifier); `dir` is
   informational; `onEvent(type, payload)` is optional.
 - The promise resolves `{ success: true, dir, files: [{ role, destPath, bytes }] }`
   or `{ success: false, canceled: true, completed }`, and rejects with the

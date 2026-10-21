@@ -101,6 +101,7 @@
             <input type="text" class="url-bar" id="urlBar" placeholder="Search or enter address" autocomplete="off" spellcheck="false" aria-label="Address and search bar">
         </div>
         <button class="bookmark-star-btn icon-btn" id="bookmarkStarBtn" title="Bookmark this page (Ctrl+D)" aria-label="Bookmark this page" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></button>
+        <div class="chrome-ext-buttons" id="chromeExtButtons" hidden></div>
         <button class="ai-chat-toggle icon-btn" id="aiChatToggle" title="AI Chat" aria-label="AI Chat"><svg class="icon"><use href="#i-chat"/></svg><span class="luma-dot ai-chat-state-dot" id="aiChatStateDot" aria-hidden="true"></span></button>
         <button class="dashboard-toggle icon-btn" id="dashboardBtn" title="Dashboard" aria-label="Dashboard"><svg class="icon"><use href="#i-grid"/></svg></button>
         <div data-slot="toolbar-button" id="extensionToolbarButtons" class="toolbar-slot-inline"></div>
@@ -909,7 +910,6 @@
 
             </div>
 
-            <div class="form-buttons settings-footer--actions" id="settingsFooter"></div>
         </div>
     </div>
 

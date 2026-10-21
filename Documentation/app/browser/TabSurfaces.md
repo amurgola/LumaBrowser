@@ -13,7 +13,8 @@ Builds the window's tab layer and the views stacked over it.
     extensions, adblocker, db and favicon cache; `tabManager` over it;
   - favicon updates relayed to the shell as `tab-view:favicon`;
   - `chromeOverlay` ([ChromeOverlay](../../core/browser/ChromeOverlay.md)), re-raised
-    on `tabSwitched` and when the tab preview raises;
+    on `tabSwitched` and when the tab preview raises; it accepts popup requests from
+    every sender except a detached window's chrome, which has its own overlay;
   - `tabPreviewManager` (published `__lumaTabPreview`);
   - `onDemandOverlay` ([OnDemandOverlay](../../core/on-demand/OnDemandOverlay.md),
     published `__lumaOnDemand`) with the chat router, `ChatModeRegistry.shared`,

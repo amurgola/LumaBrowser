@@ -14,11 +14,12 @@ as NInfer whose catalog entry carries a request profile.
   `/health` from `--api-key`.
 - `chat(options)` throws `chat: messages is required` on a missing or empty
   `messages`, otherwise starts a streaming completion and returns `{ abort() }`.
-  Options: `messages, temperature, maxTokens, tools, chatTemplateKwargs,
-  reasoningBudget, samplerOverrides, familySamplerDefaults, onDelta,
-  onReasoningDelta, onDone, onError`.
+  Options: `messages, temperature, maxTokens, tools, parallelToolCalls,
+  chatTemplateKwargs, reasoningBudget, samplerOverrides, familySamplerDefaults, onDelta,
+  onReasoningDelta, onToolCallDelta, onDone, onError`.
   - `onDelta(text, frame)` gets answer text; `onReasoningDelta(text, frame)`
-    gets `delta.reasoning_content`.
+    gets `delta.reasoning_content`; `onToolCallDelta({ index, id, name, argsDelta })`
+    gets every native tool-call fragment live.
   - `onDone(summary)` fires once with
     `{ finishReason, stopReason, usage, timings, toolCalls }` (see
     [OpenAiChatStream](OpenAiChatStream.md)).

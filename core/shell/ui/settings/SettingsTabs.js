@@ -2,6 +2,7 @@ export default class SettingsTabs {
   static PANE_IDS = {
     extensions: 'extSubpaneExtensions',
     inactiveExtensions: 'extSubpaneInactive',
+    browseExtensions: 'extSubpaneBrowse',
     chromeExtensions: 'extSubpaneChrome',
     about: 'aboutSubpaneAbout',
     license: 'aboutSubpaneLicense',
@@ -10,7 +11,9 @@ export default class SettingsTabs {
   static EXTENSION_SUBTABS = `
         <button class="settings-subtab active" data-subtab="extensions" data-parent="extensions">Extensions <span class="settings-subtab-badge" id="extActiveCountBadge"></span></button>
         <button class="settings-subtab" data-subtab="inactiveExtensions" data-parent="extensions">Inactive</button>
+        <button class="settings-subtab" data-subtab="browseExtensions" data-parent="extensions">Browse Extensions</button>
         <button class="settings-subtab" data-subtab="chromeExtensions" data-parent="extensions">Chrome Extensions</button>
+        <span class="settings-subtabs-end" id="extAddMenuHost"></span>
       `;
 
   static ABOUT_SUBTABS = `
@@ -127,7 +130,9 @@ export default class SettingsTabs {
     const panes = {
       extensions: SettingsTabs._pane(section, 'extSubpaneExtensions', 'extensionsSettingsBody', true),
       inactive: SettingsTabs._pane(section, 'extSubpaneInactive', 'inactiveExtensionsSettingsBody', false),
+      browse: SettingsTabs._pane(section, 'extSubpaneBrowse', 'browseExtensionsSettingsBody', false),
       chrome: SettingsTabs._pane(section, 'extSubpaneChrome', 'chromeExtensionsSettingsBody', false),
+      addMenuHost: subtabs.querySelector('#extAddMenuHost'),
     };
     SettingsTabs._appendSection(section);
     this._wireSubtabs(subtabs, 'extensions');
@@ -160,9 +165,7 @@ export default class SettingsTabs {
 
   static _appendSection(section) {
     const settingsMain = document.querySelector('.settings-main');
-    const formButtons = document.querySelector('.settings-content .form-buttons');
     if (settingsMain) settingsMain.appendChild(section);
-    else if (formButtons) formButtons.parentNode.insertBefore(section, formButtons);
     else {
       const content = document.querySelector('.settings-content');
       if (content) content.appendChild(section);

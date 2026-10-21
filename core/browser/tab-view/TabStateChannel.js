@@ -1,19 +1,26 @@
+const TabHosts = require('./TabHosts');
+
 class TabStateChannel {
-  constructor(mainWindow, registry, faviconCache = null) {
-    this._mainWindow = mainWindow;
+  constructor(hosts, registry, faviconCache = null) {
+    this._hosts = hosts;
     this._registry = registry;
     this._faviconCache = faviconCache;
   }
 
-  send(channel, payload) {
-    if (!this._mainWindow || this._mainWindow.isDestroyed()) return;
+  send(channel, payload, hostId = TabHosts.MAIN_ID) {
+    const win = this._hosts.liveWindowOf(hostId);
+    if (!win) return;
     try {
-      this._mainWindow.webContents.send(channel, payload);
+      win.webContents.send(channel, payload);
     } catch (_) {}
   }
 
+  sendForTab(entry, channel, payload) {
+    this.send(channel, payload, entry.hostId);
+  }
+
   broadcast(entry) {
-    this.send('tab:state', this.serialize(entry));
+    this.sendForTab(entry, 'tab:state', this.serialize(entry));
   }
 
   serialize(entry) {
@@ -32,6 +39,7 @@ class TabStateChannel {
       canGoForward: entry.canGoForward,
       zoomLevel: entry.zoomLevel,
       active: this._registry.isActive(entry.id),
+      windowId: entry.hostId,
       createdAt: entry.createdAt,
       lastNavigatedAt: entry.lastNavigatedAt,
       lastActivatedAt: entry.lastActivatedAt || null,

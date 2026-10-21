@@ -1,8 +1,9 @@
 const NavigationGenerations = require('./NavigationGenerations');
 const TabKinds = require('./TabKinds');
+const TabHosts = require('./TabHosts');
 
 class TabEntry {
-  constructor({ id, view, partition, url, title, kind, silent, pinned, keepAlive, hidden, openerTabId }) {
+  constructor({ id, view, partition, url, title, kind, silent, pinned, keepAlive, hidden, openerTabId, hostId }) {
     this.id = id;
     this.view = view;
     this.webContents = view.webContents;
@@ -12,6 +13,7 @@ class TabEntry {
     this.pinned = !!pinned;
     this.keepAlive = !!keepAlive;
     this.hidden = !!hidden;
+    this.hostId = Number.isInteger(hostId) ? hostId : TabHosts.MAIN_ID;
     this.url = url;
     this.title = title;
     this.loading = false;
@@ -49,6 +51,10 @@ class TabEntry {
 
   isInStrip() {
     return !this.silent && !this.hidden;
+  }
+
+  isMovable() {
+    return this.isRegularBrowsing() && this.isInStrip() && !this.pinned;
   }
 
   isRegularBrowsing() {

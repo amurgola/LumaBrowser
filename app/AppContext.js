@@ -57,6 +57,7 @@ class AppContext {
     this.tabViewManager = null;
     this.tabManager = null;
     this.chromeOverlay = null;
+    this.tabWindows = null;
     this.tabPreviewManager = null;
     this.onDemandOverlay = null;
     this.browserService = null;

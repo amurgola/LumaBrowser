@@ -1,5 +1,6 @@
 const path = require('path');
 const TabSurfaces = require('./TabSurfaces');
+const TabWindows = require('../window/TabWindows');
 const HistoryRecorder = require('./HistoryRecorder');
 const AutomationServices = require('./AutomationServices');
 const CoreMcpTools = require('./CoreMcpTools');
@@ -16,6 +17,7 @@ class WindowServices {
 
   wire(win) {
     new TabSurfaces(this._ctx, { log: this._log }).build(win);
+    this._ctx.tabWindows = new TabWindows(this._ctx, { log: this._log }).install(win);
     new HistoryRecorder({ tabViewManager: this._ctx.tabViewManager, historyService: this._s.historyService }).attach();
     const automation = new AutomationServices(this._ctx).build(win);
     this._mountGatewayPages();

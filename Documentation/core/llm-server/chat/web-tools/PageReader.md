@@ -7,8 +7,11 @@ game-mode [FetchGamedevDocTool](../../../../extensions/game-mode/tools/assets/Fe
 
 ## Methods
 
-- `PageReader.read(url, { timeoutMs?, tabRender?, fetcher? })` resolves
+- `PageReader.read(url, { timeoutMs?, tabRender?, fetcher?, onProgress? })` resolves
   `{ success: true, document }` or `{ success: false, error }`.
+  `onProgress(message)` hears `Fetching <host>…` and `Rendering <host> in a
+  browser tab…` (`PageReader.hostOf(url)`: the host alone, never a long
+  address); a listener that throws is ignored.
   `document`: `{ requestedUrl, url, text, viaBrowser, status?, rawCut,
   trimmedBlocks, fetchedAt }`, `text` already through
   [BoilerplateTrimmer](BoilerplateTrimmer.md).

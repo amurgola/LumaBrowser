@@ -4,12 +4,18 @@
 
 Display-only WebContentsView layers stacked above the tab views so browser-chrome
 popups (URL suggestions, bookmark menus, the notification log) render on top of
-the page.
+the page. One per browser window: the main window's (TabSurfaces) and one per
+detached window ([TabWindows](../../app/window/TabWindows.md)).
 
 ## Methods
 
-- `new ChromeOverlay(mainWindow)` registers its IPC channels and warms the
-  `popup` and `notif` layers.
+- `new ChromeOverlay(mainWindow, { acceptsSender })` registers its IPC channels and warms the
+  `popup` and `notif` layers: at once when the window's shell document has already loaded
+  (or the window cannot say), otherwise on its `did-finish-load`, so the two layer renderer
+  processes do not compete with the shell's first paint. `acceptsSender(webContents)` decides which renderers'
+  show / set-active / hide requests are this window's; by default only its own
+  window's renderer. The main window's accepts every sender that is not a detached
+  window's chrome.
 - `show({ id = 'popup', html, x, y, bottom, width, maxHeight, estHeight })` shows or
   updates a layer. `y` anchors the top; `bottom` anchors the bottom edge and derives
   `y` from the height. Initial height is `min(maxHeight || 600, estHeight || 220)`.
@@ -19,16 +25,16 @@ the page.
 - `setActive({ id, activeIndex })` forwards `overlay:set-active` to a visible layer.
 - `hide({ id })` hides a layer and zeroes its bounds.
 - `raiseVisible()` re-appends every visible layer on top (call after tab views restack).
-- `destroy()` removes and destroys every layer.
+- `destroy()` removes its IPC listeners and removes and destroys every layer.
 - `layers` is a public `Map<id, { id, view, visible, pending, ready, pendingContent }>`;
   main.js reads it for the view-stack debug dump.
 - `ChromeOverlay.BACKGROUND` (`#00000000`): every layer composites transparently, so
   the page shows outside a panel's rounded corners. The overlay page must not paint
   a background on html/body.
 
-IPC: `chrome-overlay:show`, `:set-active`, `:hide`, `:measure` route to the methods
-above; `chrome-overlay:action` and `:hover` from a layer are forwarded to the main
-window tagged with `layer` (the layer id) and `id` (the row's own id if the markup
+IPC: `chrome-overlay:show`, `:set-active`, `:hide` (from an accepted sender) and
+`:measure` route to the methods above; `chrome-overlay:action` and `:hover` from one
+of this overlay's layers (others are ignored) are forwarded to its window tagged with `layer` (the layer id) and `id` (the row's own id if the markup
 carried one, else the layer id).
 
 ## Why
@@ -42,9 +48,9 @@ Windows (electron#45104 / #45105), so each layer is sized flush to its popup and
 background is the popup colour. A colour mismatch shows as a lighter fringe on
 rounded corners and on first paint.
 
-Layers are created at startup because creating a WebContentsView on first use
-steals keyboard focus from the shell on Windows, which blurred the address bar on
-its first click. Layers never want focus: any focus they get goes straight back to
+Layers are created at startup (right after the shell loads, before any click can
+land) because creating a WebContentsView on first use steals keyboard focus from
+the shell on Windows, which blurred the address bar on its first click. Layers never want focus: any focus they get goes straight back to
 the shell webContents.
 
 Only the first `show` of a layer restacks it, so content updates do not pop a layer

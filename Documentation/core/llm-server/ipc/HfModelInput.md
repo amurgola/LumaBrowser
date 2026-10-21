@@ -13,6 +13,9 @@ Reads the model download inputs the wizard accepts and names per-repo folders.
   `Use a full .gguf URL, or owner/repo/file.gguf.` or `That doesn’t point at a .gguf file.`.
 - `HfModelInput.repoDirName(repoId)` `owner/repo` -> `owner__repo`, other unsafe characters `_`.
 - `HfModelInput.repoIdFromUrl(url)` the `owner/repo` of a Hub resolve URL, else null.
+- `HfModelInput.hubFileFromUrl(url)` `{ repoId, revision, path }` of a Hub resolve URL
+  (`huggingface.co` or `hf.co`; revision and path percent-decoded), else null. This is
+  what [ModelFileDownloader](ModelFileDownloader.md) pins a download by.
 - `HfModelInput.fileFromUrl(url)` the decoded last path segment.
 
 ## Why

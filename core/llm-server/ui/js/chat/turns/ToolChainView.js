@@ -31,19 +31,21 @@ export default class ToolChainView {
     const tools = TurnData.tools(m);
     const running = (m === this._ctx.state.streamMsg) || tools.some((x) => x.status === 'run');
     const pv = m._preview ? (m._preview.live ? 'L' : 'F') : '';
-    return (running ? 'R' : 'S') + '|' + pv + '|' + tools.map((t) => (t.tool || '') + ':' + (t.status || '')).join(',');
+    const step = (t) => (t.tool || '') + ':' + (t.status || '') + (t._pending ? ':p' : '') + (t._batch ? ':b' + t._batch.size : '');
+    return (running ? 'R' : 'S') + '|' + pv + '|' + tools.map(step).join(',');
   }
 
-  updatePendingDetail(chain, m) {
+  updateLiveDetail(chain, m) {
     if (!chain) return;
     const tools = TurnData.tools(m);
-    const i = tools.findIndex((x) => x._pending);
-    if (i === -1) return;
-    const card = chain.querySelectorAll('.cm-toolcard')[i];
-    const det = card && card.querySelector('.cm-tc-det');
-    if (!det) return;
-    const text = String(ToolCardText.detail(tools[i])).slice(0, ToolChainView.DETAIL_MAX);
-    if (det.textContent !== text) det.textContent = text;
+    const cards = chain.querySelectorAll('.cm-toolcard');
+    tools.forEach((tc, i) => {
+      if (!tc._pending && !(tc.status === 'run' && tc._progress)) return;
+      const det = cards[i] && cards[i].querySelector('.cm-tc-det');
+      if (!det) return;
+      const text = String(ToolCardText.detail(tc)).slice(0, ToolChainView.DETAIL_MAX);
+      if (det.textContent !== text) det.textContent = text;
+    });
   }
 
   _head(m, tools, running, wrap) {
@@ -68,11 +70,38 @@ export default class ToolChainView {
     const body = Dom.el('div', 'cm-chain-body');
     const steps = Dom.el('div', 'cm-chain-steps');
     body.appendChild(steps);
-    for (const tc of tools) steps.appendChild(this._stepCard(tc));
+    for (const group of ToolChainView._groups(tools)) {
+      if (group.length === 1) steps.appendChild(this._stepCard(group[0]));
+      else steps.appendChild(this._batchRow(group));
+    }
     const preview = this._previewCard(m, streaming);
     if (preview) body.appendChild(preview);
     if (running) requestAnimationFrame(() => { try { steps.scrollTop = steps.scrollHeight; } catch (_) {} });
     return body;
+  }
+
+  static _groups(tools) {
+    const groups = [];
+    for (const tc of tools) {
+      const last = groups[groups.length - 1];
+      const prev = last && last[last.length - 1];
+      const joins = prev && prev._batch && tc._batch && prev._batch.size === tc._batch.size
+        && tc._batch.index === prev._batch.index + 1 && last.length < tc._batch.size;
+      if (joins) last.push(tc);
+      else groups.push([tc]);
+    }
+    return groups;
+  }
+
+  _batchRow(group) {
+    const row = Dom.el('div', 'cm-chain-batch');
+    const running = group.some((x) => x.status === 'run');
+    const label = running ? ToolLabels.batchLabel(group) : 'Ran ' + group.length + ' together';
+    row.appendChild(Dom.el('div', 'cm-chain-batch-head', HtmlEscaper.escape(label)));
+    const cards = Dom.el('div', 'cm-chain-batch-cards');
+    for (const tc of group) cards.appendChild(this._stepCard(tc));
+    row.appendChild(cards);
+    return row;
   }
 
   _stepCard(tc) {
@@ -122,7 +151,7 @@ export default class ToolChainView {
     card.innerHTML = '<span class="cm-tc-node"></span>'
       + '<span class="cm-tc-ic">' + ToolChainView._icon(tc.tool) + '</span>'
       + '<span class="cm-tc-main"><b>' + HtmlEscaper.escape(tc._pending ? ToolLabels.stepLabel(tc) : ToolLabels.labelOf(tc.tool)) + '</b>'
-      + (det || tc._pending ? '<span class="cm-tc-det">' + det + '</span>' : '') + '</span>'
+      + (det || st === 'run' ? '<span class="cm-tc-det">' + det + '</span>' : '') + '</span>'
       + '<span class="cm-tc-st">' + ToolChainView._status(st) + '</span>';
     this._addViewFile(card, tc, st);
     return card;

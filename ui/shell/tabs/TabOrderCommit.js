@@ -1,10 +1,14 @@
 export default class TabOrderCommit {
   static async commit(api, domOrder, movedId) {
     if (!api || typeof api.moveTab !== 'function') return;
-    const at = domOrder.indexOf(movedId);
-    if (at < 0) return;
+    const index = await TabOrderCommit.indexFor(api, domOrder, movedId);
+    if (index !== null) api.moveTab(movedId, index);
+  }
+
+  static async indexFor(api, domOrder, movedId) {
+    if (domOrder.indexOf(movedId) < 0) return null;
     const full = await TabOrderCommit._fullOrder(api);
-    api.moveTab(movedId, TabOrderCommit.targetIndex(full, domOrder, movedId));
+    return TabOrderCommit.targetIndex(full, domOrder, movedId);
   }
 
   static targetIndex(full, domOrder, movedId) {

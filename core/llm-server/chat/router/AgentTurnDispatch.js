@@ -32,7 +32,7 @@ class AgentTurnDispatch {
       turnReminder: t.voiceOn ? ChatStyleDocs.VOICE_REMINDER : null,
       images: t.images,
       ...tools,
-      ...AgentTurnDispatch._modeSeams(t.modeTurn, t.evalOverrides, t.docsGrant),
+      ...AgentTurnDispatch._modeSeams(t.modeTurn, t.evalOverrides, t.docsGrant, t.modelBudget || null),
       ctxPerSlot: this._window.forRef(t.modelRef) || this._window.localPerSlot(),
       llmExtra: t.llmExtra,
       ...AgentTurnDispatch._evalExtras(t.evalOverrides),
@@ -103,22 +103,23 @@ class AgentTurnDispatch {
     ].filter(Boolean).join('\n\n') || null;
   }
 
-  static _modeSeams(modeTurn, evalOverrides, docsGrant = null) {
+  static _modeSeams(modeTurn, evalOverrides, docsGrant = null, modelBudget = null) {
     const modeTools = modeTurn && Array.isArray(modeTurn.tools) ? modeTurn.tools : [];
     const extraTools = docsGrant ? [...modeTools, docsGrant.extraTool] : modeTools;
     return {
       extraTools: extraTools.length ? extraTools : null,
       noBrowser: !!(modeTurn && modeTurn.noBrowser),
       pinnedTabId: (modeTurn && modeTurn.workTabId != null) ? modeTurn.workTabId : null,
-      agentBudget: AgentTurnDispatch._budget(modeTurn, evalOverrides),
+      agentBudget: AgentTurnDispatch._budget(modeTurn, evalOverrides, modelBudget),
       kbScope: (modeTurn && modeTurn.kbScope) ? String(modeTurn.kbScope) : null,
     };
   }
 
-  static _budget(modeTurn, evalOverrides) {
-    const modeBudget = (modeTurn && modeTurn.agentBudget) || null;
-    if (!(evalOverrides && evalOverrides.parallel > 1)) return modeBudget;
-    return { ...(modeBudget || {}), maxParallelToolCalls: evalOverrides.parallel };
+  static _budget(modeTurn, evalOverrides, modelBudget = null) {
+    const layers = [(modeTurn && modeTurn.agentBudget) || null, modelBudget || null];
+    if (evalOverrides && evalOverrides.parallel > 1) layers.push({ maxParallelToolCalls: evalOverrides.parallel });
+    const merged = Object.assign({}, ...layers.filter(Boolean));
+    return Object.keys(merged).length ? merged : null;
   }
 
   static _evalExtras(evalOverrides) {

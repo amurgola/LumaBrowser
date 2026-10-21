@@ -5,11 +5,12 @@ class ContextMenuTemplate {
   static SEPARATOR = Object.freeze({ type: 'separator' });
   static SEARCH_LABEL_MAX = 32;
 
-  constructor({ webContents, params, tab, db }) {
+  constructor({ webContents, params, tab, db, extensionItems = null }) {
     this._webContents = webContents;
     this._params = params || {};
     this._tab = tab;
     this._db = db;
+    this._extensionItems = extensionItems;
     this._items = [];
   }
 
@@ -20,6 +21,7 @@ class ContextMenuTemplate {
     this._addImage();
     this._addEditing();
     this._addSearch();
+    this._addExtensions();
     this._addInspect();
     return ContextMenuTemplate.cleanSeparators(this._items);
   }
@@ -127,6 +129,17 @@ class ContextMenuTemplate {
       label: `Search ${engine.name} for "${ContextMenuTemplate.truncate(query)}"`,
       click: () => this._tab.openInNewTab(SearchEngines.urlFor(engineId, query), true),
     });
+  }
+
+  _addExtensions() {
+    if (!this._isBrowsingPage || typeof this._extensionItems !== 'function') return;
+    let items = [];
+    try {
+      items = this._extensionItems({ webContents: this._webContents, params: this._params, entry: this._tab.entry, order: this._tab.order }) || [];
+    } catch (err) {
+      console.warn('[ContextMenu] extension items failed:', err && err.message);
+    }
+    if (items.length) this._push(ContextMenuTemplate.SEPARATOR, ...items);
   }
 
   _addInspect() {

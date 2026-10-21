@@ -1,4 +1,4 @@
-import TabOrderCommit from './TabOrderCommit.js';
+import TabStripDrag from './TabStripDrag.js';
 
 export default class TabStripInput {
   constructor({ strip, tabActions, contextMenu, persistedMenu }) {
@@ -6,14 +6,14 @@ export default class TabStripInput {
     this._tabs = tabActions;
     this._contextMenu = contextMenu;
     this._persistedMenu = persistedMenu;
-    this._dragTabId = null;
+    this._drag = new TabStripDrag({ strip });
   }
 
   install() {
     const bar = this._strip.tabBar;
     document.getElementById('newTabBtn').addEventListener('click', () => { this._tabs.create(undefined, { focusUrl: true }); });
     bar.addEventListener('wheel', (e) => this._onWheel(e), { passive: false });
-    this._wireDrag(bar);
+    this._drag.install();
     document.getElementById('persistedTabsBtn')?.addEventListener('click', () => { this._persistedMenu.show(); });
     bar.addEventListener('click', (e) => this._onClick(e));
     bar.addEventListener('mousedown', (e) => this._onMiddleDown(e));
@@ -56,36 +56,5 @@ export default class TabStripInput {
     if (!tabEl) return;
     e.preventDefault();
     this._contextMenu.show(e.clientX, e.clientY, TabStripInput._tabId(tabEl));
-  }
-
-  _wireDrag(bar) {
-    bar.addEventListener('dragstart', (e) => {
-      const tab = e.target.closest('.tab');
-      if (!tab || tab.draggable !== true) { e.preventDefault(); return; }
-      this._dragTabId = TabStripInput._tabId(tab);
-      tab.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      try { e.dataTransfer.setData('text/plain', String(this._dragTabId)); } catch (_) {}
-    });
-    bar.addEventListener('dragover', (e) => this._onDragOver(e, bar));
-    bar.addEventListener('dragend', () => {
-      const dragging = bar.querySelector('.tab.dragging');
-      if (dragging) dragging.classList.remove('dragging');
-      if (this._dragTabId != null) TabOrderCommit.commit(window.tabAPI, this._strip.domOrder(), this._dragTabId);
-      this._dragTabId = null;
-    });
-    bar.addEventListener('drop', (e) => { if (this._dragTabId != null) e.preventDefault(); });
-  }
-
-  _onDragOver(e, bar) {
-    if (this._dragTabId == null) return;
-    const over = e.target.closest('.tab');
-    if (!over || over.draggable !== true) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const dragging = bar.querySelector('.tab.dragging');
-    if (!dragging || dragging === over) return;
-    const r = over.getBoundingClientRect();
-    if (e.clientX < r.left + r.width / 2) over.before(dragging); else over.after(dragging);
   }
 }

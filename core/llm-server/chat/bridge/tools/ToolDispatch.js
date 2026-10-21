@@ -1,5 +1,6 @@
 const BrowserTools = require('../../../../llm-service/BrowserTools');
 const McpResultUnwrapper = require('./McpResultUnwrapper');
+const ToolProgress = require('./ToolProgress');
 
 class ToolDispatch {
   constructor({ table, toolSet, ctx }) {
@@ -27,6 +28,7 @@ class ToolDispatch {
         isAborted: ctx.isAborted,
         artifacts: ctx.artifacts,
         onArtifact: ctx.hooks.onArtifact,
+        trace: ctx.trace || null,
       });
       return res || { success: true };
     } catch (err) {
@@ -40,6 +42,7 @@ class ToolDispatch {
       const res = await this._toolSet.mcpAggregator.handleToolCall(name, params || {}, {
         ignoreDisabled: true,
         emit: this._emitter(),
+        onProgress: ToolProgress.reporter(ctx, name),
         chat: {
           conversationId: ctx.conversationId,
           assistantMessageId: ctx.assistantMessageId,

@@ -9,7 +9,11 @@ Runs one reply's tool calls in model order.
 - `new ToolBatchRunner({ executor, guard, compactor, toolResultBudget, history,
   verifier, workTab, clock, toolCalls, steps, emit, shouldAbort, maxParallel,
   noBrowser })`.
-- `run(iteration, batch, content, carriedNotes)` resolves to `{ aborted }`.
+- `run(iteration, batch, content, carriedNotes, { dropped? })` resolves to
+  `{ aborted }`. `dropped` are the calls a pool of one never admitted
+  ([ToolBatchParser](ToolBatchParser.md)`.split`); each is answered
+  `[Tool Result for X]: ` + `AgentLoopText.ONE_CALL_PER_REPLY` after the batch,
+  so the model knows to re-issue it on its own.
 
 ## Rules
 
@@ -24,6 +28,10 @@ Runs one reply's tool calls in model order.
 - [ToolCallGuard](ToolCallGuard.md) runs per call; a rejection holds its place
   in model order, takes no pool slot and does not count as a state change.
 - In lazy mode only [WorkTab](WorkTab.md)`.needsWorkTab` tools create the tab.
+- Every call gets a `callId` (`<iteration>.<index>`), which rides on its `tool`
+  and `tool-result` events; a real batch's `tool` events also carry
+  `batchSize` and `batchIndex`, so the chat can match a result to its own card
+  and draw the batch as one row.
 - Commit, in model order: extend the clock by the tool's duration, update the
   verifier, record `toolCalls` and the step (`batchSize` only for
   real batches), emit `tool-result`, compact the result with

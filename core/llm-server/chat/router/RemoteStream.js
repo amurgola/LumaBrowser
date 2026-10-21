@@ -12,12 +12,12 @@ class RemoteStream {
     this._db = db;
   }
 
-  stream(config, modelId, messages, temperature, hooks, extra = null) {
+  stream(config, modelId, messages, temperature, hooks, extra = null, tools = null) {
     const provider = this._providerFor(config, modelId);
     const peerTurnId = config.peerManaged ? `turn_${crypto.randomBytes(8).toString('hex')}` : null;
     const session = provider.createChatCompletionStreamSession(
       messages,
-      RemoteStream._options(modelId, temperature, extra, peerTurnId),
+      RemoteStream._options(modelId, temperature, extra, peerTurnId, tools),
       RemoteStream._handlers(hooks),
     );
     RemoteStream._settle(session, hooks);
@@ -39,8 +39,8 @@ class RemoteStream {
     return provider;
   }
 
-  static _options(modelId, temperature, extra, peerTurnId) {
-    return {
+  static _options(modelId, temperature, extra, peerTurnId, tools = null) {
+    const options = {
       temperature,
       model: modelId,
       chatTemplateKwargs: (extra && extra.chatTemplateKwargs) || undefined,
@@ -48,12 +48,15 @@ class RemoteStream {
       sessionId: peerTurnId || undefined,
       max_tokens: (extra && typeof extra.maxReplyTokens === 'number') ? extra.maxReplyTokens : undefined,
     };
+    if (Array.isArray(tools) && tools.length) options.tools = tools;
+    return options;
   }
 
   static _handlers(hooks) {
     return {
       onDelta: (text) => hooks.onDelta(text),
       onReasoning: (text) => { if (hooks.onReasoningDelta) hooks.onReasoningDelta(text); },
+      onToolCallDelta: (delta) => { if (hooks.onToolCallDelta) hooks.onToolCallDelta(delta); },
       onStatus: (payload) => { if (hooks.onStatus) hooks.onStatus(payload); },
       onUsage: (usage) => hooks.onUsage(usage),
       onError: (msg) => hooks.onError(new Error(typeof msg === 'string' ? msg : (msg && msg.message) || 'stream failed')),
@@ -67,11 +70,27 @@ class RemoteStream {
           if (res.aborted) return;
           hooks.onError(new Error(res.error || 'stream failed'));
         } else {
-          hooks.onDone({ finishReason: 'stop' });
+          hooks.onDone(RemoteStream._summary(res));
         }
       },
       (err) => hooks.onError(err),
     );
+  }
+
+  static _summary(res) {
+    const response = (res && res.response) || {};
+    const choice = (response.choices && response.choices[0]) || {};
+    const summary = { finishReason: choice.finish_reason || 'stop' };
+    const calls = RemoteStream._toolCalls(response.toolCalls);
+    if (calls.length) summary.toolCalls = calls;
+    return summary;
+  }
+
+  static _toolCalls(toolCalls) {
+    if (!Array.isArray(toolCalls)) return [];
+    return toolCalls
+      .filter((call) => call && call.function && call.function.name)
+      .map((call) => ({ id: call.id || null, name: call.function.name, args: call.function.arguments || '' }));
   }
 
   static _abortPeerTurn(provider, turnId) {

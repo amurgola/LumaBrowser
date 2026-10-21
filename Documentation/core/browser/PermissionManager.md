@@ -31,8 +31,11 @@ identity `wc:<id>` so allow-once and dedupe still work; it is tracked by its own
 
 ## Methods
 
-- `new PermissionManager({ db, getMainWindow, resolveTab, logger })`. `resolveTab(wc)`
-  returns `{ id, hidden }` or null.
+- `new PermissionManager({ db, getMainWindow, windowForTab, resolveTab, logger })`. `resolveTab(wc)`
+  returns `{ id, hidden }` or null. `windowForTab(tabId)` returns the window the tab is
+  drawn in: its prompt (and the prompt's close) goes there, so a tab dragged into its
+  own window is prompted in that window. Without it, or for a webContents that is not
+  a tab, prompts go to the main window.
 - `PermissionManager.install(instance)` / `PermissionManager.current()` hold the
   process-wide instance (TabViewManager uses it to attach sessions and report lifecycle).
 - `attachSession(session)` installs the request and check handlers once per session.

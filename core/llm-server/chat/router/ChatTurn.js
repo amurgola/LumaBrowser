@@ -216,7 +216,13 @@ class ChatTurn {
       evalOverrides: a.evalOverrides || null,
       approvalOverride: a.approvalOverride || null,
       runApprovals: a.runApprovals || null,
+      modelBudget: ChatTurn._modelBudget(this._modelOverrides),
     });
+  }
+
+  static _modelBudget(overrides) {
+    const pool = overrides && overrides.maxParallelToolCalls;
+    return typeof pool === 'number' ? { maxParallelToolCalls: pool } : null;
   }
 
   _dispatchPlain(asst, dial, images) {

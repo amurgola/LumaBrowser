@@ -8,13 +8,20 @@ llama.cpp placement.
 
 ## Methods
 
-- `GgufTensorLayout.scan(entries, dataBytes)` takes `[{ name, offset }]` and
-  returns a JSON-safe scan `{ blocks, kvBlocks, mtpTensors,
-  expertBytesByBlock, residentBytesByBlock, hostBytes, otherBytes, dataBytes,
-  tensorCount }`.
-- `GgufTensorLayout.merge(scans)` unions blocks and sums bytes across the
-  shards of a split model; `null` when the list is empty or any shard is
-  missing, so a partial merge never reads as complete.
+- `GgufTensorLayout.scan(entries, dataBytes)` takes `[{ name, offset,
+  elements?, type? }]` and returns a JSON-safe scan `{ blocks, kvBlocks,
+  mtpBlocks, mtpTensors, expertBytesByBlock, residentBytesByBlock, hostBytes,
+  otherBytes, dataBytes, tensorCount, elementCount, bytesByType }`.
+  `elementCount` sums the dimension products (the parameter count of this
+  file); `bytesByType` sums bytes per ggml type id; `mtpBlocks` lists the
+  blocks holding `nextn.*` tensors.
+- `GgufTensorLayout.merge(scans)` unions blocks and sums bytes, elements and
+  bytes by type across the shards of a split model; `null` when the list is
+  empty or any shard is missing, so a partial merge never reads as complete.
+- `GgufTensorLayout.dominantType(scan)` the ggml type id holding the most
+  bytes, or null.
+- `GgufTensorLayout.isDetachedMtpHead(scan)` true when every block seen holds
+  nextn tensors: the file is a detached MTP head, not a model.
 - `GgufTensorLayout.derive(scan, blockCount)` returns `{ attnKvPerLayer,
   attnKvLayerCount, mtpGrafted, tensorLayout, error }`. Everything except
   `mtpGrafted` is null unless the scan covers every block `0..blockCount-1`;

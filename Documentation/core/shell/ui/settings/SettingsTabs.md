@@ -2,20 +2,23 @@
 
 `core/shell/ui/settings/SettingsTabs.js` (ES module)
 
-The Settings modal's tab strip: Extensions and About after the page's General tab, the Extensions section with its three subtabs, the About subtabs, the top-level tabs extensions ask for, and switching.
+The Settings modal's tab strip: Extensions and About after the page's General tab, the Extensions section with its four subtabs and the host for the "+" add menu, the About subtabs, the top-level tabs extensions ask for, and switching.
 
 ## Methods
 
 - `new SettingsTabs({ onTab(tabName), onSubtab(subtab) })`.
-- `init()` returns `{ extensions, inactive, chrome, license }` pane bodies
-  (`#extensionsSettingsBody`, `#inactiveExtensionsSettingsBody`,
-  `#chromeExtensionsSettingsBody`, `#aboutSubpaneLicense`), or null without
-  `.settings-tabs`. The section goes into `.settings-main`, else before
-  `.settings-content .form-buttons`, else into `.settings-content`.
+- `init()` returns `{ extensions, inactive, browse, chrome, license, addMenuHost }`:
+  the pane bodies (`#extensionsSettingsBody`, `#inactiveExtensionsSettingsBody`,
+  `#browseExtensionsSettingsBody`, `#chromeExtensionsSettingsBody`,
+  `#aboutSubpaneLicense`) and the `#extAddMenuHost` span at the end of the
+  Extensions subtab strip for [ExtensionAddMenu](ExtensionAddMenu.md); null
+  without `.settings-tabs`. The section goes into `.settings-main`, else into
+  `.settings-content`.
 - `switchTab(tabName)`: activates the tab and `#<tab>Settings`, calls `onTab`,
   then restores the last subtab of Extensions or About.
 - `switchSubtab(parent, subtab)`: `'extensions'` (`extensions`,
-  `inactiveExtensions`, `chromeExtensions`) or `'about'` (`about`, `license`).
+  `inactiveExtensions`, `browseExtensions`, `chromeExtensions`) or `'about'`
+  (`about`, `license`).
 - `hasStrip()`, `hasTab(tabName)`.
 - `addExtensionTab(tabName, label)`: a tab an extension owns, inserted before
   Extensions (so it reads as a feature, not an add-on) with its own

@@ -1,11 +1,13 @@
+const DeltaCoalescer = require('./DeltaCoalescer');
 const LaunchErrorHints = require('./LaunchErrorHints');
 
 class TurnStream {
   static NUMERIC_DIAGNOSTICS = ['offFormatCalls', 'lengthCutCompletions', 'missingArgCalls', 'overflowRecoveries'];
 
-  constructor({ chatStore, send, conversationId, assistantMessageId, contextWindow, onSettled, react }) {
+  constructor({ chatStore, send, conversationId, assistantMessageId, contextWindow, onSettled, react, coalescer = null }) {
     this._store = chatStore;
     this._send = send;
+    this._text = coalescer || new DeltaCoalescer((type, text) => this._send(type, { text }));
     this._convId = conversationId;
     this._asstId = assistantMessageId;
     this._ctxWindow = contextWindow;
@@ -49,6 +51,11 @@ class TurnStream {
         ...patch,
       });
     } catch (_) {}
+    this._emit(type, payload);
+  }
+
+  _emit(type, payload) {
+    this._text.flush();
     this._send(type, payload);
   }
 
@@ -58,15 +65,15 @@ class TurnStream {
       onDelta: (text) => this._append('_content', 'delta', text),
       onReasoningDelta: (text) => this._append('_reasoning', 'reasoning-delta', text),
       onUsage: (u) => { if (u) this._usage = u; },
-      onStatus: live((payload) => this._send('status', payload)),
+      onStatus: live((payload) => this._emit('status', payload)),
       onDone: (summary) => this._done(summary),
       onError: (err) => {
         const message = (err && err.message) || String(err) || 'chat failed';
         this._finalize({ error: message }, 'error', { message, ...LaunchErrorHints.of(err) });
       },
-      onToolEvent: live((payload) => this._send('tool', payload)),
-      onArtifact: live((artifact) => this._send('artifact', artifact)),
-      onArtifactStream: live((payload) => this._send('artifact-stream', payload)),
+      onToolEvent: live((payload) => this._emit('tool', payload)),
+      onArtifact: live((artifact) => this._emit('artifact', artifact)),
+      onArtifactStream: live((payload) => this._emit('artifact-stream', payload)),
       onAgentEvent: live((payload) => this._agentEvent(payload)),
       onContentRollback: (chars) => this._rollback(chars),
       onToolTrace: (trace) => this._persistToolTrace(trace),
@@ -76,7 +83,7 @@ class TurnStream {
   _append(field, eventType, text) {
     if (this.finished || !text) return;
     this[field] += text;
-    this._send(eventType, { text });
+    this._text.add(eventType, text);
   }
 
   _done(summary) {
@@ -107,9 +114,9 @@ class TurnStream {
 
   _agentEvent(payload) {
     if (payload && typeof payload.type === 'string') {
-      this._send(payload.type, payload.payload !== undefined ? payload.payload : payload);
+      this._emit(payload.type, payload.payload !== undefined ? payload.payload : payload);
     } else {
-      this._send('agent', payload);
+      this._emit('agent', payload);
     }
   }
 
@@ -117,7 +124,7 @@ class TurnStream {
     if (this.finished || !chars) return;
     const n = Math.min(chars, this._content.length);
     this._content = n >= this._content.length ? '' : this._content.slice(0, -n);
-    this._send('rollback', { chars: n });
+    this._emit('rollback', { chars: n });
   }
 
   _persistToolTrace({ tools, artifacts }) {

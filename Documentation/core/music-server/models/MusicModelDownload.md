@@ -9,7 +9,8 @@ Downloads a music model's HuggingFace repo snapshot and marks it complete.
 - `MusicModelDownload.start({ modelId, modelsDir, onEvent, catalog? })` returns
   `{ promise, cancel }`; throws `Unknown music model: <id>` at once for an id
   not in the catalog (`catalog` defaults to `new MusicModelCatalog()`). The
-  snapshot goes to `<modelsDir>/<id>`. `promise` resolves to the
+  snapshot goes to `<modelsDir>/<id>`, read at the commit the listing was pinned
+  to (the info's `revision` is passed through). `promise` resolves to the
   [MlxRepoDownload](../../llm-server/models/MlxRepoDownload.md) result
   (`{ success: true, destPath, bytes }` or `{ success: false, canceled: true }`);
   `onEvent` receives that downloader's events (`start`, `download`, `finalize`).

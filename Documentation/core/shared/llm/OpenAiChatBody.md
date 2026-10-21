@@ -17,7 +17,10 @@ The one builder for an OpenAI-compatible `/v1/chat/completions` request body.
     `ANTI_REPETITION_SAMPLER` and `cache_prompt: true`.
   - `familySamplerDefaults`: the running model's published sampler.
   - `samplerOverrides`: per-request sampler overrides.
-  - `tools`, `toolChoice` (default `'auto'`): sent only for a non-empty array.
+  - `tools`, `toolChoice` (default `'auto'`): sent only for a non-empty array;
+    `parallelToolCalls: true` adds `parallel_tool_calls: true` beside them
+    (llama-server emits one call per reply unless asked; the agent loop asks
+    only when its pool can run a batch).
   - `chatTemplateKwargs`: sent as `chat_template_kwargs` when non-empty.
   - `reasoningBudget`: sent as `reasoning_budget` for any number.
   - `promptCacheKey`, `promptCacheRetention` (default `'24h'`): retention is

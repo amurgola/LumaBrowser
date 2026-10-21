@@ -182,11 +182,11 @@ class AgentRun {
     const message = result.response?.choices?.[0]?.message || {};
     const content = message.content || '';
     const reasoningTail = CarriedReasoning.tail(AgentRun._reasoningOf(message), this._carriedBudget.perStep);
-    const batch = ToolBatchParser.parse(this._deps.browserTools, content, this._o.maxParallel);
+    const { batch, dropped } = ToolBatchParser.split(this._deps.browserTools, content, this._o.maxParallel);
     this._history.push('assistant', content);
     if (!batch.length) return this._handleNoToolReply(i, content, reasoningTail);
     const notes = reasoningTail ? AgentLoopText.carriedNotes(reasoningTail) : '';
-    const { aborted } = await this._batchRunner.run(i, batch, content, notes);
+    const { aborted } = await this._batchRunner.run(i, batch, content, notes, { dropped });
     if (!aborted) return 'next';
     this._error = 'aborted';
     return 'stop';

@@ -23,8 +23,9 @@ registration is ended in a `finally`.
 Per iteration: `_shouldStop` (wall clock, then cancel), `_prepareRequest`
 (expire the screenshot note, last-steps warning, proactive compaction, notice
 relay), `_complete` (first completion gets the warm-up retry, then overflow
-recovery), then `_handleReply`: calibrate from `usage.prompt_tokens`, parse the
-batch, push the assistant message, and either review a no-tool reply with the
+recovery), then `_handleReply`: calibrate from `usage.prompt_tokens`, split the reply's
+calls into the batch and (at a pool of one) the dropped rest, push the
+assistant message, and either review a no-tool reply with the
 [FinalAnswerGate](FinalAnswerGate.md) or run the batch with
-[ToolBatchRunner](ToolBatchRunner.md). The reasoning tail rides as carried
+[ToolBatchRunner](ToolBatchRunner.md), which answers the dropped calls too. The reasoning tail rides as carried
 notes on the batch's first result.

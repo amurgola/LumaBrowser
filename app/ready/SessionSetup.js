@@ -25,6 +25,13 @@ class SessionSetup {
     this._ctx.app.on('session-created', (sess) => this._onSessionCreated(sess));
     this._bearer.attach(session.defaultSession);
     this._bearer.attach(session.fromPartition(SessionSetup.MAIN_PARTITION));
+    this._attachShimBridge(session.defaultSession);
+    this._attachShimBridge(session.fromPartition(SessionSetup.MAIN_PARTITION));
+  }
+
+  _attachShimBridge(sess) {
+    const bridge = this._s.chromeExtensionService && this._s.chromeExtensionService.bridge;
+    if (bridge) bridge.attach(sess);
   }
 
   _applyDnsProvider() {
@@ -36,6 +43,7 @@ class SessionSetup {
     const permissions = new PermissionManager({
       db: this._s.db,
       getMainWindow: () => this._ctx.mainWindow,
+      windowForTab: (tabId) => (this._ctx.tabViewManager ? this._ctx.tabViewManager.windowOfTab(tabId) : null),
       resolveTab: (wc) => (this._ctx.tabViewManager ? this._ctx.tabViewManager.tabForWebContents(wc) : null),
     });
     PermissionManager.install(permissions);
@@ -45,6 +53,7 @@ class SessionSetup {
 
   _onSessionCreated(sess) {
     const chromeExtensions = this._s.chromeExtensionService;
+    this._attachShimBridge(sess);
     if (chromeExtensions.ready) {
       chromeExtensions.loadAllEnabled(sess).catch((err) => this._log.error('[chrome-ext] loadAllEnabled failed', err));
     }

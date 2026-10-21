@@ -10,13 +10,14 @@ class ShardScanMerger {
     const gguf = model.gguf;
     const scans = await ShardScanMerger._collectScans(model.weights, firstResult, headerCache, gguf);
     if (!scans) return;
-    const derived = GgufTensorLayout.derive(GgufTensorLayout.merge(scans), gguf.blockCount);
+    const merged = GgufTensorLayout.merge(scans);
+    const derived = GgufTensorLayout.derive(merged, gguf.blockCount);
     if (derived.error || !derived.tensorLayout) {
       gguf.attnScanError = derived.error || 'merged tensor scan incomplete';
       return;
     }
     if (!ShardScanMerger._coversWeights(derived.tensorLayout, model, gguf)) return;
-    ShardScanMerger._apply(gguf, derived);
+    ShardScanMerger._apply(gguf, derived, merged);
   }
 
   static _isCompleteSplit(model, firstResult) {
@@ -31,7 +32,7 @@ class ShardScanMerger {
   static async _collectScans(weights, firstResult, headerCache, gguf) {
     const scans = [firstResult.tensorScan];
     for (const shard of weights.slice(1)) {
-      const result = await headerCache.get(shard.path, shard.sizeBytes);
+      const result = await headerCache.get(shard.path, shard.sizeBytes, shard.modifiedAt);
       if (!result || !result.ok || !result.tensorScan) {
         const reason = result && result.error ? ` (${result.error})` : '';
         gguf.attnScanError = `shard ${shard.name || shard.path} tensor scan unavailable${reason}`;
@@ -52,12 +53,17 @@ class ShardScanMerger {
     return true;
   }
 
-  static _apply(gguf, derived) {
+  static _apply(gguf, derived, merged) {
     gguf.attnKvPerLayer = derived.attnKvPerLayer;
     gguf.attnKvLayerCount = derived.attnKvLayerCount;
     gguf.mtpGrafted = derived.mtpGrafted;
     gguf.tensorLayout = derived.tensorLayout;
     gguf.attnScanError = null;
+    const counted = Number(merged && merged.elementCount) || 0;
+    if (gguf.parameterCountSource !== 'header' && counted > 0) {
+      gguf.parameterCount = counted;
+      gguf.parameterCountSource = 'tensors';
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import ArtifactChips from '../turns/ArtifactChips.js';
 import ReplyChoices from '../turns/ReplyChoices.js';
 import ThinkPane from '../turns/ThinkPane.js';
 import TurnData from '../turns/TurnData.js';
+import HtmlPatcher from '../../dom/HtmlPatcher.js';
 import MarkdownRenderer from '../../markdown/MarkdownRenderer.js';
 import StreamFade from './StreamFade.js';
 import StreamImages from './StreamImages.js';
@@ -94,7 +95,7 @@ export default class StreamView {
     this._fade.reset();
     this._images.reset();
     this._watch(body);
-    this._sink = this._ctx.resonant.stream('liveAnswer', { throttle: StreamView.THROTTLE_MS });
+    this._sink = this._ctx.resonant.stream('liveAnswer', { throttle: StreamView.THROTTLE_MS, patch: HtmlPatcher.apply });
   }
 
   _watch(body) {
@@ -105,7 +106,7 @@ export default class StreamView {
       this._fade.apply(body);
       observer.takeRecords();
     });
-    observer.observe(body, { childList: true });
+    observer.observe(body, { childList: true, subtree: true });
     this._observer = observer;
   }
 
@@ -129,11 +130,12 @@ export default class StreamView {
     const body = el.querySelector('.cm-asst-body');
     let think = el.querySelector('.cm-think');
     const stillThinking = this._ctx.thinkPane.isThinkingNow(m);
+    const facts = ThinkPane.facts(m, stillThinking);
     if (!think) {
-      think = ThinkPane.create(m.reasoning, true, stillThinking);
+      think = ThinkPane.create(m.reasoning, true, stillThinking, facts);
       el.querySelector('.cm-asst').insertBefore(think, body);
     } else {
-      ThinkPane.update(think, m.reasoning, stillThinking);
+      ThinkPane.update(think, m.reasoning, stillThinking, facts);
     }
     if (m.content && !m._tc) {
       m._tc = true;
@@ -155,7 +157,7 @@ export default class StreamView {
       const fresh = chain.create(m);
       if (fresh) { fresh.dataset.sig = tcSig; asst.insertBefore(fresh, body); }
     } else {
-      chain.updatePendingDetail(oldTc, m);
+      chain.updateLiveDetail(oldTc, m);
     }
     this._ctx.previewSlot.poke();
     this._syncArtifacts(asst, body, m);

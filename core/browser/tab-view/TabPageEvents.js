@@ -50,11 +50,11 @@ class TabPageEvents {
     if (!action) return;
     event.preventDefault();
     if (Accelerators.MAIN_HANDLED.has(action)) this._performAccelerator(entry, action);
-    this._channel.send('tab-view:accelerator', { action, tabId: entry.id });
+    this._channel.sendForTab(entry, 'tab-view:accelerator', { action, tabId: entry.id });
   }
 
   _onFound(entry, result) {
-    this._channel.send('tab-view:found-in-page', {
+    this._channel.sendForTab(entry, 'tab-view:found-in-page', {
       tabId: entry.id,
       requestId: result && result.requestId,
       activeMatchOrdinal: result ? result.activeMatchOrdinal : 0,

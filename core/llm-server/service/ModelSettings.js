@@ -93,6 +93,7 @@ class ModelSettings {
       reasoningEffort: d.noThink ? 'off' : (d.reasoningEffort || 'default'),
       temperature: null,
       maxReplyTokens: null,
+      maxParallelToolCalls: null,
       ...(isLocal ? { kvCacheType: d.kvCacheType || null } : {}),
     };
   }

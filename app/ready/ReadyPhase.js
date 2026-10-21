@@ -42,11 +42,17 @@ class ReadyPhase {
   }
 
   _installMenus() {
+    const bridge = this._s.chromeExtensionService.bridge;
     try {
-      new ContextMenu({ getTabViewManager: () => this._ctx.tabViewManager, db: this._s.db }).install(this._ctx.app);
+      new ContextMenu({
+        getTabViewManager: () => this._ctx.tabViewManager,
+        db: this._s.db,
+        extensionItems: bridge ? (args) => bridge.contextMenus.templateFor(args) : null,
+      }).install(this._ctx.app);
     } catch (err) {
       this._log.warn('[main] ContextMenu install failed:', err && err.message);
     }
+    if (bridge) bridge.installNavigation(this._ctx.app, () => this._ctx.tabViewManager);
     AppMenu.apply(this._ctx.electron.Menu, this._ctx.proc.platform, this._log);
   }
 

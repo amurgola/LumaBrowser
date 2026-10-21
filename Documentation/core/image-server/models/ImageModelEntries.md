@@ -9,7 +9,7 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 
 - `ImageModelEntries.ENTRIES`: Z-Image Turbo, Qwen-Image-Edit 2509,
   Qwen-Image 2.1, Qwen-Image 2.1 Turbo, SD 1.5, SDXL base, Sprite Shaper XL, FLUX.1 Schnell,
-  Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B (images), then Wan 2.2 T2V, Wan 2.2
+  Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B, MOSS-Image (images), then Wan 2.2 T2V, Wan 2.2
   I2V, AniSora V3.2, LTX-Video 2B and MiniMax-H3 (video).
 - Shared companions `FLUX_VAE`, `T5XXL_Q8`, `WAN_VAE`, `UMT5_Q8`,
   `QWEN_21_VAE`, `QWEN3_VL_8B_LLM`, `QWEN3_VL_8B_VISION`, the shared
@@ -24,12 +24,13 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 supportsI2V?, licenseNote?, files: { <role>: { role, repo, file, url,
 approxBytes, loaderFlag?, quants?, supersedes?, updateNote? } }, minVramBytes,
 defaults: { width, height, steps, cfgScale, sampler, scheduler?,
-negativePrompt?, promptGuide?, fixedSigmas?, videoFrames?, fps?, flowShift? }, constraints?,
+negativePrompt?, promptGuide?, fixedSigmas?, cacheMode?, cacheOption?, videoFrames?, fps?, flowShift? }, constraints?,
 launchArgs, protocol: 'sd-cpp-http'|'sd-cpp-video', compatibleRuntimes }`.
 
 Roles map to sd-server flags in the launch planner: `diffusion`, `vae`, `llm`,
 `clip_l`, `t5xxl`, `vision` (`--llm_vision`), `highNoise`
-(`--high-noise-diffusion-model`), `audioVae` (`--audio-vae`). `quants` must have
+(`--high-noise-diffusion-model`), `audioVae` (`--audio-vae`), `tokenizer`
+(`--tokenizer`, the one role that is a `.json`, not weights). `quants` must have
 exactly one `default` equal to the top-level file and url. `recVramBytes` is the
 comfortable GPU-resident size with the encoders on the CPU.
 
@@ -60,6 +61,18 @@ comfortable GPU-resident size with the encoders on the CPU.
 - Chroma1-Flash: the model card's heun / 8 steps / CFG 1 recipe.
 - FLUX.2 klein 4B: a different VAE from FLUX.1 (never dedupe it); Q8_0 default
   because small models lose more to 4-bit; cfg pinned to 1.
+- MOSS-Image: OpenMOSS's 5B DiT with a Qwen3.5-9B `--llm`, the FLUX.2 VAE and
+  an external `tokenizer.json` (`--tokenizer`), since Qwen3.5's vocabulary is not
+  the Qwen tokenizer sd.cpp embeds. The diffusion file is Comfy-Org's int8
+  repack loaded with `--diffusion-model`: the community GGUFs keep split Q/K/V
+  tensors sd.cpp cannot load yet (#2158). sd.cpp applies the model's shift 5 and
+  the layer-22 skip on the negative branch itself, so the row sets no scheduler
+  or shift. Upstream recommends 50 steps at cfg 3; on an RTX 5090 at 1024x1024
+  (CUDA, int8) 28 steps with `cacheMode: 'easycache'` (13 of 28 steps skipped)
+  sampled in 12 s versus 36 s for 50 plain steps with no visible loss in text,
+  skin or hair; Vulkan runs the same row at about half that speed. Below 20
+  steps dpm++2m over-sharpens lettering. Real CFG, so the short negative applies.
+  Canvases are /16. Needs an sd.cpp build from 2026-10-17 (master-973) or newer.
 - Video rows: `supportsI2V` is always explicit because a T2V checkpoint silently
   discards `init_image` in sd.cpp. Wan rows share the 4n+1 frame grid capped at
   81 (the 5 s @ 16 fps training ceiling); LTX uses 8n+1 up to 257 at /32;

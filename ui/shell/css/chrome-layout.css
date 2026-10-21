@@ -255,3 +255,8 @@ body.is-llm-tab .browser-container {
     background: var(--bg-surface-2);
     color: var(--text-primary);
 }
+
+body.detached-window .right-panel,
+body.detached-window #rightPanelResizer,
+body.detached-window #aiChatToggle,
+body.detached-window #dashboardBtn { display: none; }

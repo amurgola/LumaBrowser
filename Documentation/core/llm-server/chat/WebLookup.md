@@ -7,9 +7,11 @@ address or a result number) reads a page, one part at a time.
 
 ## Methods
 
-- `WebLookup.run({ params, tabRender?, ctxPerSlot?, session?, fetcher? })`
+- `WebLookup.run({ params, tabRender?, ctxPerSlot?, session?, fetcher?, onProgress? })`
   resolves `{ success: true, message, ... }` or `{ success: false, error }` and
-  never throws.
+  never throws. `onProgress(message)` hears each phase of the lookup (the
+  engine being asked, the host being fetched or rendered) for the tool card;
+  it rides to SearchRunner and PageReader.
   - `params` is parsed by [LookupRequest](web-tools/LookupRequest.md)
     (`query`, `url`, `find`, `part`, `timeout`, `link` / `result`).
   - search -> [SearchRunner](web-tools/SearchRunner.md); rows are remembered in

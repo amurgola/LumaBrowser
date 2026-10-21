@@ -17,8 +17,8 @@ The shared state of one app run. The composition classes read late-bound values
   name, see [AppServices](services/AppServices.md)), `renderers`, `desktopNotice`,
   `routers` (`{ chat, image, video, music }`).
 - Window time: `mainWindow`, `mainWindowController`, `tray`, `rendererRecovery`,
-  `quitController`, `tabViewManager`, `tabManager`, `chromeOverlay`,
-  `tabPreviewManager`, `onDemandOverlay`, `browserService`, `heavyServices`,
+  `quitController`, `tabViewManager`, `tabManager`, `chromeOverlay`, `tabWindows`
+  ([TabWindows](window/TabWindows.md)), `tabPreviewManager`, `onDemandOverlay`, `browserService`, `heavyServices`,
   `deferredServices`, `identityReady` (a promise), `agentDeps`.
 
 ## Methods

@@ -14,12 +14,13 @@ class WebLookup {
     return new WebLookup(options).execute();
   }
 
-  constructor({ params, tabRender = null, ctxPerSlot, session, fetcher } = {}) {
+  constructor({ params, tabRender = null, ctxPerSlot, session, fetcher, onProgress = null } = {}) {
     this._params = params;
     this._tabRender = tabRender;
     this._session = session || new WebSession();
     this._partChars = ReadBudget.partChars(ctxPerSlot);
     this._fetcher = fetcher;
+    this._onProgress = typeof onProgress === 'function' ? onProgress : null;
   }
 
   async execute() {
@@ -91,7 +92,12 @@ class WebLookup {
   }
 
   _transport() {
-    return { timeoutMs: this._request.timeoutMs, tabRender: this._tabRender, ...(this._fetcher ? { fetcher: this._fetcher } : null) };
+    return {
+      timeoutMs: this._request.timeoutMs,
+      tabRender: this._tabRender,
+      ...(this._fetcher ? { fetcher: this._fetcher } : null),
+      ...(this._onProgress ? { onProgress: this._onProgress } : null),
+    };
   }
 }
 

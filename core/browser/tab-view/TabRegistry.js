@@ -1,12 +1,30 @@
 const TabKinds = require('./TabKinds');
+const TabHosts = require('./TabHosts');
 
 class TabRegistry {
   constructor() {
     this.tabs = new Map();
     this.order = [];
-    this.activeTabId = null;
+    this._activeByHost = new Map();
     this._nextTabId = 0;
     this._nextInternalTabId = TabKinds.INTERNAL_TAB_ID_BASE;
+  }
+
+  get activeTabId() {
+    return this.activeIn(TabHosts.MAIN_ID);
+  }
+
+  set activeTabId(tabId) {
+    this.setActive(TabHosts.MAIN_ID, tabId);
+  }
+
+  activeIn(hostId) {
+    return this._activeByHost.has(hostId) ? this._activeByHost.get(hostId) : null;
+  }
+
+  setActive(hostId, tabId) {
+    if (tabId === null || tabId === undefined) this._activeByHost.delete(hostId);
+    else this._activeByHost.set(hostId, tabId);
   }
 
   allocateId(kind) {
@@ -40,19 +58,24 @@ class TabRegistry {
     return this.entries().filter((entry) => entry.keepAlive);
   }
 
-  list({ includeSilent = false, includeInternal = false } = {}) {
-    return this._ordered().filter((entry) => {
+  list({ includeSilent = false, includeInternal = false, hostId } = {}) {
+    return this._ordered(hostId).filter((entry) => {
       if (!includeSilent && (entry.silent || entry.hidden)) return false;
       return includeInternal || !entry.isInternal();
     });
   }
 
-  inStrip() {
-    return this._ordered().filter((entry) => entry.isInStrip());
+  inStrip(hostId) {
+    return this._ordered(hostId).filter((entry) => entry.isInStrip());
+  }
+
+  inHost(hostId) {
+    return this._ordered(hostId);
   }
 
   neighbourOf(tabId) {
-    const visible = this.inStrip();
+    const own = this.tabs.get(tabId);
+    const visible = this.inStrip(own ? own.hostId : undefined);
     const at = visible.findIndex((entry) => entry.id === tabId);
     if (at === -1) return visible[0] || null;
     return visible[at + 1] || visible[at - 1] || null;
@@ -77,21 +100,25 @@ class TabRegistry {
   }
 
   isActive(tabId) {
-    return this.activeTabId === tabId;
+    for (const activeId of this._activeByHost.values()) {
+      if (activeId === tabId) return true;
+    }
+    return false;
   }
 
   clear() {
     this.tabs.clear();
     this.order = [];
-    this.activeTabId = null;
+    this._activeByHost.clear();
   }
 
   static notFound(tabId) {
     return { success: false, error: `Tab ${tabId} not found` };
   }
 
-  _ordered() {
-    return this.order.map((id) => this.tabs.get(id)).filter(Boolean);
+  _ordered(hostId) {
+    const entries = this.order.map((id) => this.tabs.get(id)).filter(Boolean);
+    return hostId === undefined ? entries : entries.filter((entry) => entry.hostId === hostId);
   }
 
   _insertionIndex(index) {

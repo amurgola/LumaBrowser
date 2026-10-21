@@ -45,7 +45,7 @@ class TabSurfaces {
 
   _buildOverlays(win) {
     const tvm = this._ctx.tabViewManager;
-    const overlay = new ChromeOverlay(win);
+    const overlay = new ChromeOverlay(win, { acceptsSender: (sender) => tvm.windowIdForSender(sender) === TabViewManager.MAIN_WINDOW_ID });
     tvm.on('tabSwitched', () => overlay.raiseVisible());
     const preview = new TabPreviewManager(win, tvm, { db: this._s.db });
     preview.on('raised', () => overlay.raiseVisible());

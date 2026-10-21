@@ -340,43 +340,6 @@ class ExtensionAutocompleteData {
         '  }',
       ].join('\n'),
     },
-    {
-      label: 'extensionsAction',
-      kind: CompletionKind.FIELD,
-      detail: 'object',
-      documentation: [
-        'A button this extension contributes to the Extensions management area.',
-        'Core renders it generically, optionally collects a brief, then launches',
-        'a chat mode via a one-shot intent (the chat mode owns the behaviour).',
-        '',
-        '  {',
-        '    label: "✨ Vibe",',
-        '    variant: "primary" | "secondary",',
-        '    gate: "llm",                 // only show when an LLM is configured',
-        '    modeIntent: "code",          // chat mode launched on click',
-        '    prompt: {                    // optional modal → intent data',
-        '      title: "...", subtitle: "...", submitLabel: "Start",',
-        '      fields: [{ key, label, type: "text" | "textarea", required, placeholder }],',
-        '    },',
-        '  }',
-      ].join('\n'),
-    },
-    {
-      label: 'extensionsActions',
-      kind: CompletionKind.FIELD,
-      detail: 'array',
-      documentation: [
-        'Multiple Extensions-area buttons (the plural of extensionsAction). Same',
-        'shape per entry; core renders one button each, gated independently. Use',
-        'this when one extension contributes several launchers (e.g. code-mode\'s',
-        '"Vibe" + "Code a project").',
-        '',
-        '  extensionsActions: [',
-        '    { label: "✨ Vibe", gate: "llm", modeIntent: "code", prompt: { ... } },',
-        '    { label: "Code a project", gate: "llm", modeIntent: "code", prompt: { ... } },',
-        '  ]',
-      ].join('\n'),
-    },
   ];
 
   static CSS_CLASSES = [

@@ -58,7 +58,8 @@ Chat:
 - `generateTitle(convId)` -> [TitleGenerator](router/TitleGenerator.md).
 - `complete(opts)`, `completeStream(opts, ext)` -> [SideCompletion](router/SideCompletion.md).
 - `_completeOnce(modelRef, messages, temperature, onStatus, onToken,
-  onReasoningToken, onUsage, onTimings, images, tools, extra, ctl)`: the agent
+  onReasoningToken, onUsage, onTimings, images, tools, extra, ctl,
+  onToolCallDelta)`: the agent
   bridge's per-iteration completion, positional as the bridge calls it ->
   [AgentCompletion](router/AgentCompletion.md)`#completeOnce`.
 

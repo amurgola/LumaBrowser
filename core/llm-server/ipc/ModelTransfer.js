@@ -32,8 +32,8 @@ class ModelTransfer {
     }
   }
 
-  fetch(url, destPath, onEvent) {
-    this._current = this._download({ url, destPath, onEvent });
+  fetch(url, destPath, onEvent, expected = {}) {
+    this._current = this._download({ url, destPath, onEvent, ...ModelTransfer._known(expected) });
     return this._current.promise;
   }
 
@@ -48,6 +48,13 @@ class ModelTransfer {
     }
     this._send('canceled', {});
     return { success: false, canceled: true };
+  }
+
+  static _known(expected) {
+    const out = {};
+    if (expected && expected.expectedSize > 0) out.expectedSize = expected.expectedSize;
+    if (expected && expected.expectedSha256) out.expectedSha256 = expected.expectedSha256;
+    return out;
   }
 }
 

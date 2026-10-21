@@ -8,7 +8,7 @@ callers (TabManager, TabPreviewManager, On Demand, the dashboard) read its field
 ## Fields
 
 `id`, `view`, `webContents`, `partition`, `silent`, `kind`, `pinned`, `keepAlive`,
-`hidden`, `url`, `title`, `loading`, `canGoBack`, `canGoForward`, `zoomLevel`,
+`hidden`, `hostId` (the window the view is drawn in, [TabHosts](TabHosts.md); 0 is the main window), `url`, `title`, `loading`, `canGoBack`, `canGoForward`, `zoomLevel`,
 `createdAt`, `openerTabId` (the tab whose page opened this one, else null),
 `lastNavigatedAt`, `lastActivatedAt` (set when the tab is brought to the front;
 the AI chat offers the page the user was just on), `lastHttpStatus`, `favicon`,
@@ -21,9 +21,11 @@ generations), `_errorPageFor` (the failed URL while the error page shows),
 
 ## Methods
 
-- `new TabEntry({ id, view, partition, url, title, kind, silent, pinned, keepAlive, hidden, openerTabId })`.
+- `new TabEntry({ id, view, partition, url, title, kind, silent, pinned, keepAlive, hidden, openerTabId, hostId })`.
 - `applyNavEvent(kind, payload)` runs [NavigationGenerations](NavigationGenerations.md)`.decide`
   against `_nav`, stores the next state and returns the decision.
 - `isInternal()`, `isAutomation()` (see [TabKinds](TabKinds.md)).
 - `isInStrip()`: not silent and not hidden.
 - `isRegularBrowsing()`: not silent, not internal, not automation.
+- `isMovable()`: a regular browsing tab in the strip that is not pinned; only these
+  move between windows.

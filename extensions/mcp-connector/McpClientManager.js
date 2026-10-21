@@ -17,7 +17,7 @@ class McpClientManager {
     this._registry = new McpToolRegistry({
       getAggregator: getAggregator || (() => ChatRouterDeps.aggregator()),
       getConnections: () => this._connections,
-      handler: (toolName, args) => this.callTool(toolName, args),
+      handler: (toolName, args, opts) => this.callTool(toolName, args, opts),
     });
   }
 
@@ -53,7 +53,7 @@ class McpClientManager {
     return this._configs().map((config) => this._statusRow(config));
   }
 
-  async callTool(toolName, args) {
+  async callTool(toolName, args, opts = {}) {
     const route = this._registry.route(toolName);
     if (!route) throw new Error(`mcp-connector: unknown tool "${toolName}"`);
     const entry = this._connections.get(route.serverId);
@@ -63,8 +63,24 @@ class McpClientManager {
     return entry.client.callTool(
       { name: route.originalName, arguments: args || {} },
       undefined,
-      { timeout: McpClientManager.CALL_TIMEOUT_MS },
+      McpClientManager._requestOptions(opts),
     );
+  }
+
+  static _requestOptions(opts) {
+    const options = { timeout: McpClientManager.CALL_TIMEOUT_MS };
+    const onProgress = opts && typeof opts.onProgress === 'function' ? opts.onProgress : null;
+    if (!onProgress) return options;
+    options.resetTimeoutOnProgress = true;
+    options.onprogress = (notification) => {
+      const n = notification || {};
+      const fields = {};
+      if (typeof n.progress === 'number') fields.step = n.progress;
+      if (typeof n.total === 'number') fields.totalSteps = n.total;
+      if (n.message) fields.message = String(n.message);
+      try { onProgress(fields); } catch (_) {}
+    };
+    return options;
   }
 
   async _dial(config, entry) {

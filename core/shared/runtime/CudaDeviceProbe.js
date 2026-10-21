@@ -1,13 +1,24 @@
-const NvidiaSmi = require('./NvidiaSmi');
+const NvidiaSmiStream = require('./NvidiaSmiStream');
 
 class CudaDeviceProbe {
   static MIB = 1024 * 1024;
 
   static _gpuCount = null;
+  static READY_MS = 3000;
+  static stream = null;
+
+  static whenReady(timeoutMs = CudaDeviceProbe.READY_MS) {
+    const stream = CudaDeviceProbe._stream();
+    if (typeof stream.whenReady !== 'function') return Promise.resolve(null);
+    return stream.whenReady(timeoutMs).catch(() => null);
+  }
 
   static gpuCount() {
-    if (CudaDeviceProbe._gpuCount === null) CudaDeviceProbe._gpuCount = NvidiaSmi.queryGpuCountSync();
-    return CudaDeviceProbe._gpuCount;
+    if (CudaDeviceProbe._gpuCount !== null) return CudaDeviceProbe._gpuCount;
+    const snap = CudaDeviceProbe._stream().snapshot();
+    const count = snap.rows.length;
+    if (snap.outcome && snap.outcome.kind === 'ok') CudaDeviceProbe._gpuCount = count;
+    return count;
   }
 
   static readDevices(diagnostics) {
@@ -29,12 +40,16 @@ class CudaDeviceProbe {
   }
 
   static readComputeApps() {
-    return NvidiaSmi.queryComputeAppsSync();
+    return CudaDeviceProbe._stream().cachedComputeApps();
   }
 
   static diagnosticsDevices(diagnostics) {
     const cuda = diagnostics && diagnostics.cuda;
     return cuda && cuda.available && Array.isArray(cuda.devices) ? cuda.devices : null;
+  }
+
+  static _stream() {
+    return CudaDeviceProbe.stream || NvidiaSmiStream.shared;
   }
 
   static _fromDiagnosticsDevice(device, index) {
@@ -47,28 +62,46 @@ class CudaDeviceProbe {
   }
 
   static _liveDevices() {
-    return NvidiaSmi.queryGpusSync()
-      .filter((row) => row.totalBytes > 0)
-      .map((row, index) => ({
-        index,
-        name: row.name || `CUDA${index}`,
-        totalBytes: row.totalBytes,
-        freeBytes: row.freeBytes,
-      }));
+    const stream = CudaDeviceProbe._stream();
+    const snap = stream.snapshot();
+    if (CudaDeviceProbe._unread(snap) && typeof stream.refresh === 'function' && CudaDeviceProbe._running(stream)) {
+      Promise.resolve(stream.refresh()).catch(() => {});
+    }
+    return CudaDeviceProbe._toDevices(snap.rows);
+  }
+
+  static _unread(snap) {
+    return snap.at == null && !!snap.outcome && snap.outcome.kind === 'none';
+  }
+
+  static _running(stream) {
+    return typeof stream.isRunning !== 'function' || stream.isRunning();
+  }
+
+  static _toDevices(rows) {
+    return (rows || [])
+      .filter((row) => row && row.totalBytes > 0)
+      .map((row, position) => {
+        const index = Number.isInteger(row.index) ? row.index : position;
+        return { index, name: row.name || `CUDA${index}`, totalBytes: row.totalBytes, freeBytes: row.freeBytes };
+      });
   }
 
   static _liveRows(query) {
-    const rows = (query || (() => NvidiaSmi.queryGpusSync()))();
+    const rows = query ? query() : CudaDeviceProbe._stream().snapshot().rows;
     return (rows || []).filter((row) => row && row.totalBytes > 0);
   }
 
   static _overlayLiveMemory(diagnostics, cached, live) {
     const MIB = CudaDeviceProbe.MIB;
-    const devices = cached.map((device, i) => ({
-      ...device,
-      memoryTotalMB: Math.round(live[i].totalBytes / MIB),
-      memoryFreeMB: live[i].freeBytes != null ? Math.round(live[i].freeBytes / MIB) : device.memoryFreeMB,
-    }));
+    const devices = cached.map((device, i) => {
+      const row = live.find((r) => r.index === i) || live[i];
+      return {
+        ...device,
+        memoryTotalMB: Math.round(row.totalBytes / MIB),
+        memoryFreeMB: row.freeBytes != null ? Math.round(row.freeBytes / MIB) : device.memoryFreeMB,
+      };
+    });
     return { ...diagnostics, cuda: { ...diagnostics.cuda, devices }, _liveMemoryAt: Date.now() };
   }
 }

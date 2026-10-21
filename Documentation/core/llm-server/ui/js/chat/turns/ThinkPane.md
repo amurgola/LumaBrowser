@@ -10,5 +10,11 @@ read "Thought for" while still thinking.
 ## Methods
 
 - `isThinkingNow(message)`.
-- `ThinkPane.create(text, open, streaming)`, `ThinkPane.update(pane, text, streaming)`,
-  `ThinkPane.scrollToEnd(pane)`.
+- `ThinkPane.facts(message, thinkingNow, now?)`: the summary's inputs,
+  `{ elapsedMs, tokens }`: the clock from the first reasoning token
+  (`_reasonStart`, set by [ChatEventRouter](../stream/ChatEventRouter.md)) to
+  now while thinking, else to the last one (`_reasonAt`); null for a reloaded
+  message, which kept no clock; `tokens` is `message.reasoningTokens` when the
+  provider reported a count.
+- `ThinkPane.create(text, open, streaming, facts?)`,
+  `ThinkPane.update(pane, text, streaming, facts?)`, `ThinkPane.scrollToEnd(pane)`.

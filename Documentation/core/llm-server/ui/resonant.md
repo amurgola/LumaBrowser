@@ -5,7 +5,11 @@
 ResonantJs, the owner's reactive templating framework, copied byte for byte from
 legacy as a vendor file (allowed exception: not one class per file, not a module,
 and it keeps six em-dashes in its comments because the owner's rule is "copy it
-unchanged").
+unchanged"), plus one change made upstream in ResonantJs at the same time and
+applied here identically: `stream(name, { patch })`, where `patch(el, html)`
+writes a flush instead of `el.innerHTML = html` (the chat's live answer passes
+[HtmlPatcher](js/dom/HtmlPatcher.md)`.apply`). The next vendor bump from
+ResonantJs carries it; nothing else here differs from legacy.
 
 ## How modules use it
 

@@ -18,7 +18,8 @@ when matched, capture the exchange and optionally forward it to a webhook.
 - `matches(url, method = 'GET')` is false when disabled; otherwise checks the
   method (`'*'` matches all, case-insensitive) and the anchored,
   case-insensitive wildcard pattern (`*` any run, `?` one character, all else
-  literal).
+  literal). The compiled pattern is cached on the watcher and rebuilt only when
+  `urlPattern` changes: `matches` runs for every request of every tab.
 - `recordTrigger()` stamps `lastTriggered` and increments `triggerCount`.
 - `toJSON()` returns every field as a plain object.
 

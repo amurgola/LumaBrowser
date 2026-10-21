@@ -1,5 +1,6 @@
 import HtmlEscaper from '../../../llm-server/ui/js/format/HtmlEscaper.js';
 import ManifestCopy from './ManifestCopy.js';
+import ExtCard from './ExtCard.js';
 
 export default class ExtensionRow {
   static TOGGLE_CHANNEL = 'core.shell.toggleExtension';
@@ -14,46 +15,55 @@ export default class ExtensionRow {
 
   build(ext, constraints, errors) {
     const constraint = constraints[ext.id] || { enabled: ext.enabled !== false, canToggle: true, reason: '' };
-    const item = document.createElement('div');
-    item.className = `ext-list-item${!constraint.enabled ? ' ext-list-item--disabled' : ''}${errors.length ? ' ext-list-item--error' : ''}`;
-    item.innerHTML = this._html(ext, constraint, errors);
+    const holder = document.createElement('div');
+    holder.innerHTML = ExtCard.html(this._spec(ext, constraint, errors)).trim();
+    const item = holder.firstElementChild;
     this._wireToggle(item, ext);
     this._wireButtons(item, ext);
     return item;
   }
 
   static rowError(item, message) {
-    let el = item.querySelector('.ext-list-item-error[data-live]');
+    const inner = item.querySelector('.ext-item-tray-inner');
+    if (!inner) return;
+    let el = inner.querySelector('.ext-item-error[data-live]');
     if (!el) {
       el = document.createElement('div');
-      el.className = 'ext-list-item-error';
+      el.className = 'ext-item-error ext-list-item-error';
       el.setAttribute('data-live', '1');
-      (item.querySelector('.ext-list-item-info') || item).appendChild(el);
+      inner.insertBefore(el, inner.firstChild);
     }
-    el.innerHTML = `<span class="luma-badge bad">Error</span><span>${HtmlEscaper.escape(message)}</span>`;
+    el.textContent = message;
+    item.classList.add(ExtCard.OPEN_CLASS, 'ext-list-item--error');
   }
 
-  _html(ext, constraint, errors) {
-    const esc = HtmlEscaper.escape;
+  _spec(ext, constraint, errors) {
     const isEnabled = constraint.enabled;
+    const description = ManifestCopy.clean(ext.description);
     const tagsHtml = ExtensionRow._tagsHtml(ext.dependencies || []);
-    return `
-      <div class="ext-list-item-info">
-        <div class="ext-list-item-name">${esc(ext.name)} <span class="ext-list-item-version">v${esc(ext.version)}</span></div>
-        <div class="ext-list-item-desc">${esc(ManifestCopy.clean(ext.description))}</div>
-        ${tagsHtml ? `<div class="ext-list-item-tags">${tagsHtml}</div>` : ''}
-        ${this._reasonHtml(ext, constraint)}
-        ${ExtensionRow._errorHtml(errors)}
-      </div>
-      <div class="ext-list-item-actions">
-        ${isEnabled ? '<button class="btn btn-secondary ext-list-configure-btn">Configure</button>' : ''}
-        ${constraint.deletable ? '<button class="btn btn-secondary ext-list-delete-btn" title="Permanently delete this extension and its files">Delete</button>' : ''}
-        <label class="luma-switch" title="${esc(constraint.reason || (isEnabled ? 'Disable' : 'Enable'))}">
-          <input type="checkbox" ${isEnabled ? 'checked' : ''} ${!constraint.canToggle ? 'disabled' : ''}>
-          <span class="luma-switch-track"></span>
-        </label>
-      </div>
-    `;
+    const reasons = this._reasons(ext, constraint);
+    const error = ExtensionRow._errorText(errors);
+    const notRunning = isEnabled && ext.loadable === false;
+    return {
+      id: ext.id,
+      name: ext.name,
+      version: ext.version,
+      summary: description,
+      description,
+      dim: !isEnabled,
+      check: { checked: isEnabled, disabled: !constraint.canToggle, title: constraint.reason || undefined },
+      status: error ? null : (notRunning ? { text: 'Not running', tone: 'warn' } : null),
+      error,
+      primary: isEnabled ? { label: 'Configure', cls: 'ext-list-configure-btn' } : null,
+      details: [{ label: 'ID', value: ext.id, mono: true }],
+      extraHtml: [
+        tagsHtml ? `<div class="ext-list-item-tags">${tagsHtml}</div>` : '',
+        reasons.length ? `<p class="ext-item-desc ext-list-item-reason">${reasons.map((r) => HtmlEscaper.escape(r)).join(' ')}</p>` : '',
+      ].join(''),
+      actions: constraint.deletable
+        ? [{ label: 'Delete', cls: 'ext-list-delete-btn', danger: true, title: 'Permanently delete this extension and its files' }]
+        : [],
+    };
   }
 
   static _tagsHtml(deps) {
@@ -65,7 +75,7 @@ export default class ExtensionRow {
     }).join('');
   }
 
-  _reasonHtml(ext, constraint) {
+  _reasons(ext, constraint) {
     const reasons = [];
     if (constraint.reason) reasons.push(constraint.reason);
     if (constraint.enabled && ext.loadable === false) {
@@ -73,18 +83,18 @@ export default class ExtensionRow {
         ? `Not running: requires ${this._meta.displayName(ext.unmetDependency)} to be enabled.`
         : 'Not running: it failed to load when the app started.');
     }
-    return reasons.length ? `<div class="ext-list-item-reason">${reasons.map((r) => HtmlEscaper.escape(r)).join(' ')}</div>` : '';
+    return reasons;
   }
 
-  static _errorHtml(errors) {
+  static _errorText(errors) {
     if (!errors.length) return '';
     const last = errors[errors.length - 1].error || 'Failed to start';
     const more = errors.length > 1 ? ` (+${errors.length - 1} more)` : '';
-    return `<div class="ext-list-item-error"><span class="luma-badge bad">Error</span><span>${HtmlEscaper.escape(last)}${more}</span></div>`;
+    return `${last}${more}`;
   }
 
   _wireToggle(item, ext) {
-    const toggle = item.querySelector('.luma-switch input');
+    const toggle = item.querySelector('.ext-item-check');
     toggle.addEventListener('change', () => this._toggle(item, toggle, ext));
   }
 

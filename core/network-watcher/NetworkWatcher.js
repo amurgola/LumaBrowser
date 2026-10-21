@@ -29,7 +29,15 @@ class NetworkWatcher {
   matches(url, method = 'GET') {
     if (!this.enabled) return false;
     if (!this._methodMatches(method)) return false;
-    return NetworkWatcher._wildcardToRegex(this.urlPattern).test(url);
+    return this._patternRegex().test(url);
+  }
+
+  _patternRegex() {
+    if (!this._regex || this._regexSource !== this.urlPattern) {
+      this._regexSource = this.urlPattern;
+      this._regex = NetworkWatcher._wildcardToRegex(this.urlPattern);
+    }
+    return this._regex;
   }
 
   recordTrigger() {

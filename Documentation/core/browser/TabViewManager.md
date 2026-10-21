@@ -2,8 +2,10 @@
 
 `core/browser/TabViewManager.js`
 
-Owns every browser tab as a WebContentsView inside the main BrowserWindow. The
-renderer is only a positioning surface: it reports the content-area bounds and
+Owns every browser tab as a WebContentsView inside the main BrowserWindow or a
+window a tab was dragged out into (see [TabWindows](../../app/window/TabWindows.md)).
+One registry and one strip order span every window, so automation, history and the
+chat see every tab wherever it is drawn. Each renderer is only a positioning surface: it reports the content-area bounds and
 renders the strip from tab events. TabManager (automation) reads tabs from here,
 NetworkInterceptor attaches per view, and extensions follow tab lifecycle
 through BrowserService.
@@ -25,7 +27,11 @@ Public fields: `mainWindow`, `preloadPath`, `networkInterceptor`,
 `activeTabId`, `currentBounds`, `recentlyClosed`, `reservedPartitions`.
 
 Statics: `SHARED_PARTITION` (`persist:main`), `AUTOMATION_KINDS`, `INTERNAL_KINDS`
-(see [TabKinds](tab-view/TabKinds.md)).
+(see [TabKinds](tab-view/TabKinds.md)), `MAIN_WINDOW_ID` (0, see [TabHosts](tab-view/TabHosts.md)).
+
+`activeTabId`, `getActiveTabId()`, `currentBounds`, `boundsChanged` and `tabSwitched`
+keep meaning the main window: the overlays, the tab preview, On Demand and
+automation all live there.
 
 ## Methods
 
@@ -34,13 +40,28 @@ Lifecycle and strip ([TabLifecycle](tab-view/TabLifecycle.md), [TabActivation](t
 - `createTab(url = 'https://duckduckgo.com', options)` returns the serialized tab.
   Options: `silent`, `hidden`, `keepAlive`, `activate` (default true unless silent
   or hidden), `kind` (`user`, `cdp`, `llm`, `dashboard`), `partition`, `pinned`,
-  `title`, `preloadPath`, `index`, `openerTabId`.
+  `title`, `preloadPath`, `index`, `openerTabId`, `windowId` (the window to open
+  in; without it a tab opened from a page joins its opener's window, else the main
+  one; silent, hidden, pinned, internal and automation tabs are always the main window's).
 - `closeTab(tabId)`: refuses pinned tabs; opens a start-page tab first when it is
-  the last regular strip tab; hides persisted tabs instead of destroying them.
+  the main window's last regular strip tab (a detached window closes with its last
+  tab instead); hides persisted tabs instead of destroying them.
 - `closeTabInternal(tabId)`: destroys, bypassing pinned and last-tab rules (LLM tab teardown).
-- `reopenClosedTab()`, `moveTab(tabId, toIndex)`, `switchToTab(tabId)`,
-  `showTab(tabId)`, `cycleTab(delta)`, `selectTabByIndex(n)` (n <= 0 is the last tab),
-  `setBounds(bounds)`, `destroyAll()`.
+- `reopenClosedTab(windowId = 0)`, `moveTab(tabId, toIndex)`, `switchToTab(tabId)`,
+  `showTab(tabId)`, `cycleTab(delta, windowId = 0)`, `selectTabByIndex(n, windowId = 0)`
+  (n <= 0 is the last tab), `setBounds(bounds, windowId = 0)`, `destroyAll()`.
+
+Windows ([TabHosts](tab-view/TabHosts.md), [TabTransfer](tab-view/TabTransfer.md)):
+
+- `addWindow(window)` -> window id; `removeWindow(windowId)` (the window is closing:
+  persisted tabs go back to the main window hidden, the rest close and can be
+  reopened); `hasWindow(windowId)`, `getWindow(windowId)` (live window or null).
+- `moveTabToWindow(tabId, windowId, { index, activate = true })` -> `{ success, windowId }`
+  or `{ success: false, error }`; only movable tabs ([TabEntry](tab-view/TabEntry.md) `isMovable`).
+- `windowOfTab(tabId)`, `windowIdOfTab(tabId)`, `windowIdForSender(webContents)`
+  (a window's chrome renderer -> its id, anything else -> 0), `activeTabIdIn(windowId)`,
+  `getWindowTabs(windowId)` (serialized strip tabs), `resyncWindow(windowId)` (replays
+  a window's tabs to a reloaded renderer).
 
 Persisted tabs ([PersistedTabs](tab-view/PersistedTabs.md), [KeepAliveSweep](tab-view/KeepAliveSweep.md)):
 
@@ -72,18 +93,23 @@ Accessors:
 - `performAccelerator(entry, action)` and `sendToRenderer(channel, payload)` for
   Luma On Demand, which forwards shortcuts typed in its panel.
 
-Events: `viewAttached(webContents, entry)`, `tabCreated(tab)`, `tabSwitched(id)`,
+Events: `viewAttached(webContents, entry)`, `tabCreated(tab)`, `tabSwitched(id)` (main
+window), `windowTabSwitched(windowId, id)` (any window), `tabTransferred(id, fromWindowId, toWindowId)`,
+`windowEmptied(windowId)` (a detached window lost its last strip tab),
 `tabHidden(id)`, `tabClosed(id)`, `tabMoved(id, index)`, `boundsChanged(bounds)`,
 `tabNavigated(id, url)`, `tabTitleUpdated(id, title)`, `notification({ tabId, notificationData, tab })`.
 
 Renderer channels sent: `tab:state`, `tab:switched`, `tab:hidden`, `tab:closed`,
-`tab:moved`, `tab-view:accelerator`, `tab-view:found-in-page`, `tab-view:download`,
-`notification-intercepted`.
+`tab:moved`, `tab:transferred`, `tab-view:accelerator`, `tab-view:found-in-page`
+(each to the window the tab is drawn in), `tab-view:download`,
+`notification-intercepted` (main window).
 
 ## How the pieces fit
 
-- [TabRegistry](tab-view/TabRegistry.md) holds tabs, order and the active id;
-  [TabStateChannel](tab-view/TabStateChannel.md) serializes and sends to the chrome.
+- [TabRegistry](tab-view/TabRegistry.md) holds tabs, order and each window's active id;
+  [TabHosts](tab-view/TabHosts.md) holds the windows and their bounds;
+  [TabStateChannel](tab-view/TabStateChannel.md) serializes and sends to the right chrome;
+  [TabTransfer](tab-view/TabTransfer.md) moves tabs between windows.
 - [TabViewFactory](tab-view/TabViewFactory.md) builds and parks views and attaches
   per-tab services; [TabLifecycle](tab-view/TabLifecycle.md) creates and tears down.
 - Each new tab's webContents is wired by [TabLoadEvents](tab-view/TabLoadEvents.md)

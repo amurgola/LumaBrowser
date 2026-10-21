@@ -12,8 +12,13 @@ class AddonCatalog {
 
   async list() {
     const res = await this._client.listAddons();
-    const extensions = (res.extensions || []).map((a) => ({ ...a, installed: this._isInstalled(a.id) }));
+    const extensions = (res.extensions || []).map((a) => ({ ...a, installed: this._isInstalled(a.id), installedVersion: this._installedVersion(a.id) }));
     return { ...res, extensions };
+  }
+
+  _installedVersion(id) {
+    const manifest = this._extensions.manifests && this._extensions.manifests.get(id);
+    return (manifest && manifest.version) || null;
   }
 
   async downloadAndInstall(addonId) {

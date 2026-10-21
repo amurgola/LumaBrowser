@@ -27,7 +27,7 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
 
 1. `<loaderFlag> <diffusion> --listen-ip 127.0.0.1 --listen-port <port> -v`
 2. File roles: `--high-noise-diffusion-model`, `--vae`, `--audio-vae`*, `--llm`,
-   `--clip_l`, `--t5xxl`, `--llm_vision`*, `--clip_vision`* (* the role's own
+   `--tokenizer`, `--clip_l`, `--t5xxl`, `--llm_vision`*, `--clip_vision`* (* the role's own
    `loaderFlag` wins).
 3. `--diffusion-fa --diffusion-conv-direct --vae-conv-direct` unless the runtime
    lists them in `unsupportedFlags`.
@@ -64,3 +64,6 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
   decodes the audio latent of audio-video models (MiniMax-H3); `vision` is an
   edit model's vision projector for reference images; `clipVision` conditions
   Wan I2V / first-last-frame requests.
+- `tokenizer` is an external `tokenizer.json` for an LLM encoder whose vocabulary
+  sd.cpp does not embed. MOSS-Image needs it: Qwen3.5 tokenizes differently from
+  the built-in Qwen tokenizer.

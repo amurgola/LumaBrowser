@@ -2,6 +2,8 @@ const EventEmitter = require('events');
 const DownloadManager = require('./DownloadManager');
 const TabKinds = require('./tab-view/TabKinds');
 const TabRegistry = require('./tab-view/TabRegistry');
+const TabHosts = require('./tab-view/TabHosts');
+const TabTransfer = require('./tab-view/TabTransfer');
 const TabStateChannel = require('./tab-view/TabStateChannel');
 const TabLayout = require('./tab-view/TabLayout');
 const TabActivation = require('./tab-view/TabActivation');
@@ -29,6 +31,7 @@ class TabViewManager extends EventEmitter {
   static SHARED_PARTITION = TabKinds.SHARED_PARTITION;
   static AUTOMATION_KINDS = TabKinds.AUTOMATION;
   static INTERNAL_KINDS = TabKinds.INTERNAL;
+  static MAIN_WINDOW_ID = TabHosts.MAIN_ID;
 
   constructor(mainWindow, { preloadPath, networkInterceptor, chromeExtensionService, adblockerService, db, faviconCache } = {}) {
     super();
@@ -60,7 +63,7 @@ class TabViewManager extends EventEmitter {
 
   closeTabInternal(tabId) { return this._lifecycle.destroy(tabId); }
 
-  reopenClosedTab() { return this._lifecycle.reopenClosed(); }
+  reopenClosedTab(windowId = TabHosts.MAIN_ID) { return this._lifecycle.reopenClosed(this._hosts.resolve(windowId)); }
 
   moveTab(tabId, toIndex) { return this._lifecycle.move(tabId, toIndex); }
 
@@ -71,17 +74,46 @@ class TabViewManager extends EventEmitter {
     return this._activation.switchTo(tabId);
   }
 
-  cycleTab(delta) { return this._activation.cycle(delta); }
+  cycleTab(delta, windowId = TabHosts.MAIN_ID) { return this._activation.cycle(delta, this._hosts.resolve(windowId)); }
 
-  selectTabByIndex(n) { return this._activation.selectByIndex(n); }
+  selectTabByIndex(n, windowId = TabHosts.MAIN_ID) { return this._activation.selectByIndex(n, this._hosts.resolve(windowId)); }
 
-  setBounds(bounds) { this._layout.setBounds(bounds); }
+  setBounds(bounds, windowId = TabHosts.MAIN_ID) { this._layout.setBounds(bounds, this._hosts.resolve(windowId)); }
 
   destroyAll() {
     this.sealSession();
     this.stopKeepAliveSweep();
     this._lifecycle.destroyAll();
   }
+
+
+  addWindow(window) { return this._hosts.add(window); }
+
+  removeWindow(windowId) { return this._transfer.evacuate(windowId); }
+
+  hasWindow(windowId) { return this._hosts.has(windowId); }
+
+  getWindow(windowId) { return this._hosts.liveWindowOf(windowId); }
+
+  windowOfTab(tabId) {
+    const entry = this._registry.get(tabId);
+    return entry ? this._hosts.liveWindowOf(entry.hostId) : null;
+  }
+
+  windowIdOfTab(tabId) {
+    const entry = this._registry.get(tabId);
+    return entry ? entry.hostId : null;
+  }
+
+  windowIdForSender(webContents) { return this._hosts.idForSender(webContents); }
+
+  activeTabIdIn(windowId) { return this._registry.activeIn(windowId); }
+
+  getWindowTabs(windowId) { return this._registry.inStrip(windowId).map((entry) => this._channel.serialize(entry)); }
+
+  moveTabToWindow(tabId, windowId, options = {}) { return this._transfer.move(tabId, windowId, options); }
+
+  resyncWindow(windowId) { return this._transfer.resync(windowId); }
 
 
   setTabPersistence(tabId, persist) { return this._persisted.setPersistence(tabId, persist); }
@@ -180,10 +212,11 @@ class TabViewManager extends EventEmitter {
 
   _buildTabState() {
     this._registry = new TabRegistry();
-    this._channel = new TabStateChannel(this.mainWindow, this._registry, this.faviconCache);
-    this._layout = new TabLayout(this._registry, this);
+    this._hosts = new TabHosts(this.mainWindow);
+    this._channel = new TabStateChannel(this._hosts, this._registry, this.faviconCache);
+    this._layout = new TabLayout(this._registry, this._hosts, this);
     this._activation = new TabActivation({
-      mainWindow: this.mainWindow, registry: this._registry, channel: this._channel, layout: this._layout, emitter: this,
+      hosts: this._hosts, registry: this._registry, channel: this._channel, layout: this._layout, emitter: this,
     });
     this._persisted = new PersistedTabs({
       db: this.db, registry: this._registry, channel: this._channel,
@@ -195,12 +228,16 @@ class TabViewManager extends EventEmitter {
 
   _buildTabBehaviour() {
     const factory = new TabViewFactory({
-      mainWindow: this.mainWindow, preloadPath: this.preloadPath, adblockerService: this.adblockerService,
+      hosts: this._hosts, preloadPath: this.preloadPath, adblockerService: this.adblockerService,
       chromeExtensionService: this.chromeExtensionService, networkInterceptor: this.networkInterceptor,
     });
     this._lifecycle = new TabLifecycle({
-      mainWindow: this.mainWindow, db: this.db, registry: this._registry, channel: this._channel, factory,
+      hosts: this._hosts, db: this.db, registry: this._registry, channel: this._channel, factory,
       activation: this._activation, persisted: this._persisted, wireEvents: (entry) => this._wireEvents(entry), emitter: this,
+    });
+    this._transfer = new TabTransfer({
+      hosts: this._hosts, registry: this._registry, channel: this._channel, factory,
+      activation: this._activation, lifecycle: this._lifecycle, emitter: this,
     });
     this._keepAlive = new KeepAliveSweep({ registry: this._registry, revive: (entry) => this._persisted.revive(entry) });
     this._zoom = new TabZoom({ db: this.db, registry: this._registry, channel: this._channel });

@@ -70,6 +70,13 @@ export default class ChatEventRouter {
     turnEl.querySelector('.cm-asst-body').innerHTML = ChatIcons.pulse() + ' ' + StatusText.forPhase(p && p.phase);
   }
 
+  _clearStatus(msg) {
+    if (msg.content) return;
+    const turnEl = this._ctx.stream.turnEl();
+    const body = turnEl && turnEl.querySelector('.cm-asst-body');
+    if (body && body.textContent.trim()) body.innerHTML = ChatIcons.pulse();
+  }
+
   _compacted(turnEl, p) {
     if (!turnEl || !turnEl.parentElement) return;
     const prev = turnEl.previousElementSibling;
@@ -95,6 +102,7 @@ export default class ChatEventRouter {
     if (!msg) return;
     msg.reasoning += (p && p.text) || '';
     msg._reasonAt = Date.now();
+    if (!msg._reasonStart) msg._reasonStart = msg._reasonAt;
     this._ctx.stream.scheduleRender();
   }
 
@@ -115,6 +123,7 @@ export default class ChatEventRouter {
     if (!msg.tools) msg.tools = [];
     this._announceTool(msg, payload);
     const result = ToolEventReducer.apply(msg, payload);
+    this._clearStatus(msg);
     if (result.tabEnded) {
       this._ctx.previewSlot.release();
       if (msg.id) state.previewByMsgId.set(msg.id, msg._preview);
@@ -125,7 +134,7 @@ export default class ChatEventRouter {
   _announceTool(msg, p) {
     if (p.phase !== 'approval' && p.phase !== 'run' && p.phase !== 'done') return;
     const { state } = this._ctx;
-    const step = p.phase !== 'done' ? p : ToolEventReducer.openStep(msg, p.tool);
+    const step = p.phase !== 'done' ? p : ToolEventReducer.openStep(msg, p.tool, p.callId);
     try {
       window.dispatchEvent(new CustomEvent('luma-chat-tool', { detail: {
         conversationId: state.streamConvId || state.activeId || null, phase: p.phase, tool: p.tool,
@@ -163,6 +172,8 @@ export default class ChatEventRouter {
     if (state.streamMsg) {
       state.streamMsg.tokensIn = inTok;
       state.streamMsg.tokensOut = outTok;
+      const reasoning = u.completion_tokens_details && u.completion_tokens_details.reasoning_tokens;
+      if (Number.isFinite(reasoning)) state.streamMsg.reasoningTokens = reasoning;
     }
     if (state.streamOnScreen()) this._ctx.usage.render();
   }

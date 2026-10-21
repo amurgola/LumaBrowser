@@ -3,9 +3,10 @@ const ToolCallSniffer = require('../parsing/ToolCallSniffer');
 class PendingToolCard {
   static EMIT_MS = 250;
 
-  constructor(hooks, { now = () => Date.now() } = {}) {
+  constructor(hooks, { now = () => Date.now(), index = null } = {}) {
     this._hooks = hooks || {};
     this._now = now;
+    this._index = Number.isInteger(index) ? index : null;
     this._tool = null;
     this._target = null;
     this._startIdx = -1;
@@ -27,8 +28,10 @@ class PendingToolCard {
     this._target = target || this._target;
     this._lastEmit = now;
     const chars = this._startIdx >= 0 ? buf.length - this._startIdx : 0;
+    const event = { phase: 'pending', tool: this._tool, target: this._target, chars };
+    if (this._index !== null) event.index = this._index;
     try {
-      this._hooks.onToolEvent({ phase: 'pending', tool: this._tool, target: this._target, chars });
+      this._hooks.onToolEvent(event);
     } catch (_) {}
   }
 }

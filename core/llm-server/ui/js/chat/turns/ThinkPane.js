@@ -15,9 +15,16 @@ export default class ThinkPane {
     return (Date.now() - (m._reasonAt || 0)) < ThinkPane.LIVE_MS;
   }
 
-  static create(text, open, streaming) {
+  static facts(m, thinkingNow, now = Date.now()) {
+    const start = m && m._reasonStart;
+    let elapsedMs = null;
+    if (start) elapsedMs = (thinkingNow ? now : (m._reasonAt || now)) - start;
+    return { elapsedMs, tokens: m && Number.isFinite(m.reasoningTokens) ? m.reasoningTokens : null };
+  }
+
+  static create(text, open, streaming, facts = {}) {
     const d = Dom.el('div', 'cm-think' + (open ? ' open' : ''));
-    const sum = Dom.el('button', 'cm-think-sum', HtmlEscaper.escape(ThinkingText.summary(text, streaming)));
+    const sum = Dom.el('button', 'cm-think-sum', HtmlEscaper.escape(ThinkingText.summary(text, streaming, facts)));
     sum.addEventListener('click', () => d.classList.toggle('open'));
     const body = Dom.el('div', 'cm-think-body');
     body.textContent = text;
@@ -26,11 +33,11 @@ export default class ThinkPane {
     return d;
   }
 
-  static update(pane, text, streaming) {
+  static update(pane, text, streaming, facts = {}) {
     pane.querySelector('.cm-think-body').textContent = text;
     const sum = pane.querySelector('.cm-think-sum');
     if (!sum) return;
-    const s = ThinkingText.summary(text, streaming);
+    const s = ThinkingText.summary(text, streaming, facts);
     if (sum.textContent !== s) sum.textContent = s;
   }
 

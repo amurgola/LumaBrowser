@@ -7,11 +7,13 @@ The companion GGUFs a repo ships beside the weights.
 ## Methods
 
 - `new ModelCompanions({ gguf? })` (default `HfGgufRepo`).
-- `resolve(url, file)` resolves `{ repoId, mmproj, mtp, downloads }`: for a Hub URL,
+- `resolve(url, file, { revision? })` resolves `{ repoId, mmproj, mtp, downloads }`: for a Hub URL,
   the best projector (`GgufCompanionPicker.bestMmproj`) and the draft head matching
   the weights' quant (`bestMtp` with `GgufFileName.quantOf(file)`); `downloads` lists
-  them in fetch order as `{ ...file, kind: 'mmproj' | 'mtp', label: 'vision projector' | 'draft head' }`.
-  A non-Hub URL or a failed lookup has none.
+  them in fetch order as `{ ...file, kind: 'mmproj' | 'mtp', label: 'vision projector' | 'draft head' }`
+  (each with `url`, `approxBytes` and `sha256` from the tree). `revision` is the sha
+  the weights were pinned to, passed to `HfGgufRepo.fetchCompanions` so the companions
+  come from the same commit. A non-Hub URL or a failed lookup has none.
 
 ## Why
 

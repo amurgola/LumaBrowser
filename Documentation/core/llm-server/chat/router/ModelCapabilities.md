@@ -14,4 +14,4 @@ What the model behind a chat model ref can do this turn, read from the LIVE laun
 
 ## Why
 
-A family only claims native tool calls beside the `--jinja` its launch adds, so the claim must come from the plan the server was started with; reading the model name lets them drift and every call comes back as raw text. Harmony drops calls unless tools are registered, so it is native regardless of the setting.
+A family only claims native tool calls beside the `--jinja` its launch adds, so the claim must come from the plan the server was started with; reading the model name lets them drift and every call comes back as raw text. Harmony drops calls unless tools are registered, so it is native regardless of the setting. A remote ref is native because [RemoteStream](RemoteStream.md) sends the schemas and returns the calls; a provider that could not would leave the model with neither the array nor the fence guidance.

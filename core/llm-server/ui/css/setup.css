@@ -511,6 +511,17 @@
             opacity: 0.75;
             font-family: var(--font-sans);
         }
+        .model-note {
+            font-family: var(--font-sans);
+            font-size: var(--text-xs);
+            line-height: 1.45;
+            color: var(--text-muted);
+            margin-top: var(--space-1);
+        }
+        .model-note code {
+            font-family: var(--mono);
+            color: var(--text-dim);
+        }
 
         .model-path {
             display: flex;

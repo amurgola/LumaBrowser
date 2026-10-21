@@ -8,9 +8,9 @@ class ModelCompanions {
     this._gguf = gguf;
   }
 
-  async resolve(url, file) {
+  async resolve(url, file, { revision } = {}) {
     const repoId = HfModelInput.repoIdFromUrl(url);
-    const { mmproj, mtp } = repoId ? await this._pick(repoId, file) : { mmproj: null, mtp: null };
+    const { mmproj, mtp } = repoId ? await this._pick(repoId, file, revision) : { mmproj: null, mtp: null };
     const downloads = [
       mmproj ? { ...mmproj, kind: 'mmproj', label: 'vision projector' } : null,
       mtp ? { ...mtp, kind: 'mtp', label: 'draft head' } : null,
@@ -18,9 +18,9 @@ class ModelCompanions {
     return { repoId, mmproj, mtp, downloads };
   }
 
-  async _pick(repoId, file) {
+  async _pick(repoId, file, revision) {
     try {
-      const companions = await this._gguf.fetchCompanions(repoId);
+      const companions = await this._gguf.fetchCompanions(repoId, revision ? { revision } : {});
       return {
         mmproj: GgufCompanionPicker.bestMmproj(companions.mmprojs),
         mtp: GgufCompanionPicker.bestMtp(companions.mtps, { quant: GgufFileName.quantOf(file) }),

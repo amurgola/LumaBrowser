@@ -4,14 +4,20 @@
 
 The live turn on screen. Its answer body is bound to the `liveAnswer` scalar of
 the chat's Resonant and fed by a stream sink (55 ms throttle, markdown with the
-choices fence cut, selection guard: all in ResonantJs). While the sink runs the
+choices fence cut, selection guard: all in ResonantJs) whose flushes are
+written by [HtmlPatcher](../../dom/HtmlPatcher.md) (the sink's `patch`
+option), so settled blocks keep their DOM nodes and only the changed tail is
+rebuilt. While the sink runs the
 markdown is rendered with `{ streaming: true }` (see
 [StreamingMarkdown](../../markdown/StreamingMarkdown.md)). A MutationObserver on
-the body polishes each repaint in the same task, before the browser paints:
+the body's whole subtree (the patcher usually edits inside the growing block;
+a flush the fade missed would re-fade everything since as one late arrival)
+polishes each repaint in the same task, before the browser paints:
 [StreamImages](StreamImages.md) carries images over and
 [StreamFade](StreamFade.md) fades in the words that just arrived. A 55 ms pass keeps the
 reasoning pane (collapsing it when the answer starts), the tool chain (rebuilt
-only when its signature changes), artifacts, sub-agent cards and the scroll
+only when its signature changes; otherwise the live steps' detail, a byte
+count or a tool's progress, is ticked in place), artifacts, sub-agent cards and the scroll
 position in step, and is skipped while the user selects text in the live turn.
 
 ## Methods

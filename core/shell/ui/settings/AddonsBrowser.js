@@ -1,18 +1,20 @@
 import HtmlEscaper from '../../../llm-server/ui/js/format/HtmlEscaper.js';
 import ManifestCopy from './ManifestCopy.js';
+import ExtCard from './ExtCard.js';
 
 export default class AddonsBrowser {
   static CATALOG_CHANNEL = 'core.shell.getAvailableAddons';
 
   static INSTALL_CHANNEL = 'core.shell.downloadAndInstallAddon';
 
-  constructor({ pane, hooks, onBack }) {
+  static INTRO = 'Optional add-ons from lumabyte.com. They install in place and run without a restart.';
+
+  constructor({ pane, hooks }) {
     this._pane = pane;
     this._hooks = hooks;
-    this._onBack = onBack;
   }
 
-  async show() {
+  async load() {
     if (!this._pane || !window.ipcBridge) return;
     const listEl = this._renderShell();
     let res;
@@ -27,15 +29,11 @@ export default class AddonsBrowser {
 
   _renderShell() {
     this._pane.innerHTML = `
-      <div class="ext-addons-view">
-        <div class="ext-addons-header">
-          <button class="ext-config-back-btn" id="ext-addons-back">${ManifestCopy.BACK_ICON} Back</button>
-          <h3 class="ext-config-title">Optional add-ons</h3>
-        </div>
+      <div class="ext-addons-view ext-pane-section">
+        <p class="ext-pane-intro ext-pane-head">${HtmlEscaper.escape(AddonsBrowser.INTRO)}</p>
         <div id="ext-addons-list" class="luma-muted ext-addons-loading"><span class="luma-spinner"></span> Loading add-ons...</div>
       </div>
     `;
-    this._pane.querySelector('#ext-addons-back').addEventListener('click', () => this._onBack());
     return this._pane.querySelector('#ext-addons-list');
   }
 
@@ -48,36 +46,62 @@ export default class AddonsBrowser {
       listEl.innerHTML = '<div class="luma-empty">No optional add-ons are available right now.</div>';
       return;
     }
-    listEl.innerHTML = '';
-    const view = document.createElement('div');
-    view.className = 'ext-list-view';
-    for (const addon of res.extensions) view.appendChild(this._row(addon));
-    listEl.appendChild(view);
+    listEl.className = '';
+    listEl.innerHTML = ExtCard.listHtml(res.extensions.map((addon) => ExtCard.html(AddonsBrowser.spec(addon))));
+    const view = listEl.querySelector('.ext-item-list');
+    ExtCard.wireFolding(view);
+    view.querySelectorAll('.ext-item').forEach((card) => {
+      const btn = card.querySelector('.ext-addon-get-btn');
+      if (btn) btn.addEventListener('click', () => this._install(card.dataset.cardId, btn));
+    });
   }
 
-  _row(addon) {
-    const esc = HtmlEscaper.escape;
-    const sizeKb = addon.bytes ? `${(addon.bytes / 1024).toFixed(0)} KB` : '';
-    const item = document.createElement('div');
-    item.className = 'ext-list-item';
-    item.innerHTML = `
-        <div class="ext-list-item-info">
-          <div class="ext-list-item-name">${esc(addon.name || addon.id)} <span class="ext-list-item-version">v${esc(addon.version || '1.0.0')}</span>${sizeKb ? ` <span class="ext-list-item-version">${esc(sizeKb)}</span>` : ''}</div>
-          <div class="ext-list-item-desc">${esc(addon.description || '')}</div>
-        </div>
-        <div class="ext-list-item-actions">
-          <button class="btn ${addon.installed ? 'btn-secondary' : 'btn-primary'} ext-addon-get-btn">${addon.installed ? 'Reinstall' : 'Download'}</button>
-        </div>
-      `;
-    const btn = item.querySelector('.ext-addon-get-btn');
-    btn.addEventListener('click', () => this._install(addon.id, btn));
-    return item;
+  static stateOf(addon) {
+    if (!addon.installed) return 'install';
+    if (addon.installedVersion && addon.version && AddonsBrowser.compareVersions(addon.version, addon.installedVersion) > 0) return 'update';
+    return 'installed';
+  }
+
+  static spec(addon) {
+    const state = AddonsBrowser.stateOf(addon);
+    const size = addon.bytes ? `${(addon.bytes / 1024).toFixed(0)} KB` : '';
+    const description = ManifestCopy.clean(addon.description || '');
+    const details = [];
+    if (addon.installedVersion) details.push({ label: 'Installed', value: `v${addon.installedVersion}` });
+    if (addon.version) details.push({ label: 'Available', value: `v${addon.version}` });
+    if (size) details.push({ label: 'Download', value: size });
+    return {
+      id: addon.id,
+      name: addon.name || addon.id,
+      version: addon.installedVersion || addon.version || '1.0.0',
+      summary: description,
+      description,
+      details,
+      status: state === 'installed' ? { text: 'Installed' } : null,
+      primary: state === 'install' ? { label: 'Install', cls: 'ext-addon-get-btn' }
+        : state === 'update' ? { label: `Update to v${addon.version}`, cls: 'ext-addon-get-btn' } : null,
+      actions: state === 'installed' ? [{ label: 'Reinstall', cls: 'ext-addon-get-btn' }] : [],
+    };
+  }
+
+  static compareVersions(a, b) {
+    const pa = String(a).split('.');
+    const pb = String(b).split('.');
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+      const x = pa[i] || '0';
+      const y = pb[i] || '0';
+      const nx = Number(x);
+      const ny = Number(y);
+      const diff = Number.isFinite(nx) && Number.isFinite(ny) ? nx - ny : x.localeCompare(y);
+      if (diff) return diff > 0 ? 1 : -1;
+    }
+    return 0;
   }
 
   async _install(addonId, btn) {
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Downloading…';
+    btn.textContent = 'Installing...';
     try {
       const result = await window.ipcBridge.invoke(AddonsBrowser.INSTALL_CHANNEL, addonId);
       if (result && result.success) this._installed(btn, result, addonId);
@@ -90,8 +114,6 @@ export default class AddonsBrowser {
   _installed(btn, result, addonId) {
     const name = result.name || addonId;
     btn.textContent = result.activated ? 'Installed' : 'Installed (restart to run)';
-    btn.classList.remove('btn-primary');
-    btn.classList.add('btn-secondary');
     this._hooks.toast(result.activated
       ? `"${name}" installed and running.`
       : `"${name}" installed, but it could not be started right now. Restart the app to activate it.`, result.activated ? 'ok' : 'bad');

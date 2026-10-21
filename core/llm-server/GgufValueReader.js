@@ -9,6 +9,7 @@ class GgufValueReader {
   static MAX_STRING_BYTES = 8 * 1024 * 1024;
   static MAX_ARRAY_COUNT = 200 * 1000 * 1000;
   static MAX_RETAINED_ARRAY = 1024;
+  static MAX_ARRAY_DEPTH = 4;
 
   constructor(cursor, lengthsAre64Bit) {
     this._cursor = cursor;
@@ -45,7 +46,7 @@ class GgufValueReader {
     return GgufValueReader._decodeScalar(bytes, type);
   }
 
-  async array() {
+  async array(depth = 1) {
     const elementType = await this.uint32();
     const count = await this.length();
     if (count < 0 || count > GgufValueReader.MAX_ARRAY_COUNT) {
@@ -53,6 +54,7 @@ class GgufValueReader {
     }
     if (GgufValueReader.isFixedWidth(elementType)) return this._fixedWidthArray(elementType, count);
     if (elementType === GgufValueReader.TYPES.STRING) return this._skipStringArray(count);
+    if (elementType === GgufValueReader.TYPES.ARRAY) return this._nestedArray(count, depth);
     throw new Error(`Unsupported GGUF array element type ${elementType}`);
   }
 
@@ -64,6 +66,20 @@ class GgufValueReader {
     const values = new Array(count);
     for (let i = 0; i < count; i++) values[i] = await this.scalar(elementType);
     return values;
+  }
+
+  async _nestedArray(count, depth) {
+    if (depth >= GgufValueReader.MAX_ARRAY_DEPTH) {
+      throw new Error(`GGUF array nested deeper than ${GgufValueReader.MAX_ARRAY_DEPTH} levels`);
+    }
+    const values = count <= GgufValueReader.MAX_RETAINED_ARRAY ? new Array(count) : null;
+    let complete = values !== null;
+    for (let i = 0; i < count; i++) {
+      const inner = await this.array(depth + 1);
+      if (inner === undefined) complete = false;
+      else if (values) values[i] = inner;
+    }
+    return complete ? values : undefined;
   }
 
   async _skipStringArray(count) {

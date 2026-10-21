@@ -1,15 +1,18 @@
 const ImageSlotRoles = require('./ImageSlotRoles');
 const CudaDevicePicker = require('../../shared/runtime/CudaDevicePicker');
+const CudaDeviceProbe = require('../../shared/runtime/CudaDeviceProbe');
 
 class ImageSlotPlacement {
   static GB = 1024 * 1024 * 1024;
+  static GPU_READY_MS = 3000;
   static PAD_BYTES = 2 * ImageSlotPlacement.GB;
   static FALLBACK_BYTES = { video: 16 * ImageSlotPlacement.GB, edit: 12 * ImageSlotPlacement.GB, generate: 8 * ImageSlotPlacement.GB };
   static AUTO_FIT_FLAG = '--auto-fit';
 
-  constructor({ vramCoordinator, capabilities }) {
+  constructor({ vramCoordinator, capabilities, gpuReady = () => CudaDeviceProbe.whenReady(ImageSlotPlacement.GPU_READY_MS) }) {
     this._vram = vramCoordinator;
     this._capabilities = capabilities;
+    this._gpuReady = gpuReady;
   }
 
   static requiredBytes(model, role) {
@@ -32,6 +35,7 @@ class ImageSlotPlacement {
 
   async place({ role, runtime, requiredBytes, settingsDb, diagnostics }) {
     if (ImageSlotPlacement.isCpuOnlyRuntime(runtime)) return ImageSlotPlacement._unplaced();
+    await this._gpuReady();
     const request = { serverId: role, role: 'image', requiredBytes, settingsDb, diagnostics };
     const single = this._reserveOneCard(request);
     if (!single.offloadToCpu) return single;

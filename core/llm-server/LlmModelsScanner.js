@@ -7,6 +7,7 @@ const AddonModelBuilder = require('./scanner/AddonModelBuilder');
 const ModelClassifier = require('./scanner/ModelClassifier');
 const GgufHeaderAttacher = require('./scanner/GgufHeaderAttacher');
 const GgufHeaderCache = require('./scanner/GgufHeaderCache');
+const GgufRoleResolver = require('./scanner/GgufRoleResolver');
 const GgufParseWorkerClient = require('./scanner/GgufParseWorkerClient');
 const ModelSidecars = require('./scanner/ModelSidecars');
 const BoundedParallel = require('./scanner/BoundedParallel');
@@ -40,16 +41,17 @@ class LlmModelsScanner {
     const unavailable = await LlmModelsScanner._checkRoot(rootDir);
     if (unavailable) return unavailable;
     const walk = await new ModelDirWalker().walk(rootDir);
-    const models = this._buildModels(walk, rootDir);
+    const roles = await GgufRoleResolver.resolve(walk.ggufs, this._headerCache, LlmModelsScanner.PARSE_CONCURRENCY);
+    const models = this._buildModels(walk, rootDir, roles);
     await this._readHeaders(models);
     await ModelSidecars.attach(models);
     LlmModelsScanner._sort(models);
     return { available: true, dir: rootDir, models, truncated: walk.visited >= ModelDirWalker.MAX_ENTRIES };
   }
 
-  _buildModels(walk, rootDir) {
+  _buildModels(walk, rootDir, roles) {
     const models = [
-      ...GgufModelGrouper.group(walk.ggufs, rootDir),
+      ...GgufModelGrouper.group(walk.ggufs, rootDir, roles),
       ...MlxModelBuilder.build(walk.mlxDirs, rootDir),
       ...AddonModelBuilder.build(walk.addonFiles, rootDir),
     ];

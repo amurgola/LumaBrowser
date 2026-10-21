@@ -10,6 +10,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
     ['vae', '--vae', false],
     ['audioVae', '--audio-vae', true],
     ['llm', '--llm', false],
+    ['tokenizer', '--tokenizer', false],
     ['clip_l', '--clip_l', false],
     ['t5xxl', '--t5xxl', false],
     ['vision', '--llm_vision', true],

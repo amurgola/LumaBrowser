@@ -18,8 +18,10 @@ export default class ArtifactRowHtml {
     const rootId = String(a.rootId || a.id);
     const sub = opts && opts.global ? ArtifactRowHtml._subLine(a) : '';
     return '<div class="cm-conv cm-art-row" data-art-id="' + esc(String(a.id)) + '" data-art-root="' + esc(rootId) + '">'
-      + '<span class="cm-conv-title">' + esc(a.title || 'Artifact') + ' <span class="cm-art-kind">' + esc(a.type || '') + '</span>'
-      + ArtifactRowHtml._versionBadge(vc) + sub + '</span>'
+      + '<span class="cm-art-text"><span class="cm-art-line">'
+      + '<span class="cm-conv-title">' + esc(a.title || 'Artifact') + '</span>'
+      + '<span class="cm-art-kind">' + esc(a.type || '') + '</span>'
+      + ArtifactRowHtml._versionBadge(vc) + '</span>' + sub + '</span>'
       + '<button type="button" class="cm-conv-menu cm-conv-trash" data-art-del title="'
       + (vc > 1 ? 'Delete artifact (all ' + vc + ' versions)' : 'Delete artifact') + '">' + ChatIcons.trash + '</button>'
       + '</div>'
@@ -45,7 +47,7 @@ export default class ArtifactRowHtml {
 
   static _versionBadge(vc) {
     if (vc <= 1) return '';
-    return ' <button type="button" class="cm-art-vbadge" data-art-hist title="Show version history">v' + vc + ' ▾</button>';
+    return '<button type="button" class="cm-art-vbadge" data-art-hist title="Show version history">v' + vc + ' ▾</button>';
   }
 
   static _subLine(a) {

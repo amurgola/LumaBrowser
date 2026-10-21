@@ -4,13 +4,14 @@ class TabViewIpcController {
   static register(manager, notificationRelay) {
     TabViewIpcController._registerTabs(manager);
     TabViewIpcController._registerDownloads(manager.downloads);
-    ipcMain.on('tab-view:set-bounds', (_event, bounds) => manager.setBounds(bounds));
+    ipcMain.on('tab-view:set-bounds', (event, bounds) => manager.setBounds(bounds, TabViewIpcController._windowOf(manager, event)));
     ipcMain.on('notification-intercepted', (event, data) => notificationRelay.relay(event.sender, data));
   }
 
   static _registerTabs(m) {
     const handle = (channel, fn) => ipcMain.handle(channel, fn);
-    handle('tab-view:create', (_e, url, options) => m.createTab(url, options || {}));
+    const windowOf = (e) => TabViewIpcController._windowOf(m, e);
+    handle('tab-view:create', (e, url, options) => m.createTab(url, { ...(options || {}), windowId: windowOf(e) }));
     handle('tab-view:close', (_e, tabId) => m.closeTab(tabId));
     handle('tab-view:switch', (_e, tabId) => m.switchToTab(tabId));
     handle('tab-view:navigate', (_e, tabId, url) => m.navigate(tabId, url));
@@ -30,13 +31,17 @@ class TabViewIpcController {
     handle('tab-view:stop', (_e, tabId) => m.stop(tabId));
     handle('tab-view:hard-reload', (_e, tabId) => m.reload(tabId, { ignoreCache: true }));
     handle('tab-view:move', (_e, tabId, toIndex) => m.moveTab(tabId, toIndex));
-    handle('tab-view:cycle', (_e, delta) => m.cycleTab(Number(delta) || 1));
-    handle('tab-view:select-index', (_e, n) => m.selectTabByIndex(Number(n) || 0));
-    handle('tab-view:reopen-closed', () => m.reopenClosedTab());
+    handle('tab-view:cycle', (e, delta) => m.cycleTab(Number(delta) || 1, windowOf(e)));
+    handle('tab-view:select-index', (e, n) => m.selectTabByIndex(Number(n) || 0, windowOf(e)));
+    handle('tab-view:reopen-closed', (e) => m.reopenClosedTab(windowOf(e)));
     handle('tab-view:find', (_e, tabId, text, opts) => m.findInPage(tabId, text, opts || {}));
     handle('tab-view:stop-find', (_e, tabId, action) => m.stopFindInPage(tabId, action));
     handle('tab-view:print', (_e, tabId) => m.print(tabId));
     handle('tab-view:toggle-devtools', (_e, tabId) => m.toggleDevTools(tabId));
+  }
+
+  static _windowOf(manager, event) {
+    return manager.windowIdForSender(event && event.sender);
   }
 
   static _registerDownloads(downloads) {

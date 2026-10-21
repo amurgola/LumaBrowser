@@ -18,8 +18,15 @@ class AgentEventRelay {
   _onTool(evt) {
     this._o.mirror.retractIteration();
     if (evt.tool === CallMarkers.MALFORMED_TOOL) return;
-    this._o.trace.open(evt.tool, evt.params);
-    if (this._hooks.onToolEvent) this._hooks.onToolEvent({ phase: 'run', tool: evt.tool, params: evt.params });
+    this._o.trace.open(evt.tool, evt.params, evt.callId);
+    if (this._hooks.onToolEvent) this._hooks.onToolEvent({ phase: 'run', tool: evt.tool, params: evt.params, ...AgentEventRelay._callFields(evt) });
+  }
+
+  static _callFields(evt) {
+    const out = {};
+    if (evt.callId != null) out.callId = evt.callId;
+    if (evt.batchSize > 1) { out.batchSize = evt.batchSize; out.batchIndex = evt.batchIndex; }
+    return out;
   }
 
   _onToolResult(evt) {
@@ -34,6 +41,7 @@ class AgentEventRelay {
       error: evt.error,
       summary: evt.summary || null,
       artifact: evt.artifact || shot || null,
+      ...(evt.callId != null ? { callId: evt.callId } : {}),
     });
   }
 

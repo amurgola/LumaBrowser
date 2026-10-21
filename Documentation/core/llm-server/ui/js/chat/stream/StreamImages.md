@@ -2,11 +2,12 @@
 
 `core/llm-server/ui/js/chat/stream/StreamImages.js`
 
-Keeps a streaming answer's markdown images (`img.cm-md-img`) steady. Every
-flush rebuilds the live body with `innerHTML`, which would recreate each image:
-it blinks out, decodes again and the text below jumps. After each repaint the
-freshly parsed `<img>` is swapped for the element already on screen with the
-same `src`.
+Keeps a streaming answer's markdown images (`img.cm-md-img`) steady. A flush
+rebuilds the live body's changed tail ([HtmlPatcher](../../dom/HtmlPatcher.md)),
+which would recreate an image there: it blinks out, decodes again and the text
+below jumps. After each repaint the freshly parsed `<img>` is swapped for the
+element already on screen with the same `src`; an image in a block the repaint
+left alone is already that element and is not touched.
 
 A new image that has not loaded is hidden (`cm-img-pending`) and fades in once
 (`cm-img-in`, 300 ms) when it loads. Re-inserting an element restarts its CSS

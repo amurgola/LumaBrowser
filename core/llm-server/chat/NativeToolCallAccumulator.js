@@ -7,8 +7,19 @@ class NativeToolCallAccumulator {
 
   add(fragments) {
     if (!Array.isArray(fragments)) return this;
-    for (const fragment of fragments) if (fragment) this._merge(fragment);
+    for (const fragment of fragments) if (fragment) this.merge(fragment);
     return this;
+  }
+
+  merge(fragment) {
+    const index = Number.isInteger(fragment.index) ? fragment.index : 0;
+    const slot = this._slotAt(index);
+    if (fragment.id) slot.id = fragment.id;
+    const fn = fragment.function || {};
+    if (typeof fn.name === 'string' && fn.name) slot.name = fn.name;
+    const argsDelta = typeof fn.arguments === 'string' ? fn.arguments : '';
+    slot.args += argsDelta;
+    return { index, id: slot.id || null, name: slot.name || null, argsDelta };
   }
 
   finalize() {
@@ -21,14 +32,6 @@ class NativeToolCallAccumulator {
     if (done.length < repeats) return false;
     const last = NativeToolCallAccumulator._signature(done[done.length - 1]);
     return done.slice(-repeats).every((slot) => NativeToolCallAccumulator._signature(slot) === last);
-  }
-
-  _merge(fragment) {
-    const slot = this._slotAt(Number.isInteger(fragment.index) ? fragment.index : 0);
-    if (fragment.id) slot.id = fragment.id;
-    const fn = fragment.function || {};
-    if (typeof fn.name === 'string' && fn.name) slot.name = fn.name;
-    if (typeof fn.arguments === 'string') slot.args += fn.arguments;
   }
 
   _slotAt(index) {

@@ -22,8 +22,7 @@ Creates and manages the main window.
   7. on every `did-finish-load`: zoom 1.0, `settings-loaded` `{ webhookUrl }`,
      then [StartupTabs](StartupTabs.md)`.open()`;
   8. on `closed`: destroy every tab, forget the window, stop the gateway;
-  9. `window:state` `{ maximized }` (maximized or full screen) on
-     maximize/unmaximize/enter/leave full screen and each load;
+  9. `window:state` `{ maximized }` through [WindowStateRelay](WindowStateRelay.md);
   10. minimize hides to the tray;
   11. [WindowServices](../browser/WindowServices.md)`.wire(win)`.
 - `show()` restores, renews a suspended renderer, shows and focuses; false

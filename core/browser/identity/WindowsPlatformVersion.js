@@ -4,15 +4,31 @@ class WindowsPlatformVersion {
   static FALLBACK = '15.0.0';
   static FIRST_WIN10_BUILD = 10240;
   static REGISTRY_KEY = 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion';
+  static REG_ARGS = ['query', WindowsPlatformVersion.REGISTRY_KEY, '/v', 'CurrentBuildNumber'];
+  static REG_OPTIONS = { encoding: 'utf8', windowsHide: true, timeout: 3000 };
 
   static CONTRACT_BY_BUILD = [
     [26100, 19], [22621, 15], [22000, 14], [20348, 12], [19041, 10], [18362, 8],
     [17763, 7], [17134, 6], [16299, 5], [15063, 4], [14393, 3], [10586, 2],
   ];
 
+  static _build = null;
+
   static detect(platform = process.platform) {
     if (platform !== 'win32') return WindowsPlatformVersion.FALLBACK;
-    return WindowsPlatformVersion.fromBuild(WindowsPlatformVersion._readBuildNumber());
+    if (WindowsPlatformVersion._build === null) WindowsPlatformVersion._build = WindowsPlatformVersion._readBuildNumber();
+    return WindowsPlatformVersion.fromBuild(WindowsPlatformVersion._build);
+  }
+
+  static prefetch(platform = process.platform) {
+    if (platform !== 'win32' || WindowsPlatformVersion._build !== null) return Promise.resolve(WindowsPlatformVersion._build || 0);
+    return new Promise((resolve) => {
+      childProcess.execFile('reg', WindowsPlatformVersion.REG_ARGS, WindowsPlatformVersion.REG_OPTIONS, (err, out) => {
+        const build = err ? 0 : WindowsPlatformVersion.parseBuildNumber(out);
+        if (WindowsPlatformVersion._build === null) WindowsPlatformVersion._build = build;
+        resolve(WindowsPlatformVersion._build);
+      });
+    });
   }
 
   static fromBuild(build) {
@@ -28,9 +44,7 @@ class WindowsPlatformVersion {
 
   static _readBuildNumber() {
     try {
-      const out = childProcess.execFileSync('reg', [
-        'query', WindowsPlatformVersion.REGISTRY_KEY, '/v', 'CurrentBuildNumber',
-      ], { encoding: 'utf8', windowsHide: true, timeout: 3000 });
+      const out = childProcess.execFileSync('reg', WindowsPlatformVersion.REG_ARGS, WindowsPlatformVersion.REG_OPTIONS);
       return WindowsPlatformVersion.parseBuildNumber(out);
     } catch (_) {
       return 0;

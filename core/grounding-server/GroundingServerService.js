@@ -1,4 +1,5 @@
 const VramCoordinator = require('../shared/runtime/VramCoordinator');
+const CudaDeviceProbe = require('../shared/runtime/CudaDeviceProbe');
 const HotswapCoordinator = require('../shared/runtime/HotswapCoordinator');
 const GroundingRuntimeServer = require('./GroundingRuntimeServer');
 const GroundingModelFiles = require('./GroundingModelFiles');
@@ -22,6 +23,7 @@ class GroundingServerService {
     vramCoordinator = VramCoordinator.shared,
     hotswap = HotswapCoordinator.shared,
     findFreePort = () => GroundingRuntimeServer.findFreePort(),
+    gpuReady = () => CudaDeviceProbe.whenReady(),
   }) {
     this.settingsDb = settingsDb;
     this.llmServerService = llmServerService;
@@ -31,6 +33,7 @@ class GroundingServerService {
     this._vram = vramCoordinator;
     this._hotswap = hotswap;
     this._findFreePort = findFreePort;
+    this._gpuReady = gpuReady;
     this._recommended = new GroundingRecommendedModels({
       getModelsRoot: () => this.llmServerService.getModelsDirConfig().effectivePath,
       createModelDownload,
@@ -196,6 +199,7 @@ class GroundingServerService {
     try {
       await this._hotswap.acquire(GroundingServerService.SERVER_ID);
     } catch (_) {}
+    try { await this._gpuReady(); } catch (_) {}
     return this._vram.reserve({
       serverId: GroundingServerService.SERVER_ID,
       role: GroundingServerService.ROLE,

@@ -8,7 +8,8 @@ Wires everything that needs the main window, once per window.
 
 - `new WindowServices(ctx, { log? })`.
 - `wire(win)`:
-  1. [TabSurfaces](TabSurfaces.md) (tabs, overlays, preview, On Demand);
+  1. [TabSurfaces](TabSurfaces.md) (tabs, overlays, preview, On Demand), then
+     [TabWindows](../window/TabWindows.md) installed on the window (`ctx.tabWindows`);
   2. [HistoryRecorder](HistoryRecorder.md);
   3. [AutomationServices](AutomationServices.md) (selector fallback, REST
      browser/health routes, BrowserService, grounding, desktop);

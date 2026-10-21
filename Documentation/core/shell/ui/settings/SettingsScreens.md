@@ -2,7 +2,7 @@
 
 `core/shell/ui/settings/SettingsScreens.js` (ES module)
 
-Wires the Settings Extensions and About tabs together once Settings exists: tabs, list, row, configuration, file actions, add-ons, Chrome extensions, footer action bar, About and License, and the pages extensions register (hidden under Extensions, or as a top-level tab of their own).
+Wires the Settings Extensions and About tabs together once Settings exists: tabs, list, row, configuration, file actions, the "+" add menu, Browse Extensions, Chrome extensions, About and License, and the pages extensions register (hidden under Extensions, or as a top-level tab of their own).
 
 ## Methods
 
@@ -16,9 +16,11 @@ Wires the Settings Extensions and About tabs together once Settings exists: tabs
   tab runs its `onActivate`.
 - `unregisterPage(extensionId)`: the page and, when it owned one, the tab.
 - `tabOf(extensionId)`: the tab name an extension's page owns, or null.
-- The footer (`#settingsFooter`) is the Extensions action bar on that tab and
-  empty elsewhere (everything autosaves).
-- Subtabs load lazily: the list for Extensions and Inactive, the Chrome panel,
+- Settings has no footer (everything autosaves). New Extension and Install from
+  .zip sit in the [ExtensionAddMenu](ExtensionAddMenu.md) mounted on the
+  subtab strip's `addMenuHost`.
+- Subtabs load lazily: the list for Extensions and Inactive, the
+  [AddonsBrowser](AddonsBrowser.md) for Browse Extensions, the Chrome panel,
   About (only when `window.electronAPI.getLicenses` exists), License.
 
 ## Globals

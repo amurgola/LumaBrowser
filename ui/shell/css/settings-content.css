@@ -559,30 +559,117 @@
 .settings-modal .provider-card-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 .provider-runtime-id { margin-top: var(--space-2); }
 
-.settings-modal .ext-list-item {
+.ext-item-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.settings-modal .ext-item {
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color var(--dur-fast) var(--ease);
+}
+.settings-modal .ext-item.is-open { border-color: var(--border-strong); }
+.ext-item-head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    margin: 0;
-    padding: var(--space-3) 0;
-    background: none;
-    border: 0;
-    border-top: 1px solid var(--border-soft);
-    border-radius: 0;
+    gap: var(--space-3);
+    min-height: 52px;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
 }
-.settings-modal .ext-list-item:first-child { border-top: 0; }
-.ext-list-item-info { flex: 1; min-width: 0; }
-.settings-modal .ext-list-item-name { font-size: var(--text-md); font-weight: var(--weight-medium); color: var(--text-primary); }
-.settings-modal .ext-list-item-version { margin-left: var(--space-1); font-size: var(--text-xs); font-weight: var(--weight-regular); color: var(--text-muted); }
-.settings-modal .ext-list-item-desc { margin-top: 2px; font-size: var(--text-sm); line-height: var(--leading); color: var(--text-secondary); }
-.ext-list-item-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-1); }
-.ext-list-item-reason { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--text-secondary); }
-.ext-list-item-error { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); font-size: var(--text-sm); color: var(--danger); word-break: break-word; }
-.ext-list-no-config { flex-shrink: 0; font-size: var(--text-sm); color: var(--text-muted); }
-.ext-list-item-actions { display: flex; align-items: center; gap: var(--space-3); flex-shrink: 0; }
-.ext-list-item--disabled .ext-list-item-info { opacity: 0.6; }
-.ext-list-item--error .ext-list-item-name { color: var(--danger); }
+.ext-item.is-open .ext-item-head { background: var(--bg-surface-2); }
+.ext-item-check { flex: none; margin: 0; }
+.ext-item-icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+}
+.ext-item-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-secondary);
+    background: var(--bg-surface-2);
+}
+.ext-item-text { flex: 1; min-width: 0; cursor: pointer; }
+.ext-item-title { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; }
+.settings-modal .ext-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--text-primary);
+}
+.settings-modal .ext-item-version { flex: none; font-size: var(--text-xs); color: var(--text-muted); }
+.settings-modal .ext-item-summary {
+    margin-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+.ext-item.is-dim .ext-item-text,
+.ext-item.is-dim .ext-item-icon { opacity: 0.6; }
+.ext-item-status { flex: none; font-size: var(--text-sm); color: var(--text-secondary); }
+.ext-item-status.is-warn { color: var(--warning); }
+.ext-item-status.is-bad { color: var(--danger); }
+.ext-item-status.is-ok { color: var(--success); }
+.ext-item-primary { flex: none; }
+.ext-item-chev {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.ext-item-chev:hover { color: var(--text-primary); background: var(--surface-hover); }
+.ext-item-chev:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ext-item-chev .icon { width: 16px; height: 16px; transition: transform var(--dur) var(--ease); }
+.ext-item.is-open .ext-item-chev .icon { transform: rotate(180deg); }
+.ext-item-tray {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--dur) var(--ease);
+}
+.ext-item.is-open .ext-item-tray { grid-template-rows: 1fr; }
+.ext-item-tray-inner {
+    min-height: 0;
+    overflow: hidden;
+    background: var(--surface-sunken);
+}
+.ext-item.is-open .ext-item-tray-inner {
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-3);
+    border-top: 1px solid var(--border-soft);
+}
+.ext-item-desc { margin: 0 0 var(--space-3); font-size: var(--text-sm); line-height: var(--leading); color: var(--text-secondary); }
+.ext-item-details { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin-bottom: var(--space-3); font-size: var(--text-sm); }
+.ext-item-detail { display: contents; }
+.ext-item-detail-label { color: var(--text-muted); }
+.ext-item-detail-value { min-width: 0; overflow-wrap: anywhere; color: var(--text-secondary); }
+.ext-item-detail-value.is-mono { font-family: var(--font-mono); font-size: var(--text-xs); }
+.ext-item-error { margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--danger); overflow-wrap: anywhere; }
+.ext-item-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ext-item-tray-inner > :last-child { margin-bottom: 0; }
+.ext-list-item-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-3); }
+@media (prefers-reduced-motion: reduce) {
+    .ext-item-tray, .ext-item-chev .icon { transition: none; }
+}
+
+.ext-pane-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+.ext-pane-intro { margin: 0 0 var(--space-3); font-size: var(--text-sm); line-height: var(--leading); color: var(--text-secondary); }
+.ext-pane-section + .ext-pane-section { margin-top: var(--space-6); }
+.settings-modal .ext-pane-group-label { margin: var(--space-4) 0 var(--space-2); font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-secondary); }
 .ext-tag-state { font-size: var(--text-xs); font-weight: var(--weight-medium); }
 .settings-modal .ext-tag {
     padding: 1px 6px;
@@ -708,7 +795,6 @@
 .gs-panel-narrow { max-width: 720px; }
 .gs-ext-list { margin-bottom: var(--space-6); }
 .ext-list-item-meta { display: flex; align-items: center; gap: 6px; }
-.ext-addons-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
 .ext-addons-loading { padding: var(--space-3) 0; }
 .gs-item-row > .form-input { flex: 1; min-width: 0; }
 .settings-modal .gs-item-row > .form-input { height: 28px; font-size: var(--text-sm); }
@@ -733,3 +819,17 @@
 .gs-disclosure-body b { font-weight: var(--weight-semibold); color: var(--text-primary); }
 .gs-disclosure-body .gs-group-subtitle { margin-top: var(--space-4); }
 .gs-api-list { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-secondary); }
+
+.settings-modal .chrome-store-search { width: 220px; flex: 0 0 auto; }
+.settings-modal .chrome-store-custom > .form-input { flex: 1; min-width: 0; width: auto; }
+.chrome-store-custom { margin-top: var(--space-2); }
+.chrome-store-custom-note { margin-top: var(--space-2); }
+.ext-pane-head .gs-subsection-title { margin: 0; }
+.gs-subsection-count { margin-left: var(--space-1); font-size: var(--text-sm); font-weight: var(--weight-regular); color: var(--text-muted); }
+.ext-pane-section .gs-disclosure { margin-top: var(--space-2); }
+.chrome-ext-reload-notice {
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+.chrome-ext-reload-notice .luma-btn { flex: none; }

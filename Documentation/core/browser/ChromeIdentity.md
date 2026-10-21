@@ -13,10 +13,16 @@ websites: version, User-Agent string, client-hint values and UA metadata.
 - `ChromeIdentity.BRANDS` / `FULL_VERSION_BRANDS`: brand lists from
   [ChromeBrandList](identity/ChromeBrandList.md).
 - `ChromeIdentity.PLATFORM_VERSION` (from [WindowsPlatformVersion](identity/WindowsPlatformVersion.md),
-  read once at load), `ARCHITECTURE` (`arm` or `x86`), `BITNESS` (`32` or `64`).
+  read on first use), `ARCHITECTURE` (`arm` or `x86`), `BITNESS` (`32` or `64`).
 - `ChromeIdentity.LOW_ENTROPY_HEADERS`: `Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`.
 - `ChromeIdentity.HIGH_ENTROPY_OVERRIDES`: lowercase high-entropy hint name -> value.
 - `ChromeIdentity.UA_METADATA`: the `Emulation.UserAgentMetadata` object.
+
+`PLATFORM_VERSION`, `HIGH_ENTROPY_OVERRIDES` and `UA_METADATA` are static getters
+that build their value on first access and keep it (the same object every time).
+Loading the module starts `WindowsPlatformVersion.prefetch()` so the registry read
+runs in the background instead of as a synchronous child process on the boot path;
+the first access (the first page request) finds the answer ready.
 - `ChromeIdentity.acceptLanguage()`: the UI locale plus its base language
   (`en-US,en`), as real Chrome sends; `en-US,en` outside Electron.
 - `ChromeIdentity.applyToSession(sess)`: sets the UA string and Accept-Language

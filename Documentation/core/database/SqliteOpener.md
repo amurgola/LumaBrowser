@@ -3,7 +3,7 @@
 `core/database/SqliteOpener.js`
 
 Opens every SQLite database in the app the same way: better-sqlite3, WAL
-journaling and a busy timeout.
+journaling, `synchronous = NORMAL` and a busy timeout.
 
 ## Methods
 
@@ -22,6 +22,11 @@ journaling and a busy timeout.
 WAL is not optional: every one of these databases is read by one process while
 another writes it. The one exception is a read-only file nobody writes, which
 is why `readOnly` skips the switch instead of failing on a read-only folder.
+
+`synchronous = NORMAL` is the WAL-safe setting: a commit stays durable across an
+application crash and consistent across a power loss, and the database skips the
+fsync that FULL does on every commit. Every autocommit settings write otherwise
+paid that fsync on the main thread. The read-only open skips it with the WAL switch.
 
 The timeout is passed through the constructor's `timeout` option because that
 is the knob better-sqlite3 actually uses for `busy_timeout`. Legacy bug L8

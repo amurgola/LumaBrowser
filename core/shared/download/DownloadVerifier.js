@@ -1,14 +1,17 @@
 const fs = require('fs');
 const crypto = require('crypto');
 const PartialFile = require('./PartialFile');
+const ChunkMeta = require('./ChunkMeta');
+const DownloadError = require('./DownloadError');
 
 class DownloadVerifier {
-  static async verifyPartial({ partPath, total, sha256, onVerify, forLabel }) {
+  static async verifyPartial({ partPath, metaPath = null, total, sha256, digest = null, onVerify, forLabel = '' }) {
     const size = PartialFile.size(partPath);
-    DownloadVerifier._assertSize(partPath, size, total, forLabel);
+    DownloadVerifier._assertSize({ partPath, metaPath, size, total, forLabel });
     if (!sha256) return;
-    const digest = await DownloadVerifier._digestWithProgress(partPath, size, onVerify, forLabel);
-    DownloadVerifier._assertDigest(partPath, digest, sha256, forLabel);
+    const expected = String(sha256).toLowerCase();
+    const actual = digest ? String(digest).toLowerCase() : await DownloadVerifier._digestWithProgress(partPath, size, onVerify, forLabel);
+    DownloadVerifier._assertDigest({ partPath, metaPath, digest: actual, sha256: expected, forLabel });
   }
 
   static sha256File(filePath, onTick) {
@@ -26,10 +29,10 @@ class DownloadVerifier {
     });
   }
 
-  static _assertSize(partPath, size, total, forLabel) {
+  static _assertSize({ partPath, metaPath, size, total, forLabel }) {
     if (!(total > 0) || size === total) return;
-    DownloadVerifier._discard(partPath);
-    throw new Error(
+    DownloadVerifier._discard(partPath, metaPath);
+    throw DownloadError.integrity(
       `Download verification failed${forLabel}: expected ${total} bytes, got ${size}. The partial file was discarded; try again.`);
   }
 
@@ -42,18 +45,19 @@ class DownloadVerifier {
     }
   }
 
-  static _assertDigest(partPath, digest, sha256, forLabel) {
+  static _assertDigest({ partPath, metaPath, digest, sha256, forLabel }) {
     if (digest === sha256) return;
-    DownloadVerifier._discard(partPath);
-    throw new Error(
+    DownloadVerifier._discard(partPath, metaPath);
+    throw DownloadError.integrity(
       `Download verification failed${forLabel}: checksum mismatch (the file does not match the one published upstream). The partial file was discarded; try again.`);
   }
 
-  static _discard(partPath) {
+  static _discard(partPath, metaPath) {
     try {
       fs.unlinkSync(partPath);
     } catch (_) {
     }
+    if (metaPath) ChunkMeta.clear(metaPath);
   }
 
   static _callQuietly(callback, ...args) {

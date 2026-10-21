@@ -37,6 +37,9 @@ export default class TabContextMenu {
     const api = window.tabAPI;
     add('reload', 'Reload', () => api && api.reload(tabId));
     add('duplicate', 'Duplicate', () => { if (tab.url) this._tabs.create(tab.url, { activate: true }); });
+    if (api && typeof api.moveToNewWindow === 'function' && !tab.pinned && this._strip.visibleIds().length > 1) {
+      add('move-window', 'Move tab to new window', () => api.moveToNewWindow(tabId));
+    }
     add('copy-url', 'Copy URL', () => { if (tab.url) Clipboard.copyText(tab.url); });
     if (api && typeof api.setMuted === 'function') add('mute', tab.muted ? 'Unmute tab' : 'Mute tab', () => api.setMuted(tabId, !tab.muted));
     items.push({ sep: true });

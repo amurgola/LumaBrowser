@@ -22,3 +22,9 @@ Process configuration that precedes everything else.
   7. Chromium switches: `enable-features=UseSkiaRenderer`,
      `force-color-profile=srgb`, `disable-features=CalculateNativeWinOcclusion`,
      and on Linux `enable-transparent-visuals`.
+
+## Extension load warnings
+
+`run()` installs [ExtensionLoadWarnings](../../core/chrome-extensions/ExtensionLoadWarnings.md)
+right after the rejection tap, before any session loads an extension, so
+Electron's per-session `ExtensionLoadWarning` is filtered from the first one.

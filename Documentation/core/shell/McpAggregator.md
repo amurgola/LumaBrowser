@@ -32,7 +32,8 @@ The handler returns an MCP result (see [McpResult](McpResult.md)). It receives
 - `handleToolCall(toolName, args, opts = {})` routes to the first set that lists
   the tool and has a handler. Throws `tool "<name>" is disabled` (unless
   `opts.ignoreDisabled`) or `unknown tool "<name>"`. Other `opts`: `emit`
-  (live-event sink so a tool can stream progress), `chat` (`{ conversationId,
+  (live-event sink so a tool can stream its own events), `onProgress(fields)`
+  (the tool card's progress line, see the chat bridge's ToolProgress), `chat` (`{ conversationId,
   assistantMessageId, onArtifact }` so a delegating tool can bubble artifacts
   back). Both pass through untouched.
 

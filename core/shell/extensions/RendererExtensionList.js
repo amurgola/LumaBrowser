@@ -47,8 +47,6 @@ class RendererExtensionList {
       navigationBar: manifest.navigationBar || null,
       settings: manifest.settings || null,
       setupTab: manifest.setupTab ? { label: ManifestFields.option(manifest.setupTab, 'label') || manifest.name } : null,
-      extensionsAction: manifest.extensionsAction || null,
-      extensionsActions: ManifestFields.actions(manifest),
     };
   }
 

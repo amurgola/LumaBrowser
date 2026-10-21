@@ -25,7 +25,10 @@ export default class TurnRenderer {
     if (m.id) t.dataset.msgId = m.id;
     const a = Dom.el('div', 'cm-asst');
     const live = m === state.streamMsg;
-    if (TurnData.hasReasoning(m.reasoning)) a.appendChild(ThinkPane.create(m.reasoning, live, this._ctx.thinkPane.isThinkingNow(m)));
+    if (TurnData.hasReasoning(m.reasoning)) {
+      const thinkingNow = this._ctx.thinkPane.isThinkingNow(m);
+      a.appendChild(ThinkPane.create(m.reasoning, live, thinkingNow, ThinkPane.facts(m, thinkingNow)));
+    }
     this._appendIf(a, this._ctx.chain.create(m));
     this._appendIf(a, AgentRunCards.create(m));
     const parsed = ReplyChoices.parse(m.content);

@@ -11,6 +11,7 @@ class SqliteOpener {
     if (mkdir) SqliteOpener._ensureParentDirectory(dbPath);
     const db = SqliteOpener._construct(dbPath, busyTimeoutMs);
     db.pragma('journal_mode = WAL');
+    db.pragma('synchronous = NORMAL');
     return db;
   }
 

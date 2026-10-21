@@ -1,16 +1,21 @@
 const UnsupportedFlagMemory = require('../UnsupportedFlagMemory');
 const ModelRuntimeMatch = require('./ModelRuntimeMatch');
+const CudaDeviceProbe = require('../../../shared/runtime/CudaDeviceProbe');
 
 class LaunchPreflight {
-  constructor({ diagnostics, detector, scanner, catalog }) {
+  static GPU_READY_MS = 3000;
+
+  constructor({ diagnostics, detector, scanner, catalog, gpuReady = () => CudaDeviceProbe.whenReady(LaunchPreflight.GPU_READY_MS) }) {
     this._diagnostics = diagnostics;
     this._detector = detector;
     this._scanner = scanner;
     this._catalog = catalog;
+    this._gpuReady = gpuReady;
   }
 
   async resolve(ctx, timings) {
     ctx.diag = await this._readDiagnostics(ctx.service);
+    await this._gpuReady();
     timings.diag = Date.now();
     const runtimeRefusal = await this._resolveRuntime(ctx);
     if (runtimeRefusal) return runtimeRefusal;

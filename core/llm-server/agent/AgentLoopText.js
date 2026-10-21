@@ -24,6 +24,9 @@ class AgentLoopText {
   static DEFERRED_CALL = 'Not executed. Another call in this same response already changed state, '
     + 'and this one was written before you could see that result. Check what changed, then re-issue this call if you still need it.';
 
+  static ONE_CALL_PER_REPLY = 'Not executed: only the first tool call of a response runs here, one per response. '
+    + 'Read the result above, then re-issue this call on its own if you still need it.';
+
   static NO_BROWSER_TAB_INFO = '(none: this agent has no browser)';
 
   static LAZY_TAB_INFO = 'none yet: a blank working tab opens automatically the first time you use a browser action (navigate, click, screenshot, …)';

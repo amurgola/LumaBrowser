@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const ManifestFields = require('./ManifestFields');
 const DashboardContribution = require('./DashboardContribution');
 
 class ManifestValidator {
@@ -16,7 +15,6 @@ class ManifestValidator {
       ...ManifestValidator._fieldTypeIssues(manifest),
       ...ManifestValidator._entryPointIssues(manifest, extDir),
       ...ManifestValidator._declarativeUiIssues(manifest),
-      ...ManifestValidator._actionIssues(manifest),
       ...ManifestValidator._dashboardIssues(manifest, extDir),
     ];
   }
@@ -88,15 +86,6 @@ class ManifestValidator {
     }
     if (block.api !== undefined && (!Array.isArray(block.api) || block.api.some((m) => typeof m !== 'string'))) {
       issues.push('dashboard.api should be an array of method names');
-    }
-    return issues;
-  }
-
-  static _actionIssues(manifest) {
-    const issues = [];
-    for (const action of ManifestFields.actions(manifest)) {
-      if (!action || !action.label) issues.push('extensionsAction.label is required');
-      if (!action || !action.modeIntent) issues.push('extensionsAction.modeIntent is required (the chat mode to launch)');
     }
     return issues;
   }

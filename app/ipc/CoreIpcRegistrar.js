@@ -39,11 +39,16 @@ class CoreIpcRegistrar {
     this._registerChatSurfaces();
     const media = this._registerMediaServers();
     this._registerSharingAndPlacement();
-    new WindowControlIpc(() => this._ctx.mainWindow).register(this._ipcMain);
+    new WindowControlIpc(() => this._ctx.mainWindow, { windowForSender: (wc) => CoreIpcRegistrar._windowForSender(this._ctx, wc) }).register(this._ipcMain);
     this._registerLlmSettings();
     this._registerShell();
     if (this._debugIpc) this._debugIpc.register(this._ipcMain);
     return { chat, ...media };
+  }
+
+  static _windowForSender(ctx, webContents) {
+    const BrowserWindow = ctx.electron && ctx.electron.BrowserWindow;
+    return BrowserWindow ? BrowserWindow.fromWebContents(webContents) : null;
   }
 
   _registerSettings() {
@@ -61,7 +66,9 @@ class CoreIpcRegistrar {
       vscodeExtension: s.vscodeExtension,
       onSetupFinalized: () => this._ctx.deferredServices.start(),
     }).register();
-    new ChromeExtensionIpcHandlers(s.chromeExtensionService).register();
+    new ChromeExtensionIpcHandlers(s.chromeExtensionService, {
+      openUrlInTab: (url) => this._ctx.tabViewManager && this._ctx.tabViewManager.createTab(url),
+    }).register();
     new AdblockerIpcHandlers(s.adblockerService).register();
   }
 

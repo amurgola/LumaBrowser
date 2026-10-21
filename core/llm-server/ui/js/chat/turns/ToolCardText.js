@@ -3,6 +3,29 @@ export default class ToolCardText {
 
   static detail(tc) {
     if (tc && tc._pending) return ToolCardText._pendingDetail(tc);
+    const base = ToolCardText._settledDetail(tc);
+    const progress = tc && tc.status === 'run' ? ToolCardText.progress(tc._progress) : '';
+    return [base, progress].filter(Boolean).join(' · ');
+  }
+
+  static progress(progress) {
+    if (!progress) return '';
+    if (progress.message) return progress.message;
+    if (typeof progress.step === 'number' && typeof progress.totalSteps === 'number' && progress.totalSteps > 0) {
+      return 'step ' + Math.round(progress.step) + ' of ' + Math.round(progress.totalSteps);
+    }
+    if (typeof progress.elapsedMs === 'number') return ToolCardText.elapsed(progress.elapsedMs);
+    return '';
+  }
+
+  static elapsed(ms) {
+    const total = Math.max(0, Math.round((Number(ms) || 0) / 1000));
+    if (total < 60) return total + 's';
+    const seconds = total % 60;
+    return Math.floor(total / 60) + 'm ' + (seconds < 10 ? '0' : '') + seconds + 's';
+  }
+
+  static _settledDetail(tc) {
     const structured = ToolCardText.metaDetail(tc);
     if (structured) return structured;
     if (tc && tc.summary) return tc.summary;

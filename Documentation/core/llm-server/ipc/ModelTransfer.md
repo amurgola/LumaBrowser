@@ -10,7 +10,9 @@ One model download run across several files with one stable cancel and pause han
 - `handle` getter `{ cancel, pause }` for the download slot.
 - `stopped` getter, true after cancel or pause.
 - `cancel()`, `pause()` (pause also counts as stopped) reach the live file.
-- `fetch(url, destPath, onEvent)` starts one file; resolves `ModelDownload`'s result.
+- `fetch(url, destPath, onEvent, expected?)` starts one file; resolves `ModelDownload`'s
+  result. `expected` is `{ expectedSize, expectedSha256 }` from the pinned listing;
+  only known values (a size > 0, a non-empty digest) are passed to the download.
 - `wasStopped(result)` stopped, or the file reported `canceled` or `paused`.
 - `stopOutcome()` sends `paused` and returns `{ success: false, paused: true }`, or
   sends `canceled` and returns `{ success: false, canceled: true }`.

@@ -559,6 +559,78 @@ class ImageModelEntries {
       compatibleRuntimes: [...SD_CPP_RUNTIMES],
     },
     {
+      id: 'moss-image-sft',
+      label: 'MOSS-Image',
+      blurb:
+        'OpenMOSS\'s MOSS-Image (Oct 2026), a 5B DiT trained from scratch with '
+        + 'Qwen3.5-9B as its text encoder and the FLUX.2 VAE. Strong photorealism '
+        + 'and bilingual (English + Chinese) text rendering; takes natural language, '
+        + 'Danbooru tags or long detailed captions. Real CFG, so negative prompts '
+        + 'work. ~11.4 GB total at int8 across diffusion + encoder + VAE. Needs a '
+        + 'stable-diffusion.cpp build from 2026-10-17 (master-973) or newer: update '
+        + 'the runtime in Setup if it fails to load.',
+      family: 'moss-image',
+      kind: 'generate',
+      licenseNote: 'Apache-2.0 (weights and outputs): free for commercial use and hosting.',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'Comfy-Org/MOSS-Image',
+          file: 'moss_image_sft_int8_convrot.safetensors',
+          url: `${HF}/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors?download=true`,
+          approxBytes: 5413698958,
+          loaderFlag: '--diffusion-model',
+          quants: [
+            { id: 'int8', label: 'int8 - recommended (what sd.cpp\'s MOSS docs run)', file: 'moss_image_sft_int8_convrot.safetensors', url: `${HF}/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors?download=true`, approxBytes: 5413698958, recVramBytes: 12 * GB, default: true },
+            { id: 'bf16', label: 'bf16 - full precision', file: 'moss_image_sft_bf16.safetensors', url: `${HF}/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors?download=true`, approxBytes: 10164655808, recVramBytes: 20 * GB },
+          ],
+        },
+        vae: {
+          role: 'vae',
+          repo: 'Comfy-Org/MOSS-Image',
+          file: 'flux2-vae.safetensors',
+          url: `${HF}/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors?download=true`,
+          approxBytes: 336211292,
+        },
+        llm: {
+          role: 'llm',
+          repo: 'unsloth/Qwen3.5-9B-GGUF',
+          file: 'Qwen3.5-9B-Q4_K_M.gguf',
+          url: `${HF}/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-Q4_K_M.gguf?download=true`,
+          approxBytes: 5680522464,
+        },
+        tokenizer: {
+          role: 'tokenizer',
+          repo: 'OpenMOSS-Team/MOSS-Image-Base',
+          file: 'tokenizer.json',
+          url: `${HF}/OpenMOSS-Team/MOSS-Image-Base/resolve/main/tokenizer/tokenizer.json?download=true`,
+          approxBytes: 19989325,
+        },
+      },
+      minVramBytes: 10 * GB,
+      defaults: {
+        width: 1024,
+        height: 1024,
+        steps: 28,
+        cfgScale: 3.0,
+        sampler: 'euler',
+        cacheMode: 'easycache',
+        negativePrompt: 'worst quality, bad anatomy, watermark, jpeg artifacts',
+        promptGuide:
+          'This is MOSS-Image (LLM-conditioned via Qwen3.5). Prefer a detailed '
+          + 'NATURAL-LANGUAGE description in English: subject, setting, style, '
+          + 'lighting, camera and composition, several sentences are welcome since '
+          + 'it reads long prompts well. Danbooru-style tags also work for anime '
+          + 'art. It renders English and Chinese text well: put the exact words in '
+          + 'quotes and say where they appear. Real CFG, so negative prompts work. '
+          + 'Short or vague prompts look flat, so expand them with concrete detail.',
+      },
+      constraints: { dimensionMultiple: 16 },
+      launchArgs: ['--clip-on-cpu'],
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
       id: 'wan-2-2-t2v-a14b',
       label: 'Wan 2.2 T2V A14B',
       blurb:

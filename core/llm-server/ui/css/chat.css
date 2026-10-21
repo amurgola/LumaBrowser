@@ -320,6 +320,12 @@
         .cm-recents-head-del:hover { color: var(--danger); background: var(--danger-dim); }
         .cm-recents-head-del svg { width: 14px; height: 14px; display: block; }
 
+        .cm-conv.cm-art-row { height: auto; min-height: 32px; padding-top: var(--space-1); padding-bottom: var(--space-1); }
+        .cm-art-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .cm-art-line { display: flex; align-items: center; min-width: 0; }
+        .cm-art-line .cm-conv-title { flex: 0 1 auto; min-width: 0; }
+        .cm-art-line .cm-art-kind,
+        .cm-art-line .cm-art-vbadge { flex: none; }
         .cm-art-kind {
             display: inline-block;
             margin-left: 6px;
@@ -1475,6 +1481,16 @@
         .cm-model-opt.sel { color: var(--text-primary); background: var(--bg-elevated); }
         .cm-model-opt .cm-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); flex: 0 0 6px; }
         .cm-model-opt .cm-dot.ready { background: var(--success); }
+        .cm-agent-pop { max-width: min(360px, calc(100vw - 16px)); }
+        .cm-model-opt.cm-agent-opt { align-items: flex-start; padding: var(--space-2) 10px; }
+        .cm-model-opt.cm-agent-opt + .cm-agent-opt { margin-top: 2px; }
+        .cm-agent-text { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); line-height: var(--leading-tight); }
+        .cm-agent-name { color: var(--text-primary); }
+        .cm-agent-name .cm-model-sub { margin-left: var(--space-1); }
+        .cm-agent-desc {
+            margin-top: 0; line-height: var(--leading);
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
 
         .cm-local-head { display: block; padding: var(--space-2) 10px var(--space-1); }
         .cm-local-name { color: var(--text-primary); font-size: var(--text-md); font-weight: 600; }
@@ -1703,6 +1719,14 @@
             overflow-y: auto;
             scrollbar-width: thin;
         }
+        .cm-chain-batch { display: flex; flex-direction: column; gap: 2px; }
+        .cm-chain-batch-head {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            padding: 2px var(--space-3) 0;
+        }
+        .cm-chain-batch-cards { display: flex; flex-wrap: wrap; gap: 2px var(--space-3); }
+        .cm-chain-batch-cards .cm-toolcard { flex: 1 1 220px; min-width: 0; }
         .cm-toolcard.cm-tc-view { cursor: pointer; }
         .cm-toolcard.cm-tc-view:hover { background: var(--surface-hover); }
 

@@ -4,9 +4,12 @@ const ChunkMeta = require('./ChunkMeta');
 const PartialFile = require('./PartialFile');
 const DownloadRateMeter = require('./DownloadRateMeter');
 const DownloadVerifier = require('./DownloadVerifier');
+const DownloadError = require('./DownloadError');
+const DownloadRetry = require('./DownloadRetry');
+const DownloadPublish = require('./DownloadPublish');
 
 class ParallelDownload {
-  static CHUNK_RETRIES = 3;
+  static CHUNK_ATTEMPTS = 4;
   static WRITE_QUEUE_HIGH_WATER = 4 * 1024 * 1024;
 
   constructor(job) {
@@ -96,24 +99,23 @@ class ParallelDownload {
       const index = this._pending[this._cursor++];
       const outcome = await this._fetchChunkWithRetries(index);
       if (outcome === 'stopped') return;
-      if (outcome instanceof Error) { this._failure = outcome; return; }
+      if (outcome instanceof Error) { if (!this._failure) this._failure = outcome; return; }
       this._markChunkDone(index);
     }
   }
 
   async _fetchChunkWithRetries(index) {
-    let lastError = null;
-    for (let attempt = 1; attempt <= ParallelDownload.CHUNK_RETRIES; attempt++) {
-      try {
-        await this._fetchChunk(index);
-        return 'ok';
-      } catch (err) {
-        this._inflight.delete(index);
-        lastError = err;
-        if (this._isStopped()) return 'stopped';
-      }
+    try {
+      await DownloadRetry.run(() => this._fetchChunk(index), {
+        attempts: ParallelDownload.CHUNK_ATTEMPTS,
+        isStopped: () => this._isStopped() || !!this._failure,
+        sleep: this._job.sleep,
+      });
+      return 'ok';
+    } catch (err) {
+      this._inflight.delete(index);
+      return this._isStopped() ? 'stopped' : err;
     }
-    return lastError;
   }
 
   _markChunkDone(index) {
@@ -136,15 +138,20 @@ class ParallelDownload {
     }
   }
 
-  _requestRange(start, end) {
-    return axios.get(this._job.url, {
-      responseType: 'stream',
-      headers: { 'Accept-Encoding': 'identity', Range: `bytes=${start}-${end}` },
-      maxRedirects: 5,
-      signal: this._job.controller.signal,
-      timeout: 0,
-      validateStatus: (status) => status === 206,
-    });
+  async _requestRange(start, end) {
+    const { url, headers = {}, controller, forLabel } = this._job;
+    try {
+      return await axios.get(url, {
+        responseType: 'stream',
+        headers: { ...headers, 'Accept-Encoding': 'identity', Range: `bytes=${start}-${end}` },
+        maxRedirects: 5,
+        signal: controller.signal,
+        timeout: 0,
+        validateStatus: (status) => status === 206,
+      });
+    } catch (err) {
+      throw DownloadError.fromRequest(err, { url, forLabel });
+    }
   }
 
   _writeStreamAt(stream, index, start) {
@@ -179,19 +186,24 @@ class ParallelDownload {
 
   async _finish() {
     if (this._isStopped()) return { canceled: true };
-    if (this._failure) {
-      throw new Error(`Download interrupted${this._job.forLabel}: ${this._failure.message} (resume on retry)`);
-    }
+    if (this._failure) throw this._interrupted(this._failure);
     await this._verifyAndPublish();
     this._tickProgress(true);
     return { bytes: this._job.total, resumed: this._resumed };
   }
 
+  _interrupted(failure) {
+    if (failure instanceof DownloadError && !failure.retryable) return failure;
+    return new DownloadError(`Download interrupted${this._job.forLabel}: ${failure.message} (resume on retry)`, {
+      code: failure.code || DownloadError.NETWORK, status: failure.status || null, retryable: true,
+    });
+  }
+
   async _verifyAndPublish() {
     const { verify, partPath, metaPath, destPath, total, expectSha, onVerify, forLabel } = this._job;
-    if (verify) await DownloadVerifier.verifyPartial({ partPath, total, sha256: expectSha, onVerify, forLabel });
+    if (verify) await DownloadVerifier.verifyPartial({ partPath, metaPath, total, sha256: expectSha, onVerify, forLabel });
     ChunkMeta.clear(metaPath);
-    fs.renameSync(partPath, destPath);
+    await DownloadPublish.publish(partPath, destPath);
   }
 
   _tickProgress(force) {

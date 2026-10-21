@@ -1,14 +1,16 @@
 const HfHubClient = require('./HfHubClient');
+const HfPinnedRepo = require('./HfPinnedRepo');
 
 class HfMlxRepo {
-  static async fetchInfo(repoId, { signal } = {}) {
+  static async fetchInfo(repoId, { signal, revision } = {}) {
     const id = HfHubClient.requireRepoId(repoId);
-    const [meta, tree, config] = await HfMlxRepo._fetchAll(id, signal);
-    const files = HfMlxRepo._files(tree);
+    const [meta, pinned, config] = await HfMlxRepo._fetchAll(id, signal, revision);
+    const files = pinned.files.map((file) => ({ path: file.path, size: file.size, sha256: file.sha256 }));
     return {
       ...HfMlxRepo._identity(id, meta),
       ...HfMlxRepo._modelFacts(id, meta, config || {}),
       ...HfMlxRepo._sizes(files),
+      revision: pinned.describe(),
       files,
     };
   }
@@ -21,15 +23,15 @@ class HfMlxRepo {
     return dtype ? dtype[1].toUpperCase() : null;
   }
 
-  static async _fetchAll(id, signal) {
-    const [meta, tree, config] = await Promise.all([
+  static async _fetchAll(id, signal, revision) {
+    const [meta, pinned, config] = await Promise.all([
       HfHubClient.get(`${HfHubClient.BASE}/api/models/${id}?expand[]=safetensors&expand[]=gated`, { signal })
         .catch((err) => (err.code === 'HF_NOT_FOUND' ? null : Promise.reject(err))),
-      HfHubClient.get(HfHubClient.treeUrl(id), { signal }),
+      HfPinnedRepo.pin(id, { signal, revision }),
       HfMlxRepo._fetchConfig(id, signal),
     ]);
     if (meta === null) throw HfHubClient.notFound(`No such model: ${id}`);
-    return [meta, tree, config];
+    return [meta, pinned, config];
   }
 
   static async _fetchConfig(id, signal) {
@@ -39,12 +41,6 @@ class HfMlxRepo {
       responseType: 'json',
     });
     return data && typeof data === 'object' ? data : null;
-  }
-
-  static _files(tree) {
-    return (Array.isArray(tree) ? tree : [])
-      .filter((entry) => entry && entry.type !== 'directory' && entry.path)
-      .map((entry) => ({ path: entry.path, size: Number(entry.size) || 0 }));
   }
 
   static _identity(id, meta) {

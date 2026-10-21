@@ -1,3 +1,5 @@
+const TokenEstimator = require('../../../../shared/text/TokenEstimator');
+
 class RunHealth {
   static TIMING_KEYS = ['predicted_n', 'predicted_ms', 'prompt_n', 'prompt_ms'];
 
@@ -44,6 +46,12 @@ class RunHealth {
     for (const key of RunHealth.TIMING_KEYS) {
       if (Number.isFinite(timings[key])) this.turnTotals[key] += timings[key];
     }
+  }
+
+  charsPerSecond() {
+    const totals = this.turnTotals;
+    if (!(totals.predicted_ms > 0) || !(totals.predicted_n > 0)) return null;
+    return (totals.predicted_n / (totals.predicted_ms / 1000)) * TokenEstimator.CHARS_PER_TOKEN;
   }
 
   doneFields(result) {

@@ -20,6 +20,10 @@ class MenuTab {
     return !!(this._tvm && this._entry);
   }
 
+  get entry() { return this._entry; }
+
+  get order() { return this._tvm && Array.isArray(this._tvm.order) ? this._tvm.order : null; }
+
   get isInternal() {
     if (!this.isTabPage || !this._entry.kind) return false;
     const kinds = this._tvm.constructor.INTERNAL_KINDS;

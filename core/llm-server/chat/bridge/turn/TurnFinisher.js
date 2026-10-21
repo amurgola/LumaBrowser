@@ -18,7 +18,7 @@ class TurnFinisher {
     const o = this._o;
     const text = FinalTextResolver.resolve({ result, trace: o.trace, artifacts: o.artifacts, groups: o.groups, hooks: this._hooks });
     this._persistTrace();
-    await o.mirror.settleFinal(text, o.isAborted);
+    await o.mirror.settleFinal(text, o.isAborted, { charsPerSecond: o.health.charsPerSecond() });
     this._hooks.onDone(o.health.doneFields(result));
     o.closeWork();
   }

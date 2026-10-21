@@ -37,11 +37,26 @@ class StreamMirror {
     this._iterationStreamed = 0;
   }
 
-  async settleFinal(text, isAborted) {
-    if (this.totalStreamed === text) return;
-    if (this.totalStreamed.length > 0 && this._hooks.onContentRollback) this._hooks.onContentRollback(this.totalStreamed.length);
-    this.totalStreamed = '';
-    await TextDrip.play(text, this._hooks.onDelta, isAborted);
+  async settleFinal(text, isAborted, pace = {}) {
+    const shown = this.totalStreamed;
+    const canonical = String(text == null ? '' : text);
+    if (shown === canonical) return;
+    const common = StreamMirror._commonPrefix(shown, canonical);
+    const extra = shown.length - common;
+    if (extra > 0 && this._hooks.onContentRollback) this._rollbackChars(extra);
+    this.totalStreamed = canonical;
+    await TextDrip.play(canonical.slice(common), this._hooks.onDelta, isAborted, pace);
+  }
+
+  static _commonPrefix(a, b) {
+    const max = Math.min(a.length, b.length);
+    let i = 0;
+    while (i < max && a.charCodeAt(i) === b.charCodeAt(i)) i++;
+    return i;
+  }
+
+  _rollbackChars(n) {
+    try { this._hooks.onContentRollback(n); } catch (_) {}
   }
 
   _rollback() {

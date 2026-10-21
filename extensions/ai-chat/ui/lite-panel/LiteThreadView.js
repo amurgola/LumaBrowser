@@ -47,12 +47,23 @@ export default class LiteThreadView {
   renderTurn(state) {
     const turn = this._turn;
     if (!turn) return;
-    if (state.tools.length > 0) this._renderRun(turn, state);
-    turn.msgContent.innerHTML = LiteMarkdown.render(state.content);
+    const toolsKey = LiteThreadView._toolsKey(state);
+    if (state.tools.length > 0 && toolsKey !== turn.toolsKey) {
+      turn.toolsKey = toolsKey;
+      this._renderRun(turn, state);
+    }
+    if (state.content !== turn.renderedContent) {
+      turn.renderedContent = state.content;
+      turn.msgContent.innerHTML = LiteMarkdown.render(state.content);
+    }
     turn.msgEl.style.display = (state.content || !state.running) ? '' : 'none';
     this._renderStopNote(turn, state);
     this._renderError(turn, state);
     this.scrollToBottom();
+  }
+
+  static _toolsKey(state) {
+    return `${state.running ? 1 : 0}|${state.tools.map((t) => `${t.tool || ''}:${t.status || ''}:${t.summary || ''}`).join('\n')}`;
   }
 
   scrollToBottom() {

@@ -87,7 +87,9 @@ The agent opens its own tabs, reads the pages and answers. Your tabs stay yours.
 
 **Browser**
 - Chromium-based browser with tabs, history, bookmarks and a built-in ad
-  blocker (Ghostery engine), plus support for unpacked Chrome extensions.
+  blocker (Ghostery engine), plus Chrome extensions: a curated store of ones
+  that work in Electron (Bitwarden, Dark Reader, SponsorBlock, React DevTools
+  and more), any Chrome Web Store link, or an unpacked folder.
 - **Luma On Demand**: a floating voice or text panel on any page that acts on
   the current tab.
 - **Dashboard**: a grid of live widgets from chats and extensions.
@@ -227,6 +229,7 @@ What does leave the machine, and how to turn it off:
 | Usage ping: version, platform, machine id, every 5 minutes | lumabyte.com | On | Settings > General |
 | Update check | lumabyte.com | On | Settings: automatic update checks |
 | Extension catalog | lumabyte.com | Only when you open Extensions | |
+| Chrome extension downloads and update checks: extension id, Chromium version | Google (clients2.google.com) | Only when you install or update one | |
 | Ad-block lists, runtimes, models | Ghostery, GitHub, Hugging Face and model hosts | When needed | |
 
 No feature depends on the usage ping.

@@ -2,6 +2,7 @@ const path = require('path');
 const AppPaths = require('../shared/AppPaths');
 const ManagedRuntimeSettings = require('../shared/runtime/ManagedRuntimeSettings');
 const VramCoordinator = require('../shared/runtime/VramCoordinator');
+const NvidiaSmiStream = require('../shared/runtime/NvidiaSmiStream');
 const RamPinService = require('../shared/runtime/rampin/RamPinService');
 const LlmRuntimeServer = require('./server/LlmRuntimeServer');
 const ServerLauncher = require('./server/ServerLauncher');
@@ -229,6 +230,7 @@ class LLMServerService {
     }
     try { await this.ramPin.stop(); } catch (_) {}
     try { await this.groupRouter.stop(); } catch (_) {}
+    try { this._deps.nvidiaSmiStream.stop(); } catch (_) {}
   }
 
   static _resolveDeps(options) {
@@ -243,6 +245,7 @@ class LLMServerService {
       vramCoordinator: options.vramCoordinator || VramCoordinator.shared,
       releasePeers: options.releasePeers || (() => RpcPeers.releaseAll()),
       vramWatchdogOptions: options.vramWatchdogOptions || {},
+      nvidiaSmiStream: options.nvidiaSmiStream || NvidiaSmiStream.shared,
       modelCaps: options.modelCaps || null,
       chatStore: options.chatStore || null,
       groupRouter: options.groupRouter || null,
@@ -327,7 +330,9 @@ class LLMServerService {
 
   _createVramWatchdog() {
     const rs = this.runtimeServer;
+    try { this._deps.nvidiaSmiStream.start(); } catch (err) { console.warn('[llm-server] nvidia-smi stream failed to start:', err && err.message); }
     return new VramWatchdog({
+      stream: this._deps.nvidiaSmiStream,
       isLoaded: () => rs.state === 'ready',
       isIdle: () => rs.state === 'ready' && this._requests.inFlight() === 0 && !rs.idleHeld,
       unloadEnabled: () => this.getUnloadOnVramPressure(),

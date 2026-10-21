@@ -8,9 +8,10 @@ class PermissionManager {
   static DECISIONS = ['once', 'always', 'block'];
   static _current = null;
 
-  constructor({ db, getMainWindow, resolveTab, logger } = {}) {
+  constructor({ db, getMainWindow, windowForTab, resolveTab, logger } = {}) {
     this._sites = new SitePermissionStore(db);
     this._getMainWindow = typeof getMainWindow === 'function' ? getMainWindow : () => null;
+    this._windowForTab = typeof windowForTab === 'function' ? windowForTab : () => null;
     this._resolveTab = typeof resolveTab === 'function' ? resolveTab : () => null;
     this._log = (logger && logger.log) || ((...a) => console.log(...a));
     this._onceGrants = new Map();
@@ -140,7 +141,15 @@ class PermissionManager {
 
   _mayPrompt(tab) {
     if (!tab || tab.hidden) return false;
-    return this._isWindowLive(this._getMainWindow());
+    return this._isWindowLive(this._promptWindowFor(tab));
+  }
+
+  _promptWindowFor(tab) {
+    let win = null;
+    if (tab && !tab.synthetic) {
+      try { win = this._windowForTab(tab.id) || null; } catch (_) { win = null; }
+    }
+    return win || this._getMainWindow();
   }
 
   _isAllowed(tab, origin, kind) {
@@ -185,6 +194,7 @@ class PermissionManager {
   }
 
   _sendPrompt(entry, tab) {
+    entry.window = this._promptWindowFor(tab);
     this._send('permission:prompt', {
       requestId: entry.requestId,
       tabId: tab.synthetic ? null : tab.id,
@@ -192,14 +202,14 @@ class PermissionManager {
       host: PermissionKinds.hostOf(entry.origin),
       kinds: entry.kinds,
       what: PermissionKinds.describe(entry.kinds),
-    });
+    }, entry.window);
   }
 
   _settle(entry, decision) {
     if (!this._pending.has(entry.key)) return;
     this._forget(entry);
     const granted = this._applyDecision(entry, decision);
-    this._send('permission:prompt-close', { requestId: entry.requestId });
+    this._send('permission:prompt-close', { requestId: entry.requestId }, entry.window);
     entry.resolve(granted);
   }
 
@@ -263,8 +273,7 @@ class PermissionManager {
     return !!win && !(typeof win.isDestroyed === 'function' && win.isDestroyed());
   }
 
-  _send(channel, payload) {
-    const win = this._getMainWindow();
+  _send(channel, payload, win = this._getMainWindow()) {
     if (!this._isWindowLive(win)) return;
     try { win.webContents.send(channel, payload); } catch (_) {}
   }

@@ -1,20 +1,26 @@
+const TabHosts = require('./TabHosts');
 const CrashTracer = require('../../diagnostics/CrashTracer');
 
 class TabLayout {
-  constructor(registry, emitter) {
+  constructor(registry, hosts, emitter) {
     this._registry = registry;
+    this._hosts = hosts;
     this._emitter = emitter;
-    this.currentBounds = { x: 0, y: 0, width: 0, height: 0 };
   }
 
-  setBounds(bounds) {
-    this.currentBounds = TabLayout._rounded(bounds);
-    this._applyToActive();
-    this._emitter.emit('boundsChanged', this.currentBounds);
+  get currentBounds() {
+    return this._hosts.boundsOf(TabHosts.MAIN_ID);
+  }
+
+  setBounds(bounds, hostId = TabHosts.MAIN_ID) {
+    const rounded = TabLayout._rounded(bounds);
+    this._hosts.setBounds(hostId, rounded);
+    this._applyToActive(hostId);
+    if (hostId === TabHosts.MAIN_ID) this._emitter.emit('boundsChanged', rounded);
   }
 
   applyTo(entry) {
-    const b = this.currentBounds;
+    const b = this._hosts.boundsOf(entry.hostId);
     try {
       if (!b.width || !b.height) {
         CrashTracer.mark('tab:bounds-hide', { id: entry.id });
@@ -37,9 +43,10 @@ class TabLayout {
     };
   }
 
-  _applyToActive() {
-    if (this._registry.activeTabId === null) return;
-    const entry = this._registry.get(this._registry.activeTabId);
+  _applyToActive(hostId) {
+    const activeId = this._registry.activeIn(hostId);
+    if (activeId === null) return;
+    const entry = this._registry.get(activeId);
     if (entry) this.applyTo(entry);
   }
 }

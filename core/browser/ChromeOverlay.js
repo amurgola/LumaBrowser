@@ -8,11 +8,13 @@ class ChromeOverlay {
   static WARM_LAYERS = ['popup', 'notif'];
   static HIDDEN_BOUNDS = { x: 0, y: 0, width: 0, height: 0 };
 
-  constructor(mainWindow) {
+  constructor(mainWindow, { acceptsSender = null } = {}) {
     this.mainWindow = mainWindow;
     this.layers = new Map();
+    this._acceptsSender = acceptsSender || ((sender) => !!sender && sender === this.mainWindow.webContents);
+    this._listeners = new Map();
     this._registerIpc();
-    this._warmLayers();
+    this._scheduleWarm();
   }
 
   show({ id = 'popup', html, x, y, bottom, width, maxHeight, estHeight }) {
@@ -49,6 +51,9 @@ class ChromeOverlay {
   }
 
   destroy() {
+    this._destroyed = true;
+    for (const [channel, listener] of this._listeners) ipcMain.removeListener(channel, listener);
+    this._listeners.clear();
     for (const layer of this.layers.values()) {
       try { this.mainWindow.contentView.removeChildView(layer.view); } catch (_) {}
       try { layer.view.webContents.destroy(); } catch (_) {}
@@ -56,7 +61,16 @@ class ChromeOverlay {
     this.layers.clear();
   }
 
+  _scheduleWarm() {
+    const wc = this.mainWindow && this.mainWindow.webContents;
+    const loading = wc && typeof wc.isLoading === 'function' && typeof wc.once === 'function' && wc.isLoading();
+    if (!loading) return this._warmLayers();
+    wc.once('did-finish-load', () => this._warmLayers());
+    return undefined;
+  }
+
   _warmLayers() {
+    if (this._destroyed) return;
     try {
       for (const id of ChromeOverlay.WARM_LAYERS) this._layer(id);
     } catch (_) {}
@@ -147,17 +161,24 @@ class ChromeOverlay {
   _forward(channel, sender, payload) {
     if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
     const layer = this._idForSender(sender);
+    if (layer === null) return;
     const p = payload || {};
     this.mainWindow.webContents.send(channel, { ...p, layer, id: p.id != null ? p.id : layer });
   }
 
   _registerIpc() {
-    ipcMain.on('chrome-overlay:show', (_e, payload) => this.show(payload || {}));
-    ipcMain.on('chrome-overlay:set-active', (_e, p) => this.setActive(p || {}));
-    ipcMain.on('chrome-overlay:hide', (_e, p) => this.hide(p || {}));
-    ipcMain.on('chrome-overlay:measure', (e, p) => this.measure(e.sender, p || {}));
-    ipcMain.on('chrome-overlay:action', (e, payload) => this._forward('chrome-overlay:action', e.sender, payload));
-    ipcMain.on('chrome-overlay:hover', (e, payload) => this._forward('chrome-overlay:hover', e.sender, payload));
+    const fromShell = (fn) => (e, p) => { if (this._acceptsSender(e && e.sender)) fn(p || {}); };
+    this._listen('chrome-overlay:show', fromShell((p) => this.show(p)));
+    this._listen('chrome-overlay:set-active', fromShell((p) => this.setActive(p)));
+    this._listen('chrome-overlay:hide', fromShell((p) => this.hide(p)));
+    this._listen('chrome-overlay:measure', (e, p) => this.measure(e.sender, p || {}));
+    this._listen('chrome-overlay:action', (e, payload) => this._forward('chrome-overlay:action', e.sender, payload));
+    this._listen('chrome-overlay:hover', (e, payload) => this._forward('chrome-overlay:hover', e.sender, payload));
+  }
+
+  _listen(channel, listener) {
+    this._listeners.set(channel, listener);
+    ipcMain.on(channel, listener);
   }
 
   static _estimatedHeight(maxHeight, estHeight) {

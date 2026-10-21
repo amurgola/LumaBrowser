@@ -5,7 +5,9 @@
 Markup for the artifact views: the scope header, one row per chain (its latest
 version, a "vN ▾" history badge when there are several, and in the global view
 the owning conversation or "Not in a conversation" plus the chain's size), and
-the version rows. Every value is escaped.
+the version rows. Every value is escaped. The kind tag and the badge sit beside
+the title, not inside its ellipsis, so a long title (an image edit names its
+version after the prompt) cannot hide the history.
 
 ## Methods
 

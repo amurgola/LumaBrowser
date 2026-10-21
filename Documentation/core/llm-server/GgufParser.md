@@ -52,7 +52,17 @@ Hybrid linear-attention models (the qwen35 class) interleave deltanet blocks
 that keep no growing KV cache. No header key says which blocks those are, but
 only full-attention blocks carry `attn_k` tensors, so the tensor names do. The
 same walk sizes every tensor from its offset and detects a grafted MTP head;
-see `GgufTensorLayout`.
+see `GgufTensorLayout`. Each entry also carries its dimension product
+(`elements`) and ggml `type`, so the one pass yields the parameter count and
+the dominant quant type without a second read.
+
+## Metadata kept beyond the hyper-parameters
+
+`general.type`, `general.parameter_count`, `<arch>.pooling_type`, the few
+`clip.*` keys and `tokenizer.chat_template` are kept, and the parser notes
+whether any `clip.*` key was seen at all (`hasClipKeys`). Arrays of arrays are
+walked to four levels (`GgufValueReader.MAX_ARRAY_DEPTH`); a deeper one before
+the core keys fails the parse, after them it only costs the tensor scan.
 
 ## Worker thread use
 

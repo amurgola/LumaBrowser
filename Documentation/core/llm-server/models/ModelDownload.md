@@ -7,13 +7,16 @@ models and, by other servers, for whisper, TTS, grounding and router models.
 
 ## Methods
 
-- `ModelDownload.start({ url, destPath, onEvent })` starts (or resumes) and
-  returns a handle `{ promise, cancel, pause }` whose functions are safe to
-  destructure. `promise` resolves to:
+- `ModelDownload.start({ url, destPath, onEvent, expectedSize?, expectedSha256?, headers? })`
+  starts (or resumes) and returns a handle `{ promise, cancel, pause }` whose
+  functions are safe to destructure. `expectedSize`, `expectedSha256` and
+  `headers` go straight to ResumableDownload when given (a Hub URL carries the
+  token by default). `promise` resolves to:
   - `{ success: true, destPath, resumed, alreadyPresent? }` on completion;
   - `{ success: false, canceled: true, paused: false }` after `cancel()`;
   - `{ success: false, canceled: false, paused: true }` after `pause()`;
-  - or rejects with the transfer error.
+  - or rejects with the transfer error (a [DownloadError](../../shared/download/DownloadError.md):
+    gated repo, not found, no space, integrity, network).
 - `onEvent(type, payload)`: `'resume' { have }`, `'download' { received, total,
   bytesPerSec, etaMs }` (rate 0 and ETA null when unknown), `'verify' { read,
   total }`, `'finalize' { destPath, bytes }`, which is emitted only on success

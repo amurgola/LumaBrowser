@@ -6,9 +6,10 @@ const ContextMenuTemplate = require('./context-menu/ContextMenuTemplate');
 class ContextMenu {
   static BOUND_FLAG = '_lumaContextMenuBound';
 
-  constructor({ getTabViewManager = () => null, db = null } = {}) {
+  constructor({ getTabViewManager = () => null, db = null, extensionItems = null } = {}) {
     this._getTabViewManager = getTabViewManager;
     this._db = db;
+    this._extensionItems = extensionItems;
   }
 
   install(app) {
@@ -37,7 +38,7 @@ class ContextMenu {
 
   _buildItems(webContents, params) {
     const tab = MenuTab.resolve(this._getTabViewManager, webContents);
-    return new ContextMenuTemplate({ webContents, params, tab, db: this._db }).build();
+    return new ContextMenuTemplate({ webContents, params, tab, db: this._db, extensionItems: this._extensionItems }).build();
   }
 
   static _windowOf(webContents) {

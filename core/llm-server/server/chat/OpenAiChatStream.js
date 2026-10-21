@@ -103,7 +103,9 @@ class OpenAiChatStream {
   _collectToolCalls(choice) {
     const fragments = (choice.delta && choice.delta.tool_calls) || (choice.message && choice.message.tool_calls);
     if (!Array.isArray(fragments)) return false;
-    this._toolCalls.add(fragments);
+    for (const fragment of fragments) {
+      if (fragment) OpenAiChatStream._call(this._callbacks.onToolCallDelta, this._toolCalls.merge(fragment));
+    }
     if (!OpenAiChatStream._opensSlot(fragments) || !this._toolCalls.isLooping()) return false;
     return this._stopForRepetition('tool-calls');
   }

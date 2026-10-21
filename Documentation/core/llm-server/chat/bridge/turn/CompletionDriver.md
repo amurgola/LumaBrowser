@@ -16,7 +16,11 @@ The `sendCompletion` the bridge hands AgentRunner.
   iteration on the mirror and reasoning relay, appends the
   [TurnReminder](TurnReminder.md), and calls `router._completeOnce(modelRef,
   msgs, temperature (opts, else the run's, else 0.2), onStatus, onToken,
-  onReasoning, onUsage, onTimings, images, nativeTools, extra, ctl)` with
+  onReasoning, onUsage, onTimings, images, nativeTools, extra, ctl,
+  nativeCallStream.onDelta)` with
   `extra` = `llmExtra` plus `trace { conversationId, turnId, callType
-  ('compact' for a compaction) }`, `pinTemperature: true` and `maxTokens`
-  ([ReplyCap](ReplyCap.md)). A length cut raises the reply cap.
+  ('compact' for a compaction) }`, `pinTemperature: true`, `maxTokens`
+  ([ReplyCap](ReplyCap.md)) and `parallelToolCalls` (the run's `parallel`, so
+  llama.cpp is asked for several calls only when the pool can run them). A length cut raises the reply cap. A fresh
+  [NativeCallStream](NativeCallStream.md) per iteration puts up the pending
+  card for a native model's calls as their fragments arrive.

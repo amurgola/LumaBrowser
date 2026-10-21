@@ -7,19 +7,47 @@ flat header summary the planner reads.
 
 ## Methods
 
-- `GgufHeaderSummary.wants(key)` is true for `general.*` identity keys and
-  the arch-prefixed hyper-parameter suffixes in `WANTED_SUFFIX`.
+- `GgufHeaderSummary.wants(key)` is true for `general.*` identity keys
+  (including `general.type` and `general.parameter_count`),
+  `tokenizer.chat_template`, the arch-prefixed hyper-parameter suffixes in
+  `WANTED_SUFFIX` (including `pooling_type`) and the `clip.*` keys in
+  `WANTED_CLIP`. `CLIP_KEY` matches any `clip.*` key (presence only).
 - `GgufHeaderSummary.numberOrNull(value)` coerces to a finite number or null.
 - `GgufHeaderSummary.build({ meta, version, tensorCount, kvCount, tensorScan,
-  tensorScanError })` returns `{ ok: true, version, tensorCount, kvCount,
-  architecture, name, sizeLabel, blockCount, contextLength, embeddingLength,
-  feedForwardLength, headCount, headCountKv, headCountKvPerLayer, keyLength,
-  valueLength, slidingWindow, slidingWindowPattern, slidingWindowPerLayer,
-  keyLengthSwa, valueLengthSwa, attnKvPerLayer, attnKvLayerCount, mtpGrafted,
-  attnScanError, tensorLayout, tensorScan, ropeFreqBase, ropeDimensionCount,
-  expertCount, expertUsedCount, expertFeedForwardLength, expertSharedCount,
-  vocabSize, fileType, fileTypeName, quantizationVersion }`.
-- Constants: `WANTED_EXACT`, `WANTED_SUFFIX`, `FTYPE_NAMES`.
+  tensorScanError, hasClipKeys })` returns `{ ok: true, version, tensorCount,
+  kvCount, architecture, name, baseName, sizeLabel, generalType, role,
+  roleSource, roleReason, poolingType, projectorType, parameterCount,
+  parameterCountSource, chatTemplate, hasChatTemplate, chatTemplateLength,
+  chatTemplateTruncated, blockCount,
+  contextLength, embeddingLength, feedForwardLength, headCount, headCountKv,
+  headCountKvPerLayer, keyLength, valueLength, slidingWindow,
+  slidingWindowPattern, slidingWindowPerLayer, keyLengthSwa, valueLengthSwa,
+  attnKvPerLayer, attnKvLayerCount, mtpGrafted, attnScanError, tensorLayout,
+  tensorScan, ropeFreqBase, ropeDimensionCount, expertCount, expertUsedCount,
+  expertFeedForwardLength, expertSharedCount, vocabSize, fileType,
+  fileTypeName, fileTypeSource, dominantTensorType, quantizationVersion }`.
+- Constants: `WANTED_EXACT`, `WANTED_SUFFIX`, `WANTED_CLIP`, `CLIP_KEY`,
+  `CHAT_TEMPLATE_MAX_CHARS` (32 K), `FTYPE_NAMES`, `GGML_TYPE_NAMES`.
+
+## Role, parameter count, chat template, quant label
+
+- `role` / `roleSource: 'header'` / `roleReason` come from
+  [GgufRoleTable](GgufRoleTable.md)`.headerRole`; `role` is null (and
+  `roleSource` null) when the header names no architecture or type, which is
+  the scanner's cue to fall back to the file name.
+- `parameterCount` is `general.parameter_count` when present
+  (`parameterCountSource: 'header'`), else the element total of the tensor walk
+  (`'tensors'`, partial for a shard until `ShardScanMerger` sums the split).
+- `chatTemplate` is `tokenizer.chat_template` cut at `CHAT_TEMPLATE_MAX_CHARS`
+  with `chatTemplateTruncated` set when it was; `chatTemplateLength` is the
+  length as written and `hasChatTemplate` its presence. Only those two scalars
+  are copied onto `model.gguf` (see `GgufHeaderAttacher.FIELDS`); the text
+  stays in the header cache so the scan IPC payload does not carry it.
+- `fileTypeName` is the `FTYPE_NAMES` entry for `general.file_type`
+  (`fileTypeSource: 'header'`); failing that the ggml type holding the most
+  tensor bytes (`'tensors'`, also exposed as `dominantTensorType`); failing that
+  `ftype N`. `FTYPE_NAMES` includes `MXFP4_MOE` (38); `GGML_TYPE_NAMES` includes
+  `MXFP4` (39) and the ternary types.
 
 ## Why these fields
 

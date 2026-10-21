@@ -16,10 +16,9 @@
     position: relative;
     display: grid;
     grid-template-columns: 220px minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr);
     grid-template-areas:
-        "sidebar body"
-        "sidebar footer";
+        "sidebar body";
     width: 100%;
     max-width: 1040px;
     height: 100%;
@@ -153,6 +152,66 @@
 .settings-subpane { display: none; }
 .settings-subpane.active { display: block; }
 
+.settings-subtabs-end {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+.settings-modal .settings-subtab-add {
+    width: 28px;
+    height: 28px;
+    margin: 0 0 var(--space-1);
+    padding: 0;
+    font-family: inherit;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-regular);
+    line-height: 1;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.settings-modal .settings-subtab-add:hover,
+.settings-modal .settings-subtab-add[aria-expanded="true"] {
+    color: var(--text-primary);
+    background: var(--surface-hover);
+}
+.settings-modal .settings-subtab-add:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.settings-add-menu {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    right: 0;
+    z-index: 20;
+    min-width: 180px;
+    padding: var(--space-1);
+    background: var(--surface-pop);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-pop);
+}
+.settings-add-menu[hidden] { display: none; }
+.settings-modal .settings-add-menu button {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: center;
+    height: 28px;
+    margin: 0;
+    padding: 0 var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    font-weight: var(--weight-regular);
+    color: var(--text-primary);
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+}
+.settings-modal .settings-add-menu button:hover { background: var(--bg-elevated); }
+
 .settings-main {
     grid-area: body;
     min-width: 0;
@@ -172,20 +231,6 @@
     from { opacity: 0; }
     to { opacity: 1; }
 }
-
-.settings-modal .settings-content > .form-buttons {
-    grid-area: footer;
-    display: flex;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: 0;
-    padding: var(--space-3) var(--space-8);
-    background: var(--bg-surface);
-    border-top: 1px solid var(--border-soft);
-}
-.settings-modal .settings-content > .form-buttons.settings-footer--actions { justify-content: flex-start; }
-.settings-modal .settings-content > .form-buttons:empty { display: none; }
 
 .settings-toast {
     position: sticky;

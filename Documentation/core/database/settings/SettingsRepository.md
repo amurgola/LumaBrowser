@@ -18,6 +18,13 @@ Raw SQL over the `settings` key-value table. Reached through
   containing the prefix (see [PathPrefixRewrite](PathPrefixRewrite.md)) and
   returns the number of rows changed. Equal or empty prefixes do nothing.
 
+## Prepared statements
+
+The per-key statements (`get`, `set`, `delete`, `has`, the prefix listing and
+the key move) are prepared once per repository and reused: `get` runs from
+dozens of call sites per user action, and re-preparing on every call was pure
+overhead. The two migration-only statements are still prepared on use.
+
 ## Why replacePathPrefix
 
 After AppPaths relocates the managed models and runtimes base, persisted

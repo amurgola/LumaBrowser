@@ -8,8 +8,8 @@ class ToolBatchRunner {
     this._o = options;
   }
 
-  async run(iteration, batch, content, carriedNotes) {
-    this._beginBatch(iteration, batch, content, carriedNotes);
+  async run(iteration, batch, content, carriedNotes, { dropped = [] } = {}) {
+    this._beginBatch(iteration, batch, content, carriedNotes, dropped);
     for (const call of batch) {
       if (this._aborting()) { this._aborted = true; break; }
       await this._admit(call);
@@ -19,15 +19,17 @@ class ToolBatchRunner {
     return { aborted: this._aborted };
   }
 
-  _beginBatch(iteration, batch, content, carriedNotes) {
+  _beginBatch(iteration, batch, content, carriedNotes, dropped) {
     this._iteration = iteration;
     this._batchSize = batch.length;
     this._content = content;
     this._notes = carriedNotes;
     this._pending = [];
     this._deferred = [];
+    this._dropped = Array.isArray(dropped) ? dropped : [];
     this._stateChanged = false;
     this._aborted = false;
+    this._index = 0;
   }
 
   _aborting() {
@@ -46,11 +48,13 @@ class ToolBatchRunner {
   }
 
   async _start(call) {
-    this._o.emit({ type: 'tool', tool: call.tool, params: call.params, iteration: this._iteration });
+    const callId = `${this._iteration}.${this._index++}`;
+    this._o.emit({ type: 'tool', tool: call.tool, params: call.params, iteration: this._iteration, callId, ...this._batchFields() });
     const tabId = await this._tabFor(call);
     this._pending.push({
       type: 'run',
       call,
+      callId,
       startedAt: Date.now(),
       promise: this._o.executor.execute(call.tool, call.params, tabId)
         .catch((err) => ({ success: false, error: (err && err.message) || String(err) })),
@@ -83,18 +87,19 @@ class ToolBatchRunner {
     this._o.verifier.observe(call.tool, result);
     const outcome = ToolBatchRunner._outcome(result);
     this._o.toolCalls.push({ tool: call.tool, params: call.params, durationMs, success: outcome.success, error: outcome.error });
-    this._o.emit(this._resultEvent(call, result, outcome));
+    this._o.emit(this._resultEvent(call, result, outcome, entry.callId));
     this._recordStep(call, result, durationMs, outcome);
     const text = this._o.compactor.compact(call.tool, result, this._o.toolResultBudget);
     this._o.history.pushToolResult(AgentLoopText.toolResult(call.tool, text), this._takeNotes(), call.tool, call.params);
     if (result && result.imageBase64) this._o.history.markScreenshot();
   }
 
-  _resultEvent(call, result, outcome) {
+  _resultEvent(call, result, outcome, callId) {
     return {
       type: 'tool-result',
       tool: call.tool,
       iteration: this._iteration,
+      callId,
       success: outcome.success,
       error: outcome.error,
       summary: (result && result.summary) || null,
@@ -117,9 +122,16 @@ class ToolBatchRunner {
     });
   }
 
+  _batchFields() {
+    return this._batchSize > 1 ? { batchSize: this._batchSize, batchIndex: this._index - 1 } : {};
+  }
+
   _reportDeferred() {
     for (const call of this._deferred) {
       this._o.history.pushToolResult(AgentLoopText.toolResult(call.tool, AgentLoopText.DEFERRED_CALL), this._takeNotes(), call.tool);
+    }
+    for (const call of this._dropped) {
+      this._o.history.pushToolResult(AgentLoopText.toolResult(call.tool, AgentLoopText.ONE_CALL_PER_REPLY), this._takeNotes(), call.tool);
     }
   }
 

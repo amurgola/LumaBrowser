@@ -11,7 +11,11 @@ treat every server kind alike.
 
 ## Construction
 
-`new MusicServerService({ settingsDb, getDiagnostics?, server?, catalog?, vramCoordinator?, hotswap?, planner?, findFreePort?, liveMemory?, platform?, settingsOptions?, runtimeOptions?, storeOptions? })`
+`new MusicServerService({ settingsDb, getDiagnostics?, server?, catalog?, vramCoordinator?, hotswap?, planner?, findFreePort?, liveMemory?, gpuReady?, platform?, settingsOptions?, runtimeOptions?, storeOptions? })`
+
+- `gpuReady()` defaults to `CudaDeviceProbe.whenReady()`; the live diagnostics
+  read before a launch awaits it (bounded, failures ignored), so a launch right
+  after boot waits for the nvidia-smi stream's first reading.
 
 - Throws `MusicServerService: settingsDb is required`.
 - `getDiagnostics()` resolves `{ cuda, gpu }` (main passes the LLM side's cached

@@ -7,11 +7,14 @@ Places one image slot's model on the GPUs through the shared
 
 ## Methods
 
-- `new ImageSlotPlacement({ vramCoordinator, capabilities })`; `capabilities`
-  is an [SdServerCapabilities](SdServerCapabilities.md).
+- `new ImageSlotPlacement({ vramCoordinator, capabilities, gpuReady? })`; `capabilities`
+  is an [SdServerCapabilities](SdServerCapabilities.md); `gpuReady()` defaults to
+  `CudaDeviceProbe.whenReady(GPU_READY_MS)` (3 s).
 - `place({ role, runtime, requiredBytes, settingsDb, diagnostics })` resolves
   `{ cudaDevice, offloadToCpu, autoFit }`:
   1. A CPU-only runtime: `{ null, false, null }`, nothing reserved.
+  1. Otherwise `gpuReady()` is awaited first, so a launch right after boot waits
+     (bounded) for the nvidia-smi stream's first reading.
   2. `reserve({ serverId: role, role: 'image', allowSplit: false, ... })`; a
      throwing coordinator leaves the slot unpinned and resident.
   3. When that offloads, the auto-fit rescue: with 2+ debited cards and a binary

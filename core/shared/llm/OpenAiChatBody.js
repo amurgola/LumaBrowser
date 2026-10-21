@@ -17,6 +17,7 @@ class OpenAiChatBody {
     samplerOverrides = null,
     tools = null,
     toolChoice = 'auto',
+    parallelToolCalls = null,
     chatTemplateKwargs = null,
     reasoningBudget = null,
     promptCacheKey = null,
@@ -28,7 +29,7 @@ class OpenAiChatBody {
     });
     OpenAiChatBody._applyStreamUsage(body);
     OpenAiChatBody._applyThinkingControls(body, chatTemplateKwargs, reasoningBudget);
-    OpenAiChatBody._applyTools(body, tools, toolChoice);
+    OpenAiChatBody._applyTools(body, tools, toolChoice, parallelToolCalls);
     OpenAiChatBody._applyPromptCache(body, promptCacheKey, promptCacheRetention);
     return body;
   }
@@ -65,10 +66,11 @@ class OpenAiChatBody {
     if (typeof reasoningBudget === 'number') body.reasoning_budget = reasoningBudget;
   }
 
-  static _applyTools(body, tools, toolChoice) {
+  static _applyTools(body, tools, toolChoice, parallelToolCalls) {
     if (!Array.isArray(tools) || !tools.length) return;
     body.tools = tools;
     body.tool_choice = toolChoice;
+    if (parallelToolCalls === true) body.parallel_tool_calls = true;
   }
 
   static _applyPromptCache(body, promptCacheKey, promptCacheRetention) {

@@ -108,8 +108,11 @@ Pinned tab ([PinnedLlmTab](service/PinnedLlmTab.md)):
 - `setEnabled(enabled)` -> `{ success: true, enabled }`; enabling creates the tab,
   disabling removes it.
 
-Lifecycle: `shutdown()` stops the server (warning on failure), then the RAM pin
-and the router, ignoring their failures.
+Lifecycle: construction starts the shared `NvidiaSmiStream` (the
+`nvidiaSmiStream` option injects one) so placement and diagnostics read a live
+VRAM snapshot before any model loads; `shutdown()` stops the server (warning on
+failure), then the RAM pin, the router and the nvidia-smi loop, ignoring their
+failures.
 
 Statics: `DEFAULT_AUTO_UNLOAD_MS` (15 min), `RUNTIMES_CACHE_KEY`,
 `MANUAL_BINARY_PREFIX`, `RAM_PIN_NAME`, `CHANNELS`.

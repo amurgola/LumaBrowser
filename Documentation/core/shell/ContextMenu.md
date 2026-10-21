@@ -23,3 +23,11 @@ On each right click it recovers a withheld image src
 ([ContextMenuTemplate](context-menu/ContextMenuTemplate.md)) and pops the menu
 up in the hosting window. No items means no menu. Any error is logged as
 `[ContextMenu] popup failed:` and never thrown.
+
+## Chrome extension items
+
+`new ContextMenu({ extensionItems })`: an optional
+`extensionItems({ webContents, params, entry, order })` returning Electron
+menu items (ReadyPhase passes `ShimBridge.contextMenus.templateFor`). The
+template adds them in their own block above Inspect on browsing pages; a
+provider that throws is logged and the menu is built without it.

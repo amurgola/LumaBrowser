@@ -1,10 +1,10 @@
 import AboutPanel from './AboutPanel.js';
 import AddonsBrowser from './AddonsBrowser.js';
 import ChromeExtensionsPanel from './ChromeExtensionsPanel.js';
+import ExtensionAddMenu from './ExtensionAddMenu.js';
 import ExtensionConfigView from './ExtensionConfigView.js';
 import ExtensionFileActions from './ExtensionFileActions.js';
 import ExtensionRow from './ExtensionRow.js';
-import ExtensionsActionBar from './ExtensionsActionBar.js';
 import ExtensionsListView from './ExtensionsListView.js';
 import SettingsTabs from './SettingsTabs.js';
 import TelemetryPanel from './TelemetryPanel.js';
@@ -66,14 +66,13 @@ export default class SettingsScreens {
       pane: panes.extensions, meta: this._meta, settingsEntries: this._entries, hooks: this._hooks, fileActions: s.fileActions, onBack: showList,
       onOpenTab: (tabName) => this.switchTab(tabName),
     });
-    s.addons = new AddonsBrowser({ pane: panes.extensions, hooks: this._hooks, onBack: showList });
-    s.actionBar = new ExtensionsActionBar({
-      meta: this._meta,
-      hooks: this._hooks,
-      onBrowseAddons: () => s.addons.show(),
+    s.addons = new AddonsBrowser({ pane: panes.browse, hooks: this._hooks });
+    s.addMenu = new ExtensionAddMenu({
+      host: panes.addMenuHost,
       onNewExtension: () => s.fileActions.createNew(),
       onInstallZip: () => s.fileActions.installZip(),
     });
+    s.addMenu.mount();
     const rowFactory = new ExtensionRow({
       meta: this._meta,
       host: this._host,
@@ -81,7 +80,7 @@ export default class SettingsScreens {
       onConfigure: (id) => s.config.show(id),
       onDelete: (id, name) => s.fileActions.delete(id, name),
     });
-    s.list = new ExtensionsListView({ panes, meta: this._meta, rowFactory, onShown: () => s.actionBar.render() });
+    s.list = new ExtensionsListView({ panes, meta: this._meta, rowFactory });
     s.chrome = new ChromeExtensionsPanel(panes.chrome);
     s.about = new AboutPanel(this._hooks);
     s.telemetry = new TelemetryPanel(panes.license, this._hooks);
@@ -90,9 +89,6 @@ export default class SettingsScreens {
 
   _onTab(tabName) {
     this._activateExtensionTab(tabName);
-    if (!this._screens || !document.getElementById('settingsFooter')) return;
-    if (tabName === 'extensions') this._screens.actionBar.render();
-    else ExtensionsActionBar.clear();
   }
 
   _activateExtensionTab(tabName) {
@@ -105,6 +101,7 @@ export default class SettingsScreens {
     const s = this._screens;
     if (!s) return;
     if (subtab === 'extensions' || subtab === 'inactiveExtensions') s.list.show();
+    else if (subtab === 'browseExtensions') s.addons.load();
     else if (subtab === 'chromeExtensions') s.chrome.load();
     else if (subtab === 'about') { if (window.electronAPI && window.electronAPI.getLicenses) s.about.load(); }
     else if (subtab === 'license') s.telemetry.load();

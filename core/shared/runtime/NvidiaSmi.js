@@ -1,13 +1,14 @@
 const fs = require('fs');
 const path = require('path');
-const { execFile, execFileSync } = require('child_process');
+const { execFile } = require('child_process');
 const NvidiaSmiOutputParser = require('./NvidiaSmiOutputParser');
+const NvidiaSmiOutcome = require('./nvidia-smi/NvidiaSmiOutcome');
 
 class NvidiaSmi {
   static BARE_NAME = 'nvidia-smi';
   static TIMEOUT_MS = 4000;
   static COUNT_ARGS = ['-L'];
-  static GPU_ARGS = ['--query-gpu=name,memory.total,memory.free', '--format=csv,noheader,nounits'];
+  static GPU_ARGS = ['--query-gpu=index,pci.bus_id,name,memory.total,memory.free', '--format=csv,noheader,nounits'];
   static APPS_ARGS = ['--query-compute-apps=pid,used_memory', '--format=csv,noheader,nounits'];
 
   static CANDIDATES_WIN = [
@@ -27,14 +28,30 @@ class NvidiaSmi {
   ];
 
   static _resolvedPath = null;
+  static _pathListeners = new Set();
 
   static setSmiPath(candidate) {
     const trimmed = typeof candidate === 'string' ? candidate.trim() : '';
-    NvidiaSmi._resolvedPath = trimmed || null;
+    const next = trimmed || null;
+    if (next === NvidiaSmi._resolvedPath) return;
+    NvidiaSmi._resolvedPath = next;
+    for (const listener of [...NvidiaSmi._pathListeners]) {
+      try { listener(NvidiaSmi.smiPath()); } catch (_) {}
+    }
   }
 
   static smiPath() {
     return NvidiaSmi._resolvedPath || NvidiaSmi.BARE_NAME;
+  }
+
+  static hasExplicitPath() {
+    return NvidiaSmi._resolvedPath !== null;
+  }
+
+  static onPathChange(listener) {
+    if (typeof listener !== 'function') return () => {};
+    NvidiaSmi._pathListeners.add(listener);
+    return () => { NvidiaSmi._pathListeners.delete(listener); };
   }
 
   static async findOnDisk() {
@@ -44,16 +61,12 @@ class NvidiaSmi {
     return null;
   }
 
-  static queryGpuCountSync() {
-    return NvidiaSmiOutputParser.parseGpuCount(NvidiaSmi._runSync(NvidiaSmi.COUNT_ARGS));
+  static streamArgs(intervalMs) {
+    return [...NvidiaSmi.GPU_ARGS, '-lms', String(Math.max(100, Math.floor(Number(intervalMs) || 0)))];
   }
 
-  static queryGpusSync() {
-    return NvidiaSmiOutputParser.parseGpuRows(NvidiaSmi._runSync(NvidiaSmi.GPU_ARGS));
-  }
-
-  static queryComputeAppsSync() {
-    return NvidiaSmiOutputParser.parseComputeApps(NvidiaSmi._runSync(NvidiaSmi.APPS_ARGS));
+  static spawnOptions() {
+    return { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] };
   }
 
   static async queryGpuCount() {
@@ -66,6 +79,30 @@ class NvidiaSmi {
 
   static async queryComputeApps() {
     return NvidiaSmiOutputParser.parseComputeApps(await NvidiaSmi._run(NvidiaSmi.APPS_ARGS));
+  }
+
+  static query(args, { timeoutMs = NvidiaSmi.TIMEOUT_MS, now = () => Date.now() } = {}) {
+    return new Promise((resolve) => {
+      let settled = false;
+      const settle = (value) => { if (!settled) { settled = true; resolve(value); } };
+      let child = null;
+      try {
+        child = execFile(NvidiaSmi.smiPath(), args, NvidiaSmi._execOptions(timeoutMs), (err, stdout, stderr) => {
+          settle({
+            ok: !err,
+            stdout: stdout || '',
+            stderr: stderr || '',
+            outcome: err ? NvidiaSmiOutcome.fromError(err, now()) : NvidiaSmiOutcome.ok(now()),
+          });
+        });
+      } catch (err) {
+        settle({ ok: false, stdout: '', stderr: '', outcome: NvidiaSmiOutcome.fromError(err, now()) });
+        return;
+      }
+      if (child && typeof child.on === 'function') {
+        child.on('error', (err) => settle({ ok: false, stdout: '', stderr: '', outcome: NvidiaSmiOutcome.fromError(err, now()) }));
+      }
+    });
   }
 
   static _candidatesForPlatform() {
@@ -81,24 +118,13 @@ class NvidiaSmi {
     }
   }
 
-  static _runSync(args) {
-    try {
-      return execFileSync(NvidiaSmi.smiPath(), args, NvidiaSmi._execOptions()) || '';
-    } catch (_) {
-      return '';
-    }
+  static async _run(args) {
+    const result = await NvidiaSmi.query(args);
+    return result.ok ? result.stdout : '';
   }
 
-  static _run(args) {
-    return new Promise((resolve) => {
-      execFile(NvidiaSmi.smiPath(), args, NvidiaSmi._execOptions(), (err, stdout) => {
-        resolve(err ? '' : (stdout || ''));
-      });
-    });
-  }
-
-  static _execOptions() {
-    return { timeout: NvidiaSmi.TIMEOUT_MS, encoding: 'utf8' };
+  static _execOptions(timeoutMs) {
+    return { timeout: timeoutMs, encoding: 'utf8', windowsHide: true };
   }
 }
 

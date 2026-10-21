@@ -20,6 +20,17 @@ model weights.
   ... or `null`.
 - `GgufFileName.bitWidth(quant)` returns the first number in a quant, or `null`.
 - `GgufFileName.isGguf(path)`, `GgufFileName.basename(repoPath)`.
+- `GgufFileName.roleHint(repoPath)` returns what the name alone suggests:
+  `mmproj`, `mtp`, `draft` (`draft`, `dflash`, `eagle`, `medusa` tokens),
+  `reranker`, `embedding` (`embed`, `bge`, `gte`, `e5`, `minilm`, ... tokens)
+  or `null`. The scanner uses it only as the fallback when the GGUF header is
+  unavailable or undecided, and as a secondary signal for drafts
+  (`DRAFT_HINT`, `EMBEDDING_HINT`, `RERANKER_HINT`).
+- `GgufFileName.familyKey(basename)` the stem with its shard suffix, quant,
+  `mmproj-`/`mtp-` prefix and precision token stripped, lowercased with one
+  separator (`qwen2-5-vl-7b-instruct`); `''` when nothing but a quant token was
+  left (`mmproj-F16`). Two quants of one model, or a projector named after its
+  model, share a key.
 
 ## Why detached MTP heads are matched narrowly
 

@@ -16,7 +16,7 @@ class MlxRepoInstall {
     const info = await this._mlx.fetchInfo(repoId);
     const destDir = path.join(modelsDir, HfModelInput.repoDirName(info.repoId));
     send('start', { repoId: info.repoId, destDir });
-    const download = this._download({ repoId: info.repoId, files: info.files, destDir, onEvent: send });
+    const download = this._download({ repoId: info.repoId, files: info.files, destDir, onEvent: send, revision: info.revision || null });
     this._slot.hold(download);
     try {
       return MlxRepoInstall._outcome(await download.promise, destDir, send);

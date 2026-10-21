@@ -19,7 +19,7 @@ class ImageModelImporter {
 
   static REPO_URL_HINT = 'Paste a HuggingFace model page URL, e.g. https://huggingface.co/circlestone-labs/Anima';
 
-  constructor({ imageServerService, slot, catalog = new ImageModelCatalog(), fetchSiblings = HfRepoSiblings.fetch, pickPath = PathPicker.pick }) {
+  constructor({ imageServerService, slot, catalog = new ImageModelCatalog(), fetchSiblings = HfRepoSiblings.fetchListing, pickPath = PathPicker.pick }) {
     this._svc = imageServerService;
     this._slot = slot;
     this._catalog = catalog;
@@ -106,7 +106,7 @@ class ImageModelImporter {
     if (!repo) return { success: false, error: ImageModelImporter.REPO_URL_HINT };
     const listed = await this._listRepo(repo.id);
     if (listed.error) return { success: false, error: listed.error };
-    const recipe = HfRepoRecipes.resolve(repo.id, listed.files, this._catalog);
+    const recipe = HfRepoRecipes.resolve(repo.id, listed.files, this._catalog, listed.listing);
     if (recipe.error) return { success: false, error: recipe.error };
     const { entry } = recipe;
     const { dir } = this._target(entry.id);
@@ -126,7 +126,9 @@ class ImageModelImporter {
 
   async _listRepo(repoId) {
     try {
-      return { files: await this._fetchSiblings(repoId) };
+      const answer = await this._fetchSiblings(repoId);
+      if (Array.isArray(answer)) return { files: answer, listing: null };
+      return { files: (answer && answer.names) || [], listing: answer || null };
     } catch (err) {
       return { error: `Could not read the HuggingFace repo "${repoId}": ${err.message}` };
     }

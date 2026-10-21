@@ -13,11 +13,12 @@ class PageReader {
     return new PageReader(url, options).execute();
   }
 
-  constructor(url, { timeoutMs, tabRender = null, fetcher = SafeFetch.fetch } = {}) {
+  constructor(url, { timeoutMs, tabRender = null, fetcher = SafeFetch.fetch, onProgress = null } = {}) {
     this._url = url;
     this._timeoutMs = timeoutMs;
     this._tabRender = typeof tabRender === 'function' ? tabRender : null;
     this._fetcher = fetcher;
+    this._onProgress = typeof onProgress === 'function' ? onProgress : null;
   }
 
   async execute() {
@@ -28,7 +29,13 @@ class PageReader {
       || this._document(this._headlessText, { url: this._res.finalUrl || this._url, status: this._res.status, rawCut: !!this._res.truncated });
   }
 
+  _progress(message) {
+    if (!this._onProgress) return;
+    try { this._onProgress(message); } catch (_) {}
+  }
+
   async _fetchHeadless() {
+    this._progress(`Fetching ${PageReader.hostOf(this._url)}…`);
     const timeoutMs = this._timeoutMs || (this._tabRender ? PageReader.HEADLESS_TIMEOUT_WITH_TAB_MS : undefined);
     this._res = await this._fetcher(this._url, { timeoutMs, maxBytes: PageReader.RAW_BYTE_LIMIT });
     this._httpOk = this._res.ok && this._res.status < 400;
@@ -38,6 +45,7 @@ class PageReader {
   async _renderInTab() {
     this._triedTab = !!this._tabRender && (this._httpOk ? ResponseText.isHtml(this._res) : PageClassifier.tabMightSucceed(this._res));
     if (!this._triedTab) return null;
+    this._progress(`Rendering ${PageReader.hostOf(this._url)} in a browser tab…`);
     const text = await Promise.resolve()
       .then(() => this._tabRender(this._url, { timeoutMs: this._timeoutMs }))
       .catch(() => null);
@@ -59,6 +67,10 @@ class PageReader {
       return LookupReply.fail(`${this._url} served a bot check instead of its content${this._tabNote()}.`, LookupReply.OTHER_SOURCE);
     }
     return null;
+  }
+
+  static hostOf(url) {
+    try { return new URL(url).hostname || url; } catch (_) { return String(url); }
   }
 
   _tabNote() {

@@ -14,8 +14,9 @@ Handles a tab page's non-navigation events.
     left to their owners (the keep-alive sweep, the internal tab loader).
   - `before-input-event` (not for silent tabs): [Accelerators](../Accelerators.md)
     `.match`; on a hit the default is prevented, main-handled actions run through
-    `performAccelerator`, and `{ action, tabId }` goes to `tab-view:accelerator`.
-  - `found-in-page`: forwarded to `tab-view:found-in-page`.
+    `performAccelerator`, and `{ action, tabId }` goes to `tab-view:accelerator` in the
+    tab's window.
+  - `found-in-page`: forwarded to `tab-view:found-in-page` in the tab's window.
   - `page-favicon-updated`: keeps http(s) and `data:image/` icons (`data:,` means
     none), and for regular browsing tabs records it in the FaviconCache, re-broadcasting
     when the cached data URL lands.

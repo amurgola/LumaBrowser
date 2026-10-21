@@ -28,22 +28,33 @@ and annotated with the parsed GGUF header. Parts live in `core/llm-server/scanne
 ## Model entry
 
 `{ kind: 'weights'|'mmproj-only'|'mtp-only'|'mlx'|<addon kind>, name, directory,
-relativeDirectory, weights[{ path, name, sizeBytes, shardIndex, shardTotal }],
-weightsCount, weightsExpectedShards, weightsTotalBytes, mmproj, mmprojTotalBytes,
-drafter?, drafterTotalBytes?, mtp?, mtpTotalBytes?, totalBytes, sidecars, gguf?,
-mlx?, addon?, formatRequirements, preferredRuntimes, compatibleRuntimes,
-mtpCapable, mtpGrafted? }`.
+relativeDirectory, role?, roleSource?, roleReason?, weights[{ path, name,
+sizeBytes, modifiedAt, shardIndex, shardTotal }], weightsCount,
+weightsExpectedShards, weightsTotalBytes, mmproj, mmprojTotalBytes, drafter?,
+drafterTotalBytes?, mtp?, mtpTotalBytes?, totalBytes, sidecars,
+unpairedCompanions?, pairing?, gguf?, mlx?, addon?, formatRequirements,
+preferredRuntimes, compatibleRuntimes, mtpCapable, mtpGrafted? }`.
+
+GGUF entries carry `role` (`main`, `draft`, `embedding`, `reranker`, `mmproj`,
+`mtp`) with `roleSource` `'header'` or `'filename'`; weights entries list the
+companions they could not claim unambiguously in `unpairedCompanions`, and a
+companion listed on its own carries its `pairing` verdict (see
+[GgufModelGrouper](scanner/GgufModelGrouper.md)).
 
 ## Flow
 
 1. [ModelDirWalker](scanner/ModelDirWalker.md) collects candidates.
-2. [GgufModelGrouper](scanner/GgufModelGrouper.md), [MlxModelBuilder](scanner/MlxModelBuilder.md)
-   and [AddonModelBuilder](scanner/AddonModelBuilder.md) build entries.
-3. [ModelClassifier](scanner/ModelClassifier.md) tags each from file names.
-4. [GgufHeaderAttacher](scanner/GgufHeaderAttacher.md) reads headers, 4 at a time
-   ([BoundedParallel](scanner/BoundedParallel.md)), merging split shards
+2. [GgufRoleResolver](scanner/GgufRoleResolver.md) reads every single file and
+   first shard through the header cache, 4 at a time, and decides its role from
+   the header; the file name is the fallback.
+3. [GgufModelGrouper](scanner/GgufModelGrouper.md) (with those roles),
+   [MlxModelBuilder](scanner/MlxModelBuilder.md) and
+   [AddonModelBuilder](scanner/AddonModelBuilder.md) build entries.
+4. [ModelClassifier](scanner/ModelClassifier.md) tags each from file names.
+5. [GgufHeaderAttacher](scanner/GgufHeaderAttacher.md) copies the headers (cache
+   hits) onto `model.gguf`, merging split shards
    ([ShardScanMerger](scanner/ShardScanMerger.md)); new parses are flushed to disk.
-5. [ModelSidecars](scanner/ModelSidecars.md) attaches metadata files.
+6. [ModelSidecars](scanner/ModelSidecars.md) attaches metadata files.
 
 ## Why
 

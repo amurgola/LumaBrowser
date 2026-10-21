@@ -4,8 +4,9 @@ const ReasoningEffort = require('./ReasoningEffort');
 class ModelOverrides {
   static MAX_TEMPERATURE = 2;
   static MAX_REPLY_TOKENS = 1000000;
+  static MAX_PARALLEL_TOOL_CALLS = 8;
 
-  static REQUEST_FIELDS = Object.freeze(['reasoningEffort', 'temperature', 'maxReplyTokens']);
+  static REQUEST_FIELDS = Object.freeze(['reasoningEffort', 'temperature', 'maxReplyTokens', 'maxParallelToolCalls']);
   static LAUNCH_FIELDS = Object.freeze(['kvCacheType']);
 
   static clean(raw, { launch = false } = {}) {
@@ -32,8 +33,15 @@ class ModelOverrides {
     if (field === 'reasoningEffort') return ModelOverrides._dial(value);
     if (field === 'temperature') return ModelOverrides._temperature(value);
     if (field === 'maxReplyTokens') return ModelOverrides._replyTokens(value);
+    if (field === 'maxParallelToolCalls') return ModelOverrides._parallelToolCalls(value);
     if (field === 'kvCacheType') return KvCacheModes.MODE_IDS.includes(value) ? String(value) : null;
     return null;
+  }
+
+  static _parallelToolCalls(value) {
+    const n = Math.floor(Number(value));
+    if (!Number.isFinite(n) || n < 1) return null;
+    return Math.min(n, ModelOverrides.MAX_PARALLEL_TOOL_CALLS);
   }
 
   static _dial(value) {

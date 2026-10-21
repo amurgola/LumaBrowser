@@ -79,9 +79,9 @@ class UnifiedChatRouter {
   completeStream(opts, ext) { return this._side.completeStream(opts, ext); }
 
   _completeOnce(modelRef, messages, temperature, onStatus, onToken, onReasoningToken, onUsage, onTimings,
-    images = [], tools = null, extra = null, ctl = null) {
+    images = [], tools = null, extra = null, ctl = null, onToolCallDelta = null) {
     return this._agentCompletion.completeOnce(modelRef, messages, temperature, onStatus, onToken, onReasoningToken,
-      onUsage, onTimings, images, tools, extra, ctl);
+      onUsage, onTimings, images, tools, extra, ctl, onToolCallDelta);
   }
 
 

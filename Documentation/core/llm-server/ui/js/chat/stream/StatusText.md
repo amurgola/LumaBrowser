@@ -9,5 +9,6 @@ compaction pill's text.
 
 - `StatusText.forPhase(phase)`: `switching-model`, `starting-server`,
   `loading-vision`, `unloading-vision`, `compacting`, `waiting-for-slot`
-  ("Waiting for processing..."), else "Working...".
+  ("Waiting for processing..."), `retrying` ("Reconnecting to the model...",
+  the agent completion's transient-failure retry), else "Working...".
 - `StatusText.COMPACTED`, `StatusText.compactedTitle(removed)`.

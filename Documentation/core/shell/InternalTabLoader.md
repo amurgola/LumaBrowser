@@ -34,3 +34,17 @@ load still commits Chromium's error page, which fires `did-finish-load`, so
 per navigation, retries the http URL `retries` times, then loads the `file://`
 fallback so the tab always shows something. `ERR_ABORTED` (-3) is normal during
 navigation and ignored, as are subframe failures.
+
+## Stall watchdog
+
+Every main-frame `did-start-navigation` arms a `STALL_MS` (5 s) timer;
+`did-navigate`, a main-frame `did-fail-load` or `destroyed` disarms it. When it
+fires the navigation has neither committed nor failed, which for a page served
+by the local gateway means it stalled: the loader counts an attempt and loads
+the next URL (the http URL, or the file:// copy once the retries are used up).
+
+Seen on 2026-10-21: on the user's profile the LLM tab's first load, released
+by `TabLifecycle` the moment Bitwarden finished loading into `persist:main`,
+still hung (loading, nothing committed) while every other tab loaded. A second
+`loadURL` fixed it at once. See
+[FirstNavigationGuard](../chrome-extensions/FirstNavigationGuard.md).

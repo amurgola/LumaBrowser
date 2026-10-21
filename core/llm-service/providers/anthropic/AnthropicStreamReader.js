@@ -12,6 +12,11 @@ class AnthropicStreamReader {
     this.usage = null;
     this.error = null;
     this._inputUsage = null;
+    this._toolBlocks = new Map();
+  }
+
+  get toolCalls() {
+    return [...this._toolBlocks.values()].map((block) => ({ id: block.id, name: block.name, args: block.args }));
   }
 
   read(stream) {
@@ -47,8 +52,21 @@ class AnthropicStreamReader {
   _handleFrame(frame) {
     if (frame.type === 'error') this._onError(frame.error || {});
     else if (frame.type === 'message_start' && frame.message) this._onMessageStart(frame.message);
+    else if (frame.type === 'content_block_start') this._onBlockStart(frame);
     else if (frame.type === 'content_block_delta') this._onDelta(frame.delta || {}, frame);
     else if (frame.type === 'message_delta') this._onMessageDelta(frame);
+  }
+
+  _onBlockStart(frame) {
+    const block = frame.content_block || {};
+    if (block.type !== 'tool_use' || !block.name) return;
+    const slot = { id: block.id || null, name: block.name, args: '' };
+    this._toolBlocks.set(frame.index, slot);
+    this._notify('onToolCallDelta', this._toolDelta(slot, ''));
+  }
+
+  _toolDelta(slot, argsDelta) {
+    return { index: this._toolBlocks.size - 1, id: slot.id, name: slot.name, argsDelta };
   }
 
   _onError(err) {
@@ -71,7 +89,17 @@ class AnthropicStreamReader {
     } else if (delta.type === 'thinking_delta' && delta.thinking) {
       this.reasoning += delta.thinking;
       this._notify('onReasoning', delta.thinking, frame);
+    } else if (delta.type === 'input_json_delta') {
+      this._onInputJson(frame.index, delta.partial_json || '');
     }
+  }
+
+  _onInputJson(index, partialJson) {
+    const slot = this._toolBlocks.get(index);
+    if (!slot) return;
+    slot.args += partialJson;
+    const ordinal = [...this._toolBlocks.keys()].indexOf(index);
+    this._notify('onToolCallDelta', { index: ordinal, id: slot.id, name: slot.name, argsDelta: partialJson });
   }
 
   _onMessageDelta(frame) {

@@ -21,3 +21,8 @@ actions the [ContextMenu](../ContextMenu.md) needs.
 Duck-typed against the TabViewManager: `findTabIdByWebContents(wc)`, `getEntry(id)`, `order`,
 `createTab(url, { activate, partition, index })`, `goBack`, `goForward`,
 `reload`, and the static `INTERNAL_KINDS` Set.
+
+## Raw access
+
+`entry` (the registry entry or `null`) and `order` (the TabViewManager's tab
+order or `null`), for callers that build `chrome.tabs.Tab` objects.

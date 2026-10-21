@@ -2,6 +2,7 @@ class HfModelInput {
   static HF_HOST = /^(?:www\.)?(?:huggingface\.co|hf\.co)\/(.+)$/i;
   static SHORTHAND = /^([^/\s]+)\/([^/\s]+)\/(.+\.gguf)$/i;
   static RESOLVE_URL_REPO = /^https?:\/\/(?:www\.)?(?:huggingface\.co|hf\.co)\/([^/\s]+\/[^/\s]+)\/resolve\//i;
+  static RESOLVE_URL_FILE = /^https?:\/\/(?:www\.)?(?:huggingface\.co|hf\.co)\/([^/\s]+\/[^/\s]+)\/resolve\/([^/\s?]+)\/([^?\s]+)/i;
 
   static resolve(input) {
     const urlPath = HfModelInput._urlPath(HfModelInput._bare(input));
@@ -17,6 +18,16 @@ class HfModelInput {
   static repoIdFromUrl(url) {
     const m = HfModelInput.RESOLVE_URL_REPO.exec(String(url || ''));
     return m ? m[1] : null;
+  }
+
+  static hubFileFromUrl(url) {
+    const m = HfModelInput.RESOLVE_URL_FILE.exec(String(url || ''));
+    if (!m) return null;
+    try {
+      return { repoId: m[1], revision: decodeURIComponent(m[2]), path: m[3].split('/').map(decodeURIComponent).join('/') };
+    } catch (_) {
+      return null;
+    }
   }
 
   static fileFromUrl(url) {

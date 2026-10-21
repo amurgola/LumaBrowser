@@ -8,8 +8,8 @@ class TabViewFactory {
   static BACKGROUND = '#ffffff';
   static ZERO_BOUNDS = { x: 0, y: 0, width: 0, height: 0 };
 
-  constructor({ mainWindow, preloadPath, adblockerService = null, chromeExtensionService = null, networkInterceptor = null }) {
-    this._mainWindow = mainWindow;
+  constructor({ hosts, preloadPath, adblockerService = null, chromeExtensionService = null, networkInterceptor = null }) {
+    this._hosts = hosts;
     this._preloadPath = preloadPath;
     this._adblocker = adblockerService;
     this._chromeExtensions = chromeExtensionService;
@@ -25,16 +25,33 @@ class TabViewFactory {
 
   attach(entry) {
     CrashTracer.mark('tab:create', TabViewFactory._traceOf(entry));
-    this._mainWindow.contentView.addChildView(entry.view);
-    entry.view.setVisible(false);
-    entry.view.setBounds(TabViewFactory.ZERO_BOUNDS);
+    this._park(entry);
     CrashTracer.mark('tab:attached', { id: entry.id });
+  }
+
+  reparent(entry, toHostId) {
+    CrashTracer.mark('tab:reparent', { id: entry.id, from: entry.hostId, to: toHostId });
+    try { entry.view.setVisible(false); } catch (_) {}
+    this.detach(entry);
+    entry.hostId = toHostId;
+    this._park(entry);
+  }
+
+  detach(entry) {
+    const win = this._hosts.liveWindowOf(entry.hostId);
+    if (!win) return;
+    try { win.contentView.removeChildView(entry.view); } catch (_) {}
   }
 
   attachServices(entry) {
     this._applyAdblocker(entry);
     this._loadChromeExtensions(entry);
     this._attachNetworkLog(entry);
+  }
+
+  extensionsSettling(entry) {
+    if (!this._chromeExtensions || typeof this._chromeExtensions.loadsInFlight !== 'function') return null;
+    try { return this._chromeExtensions.loadsInFlight(entry.webContents.session); } catch (_) { return null; }
   }
 
   static applyIdentity(entry) {
@@ -62,6 +79,12 @@ class TabViewFactory {
     try { view.setBackgroundColor(TabViewFactory.BACKGROUND); } catch (_) {}
     view.webContents.setUserAgent(ChromeIdentity.USER_AGENT);
     view.webContents.setMaxListeners(TabViewFactory.MAX_LISTENERS);
+  }
+
+  _park(entry) {
+    this._hosts.windowOf(entry.hostId).contentView.addChildView(entry.view);
+    entry.view.setVisible(false);
+    entry.view.setBounds(TabViewFactory.ZERO_BOUNDS);
   }
 
   static _traceOf(entry) {

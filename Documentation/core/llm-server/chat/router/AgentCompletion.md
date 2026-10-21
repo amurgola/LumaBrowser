@@ -7,7 +7,7 @@ One non-streaming completion for the agent loop, with retries.
 ## Methods
 
 - `new AgentCompletion({ dispatch, nativeToolsActive, isBridgeAborted })`.
-- `completeOnce(modelRef, messages, temperature, onStatus, onToken, onReasoningToken, onUsage, onTimings, images = [], tools = null, extra = null, ctl = null)`: up to `MAX_ATTEMPTS` (3); before each, `ctl.isAborted()` (or, without a control, `isBridgeAborted()`) returns `{ success: false, error: 'aborted' }`; a transient failure (`TransientLlmError`) emits `onStatus({ phase: 'retrying', attempt })` and waits `RETRY_STEP_MS * attempt`. Never rejects.
+- `completeOnce(modelRef, messages, temperature, onStatus, onToken, onReasoningToken, onUsage, onTimings, images = [], tools = null, extra = null, ctl = null, onToolCallDelta = null)`: `onToolCallDelta({ index, id, name, argsDelta })` gets a native call's fragments as they stream; up to `MAX_ATTEMPTS` (3); before each, `ctl.isAborted()` (or, without a control, `isBridgeAborted()`) returns `{ success: false, error: 'aborted' }`; a transient failure (`TransientLlmError`) emits `onStatus({ phase: 'retrying', attempt })` and waits `RETRY_STEP_MS * attempt`. Never rejects.
 - `attempt(modelRef, messages, temperature, sinks, images, tools, extra, stallTimeoutMs = STALL_TIMEOUT_MS, ctl = null)`: one `CompletionAttempt`, with `nativeToolsActive(modelRef)` read once.
 - `STALL_TIMEOUT_MS` 10 minutes.
 

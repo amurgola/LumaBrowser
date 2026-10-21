@@ -41,7 +41,13 @@ class CatalogModelInstaller {
   }
 
   static downloadList(files, dir) {
-    return Object.keys(files).map((role) => ({ role, url: files[role].url, destPath: path.join(dir, files[role].file) }));
+    return Object.keys(files).map((role) => {
+      const row = files[role];
+      const item = { role, url: row.url, destPath: path.join(dir, row.file) };
+      if (Number(row.size) > 0) item.expectedSize = Number(row.size);
+      if (row.sha256) item.expectedSha256 = row.sha256;
+      return item;
+    });
   }
 }
 

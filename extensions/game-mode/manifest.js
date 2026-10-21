@@ -32,24 +32,5 @@ module.exports = {
 
   routes: { file: './routes.js' },
 
-  extensionsActions: [
-    {
-      label: 'Make a game',
-      variant: 'primary',
-      gate: 'llm',
-      modeIntent: 'game',
-      prompt: {
-        title: 'Make a game',
-        subtitle: 'Describe the game you want. The agent designs, builds, and iterates on it with you. Then you press Play.',
-        submitLabel: 'Start building',
-        fields: [
-          { key: 'premise', label: 'What game do you want?', type: 'textarea', rows: 4, required: true,
-            placeholder: 'e.g. A one-button flappy clone with a night-sky theme and combo scoring.' },
-          { key: 'name', label: 'Name (optional)', type: 'text', placeholder: 'Night Flap' },
-        ],
-      },
-    },
-  ],
-
   main: './main.js',
 };

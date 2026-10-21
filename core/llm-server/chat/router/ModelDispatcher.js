@@ -62,7 +62,7 @@ class ModelDispatcher {
     }
     const config = this._remoteConfig(modelRef);
     const sendMessages = images.length ? MessageImages.inject(messages, images) : messages;
-    return this._remote.stream(config, ChatModelRef.split(modelRef).modelId, sendMessages, temperature, hooks, extra);
+    return this._remote.stream(config, ChatModelRef.split(modelRef).modelId, sendMessages, temperature, hooks, extra, tools);
   }
 
   _remoteConfig(modelRef) {

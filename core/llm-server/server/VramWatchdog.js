@@ -1,4 +1,5 @@
-const NvidiaSmi = require('../../shared/runtime/NvidiaSmi');
+const NvidiaSmiStream = require('../../shared/runtime/NvidiaSmiStream');
+const NvidiaSmiOutcome = require('../../shared/runtime/nvidia-smi/NvidiaSmiOutcome');
 const VramCoordinator = require('../../shared/runtime/VramCoordinator');
 const CudaDevicePicker = require('../../shared/runtime/CudaDevicePicker');
 const LedgerCards = require('./vram-watchdog/LedgerCards');
@@ -9,7 +10,7 @@ class VramWatchdog {
   static DEFAULT_CONFIRM_SAMPLES = 2;
   static DEFAULT_DWELL_MS = 30 * 1000;
   static DEFAULT_OWN_LOAD_GRACE_MS = 15 * 1000;
-  static UNAVAILABLE_AFTER_EMPTY = 3;
+  static MISSING_RETRY_MAX_MS = 5 * 60 * 1000;
 
   constructor(options = {}) {
     this._readHooks(options);
@@ -19,15 +20,19 @@ class VramWatchdog {
     this._running = false;
     this._ticking = false;
     this._available = true;
-    this._emptyRuns = 0;
+    this._degraded = false;
+    this._outcome = NvidiaSmiOutcome.none();
+    this._missingRuns = 0;
     this._lastSampleAt = null;
+    this._lastGoodAt = null;
     this._unloads = 0;
   }
 
   start() {
-    if (this._running || !this._available) return false;
+    if (this._running) return false;
     if (!this._isLoaded()) return false;
     this._running = true;
+    if (this._ownsStream && this._stream && typeof this._stream.start === 'function') this._stream.start();
     this.tick();
     return true;
   }
@@ -46,9 +51,8 @@ class VramWatchdog {
     if (this._ticking) return;
     this._ticking = true;
     try {
-      let rows = [];
-      try { rows = (await this._sample()) || []; } catch (_) { rows = []; }
-      for (const card of this._observeRows(rows)) await this._maybeUnload(card);
+      const reading = await this._read();
+      for (const card of this._observeReading(reading)) await this._maybeUnload(card);
     } catch (err) {
       this._warn('[vram-watchdog] tick failed:', err);
     } finally {
@@ -67,36 +71,62 @@ class VramWatchdog {
   getState() {
     return {
       available: this._available,
+      degraded: this._degraded,
+      outcome: { kind: this._outcome.kind, reason: this._outcome.reason },
       running: this._running,
       intervalMs: this._intervalMs,
       lastSampleAt: this._lastSampleAt,
+      lastGoodAt: this._lastGoodAt,
       unloads: this._unloads,
       cards: [...this._cards.values()].sort((a, b) => a.index - b.index).map((c) => c.view()),
     };
   }
 
-  * _observeRows(sampled) {
-    const rows = sampled.filter((r) => r && Number(r.totalBytes) > 0);
+  async _read() {
+    try {
+      const result = await this._sample();
+      if (Array.isArray(result)) return { rows: result, outcome: NvidiaSmiOutcome.ok(this._now()) };
+      if (result && Array.isArray(result.rows)) return { rows: result.rows, outcome: result.outcome || NvidiaSmiOutcome.ok(this._now()) };
+      return { rows: [], outcome: NvidiaSmiOutcome.parse(this._now(), 'sampler returned no rows') };
+    } catch (err) {
+      return { rows: [], outcome: NvidiaSmiOutcome.of(NvidiaSmiOutcome.EXIT, (err && err.message) || 'sampler failed', this._now()) };
+    }
+  }
+
+  * _observeReading({ rows, outcome }) {
     this._lastSampleAt = this._now();
-    if (!rows.length) {
-      this._noteEmptySample();
+    this._outcome = outcome;
+    if (!NvidiaSmiOutcome.isOk(outcome)) {
+      this._noteDegraded(outcome);
       return;
     }
-    this._emptyRuns = 0;
-    this._available = true;
+    const usable = (rows || []).filter((r) => r && Number(r.totalBytes) > 0);
+    if (!usable.length) {
+      this._noteDegraded(NvidiaSmiOutcome.parse(this._now(), 'no card rows in the reading'));
+      return;
+    }
+    this._noteGood();
     const ledger = LedgerCards.fromLedger(this._readLedger());
     const now = this._now();
-    for (const row of rows) {
-      const card = this._observeRow(row, rows, ledger, now);
+    for (const row of usable) {
+      const card = this._observeRow(row, usable, ledger, now);
       if (card) yield card;
     }
   }
 
-  _noteEmptySample() {
-    this._emptyRuns += 1;
-    if (this._emptyRuns < VramWatchdog.UNAVAILABLE_AFTER_EMPTY) return;
-    this._available = false;
-    this.stop();
+  _noteDegraded(outcome) {
+    this._degraded = true;
+    this._outcome = outcome;
+    const missing = outcome.kind === NvidiaSmiOutcome.MISSING;
+    this._available = !missing;
+    this._missingRuns = missing ? this._missingRuns + 1 : 0;
+  }
+
+  _noteGood() {
+    this._degraded = false;
+    this._available = true;
+    this._missingRuns = 0;
+    this._lastGoodAt = this._now();
   }
 
   _readLedger() {
@@ -144,8 +174,14 @@ class VramWatchdog {
 
   _schedule() {
     if (this._timer) return;
-    this._timer = setTimeout(() => { this._timer = null; this.tick(); }, this._intervalMs);
+    this._timer = setTimeout(() => { this._timer = null; this.tick(); }, this._nextDelayMs());
     if (this._timer && typeof this._timer.unref === 'function') this._timer.unref();
+  }
+
+  _nextDelayMs() {
+    if (!this._missingRuns) return this._intervalMs;
+    const doubled = this._intervalMs * (2 ** Math.min(this._missingRuns, 20));
+    return Math.min(doubled, VramWatchdog.MISSING_RETRY_MAX_MS);
   }
 
   _warn(message, err) {
@@ -154,7 +190,9 @@ class VramWatchdog {
 
   _readHooks(o) {
     const fn = (value, fallback) => (typeof value === 'function' ? value : fallback);
-    this._sample = fn(o.sample, () => NvidiaSmi.queryGpus());
+    this._stream = o.stream || NvidiaSmiStream.shared;
+    this._ownsStream = typeof o.sample !== 'function';
+    this._sample = fn(o.sample, () => this._stream.refresh({ maxAgeMs: this._intervalMs }));
     this._ledger = fn(o.ledger, () => VramCoordinator.shared.snapshot());
     this._reserveOf = fn(o.reserveBytes, () => (Number(o.reserveBytes) > 0
       ? Number(o.reserveBytes) : CudaDevicePicker.PER_CARD_RESERVE_BYTES));

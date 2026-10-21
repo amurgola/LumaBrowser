@@ -18,3 +18,8 @@ Builds the services everything else leans on, over the one settings database.
   - `apiSecurity`;
   - `activityLogService` over its own `<dataDir>/activity-log.db`, with the
     callers `core.browser`, `core.llm`, `core.shell` registered.
+
+## Chrome extension bridge
+
+`_buildBrowserAddOns()` creates the `ChromeExtensionService` with a new
+[ShimBridge](../../core/chrome-extensions/bridge/ShimBridge.md).

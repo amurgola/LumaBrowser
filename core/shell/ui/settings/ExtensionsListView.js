@@ -1,14 +1,20 @@
+import ExtCard from './ExtCard.js';
+
 export default class ExtensionsListView {
   static CONSTRAINTS_CHANNEL = 'core.shell.getToggleConstraints';
 
+  static INTRO = {
+    active: 'Extensions add features to LumaBrowser. Clear the checkbox to turn one off; it moves to Inactive.',
+    inactive: 'Extensions that are turned off. Check one to turn it back on.',
+  };
+
   static ERRORS_CHANNEL = 'core.shell.getExtensionErrors';
 
-  constructor({ panes, meta, rowFactory, onShown }) {
+  constructor({ panes, meta, rowFactory }) {
     this._activePane = panes.extensions;
     this._inactivePane = panes.inactive || null;
     this._meta = meta;
     this._rowFactory = rowFactory;
-    this._onShown = onShown;
   }
 
   isVisible() {
@@ -29,12 +35,11 @@ export default class ExtensionsListView {
     const active = entries.filter(isEnabled);
     const inactive = entries.filter((ext) => !isEnabled(ext));
     this._setCount(active.length);
-    const build = (list, emptyMessage) => this._listView(list, emptyMessage, constraints, errors);
+    const build = (list, intro, emptyMessage) => this._listView(list, intro, emptyMessage, constraints, errors);
     this._swapPanes(
-      build(active, entries.length === 0 ? 'No extensions installed' : 'No active extensions'),
-      build(inactive, 'No inactive extensions'),
+      build(active, ExtensionsListView.INTRO.active, entries.length === 0 ? 'No extensions installed' : 'No active extensions'),
+      build(inactive, ExtensionsListView.INTRO.inactive, 'No inactive extensions'),
     );
-    this._onShown();
   }
 
   _clearPanes() {
@@ -79,17 +84,26 @@ export default class ExtensionsListView {
     if (badge) badge.textContent = String(count);
   }
 
-  _listView(list, emptyMessage, constraints, errors) {
+  _listView(list, intro, emptyMessage, constraints, errors) {
+    const pane = document.createElement('div');
+    pane.className = 'ext-pane-section';
+    const head = document.createElement('p');
+    head.className = 'ext-pane-intro ext-pane-head';
+    head.textContent = intro;
+    pane.appendChild(head);
     if (list.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'luma-empty';
       empty.textContent = emptyMessage;
-      return empty;
+      pane.appendChild(empty);
+      return pane;
     }
     const view = document.createElement('div');
-    view.className = 'ext-list-view';
+    view.className = 'ext-item-list ext-list-view';
     for (const ext of list) view.appendChild(this._rowFactory.build(ext, constraints, errors.get(ext.id) || []));
-    return view;
+    ExtCard.wireFolding(view);
+    pane.appendChild(view);
+    return pane;
   }
 
   _swapPanes(activeView, inactiveView) {

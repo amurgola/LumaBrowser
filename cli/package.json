@@ -1,6 +1,6 @@
 {
   "name": "lumabrowser",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "CLI launcher for LumaBrowser: a multi-tab browser with notification interception and AI-driven automation.",
   "bin": {
     "lumabrowser": "bin/lumabrowser.js",

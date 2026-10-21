@@ -6,8 +6,13 @@ Measures one loaded model's VRAM and RAM peak for the fit test.
 
 ## Methods
 
-- `new VramFootprint({ nvidiaSmi, processMemory, sleep })` (defaults `NvidiaSmi`,
-  `ProcessMemory`, `CancellableDelay.sleep`).
+- `new VramFootprint({ nvidiaSmi, processMemory, sleep })` (defaults
+  `VramFootprint.streamQueries()`, `ProcessMemory`, `CancellableDelay.sleep`).
+- `VramFootprint.streamQueries(stream = NvidiaSmiStream.shared)` the `nvidiaSmi`
+  seam over the shared [NvidiaSmiStream](../../../shared/runtime/NvidiaSmiStream.md):
+  `queryGpus()` is the snapshot refreshed when older than `MAX_READING_AGE_MS`
+  (250 ms), `queryComputeApps()` the per-process list re-queried only when a
+  card's used bytes moved. Nothing spawns per sample.
 - `captureBaseline()` the MAX summed free VRAM over 4 samples 350 ms apart (null
   when no card reports).
 - `track(pid)` the process to attribute.

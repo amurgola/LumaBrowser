@@ -11,7 +11,11 @@ placeholder read "Inherit (<value>)", naming what a blank field resolves to
 row carries an accent dot. Settings layer Defaults, then model, then profile;
 see [ModelSettings](../../../../service/ModelSettings.md).
 
-- Every model and profile: Thinking, Temperature, Reply limit (tokens).
+- Every model and profile: Thinking, Temperature, Reply limit (tokens),
+  Parallel tools (1 to 8 calls at once in Tools-on turns; "Inherit (one at a
+  time)" is the measured default, see
+  [ToolConcurrency](../../../../../llm-service/ToolConcurrency.md); its row's
+  tooltip says what it does and why one is the default).
 - A local model itself (never a profile): KV cache and Extra flags, under
   "When this model loads" since they apply on the model's next load.
 - A model offers "Save as profile…" (the form's request fields become a new

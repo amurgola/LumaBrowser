@@ -15,22 +15,22 @@ class HfRepoRecipes {
     return { id: `${parts[0]}/${parts[1]}` };
   }
 
-  static resolve(repoId, rfilenames, catalog) {
-    if (HfRepoRecipes._isAnimaRepo(repoId, rfilenames)) return HfRepoRecipes.resolveAnima(repoId, rfilenames, catalog);
+  static resolve(repoId, rfilenames, catalog, listing = null) {
+    if (HfRepoRecipes._isAnimaRepo(repoId, rfilenames)) return HfRepoRecipes.resolveAnima(repoId, rfilenames, catalog, listing);
     return {
       error: `No auto-download recipe for "${repoId}" yet. For a single-file model, use `
         + '"Import custom model" with the direct .safetensors / .gguf URL instead.',
     };
   }
 
-  static resolveAnima(repoId, rfilenames, catalog) {
+  static resolveAnima(repoId, rfilenames, catalog, listing = null) {
     const diffusion = HfRepoRecipes.pickNewestAnimaBase(rfilenames.filter((f) => /diffusion_models\//i.test(f) && /\.safetensors$/i.test(f)));
     if (!diffusion) return { error: `Repo "${repoId}" has no Anima diffusion .safetensors under split_files/diffusion_models/.` };
     const llm = rfilenames.find((f) => /text_encoders\/.*qwen.*\.safetensors$/i.test(f)) || rfilenames.find((f) => /text_encoders\/.*\.safetensors$/i.test(f));
     const vae = rfilenames.find((f) => /vae\/.*qwen.*vae.*\.safetensors$/i.test(f)) || rfilenames.find((f) => /vae\/.*\.safetensors$/i.test(f));
     if (!llm) return { error: `Repo "${repoId}" is missing the Qwen3 text encoder under split_files/text_encoders/.` };
     if (!vae) return { error: `Repo "${repoId}" is missing the VAE under split_files/vae/.` };
-    return { entry: HfRepoRecipes._animaEntry(repoId, { diffusion, vae, llm }, (catalog && catalog.getById('anima')) || {}) };
+    return { entry: HfRepoRecipes._animaEntry(repoId, { diffusion, vae, llm }, (catalog && catalog.getById('anima')) || {}, listing) };
   }
 
   static pickNewestAnimaBase(files) {
@@ -44,16 +44,20 @@ class HfRepoRecipes {
     return scored[0].f;
   }
 
-  static resolveUrl(repoId, rfilename) {
-    return `https://huggingface.co/${repoId}/resolve/main/${rfilename.split('/').map(encodeURIComponent).join('/')}?download=true`;
+  static resolveUrl(repoId, rfilename, revision = 'main') {
+    const segment = encodeURIComponent(String(revision || 'main'));
+    return `https://huggingface.co/${repoId}/resolve/${segment}/${rfilename.split('/').map(encodeURIComponent).join('/')}?download=true`;
   }
 
   static _isAnimaRepo(repoId, rfilenames) {
     return /^circlestone-labs\/Anima$/i.test(repoId) || rfilenames.some((f) => /(^|\/)anima[-_].*\.safetensors$/i.test(f));
   }
 
-  static _animaEntry(repoId, picks, cat) {
-    const file = (rf, extra) => ({ role: extra.role, file: path.basename(rf), url: HfRepoRecipes.resolveUrl(repoId, rf), ...extra });
+  static _animaEntry(repoId, picks, cat, listing) {
+    const revision = listing && listing.revision && listing.revision.sha ? listing.revision.sha : 'main';
+    const file = (rf, extra) => ({
+      role: extra.role, file: path.basename(rf), url: HfRepoRecipes.resolveUrl(repoId, rf, revision), ...HfRepoRecipes._listed(listing, rf), ...extra,
+    });
     return {
       id: 'anima',
       label: cat.label || 'Anima (non-commercial)',
@@ -72,6 +76,16 @@ class HfRepoRecipes {
       compatibleRuntimes: cat.compatibleRuntimes || [...HfRepoRecipes.COMPATIBLE_RUNTIMES],
       resolvedNote: `Resolved newest base: ${path.basename(picks.diffusion)}`,
     };
+  }
+
+  static _listed(listing, rfilename) {
+    const files = listing && Array.isArray(listing.files) ? listing.files : [];
+    const found = files.find((f) => f && f.path === rfilename);
+    if (!found) return {};
+    const out = {};
+    if (Number(found.size) > 0) out.size = Number(found.size);
+    if (found.sha256) out.sha256 = found.sha256;
+    return out;
   }
 }
 

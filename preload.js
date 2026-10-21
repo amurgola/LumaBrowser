@@ -206,6 +206,14 @@ try {
       ipcRenderer.on('tab:switched', listener);
       return () => ipcRenderer.removeListener('tab:switched', listener);
     },
+    dragOut: (tabId) => ipcRenderer.invoke('tab-window:drag-out', tabId),
+    dropIn: (tabId, index) => ipcRenderer.invoke('tab-window:drop-in', tabId, index),
+    moveToNewWindow: (tabId) => ipcRenderer.invoke('tab-window:open', tabId),
+    onTransferred: (cb) => {
+      const listener = (_e, payload) => cb(payload);
+      ipcRenderer.on('tab:transferred', listener);
+      return () => ipcRenderer.removeListener('tab:transferred', listener);
+    },
     onNotificationIntercepted: (cb) => {
       const listener = (_e, payload) => cb(payload);
       ipcRenderer.on('notification-intercepted', listener);

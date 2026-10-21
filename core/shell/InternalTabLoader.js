@@ -2,6 +2,7 @@ class InternalTabLoader {
   static ERR_ABORTED = -3;
   static DEFAULT_RETRIES = 8;
   static DEFAULT_RETRY_DELAY_MS = 600;
+  static STALL_MS = 5000;
 
   static wire(service, wc, options = {}) {
     const loader = new InternalTabLoader(service, wc, options);
@@ -20,11 +21,13 @@ class InternalTabLoader {
     return service.tabHtmlUrl === service.tabHtmlFileUrl;
   }
 
-  constructor(service, wc, { retries = InternalTabLoader.DEFAULT_RETRIES, retryDelayMs = InternalTabLoader.DEFAULT_RETRY_DELAY_MS } = {}) {
+  constructor(service, wc, { retries = InternalTabLoader.DEFAULT_RETRIES, retryDelayMs = InternalTabLoader.DEFAULT_RETRY_DELAY_MS, stallMs = InternalTabLoader.STALL_MS } = {}) {
     this._service = service;
     this._wc = wc;
     this._retries = retries;
     this._retryDelayMs = retryDelayMs;
+    this._stallMs = stallMs;
+    this._stallTimer = null;
     this._navFailed = false;
     this._attempts = 0;
   }
@@ -34,13 +37,35 @@ class InternalTabLoader {
     this._wc.on('did-start-navigation', (_e, _url, _isInPlace, isMainFrame) => this._onStartNavigation(isMainFrame));
     this._wc.on('did-fail-load', (_e, errorCode, _desc, _validatedURL, isMainFrame) => this._onFailLoad(errorCode, isMainFrame));
     this._wc.on('did-finish-load', () => this._onFinishLoad());
+    this._wc.on('did-navigate', () => this._clearStall());
+    this._wc.on('destroyed', () => this._clearStall());
   }
 
   _onStartNavigation(isMainFrame) {
-    if (isMainFrame) this._navFailed = false;
+    if (!isMainFrame) return;
+    this._navFailed = false;
+    this._armStall();
+  }
+
+  _armStall() {
+    this._clearStall();
+    this._stallTimer = setTimeout(() => this._onStall(), this._stallMs);
+  }
+
+  _clearStall() {
+    if (this._stallTimer) clearTimeout(this._stallTimer);
+    this._stallTimer = null;
+  }
+
+  _onStall() {
+    this._stallTimer = null;
+    if (this._wc.isDestroyed()) return;
+    this._attempts += 1;
+    this._wc.loadURL(this._nextUrl()).catch(() => {});
   }
 
   _onFailLoad(errorCode, isMainFrame) {
+    if (isMainFrame) this._clearStall();
     if (!isMainFrame || errorCode === InternalTabLoader.ERR_ABORTED) return;
     this._navFailed = true;
     this._service.tabLoadedOk = false;

@@ -10,16 +10,21 @@ the OpenAI `chat.completion` shape like every provider.
 
 - `new AnthropicProvider(db)`: settings under `anthropic.*`, default endpoint
   `https://api.anthropic.com`.
-- `capabilities`: no tools (no `tool_use` blocks are emitted or parsed), cache
-  prefix and reasoning stream supported, `defaultMaxTokens` 32000 (the floor).
+- `capabilities`: tools (sent as Messages API tools, read back from
+  `tool_use` blocks on the streaming path), cache prefix and reasoning stream
+  supported, `defaultMaxTokens` 32000 (the floor).
 - `testConnection()`, `fetchModels()`: both refuse without an endpoint or an
   API key (the API has no anonymous read). Models are stored as
   `{ id, object, created, owned_by: 'anthropic' }`.
 - `sendChatCompletion(messages, options)`: 30 s default timeout.
 - `createChatCompletionStreamSession(messages, options, handlers)`: 120 s
   default; handlers `onDelta(text, frame)`, `onReasoning(text, frame)`,
-  `onUsage(usage)`, `onError(message)`. Resolves through `_streamSession`, so
-  `done` never rejects.
+  `onToolCallDelta({ index, id, name, argsDelta })`, `onUsage(usage)`,
+  `onError(message)`. Resolves through `_streamSession`, so `done` never
+  rejects. `options.tools` rides as tools; the model's `tool_use` blocks come
+  back as `message.tool_calls` and, beside the OpenAI fields, as `toolCalls`
+  `[{ id, type, function, parsedArguments }]`, the same shape
+  [OpenAICompatibleProvider](OpenAICompatibleProvider.md) reports.
 
 Both refuse with `No endpoint configured` / `No model selected` first.
 

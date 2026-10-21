@@ -1,5 +1,6 @@
 const AgentLoopText = require('../../../agent/AgentLoopText');
 const IterationStream = require('./IterationStream');
+const NativeCallStream = require('./NativeCallStream');
 const TurnReminder = require('./TurnReminder');
 
 class CompletionDriver {
@@ -17,6 +18,7 @@ class CompletionDriver {
     o.mirror.beginIteration();
     o.reasoning.beginIteration();
     const stream = new IterationStream({ hooks: o.hooks, mirror: o.mirror, allows: o.toolSet.allows });
+    const native = new NativeCallStream({ hooks: o.hooks, mirror: o.mirror });
     const sendMsgs = TurnReminder.append(msgs, this._reminder());
     const completion = await o.router._completeOnce(
       o.modelRef, sendMsgs, this._temperature(opts),
@@ -29,6 +31,7 @@ class CompletionDriver {
       o.nativePlan.build(o.toolSet),
       this._extra(sendMsgs, opts),
       o.control.completionControl,
+      native.onDelta,
     );
     o.control.clearLive();
     if (o.health.noteCompletion(completion)) o.replyCap.noteLengthCut();
@@ -66,6 +69,7 @@ class CompletionDriver {
       },
       pinTemperature: true,
       maxTokens: o.replyCap.maxTokens(sendMsgs),
+      parallelToolCalls: !!o.parallel,
     };
   }
 }

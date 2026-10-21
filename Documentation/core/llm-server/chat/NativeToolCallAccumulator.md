@@ -12,6 +12,10 @@ completion stuck repeating one call.
   (default 0): `id` and `function.name` are taken when present, and
   `function.arguments` pieces are concatenated. Non-arrays and null entries are
   ignored. Returns `this`.
+- `merge(fragment)` folds one fragment in and returns its live report
+  `{ index, id, name, argsDelta }` (the slot's id and name so far, the
+  arguments text this fragment added), which a "preparing" card is fed from.
+  `add` is a loop over it.
 - `finalize()` returns the dense list of calls that got a name:
   `[{ id, name, args }]`.
 - `isLooping()` is true when the last three completed calls (every named slot

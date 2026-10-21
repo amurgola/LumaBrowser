@@ -7,16 +7,23 @@ header facts, every quant variant, and the companion files beside them.
 
 ## Methods
 
-- `HfGgufRepo.fetchVariants(repoId, { signal })` returns `{ repoId, author,
-  name, gated, paramsB, maxContext, architecture, chatTemplate, variants }`
-  where each variant is `{ quant, file, url, approxBytes, sharded, partUrls }`
-  (`partUrls` only when sharded). Throws `HF_BAD_ID` for a malformed id and
-  `HF_NOT_FOUND` ("No such model: <id>") when the model page is unreadable.
+- `HfGgufRepo.fetchVariants(repoId, { signal, revision })` returns `{ repoId,
+  author, name, gated, paramsB, maxContext, architecture, chatTemplate,
+  revision, variants }` where each variant is `{ quant, file, url, approxBytes,
+  sha256, sharded, partUrls, parts }`: `url` and `partUrls` read the commit
+  [HfPinnedRepo](HfPinnedRepo.md) pinned (`revision` is its description),
+  `sha256` is the LFS digest of a single-file variant (null when sharded or
+  unknown), and `parts` (sharded only) is `[{ url, file, size, sha256 }]` in
+  shard order beside the `partUrls` the UI already reads. Throws `HF_BAD_ID`
+  for a malformed id, `HF_NOT_FOUND` ("No such model: <id>") when the model
+  page is missing, and the `HF_ACCESS_DENIED` access error for a gated repo.
   Unknown header facts are `null`.
-- `HfGgufRepo.fetchCompanions(repoId, { signal })` returns `{ mmprojs, mtps }`:
-  vision projectors `{ file, path, url, approxBytes, precision }` and detached
-  MTP heads `{ file, path, url, approxBytes, quant }`. Never throws; any
-  failure returns empty lists.
+- `HfGgufRepo.fetchCompanions(repoId, { signal, revision })` returns
+  `{ mmprojs, mtps }`: vision projectors `{ file, path, url, approxBytes,
+  sha256, precision }` and detached MTP heads `{ file, path, url, approxBytes,
+  sha256, quant }`. With a 40-hex `revision` (the sha the weights were pinned
+  to) the tree at that commit is read directly; otherwise the branch is
+  resolved first. Never throws; any failure returns empty lists.
 - `HfGgufRepo.fetchMmprojs(repoId, { signal })` returns just `mmprojs`.
 
 ## Why

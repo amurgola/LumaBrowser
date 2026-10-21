@@ -1,5 +1,6 @@
 import ChatIcons from '../ChatIcons.js';
 import SelectorText from '../common/SelectorText.js';
+import HtmlPatcher from '../../dom/HtmlPatcher.js';
 import ToolLabels from './ToolLabels.js';
 import TurnData from './TurnData.js';
 import Dom from '../../dom/Dom.js';
@@ -68,7 +69,7 @@ export default class AgentRunCards {
     AgentRunCards._updateHead(card, run, running);
     AgentRunCards._updateThinking(card, run, running);
     AgentRunCards._updateSteps(card, run);
-    card.querySelector('.cm-agent-text').innerHTML = MarkdownRenderer.render(run.body || '', { streaming: running }) || (running ? ChatIcons.pulse() : '');
+    HtmlPatcher.apply(card.querySelector('.cm-agent-text'), MarkdownRenderer.render(run.body || '', { streaming: running }) || (running ? ChatIcons.pulse() : ''));
     if (run.error) AgentRunCards._showError(card, run.error);
   }
 

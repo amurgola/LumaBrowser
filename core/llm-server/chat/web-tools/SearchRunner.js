@@ -20,12 +20,13 @@ class SearchRunner {
     return new SearchRunner(query, options).execute();
   }
 
-  constructor(query, { timeoutMs, tabRender = null, fetcher = SafeFetch.fetch, partChars = ReadBudget.partChars() } = {}) {
+  constructor(query, { timeoutMs, tabRender = null, fetcher = SafeFetch.fetch, partChars = ReadBudget.partChars(), onProgress = null } = {}) {
     this._query = query;
     this._timeoutMs = timeoutMs;
     this._tabRender = typeof tabRender === 'function' ? tabRender : null;
     this._fetcher = fetcher;
     this._partChars = partChars;
+    this._onProgress = typeof onProgress === 'function' ? onProgress : null;
     this._list = new ResultList();
     this._answeredEngines = new Set();
     this._sawNothingFound = false;
@@ -57,6 +58,7 @@ class SearchRunner {
   }
 
   async _collect({ engine, load }) {
+    this._progress(`Asking ${SearchRunner.engineLabel(engine)}…`);
     const html = await Promise.resolve().then(load).catch(() => null);
     if (!html || PageClassifier.isChallenge(html)) return;
     const rows = engine.parse(html);
@@ -66,6 +68,15 @@ class SearchRunner {
     } else {
       this._noteEmptyPage(html);
     }
+  }
+
+  static engineLabel(engine) {
+    return String((engine && engine.name) || 'the web').replace(/Engine$/, '');
+  }
+
+  _progress(message) {
+    if (!this._onProgress) return;
+    try { this._onProgress(message); } catch (_) {}
   }
 
   _loadInTab() {

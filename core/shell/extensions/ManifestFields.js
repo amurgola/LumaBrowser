@@ -7,11 +7,6 @@ class ManifestFields {
   static option(definition, key) {
     return definition && typeof definition === 'object' ? definition[key] || null : null;
   }
-
-  static actions(manifest) {
-    if (Array.isArray(manifest.extensionsActions)) return manifest.extensionsActions;
-    return manifest.extensionsAction ? [manifest.extensionsAction] : [];
-  }
 }
 
 module.exports = ManifestFields;

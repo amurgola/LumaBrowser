@@ -3,12 +3,14 @@ const ShardScanMerger = require('./ShardScanMerger');
 
 class GgufHeaderAttacher {
   static FIELDS = [
-    'architecture', 'name', 'blockCount', 'contextLength', 'embeddingLength', 'feedForwardLength',
+    'architecture', 'name', 'baseName', 'generalType', 'role', 'roleSource', 'roleReason', 'poolingType',
+    'projectorType', 'parameterCount', 'parameterCountSource', 'hasChatTemplate', 'chatTemplateLength', 'chatTemplateTruncated',
+    'blockCount', 'contextLength', 'embeddingLength', 'feedForwardLength',
     'headCount', 'headCountKv', 'headCountKvPerLayer', 'keyLength', 'valueLength', 'keyLengthSwa',
     'valueLengthSwa', 'slidingWindow', 'slidingWindowPattern', 'slidingWindowPerLayer', 'attnKvPerLayer',
     'attnKvLayerCount', 'mtpGrafted', 'attnScanError', 'tensorLayout', 'ropeFreqBase', 'expertCount',
     'expertUsedCount', 'expertFeedForwardLength', 'expertSharedCount', 'vocabSize', 'fileType',
-    'fileTypeName', 'quantizationVersion',
+    'fileTypeName', 'fileTypeSource', 'dominantTensorType', 'quantizationVersion',
   ];
 
   static isTarget(model) {
@@ -17,7 +19,7 @@ class GgufHeaderAttacher {
 
   static async attach(model, headerCache) {
     const first = model.weights[0];
-    const result = await headerCache.get(first.path, first.sizeBytes);
+    const result = await headerCache.get(first.path, first.sizeBytes, first.modifiedAt);
     if (!(result && result.ok)) {
       model.gguf = { parsed: false, error: (result && result.error) || 'unknown parse error' };
       return;

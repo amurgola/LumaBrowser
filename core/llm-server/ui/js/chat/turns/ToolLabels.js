@@ -65,6 +65,12 @@ export default class ToolLabels {
     return ToolLabels.RUNNING[tc.tool] || (ToolLabels.labelOf(tc.tool) + '…');
   }
 
+  static batchLabel(steps) {
+    const tools = new Set(steps.map((s) => s.tool));
+    if (tools.size === 1) return ToolLabels.stepLabel(steps[0]) + ' (' + steps.length + ')';
+    return 'Running ' + steps.length + ' tools…';
+  }
+
   static agentStepLabel(tool) {
     return ToolLabels.LABEL[tool] || tool || 'tool';
   }

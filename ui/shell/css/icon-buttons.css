@@ -104,3 +104,20 @@
     color: var(--text-primary);
 }
 .toolbar #aiActivityToggle.has-active .ai-activity-toggle-count { color: var(--text-primary); }
+
+.chrome-ext-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+.chrome-ext-buttons[hidden] { display: none; }
+.chrome-ext-btn-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    pointer-events: none;
+}
+.chrome-ext-btn-letter {
+    font-size: var(--text-xs);
+    font-weight: 600;
+}

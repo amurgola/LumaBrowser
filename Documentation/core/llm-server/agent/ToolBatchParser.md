@@ -11,3 +11,7 @@ Every tool call in one assistant reply, in the order the model wrote them.
   and Harmony recovery paths), else `parseToolCall` for a batch of at most one.
   Non-objects are dropped. `maxParallel <= 1` keeps only the first call, exactly
   what the loop did before batching.
+- `ToolBatchParser.split(browserTools, content, maxParallel)`: `{ batch, dropped }`,
+  the calls that will run and, at a pool of one, the later calls that will not,
+  so [ToolBatchRunner](ToolBatchRunner.md) can answer them instead of the model
+  discovering a silence. `parse` is `split(...).batch`.

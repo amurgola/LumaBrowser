@@ -2,7 +2,8 @@
 
 `core/browser/tab-view/TabViewIpcController.js`
 
-Routes the chrome renderer's tab-view IPC to the TabViewManager. Controller only.
+Routes the chrome renderers' tab-view IPC to the TabViewManager. Window-relative
+requests act on the sender's window (`windowIdForSender`). Controller only.
 
 ## Methods
 
@@ -20,3 +21,6 @@ Routes the chrome renderer's tab-view IPC to the TabViewManager. Controller only
 
 `ipcMain.on`: `tab-view:set-bounds` and `notification-intercepted`
 ([TabNotificationRelay](TabNotificationRelay.md)).
+
+`create` (opens in the sender's window), `cycle`, `select-index`, `reopen-closed`
+and `set-bounds` act on the sender's window; the rest take a tab id.

@@ -43,13 +43,23 @@ export default class PanelResizer {
     const startX = downEvent.clientX;
     const startY = downEvent.clientY;
     const startSize = PanelResizer._currentSize(cfg);
+    let pending = null;
+    let frame = 0;
+    const apply = () => {
+      frame = 0;
+      if (pending == null) return;
+      document.documentElement.style.setProperty(cfg.cssVar, `${PanelResizer.nextSize(cfg, startSize, pending)}px`);
+      pending = null;
+    };
     const onMove = (e) => {
-      const delta = cfg.axis === 'col' ? (e.clientX - startX) : (e.clientY - startY);
-      document.documentElement.style.setProperty(cfg.cssVar, `${PanelResizer.nextSize(cfg, startSize, delta)}px`);
+      pending = cfg.axis === 'col' ? (e.clientX - startX) : (e.clientY - startY);
+      if (!frame) frame = requestAnimationFrame(apply);
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
+      if (frame) cancelAnimationFrame(frame);
+      apply();
       this._endDrag(cfg, handleEl);
     };
     document.addEventListener('mousemove', onMove);

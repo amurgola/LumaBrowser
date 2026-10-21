@@ -70,6 +70,7 @@ class LocalRequest {
       temperature,
       familySamplerDefaults: FamilySampler.forTurn(plan, extra),
       tools: (tools && tools.length) ? tools : undefined,
+      parallelToolCalls: !!(extra && extra.parallelToolCalls),
       chatTemplateKwargs: extra && extra.chatTemplateKwargs,
       reasoningBudget: extra && extra.reasoningBudget,
       maxTokens: RequestSettings.maxTokens(extra),
@@ -78,6 +79,7 @@ class LocalRequest {
         hooks.onDelta(t);
       },
       onReasoningDelta: (t) => hooks.onReasoningDelta(t),
+      onToolCallDelta: (d) => { if (hooks.onToolCallDelta) hooks.onToolCallDelta(d); },
       onDone: (summary) => {
         settle();
         log.line(`done: total ${log.elapsedMs()}ms`);

@@ -16,6 +16,7 @@ export default class TabEventSync {
     api.onClosed((p) => this.onClosed(p));
     api.onHidden((p) => this.onHidden(p));
     if (typeof api.onMoved === 'function') api.onMoved((p) => this.onMoved(p));
+    if (typeof api.onTransferred === 'function') api.onTransferred((p) => this.onTransferred(p));
     api.onNotificationIntercepted(({ tabId, notificationData }) => {
       if (typeof window.handleNotification === 'function') window.handleNotification(notificationData, tabId).catch((e) => console.error(e));
     });
@@ -56,6 +57,16 @@ export default class TabEventSync {
     const entry = store.get(id);
     if (entry && entry.tabElement) entry.tabElement.remove();
     closedTabs.remember(entry);
+    store.delete(id);
+    strip.updateDensity();
+    this._emit('tabClosed', id);
+    persistedMenu.refreshButton();
+  }
+
+  onTransferred({ id }) {
+    const { store, strip, persistedMenu } = this._d;
+    const entry = store.get(id);
+    if (entry && entry.tabElement) entry.tabElement.remove();
     store.delete(id);
     strip.updateDensity();
     this._emit('tabClosed', id);

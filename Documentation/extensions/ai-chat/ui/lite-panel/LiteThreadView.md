@@ -20,5 +20,8 @@ The side panel's message thread in the legacy CSS vocabulary (`.ai-msg`,
   while running; opens the group for an action card and closes it when the turn
   ends. Paints the answer (hidden while empty and running), adds "Stopped
   before finishing." once for an aborted turn without error, and
-  "Error: <message>" once for an error.
+  "Error: <message>" once for an error. The markdown is re-rendered only when
+  `content` changed since the last paint and the action list only when a tool's
+  name, status or summary (or `running`) changed, so a frame that merely moved
+  the status phase does not re-parse the whole answer or rebuild the cards.
 - `scrollToBottom()`.

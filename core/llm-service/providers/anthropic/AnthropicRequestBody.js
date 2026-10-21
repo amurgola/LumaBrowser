@@ -11,7 +11,26 @@ class AnthropicRequestBody {
     if (stream) body.stream = true;
     if (system) body.system = system;
     if (AnthropicModelLimits.takesAdaptiveThinking(model)) AnthropicRequestBody._addThinking(body, options, model);
+    AnthropicRequestBody._addTools(body, options.tools);
     return body;
+  }
+
+  static _addTools(body, tools) {
+    if (!Array.isArray(tools) || !tools.length) return;
+    const converted = tools.map(AnthropicRequestBody._tool).filter(Boolean);
+    if (converted.length) body.tools = converted;
+  }
+
+  static _tool(schema) {
+    const fn = (schema && schema.function) || schema;
+    if (!fn || typeof fn.name !== 'string' || !fn.name) return null;
+    const tool = {
+      name: fn.name,
+      input_schema: fn.parameters && typeof fn.parameters === 'object' ? fn.parameters : { type: 'object', properties: {} },
+      eager_input_streaming: true,
+    };
+    if (fn.description) tool.description = String(fn.description);
+    return tool;
   }
 
   static effortFromOptions(options = {}) {

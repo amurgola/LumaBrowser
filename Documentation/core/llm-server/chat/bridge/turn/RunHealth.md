@@ -16,6 +16,9 @@ One run's health tally and usage figures.
   returns whether it was cut.
 - `onUsage(usage)`, `onTimings(timings)` (sums `predicted_n`, `predicted_ms`,
   `prompt_n`, `prompt_ms`, `completions`).
+- `charsPerSecond()`: the turn's decode speed as characters per second
+  (`predicted_n / predicted_ms` times `TokenEstimator.CHARS_PER_TOKEN`), or
+  null before any timings; the pace [TextDrip](TextDrip.md) replays at.
 - `doneFields(result)`: the `onDone` payload `{ finishReason: 'stop', usage,
   timings, turnTimings (with predicted_per_second), iterations, stopReason,
   offFormatCalls, offFormatShapes, lengthCutCompletions, missingArgCalls,

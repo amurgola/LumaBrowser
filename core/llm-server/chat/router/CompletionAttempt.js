@@ -48,6 +48,11 @@ class CompletionAttempt {
         this._reasoning += t;
         CompletionAttempt._call(this._sinks.onReasoningToken, t);
       },
+      onToolCallDelta: (d) => {
+        if (!d || this._done) return;
+        this._bump();
+        CompletionAttempt._call(this._sinks.onToolCallDelta, d);
+      },
       onUsage: (u) => {
         if (!u) return;
         this._bump();

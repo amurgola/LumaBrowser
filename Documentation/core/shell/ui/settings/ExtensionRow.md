@@ -20,3 +20,13 @@ One row of the extensions list: name, version, cleaned description, dependency t
 ## Globals
 
 Dispatches `extension-toggled` on `document`; reads `window.ipcBridge.invoke`.
+
+## As an ExtCard (2026-10-21)
+
+The row is now an [ExtCard](ExtCard.md): the switch became the card's
+checkbox (`.ext-item-check`, checked is active, disabled with the lock reason
+as its title), Configure is the primary action while enabled, and the tray
+holds the full description, dependency tags, the lock or not-running reason,
+the ID, and Delete. `Not running` and `Error` show as the state word on the
+folded line. `ExtensionRow.rowError(item, message)` writes the live error at
+the top of the tray and unfolds the card so it is seen.

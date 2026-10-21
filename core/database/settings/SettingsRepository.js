@@ -4,10 +4,11 @@ const PathPrefixRewrite = require('./PathPrefixRewrite');
 class SettingsRepository {
   constructor(db) {
     this._db = db;
+    this._statements = new Map();
   }
 
   get(key, defaultValue = null) {
-    const row = this._db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+    const row = this._statement('SELECT value FROM settings WHERE key = ?').get(key);
     return row ? SettingsValueCodec.decode(row.value) : defaultValue;
   }
 
@@ -16,15 +17,15 @@ class SettingsRepository {
   }
 
   delete(key) {
-    this._db.prepare('DELETE FROM settings WHERE key = ?').run(key);
+    this._statement('DELETE FROM settings WHERE key = ?').run(key);
   }
 
   has(key) {
-    return !!this._db.prepare('SELECT key FROM settings WHERE key = ?').get(key);
+    return !!this._statement('SELECT key FROM settings WHERE key = ?').get(key);
   }
 
   getAllKeysWithPrefix(prefix) {
-    const rows = this._db.prepare('SELECT key, value FROM settings WHERE key LIKE ?').all(`${prefix}%`);
+    const rows = this._statement('SELECT key, value FROM settings WHERE key LIKE ?').all(`${prefix}%`);
     return Object.fromEntries(rows.map((row) => [row.key, SettingsValueCodec.decode(row.value)]));
   }
 
@@ -46,7 +47,7 @@ class SettingsRepository {
   }
 
   _moveRawValue(from, to) {
-    const row = this._db.prepare('SELECT value FROM settings WHERE key = ?').get(from);
+    const row = this._statement('SELECT value FROM settings WHERE key = ?').get(from);
     if (!row) return false;
     if (!this.has(to)) this._upsertRaw(to, row.value);
     this.delete(from);
@@ -61,8 +62,17 @@ class SettingsRepository {
   }
 
   _upsertRaw(key, text) {
-    this._db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
+    this._statement('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
       .run(key, text);
+  }
+
+  _statement(sql) {
+    let statement = this._statements.get(sql);
+    if (!statement) {
+      statement = this._db.prepare(sql);
+      this._statements.set(sql, statement);
+    }
+    return statement;
   }
 }
 

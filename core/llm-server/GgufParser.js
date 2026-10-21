@@ -41,6 +41,7 @@ class GgufParser {
     this._coreComplete = false;
     this._tensorScan = null;
     this._tensorScanError = null;
+    this._hasClipKeys = false;
   }
 
   async _openFile(filePath) {
@@ -76,6 +77,7 @@ class GgufParser {
       const key = await this._reader.string();
       const type = await this._reader.uint32();
       if (key.startsWith('tokenizer.')) this._markCoreComplete();
+      if (GgufHeaderSummary.CLIP_KEY.test(key)) this._hasClipKeys = true;
       const value = await this._readValue(key, type);
       if (value !== undefined && GgufHeaderSummary.wants(key)) this._meta[key] = value;
     }
@@ -113,10 +115,11 @@ class GgufParser {
     const name = await this._reader.string();
     const rank = await this._reader.uint32();
     if (rank < 0 || rank > GgufParser.MAX_TENSOR_RANK) throw new Error(`Implausible GGUF tensor rank ${rank}`);
-    for (let d = 0; d < rank; d++) await this._reader.length();
-    await this._reader.uint32();
+    let elements = 1;
+    for (let d = 0; d < rank; d++) elements *= await this._reader.length();
+    const type = await this._reader.uint32();
     const offset = await this._reader.uint64();
-    return { name, offset };
+    return { name, offset, elements: Number.isFinite(elements) ? elements : 0, type };
   }
 
   _buildSuccess() {
@@ -127,6 +130,7 @@ class GgufParser {
       kvCount: this._kvCount,
       tensorScan: this._tensorScan,
       tensorScanError: this._tensorScanError,
+      hasClipKeys: this._hasClipKeys,
     });
     return { ...summary, bytesRead: this._cursor.bytesPaged, truncated: false, durationMs: this._elapsedMs() };
   }

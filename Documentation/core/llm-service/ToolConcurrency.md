@@ -35,4 +35,10 @@ several tool results into one prompt. The native-tools knob is separate
 because the transports fail differently; it was graded separately and showed
 the same signature. Retune per model family and re-grade
 (scripts/run-gambit.js) before raising either. 1 is the kill switch: it
-reproduces the one-call-per-iteration loop exactly.
+reproduces the one-call-per-iteration loop exactly. The user can raise the pool
+per model or profile in the Tune dialog (`maxParallelToolCalls`, a
+[ModelOverrides](../shared/llm/ModelOverrides.md) request field) to re-grade a
+bigger model themselves; when the pool allows a batch the local request also
+asks llama-server for `parallel_tool_calls`, which it leaves off by default.
+Whatever the pool, a later call the model wrote that did not run is answered
+(`AgentLoopText.ONE_CALL_PER_REPLY`) rather than silently dropped.

@@ -1238,7 +1238,12 @@
             const fmt = fmtName ? this._resolveFormat(fmtName) : null;
             if (fmt) { el.innerHTML = String(fmt(value, item) ?? ''); return; }
             const named = variableName ? this._formatters[variableName] : null;
-            if (named) { el.innerHTML = named(value ?? '', meta || { done: true }); return; }
+            if (named) {
+                const html = named(value ?? '', meta || { done: true });
+                if (meta && typeof meta.patch === 'function') meta.patch(el, html);
+                else el.innerHTML = html;
+                return;
+            }
             if (el.hasAttribute('res-html')) el.innerHTML = value ?? '';
             else el.textContent = value ?? '';
         }
@@ -1297,9 +1302,10 @@
             }
             const throttle = Number(opts.throttle) || 0;
             const preserveSelection = opts.preserveSelection !== false;
+            const patch = typeof opts.patch === 'function' ? opts.patch : null;
             const st = this._streams[variableName] = {
                 raw: String(this.data[variableName] ?? ''),
-                throttle, preserveSelection, timer: null,
+                throttle, preserveSelection, patch, timer: null,
             };
             const schedule = () => {
                 if (st.timer) return;
@@ -1331,7 +1337,7 @@
             }
             elements.forEach(el => {
                 if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.value = raw; return; }
-                this._writeValue(el, raw, variableName, null, { done: final });
+                this._writeValue(el, raw, variableName, null, { done: final, patch: st ? st.patch : null });
             });
         }
 

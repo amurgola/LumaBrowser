@@ -18,10 +18,12 @@ import DebugTools from '../debug/DebugTools.js';
 import ViewBoundsReporter from '../layout/ViewBoundsReporter.js';
 import PanelResizer from '../layout/PanelResizer.js';
 import WindowControls from '../window/WindowControls.js';
+import WindowMode from '../window/WindowMode.js';
 import NavButtons from '../nav/NavButtons.js';
 import SessionHistoryMenu from '../nav/SessionHistoryMenu.js';
 import ChromeKind from '../nav/ChromeKind.js';
 import UrlSecurityBadge from '../nav/UrlSecurityBadge.js';
+import ChromeExtensionButtons from '../nav/ChromeExtensionButtons.js';
 import AddressBar from '../omnibox/AddressBar.js';
 import SearchEngineChoice from '../omnibox/SearchEngineChoice.js';
 import UrlAutocomplete from '../omnibox/UrlAutocomplete.js';
@@ -66,6 +68,7 @@ export default class ShellApp {
   start() {
     BootLog.log('initializeApp start');
     PlatformClass.apply();
+    this.detached = WindowMode.apply();
     this._build();
     this._installChrome();
     this._installSettings();
@@ -76,7 +79,7 @@ export default class ShellApp {
     this.activity.install();
     this.bounds.queue();
     BootLog.log('initializeApp end (about to gate setup wizard)');
-    this.wizard.maybeShow();
+    if (!this.detached) this.wizard.maybeShow();
   }
 
   _build() {
@@ -123,6 +126,7 @@ export default class ShellApp {
     this.findBar = new FindBar({ store, bounds, closeEditBar: () => this.editBar.close() });
     this.editBar = new BookmarkEditBar({ tree: this.tree, bounds, closeFindBar: () => this.findBar.close(false), refreshStar: (url) => this.star.refresh(url) });
     this.star = new BookmarkStar({ tree: this.tree, store, editBar: this.editBar });
+    this.chromeExtButtons = new ChromeExtensionButtons({ popupMenu: this.popupMenu, openSettings: () => this._openChromeExtensionSettings() });
     this.folderMenu = new BookmarkFolderMenu({ popupMenu, favicons, tabActions });
     this.bookmarkMenu = new BookmarkContextMenu({ popupMenu, tabActions, nodeActions: this.nodeActions });
     this.bookmarksBar = new BookmarksBar({
@@ -181,6 +185,12 @@ export default class ShellApp {
     new PanelResizer().install();
   }
 
+  _openChromeExtensionSettings() {
+    this.settings.open('extensions');
+    const sub = document.querySelector('[data-subtab="chromeExtensions"]');
+    if (sub) sub.click();
+  }
+
   _keyboard() {
     const actions = new AcceleratorActions({
       store: this.store, strip: this.strip, tabActions: this.tabActions, findBar: this.findBar, host: this.host,
@@ -219,6 +229,7 @@ export default class ShellApp {
 
   _installBrowserData() {
     this.star.install();
+    this.chromeExtButtons.install();
     this.autocomplete.install();
     UrlSecurityBadge.update('');
     this.nav.updateReloadButton();
@@ -289,6 +300,7 @@ export default class ShellApp {
 
   _startCollaborators() {
     if (this.browserRenderer) this.browserRenderer.init(this.store.tabs, () => this.store.activeTabId);
+    if (this.detached) return;
     if (this.slotManager) {
       this.slotManager.init();
       this.slotManager.initSettingsTabs();

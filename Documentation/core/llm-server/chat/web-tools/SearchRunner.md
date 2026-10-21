@@ -6,13 +6,16 @@ Runs one web search over a ladder of sources.
 
 ## Methods
 
-- `SearchRunner.run(query, { timeoutMs?, tabRender?, fetcher?, partChars? })`
+- `SearchRunner.run(query, { timeoutMs?, tabRender?, fetcher?, partChars?, onProgress? })`
   resolves one of:
   - `{ success: true, results, message }` from [ResultList](ResultList.md);
   - `{ success: true, results: [], message }`: an engine said nothing matched;
   - `{ success: true, message }`: an unparsed results page as text (first part);
   - `{ success: false, error }`: no engine answered; points at searching by
     hand with the browser tools.
+- `onProgress(message)` hears `Asking <engine>…` before each source is loaded
+  (a listener that throws is ignored); `SearchRunner.engineLabel(engine)` is
+  the class name without `Engine`.
 - Statics: `ENOUGH_RESULTS` (3), `ENGINE_PAGE_BYTES` (1 MB),
   `MIN_RENDERED_CHARS` (200), `FAILURE_NEXT_STEP`.
 

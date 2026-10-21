@@ -23,6 +23,7 @@ class MusicServerService {
     planner = new MusicLaunchPlanner({ vramCoordinator }),
     findFreePort = () => MusicRuntimeServer.findFreePort(),
     liveMemory = (diagnostics) => CudaDeviceProbe.withLiveMemory(diagnostics),
+    gpuReady = () => CudaDeviceProbe.whenReady(),
     platform = process.platform,
     settingsOptions = {},
     runtimeOptions = {},
@@ -38,6 +39,7 @@ class MusicServerService {
     this._planner = planner;
     this._findFreePort = findFreePort;
     this._liveMemory = liveMemory;
+    this._gpuReady = gpuReady;
     this._platform = platform;
     this._settings = new MusicServerSettings(settingsDb, settingsOptions);
     this._runtimes = this._createRuntimes(runtimeOptions);
@@ -166,6 +168,7 @@ class MusicServerService {
 
   async _liveDiagnostics() {
     const cached = await Promise.resolve().then(() => this._getDiagnostics()).catch(() => null);
+    try { await this._gpuReady(); } catch (_) {}
     return this._liveMemory(cached);
   }
 }

@@ -21,9 +21,14 @@ and forwards each namespaced call to the owning server.
 - `disconnectAll()`.
 - `status()`: per stored server `{ id, name, transport, enabled, status, error,
   tools: [{ name, description }] }`; `idle`/`disabled` when never dialled.
-- `callTool(toolName, args)`: the aggregator handler. Rejects
+- `callTool(toolName, args, opts = {})`: the aggregator handler. Rejects
   `mcp-connector: unknown tool "<name>"` and
   `mcp-connector: server for "<name>" is not connected`; otherwise
   `client.callTool({ name: original, arguments }, undefined, { timeout: 120000 })`,
-  whose MCP envelope is returned as-is.
+  whose MCP envelope is returned as-is. With `opts.onProgress` the request also
+  carries `onprogress` (the SDK then mints the `_meta.progressToken` and routes
+  the server's `notifications/progress` to it) and `resetTimeoutOnProgress`, so
+  a server that reports progress is not cut off at the timeout; each
+  notification `{ progress, total, message }` reaches `onProgress` as
+  `{ step, totalSteps, message }` (only the fields present).
 - Statics `CONNECT_TIMEOUT_MS` (30000), `CALL_TIMEOUT_MS` (120000).

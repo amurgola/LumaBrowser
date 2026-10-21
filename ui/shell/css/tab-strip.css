@@ -65,6 +65,8 @@
 .tab-strip .tab:hover::before,
 .tab-strip .tab:hover + .tab::before { display: none; }
 .tab-strip .tab.dragging { opacity: 0.45; }
+.tab-strip .tab.drop-before { box-shadow: inset 2px 0 0 var(--accent); }
+.tab-strip .tab.drop-after { box-shadow: inset -2px 0 0 var(--accent); }
 .tab-strip.dense .tab { padding: 0 var(--space-2); gap: 6px; }
 .tab-strip.dense .tab:not(.active) .tab-close { display: none; }
 .tab-strip.very-dense .tab:not(.active):not(.pinned) .tab-title { display: none; }

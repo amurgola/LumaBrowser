@@ -1,17 +1,17 @@
-const axios = require('axios');
+const HfPinnedRepo = require('../../llm-server/models/HfPinnedRepo');
 
 class HfRepoSiblings {
-  static TIMEOUT_MS = 20000;
-  static MAX_REDIRECTS = 5;
-
   static async fetch(repoId) {
-    const res = await axios.get(`https://huggingface.co/api/models/${repoId}`, {
-      timeout: HfRepoSiblings.TIMEOUT_MS,
-      maxRedirects: HfRepoSiblings.MAX_REDIRECTS,
-      headers: { Accept: 'application/json' },
-    });
-    const siblings = res.data && Array.isArray(res.data.siblings) ? res.data.siblings : [];
-    return siblings.map((s) => s && s.rfilename).filter(Boolean);
+    return (await HfRepoSiblings.fetchListing(repoId)).names;
+  }
+
+  static async fetchListing(repoId) {
+    const pinned = await HfPinnedRepo.pin(repoId);
+    return {
+      revision: pinned.describe(),
+      files: pinned.files.map((file) => ({ path: file.path, size: file.size, sha256: file.sha256 })),
+      names: pinned.files.map((file) => file.path),
+    };
   }
 }
 

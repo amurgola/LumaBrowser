@@ -23,8 +23,10 @@ export default class StreamImages {
       const i = previous.findIndex((old) => old.getAttribute('src') === img.getAttribute('src'));
       if (i !== -1) {
         const old = previous.splice(i, 1)[0];
-        img.replaceWith(old);
-        this._resumeFade(old);
+        if (old !== img) {
+          img.replaceWith(old);
+          this._resumeFade(old);
+        }
         kept.push(old);
       } else {
         this._watch(img);

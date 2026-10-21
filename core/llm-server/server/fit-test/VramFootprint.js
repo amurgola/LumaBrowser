@@ -1,12 +1,20 @@
-const NvidiaSmi = require('../../../shared/runtime/NvidiaSmi');
+const NvidiaSmiStream = require('../../../shared/runtime/NvidiaSmiStream');
 const ProcessMemory = require('../../../shared/runtime/ProcessMemory');
 const CancellableDelay = require('./CancellableDelay');
 
 class VramFootprint {
   static BASELINE_SAMPLES = 4;
   static BASELINE_GAP_MS = 350;
+  static MAX_READING_AGE_MS = 250;
 
-  constructor({ nvidiaSmi = NvidiaSmi, processMemory = ProcessMemory, sleep = CancellableDelay.sleep } = {}) {
+  static streamQueries(stream = NvidiaSmiStream.shared) {
+    return {
+      queryGpus: async () => (await stream.refresh({ maxAgeMs: VramFootprint.MAX_READING_AGE_MS })).rows,
+      queryComputeApps: () => stream.computeApps(),
+    };
+  }
+
+  constructor({ nvidiaSmi = VramFootprint.streamQueries(), processMemory = ProcessMemory, sleep = CancellableDelay.sleep } = {}) {
     this._nvidiaSmi = nvidiaSmi;
     this._processMemory = processMemory;
     this._sleep = sleep;
