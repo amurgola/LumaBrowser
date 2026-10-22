@@ -110,6 +110,8 @@ jobs:
             if [ -z "${!v:-}" ]; then unset "$v"; fi
           done
 
+          if [ "$RUNNER_OS" != "macOS" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
+
           build_cmd='${{ matrix.build_cmd }}'
 
           for attempt in 1 2 3; do
