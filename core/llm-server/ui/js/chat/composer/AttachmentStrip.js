@@ -6,6 +6,7 @@ import TabContext from './TabContext.js';
 
 export default class AttachmentStrip {
   static MAX_CONTEXT_CHIPS = 12;
+  static PREVIEW_MIME = /^image\/(png|jpeg|gif|webp|bmp)$/;
 
   constructor(ctx) {
     this._ctx = ctx;
@@ -73,15 +74,26 @@ export default class AttachmentStrip {
   static _fileChipHtml(f, i) {
     const esc = HtmlEscaper.escape;
     const sz = f.size ? ByteFormatter.bytes(f.size, { zero: '' }) : '';
+    const src = AttachmentStrip.previewSrc(f);
     const ic = f.page ? TabContext.iconHtml(f.page.favicon) : (f.dashboard ? DashboardContext.iconHtml() : (f.kind === 'image' ? ChatIcons.image : ChatIcons.doc));
     const what = f.page ? f.page.url : (f.dashboard ? AttachmentStrip._dashboardTitle(f) : (f.kind || 'file'));
-    const cls = (f.page ? ' page' : '') + (f.dashboard ? ' dashboard' : '') + (f.error ? ' err' : '');
-    return '<span class="cm-att' + cls + '" title="' + esc(f.error || what + (sz ? ' · ' + sz : '')) + '">'
-      + '<span class="cm-att-ic">' + ic + '</span>'
+    const cls = (f.page ? ' page' : '') + (f.dashboard ? ' dashboard' : '') + (f.error ? ' err' : '') + (src ? ' has-preview' : '');
+    return '<span class="cm-att' + cls + '"' + (src ? ' tabindex="0"' : ' title="' + esc(f.error || what + (sz ? ' · ' + sz : '')) + '"') + '>'
+      + (src
+        ? '<img class="cm-att-thumb" src="' + src + '" alt="">'
+          + '<span class="cm-att-preview" aria-hidden="true"><img src="' + src + '" alt=""></span>'
+        : '<span class="cm-att-ic">' + ic + '</span>')
       + '<span class="cm-att-name">' + esc(f.name || 'attachment') + '</span>'
       + (sz ? '<span class="cm-att-sz">' + esc(sz) + '</span>' : '')
       + '<button class="cm-att-x" data-att-rm="' + i + '" type="button" title="Remove">×</button>'
       + '</span>';
+  }
+
+  static previewSrc(f) {
+    if (!f || f.kind !== 'image' || f.error || typeof f.base64 !== 'string' || !f.base64) return '';
+    const mime = String(f.mime || 'image/png').toLowerCase();
+    if (!AttachmentStrip.PREVIEW_MIME.test(mime) || !/^[A-Za-z0-9+/=\s]+$/.test(f.base64)) return '';
+    return 'data:' + mime + ';base64,' + f.base64.replace(/\s+/g, '');
   }
 
   static _dashboardTitle(f) {

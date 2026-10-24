@@ -13,6 +13,7 @@ class VideoRequestPlanner {
   plan({ request, model, wantId }) {
     const md = (model && model.defaults) || {};
     const params = this._effectiveParams(request, md);
+    VideoRequestPlanner._defaultExpertSplit(params, model);
     const norm = VideoConstraints.normalizeVideoRequest(params, model && model.constraints);
     Object.assign(params, { width: norm.width, height: norm.height, videoFrames: norm.videoFrames, fps: norm.fps });
     VideoRequestPlanner._logAdjustments(wantId, norm.adjustments);
@@ -82,6 +83,13 @@ class VideoRequestPlanner {
       cacheMode: md.cacheMode || undefined,
       cacheOption: md.cacheOption || undefined,
     };
+  }
+
+  static AUTO_HIGH_NOISE_STEPS = -1;
+
+  static _defaultExpertSplit(params, model) {
+    const twoExperts = !!(model && model.files && model.files.highNoise);
+    if (twoExperts && !(Number(params.highNoiseSteps) > 0)) params.highNoiseSteps = VideoRequestPlanner.AUTO_HIGH_NOISE_STEPS;
   }
 
   static _logAdjustments(wantId, adjustments) {

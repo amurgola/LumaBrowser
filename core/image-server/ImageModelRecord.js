@@ -37,6 +37,8 @@ class ImageModelRecord {
         ImageModelRecord._pick(sources, 'compatibleRuntimes') || ImageModelRecord.DEFAULT_RUNTIMES
       ),
       launchArgs: ImageModelRecord._pick(sources, 'launchArgs') || [],
+      preferredRuntimes: ImageModelRecord._pick(sources, 'preferredRuntimes') || [],
+      sageAttention: ImageModelRecord._pick(sources, 'sageAttention') === true,
       licenseNote: ImageModelRecord._pick(sources, 'licenseNote'),
       fileUpdates: ImageModelRecord._fileUpdates({ id, family, files }, catalogList),
       manifest: manifest || null,

@@ -3,6 +3,7 @@ const DebugLog = require('../../core/DebugLog');
 const ChromeIdentity = require('../../core/browser/ChromeIdentity');
 const UnhandledRejectionTap = require('./UnhandledRejectionTap');
 const ExtensionLoadWarnings = require('../../core/chrome-extensions/ExtensionLoadWarnings');
+const LaunchUrls = require('./LaunchUrls');
 
 class ProcessSetup {
   static SWITCHES = [['enable-features', 'UseSkiaRenderer'], ['force-color-profile', 'srgb'], ['disable-features', 'CalculateNativeWinOcclusion']];
@@ -39,7 +40,13 @@ class ProcessSetup {
       app.exit(0);
       return false;
     }
-    app.on('second-instance', () => this._focusExistingWindow());
+    const launchUrls = new LaunchUrls({ getTabViewManager: () => this._ctx.tabViewManager, log: this._log });
+    this._ctx.launchUrls = launchUrls;
+    launchUrls.open(LaunchUrls.fromArgv(this._ctx.argv));
+    app.on('second-instance', (_event, argv) => {
+      this._focusExistingWindow();
+      launchUrls.open(LaunchUrls.fromArgv(argv));
+    });
     return true;
   }
 

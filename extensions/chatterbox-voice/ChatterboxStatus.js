@@ -17,14 +17,20 @@ class ChatterboxStatus {
 
   async execute() {
     const installed = AudioCppInstallation.findInstalledRuntime(this._runtimesDir, this._settings.preferredRuntimeId);
+    const voices = this._engine.listVoices();
+    const models = this._modelRows(installed ? installed.release : null);
     return {
       runtimes: this._runtimeRows(),
       sttReady: await this._sttReady(),
-      activeRuntime: installed ? { id: installed.id, backend: installed.backend } : null,
+      activeRuntime: installed ? ChatterboxStatus._runtimeSummary(installed) : null,
       preferredRuntimeId: this._settings.preferredRuntimeId,
-      models: this._modelRows(),
+      models,
       voices: this._store.list().map((v) => ({ ...v, languageName: ChatterboxModels.LANGUAGE_NAMES[v.language] || v.language })),
-      turboAvailable: this._engine.listVoices().some((v) => v.id === ChatterboxEngine.TURBO_VOICE_ID),
+      turboAvailable: voices.some((v) => v.id === ChatterboxEngine.TURBO_VOICE_ID),
+      kitten: this._kittenView(voices, models),
+      cloneModelId: this._engine.cloneModelId(),
+      cloneModels: models.filter((m) => m.installed && m.runtimeSupported && m.tasks.includes('clone')).map((m) => ({ id: m.id, name: m.name })),
+      attributions: models.filter((m) => m.installed && m.attribution).map((m) => m.attribution),
       activeVoiceId: this._activeVoiceId(),
       languages: Object.entries(ChatterboxModels.LANGUAGE_NAMES).map(([code, name]) => ({ code, name })),
       limits: { minRefSec: VoiceStore.MIN_REF_SEC, maxRefSec: VoiceStore.MAX_REF_SEC },
@@ -34,6 +40,11 @@ class ChatterboxStatus {
         model: this._jobs.model ? { ...this._jobs.model.state } : null,
       },
     };
+  }
+
+  static _runtimeSummary(installed) {
+    const release = installed.release || null;
+    return { id: installed.id, backend: installed.backend, release: release ? { tag: release.tag || null, publishedAt: release.publishedAt || null } : null };
   }
 
   _runtimeRows() {
@@ -52,14 +63,29 @@ class ChatterboxStatus {
     }));
   }
 
-  _modelRows() {
+  _modelRows(release) {
     return ChatterboxModels.getModels().map((m) => {
       const bytes = ChatterboxStatus._sizeOnDisk(path.join(this._modelsDir, m.file));
+      const runtimeSupported = ChatterboxModels.runtimeSupports(m, release);
       return {
         id: m.id, name: m.name, description: m.description, sizeBytes: m.sizeBytes, license: m.license,
-        task: m.task, languages: m.languages, installed: bytes > 0, bytesOnDisk: bytes,
+        licenseNote: m.licenseNote || null, attribution: m.attribution || null,
+        tasks: m.tasks, languages: m.languages, installed: bytes > 0, bytesOnDisk: bytes,
+        runtimeSupported, runtimeNote: runtimeSupported ? null : ChatterboxModels.runtimeNote(m),
       };
     });
+  }
+
+  _kittenView(voices, models) {
+    const row = models.find((m) => m.id === ChatterboxModels.KITTEN_ID);
+    return {
+      available: voices.some((v) => v.id === ChatterboxEngine.KITTEN_VOICE_ID),
+      installed: !!row && row.installed,
+      runtimeSupported: !!row && row.runtimeSupported,
+      preset: this._engine.kittenPreset(),
+      groups: ChatterboxModels.KITTEN_VOICE_GROUPS,
+      attribution: row ? row.attribution : null,
+    };
   }
 
   async _sttReady() {

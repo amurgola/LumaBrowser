@@ -6,6 +6,8 @@ const ImageSlotRoles = require('./ImageSlotRoles');
 const ImageSlotPlacement = require('./ImageSlotPlacement');
 const ImageLaunchInputs = require('./ImageLaunchInputs');
 const ImageLaunchLog = require('./ImageLaunchLog');
+const PreferredImageRuntime = require('./PreferredImageRuntime');
+const SageAttentionPolicy = require('./SageAttentionPolicy');
 const VaeTilingPolicy = require('./VaeTilingPolicy');
 const UserGpuPin = require('./UserGpuPin');
 
@@ -24,6 +26,7 @@ class ImageSlotLaunch {
       || await this._resolveModel()
       || ImageLaunchInputs.apiKeyRefusal(this._service.getApiKeyForLaunch());
     if (refusal) return { success: false, error: refusal };
+    this._preferRuntime();
     await this._allocatePorts();
     await this._evictSwapSibling();
     await this._placeOnGpus();
@@ -50,6 +53,7 @@ class ImageSlotLaunch {
       manualBinaries: this._service.getAllManualRuntimeBinaries(),
     });
     this._runtime = found.runtime;
+    this._runtimes = found.runtimes || [];
     return found.error || null;
   }
 
@@ -58,6 +62,12 @@ class ImageSlotLaunch {
     this._model = found.model;
     this._profile = found.model ? ImageSlotRoles.profile(this._role, found.model) : null;
     return found.error || null;
+  }
+
+  _preferRuntime() {
+    const picked = PreferredImageRuntime.pick({ model: this._model, configured: this._runtime, runtimes: this._runtimes });
+    this._runtime = picked.runtime;
+    this._runtimeNote = picked.note;
   }
 
   async _allocatePorts() {
@@ -88,6 +98,7 @@ class ImageSlotLaunch {
     const { cudaDevice, offloadToCpu, autoFit } = this._placement;
     this._vaeTiling = VaeTilingPolicy.decide({ model: this._model, profile: this._profile, offloadToCpu, cudaDevice, diagnostics: this._diag });
     this._clip = this._decideTextEncoders();
+    this._sage = await this._decideSageAttention(cudaDevice);
     const launch = this._deps.launchPlanner.plan({
       model: this._model,
       runtime: this._runtime,
@@ -100,11 +111,23 @@ class ImageSlotLaunch {
         loraDir: ImageSlotLaunch.existingLoraDir(this._modelsDir),
         autoFit,
         clipOnCpu: this._clip.clipOnCpu,
+        sageAttention: this._sage.sageAttention,
         autoFitForm: autoFit ? await this._deps.capabilities.autoFitFlagForm(this._runtime.binaryPath) : undefined,
       },
     });
     launch.cudaDevice = cudaDevice;
     return launch;
+  }
+
+  _decideSageAttention(cudaDevice) {
+    if (this._cpuOnly) return { sageAttention: false, note: null };
+    return SageAttentionPolicy.decide({
+      model: this._model,
+      runtime: this._runtime,
+      cudaDevice,
+      diagnostics: this._diag,
+      supportsFlag: (flag) => this._deps.capabilities.supportsFlag(this._runtime.binaryPath, flag),
+    });
   }
 
   _decideTextEncoders() {
@@ -129,6 +152,8 @@ class ImageSlotLaunch {
       vaeTiling: this._vaeTiling,
       cpuOnly: this._cpuOnly,
       clipNote: this._clip.note,
+      runtimeNote: this._runtimeNote,
+      sageNote: this._sage.note,
     }));
   }
 

@@ -6,9 +6,10 @@ Lists the GPUs a llama.cpp launch can budget against.
 
 ## Methods
 
-- `GpuInventory.fromDiagnostics(diagnostics)` returns `[{ name, totalBytes, freeBytes? }]`:
-  CUDA cards (`memoryTotalMB`, live `memoryFreeMB` or null, name default
-  `NVIDIA GPU`, zero-VRAM cards dropped); only when there are none, registry
+- `GpuInventory.fromDiagnostics(diagnostics)` returns `[{ name, totalBytes, freeBytes?, occupiedBytes? }]`:
+  CUDA cards (`memoryTotalMB`, `memoryFreeMB` or null, name default
+  `NVIDIA GPU`, zero-VRAM cards dropped; `occupiedBytes = total - free` only when
+  the snapshot carries `_liveMemoryAt`, i.e. was read live just before planning); only when there are none, registry
   adapters except Microsoft's Basic Render Driver (`displayName`, `deviceString`,
   `vendor` or `GPU`).
 - `GpuInventory.remoteDevices(rpcServers)` returns one `{ name, totalBytes, remote: true }`

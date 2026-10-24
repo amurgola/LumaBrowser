@@ -19,8 +19,7 @@ class VramBudget {
   }
 
   static _available(budget, overrides) {
-    const reserve = budget.perGpu.length * GpuOverhead.PER_CARD_RESERVE;
-    let available = Math.max(0, budget.totalVram - reserve);
+    let available = budget.perGpu.reduce((sum, g) => sum + GpuOverhead.cardRoom(g), 0);
     const cap = Number(overrides.vramCapBytes);
     if (Number.isFinite(cap) && cap > 0) available = Math.min(available, cap);
     return available;
@@ -29,7 +28,7 @@ class VramBudget {
   static _resolveLargestCard(budget) {
     budget.largestGpuIndex = GpuInventory.largestIndex(budget.perGpu);
     budget.largestGpuUsableBytes = budget.largestGpuIndex >= 0
-      ? Math.max(0, budget.perGpu[budget.largestGpuIndex].totalBytes - GpuOverhead.PER_CARD_RESERVE)
+      ? GpuOverhead.cardRoom(budget.perGpu[budget.largestGpuIndex])
       : 0;
   }
 }

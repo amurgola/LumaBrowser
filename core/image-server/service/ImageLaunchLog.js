@@ -1,9 +1,9 @@
 class ImageLaunchLog {
-  static line({ role, modelId, placement, profile, vaeTiling, cpuOnly, clipNote }) {
-    return `[image-server] ${role} model "${modelId}"${ImageLaunchLog._suffixes({ placement, profile, vaeTiling, cpuOnly, clipNote }).join('')}`;
+  static line({ role, modelId, placement, profile, vaeTiling, cpuOnly, clipNote, runtimeNote, sageNote }) {
+    return `[image-server] ${role} model "${modelId}"${ImageLaunchLog._suffixes({ placement, profile, vaeTiling, cpuOnly, clipNote, runtimeNote, sageNote }).join('')}`;
   }
 
-  static _suffixes({ placement, profile, vaeTiling, cpuOnly, clipNote }) {
+  static _suffixes({ placement, profile, vaeTiling, cpuOnly, clipNote, runtimeNote, sageNote }) {
     const { cudaDevice, offloadToCpu, autoFit } = placement;
     const tiling = `VAE tiling ${vaeTiling ? 'on' : 'OFF'}`;
     return [
@@ -14,6 +14,8 @@ class ImageLaunchLog {
       offloadToCpu ? ' (CPU weight-offload on)' : '',
       cpuOnly ? ' (CPU runtime, no GPU placement)' : '',
       clipNote ? ` (${clipNote})` : '',
+      runtimeNote ? ` (${runtimeNote})` : '',
+      sageNote ? ` (${sageNote})` : '',
     ];
   }
 }

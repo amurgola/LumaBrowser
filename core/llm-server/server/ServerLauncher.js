@@ -7,6 +7,7 @@ const LlmRuntimeDetector = require('../runtimes/LlmRuntimeDetector');
 const LlmModelsScanner = require('../LlmModelsScanner');
 const SystemDiagnostics = require('../SystemDiagnostics');
 const VramCoordinator = require('../../shared/runtime/VramCoordinator');
+const CudaDeviceProbe = require('../../shared/runtime/CudaDeviceProbe');
 const HotswapCoordinator = require('../../shared/runtime/HotswapCoordinator');
 const LaunchPreflight = require('./launcher/LaunchPreflight');
 const PeerGpuBorrow = require('./launcher/PeerGpuBorrow');
@@ -31,13 +32,14 @@ class ServerLauncher {
     rpcPeers = RpcPeers,
     findFreePort = () => LlmRuntimeServer.findFreePort(),
     freeMemory = () => os.freemem(),
+    liveMemory = (diag) => CudaDeviceProbe.withFreshLiveMemory(diag),
     lending = () => global.__lumaRpcLending,
     log = console,
   } = {}) {
     const finalizer = new LaunchFinalizer({ vram });
     const placement = new LlmPlacement({ vram });
     this._parts = {
-      planFor, catalog, hotswap, findFreePort, freeMemory, lending, log,
+      planFor, catalog, hotswap, findFreePort, freeMemory, liveMemory, lending, log,
       preflight: new LaunchPreflight({ diagnostics, detector, scanner, catalog }),
       borrow: new PeerGpuBorrow({ rpcPeers, log }),
       placement,

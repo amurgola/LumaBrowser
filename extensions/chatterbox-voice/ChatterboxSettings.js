@@ -7,7 +7,7 @@ class ChatterboxSettings {
   static DEFAULT_IDLE_MS = 5 * 60 * 1000;
 
   constructor() {
-    this.values = { preferredRuntimeId: null, idleMs: ChatterboxSettings.DEFAULT_IDLE_MS };
+    this.values = { preferredRuntimeId: null, idleMs: ChatterboxSettings.DEFAULT_IDLE_MS, kittenPreset: null, cloneModelId: null };
   }
 
   static appBaseDir() {
@@ -28,6 +28,24 @@ class ChatterboxSettings {
 
   get idleMs() {
     return this.values.idleMs || ChatterboxSettings.DEFAULT_IDLE_MS;
+  }
+
+  get kittenPreset() {
+    return this.values.kittenPreset || null;
+  }
+
+  get cloneModelId() {
+    return this.values.cloneModelId || null;
+  }
+
+  setKittenPreset(name) {
+    this.values.kittenPreset = name ? String(name) : null;
+    this._save();
+  }
+
+  setCloneModel(id) {
+    this.values.cloneModelId = id ? String(id) : null;
+    this._save();
   }
 
   load() {

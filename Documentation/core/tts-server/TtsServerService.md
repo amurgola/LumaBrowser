@@ -32,7 +32,12 @@ extension engine ([TtsEngineRegistry](TtsEngineRegistry.md)) to that engine.
   `code: 'NO_TTS_MODEL'`, or `code: 'TTS_RUNTIME_MISSING', installable: true`.
 - `synthesize({ text, sid?, speed? }, onChunk)` returns `{ id, done }` at once
   (`id` is `tts-<n>`). Chunks are `{ seq, sampleRate, pcm }`; `done` resolves
-  `{ canceled }`. `sid` and `speed` default to the settings.
+  `{ canceled }`. `sid` and `speed` default to the settings; an unset `sid`
+  is the loaded catalog voice's `defaultSid` (`getSid(modelId)`), and
+  `getView().sid` reports the same effective value for the default voice.
+  The worker receives `speed` multiplied by the catalog voice's `speedScale`
+  (KittenTTS Nano 1.25, everything else 1), so a user speed of 1.0 stays
+  conversational on every voice.
 - `cancel(id)` cancels an extension request through its engine, or tells the
   worker and resolves the request as `{ canceled: true }`.
 - `stop()` stops the worker and calls `stop()` on every extension engine.

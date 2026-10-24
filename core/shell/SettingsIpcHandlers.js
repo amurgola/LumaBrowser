@@ -19,11 +19,11 @@ class SettingsIpcHandlers {
     filters: [{ name: 'JSON', extensions: ['json'] }],
   };
 
-  constructor({ db, restGateway, mcpAggregator, apiSecurity, mainWindowGetter, rootDir, onSetupFinalized = null, cliShim = null, idePlugin = null, vscodeExtension = null }) {
+  constructor({ db, restGateway, mcpAggregator, apiSecurity, mainWindowGetter, rootDir, onSetupFinalized = null, cliShim = null, idePlugin = null, vscodeExtension = null, windhawkMods = null }) {
     this._db = db;
     this._mainWindow = mainWindowGetter || (() => null);
     this._rootDir = rootDir;
-    this._integrations = { cliShim, idePlugin, vscodeExtension };
+    this._integrations = { cliShim, idePlugin, vscodeExtension, windhawkMods };
     this._api = new ApiServerSettings({ db, restGateway });
     this._preferences = new AppPreferences(db);
     this._startup = new StartupSettings({ db, app });
@@ -47,7 +47,7 @@ class SettingsIpcHandlers {
   }
 
   _registerIntegrations() {
-    const { cliShim, idePlugin, vscodeExtension } = this._integrations;
+    const { cliShim, idePlugin, vscodeExtension, windhawkMods } = this._integrations;
     const M = OptionalServiceCall.MESSAGES;
     const ids = OptionalServiceCall.ideIds;
     ipcMain.handle('core.settings.cliShim.status', () => OptionalServiceCall.run(cliShim, M.cliShim, (s) => s.status()));
@@ -59,6 +59,9 @@ class SettingsIpcHandlers {
     ipcMain.handle('core.settings.vscodeExtension.status', () => OptionalServiceCall.run(vscodeExtension, M.vscodeExtension, (s) => s.status()));
     ipcMain.handle('core.settings.vscodeExtension.install', (_e, list) => OptionalServiceCall.run(vscodeExtension, M.vscodeExtension, (s) => s.install(ids(list))));
     ipcMain.handle('core.settings.vscodeExtension.uninstall', (_e, list) => OptionalServiceCall.run(vscodeExtension, M.vscodeExtension, (s) => s.uninstall(ids(list))));
+    ipcMain.handle('core.settings.windhawkMods.status', () => OptionalServiceCall.run(windhawkMods, M.windhawkMods, (s) => s.status()));
+    ipcMain.handle('core.settings.windhawkMods.install', (_e, list) => OptionalServiceCall.run(windhawkMods, M.windhawkMods, (s) => s.install(ids(list))));
+    ipcMain.handle('core.settings.windhawkMods.uninstall', (_e, list) => OptionalServiceCall.run(windhawkMods, M.windhawkMods, (s) => s.uninstall(ids(list))));
   }
 
   _registerApiServer() {

@@ -12,11 +12,15 @@ export default class MoreSettingsChips {
     if (prefs.approvalPolicy && prefs.approvalPolicy !== 'auto') chips.push(prefs.approvalPolicy === 'ask' ? 'Always ask' : 'Never ask');
     if (defaults.tensorSplit) chips.push('Tensor split');
     if (defaults.cacheReuse) chips.push('Context retention');
+    if (defaults.noMoeGpuCache) chips.push('MoE GPU cache off');
     if (defaults.usePeerGpus) chips.push('Peer GPUs');
     if (defaults.pinModelRam && prefs.ramPinSupported()) chips.push('RAM pin');
     if (defaults.groupRouter) chips.push('Tool router');
     if (prefs.autoUnloadMs > 0) chips.push('Auto-unload');
     if (prefs.unloadOnVramPressure === true) chips.push('Unload on VRAM pressure');
+    if (prefs.gpuHeadroomBytes != null && prefs.gpuHeadroomBytes !== DefaultsOptions.GIB) {
+      chips.push(`${Math.round((prefs.gpuHeadroomBytes / DefaultsOptions.GIB) * 10) / 10} GB GPU headroom`);
+    }
     if ((defaults.launchFlags || '').trim()) chips.push('Extra flags');
     return chips;
   }

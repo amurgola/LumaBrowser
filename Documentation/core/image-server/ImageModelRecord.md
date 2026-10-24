@@ -10,7 +10,11 @@ with its curated catalog row. Used by [ImageModelsScanner](ImageModelsScanner.md
 - `ImageModelRecord.build({ id, dir, manifest, files, catalogEntry, catalogList })`
   returns `{ id, name, label, dir, family, kind, supportsI2V, supportsEdit,
   files, minVramBytes, defaults, constraints, protocol, compatibleRuntimes,
-  launchArgs, licenseNote, fileUpdates, manifest }`:
+  launchArgs, preferredRuntimes, sageAttention, licenseNote, fileUpdates, manifest }`:
+  - `preferredRuntimes` (catalog, else manifest, else `[]`) and `sageAttention`
+    (`true` only when the catalog or manifest says exactly `true`) are launch
+    preferences read by [PreferredImageRuntime](service/PreferredImageRuntime.md)
+    and [SageAttentionPolicy](service/SageAttentionPolicy.md).
   - `label`, `family`, `constraints`, `protocol`, `compatibleRuntimes`,
     `launchArgs`, `licenseNote`: catalog value, else manifest value, else
     `id` / `null` / `null` / `sd-cpp-http` / `DEFAULT_RUNTIMES` / `[]` / `null`.

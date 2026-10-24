@@ -48,7 +48,9 @@ The service needs `getDefaults`, `settingsDb`, `runtimeServer`
 6. MLX and extension runtimes (`PlanFor#isCustomLaunch`) plan and start here.
 7. Wait up to 30 s for GPUs lent to a peer (`lending.waitUntilFree(30000)`).
 8. [PeerGpuBorrow](launcher/PeerGpuBorrow.md), then join the hotswap reclaim and
-   log the preflight timings.
+   log the preflight timings, then read the cards' free VRAM live
+   (`liveMemory`, default `CudaDeviceProbe.withFreshLiveMemory`) so the budget nets
+   out what already occupies each card before the GPU headroom.
 9. [LlmPlacement](launcher/LlmPlacement.md): probe plan, VRAM reservation, real plan
    against the reserved cards. A plan failure returns borrowed GPUs.
 10. Expert offload beats borrowing: a plan with `cpuMoe` after a borrow returns the

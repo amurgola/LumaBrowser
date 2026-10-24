@@ -17,6 +17,10 @@ The LLM server's persisted feature settings. Extends [KeyedSettings](KeyedSettin
   `setAutoUnloadMs(ms)` floors, clamps at 0, deletes the key for 0, returns the value.
 - `getUnloadOnVramPressure()` true only for a stored `true`;
   `setUnloadOnVramPressure(value)` stores `true` or deletes; returns the boolean.
+- `getGpuHeadroomBytes()`, `setGpuHeadroomBytes(bytes)` -> the stored value: the
+  per-card [GpuHeadroom](../../shared/runtime/GpuHeadroom.md), loaded into the
+  process at construction so the image and music placements see it from boot.
+  Takes effect at the next model load.
 - Statics: `KEYS` (`core.llmServer.enabled`, `.openTabOnLoad`, `.modelsDir`,
   `.defaults.autoUnloadMs`, `core.llm.unloadOnVramPressure`; never renamed),
   `DEFAULT_AUTO_UNLOAD_MS` (15 min, the value the toggle stores).

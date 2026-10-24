@@ -1,4 +1,5 @@
 const path = require('path');
+const ImageLoraCatalog = require('../models/ImageLoraCatalog');
 const ImageModelCatalog = require('../models/ImageModelCatalog');
 const ImageDownloadSlot = require('./ImageDownloadSlot');
 const ImageManifestBuilder = require('./ImageManifestBuilder');
@@ -8,10 +9,13 @@ const ImageQuantResolver = require('./ImageQuantResolver');
 class CatalogModelInstaller {
   static BUSY = 'An image model download is already in progress.';
 
-  constructor({ imageServerService, slot, catalog = new ImageModelCatalog() }) {
+  constructor({ imageServerService, slot, catalog = new ImageModelCatalog(), loras = null, attacher = null, loraCatalog = new ImageLoraCatalog() }) {
     this._svc = imageServerService;
     this._slot = slot;
     this._catalog = catalog;
+    this._loras = loras;
+    this._attacher = attacher;
+    this._loraCatalog = loraCatalog;
   }
 
   install(args, send) {
@@ -26,7 +30,7 @@ class CatalogModelInstaller {
     if (resolved.error) return { success: false, error: resolved.error };
     const dir = path.join(this._svc.getModelsDirConfig().effectivePath, entry.id);
     const files = CatalogModelInstaller.downloadList(resolved.files, dir);
-    return this._slot.run({
+    const result = await this._slot.run({
       files,
       dir,
       send,
@@ -34,10 +38,39 @@ class CatalogModelInstaller {
       start: { id, dir, files: ImageDownloadSlot.startFiles(files) },
       onDownloaded: () => {
         ImageModelManifest.writeQuietly(dir, ImageManifestBuilder.forCatalog(entry, resolved.files));
-        send('done', { id, dir });
         return { success: true, id, dir };
       },
     });
+    if (!(result && result.success)) return result;
+    await this._attachRecommendedLora(entry, send);
+    send('done', { id, dir });
+    return result;
+  }
+
+  async _attachRecommendedLora(entry, send) {
+    const loraId = entry.recommendedLora;
+    if (!loraId || !this._loras || !this._attacher) return;
+    try {
+      const got = await this._loras.download({ id: loraId }, CatalogModelInstaller._relay(send, entry));
+      if (!(got && got.success)) throw new Error((got && got.error) || 'download failed');
+      const curated = this._loraCatalog.getById(loraId);
+      await this._attacher.attach({
+        id: entry.id,
+        loras: [{ name: got.name }],
+        distilledPreset: true,
+        preset: (curated && curated.preset) || null,
+      });
+    } catch (err) {
+      console.warn(`[image-server] "${entry.id}" installed without its recommended LoRA ${loraId}: ${err.message}`);
+    }
+  }
+
+  static _relay(send, entry) {
+    return (type, payload) => {
+      if (type === 'done' || type === 'error') return;
+      if (type === 'start') send('start', { ...(payload || {}), id: entry.id });
+      else send(type, payload);
+    };
   }
 
   static downloadList(files, dir) {

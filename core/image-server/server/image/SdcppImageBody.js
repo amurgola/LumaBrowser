@@ -8,6 +8,8 @@ class SdcppImageBody {
   static DEFAULT_CFG = 7.0;
   static DEFAULT_STRENGTH = 0.75;
 
+  static PREVIEW = Object.freeze({ mode: 'proj', interval: 1 });
+
   static build(request) {
     const body = SdcppImageBody._base(request);
     SdcppImageBody._addOptional(body, request);
@@ -25,6 +27,8 @@ class SdcppImageBody {
       seed: typeof seed === 'number' && seed >= 0 ? seed : -1,
       batch_count: 1,
       output_format: outputFormat || 'png',
+      preview: SdcppImageBody.PREVIEW.mode,
+      preview_interval: SdcppImageBody.PREVIEW.interval,
       sample_params: {
         sample_steps: steps || SdcppImageBody.DEFAULT_STEPS,
         sample_method: sampler || SdcppImageBody.DEFAULT_SAMPLER,

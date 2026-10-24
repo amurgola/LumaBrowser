@@ -109,6 +109,8 @@ class PlanSummary {
         gpuExpertLayers: moe.gpuExpertLayers,
         tensorSplit: moe.tensorSplitRatio,
       } : null,
+      moeGpuCacheMib: moe.gpuCache && moe.gpuCache.enabled ? moe.gpuCache.mib : null,
+      moeGpuCacheOffReason: moe.cpuMoeEnabled && moe.gpuCache && !moe.gpuCache.enabled ? moe.gpuCache.reason : null,
     };
   }
 

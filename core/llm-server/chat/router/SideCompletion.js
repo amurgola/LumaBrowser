@@ -31,12 +31,12 @@ class SideCompletion {
     });
   }
 
-  completeStream({ messages, temperature = 0.9, modelRef, timeoutMs = 300000, noThink = false } = {}, ext = {}) {
+  completeStream({ messages, temperature = 0.9, modelRef, timeoutMs = 300000, noThink = false, images = [] } = {}, ext = {}) {
     if (!Array.isArray(messages) || messages.length === 0) return SideCompletion._failed(ext, 'messages is required');
     const ref = this._models.resolveRef(modelRef);
     if (!ref) return SideCompletion._failed(ext, 'No model configured.');
     const off = noThink ? ThinkingOff.resolve(ref, messages) : null;
-    return this._stream(ref, off ? off.messages : messages, temperature, off ? off.extra : null, timeoutMs, ext);
+    return this._stream(ref, off ? off.messages : messages, temperature, off ? off.extra : null, timeoutMs, ext, MessageImages.imagesOf(images));
   }
 
   async _withRetries(request) {
@@ -53,7 +53,7 @@ class SideCompletion {
     return { error: (lastErr && lastErr.message) || 'complete failed' };
   }
 
-  _stream(ref, messages, temperature, extra, timeoutMs, ext) {
+  _stream(ref, messages, temperature, extra, timeoutMs, ext, images = []) {
     const s = { text: '', done: false, aborted: false, handle: null, timer: null };
     const stop = () => { try { if (s.handle && s.handle.abort) s.handle.abort(); } catch (_) {} };
     const finishDone = () => {
@@ -67,16 +67,16 @@ class SideCompletion {
       SideCompletion._call(ext.onError, e instanceof Error ? e : new Error(String(e)));
     };
     s.timer = setTimeout(() => { stop(); finishErr(new Error('complete timeout')); }, timeoutMs);
-    this._startStream(ref, messages, temperature, extra, SideCompletion._streamHooks(s, ext, finishDone, finishErr)).then(
+    this._startStream(ref, messages, temperature, extra, SideCompletion._streamHooks(s, ext, finishDone, finishErr), images).then(
       (h) => { s.handle = h; if (s.aborted || s.done) stop(); },
       (e) => finishErr(e),
     );
     return { abort: () => { s.aborted = true; stop(); finishDone(); } };
   }
 
-  _startStream(ref, messages, temperature, extra, hooks) {
+  _startStream(ref, messages, temperature, extra, hooks, images = []) {
     try {
-      return Promise.resolve(this._dispatch(ref, messages, temperature, hooks, [], null, extra));
+      return Promise.resolve(this._dispatch(ref, messages, temperature, hooks, images, null, extra));
     } catch (err) {
       return Promise.reject(err);
     }

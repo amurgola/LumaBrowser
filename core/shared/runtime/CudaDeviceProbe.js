@@ -5,6 +5,7 @@ class CudaDeviceProbe {
 
   static _gpuCount = null;
   static READY_MS = 3000;
+  static FRESH_READ_TIMEOUT_MS = 2000;
   static stream = null;
 
   static whenReady(timeoutMs = CudaDeviceProbe.READY_MS) {
@@ -37,6 +38,19 @@ class CudaDeviceProbe {
     } catch (_) {
       return diagnostics;
     }
+  }
+
+  static async withFreshLiveMemory(diagnostics, { maxAgeMs = 0, timeoutMs = CudaDeviceProbe.FRESH_READ_TIMEOUT_MS } = {}) {
+    try {
+      const stream = CudaDeviceProbe._stream();
+      if (typeof stream.refresh === 'function' && CudaDeviceProbe._running(stream)) {
+        let timer = null;
+        const timeout = new Promise((resolve) => { timer = setTimeout(resolve, timeoutMs); });
+        await Promise.race([Promise.resolve(stream.refresh({ maxAgeMs })).catch(() => {}), timeout]);
+        clearTimeout(timer);
+      }
+    } catch (_) {}
+    return CudaDeviceProbe.withLiveMemory(diagnostics);
   }
 
   static readComputeApps() {

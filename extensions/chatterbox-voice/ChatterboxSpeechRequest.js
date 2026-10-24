@@ -1,24 +1,30 @@
 const http = require('http');
 const CoreRequire = require('./CoreRequire');
+const ChatterboxModels = require('./ChatterboxModels');
 const PcmChunker = require('./PcmChunker');
 
 const WavCodec = CoreRequire.load('shared/audio/WavCodec');
 
 class ChatterboxSpeechRequest {
   static TURBO_VOICE_ID = 'turbo';
+  static KITTEN_VOICE_ID = 'kitten';
   static REQUEST_TIMEOUT_MS = 120 * 1000;
 
-  static buildBody({ voiceId, text, speed }, store) {
+  static buildBody({ voiceId, text, speed }, store, { kittenPreset = null, cloneModelId = 'chatterbox' } = {}) {
     const body = { input: String(text || '').trim(), response_format: 'wav' };
-    if (String(voiceId) === ChatterboxSpeechRequest.TURBO_VOICE_ID) {
+    const id = String(voiceId);
+    if (id === ChatterboxSpeechRequest.TURBO_VOICE_ID) {
       body.model = 'chatterbox-turbo';
+    } else if (id === ChatterboxSpeechRequest.KITTEN_VOICE_ID) {
+      body.model = ChatterboxModels.KITTEN_ID;
+      body.voice = ChatterboxModels.presetFor(ChatterboxModels.getModelById(ChatterboxModels.KITTEN_ID), kittenPreset);
     } else {
       const v = store.get(voiceId);
       if (!v) return { error: Object.assign(new Error('Cloned voice not found.'), { code: 'NO_TTS_MODEL' }) };
-      ChatterboxSpeechRequest._addClone(body, v, store);
+      const error = ChatterboxSpeechRequest._addClone(body, v, store, cloneModelId || 'chatterbox');
+      if (error) return { error };
     }
-    const s = Number(speed);
-    if (Number.isFinite(s) && s > 0 && Math.abs(s - 1) > 0.01) body.speed = Math.min(2, Math.max(0.5, s));
+    ChatterboxSpeechRequest._addSpeed(body, speed);
     return { body };
   }
 
@@ -40,11 +46,23 @@ class ChatterboxSpeechRequest {
     });
   }
 
-  static _addClone(body, v, store) {
-    body.model = 'chatterbox';
+  static _addClone(body, v, store, modelId) {
+    body.model = modelId;
     body.voice_ref = { type: 'path', path: store.refPath(v.id).replace(/\\/g, '/') };
     if (v.referenceText) body.reference_text = v.referenceText;
+    if (modelId === ChatterboxModels.KITTEN_ID) {
+      if (v.referenceText) return null;
+      return Object.assign(new Error(`KittenTTS 2 needs the transcript of the reference clip for "${v.name}": open the voice, fill in "What the clip says" and save.`), { code: 'NO_REFERENCE_TEXT' });
+    }
     if (v.language && v.language !== 'en') body.language = v.language;
+    return null;
+  }
+
+  static _addSpeed(body, speed) {
+    const s = Number(speed);
+    if (!Number.isFinite(s) || s <= 0 || Math.abs(s - 1) <= 0.01) return;
+    if (!ChatterboxModels.acceptsSpeed(body.model)) return;
+    body.speed = Math.min(2, Math.max(0.5, s));
   }
 
   static _readReply(res, { onChunk, untrack, resolve, reject }) {

@@ -7,7 +7,13 @@ class RuntimeFlags {
 
   static FIT_OFF_MIN_BUILD = 10621;
 
+  static MOE_CACHE_MIN_BUILD = 11480;
+
+  static MOE_CACHE_MULTI_GPU_MIN_BUILD = 11507;
+
   static LUMA_RUNTIME_ID = 'llama-cpp-luma';
+
+  static LUMA_MOE_CACHE_MIN_TAG = 4;
 
   static TENSOR_SPLIT_RUNTIME_IDS = ['llama-cpp-cuda12', 'llama-cpp-cuda13', 'llama-cpp-luma'];
 
@@ -60,6 +66,18 @@ class RuntimeFlags {
     this.fitOff = this.fit && (this.isLuma || build >= RuntimeFlags.FIT_OFF_MIN_BUILD);
     this.tensorSplitRuntime = RuntimeFlags.TENSOR_SPLIT_RUNTIME_IDS.includes(this.id);
     this.tensorSplitBuild = this.isLuma || build >= RuntimeFlags.TENSOR_SPLIT_MIN_BUILD;
+    this._resolveMoeCacheGate(build);
+  }
+
+  _resolveMoeCacheGate(build) {
+    const accepted = this.accepts('--moe-cache-mib');
+    if (this.isLuma) {
+      this.moeCache = accepted && Number(this.build) >= RuntimeFlags.LUMA_MOE_CACHE_MIN_TAG;
+      this.moeCacheMultiGpu = this.moeCache;
+      return;
+    }
+    this.moeCache = accepted && build >= RuntimeFlags.MOE_CACHE_MIN_BUILD;
+    this.moeCacheMultiGpu = accepted && build >= RuntimeFlags.MOE_CACHE_MULTI_GPU_MIN_BUILD;
   }
 }
 

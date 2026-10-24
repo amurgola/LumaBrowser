@@ -15,7 +15,10 @@ Process configuration that precedes everything else.
      live there too); `ctx.dataDir` is it, else `userData`;
   2. the crash journal, before the lock so even that exit is recorded;
   3. the single-instance lock; `second-instance` restores, shows and focuses the
-     running window;
+     running window; web links on the command line open as tabs through
+     [LaunchUrls](LaunchUrls.md) (`ctx.launchUrls`): this launch's own argv is
+     queued for the first load, a second instance's argv is opened when it
+     arrives;
   4. dev only: the console ring buffer behind the chat's "Copy Logs";
   5. [UnhandledRejectionTap](UnhandledRejectionTap.md);
   6. `app.userAgentFallback = ChromeIdentity.USER_AGENT` (service workers read it);

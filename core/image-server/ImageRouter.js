@@ -9,6 +9,8 @@ const LocalImageRun = require('./router/LocalImageRun');
 const RemoteImageRun = require('./router/RemoteImageRun');
 
 class ImageRouter {
+  static RENDERING_PHASE = 'rendering-image';
+
   constructor({ imageServerService, notify, scanner, presize } = {}) {
     if (!imageServerService) throw new Error('ImageRouter: imageServerService is required');
     this._svc = imageServerService;
@@ -69,6 +71,7 @@ class ImageRouter {
     ready.server.markActive();
     if (!target.model) return ImageRouter._fail(send, `Image model "${target.wantId}" not found in the models directory.`);
     const plan = this._planRequest(request, target.model, send);
+    send('status', { phase: ImageRouter.RENDERING_PHASE });
     send('meta', ImageRouter._meta(target.wantId, ready.status, plan));
     return this._run(this._localRun({ send, target, ready, plan, startedAt }));
   }

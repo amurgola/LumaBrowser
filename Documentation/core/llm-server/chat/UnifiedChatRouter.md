@@ -37,7 +37,11 @@ host, the placement test, Luma On Demand and the extension chat surface.
 
 Models and capabilities:
 - `listModels()` -> [ChatModelList](router/ChatModelList.md)`#list`.
+- `resolveModelRef(ref)` -> the ref a call would use (given, else last used, else
+  the default; null when none): ChatModelList`#resolveRef`.
 - `contextWindowFor(ref)` -> [ModelContextWindow](router/ModelContextWindow.md)`#forRef`.
+- `modelVisionSupport(ref)`: `'active' | 'available' | 'unknown' | 'none'`
+  (ModelCapabilities`#visionSupport`).
 - `modelVisionActive(ref)`, `modelNativeToolsActive(ref)`,
   `modelNativeToolExclude(ref)` -> [ModelCapabilities](router/ModelCapabilities.md).
 

@@ -10,7 +10,10 @@ corrupt value falls back to a safe default.
 - `new TtsVoiceSettings(settingsDb)` (any `{ get(key, default), set(key, value) }`).
 - `getModelId()` / `setModelId(id)`: `core.voice.tts.modelId`, `null` when unset
   or blank; stored as a string.
-- `getSid()` / `setSid(sid)`: `core.voice.tts.sid`, a non-negative number, else 0.
+- `getSid(fallback = 0)` / `setSid(sid)`: `core.voice.tts.sid`, a non-negative
+  number; unset or corrupt reads back as `fallback` (the service passes the
+  catalog voice's `defaultSid`, so KittenTTS speaks with speaker 6 until the user
+  picks one; a saved 0 still wins).
 - `getSpeed()` / `setSpeed(speed)`: `core.voice.tts.speed`, strictly between
   0.25 and 4, else 1.
 - `getAutoUnloadMs()`: `core.voice.tts.autoUnloadMs`, non-negative (0 means

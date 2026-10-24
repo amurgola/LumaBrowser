@@ -8,11 +8,21 @@ The snapshot the "Voice cloning" tab polls.
 
 - `ChatterboxStatus.build({ voice, extensionId, engine, store, settings, jobs, runtimesDir, modelsDir })`
   resolves `{ runtimes, sttReady, activeRuntime, preferredRuntimeId, models,
-  voices, turboAvailable, activeVoiceId, languages, limits, server, jobs }`:
+  voices, turboAvailable, kitten, cloneModelId, cloneModels, attributions,
+  activeVoiceId, languages, limits, server, jobs }`:
   - `runtimes`: every catalog row with `available` (asset for this host),
     `installed`, `recommended` (first available);
   - `sttReady`: awaited `context.voice.sttReady()`, false when absent;
-  - `models`: rows with `installed` and `bytesOnDisk`;
+  - `activeRuntime`: `{ id, backend, release: { tag, publishedAt } | null }`;
+  - `models`: rows with `tasks`, `licenseNote`, `attribution`, `installed`,
+    `bytesOnDisk`, `runtimeSupported` and `runtimeNote` (set when the installed
+    audio.cpp predates the model);
+  - `kitten`: `{ available, installed, runtimeSupported, preset, groups, attribution }`
+    for the KittenTTS 2 built-in voice (`groups` feeds the picker);
+  - `cloneModelId`: the engine's effective cloner; `cloneModels`: the installed,
+    supported models that clone (`{ id, name }`);
+  - `attributions`: lines the licenses of downloaded models oblige the product
+    to show (`Powered by KittenML`);
   - `voices`: stored rows plus `languageName`;
   - `activeVoiceId`: the default TTS model id minus `ext:<extensionId>:`, else null;
   - `limits`: `{ minRefSec, maxRefSec }`; `server`: the engine status;

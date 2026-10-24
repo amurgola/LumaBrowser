@@ -4,11 +4,13 @@ class SdcppPayload {
   static DEFAULT_PREVIEW_MIME = 'image/png';
 
   static progressOf(data) {
-    const holder = data && (data.progress || data.status_detail || data);
-    const step = SdcppPayload._pickNumber(holder, SdcppPayload.STEP_KEYS);
-    const totalSteps = SdcppPayload._pickNumber(holder, SdcppPayload.TOTAL_KEYS);
-    if (step == null && totalSteps == null) return null;
-    return { step, totalSteps };
+    if (!data) return null;
+    for (const holder of [data.progress, data.status_detail, data.preview, data]) {
+      const step = SdcppPayload._pickNumber(holder, SdcppPayload.STEP_KEYS);
+      const totalSteps = SdcppPayload._pickNumber(holder, SdcppPayload.TOTAL_KEYS);
+      if (step != null || totalSteps != null) return { step, totalSteps };
+    }
+    return null;
   }
 
   static previewOf(data) {

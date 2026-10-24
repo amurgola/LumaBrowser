@@ -11,7 +11,7 @@ The `plan` object a llama.cpp launch returns beside its argv.
   (`contextSize`, `requestedContextSize`, `loadMode`, projector, family), speculation
   (`mtp`, `specType`, `draftCacheType`, KV types), placement (`ngl`, `fullOffload`,
   `partial`, `gguf` summary, `singleGpu`, splits, `flashAttn`, `swaFull`), serving
-  (`cacheReuse*`, `promptCache`, slots), experts (`cpuMoe*`, `moeSplit`) and
+  (`cacheReuse*`, `promptCache`, slots), experts (`cpuMoe*`, `moeSplit`, `moeGpuCacheMib`, `moeGpuCacheOffReason`) and
   accounting (`rpc`, `apiKeyRequired`, byte estimates, `perGpu`,
   `decodeEstimate`, runtime and model names, `port`, `notes`).
 

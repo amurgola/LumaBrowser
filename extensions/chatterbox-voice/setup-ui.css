@@ -13,6 +13,9 @@
 .cv-row-main { flex: 1 1 auto; min-width: 0; }
 .cv-row-name { font-weight: var(--weight-medium); }
 .cv-row-desc { margin-top: 2px; font-size: var(--text-xs); color: var(--text-secondary); }
+.cv-license-note { color: var(--text-muted); }
+.cv-attributions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }
+.cv-select { flex: 0 0 auto; max-width: 18em; padding: var(--space-1) var(--space-2); font: inherit; font-size: var(--text-sm); color: var(--text-primary); background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); }
 .cv-row input[type=radio] { accent-color: var(--accent); }
 .cv-row .luma-btn { flex: 0 0 auto; }
 .cv-progress { height: 4px; margin-top: var(--space-2); overflow: hidden; border-radius: var(--radius-pill); background: var(--bg-surface-2); }

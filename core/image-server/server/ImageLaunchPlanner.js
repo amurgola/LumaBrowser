@@ -19,6 +19,8 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
 
   static PERFORMANCE_FLAGS = ['--diffusion-fa', '--diffusion-conv-direct', '--vae-conv-direct'];
 
+  static SAGE_ATTENTION_FLAG = '--sage-attn';
+
   static inferLoaderFlag(filePath) {
     const ext = path.extname(filePath || '').toLowerCase();
     return ext === '.gguf' ? '--diffusion-model' : '-m';
@@ -53,6 +55,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
       ...this._listenArgs(),
       ...this._fileRoleArgs(),
       ...this._performanceArgs(),
+      ...this._sageAttentionArgs(),
       ...this._vaeTilingArgs(),
       ...this._loraDirArgs(),
       ...this._autoFitArgs(),
@@ -77,6 +80,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
       autoFit: args.includes('--auto-fit'),
       vaeTiling: args.includes('--vae-tiling'),
       flashAttention: args.includes('--diffusion-fa'),
+      sageAttention: args.includes(ImageLaunchPlanner.SAGE_ATTENTION_FLAG),
       files: ImageLaunchPlanner._fileBasenames(model.files),
     };
   }
@@ -106,6 +110,11 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
 
   _performanceArgs() {
     return ImageLaunchPlanner.PERFORMANCE_FLAGS.filter((flag) => !this._unsupported.has(flag));
+  }
+
+  _sageAttentionArgs() {
+    const flag = ImageLaunchPlanner.SAGE_ATTENTION_FLAG;
+    return this._overrides.sageAttention && !this._unsupported.has(flag) ? [flag] : [];
   }
 
   _vaeTilingArgs() {

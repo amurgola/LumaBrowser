@@ -12,7 +12,8 @@ touched.
   `No default image model selected.` or `null`.
 - `runtime({ runtimeId, runtimesRoot, diagnostics, manualBinaries })` calls
   `detectRuntimes({ runtimesRoot, cuda, gpu, manualBinaries })`; resolves
-  `{ runtime }` or `{ error }`: `Image runtime <id> not found.`,
+  `{ runtime, runtimes }` (the detected rows, for
+  [PreferredImageRuntime](PreferredImageRuntime.md)) or `{ error }`: `Image runtime <id> not found.`,
   `Image runtime <name> is not installed.`, `Image runtime <name> has no usable binary.`
 - `model({ modelId, modelsDir })` resolves `{ model }` (the scanned record) or
   `{ error: 'Image model "<id>" not found in <dir>.' }`.

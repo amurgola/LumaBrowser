@@ -97,6 +97,8 @@ class LLMServerService {
   dismissVramPressure(card) { return this.vramWatchdog.dismiss(card); }
   getUnloadOnVramPressure() { return this._settings.getUnloadOnVramPressure(); }
   setUnloadOnVramPressure(value) { return this._settings.setUnloadOnVramPressure(value); }
+  getGpuHeadroomBytes() { return this._settings.getGpuHeadroomBytes(); }
+  setGpuHeadroomBytes(bytes) { return this._settings.setGpuHeadroomBytes(bytes); }
 
 
   setQueueManager(queueManager) { this.queueManager = queueManager || null; }

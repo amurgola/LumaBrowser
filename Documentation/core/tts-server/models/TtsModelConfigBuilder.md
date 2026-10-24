@@ -19,9 +19,11 @@ catalog entry or a scanned model descriptor.
     `voiceEmbeddingCacheCapacity: 16`; threads capped at 6.
   - `vits`: `entry.onnxFile`, or the folder name minus `vits-piper-` plus `.onnx`;
     `tokens.txt`, `espeak-ng-data`.
+  - `kitten` (KittenTTS v0.8): `model` (`entry.onnxFile` or `model.fp32.onnx`),
+    `voices.bin`, `tokens.txt`, `espeak-ng-data`; threads capped at 2.
 - Threads default to 4.
 - Statics: `DEFAULT_THREADS`, `POCKET_MAX_THREADS`, `POCKET_VOICE_CACHE`,
-  `DEFAULT_KOKORO_LEXICONS`.
+  `KITTEN_MAX_THREADS`, `DEFAULT_KOKORO_LEXICONS`.
 
 ## Why
 
@@ -36,3 +38,8 @@ catalog entry or a scanned model descriptor.
   plus room for extension-fed clips.
 - Piper archives name the onnx after the voice, which the scanner detects; the
   folder-name guess covers an un-scanned entry.
+- KittenTTS archives are laid out like Kokoro v0.19 (one graph, a style table
+  in `voices.bin`, tokens, espeak data) but go under the addon's `kitten` key,
+  which also accepts `lengthScale` and `lexicon` (unused: speed rides the
+  generate request, and the v0.8 archives ship no lexicon). Nano measured the
+  same speed from 2 to 12 threads (2026-10-22), so it takes two.

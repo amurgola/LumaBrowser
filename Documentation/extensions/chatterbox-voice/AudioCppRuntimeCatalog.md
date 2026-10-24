@@ -30,3 +30,7 @@ Asset regexes are verified against v0.9.0 (2026-09-30). The `-portable` twins
 and the Colab-targeted Linux CUDA build are deliberately not matched. `KIND` is
 the add-on's own so the installer's kind gate rejects a core runtime id passed
 by mistake.
+
+## Suffixed release tags (2026-10-22)
+
+audio.cpp's 2026-10-19 release is tagged `v0.9.2-drama3-base-small` and names its assets `audio-v0.9.2-drama3-base-small-bin-windows-x64-cpu.zip`, so every pattern allows an optional lower-case suffix after the version (`(?:-[a-z0-9-]+?)?`). The `-portable`, `-lib-` and `-cudart-` twins still do not match the binary patterns (the literal tail must follow directly). Without this the core resolver walked back to v0.9.2 (2026-10-15), which cannot load KittenTTS 2.

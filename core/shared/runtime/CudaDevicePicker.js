@@ -1,5 +1,10 @@
+const GpuHeadroom = require('./GpuHeadroom');
+
 class CudaDevicePicker {
-  static PER_CARD_RESERVE_BYTES = 1024 * 1024 * 1024;
+  static get PER_CARD_RESERVE_BYTES() {
+    return GpuHeadroom.bytes();
+  }
+
   static FREE_FRACTION = 0.8;
 
   static cardRoomBytes(device, { reserveBytes = CudaDevicePicker.PER_CARD_RESERVE_BYTES } = {}) {

@@ -34,6 +34,7 @@ class ExtensionHost {
       activityLog: s.activityLogService,
       ttsServer: s.ttsServerService,
       sttServer: s.whisperServerService,
+      get dashboard() { return s.dashboardService || null; },
     };
   }
 }

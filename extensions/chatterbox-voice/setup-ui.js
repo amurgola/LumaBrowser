@@ -155,8 +155,12 @@
       head.innerHTML =
         '<div><h2 class="luma-title">Voice cloning</h2>'
         + '<p class="luma-sub">Clone a voice from a short recording and let voice conversations and read-aloud speak with it. '
-        + 'Powered by Chatterbox (Resemble AI, MIT) on the audio.cpp engine, fully local. '
-        + 'Pick a cloned voice here or under the microphone button in the chat.</p></div>';
+        + 'Chatterbox (Resemble AI, MIT) and KittenTTS 2 (KittenML, community license) on the audio.cpp engine, fully local. '
+        + 'Pick a voice here or under the microphone button in the chat.</p>'
+        + (((st && st.attributions) || []).length
+          ? '<div class="cv-attributions">' + st.attributions.map((a) => '<span class="luma-chip">' + esc(a) + '</span>').join('') + '</div>'
+          : '')
+        + '</div>';
       const actions = document.createElement('div');
       actions.className = 'cv-head-actions';
       const add = document.createElement('button');
@@ -182,12 +186,16 @@
         id: 'turbo', name: 'Chatterbox Turbo', description: 'Built-in English voice, fixed speaker. Fastest option, no cloning.',
         builtin: true, languageName: 'English',
       }));
+      if (st && st.kitten && st.kitten.available) list.appendChild(renderCard({
+        id: 'kitten', name: 'KittenTTS 2', description: 'Built-in voice "' + st.kitten.preset + '". 123 prepared voices in 16 languages; pick one below. Powered by KittenML.',
+        builtin: true, languageName: 'Multilingual', presetPicker: st.kitten,
+      }));
       if (!voices.length && !formOpen) {
         const empty = document.createElement('div');
         empty.className = 'luma-empty';
-        empty.textContent = st && st.models && st.models.some((m) => m.id === 'chatterbox' && m.installed)
+        empty.textContent = st && st.cloneModelId
           ? 'No cloned voices yet. Click “Add a voice” and record 10-20 seconds of speech.'
-          : 'Install the engine and download the Chatterbox model above, then add a voice.';
+          : 'Install the engine and download Chatterbox or KittenTTS 2 above, then add a voice.';
         list.appendChild(empty);
       }
       for (const v of voices) list.appendChild(renderCard(v));
@@ -233,6 +241,12 @@
             use.addEventListener('click', () => run('runtime.prefer', { id: r.id }));
             row.appendChild(use);
           }
+          const re = document.createElement('button');
+          re.className = 'luma-btn'; re.textContent = 'Reinstall';
+          re.title = 'Download the latest audio.cpp release again';
+          re.disabled = !!busy;
+          re.addEventListener('click', () => run('runtime.install', { id: r.id }));
+          row.appendChild(re);
           const rm = document.createElement('button');
           rm.className = 'luma-btn danger'; rm.textContent = 'Remove';
           rm.disabled = !!busy;
@@ -258,7 +272,7 @@
 
       const mcol = document.createElement('div');
       mcol.className = 'cv-engine-col';
-      mcol.innerHTML = '<div class="cv-sub">Chatterbox models</div>';
+      mcol.innerHTML = '<div class="cv-sub">Voice models</div>';
       const mj = st.jobs && st.jobs.model;
       for (const m of st.models) {
         const row = document.createElement('div');
@@ -267,7 +281,9 @@
         main.className = 'cv-row-main';
         main.innerHTML = '<div class="cv-row-name">' + esc(m.name)
           + (m.installed ? ' <span class="luma-chip">installed</span>' : '')
-          + '</div><div class="cv-row-desc">' + esc(m.description) + ' · ' + mb(m.sizeBytes) + ' · ' + esc(m.license) + '</div>';
+          + '</div><div class="cv-row-desc">' + esc(m.description) + ' · ' + mb(m.sizeBytes) + ' · ' + esc(m.license) + '</div>'
+          + (m.licenseNote ? '<div class="cv-row-desc cv-license-note">' + esc(m.licenseNote) + '</div>' : '')
+          + (m.runtimeSupported === false ? '<div class="luma-form-err">' + esc(m.runtimeNote || 'Needs a newer audio.cpp engine.') + '</div>' : '');
         row.appendChild(main);
         const busy = mj && !mj.done;
         if (m.installed) {
@@ -294,6 +310,7 @@
         if (mj && mj.id === m.id && !mj.done) mcol.appendChild(progress(mj, 'Downloading'));
         if (mj && mj.id === m.id && mj.done && mj.error) mcol.appendChild(errorLine(mj.error));
       }
+      if (st.cloneModels && st.cloneModels.length > 1) mcol.appendChild(renderCloneChooser());
       grid.appendChild(mcol);
       box.appendChild(grid);
 
@@ -305,6 +322,47 @@
         box.appendChild(warn);
       }
       host.appendChild(box);
+    }
+
+    function renderCloneChooser() {
+      const row = document.createElement('div');
+      row.className = 'cv-row';
+      const main = document.createElement('div');
+      main.className = 'cv-row-main';
+      main.innerHTML = '<div class="cv-row-name">Clone with</div><div class="cv-row-desc">The model your cloned voices speak through. KittenTTS 2 needs each clip’s transcript.</div>';
+      row.appendChild(main);
+      const sel = document.createElement('select');
+      sel.className = 'cv-select';
+      sel.setAttribute('data-clone-model', '');
+      for (const m of st.cloneModels) {
+        const opt = document.createElement('option');
+        opt.value = m.id; opt.textContent = m.name; opt.selected = m.id === st.cloneModelId;
+        sel.appendChild(opt);
+      }
+      sel.addEventListener('change', () => run('clone.model', { id: sel.value }));
+      row.appendChild(sel);
+      return row;
+    }
+
+    function renderPresetPicker(kitten) {
+      const wrap = document.createElement('div');
+      wrap.className = 'cv-card-meta';
+      const sel = document.createElement('select');
+      sel.className = 'cv-select';
+      sel.setAttribute('data-kitten-preset', '');
+      for (const g of kitten.groups || []) {
+        const group = document.createElement('optgroup');
+        group.label = g.name;
+        for (const name of g.voices) {
+          const opt = document.createElement('option');
+          opt.value = name; opt.textContent = name; opt.selected = name === kitten.preset;
+          group.appendChild(opt);
+        }
+        sel.appendChild(group);
+      }
+      sel.addEventListener('change', () => run('kitten.preset', { name: sel.value }));
+      wrap.appendChild(sel);
+      return wrap;
     }
 
     function progress(job, verb) {
@@ -360,6 +418,7 @@
         + (v.refHz ? '<span class="luma-chip" title="Median pitch of the reference clip">~' + esc(v.refHz) + ' Hz</span>' : '')
         + (active ? '<span class="luma-chip cv-chip-active">Active in chat</span>' : '')
         + '</div></div>';
+      if (v.presetPicker) card.querySelector('.luma-card-main').appendChild(renderPresetPicker(v.presetPicker));
       const actions = document.createElement('div');
       actions.className = 'luma-card-actions';
       if (!v.builtin) {
@@ -482,7 +541,7 @@
         + '<input name="trimStartSec" type="number" min="0" max="30" step="0.5" value="0" style="width:5em" />'
         + '<span class="cv-rec-hint">seconds (cut a false start; use Play to find the spot)</span></label>'
         + '</div></div>'
-        + '<div class="luma-field"><span>What the clip says <small>(optional; helps pronunciation)</small></span>'
+        + '<div class="luma-field"><span>What the clip says <small>(optional for Chatterbox, where it helps pronunciation; required by KittenTTS 2)</small></span>'
         + '<textarea name="referenceText" rows="2" placeholder="Transcript of the reference clip">' + esc(cur.referenceText) + '</textarea>'
         + '<div class="cv-rec-actions" style="margin-top:6px">'
         + '<button type="button" class="luma-btn" data-transcribe' + (st && st.sttReady ? '' : ' disabled') + '>Transcribe automatically</button>'

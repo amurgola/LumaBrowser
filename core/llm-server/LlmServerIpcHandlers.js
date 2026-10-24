@@ -151,6 +151,8 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('dismissVramPressure', (_e, card) => ({ dismissed: !!svc.dismissVramPressure(card) }));
     LlmServerIpcHandlers._handle('getUnloadOnVramPressure', () => ({ enabled: !!svc.getUnloadOnVramPressure() }));
     LlmServerIpcHandlers._handle('setUnloadOnVramPressure', (_e, value) => ({ enabled: svc.setUnloadOnVramPressure(value) }));
+    LlmServerIpcHandlers._handle('getGpuHeadroom', () => ({ bytes: svc.getGpuHeadroomBytes() }));
+    LlmServerIpcHandlers._handle('setGpuHeadroom', (_e, bytes) => ({ bytes: svc.setGpuHeadroomBytes(bytes) }));
     LlmServerIpcHandlers._handle('dismissNvidiaSmiPathHint', () => { svc.setNvidiaSmiPathHintDismissed(true); });
     LlmServerIpcHandlers._handle('resetNvidiaSmiPathHint', () => { diagnostics.resetNvidiaSmiPathHint(); });
     LlmServerIpcHandlers._handle('addNvidiaSmiToPath', (_e, directory) => SystemDiagnostics.addDirectoryToUserPath(directory));

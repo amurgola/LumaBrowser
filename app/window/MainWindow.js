@@ -129,6 +129,7 @@ class MainWindow {
       win.webContents.setZoomFactor(1.0);
       win.webContents.send('settings-loaded', { webhookUrl: s.db.get('webhookUrl', '') });
       startupTabs.open();
+      if (this._ctx.launchUrls) this._ctx.launchUrls.ready();
     });
   }
 

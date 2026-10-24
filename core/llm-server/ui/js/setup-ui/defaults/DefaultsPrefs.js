@@ -4,6 +4,7 @@ export default class DefaultsPrefs {
   constructor() {
     this.autoUnloadMs = 0;
     this.unloadOnVramPressure = null;
+    this.gpuHeadroomBytes = null;
     this.approvalPolicy = null;
     this.ramPinStatus = null;
   }
@@ -11,6 +12,7 @@ export default class DefaultsPrefs {
   async load(api) {
     this.autoUnloadMs = await DefaultsPrefs._read(api, 'getAutoUnloadMs', (r) => (r && r.success ? r.ms || 0 : 0), 0);
     this.unloadOnVramPressure = await DefaultsPrefs._read(api, 'getUnloadOnVramPressure', (r) => (r && r.success ? !!r.enabled : null), null);
+    this.gpuHeadroomBytes = await DefaultsPrefs._read(api, 'getGpuHeadroom', (r) => (r && r.success && Number(r.bytes) > 0 ? Number(r.bytes) : null), null);
     this.approvalPolicy = await DefaultsPrefs._read(api, 'getApprovalPolicy', DefaultsPrefs.policyFrom, null);
     const pin = await DefaultsPrefs._read(api, 'getRamPinStatus', (r) => (r && r.success ? r.status : undefined), undefined);
     if (pin !== undefined) this.ramPinStatus = pin;

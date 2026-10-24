@@ -1,10 +1,12 @@
 import Dom from '../../dom/Dom.js';
 import Dialogs from '../../dialogs/Dialogs.js';
+import ComposeIntent from './ComposeIntent.js';
 
 export default class ModeLauncher {
   constructor(ctx) {
     this._ctx = ctx;
     this._consumingIntent = false;
+    this._compose = new ComposeIntent(ctx);
   }
 
   async start(modeId, presetData) {
@@ -25,6 +27,7 @@ export default class ModeLauncher {
     this._consumingIntent = true;
     try {
       const intent = api.chat && api.chat.takeIntent ? await api.chat.takeIntent() : null;
+      if (ComposeIntent.is(intent)) { await this._compose.apply(intent.compose); return; }
       if (!intent || !intent.mode) return;
       if (this._ctx.modeDef(intent.mode)) await this.start(intent.mode, intent.data || {});
       else console.warn('[chat] pending intent for unknown mode:', intent.mode);

@@ -35,9 +35,7 @@ class MoeLayerSplit {
 
   static _budgets(perGpu) {
     const fixedShare = GpuOverhead.FIXED / perGpu.length;
-    return perGpu.map((g) => Math.max(
-      0, ((Number(g && g.totalBytes) || 0) - GpuOverhead.PER_CARD_RESERVE - fixedShare) * MoeLayerSplit.CARD_SAFETY,
-    ));
+    return perGpu.map((g) => Math.max(0, (GpuOverhead.cardRoom(g) - fixedShare) * MoeLayerSplit.CARD_SAFETY));
   }
 
   static _pack(n, blocks, costAt, budgets) {

@@ -40,6 +40,7 @@ class LaunchOverrides {
       cacheReuse: !!defaults.cacheReuse,
       promptCacheRam: LaunchOverrides._promptCacheRam(ctx.settingsDb),
       cpuMoe: !!defaults.cpuMoe,
+      noMoeGpuCache: !!defaults.noMoeGpuCache,
       noSpecDrafter: !!defaults.noSpecDrafter,
       noNgramSpec: !!defaults.noNgramSpec,
       suppressMmprojLoad: !ctx.withVision,

@@ -15,6 +15,8 @@ export default class DefaultsForm {
       ...DefaultsForm.thinking(value('defaultReasoningEffort') || 'default'),
       usePeerGpus: checked('defaultUsePeerGpus'),
     };
+    const moeCache = doc.getElementById('defaultMoeGpuCache');
+    if (moeCache) payload.noMoeGpuCache = !moeCache.checked;
     DefaultsForm._optional(doc, payload);
     return payload;
   }

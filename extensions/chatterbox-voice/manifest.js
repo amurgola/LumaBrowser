@@ -5,9 +5,11 @@ module.exports = {
   description:
     'Clone a voice from a short recording and have voice conversations and '
     + 'read-aloud speak with it. Adds Resemble AI’s open Chatterbox models '
-    + '(MIT) running on the audio.cpp engine (Apache-2.0, GPU or CPU) as an '
-    + 'extra engine in the chat’s voice picker, plus a "Voice cloning" tab in '
-    + 'the LLM Setup area to manage voices.',
+    + '(MIT) and KittenML’s KittenTTS 2 (Stellon Labs Community License: free '
+    + 'under 1M USD revenue and funding, commercial use needs registration and '
+    + 'a "Powered by KittenML" notice) running on the audio.cpp engine '
+    + '(Apache-2.0, GPU or CPU) as an extra engine in the chat’s voice picker, '
+    + 'plus a "Voice cloning" tab in the LLM Setup area to manage voices.',
 
   distributable: true,
 

@@ -13,7 +13,7 @@ export default class DefaultsCard {
 
   static SHARED_CONTROLS = ['defaultRuntimeSelect', 'defaultModelSelect', 'defaultContextSelect', 'defaultKvSelect',
     'defaultParallelSelect', 'defaultTensorSplit', 'defaultCacheReuse', 'defaultReasoningEffort', 'defaultUsePeerGpus',
-    'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin', 'defaultOpenVinoDevice'];
+    'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin', 'defaultOpenVinoDevice', 'defaultMoeGpuCache'];
 
   constructor(ctx) {
     this._ctx = ctx;
@@ -137,6 +137,18 @@ export default class DefaultsCard {
       pressure.addEventListener('change', async () => {
         this.prefs.unloadOnVramPressure = !!pressure.checked;
         try { await api.setUnloadOnVramPressure(this.prefs.unloadOnVramPressure); } catch (_) {}
+        this.renderView(this._ctx.lastDefaults);
+      });
+    }
+    const headroom = doc.getElementById('defaultGpuHeadroom');
+    if (headroom && api.setGpuHeadroom) {
+      headroom.addEventListener('change', async () => {
+        const gib = Number(headroom.value);
+        if (!(gib > 0)) return;
+        try {
+          const r = await api.setGpuHeadroom(gib * DefaultsOptions.GIB);
+          if (r && r.success) this.prefs.gpuHeadroomBytes = Number(r.bytes);
+        } catch (_) {}
         this.renderView(this._ctx.lastDefaults);
       });
     }

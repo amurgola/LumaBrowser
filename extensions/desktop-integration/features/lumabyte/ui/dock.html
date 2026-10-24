@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../../../../core/llm-server/ui/css/tokens.css">
+<style>
+@property --spin { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; }
+body { display: flex; align-items: center; justify-content: center; }
+.dock {
+  all: unset; position: relative; width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: rgba(20, 27, 44, .94); color: var(--text-primary, #e6e9f2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .05), 0 1px 2px rgba(0, 0, 0, .28), 0 3px 7px rgba(0, 0, 0, .26), 0 0 8px rgba(245, 144, 52, .08);
+  transform: scale(.6); opacity: 0;
+  transition: transform .32s cubic-bezier(.3, 1.45, .55, 1), opacity .18s ease, box-shadow .2s ease;
+}
+.dock.in { transform: none; opacity: 1; }
+.dock:hover { box-shadow: 0 0 0 1px rgba(255, 176, 107, .32), inset 0 1px 0 rgba(255, 255, 255, .05), 0 1px 2px rgba(0, 0, 0, .28), 0 3px 7px rgba(0, 0, 0, .26), 0 0 9px rgba(245, 144, 52, .16); }
+.dock:active { transform: scale(.94); }
+.dock svg { width: 18px; height: 18px; }
+.dock::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; padding: 1.4px; box-sizing: border-box; pointer-events: none;
+  background: conic-gradient(from var(--spin), rgba(245, 144, 52, .85), rgba(255, 176, 107, .85));
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  opacity: 0; transition: opacity .2s ease;
+}
+.dock.open::before { opacity: 1; }
+.dock.busy::before {
+  opacity: 1; animation: rim 1.4s linear infinite;
+  background: conic-gradient(from var(--spin), transparent 0 50%, rgba(245, 144, 52, .75) 72%, #ffe2c2 82%, transparent 92%);
+}
+@keyframes rim { to { --spin: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .dock, .dock::before { transition: none; animation: none !important; } }
+</style>
+</head>
+<body>
+<button class="dock" id="dock" type="button" aria-label="Lumabyte">
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.4" y="2.4" width="19.2" height="19.2" rx="5.2" stroke="currentColor" stroke-width="1.8"/><path d="M8.4 7H10.7V14.7H16.8V17H8.4Z" fill="currentColor"/><path d="M12.6 7H16.8V11.2Z" fill="var(--accent, #f59034)"/></svg>
+</button>
+<script>
+  const dock = document.getElementById('dock');
+  const label = new URLSearchParams(location.search).get('label') || 'this window';
+  dock.title = `Lumabyte on ${label}`;
+  requestAnimationFrame(() => dock.classList.add('in'));
+  dock.addEventListener('click', () => window.lumabyte.dock('toggle'));
+  window.lumabyte.onDock((s) => {
+    dock.classList.toggle('open', !!(s && s.open));
+    dock.classList.toggle('busy', !!(s && s.busy));
+  });
+</script>
+</body>
+</html>

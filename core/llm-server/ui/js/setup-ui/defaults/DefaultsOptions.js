@@ -25,6 +25,21 @@ export default class DefaultsOptions {
     { id: 'never', label: 'Never ask', title: 'Every enabled tool runs straight away' },
   ];
 
+  static GPU_HEADROOM = [
+    { id: '1', label: '1 GB', title: 'Default: enough for a card that does not drive a display' },
+    { id: '2', label: '2 GB', title: 'Room for the desktop and a browser to grow' },
+    { id: '3', label: '3 GB', title: 'For a card you also game or edit video on' },
+    { id: '4', label: '4 GB', title: 'Generous: other GPU apps come and go' },
+  ];
+
+  static GIB = 1024 * 1024 * 1024;
+
+  static headroomPosition(bytes) {
+    const gib = Number(bytes) / DefaultsOptions.GIB;
+    const hit = DefaultsOptions.GPU_HEADROOM.find((o) => Number(o.id) === gib);
+    return hit ? hit.id : '';
+  }
+
   static OPENVINO_RUNTIME_ID = 'llama-cpp-openvino';
 
   static openvinoDeviceOptions(npuNames = []) {

@@ -58,7 +58,10 @@ class PlacementNotes {
     const { budget } = this._s;
     const cards = budget.perGpu.length;
     if (cards > 0) {
-      this._notes.push(`VRAM usable: ${ByteLadder.format(budget.vramAvailableBytes)} across ${cards} adapter${cards === 1 ? '' : 's'} (after 1 GB/card reserve).`);
+      const occupied = budget.perGpu.reduce((sum, g) => sum + (Number(g.occupiedBytes) || 0), 0);
+      const inUse = occupied > 0 ? `${ByteLadder.format(occupied)} already in use, ` : '';
+      this._notes.push(`VRAM usable: ${ByteLadder.format(budget.vramAvailableBytes)} across ${cards} adapter${cards === 1 ? '' : 's'} `
+        + `(after ${inUse}${ByteLadder.format(GpuOverhead.PER_CARD_RESERVE)}/card headroom).`);
     } else {
       this._notes.push('No GPU VRAM detected; CPU inference only.');
     }

@@ -18,10 +18,11 @@ class LlmDefaults extends KeyedSettings {
     usePeerGpus: 'core.llmServer.defaults.usePeerGpus',
     pinModelRam: 'core.llmServer.defaults.pinModelRam',
     openvinoDevice: 'core.llmServer.defaults.openvinoDevice',
+    noMoeGpuCache: 'core.llmServer.defaults.noMoeGpuCache',
   };
 
   static ID_FIELDS = Object.freeze(['runtimeId', 'modelPath']);
-  static FLAG_FIELDS = Object.freeze(['tensorSplit', 'cacheReuse', 'cpuMoe', 'noThink', 'usePeerGpus', 'pinModelRam']);
+  static FLAG_FIELDS = Object.freeze(['tensorSplit', 'cacheReuse', 'cpuMoe', 'noThink', 'usePeerGpus', 'pinModelRam', 'noMoeGpuCache']);
   static DEFAULT_PARALLEL = 1;
   static MAX_PARALLEL = 64;
 

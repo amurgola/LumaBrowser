@@ -70,6 +70,8 @@ class ChatterboxExtension {
       modelsDir: () => this.modelsDir(),
       preferredRuntimeId: () => this.settings.preferredRuntimeId,
       idleMs: () => this.settings.idleMs,
+      kittenPreset: () => this.settings.kittenPreset,
+      cloneModelId: () => this.settings.cloneModelId,
       log: (msg) => this.log(msg),
     });
   }

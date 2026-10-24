@@ -19,8 +19,8 @@ devices from [CudaDeviceProbe](CudaDeviceProbe.md).
 - `CudaDevicePicker.cardRoomBytes(device, { reserveBytes })` returns free VRAM
   minus the reserve (default `PER_CARD_RESERVE_BYTES`), never negative. Unknown
   free VRAM is zero room.
-- `CudaDevicePicker.PER_CARD_RESERVE_BYTES` (1 GiB, the launch planner's
-  per-card reserve), `CudaDevicePicker.FREE_FRACTION` (0.8).
+- `CudaDevicePicker.PER_CARD_RESERVE_BYTES` (getter: the user's
+  [GpuHeadroom](GpuHeadroom.md), default 1 GiB, the launch planner's per-card reserve), `CudaDevicePicker.FREE_FRACTION` (0.8).
 
 ## Why
 

@@ -64,7 +64,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/fs/FileLinker.md](core/shared/fs/FileLinker.md): places a model file by hardlink, then symlink, never copy; has `link`, `isSameFile`.
 - [core/shared/ipc/IpcEnvelope.md](core/shared/ipc/IpcEnvelope.md): wraps IPC handlers in the `{ success }` envelope; has `enveloped`, `raw`, `errorFields`, `isCloneable`.
 - [core/shared/ipc/PathPicker.md](core/shared/ipc/PathPicker.md): native open dialog with one normalised cancel result; has `pick`.
-- [core/shared/ipc/SenderStream.md](core/shared/ipc/SenderStream.md): progress emitter that stops once the renderer is gone; has `create`.
+- [core/shared/ipc/SenderStream.md](core/shared/ipc/SenderStream.md): progress emitter that stops once the renderer is gone; has `create`, `observe` (main-process observers of every streamed message).
 - [core/shared/ipc/VoiceChannels.md](core/shared/ipc/VoiceChannels.md): voice IPC channel names; has `VOICE_EVENT_CHANNEL`, `TTS_STREAM_CHANNEL`.
 - [core/shared/llm/BalancedJson.md](core/shared/llm/BalancedJson.md): finds where a JSON object really ends; has `extractObject`.
 - [core/shared/llm/KvCacheModes.md](core/shared/llm/KvCacheModes.md): KV cache precision table; has `mode`, `pair`, `idFor`, `shortLabel`.
@@ -107,6 +107,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/runtime/CudaPin.md](core/shared/runtime/CudaPin.md): picks the CUDA devices a managed server is pinned to; has `resolveCudaDevice`, `filterDiagnosticsToDevices`, `applyCudaDeviceEnv`.
 - [core/shared/runtime/CudaDeviceProbe.md](core/shared/runtime/CudaDeviceProbe.md): reads CUDA cards from diagnostics or the nvidia-smi stream's cached snapshot, never spawning; has `readDevices`, `withLiveMemory`, `readComputeApps`, `gpuCount`, `whenReady`.
 - [core/shared/runtime/CudaDevicePicker.md](core/shared/runtime/CudaDevicePicker.md): the most-powerful-free-card pick order; has `pick`, `cardRoomBytes`.
+- [core/shared/runtime/GpuHeadroom.md](core/shared/runtime/GpuHeadroom.md): the user's per-card VRAM headroom every placement and the VRAM watchdog share; has `bytes`, `load`, `save`.
 - [core/shared/runtime/ManagedRuntimeSettings.md](core/shared/runtime/ManagedRuntimeSettings.md): saved runtime detection and manual binary paths; has `getManualRuntimeBinary`, `setManualRuntimeBinary`, `getCachedRuntimesView`, `ensureRuntimesView`.
 - [core/shared/runtime/rampin/RamPinService.md](core/shared/runtime/rampin/RamPinService.md): supervises one RAM-pin worker for a feature's default model; has `apply`, `stop`, `getStatus`, `isActiveFor`.
 - [core/shared/runtime/rampin/RamPinFitGate.md](core/shared/runtime/rampin/RamPinFitGate.md): refuses a pin that would cut into the OS RAM reserve; has `evaluate`.
@@ -622,6 +623,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/server/launch/GpuInventory.md](core/llm-server/server/launch/GpuInventory.md): local and remote GPUs to budget against; has `fromDiagnostics`, `remoteDevices`, `largestIndex`.
 - [core/llm-server/server/launch/TensorParallelRatio.md](core/llm-server/server/launch/TensorParallelRatio.md): bandwidth-weighted tensor-parallel ratio; has `compute`.
 - [core/llm-server/server/launch/MoeLayerSplit.md](core/llm-server/server/launch/MoeLayerSplit.md): byte-balanced multi-GPU split for MoE expert offload; has `balance`.
+- [core/llm-server/server/launch/MoeGpuCachePlan.md](core/llm-server/server/launch/MoeGpuCachePlan.md): every expert in RAM plus a `--moe-cache-mib` device cache instead of the layer fill; has `resolve`.
 - [core/llm-server/server/launch/LayerFillSplit.md](core/llm-server/server/launch/LayerFillSplit.md): fastest-card-first layer split; has `compute`, `describe`.
 - [core/llm-server/server/launch/RpcSplitRatio.md](core/llm-server/server/launch/RpcSplitRatio.md): split across remote RPC GPUs; has `compute`.
 - [core/llm-server/server/launch/PromptCacheRam.md](core/llm-server/server/launch/PromptCacheRam.md): sizes the prompt cache in RAM; has `resolve`.
@@ -1036,7 +1038,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/voice/VoiceDownloadProgress.md](core/llm-server/ui/js/voice/VoiceDownloadProgress.md): shows engine and model download progress from `api.voice.onVoiceEvent` on a note ("Downloading X: N%", then "Unpacking…").
 - [core/llm-server/ui/js/voice/VoicePanels.md](core/llm-server/ui/js/voice/VoicePanels.md): the panels the voice controls open: setup ("Set up voice conversation" or "Set up read aloud", noting the engines run on this computer or on the host), the microphone picker (devices, level meter, recognition model, voice quality, Start) and notes.
 - [core/llm-server/ui/js/voice/VoicePopover.md](core/llm-server/ui/js/voice/VoicePopover.md): the one voice popover at a time (`.cm-voice-pop`), positioned above its anchor.
-- [core/llm-server/ui/js/voice/VoiceQualityChoice.md](core/llm-server/ui/js/voice/VoiceQualityChoice.md): the voice choice: catalog tiers in Low, Fast, Medium, High order, then extension engines' voices grouped under the engine name (no download here; the add-on's Setup tab owns them).
+- [core/llm-server/ui/js/voice/VoiceQualityChoice.md](core/llm-server/ui/js/voice/VoiceQualityChoice.md): the voice choice: catalog tiers in Light, Low, Fast, Medium, High order, then extension engines' voices grouped under the engine name (no download here; the add-on's Setup tab owns them).
 - [core/llm-server/ui/js/voice/VoiceRadioRow.md](core/llm-server/ui/js/voice/VoiceRadioRow.md): one radio row of the picker (microphone, recognition model, voice).
 - [core/llm-server/ui/js/voice/VoiceSetupRows.md](core/llm-server/ui/js/voice/VoiceSetupRows.md): the setup panel's list of missing engines and models with one install button (stops at the first failure).
 - [core/llm-server/ui/js/voice/VoiceStyles.md](core/llm-server/ui/js/voice/VoiceStyles.md): the voice controls' styles (mic states, popovers, meter, transcript strip), injected once as `<style id="cm-voice-styles">`; kept in JS because the PWA and the LLM tab both use the controller.
@@ -1209,6 +1211,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/chat/main/MainColumn.md](core/llm-server/ui/js/chat/main/MainColumn.md): the chat column: the top bar (the conversation title, which opens its menu, and the conversation-scoped Artifacts button), the message scroller with its auto-follow, and the "New text" pill that re-pins it after the user scrolls up mid-stream.
 - [core/llm-server/ui/js/chat/modes/CodeSurfaceReporter.md](core/llm-server/ui/js/chat/modes/CodeSurfaceReporter.md): tells the tab page whether the open conversation has a folder on disk (Code mode's project, Game mode's game) so the mode pill shows "Code" and the editor opens over that folder.
 - [core/llm-server/ui/js/chat/modes/ModeContext.md](core/llm-server/ui/js/chat/modes/ModeContext.md): what an extension chat mode's client hooks receive, and the safe way to call them (a throwing hook is swallowed).
+- [core/llm-server/ui/js/chat/modes/ComposeIntent.md](core/llm-server/ui/js/chat/modes/ComposeIntent.md): applies a `{ compose }` chat intent another surface left (a desktop client handing over text, files or a screenshot): a fresh conversation with the attachments staged and the prompt in the composer, sent when asked; has `is`, `apply`.
 - [core/llm-server/ui/js/chat/modes/ModeLauncher.md](core/llm-server/ui/js/chat/modes/ModeLauncher.md): starts a conversation in an extension chat mode: preflight (the mode's own, else [ModePreflight](core/llm-server/ui/js/chat/modes/ModePreflight.md)), setup (the mode's `openSetup(api, ctx)` with a lazily created inline host, else its schema form through `chatExt.openSchemaInline`, else none; a cancel restores the previous screen), create the conversation and persist its meta up front, render and theme it, then let the mode send its opening turn (marked as a first turn for the AI title).
 - [core/llm-server/ui/js/chat/modes/ModePreflight.md](core/llm-server/ui/js/chat/modes/ModePreflight.md): the built-in requirement check before a mode starts, and the blocking card listing what is missing with Close and Open Setup.
 - [core/llm-server/ui/js/chat/modes/ModeTheme.md](core/llm-server/ui/js/chat/modes/ModeTheme.md): a mode's theme over the chat column: a background image (base64 or URL) through the `--cm-bg-image` property and the `cm-has-bg` class.
@@ -1664,6 +1667,8 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/service/SdServerCapabilities.md](core/image-server/service/SdServerCapabilities.md): sd-server feature probe; has `supportsFlag`, `autoFitFlagForm`.
 - [core/image-server/service/ImageSlotPlacement.md](core/image-server/service/ImageSlotPlacement.md): image slot VRAM placement with auto-fit; has `place`, `requiredBytes`, `budgetString`.
 - [core/image-server/service/VaeTilingPolicy.md](core/image-server/service/VaeTilingPolicy.md): VAE tiling decision; has `decide`.
+- [core/image-server/service/SageAttentionPolicy.md](core/image-server/service/SageAttentionPolicy.md): per-launch --sage-attn decision (CUDA build, Ampere+ card, model opt-in); has `decide`.
+- [core/image-server/service/PreferredImageRuntime.md](core/image-server/service/PreferredImageRuntime.md): one-launch swap onto a model's preferred drop-in runtime (MiniMax-H3 on the LumaByte build); has `pick`, `interchangeable`.
 - [core/image-server/service/UserGpuPin.md](core/image-server/service/UserGpuPin.md): whether the user pinned a slot to a GPU; has `isPinnedToGpu`.
 - [core/image-server/service/ImageLaunchInputs.md](core/image-server/service/ImageLaunchInputs.md): pre-launch runtime, model and API key checks; has `runtime`, `model`, `apiKeyRefusal`.
 - [core/image-server/service/ImageLaunchLog.md](core/image-server/service/ImageLaunchLog.md): the image launch console line; has `line`.
@@ -1727,10 +1732,10 @@ Small building blocks shared by more than one subsystem.
 
 ## core/tts-server
 
-- [core/tts-server/models/TtsModelCatalog.md](core/tts-server/models/TtsModelCatalog.md): the curated TTS voice models and Pocket voice clips; has `list`, `getById`, `downloadUrl`, `recommendedId`, `pocketVoiceUrl`.
+- [core/tts-server/models/TtsModelCatalog.md](core/tts-server/models/TtsModelCatalog.md): the curated TTS voice models (Pocket, Kokoro, Piper, KittenTTS) and Pocket voice clips; has `list`, `getById`, `downloadUrl`, `recommendedId`, `pocketVoiceUrl`.
 - [core/tts-server/models/TtsModelConfigBuilder.md](core/tts-server/models/TtsModelConfigBuilder.md): the sherpa OfflineTts config per engine; has `build`.
 - [core/tts-server/models/KokoroTokenPatcher.md](core/tts-server/models/KokoroTokenPatcher.md): aliases the r-colored vowels missing from Kokoro v1.x; has `patch`.
-- [core/tts-server/TtsModelsScanner.md](core/tts-server/TtsModelsScanner.md): detects extracted TTS models by their files; has `scan`, `scanPocketVoices`.
+- [core/tts-server/TtsModelsScanner.md](core/tts-server/TtsModelsScanner.md): detects extracted TTS models by their files (Kitten told from Kokoro by graph metadata or folder name); has `scan`, `scanPocketVoices`.
 - [core/tts-server/TtsEngineRegistry.md](core/tts-server/TtsEngineRegistry.md): extension-provided TTS engines and their namespaced voices; has `shared`, `register`, `resolve`, `listVoiceEntries`, `parseId`, `makeId`.
 - [core/tts-server/runtimes/SherpaRuntimeLayout.md](core/tts-server/runtimes/SherpaRuntimeLayout.md): sherpa addon paths, pinned version and install checks; has `tarballUrl`, `runtimeDir`, `addonDir`, `isInstalled`, `installedVersion`.
 - [core/tts-server/runtimes/SherpaRuntimeInstaller.md](core/tts-server/runtimes/SherpaRuntimeInstaller.md): installs the sherpa npm packages from the registry; has `install`.
@@ -1809,6 +1814,12 @@ Small building blocks shared by more than one subsystem.
 - [core/shell/harness-connections/ExecutableFinder.md](core/shell/harness-connections/ExecutableFinder.md): finds a program on PATH without a shell; has `find`.
 - [core/shell/IdePluginInstaller.md](core/shell/IdePluginInstaller.md): JetBrains plugin installer by copy; has `detectIdes`, `status`, `install`, `uninstall`, `refreshIfInstalled`.
 - [core/shell/VscodeExtensionInstaller.md](core/shell/VscodeExtensionInstaller.md): VS Code family installer through each editor's CLI; has `detectIdes`, `status`, `install`, `uninstall`, `refreshIfInstalled`.
+- [core/shell/WindhawkModInstaller.md](core/shell/WindhawkModInstaller.md): one-click install of the bundled Windhawk mods as local mods (compile, one UAC prompt, registry config); has `status`, `install`, `uninstall`, `refreshIfInstalled`.
+- [core/shell/windhawk/WindhawkModSource.md](core/shell/windhawk/WindhawkModSource.md): reads a Windhawk mod's header, luma_client block and default settings in the engine's form; has `parse`, `targets`, `splitArgs`, `clientBlock`, `initialSettings`.
+- [core/shell/windhawk/WindhawkLocator.md](core/shell/windhawk/WindhawkLocator.md): finds Windhawk and its compiler, engine, data folder and registry key from windhawk.ini; has `locate`, `readIni`.
+- [core/shell/windhawk/WindhawkRegistry.md](core/shell/windhawk/WindhawkRegistry.md): reads the installed mod configs under the engine's HKLM Mods key via reg.exe; has `readMods`, `parse`.
+- [core/shell/windhawk/WindhawkCompiler.md](core/shell/windhawk/WindhawkCompiler.md): compiles a mod with Windhawk's clang and its exact arguments; has `args`, `dllName`, `compile`.
+- [core/shell/windhawk/WindhawkElevation.md](core/shell/windhawk/WindhawkElevation.md): runs a JSON plan of copies and registry writes in one elevated PowerShell (one UAC prompt); has `apply`.
 - [core/shell/ide-installers/IdeInstaller.md](core/shell/ide-installers/IdeInstaller.md): shared base class for IDE installers; has `status`, `install`, `uninstall`, `refreshIfInstalled`.
 - [core/shell/ide-installers/JetBrainsIdeDir.md](core/shell/ide-installers/JetBrainsIdeDir.md): JetBrains folder naming and layout; has `parse`, `compare`, `vendorRoots`, `pluginsDir`.
 - [core/shell/ide-installers/VersionCompare.md](core/shell/ide-installers/VersionCompare.md): numeric version compare; has `compare`.
@@ -2758,9 +2769,9 @@ Small building blocks shared by more than one subsystem.
 - [extensions/chatterbox-voice/AudioCppRuntimeCatalog.md](extensions/chatterbox-voice/AudioCppRuntimeCatalog.md): the audio.cpp builds the add-on can install.
 - [extensions/chatterbox-voice/AudioCppRuntimeInstaller.md](extensions/chatterbox-voice/AudioCppRuntimeInstaller.md): core [RuntimeInstaller](core/shared/runtime/RuntimeInstaller.md) bound to the audio.cpp catalog.
 - [extensions/chatterbox-voice/AudioCppServer.md](extensions/chatterbox-voice/AudioCppServer.md): supervises one audiocpp_server child.
-- [extensions/chatterbox-voice/ChatterboxEngine.md](extensions/chatterbox-voice/ChatterboxEngine.md): the TTS engine registered with `context.voice`, implementing the duck-typed contract of core [TtsEngineRegistry](core/tts-server/TtsEngineRegistry.md) on top of the audio.cpp server.
+- [extensions/chatterbox-voice/ChatterboxEngine.md](extensions/chatterbox-voice/ChatterboxEngine.md): the TTS engine registered with `context.voice` (Turbo, the KittenTTS 2 built-in voice and cloned voices), implementing the duck-typed contract of core [TtsEngineRegistry](core/tts-server/TtsEngineRegistry.md) on top of the audio.cpp server; has `listVoices`, `cloneModelId`, `kittenPreset`, `synthesize`.
 - [extensions/chatterbox-voice/ChatterboxExtension.md](extensions/chatterbox-voice/ChatterboxExtension.md): the active Chatterbox add-on.
-- [extensions/chatterbox-voice/ChatterboxModels.md](extensions/chatterbox-voice/ChatterboxModels.md): the two Chatterbox GGUF files and the language names the Setup tab shows.
+- [extensions/chatterbox-voice/ChatterboxModels.md](extensions/chatterbox-voice/ChatterboxModels.md): the Chatterbox and KittenTTS 2 GGUF files (tasks, commercial terms, runtime requirement, KittenTTS 2 presets) and the language names the Setup tab shows; has `getModels`, `getModelById`, `canClone`, `runtimeSupports`, `presetFor`.
 - [extensions/chatterbox-voice/ChatterboxSettings.md](extensions/chatterbox-voice/ChatterboxSettings.md): the add-on's paths and its small settings file.
 - [extensions/chatterbox-voice/ChatterboxSetupActions.md](extensions/chatterbox-voice/ChatterboxSetupActions.md): routes the "Voice cloning" Setup tab's `setup.invoke` actions.
 - [extensions/chatterbox-voice/ChatterboxSpeechRequest.md](extensions/chatterbox-voice/ChatterboxSpeechRequest.md): one `POST /v1/audio/speech` to the audio.cpp server.
@@ -3429,6 +3440,7 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [app/ipc/CoreIpcRegistrar.md](app/ipc/CoreIpcRegistrar.md): registers every core IPC controller once, at boot.
 - [app/ipc/WindowControlIpc.md](app/ipc/WindowControlIpc.md): iPC for the custom frameless title bar.
 - [app/process/ProcessSetup.md](app/process/ProcessSetup.md): process configuration that precedes everything else.
+- [app/process/LaunchUrls.md](app/process/LaunchUrls.md): command-line web links (first launch and second instance) opened as tabs.
 - [app/process/UnhandledRejectionTap.md](app/process/UnhandledRejectionTap.md): the process-wide unhandled-rejection listener.
 - [app/ready/AgentDeps.md](app/ready/AgentDeps.md): the dependencies of the agentic chat, scheduled runs, triggers, the live page API and placement's test, published as `ctx.agentDeps` once the browser and the extensions exist (null before; readers degrade).
 - [app/ready/AppMenu.md](app/ready/AppMenu.md): the application menu.
@@ -3463,6 +3475,108 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [app/window/WindowKeys.md](app/window/WindowKeys.md): keyboard handling on the shell renderer.
 - [app/window/TabWindows.md](app/window/TabWindows.md): windows tabs are dragged out into: tear-off under the cursor, joining another window's strip, move-to-new-window, closing emptied windows.
 - [app/window/WindowStateRelay.md](app/window/WindowStateRelay.md): sends a window's maximized / full-screen state to its chrome renderer.
+
+## extensions/desktop-integration
+
+Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk mods, AutoHotkey, PowerToys, scripts), found through `~/.lumabrowser/desktop.json` and guarded by a `dsk_` token; every endpoint beyond `/hello` is a feature module auto-discovered from `features/<id>/`.
+
+- [extensions/desktop-integration/README.md](extensions/desktop-integration/README.md): the full contract: discovery (`desktop.json`), auth headers, `X-Luma-Client`, the response envelope, the feature folder contract, the `deps` object, other extensions' APIs, ChatHandoff and Speech.
+- [extensions/desktop-integration/DesktopIntegrationExtension.md](extensions/desktop-integration/DesktopIntegrationExtension.md): main-process side: token, client registry, shared services, feature registry, IPC, the handshake once routes mount, the public API; also documents `manifest.js`, `main.js`, `routes.js` and `renderer.js`.
+- [extensions/desktop-integration/DesktopRoutes.md](extensions/desktop-integration/DesktopRoutes.md): `/api/desktop`: unguarded `/hello`, the token guard, per-feature dispatch with 404 `Feature disabled` / `Unknown feature`; has `router`.
+- [extensions/desktop-integration/DesktopToken.md](extensions/desktop-integration/DesktopToken.md): the `dsk_` token desktop clients present (`X-Luma-Desktop-Token` or Bearer); has `get`, `rotate`, `matches`.
+- [extensions/desktop-integration/DesktopHandshake.md](extensions/desktop-integration/DesktopHandshake.md): writes, refreshes and owner-checks `~/.lumabrowser/desktop.json`; has `setPort`, `refresh`, `remove`, `read`.
+- [extensions/desktop-integration/ClientRegistry.md](extensions/desktop-integration/ClientRegistry.md): desktop clients seen since launch by `X-Luma-Client`; has `record`, `list`, `clear`.
+- [extensions/desktop-integration/FeatureCatalog.md](extensions/desktop-integration/FeatureCatalog.md): discovers and validates `features/<id>/index.js` modules; has `discover`, `validate`.
+- [extensions/desktop-integration/FeatureRegistry.md](extensions/desktop-integration/FeatureRegistry.md): persisted feature toggles, create/mount/dispose, the per-feature routers; has `load`, `setEnabled`, `routerFor`, `enabledIds`, `list`.
+- [extensions/desktop-integration/FeatureDeps.md](extensions/desktop-integration/FeatureDeps.md): builds each feature's `deps` (db, settings, scoped IPC, broadcast, extensions, handoff, speech, windows, log, appInfo); has `build`, `scopedIpc`, `logger`.
+- [extensions/desktop-integration/FeatureSettings.md](extensions/desktop-integration/FeatureSettings.md): one feature's namespaced key-value settings; has `get`, `set`, `delete`, `all`.
+- [extensions/desktop-integration/FeatureSettingsSchema.md](extensions/desktop-integration/FeatureSettingsSchema.md): normalizes a feature's declarative `settingsSchema` and coerces values the settings tab sends; has `normalize`, `withValues`, `coerce`.
+- [extensions/desktop-integration/DesktopBroadcast.md](extensions/desktop-integration/DesktopBroadcast.md): feature-tagged events to the Dashboard channel and the settings tab; has `emit`, `forFeature`.
+- [extensions/desktop-integration/DesktopIpcHandlers.md](extensions/desktop-integration/DesktopIpcHandlers.md): IPC controller of the settings tab; has `register`.
+- [extensions/desktop-integration/shared/ChatHandoff.md](extensions/desktop-integration/shared/ChatHandoff.md): raises Luma and opens a new chat seeded with a prompt and attachments, sent when asked; has `open`, `readAttachments`.
+- [extensions/desktop-integration/shared/Speech.md](extensions/desktop-integration/shared/Speech.md): speaks text through the app's TTS, played in the main window; has `speak`, `stop`, `available`.
+- [extensions/desktop-integration/shared/ActivityOverlay.md](extensions/desktop-integration/shared/ActivityOverlay.md): the desktop activity ring and island (click-through light around the active monitor, a focus-free pill with quick actions, a peek layer for the shortcut hint); has `show`, `update`, `close`, `peek`, `unpeek`, `dispose`.
+- [extensions/desktop-integration/shared/ActivityPages.md](extensions/desktop-integration/shared/ActivityPages.md): the ring and island pages with Luma's tokens inlined; has `ringHtml`, `islandHtml`, `dataUrl`.
+- [extensions/desktop-integration/shared/AppWindows.md](extensions/desktop-integration/shared/AppWindows.md): finds and raises the main window; has `getMainWindow`, `focusMainWindow`.
+- [extensions/desktop-integration/ui/DesktopRenderer.md](extensions/desktop-integration/ui/DesktopRenderer.md): the extension in the main window: settings tab and speech player.
+- [extensions/desktop-integration/ui/DesktopSettingsTab.md](extensions/desktop-integration/ui/DesktopSettingsTab.md): token (masked, copy, rotate), handshake path, generated feature switches, connected clients.
+- [extensions/desktop-integration/ui/SpeechPlayer.md](extensions/desktop-integration/ui/SpeechPlayer.md): plays the PCM Speech pushes through the chat's PcmScheduler; has `play`, `stop`.
+
+### extensions/desktop-integration/features
+
+- [extensions/desktop-integration/features/ping/index.md](extensions/desktop-integration/features/ping/index.md): the worked example feature: `GET /api/desktop/ping/` answers the version and enabled features.
+<!-- desktop-integration-features -->
+- [extensions/desktop-integration/features/glance/index.md](extensions/desktop-integration/features/glance/index.md): GET /api/desktop/glance/ one-line Hub summary (next event, unread, due, running) for tiny surfaces; POST /glance/open opens the Dashboard or an item.
+- [extensions/desktop-integration/features/glance/GlanceService.md](extensions/desktop-integration/features/glance/GlanceService.md): builds and briefly caches the glance from its providers.
+- [extensions/desktop-integration/features/glance/GlanceProviders.md](extensions/desktop-integration/features/glance/GlanceProviders.md): pluggable glance sources: calendar, conversation queue, due tasks, running timed tasks.
+- [extensions/desktop-integration/features/glance/GlanceText.md](extensions/desktop-integration/features/glance/GlanceText.md): clock formats, clipping and segment fitting for the glance line.
+- [extensions/desktop-integration/features/glance/GlanceOpener.md](extensions/desktop-integration/features/glance/GlanceOpener.md): focuses Luma and opens the Dashboard, or an event, thread or task link.
+- [extensions/desktop-integration/features/jobs/index.md](extensions/desktop-integration/features/jobs/index.md): long-running work (chat replies, renders, downloads, installs, timed tasks, app update) as `GET /api/desktop/jobs/`, an SSE `stream`, `POST /:id/cancel`, and progress, badge and Stop/Cancel buttons on the taskbar; has `summary`, `aggregateOf`.
+- [extensions/desktop-integration/features/jobs/JobRegistry.md](extensions/desktop-integration/features/jobs/JobRegistry.md): the normalized job list with throttled change events and recent history; has `start`, `update`, `finish`, `list`, `cancel`, `aggregate`, `onChange`.
+- [extensions/desktop-integration/features/jobs/JobEventStream.md](extensions/desktop-integration/features/jobs/JobEventStream.md): Server-Sent Events of job changes with heartbeat and a clean end; has `handle`, `close`, `frame`.
+- [extensions/desktop-integration/features/jobs/TaskbarSurface.md](extensions/desktop-integration/features/jobs/TaskbarSurface.md): main window `setProgressBar`, `setOverlayIcon`, `setThumbarButtons` from the job aggregate; has `start`, `render`, `dispose`.
+- [extensions/desktop-integration/features/jobs/TaskbarIcons.md](extensions/desktop-integration/features/jobs/TaskbarIcons.md): 16x16 overlay and thumbar icons drawn in code; has `get`, `bitmap`.
+- [extensions/desktop-integration/features/jobs/sources/ChatJobSource.md](extensions/desktop-integration/features/jobs/sources/ChatJobSource.md): chat replies from the chat router's in-flight turn; Stop via `router.abort()`.
+- [extensions/desktop-integration/features/jobs/sources/RenderJobSource.md](extensions/desktop-integration/features/jobs/sources/RenderJobSource.md): image, video and music renders by wrapping the media routers' `generate`; cancel via `abort()`.
+- [extensions/desktop-integration/features/jobs/sources/TransferJobSource.md](extensions/desktop-integration/features/jobs/sources/TransferJobSource.md): model downloads and runtime installs from `SenderStream.observe`; has `onMessage`, `sweep`, `patchFor`.
+- [extensions/desktop-integration/features/jobs/sources/TimedTaskJobSource.md](extensions/desktop-integration/features/jobs/sources/TimedTaskJobSource.md): timed-task runs polled from the timed-tasks API.
+- [extensions/desktop-integration/features/jobs/sources/AppUpdateJobSource.md](extensions/desktop-integration/features/jobs/sources/AppUpdateJobSource.md): the app update download from electron-updater events.
+- [extensions/desktop-integration/features/lumabyte/index.md](extensions/desktop-integration/features/lumabyte/index.md): the lumabyte feature: attach Luma to any window (Ctrl+Alt+Shift+A), a docked button and a panel with a conversation grounded in that window; routes and settings.
+- [extensions/desktop-integration/features/lumabyte/LumabyteFeature.md](extensions/desktop-integration/features/lumabyte/LumabyteFeature.md): Lumabyte wiring: shortcut, attach and detach, the 120 ms poll, panel IPC, REST; has `toggleForeground`, `attach`, `detach`, `tick`.
+- [extensions/desktop-integration/features/lumabyte/Attachment.md](extensions/desktop-integration/features/lumabyte/Attachment.md): one attached window's dock and panel, following the window and shown only while it is in front; has `sync`, `openPanel`, `closePanel`.
+- [extensions/desktop-integration/features/lumabyte/AttachPlacement.md](extensions/desktop-integration/features/lumabyte/AttachPlacement.md): where Lumabyte's dock and panel go beside a window; has `dock`, `panel`.
+- [extensions/desktop-integration/features/lumabyte/WindowProbe.md](extensions/desktop-integration/features/lumabyte/WindowProbe.md): the Win32 questions Lumabyte asks about a window (alive, minimized, frame, owner, app); has `foreground`, `frame`, `app`.
+- [extensions/desktop-integration/features/lumabyte/WindowContext.md](extensions/desktop-integration/features/lumabyte/WindowContext.md): the screenshot and accessible text one Lumabyte message carries; has `read`, `screenshot`, `accessibleText`.
+- [extensions/desktop-integration/features/lumabyte/LumabyteActions.md](extensions/desktop-integration/features/lumabyte/LumabyteActions.md): Lumabyte acting on its window through desktop control (click, type, key, scroll) from an actions block, plus file reads; has `parse`, `run`, `observe`, `unavailableReason`, `outputs`.
+- [extensions/desktop-integration/features/lumabyte/LumabyteFiles.md](extensions/desktop-integration/features/lumabyte/LumabyteFiles.md): Lumabyte reading a file's text or a folder's list, and finding the folder open in File Explorer; has `read`, `resolve`, `folderOf`.
+- [extensions/desktop-integration/features/lumabyte/LumabyteChat.md](extensions/desktop-integration/features/lumabyte/LumabyteChat.md): one grounded Lumabyte turn streamed through the chat router; has `capabilities`, `send`, `systemPrompt`.
+- [extensions/desktop-integration/features/lumabyte/ThreadStore.md](extensions/desktop-integration/features/lumabyte/ThreadStore.md): Lumabyte's per-app JSON store (current and previous thread); has `messages`, `append`, `clear`, `previous`, `resume`, `flush`.
+- [extensions/desktop-integration/features/lumabyte/LumabyteWindows.md](extensions/desktop-integration/features/lumabyte/LumabyteWindows.md): the Electron windows behind a Lumabyte attachment; has `dock`, `panel`, `hwndOf`.
+- [extensions/desktop-integration/features/lumabyte/ui/panel.md](extensions/desktop-integration/features/lumabyte/ui/panel.md): the Lumabyte panel page (island identity, markdown thread, composer).
+- [extensions/desktop-integration/features/lumabyte/ui/dock.md](extensions/desktop-integration/features/lumabyte/ui/dock.md): the Lumabyte dock button page.
+- [extensions/desktop-integration/features/lumabyte/ui/preload.md](extensions/desktop-integration/features/lumabyte/ui/preload.md): the sandboxed bridge for Lumabyte's pages; has `call`, `dock`, `onEvent`, `onDock`.
+- [extensions/desktop-integration/features/lumabyte/WinEvents.md](extensions/desktop-integration/features/lumabyte/WinEvents.md): WinEvent hooks that keep Lumabyte on its window as it moves, and z-order placement right above it; has `watchLocation`, `watchSystem`, `placeAbove`.
+- [extensions/desktop-integration/shared/HintContributions.md](extensions/desktop-integration/shared/HintContributions.md): keys other desktop features add to the Ctrl+Alt+Shift hint (`deps.hints`); has `add`, `entries`, `setHost`, `dismiss`, `target`.
+- [extensions/desktop-integration/features/hotkeys/index.md](extensions/desktop-integration/features/hotkeys/index.md): the hotkeys feature: global shortcuts plus `GET /api/desktop/hotkeys/` and `POST /run { action }` for read-selection, rewrite-selection, clipboard-to-chat, screenshot-to-chat; bindings and settings.
+- [extensions/desktop-integration/features/hotkeys/HotkeysFeature.md](extensions/desktop-integration/features/hotkeys/HotkeysFeature.md): wiring, routes, re-binding, failure notifications; has `start`, `run`, `fire`, `describe`, `mount`, `onSettingsChanged`, `dispose`, `settingsSchema`.
+- [extensions/desktop-integration/features/hotkeys/HotkeyActions.md](extensions/desktop-integration/features/hotkeys/HotkeyActions.md): the four actions; has `run`, `readSelection`, `stopSpeaking`, `rewriteSelection`, `clipboardToChat`, `screenshotToChat`.
+- [extensions/desktop-integration/features/hotkeys/HotkeyActivity.md](extensions/desktop-integration/features/hotkeys/HotkeyActivity.md): what the hotkey actions show on the activity island (reading with Pause, Stop, Continue in LumaBrowser; rewrite progress; confirmations; failures); has `reading`, `working`, `flash`.
+- [extensions/desktop-integration/features/hotkeys/ChordHint.md](extensions/desktop-integration/features/hotkeys/ChordHint.md): the shortcut hint: holding the shortcuts' modifiers peeks the next keys on the activity island and sweeps the ring on; has `start`, `stop`, `suppress`, `tick`, `comboOf`, `split`.
+- [extensions/desktop-integration/features/hotkeys/HintTarget.md](extensions/desktop-integration/features/hotkeys/HintTarget.md): a click on a window while the shortcut hint is up aims the hint and the next action at that window; has `begin`, `end`, `poll`, `framed`.
+- [extensions/desktop-integration/features/hotkeys/ScreenTextReader.md](extensions/desktop-integration/features/hotkeys/ScreenTextReader.md): reads the text in a screen capture with a chat model that can see images, for Read aloud with nothing selected; has `available`, `read`.
+- [extensions/desktop-integration/features/hotkeys/HotkeyBindings.md](extensions/desktop-integration/features/hotkeys/HotkeyBindings.md): globalShortcut registration with per-action status and conflicts; has `apply`, `status`, `unregisterAll`, `normalize`.
+- [extensions/desktop-integration/features/hotkeys/NativeKeys.md](extensions/desktop-integration/features/hotkeys/NativeKeys.md): Windows: held modifiers, clipboard sequence number, Ctrl+C/V via the shared koffi bindings; has `heldModifiers`, `clipboardSequence`, `sendCombo`, `releaseKeys`.
+- [extensions/desktop-integration/features/hotkeys/SelectionKeys.md](extensions/desktop-integration/features/hotkeys/SelectionKeys.md): picks the selection actions' keys backend per platform (Windows, macOS, Linux); has `create`.
+- [extensions/desktop-integration/features/hotkeys/MacKeys.md](extensions/desktop-integration/features/hotkeys/MacKeys.md): macOS selection keys: Cmd+C/V posted with CoreGraphics, pasteboard change count, frontmost app, Accessibility check; has `unavailableReason`, `heldModifiers`, `sendCombo`.
+- [extensions/desktop-integration/features/hotkeys/MacApi.md](extensions/desktop-integration/features/hotkeys/MacApi.md): the koffi bindings to CoreGraphics and the Objective-C runtime behind MacKeys; has `load`.
+- [extensions/desktop-integration/features/hotkeys/LinuxKeys.md](extensions/desktop-integration/features/hotkeys/LinuxKeys.md): Linux selection keys: XTEST on X11, the primary selection plus wtype or ydotool on Wayland; has `session`, `copyMode`, `readPrimary`, `canPaste`, `sendCombo`.
+- [extensions/desktop-integration/features/hotkeys/X11Api.md](extensions/desktop-integration/features/hotkeys/X11Api.md): the koffi bindings to libX11 and libXtst behind LinuxKeys; has `load`.
+- [extensions/desktop-integration/features/hotkeys/SelectionClipboard.md](extensions/desktop-integration/features/hotkeys/SelectionClipboard.md): copy and paste the foreground selection with the clipboard saved and restored; has `copySelection`, `pasteText`, `releaseModifiers`.
+- [extensions/desktop-integration/features/hotkeys/SelectionRewriter.md](extensions/desktop-integration/features/hotkeys/SelectionRewriter.md): rewrites text through the chat router's side completion; has `rewrite`, `clean`.
+- [extensions/desktop-integration/features/hotkeys/RegionCapture.md](extensions/desktop-integration/features/hotkeys/RegionCapture.md): freeze the screen, pick, crop (Win32Capture or desktopCapturer); has `capture`, `cancel`, `toPhysical`, `clamp`.
+- [extensions/desktop-integration/features/hotkeys/RegionOverlay.md](extensions/desktop-integration/features/hotkeys/RegionOverlay.md): per-display transparent drag-a-rectangle picker; has `pick`, `cancel`, `pageHtml`.
+- [extensions/desktop-integration/features/file-actions/index.md](extensions/desktop-integration/features/file-actions/index.md): Luma actions on selected files and folders: `POST /available` lists them per selection, `POST /run` starts one; also `/agents`, `/settings`.
+- [extensions/desktop-integration/features/file-actions/FileSelection.md](extensions/desktop-integration/features/file-actions/FileSelection.md): validates request paths (absolute, local, readable, no device or UNC paths) and classifies them; has `inspect`, `pathProblem`, `kindOf`.
+- [extensions/desktop-integration/features/file-actions/FileActionCatalog.md](extensions/desktop-integration/features/file-actions/FileActionCatalog.md): which actions apply to a selection, by kind, count, size and what is installed; has `available`, `resolve`, `agentIdOf`.
+- [extensions/desktop-integration/features/file-actions/FileActionEnv.md](extensions/desktop-integration/features/file-actions/FileActionEnv.md): live probes (chat, speech, image editing, agents) and the agent knowledge-base ingest.
+- [extensions/desktop-integration/features/file-actions/FileActionRunner.md](extensions/desktop-integration/features/file-actions/FileActionRunner.md): runs an action in the background (chat handoff, read aloud, knowledge-base import), broadcasts and notifies the outcome; has `start`, `fill`.
+- [extensions/desktop-integration/features/file-actions/FileText.md](extensions/desktop-integration/features/file-actions/FileText.md): a file's readable text for Read aloud (text head, Markdown and HTML stripped, PDF via AttachmentPdfText).
+- [extensions/desktop-integration/features/file-actions/KnowledgeFiles.md](extensions/desktop-integration/features/file-actions/KnowledgeFiles.md): collects knowledge-base documents from files and a bounded folder walk.
+- [extensions/desktop-integration/features/open/index.md](extensions/desktop-integration/features/open/index.md): the open feature: open links and searches in Luma or ask the chat; unwraps Edge and Bing links.
+- [extensions/desktop-integration/features/open/LinkUnwrap.md](extensions/desktop-integration/features/open/LinkUnwrap.md): pure unwrapper for microsoft-edge:, Bing redirect and Bing search links.
+- [extensions/desktop-integration/features/open/OpenText.md](extensions/desktop-integration/features/open/OpenText.md): free text to ask, url or query by the ask prefix and a link test.
+- [extensions/desktop-integration/features/open/OpenActions.md](extensions/desktop-integration/features/open/OpenActions.md): opens the tab, runs the search with Luma's engine, hands off to chat.
+- [extensions/desktop-integration/features/notifications/index.md](extensions/desktop-integration/features/notifications/index.md): OS notification relay: `POST /api/desktop/notifications/` files desktop toasts in the Personal Hub queue; `recent`, `apps`, `config`, `flush`; per-app filters and dedupe.
+- [extensions/desktop-integration/features/notifications/NotificationRelay.md](extensions/desktop-integration/features/notifications/NotificationRelay.md): normalize, filter, dedupe, push to the Hub or buffer; recent items and the apps table; has `ingest`, `flush`, `recent`, `apps`, `config`.
+- [extensions/desktop-integration/features/notifications/OsNotification.md](extensions/desktop-integration/features/notifications/OsNotification.md): cleans one OS notification into a fixed shape; has `normalize`, `webUrl`.
+- [extensions/desktop-integration/features/notifications/AppFilter.md](extensions/desktop-integration/features/notifications/AppFilter.md): per-app allow/deny with `*` wildcards, skips Luma itself; has `decide`, `parseList`, `matches`.
+- [extensions/desktop-integration/features/notifications/HubMapper.md](extensions/desktop-integration/features/notifications/HubMapper.md): OS notification to Hub queue item, known desktop apps through the Hub classifier; has `toQueueItem`, `hubAppFor`.
+- [extensions/desktop-integration/features/ask/index.md](extensions/desktop-integration/features/ask/index.md): "Ask Luma about this window": `POST /api/desktop/ask/window` captures a window's text (UI Automation) and screenshot into a new chat; `POST /ask/content`, `GET /ask/`; optional global hotkey.
+- [extensions/desktop-integration/features/ask/AskService.md](extensions/desktop-integration/features/ask/AskService.md): the ask flows and input parsing; has `askWindow`, `askForeground`, `askContent`, `config`, `parseHwnd`, `parseImage`.
+- [extensions/desktop-integration/features/ask/WindowCapture.md](extensions/desktop-integration/features/ask/WindowCapture.md): resolves, refuses (own, elevated, protected, prompts, anti-cheat, minimized, hidden) and captures a window on top of core/desktop; has `describe`, `screenshot`, `text`, `foregroundWindow`, `unavailable`.
+- [extensions/desktop-integration/features/ask/WindowText.md](extensions/desktop-integration/features/ask/WindowText.md): one-shot read-only UI Automation text reader (powershell.exe); has `read`, `script`, `parse`.
+- [extensions/desktop-integration/features/ask/AskSettings.md](extensions/desktop-integration/features/ask/AskSettings.md): the ask settingsSchema and typed, clamped reads; has `get`, `all`, `normalize`.
+- [extensions/desktop-integration/features/ask/AskHotkey.md](extensions/desktop-integration/features/ask/AskHotkey.md): the ask feature's Electron global shortcut; has `set`, `clear`, `toAccelerator`.
 
 ## extensions/ui-kit
 
@@ -3553,7 +3667,7 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [ui/shell/settings/general/GeneralSettings.md](ui/shell/settings/general/GeneralSettings.md): general and API & MCP settings: composes the parts below, the application switches, DNS, MCP export, guides and endpoint lists; values reload on `settings:open`.
 - [ui/shell/settings/general/GuideMarkdown.md](ui/shell/settings/general/GuideMarkdown.md): the guide's small markdown renderer; the source is HTML-escaped first.
 - [ui/shell/settings/general/GuideViewer.md](ui/shell/settings/general/GuideViewer.md): shows the bundled extensions guide in a modal over Settings.
-- [ui/shell/settings/general/IdeInstallerList.md](ui/shell/settings/general/IdeInstallerList.md): one IDE-integration list (JetBrains plugin or VS Code extension): a row per editor with Install / Remove, install-everywhere and rescan.
+- [ui/shell/settings/general/IdeInstallerList.md](ui/shell/settings/general/IdeInstallerList.md): one integration list (JetBrains plugin, VS Code extension or Windhawk mods): a row per target with Install / Remove (and Update for Windhawk), install-everywhere and rescan.
 - [ui/shell/settings/general/LlmServerSettings.md](ui/shell/settings/general/LlmServerSettings.md): lLM server switch, open-on-launch and call tracing (locked on when forced by --trace-llm) with Clear.
 - [ui/shell/settings/general/RestartNotes.md](ui/shell/settings/general/RestartNotes.md): "Restart required" notes get a "Restart now" action (confirm, then `core.settings.relaunch`).
 - [ui/shell/settings/general/SettingToggle.md](ui/shell/settings/general/SettingToggle.md): autosaving switch: write, Saved tick, revert and error on failure.
@@ -3858,3 +3972,21 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [tools/ide/VsixManifest.md](tools/ide/VsixManifest.md): the VSIX's `extension.vsixmanifest` and `[Content_Types].xml`.
 - [tools/ide/WebviewAppBundler.md](tools/ide/WebviewAppBundler.md): bundles the page's ES-module graph (with the markdown modules it imports) into one classic `app.js`, using core's [ModuleScriptBundler](core/llm-server/chat/ModuleScriptBundler.md); module URL paths map onto repo files.
 - [tools/ide/ZipExtractor.md](tools/ide/ZipExtractor.md): unpacks a zip with Expand-Archive (Windows) or unzip.
+
+## integrations/windhawk
+
+Windhawk mods that are desktop clients of Desktop Integration; install and authoring guide in `integrations/windhawk/README.md`.
+
+- [integrations/windhawk/_shared/luma_client.inc.md](integrations/windhawk/_shared/luma_client.inc.md): the canonical C++ client every mod embeds verbatim: handshake discovery, WinHTTP JSON requests with the token, thread-pool async with safe unload, JSON helpers.
+- [integrations/windhawk/luma-desktop-ping.wh.md](integrations/windhawk/luma-desktop-ping.wh.md): the template mod: logs the `/api/desktop/ping/` answer on init.
+- [integrations/windhawk/luma-taskbar-glance.wh.md](integrations/windhawk/luma-taskbar-glance.wh.md): Windhawk mod (GPL-3) that puts the glance line on the Windows 11 taskbar clock and tooltip; middle-click opens Luma.
+- [integrations/windhawk/luma-explorer-actions.wh.md](integrations/windhawk/luma-explorer-actions.wh.md): adds a "Luma" submenu to Explorer's classic context menu, filled from `/file-actions/available`; TrackPopupMenu(Ex) and NtUserTrackPopupMenuEx hooks on the folder view, optional trace file.
+- [integrations/windhawk/luma-link-redirect.wh.md](integrations/windhawk/luma-link-redirect.wh.md): Windhawk mod sending Edge-forced links (Start search, widgets) to Luma's open feature.
+- [integrations/windhawk/luma-notification-relay.wh.md](integrations/windhawk/luma-notification-relay.wh.md): sends every Windows toast (read with UserNotificationListener from Explorer) to `/api/desktop/notifications/`.
+- [integrations/windhawk/luma-ask-window.wh.md](integrations/windhawk/luma-ask-window.wh.md): adds "Ask Luma about this window" to every app's window menu (DefWindowProc hook) and an optional Explorer hotkey; posts the hwnd to `/api/desktop/ask/window`.
+
+## tools/windhawk
+
+- [tools/windhawk/check-mods.md](tools/windhawk/check-mods.md): `npm run windhawk:check [-- <mod>]`, compile-checks the Windhawk mods with the installed Windhawk compiler.
+- [tools/windhawk/WindhawkModChecker.md](tools/windhawk/WindhawkModChecker.md): compiles a mod per `@architecture` with Windhawk's own arguments into a temp DLL and checks its `luma_client` block; has `check`, `args`, `available`, `engineDir`.
+- [tools/windhawk/ModHeader.md](tools/windhawk/ModHeader.md): re-export of core WindhawkModSource for check-mods; has `parse`, `targets`, `splitArgs`, `clientBlock`.

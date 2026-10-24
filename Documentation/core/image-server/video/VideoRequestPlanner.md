@@ -13,7 +13,12 @@ Resolves a video request into the sd-server adapter parameters.
     cfg, sampler, scheduler, negative prompt, fps and flow shift; `seed` only from
     the caller (null otherwise);
   - model-only knobs: `outputFormat`, `moeBoundary`, `highNoiseSteps`,
-    `highNoiseCfgScale`, `cacheMode`, `cacheOption`;
+    `highNoiseCfgScale`, `cacheMode`, `cacheOption`; a two-expert model
+    (`files.highNoise` present) with no positive `highNoiseSteps` gets
+    `highNoiseSteps: -1` (`AUTO_HIGH_NOISE_STEPS`), the automatic split of one
+    `steps` schedule at `moeBoundary`. Without it sd-server's request defaults
+    add a 20-step high-noise pass on top of `steps` (an AniSora "10-step" render
+    ran 30 steps, measured 2026-10-22);
   - `loras` from [ImageLoraSpecs](../router/ImageLoraSpecs.md)`.resolve(model.defaults, lorasDir)`;
   - `firstFrame`, `lastFrame` (null when absent);
   - then `VideoConstraints.normalizeVideoRequest` snaps width, height, frames and

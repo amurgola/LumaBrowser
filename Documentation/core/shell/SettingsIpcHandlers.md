@@ -9,8 +9,8 @@ enveloped), the shapes the renderer has always read.
 ## Methods
 
 - `new SettingsIpcHandlers({ db, restGateway, mcpAggregator, apiSecurity,
-  mainWindowGetter, rootDir, onSetupFinalized?, cliShim?, idePlugin?, vscodeExtension? })`.
-- `register()` registers the 53 channels below.
+  mainWindowGetter, rootDir, onSetupFinalized?, cliShim?, idePlugin?, vscodeExtension?, windhawkMods? })`.
+- `register()` registers the 56 channels below.
 
 ## Channels
 
@@ -19,6 +19,7 @@ enveloped), the shapes the renderer has always read.
 | `cliShim.status/install/uninstall` | [OptionalServiceCall](settings/OptionalServiceCall.md) over [CliShim](CliShim.md) |
 | `idePlugin.status/install(ids)/uninstall(ids)` | OptionalServiceCall over [IdePluginInstaller](IdePluginInstaller.md), ids via `ideIds` |
 | `vscodeExtension.status/install(ids)/uninstall(ids)` | OptionalServiceCall over [VscodeExtensionInstaller](VscodeExtensionInstaller.md) |
+| `windhawkMods.status/install(ids)/uninstall(ids)` | OptionalServiceCall over [WindhawkModInstaller](WindhawkModInstaller.md); install and uninstall show one UAC prompt |
 | `getApiPort`, `getEffectiveApiPort`, `setApiPort`, `get/setApiEnabled`, `get/setMcpEnabled` | [ApiServerSettings](settings/ApiServerSettings.md) |
 | `getPersona`, `setPersona` | [OnboardingPersona](settings/OnboardingPersona.md) |
 | `get/setAutoCheckUpdates`, `get/setDnsProvider`, `get/setShowBookmarksBar` | [AppPreferences](settings/AppPreferences.md) |

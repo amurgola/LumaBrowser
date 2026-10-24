@@ -8,8 +8,9 @@ const ChatterboxSpeechRequest = require('./ChatterboxSpeechRequest');
 
 class ChatterboxEngine {
   static TURBO_VOICE_ID = ChatterboxSpeechRequest.TURBO_VOICE_ID;
+  static KITTEN_VOICE_ID = ChatterboxSpeechRequest.KITTEN_VOICE_ID;
 
-  constructor({ store, runtimesDir, modelsDir, preferredRuntimeId, idleMs, log }) {
+  constructor({ store, runtimesDir, modelsDir, preferredRuntimeId, idleMs, kittenPreset, cloneModelId, log }) {
     this.id = 'chatterbox-voice';
     this.name = 'Chatterbox';
     this.store = store;
@@ -18,6 +19,8 @@ class ChatterboxEngine {
     this._modelsDir = modelsDir;
     this._preferredRuntimeId = preferredRuntimeId;
     this._idleMs = idleMs;
+    this._kittenPreset = kittenPreset || (() => null);
+    this._cloneModelId = cloneModelId || (() => null);
     this._log = log || (() => {});
     this._ensureChain = Promise.resolve();
     this._inflight = new Map();
@@ -27,8 +30,9 @@ class ChatterboxEngine {
 
   listVoices() {
     const out = [];
-    if (this._hasModel('chatterbox-turbo')) out.push(ChatterboxEngine._turboVoice());
-    if (this._hasModel('chatterbox')) for (const v of this.store.list()) out.push(ChatterboxEngine._cloneVoice(v));
+    if (this.modelUsable('chatterbox-turbo')) out.push(ChatterboxEngine._turboVoice());
+    if (this.modelUsable(ChatterboxModels.KITTEN_ID)) out.push(this._kittenVoice());
+    if (this.cloneModelId()) for (const v of this.store.list()) out.push(ChatterboxEngine._cloneVoice(v));
     return out;
   }
 
@@ -86,6 +90,26 @@ class ChatterboxEngine {
     return this.server.getStatus();
   }
 
+  cloneModelId() {
+    const chosen = this._cloneModelId();
+    if (chosen && ChatterboxModels.canClone(ChatterboxModels.getModelById(chosen)) && this.modelUsable(chosen)) return chosen;
+    return ChatterboxModels.CLONE_PREFERENCE.find((id) => this.modelUsable(id)) || null;
+  }
+
+  kittenPreset() {
+    return ChatterboxModels.presetFor(ChatterboxModels.getModelById(ChatterboxModels.KITTEN_ID), this._kittenPreset());
+  }
+
+  modelUsable(modelId) {
+    const m = ChatterboxModels.getModelById(modelId);
+    return !!m && this._hasModel(modelId) && ChatterboxModels.runtimeSupports(m, this.installedRelease());
+  }
+
+  installedRelease() {
+    const found = AudioCppInstallation.findInstalledRuntime(this._runtimesDir(), this._preferredRuntimeId());
+    return found ? found.release : null;
+  }
+
   async _ensureInner() {
     const voices = this._voicesForLaunch();
     const stamp = JSON.stringify([this._preferredRuntimeId(), voices.map((v) => v.id)]);
@@ -110,7 +134,10 @@ class ChatterboxEngine {
 
   _speak({ voiceId, text, speed }, onChunk, id) {
     if (!String(text || '').trim()) return Promise.resolve(false);
-    const { body, error } = ChatterboxSpeechRequest.buildBody({ voiceId, text, speed }, this.store);
+    const { body, error } = ChatterboxSpeechRequest.buildBody({ voiceId, text, speed }, this.store, {
+      kittenPreset: this.kittenPreset(),
+      cloneModelId: this.cloneModelId(),
+    });
     if (error) return Promise.reject(error);
     return ChatterboxSpeechRequest.send({
       port: this.server.port,
@@ -136,6 +163,17 @@ class ChatterboxEngine {
       description: 'Fast English voice with a fixed speaker.',
       language: 'en',
       quality: 'turbo',
+    };
+  }
+
+  _kittenVoice() {
+    const preset = this.kittenPreset();
+    return {
+      id: ChatterboxEngine.KITTEN_VOICE_ID,
+      name: `KittenTTS 2 (${preset})`,
+      description: `KittenTTS 2 built-in voice "${preset}". Change it in Setup, Voice cloning. Powered by KittenML.`,
+      language: 'en',
+      quality: 'preset',
     };
   }
 

@@ -33,6 +33,10 @@ the background.
   position equals its `index`, else by position. A null live free value keeps
   the cached one. Returns the input unchanged when it has no available CUDA
   devices, the reading is empty, the card counts differ, or anything throws.
+- `CudaDeviceProbe.withFreshLiveMemory(diagnostics, { maxAgeMs = 0, timeoutMs = FRESH_READ_TIMEOUT_MS })`
+  asks a running stream for a reading no older than `maxAgeMs` (bounded by
+  `timeoutMs`, 2 s), then `withLiveMemory`. Never rejects. The LLM launch uses it
+  right before placement.
   `query` is a test seam defaulting to the stream snapshot's rows.
 - `CudaDeviceProbe.readComputeApps()` returns `{ pid: bytes }` of resident VRAM
   per CUDA process: the stream's last list, refreshed in the background when a

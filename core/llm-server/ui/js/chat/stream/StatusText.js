@@ -2,6 +2,8 @@ export default class StatusText {
   static PHASES = {
     'switching-model': 'Loading the selected model...',
     'starting-server': 'Starting the local model...',
+    'rendering-image': 'Generating the image...',
+    'rendering-video': 'Rendering the video...',
     'loading-vision': 'Loading vision (image support)...',
     'unloading-vision': 'Switching back to fast text mode...',
     compacting: 'Summarizing earlier conversation to free context...',

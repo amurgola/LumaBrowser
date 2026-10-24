@@ -18,9 +18,10 @@ class ImageLaunchInputs {
     const view = await this._detector.detectRuntimes({
       runtimesRoot, cuda: diagnostics.cuda, gpu: diagnostics.gpu, manualBinaries,
     });
-    const runtime = (view.runtimes || []).find((r) => r.id === runtimeId);
+    const runtimes = view.runtimes || [];
+    const runtime = runtimes.find((r) => r.id === runtimeId);
     const error = ImageLaunchInputs._runtimeRefusal(runtimeId, runtime);
-    return error ? { error } : { runtime };
+    return error ? { error } : { runtime, runtimes };
   }
 
   async model({ modelId, modelsDir }) {

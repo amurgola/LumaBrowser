@@ -20,8 +20,9 @@ streams the render's events to the caller's `send`.
   `cfgScale`, `seed`, `sampler`, `scheduler`, `initImage`, `strength`,
   `refImages`, `mask`, `loras`, `sigmaNodes`, `refArea`, `cacheMode`,
   `cacheOption`, `slot` (`'edit'` / `'generate'`), `forceLocal`, `snapNative`,
-  `send(type, payload)`. Events: `meta`, `status { phase }`,
-  `progress { step, totalSteps }`, `preview { b64, mime }`,
+  `send(type, payload)`. Events: `meta`, `status { phase }` (the launcher's
+  `starting-server` / `switching-model`, then `rendering-image` right before
+  `meta` on the local path), `progress { step, totalSteps }`, `preview { b64, mime }`,
   `done { images: [{ b64, mime, width, height, seed }], modelId }`, `error { message }`.
   A missing prompt or no configured model returns an error without an event;
   every later failure also sends `error`. Local images resolve as

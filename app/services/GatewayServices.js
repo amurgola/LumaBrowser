@@ -6,6 +6,7 @@ const CliHandshake = require('../../core/shell/CliHandshake');
 const CliShim = require('../../core/shell/CliShim');
 const IdePluginInstaller = require('../../core/shell/IdePluginInstaller');
 const VscodeExtensionInstaller = require('../../core/shell/VscodeExtensionInstaller');
+const WindhawkModInstaller = require('../../core/shell/WindhawkModInstaller');
 const DashboardService = require('../../core/dashboard/DashboardService');
 const AppGlobals = require('../AppGlobals');
 
@@ -40,6 +41,7 @@ class GatewayServices {
     this._s.cliShim = new CliShim({ exePath: this._ctx.env.APPIMAGE || this._ctx.proc.execPath, cliSource: this._resource('cli'), version });
     this._s.idePlugin = new IdePluginInstaller({ sourceDir: this._ideResource(IdePluginInstaller.PLUGIN_DIR_NAME), version });
     this._s.vscodeExtension = new VscodeExtensionInstaller({ vsixPath: this._ideResource(VscodeExtensionInstaller.VSIX_NAME), version });
+    this._s.windhawkMods = new WindhawkModInstaller({ modsDir: this._ctx.path('integrations', 'windhawk') });
   }
 
   _serveInAppPagesOverGateway() {

@@ -32,8 +32,8 @@ class LayerFillSplit {
     const fixed = GpuOverhead.fixed(flashAttnSupported);
     return perGpu.map((g, i) => {
       const total = Number(g && g.totalBytes) || 0;
-      const resident = g && g.freeBytes != null ? Math.max(0, total - Number(g.freeBytes)) : 0;
-      return Math.max(0, (total - Math.max(GpuOverhead.PER_CARD_RESERVE, resident) - fixed) * LayerFillSplit.CARD_SAFETY - (i === 0 ? extraBytes : 0));
+      const cachedResident = g && g.freeBytes != null ? Math.max(0, total - Number(g.freeBytes)) : 0;
+      return Math.max(0, (GpuOverhead.cardRoom(g, { cachedResident }) - fixed) * LayerFillSplit.CARD_SAFETY - (i === 0 ? extraBytes : 0));
     });
   }
 

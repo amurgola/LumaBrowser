@@ -7,7 +7,10 @@ Builds the `POST /sdcpp/v1/img_gen` request body from an image request.
 ## Methods
 
 - `SdcppImageBody.build(request)` returns the body. Defaults: 512 x 512, 20
-  steps, `euler`, cfg 7.0, `png`, `batch_count: 1`; a seed below 0 or missing
+  steps, `euler`, cfg 7.0, `png`, `batch_count: 1`, `preview: 'proj'` and
+  `preview_interval: 1` (`SdcppImageBody.PREVIEW`: sd-server reports the step
+  counter only inside its `preview` object, so the near-free latent projection
+  is always requested); a seed below 0 or missing
   is `-1` (random).
   - `negative_prompt`, `lora` (non-empty array), `ref_image_args`, and
     `cache_mode` (+ `cache_option`) only when given.

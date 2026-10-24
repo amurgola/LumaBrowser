@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../../../../core/llm-server/ui/css/tokens.css">
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+<div class="sheet" id="sheet">
+  <header class="head">
+    <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="2.4" y="2.4" width="19.2" height="19.2" rx="5.2" stroke="currentColor" stroke-width="1.8"/><path d="M8.4 7H10.7V14.7H16.8V17H8.4Z" fill="currentColor"/><path d="M12.6 7H16.8V11.2Z" fill="var(--accent, #f59034)"/></svg></span>
+    <div class="who">
+      <div class="name">Lumabyte</div>
+      <div class="where" id="where"></div>
+    </div>
+    <div class="tools">
+      <button class="pill" id="newBtn" type="button" title="Start a new conversation; this one stays available" hidden><svg viewBox="0 0 16 16"><path d="M8 3.5v9M3.5 8h9"/></svg>New chat</button>
+      <button class="icon" id="lumaBtn" type="button" title="Continue in LumaBrowser" aria-label="Continue in LumaBrowser"><svg viewBox="0 0 16 16"><path d="M6.5 3.5h-3v9h9v-3M9 3.5h3.5V7M12.5 3.5 7.5 8.5"/></svg></button>
+      <button class="icon" id="detachBtn" type="button" title="Detach from this window" aria-label="Detach from this window"><svg viewBox="0 0 16 16"><path d="M6.6 9.4 9.4 6.6M5.2 7.4 3.8 8.8a2.2 2.2 0 0 0 3.1 3.1l1.4-1.4M10.8 8.6l1.4-1.4a2.2 2.2 0 0 0-3.1-3.1L7.7 5.5M3 3l10 10"/></svg></button>
+      <button class="icon" id="closeBtn" type="button" title="Hide (Esc)" aria-label="Hide"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></button>
+    </div>
+  </header>
+  <main class="log" id="log" aria-live="polite"></main>
+  <footer class="foot">
+    <div class="status" id="status" hidden><span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="statusText"></span></div>
+    <form class="composer" id="composer">
+      <textarea id="input" rows="1" placeholder="Ask about this window" autocomplete="off"></textarea>
+      <button class="send" id="send" type="submit" title="Send (Enter)" aria-label="Send"><svg viewBox="0 0 16 16"><path d="M8 12.5v-9M4 7.5l4-4 4 4"/></svg></button>
+    </form>
+    <div class="sees" id="sees"></div>
+  </footer>
+</div>
+<script type="module" src="panel.js"></script>
+</body>
+</html>

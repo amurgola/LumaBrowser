@@ -14,7 +14,7 @@ The plan notes for the optional serving features of a launch.
   drafter (on, off by setting, unsupported, or missing on disk); a measured VRAM
   basis; distributed inference (on with the split and idle remote devices,
   unsupported, or skipped because the model fits locally or runs expert offload);
-  MoE expert offload (fill, all experts in RAM, or why it is off or not needed);
+  MoE expert offload (fill, all experts in RAM with or without the MoE GPU cache and why the cache is off, or why offload is off or not needed);
   and the load-mode fallback when both spellings are rejected.
 
 ## Why

@@ -50,7 +50,7 @@ class ImageRuntimeCatalog extends RuntimeCatalog {
       name: 'stable-diffusion.cpp (LumaByte)',
       kind: 'image-inference',
       description:
-        "LumaByte's patched stable-diffusion.cpp build (CUDA 12): upstream plus the luma-sdcpp patch stack. Reference images for an edit are prepared in a fraction of the time (a three-image Qwen-Image 2.1 edit went from 38 s to 12 s), with pixel-identical output. Windows only for now.",
+        "LumaByte's patched stable-diffusion.cpp build (CUDA 12): upstream plus the luma-sdcpp patch stack. Reference images for an edit are prepared in a fraction of the time (a three-image Qwen-Image 2.1 edit went from 38 s to 12 s) and MiniMax-H3 video decodes about 5x faster (a 124-frame clip from 94 s to 20 s), with pixel-identical output. Models that benefit use it automatically once it is installed. Windows only for now.",
       repo: { owner: 'amurgola', repo: 'luma-sdcpp' },
       platforms: ['win32'],
       assetPatterns: { 'win32-x64': ImageRuntimeCatalog.WIN_CUDA12_ASSET },

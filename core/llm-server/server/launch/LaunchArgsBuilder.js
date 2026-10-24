@@ -109,6 +109,7 @@ class LaunchArgsBuilder {
   _addExpertOffload(moe) {
     if (moe.gpuExpertLayers <= 0) {
       this._push('--cpu-moe');
+      if (moe.gpuCache && moe.gpuCache.enabled) this._push('--moe-cache-mib', String(moe.gpuCache.mib));
       return;
     }
     this._push('--n-cpu-moe', String(moe.nCpuMoe));

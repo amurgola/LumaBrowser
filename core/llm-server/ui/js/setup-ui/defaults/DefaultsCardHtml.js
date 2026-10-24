@@ -19,7 +19,9 @@ export default class DefaultsCardHtml {
     ramPin: 'Locks the model files into physical memory for the whole session (Windows <code>VirtualLock</code>, Linux <code>mlock</code>), so every server start reads the weights at RAM speed instead of from disk. The launcher switches that start to <code>mmap</code>, which reads the very pages the pin holds: no second copy of the model in RAM. Pinned memory cannot be paged out, so the pin is refused when it would leave the system short on free RAM. Pins at app start, releases when the app closes.',
     groupRouter: 'Runs a 640&nbsp;MB model on the CPU next to the chat model. Before every Tools-on turn it reads your message and preloads the tool groups it needs (web search, images, video, music, artifacts, widgets, knowledge base, webhooks, tool forge), so the chat model has the full instructions for each tool on its first call. Adds about 0.1&nbsp;s per message and uses no VRAM. It can only add tools, so if it is slow or stopped the chat behaves exactly as it does with this off.',
     groupRouterPin: 'Locks the 640&nbsp;MB router model file into physical memory for the session, the same way RAM pin does for the chat model, so it never gets paged out and restarts read it at RAM speed. Only applies while Tool router is on.',
-    vramPressure: 'While a model is loaded the app checks free VRAM on its cards every 5 seconds. When another app leaves a card under half of the reserve the launch planner held back, a banner warns you. With this on, a card that stays that low for 30 seconds while no request is running also unloads the model, so the other app gets its memory and the next chat reloads cleanly. Never interrupts a running generation.',
+    moeGpuCache: 'When a mixture-of-experts model is too big for the GPU, every expert stays in system RAM and the spare VRAM becomes a cache of the experts used most recently (<code>--moe-cache-mib</code>); those run on the GPU and only cache misses cross PCIe. Measured on an RTX 5090 with a 111 GB model: roughly a third faster generation than filling the GPU with whole layers of experts, prompt processing about 13% slower. Output quality is unchanged. Needs a llama.cpp build from October 2026 or later (LumaByte luma-b4); older builds keep the layer fill. Applies at the next model load.',
+    gpuHeadroom: 'How much VRAM a model load leaves free on each card, on top of what the desktop, other apps and other models already use there at load time. More headroom means fewer layers or experts on the GPU, so a little slower decode, but no slowdown when the desktop or a browser grows and no low-VRAM warnings. Raise it for the card that drives your monitors. Applies at the next model load; the low-VRAM warning uses the same number.',
+    vramPressure: 'While a model is loaded the app checks free VRAM on its cards every 5 seconds. When another app leaves a card under half of the GPU headroom, a banner warns you. With this on, a card that stays that low for 30 seconds while no request is running also unloads the model, so the other app gets its memory and the next chat reloads cleanly. Never interrupts a running generation.',
   };
 
   static html(rows, v) {
@@ -54,6 +56,7 @@ export default class DefaultsCardHtml {
       rows.segmented('defaultKvSelect', 'KV cache precision', DefaultsOptions.KV, d.kvCacheType || '', H.kv),
       rows.segmented('defaultParallelSelect', 'Concurrent predictions', DefaultsOptions.parallelOptions(parallel), String(parallel), H.parallel),
       rows.segmented('defaultReasoningEffort', 'Thinking', DefaultsOptions.EFFORT, DefaultsOptions.effortPosition(d), H.thinking),
+      v.prefs.gpuHeadroomBytes != null ? rows.segmented('defaultGpuHeadroom', 'GPU headroom', DefaultsOptions.GPU_HEADROOM, DefaultsOptions.headroomPosition(v.prefs.gpuHeadroomBytes), H.gpuHeadroom) : '',
       v.prefs.approvalPolicy != null ? rows.segmented('defaultToolApproval', 'Tool approval', DefaultsOptions.APPROVAL, v.prefs.approvalPolicy, H.approval) : '',
       d.modelPath ? DefaultsCardHtml._tuneRow(rows, d, H.tune) : '',
     ].join('\n                        ');
@@ -72,6 +75,7 @@ export default class DefaultsCardHtml {
     const pinSupported = v.prefs.ramPinSupported();
     return [
       rows.toggle('defaultTensorSplit', 'Tensor split', !!d.tensorSplit, 'Split tensors across 2+ NVIDIA GPUs (experimental)', H.tensorSplit),
+      rows.toggle('defaultMoeGpuCache', 'MoE GPU cache', !d.noMoeGpuCache, 'Cache hot experts in VRAM when a MoE model spills to RAM', H.moeGpuCache),
       rows.toggle('defaultCacheReuse', 'Context retention', !!d.cacheReuse, 'Keep conversation context reusable in server memory', H.cacheReuse),
       rows.toggle('defaultUsePeerGpus', 'Peer GPUs', !!d.usePeerGpus, 'Borrow GPUs from attached network peers <span id="peerGpusHint" class="defaults-caption-hint"></span>', H.peerGpus),
       pinSupported ? rows.toggle('defaultRamPin', 'RAM pin', !!d.pinModelRam, 'Keep the default model locked in RAM <span id="ramPinHint" class="defaults-caption-hint"></span>', H.ramPin) : '',

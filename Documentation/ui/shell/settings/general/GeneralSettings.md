@@ -2,7 +2,7 @@
 
 `ui/shell/settings/general/GeneralSettings.js`
 
-General and API & MCP settings: composes the parts below, the application switches, DNS, MCP export, guides and endpoint lists; values reload on `settings:open`.
+General and API & MCP settings: composes the parts below (three IdeInstallerList instances: JetBrains, VS Code, Windhawk), the application switches, DNS, MCP export, guides and endpoint lists; values reload on `settings:open`.
 
 ## Methods
 

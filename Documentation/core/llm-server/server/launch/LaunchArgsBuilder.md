@@ -17,7 +17,7 @@ Assembles the llama-server argv for a resolved launch.
      [`-md <head> [-ngld 99]`] `--spec-ngram-mod-n-match 40 --spec-ngram-mod-n-min 0 --spec-ngram-mod-n-max 16`;
      or standalone `--spec-type ngram-mod --spec-ngram-mod-n-max 4`; then `--cache-type-k-draft/-v-draft`
   6. splits: `--split-mode tensor [--tensor-split r]`; `--rpc <addrs> [--tensor-split r]`;
-     `--n-cpu-moe N [--tensor-split r]` or `--cpu-moe`; fill-order `--tensor-split r`
+     `--n-cpu-moe N [--tensor-split r]` or `--cpu-moe [--moe-cache-mib N]`; fill-order `--tensor-split r`
   7. family tuning args, the family drafter args, the runtime's `extraArgs`, then the user's flags
 - `HOST` (`127.0.0.1`).
 

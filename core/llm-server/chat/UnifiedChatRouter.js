@@ -52,8 +52,10 @@ class UnifiedChatRouter {
 
 
   listModels() { return this._models.list(); }
+  resolveModelRef(modelRef) { return this._models.resolveRef(modelRef); }
   contextWindowFor(modelRef) { return this._window.forRef(modelRef); }
   modelVisionActive(modelRef) { return this._caps.visionActive(modelRef); }
+  modelVisionSupport(modelRef) { return this._caps.visionSupport(modelRef); }
   modelNativeToolsActive(modelRef) { return this._caps.nativeToolsActive(modelRef); }
   modelNativeToolExclude(modelRef) { return this._caps.nativeToolExclude(modelRef); }
 

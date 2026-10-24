@@ -19,9 +19,11 @@ class TtsVoiceSettings {
     this._db.set(TtsVoiceSettings.MODEL_KEY, String(id || ''));
   }
 
-  getSid() {
-    const value = Number(this._db.get(TtsVoiceSettings.SID_KEY, 0));
-    return Number.isFinite(value) && value >= 0 ? value : 0;
+  getSid(fallback = 0) {
+    const stored = this._db.get(TtsVoiceSettings.SID_KEY, null);
+    if (stored == null || stored === '') return fallback;
+    const value = Number(stored);
+    return Number.isFinite(value) && value >= 0 ? value : fallback;
   }
 
   setSid(sid) {

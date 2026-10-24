@@ -14,6 +14,7 @@ Modes with `agent: true` start with tools on.
 
 - `start(modeId, presetData?)`: preset data (an external launcher) skips setup.
 - `checkPendingIntent()`: takes a one-shot `api.chat.takeIntent()` only after the
-  mode list loaded (it is read-once on the server).
+  mode list loaded (it is read-once on the server). A `{ compose }` intent goes to
+  [ComposeIntent](ComposeIntent.md) instead of a mode.
 - `leaveActive()`: clears editor chips and calls the outgoing mode's
   `onLeaveConversation` (before the mode is reassigned).

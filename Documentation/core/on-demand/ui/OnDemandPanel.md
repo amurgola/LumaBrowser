@@ -19,7 +19,7 @@ The panel controller: state from main, the chat turn, the composer, drag and key
 - `finishTurn({ error, aborted })`, `applyState(st)`, `loadHistory()`.
 
 `applyState`: header (title or host, URL tooltip, model or "No model set up"),
-tile dot (`ready`/`bad`), `tile-live`, expanded/collapsed. A tab change (unless
+tile dot (`ready`/`bad`; only `bad` is drawn), `tile-live` (no longer styled), expanded/collapsed. A tab change (unless
 it shares the conversation, as a tab the page opened does) drops the running
 turn and clears the log. Opening loads history, focuses the input and starts
 the mic when auto-voice is on.

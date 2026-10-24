@@ -40,15 +40,17 @@ class ImageIpcHandlers {
   }
 
   static _services(service, router, slot) {
+    const loras = new ImageLoraLibrary({ imageServerService: service, slot });
+    const attacher = new ModelLoraAttacher({ imageServerService: service });
     return {
       models: new ImageModelsView({ imageServerService: service }),
       runtimes: new ImageRuntimeSetup({ imageServerService: service }),
       defaults: new ImageDefaultsUpdater(service),
       configs: new ImageServerConfigs(service),
       slots: new ImageSlots(service),
-      installer: new CatalogModelInstaller({ imageServerService: service, slot }),
-      loras: new ImageLoraLibrary({ imageServerService: service, slot }),
-      attacher: new ModelLoraAttacher({ imageServerService: service }),
+      installer: new CatalogModelInstaller({ imageServerService: service, slot, loras, attacher }),
+      loras,
+      attacher,
       importer: new ImageModelImporter({ imageServerService: service, slot }),
       adopter: new ExistingModelAdopter(service),
       remover: new InstalledModelRemover(service),

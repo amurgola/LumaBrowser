@@ -10,12 +10,12 @@ The persisted LLM launch defaults. Extends [KeyedSettings](KeyedSettings.md).
   [ModelLaunchFlags](ModelLaunchFlags.md), `groupRouter` has `isEnabled`,
   `isPinEnabled`, `setEnabled`, `setPinEnabled`.
 - `get()` returns
-  `{ runtimeId, modelPath, contextSize, kvCacheType, maxConcurrent, openvinoDevice, tensorSplit, cacheReuse, cpuMoe, noThink, reasoningEffort, usePeerGpus, pinModelRam, groupRouter, groupRouterPinRam, launchFlags }`:
+  `{ runtimeId, modelPath, contextSize, kvCacheType, maxConcurrent, openvinoDevice, tensorSplit, cacheReuse, cpuMoe, noThink, reasoningEffort, usePeerGpus, pinModelRam, noMoeGpuCache, groupRouter, groupRouterPinRam, launchFlags }`:
   - `contextSize` a floored positive number, else null (the planner's own default);
   - `kvCacheType` one of `KvCacheModes.MODE_IDS`, else null;
   - `maxConcurrent` 1 to 64 (`DEFAULT_PARALLEL`, `MAX_PARALLEL`), else 1;
   - `openvinoDevice` `GPU`, `NPU` or `CPU` ([OpenVinoDevice](../runtimes/OpenVinoDevice.md)`.normalize`), else null (Auto);
-  - the six `FLAG_FIELDS` booleans, off by default;
+  - the seven `FLAG_FIELDS` booleans, off by default (`noMoeGpuCache` is an opt-out: unset keeps the MoE GPU cache on);
   - `reasoningEffort` `ReasoningEffort.normalizeEffort` of the stored level (`'default'` when none);
   - `groupRouter`, `groupRouterPinRam` from the router;
   - `launchFlags` the current default model's flags, `''` when none.

@@ -26,3 +26,19 @@ Classic-script exception: the extension is `distributable: true`, so this stays 
 Reads `window.LumaSetupExt`, `window.LumaModal`, `AudioContext`,
 `MediaRecorder`, `navigator.mediaDevices`. Injects
 `<link id="cv-css" href="/llm-ui/ext/chatterbox-voice/setup-ui.css">`, which is on tokens.css per the [design system](../../ui/DesignSystem.md) (no fallback greys or greens; the active chip is neutral).
+
+## KittenTTS 2 (2026-10-22)
+
+- The models column is titled "Voice models"; a row shows its `licenseNote`
+  (the Stellon Labs commercial terms) under the description and a
+  `luma-form-err` line with `runtimeNote` when the installed audio.cpp predates
+  the model. Installed engine rows gain a "Reinstall" button (`runtime.install`)
+  for that case.
+- The header lists `attributions` as chips ("Powered by KittenML") while the
+  model is downloaded, as its license requires.
+- A "KittenTTS 2" built-in card appears when `kitten.available`, with a
+  `select[data-kitten-preset]` of `kitten.groups` (optgroups) that invokes
+  `kitten.preset { name }`; Preview and "Use in chat" send voice id `kitten`.
+- With two cloning models downloaded, a "Clone with" row
+  (`select[data-clone-model]`) invokes `clone.model { id }`.
+- The form notes that the transcript is required by KittenTTS 2.

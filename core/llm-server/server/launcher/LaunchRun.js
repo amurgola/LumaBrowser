@@ -24,6 +24,7 @@ class LaunchRun {
     await this._waitForLentGpus();
     await this._parts.borrow.borrow(this._ctx);
     await this._joinHotswapReclaim();
+    await this._readLiveCards();
     this._parts.placement.place(this._ctx);
     await this._planLaunch();
     await this._preferExpertOffloadOverPeers();
@@ -83,6 +84,12 @@ class LaunchRun {
     await this._hotswapReclaim;
     this._parts.log.log(`[llm-server] launch preflight: diag ${t.diag - t.preflight}ms, runtimes ${t.runtimes - t.diag}ms, `
       + `scan ${t.scan - t.runtimes}ms, plan ${t.plan - t.scan}ms, evict-join ${Date.now() - t.plan}ms`);
+  }
+
+  async _readLiveCards() {
+    const ctx = this._ctx;
+    if (typeof this._parts.liveMemory !== 'function') return;
+    try { ctx.diag = await this._parts.liveMemory(ctx.diag); } catch (_) {}
   }
 
   async _planLaunch() {

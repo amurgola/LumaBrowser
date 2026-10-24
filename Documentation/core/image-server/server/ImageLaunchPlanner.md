@@ -10,18 +10,20 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
 - `new ImageLaunchPlanner().plan({ model, runtime, diagnostics?, port, publicPort?, overrides? })`
   returns `{ binaryPath, args, plan }`.
   - `plan = { port (publicPort when given, else port), privatePort, modelId,
-    runtimeId, offloadToCpu, autoFit, vaeTiling, flashAttention, files: { role: basename } }`.
+    runtimeId, offloadToCpu, autoFit, vaeTiling, flashAttention, sageAttention,
+    files: { role: basename } }`.
   - Throws `ImageLaunchPlanner: model is required`, `runtime is required`,
     `runtime has no binaryPath`, `port is required` (must be a number),
     `model.files.diffusion.path is required`.
   - `overrides`: `offloadToCpu`, `autoFit` (true or a `--max-vram` budget
     string), `autoFitForm` ('bare' for pre-on|off builds), `vaeTiling`,
-    `loraDir`, `clipOnCpu` (false drops the catalog's `--clip-on-cpu`).
+    `loraDir`, `clipOnCpu` (false drops the catalog's `--clip-on-cpu`),
+    `sageAttention` (decided by [SageAttentionPolicy](../service/SageAttentionPolicy.md)).
 - `ImageLaunchPlanner.inferLoaderFlag(filePath)` is `--diffusion-model` for
   `.gguf`, else `-m`.
 - `ImageLaunchPlanner.preferSdServer(binaryPath)` keeps an `sd-server*` path,
   otherwise returns the `sd-server[.exe]` sibling.
-- Statics: `GIB`, `HOST`, `FILE_ROLE_FLAGS`, `PERFORMANCE_FLAGS`.
+- Statics: `GIB`, `HOST`, `FILE_ROLE_FLAGS`, `PERFORMANCE_FLAGS`, `SAGE_ATTENTION_FLAG`.
 
 ## Argv order
 
@@ -30,7 +32,7 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
    `--tokenizer`, `--clip_l`, `--t5xxl`, `--llm_vision`*, `--clip_vision`* (* the role's own
    `loaderFlag` wins).
 3. `--diffusion-fa --diffusion-conv-direct --vae-conv-direct` unless the runtime
-   lists them in `unsupportedFlags`.
+   lists them in `unsupportedFlags`, then `--sage-attn` (override, same check).
 4. `--vae-tiling` (override), `--lora-model-dir <dir>` (override).
 5. `--auto-fit on [--max-vram <budget>]`, or `--offload-to-cpu`, never both.
 6. The model's `launchArgs`, then the runtime's `extraArgs` (last, so they win).
@@ -48,7 +50,10 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
 - The detector may return sd-cli (first on the binary list); sd-server lives next
   to it in every bundle.
 - Flash attention and direct conv2d are measured wins on every supported CUDA and
-  Vulkan build.
+  Vulkan build. SageAttention takes precedence over flash attention inside the
+  diffusion model, so the two flags coexist; it is per launch because it needs a
+  CUDA build and an Ampere-or-newer card (MiniMax-H3's 124-frame step: 7.7 s to
+  4.5 s on an RTX 5090, 2026-10-22).
 - VAE tiling keeps an edit model's reference encode small (un-tiled wan_vae is
   7 to 8 GB, the "failed to encode reference image 0" OOM), so it stays resident.
 - The LoRA folder backs each request's structured `lora` list; prompt `<lora:>`

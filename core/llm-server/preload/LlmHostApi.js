@@ -40,6 +40,8 @@ class LlmHostApi extends PreloadSection {
       dismissVramPressure: (card) => ipcRenderer.invoke('core.llmServer.dismissVramPressure', card),
       getUnloadOnVramPressure: () => ipcRenderer.invoke('core.llmServer.getUnloadOnVramPressure'),
       setUnloadOnVramPressure: (v) => ipcRenderer.invoke('core.llmServer.setUnloadOnVramPressure', v),
+      getGpuHeadroom: () => ipcRenderer.invoke('core.llmServer.getGpuHeadroom'),
+      setGpuHeadroom: (bytes) => ipcRenderer.invoke('core.llmServer.setGpuHeadroom', bytes),
       checkSystemLibraries: () => ipcRenderer.invoke('core.llmServer.checkSystemLibraries'),
     };
   }

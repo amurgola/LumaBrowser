@@ -28,7 +28,9 @@ class ImageLoraEntries {
       approxBytes: 744 * MB,
       blurb: 'Renders video + audio in 6-8 steps instead of ~20 (~3x faster wall-clock; '
         + '4 steps works but softer). Author\'s current best checkpoint, sharpest '
-        + 'micro-detail; may ghost on fast large motion at 4 steps.',
+        + 'micro-detail; may ghost on fast large motion at 4 steps. Like every H3 '
+        + 'speed LoRA it costs some soundtrack quality (this one the least); for '
+        + 'audio-critical clips remove it and render the full ~20 steps.',
       weight: 1.0,
       preset: { steps: 8, cfgScale: 1.0, sampler: 'euler' },
       licenseNote: 'Derived from MiniMax-H3: the MiniMax-H3 Community License applies.',

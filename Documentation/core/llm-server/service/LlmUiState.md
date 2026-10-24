@@ -17,7 +17,8 @@ The LLM tab's remembered UI state. Extends [KeyedSettings](KeyedSettings.md).
 - `setPendingSetupExpand(expand)` stores the hint, falsy clears it;
   `consumePendingSetupExpand()` returns it once, then null.
 - `setChatIntent(intent)`, `takeChatIntent()` an in-memory `{ mode, data? }`
-  read once (null after).
+  or `{ compose: { conversationId?, prompt, attachments, autoSend } }` (see
+  [ComposeIntent](../ui/js/chat/modes/ComposeIntent.md)), read once (null after).
 - Statics: `KEYS` (`core.llmServer.ui.mode`, `.ui.pendingSetupExpand`,
   `.ui.sidebarCollapsed`, `.chat.lastModelRef`), `MODES`.
 

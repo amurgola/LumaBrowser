@@ -10,21 +10,31 @@ folder per voice model) and detects the engine from the files. Extends
 
 - `new TtsModelsScanner().scan(dir)` returns descriptors sorted by id:
   - Pocket: `{ id, name, dir, engine: 'pocket', onnxFile, pocketFiles: { lmMain, lmFlow, encoder, decoder, textConditioner }, voices, sizeBytes }`
-  - Kokoro / VITS: `{ id, name, dir, engine, onnxFile, hasDict, lexiconFiles, sizeBytes }`
+  - Kokoro / Kitten / VITS: `{ id, name, dir, engine, onnxFile, hasDict, lexiconFiles, sizeBytes }`
   `sizeBytes` sums the `.onnx` graphs. Folders with no `.onnx` are skipped.
 - `scanPocketVoices(modelDir)` returns `[{ id, name, path }]` for the WAVs in
   `voices/`, else `test_wavs/`, else `[]`. Sorted by file name (index = speaker
   id); `name` capitalises the id and turns `_` / `-` runs into spaces.
-- Statics: `VOICE_DIRS`, `POCKET_GRAPHS`.
+- Statics: `VOICE_DIRS`, `POCKET_GRAPHS`, `METADATA_TAIL_BYTES` (16 KB),
+  `KITTEN_MODEL_TYPE`.
 
 ## Detection
 
 Checked in this order, because a Pocket archive also ships `tokens.txt`:
 
 - `pocket`: an `lm_main*.onnx` graph.
-- `kokoro`: `voices.bin`. `onnxFile` prefers the `int8` graph (int8 archives
-  carry `model.int8.onnx`, fp32 ones `model.onnx`).
+- `kitten` (KittenTTS v0.8) or `kokoro`: `voices.bin`. The two layouts are
+  identical (Kitten matches Kokoro v0.19 file for file), so a `voices.bin`
+  folder is Kitten when its name starts with `kitten-` (every sherpa archive)
+  or when the last 16 KB of the graph carry sherpa's `model_type` metadata
+  entry with the value `kitten-tts`; otherwise it is Kokoro. `onnxFile` prefers
+  the `int8` graph for both (int8 archives carry `model.int8.onnx`, fp32 ones
+  `model.onnx`).
 - `vits` (Piper): `tokens.txt`; `onnxFile` is the first `.onnx`.
+
+The metadata sniff reads the file tail because the onnx library serialises
+`metadata_props` (field 14) after the graph (field 7); measured 2026-10-22 the
+entry sat 1 to 4 KB from the end of the Kitten and both Kokoro graphs.
 
 `hasDict` and `lexiconFiles` report what a Kokoro folder really contains (v1.x
 carries `dict/` and lexicons, v0.19 is espeak-only) so `TtsModelConfigBuilder`

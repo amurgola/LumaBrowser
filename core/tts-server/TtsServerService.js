@@ -45,8 +45,13 @@ class TtsServerService {
 
   getDefaultModelId() { return this._settings.getModelId(); }
   setDefaultModelId(id) { this._settings.setModelId(id); }
-  getSid() { return this._settings.getSid(); }
+  getSid(modelId = this.getDefaultModelId()) { return this._settings.getSid(this._catalogDefaultSid(modelId)); }
   setSid(sid) { this._settings.setSid(sid); }
+
+  _catalogDefaultSid(modelId) {
+    const entry = modelId ? this._catalog.getById(modelId) : null;
+    return entry && Number.isFinite(entry.defaultSid) ? entry.defaultSid : 0;
+  }
   getSpeed() { return this._settings.getSpeed(); }
   setSpeed(speed) { this._settings.setSpeed(speed); }
   getAutoUnloadMs() { return this._settings.getAutoUnloadMs(); }
@@ -69,7 +74,7 @@ class TtsServerService {
       modelCatalog: this._catalog.list().concat(external),
       recommendedModelId: this._catalog.recommendedId(TtsServerService.threadCount()),
       defaultModelId: model ? model.id : null,
-      sid: this.getSid(),
+      sid: this.getSid(model ? model.id : null),
       speed: this.getSpeed(),
       workerState: this.workerState,
       workerInfo: this.workerInfo,
@@ -235,8 +240,14 @@ class TtsServerService {
     const speed = Number(args.speed) > 0 ? Number(args.speed) : this.getSpeed();
     const text = String(args.text || '');
     if (info && info.external) return this._external.synthesize(id, info.modelId, { text, speed }, onChunk);
-    const sid = Number.isFinite(args.sid) ? Number(args.sid) : this.getSid();
-    return this._sendToWorker(id, { type: 'synthesize', id, text, sid, speed }, onChunk);
+    const sid = Number.isFinite(args.sid) ? Number(args.sid) : this.getSid(info ? info.modelId : null);
+    const scaled = speed * this._speedScale(info ? info.modelId : null);
+    return this._sendToWorker(id, { type: 'synthesize', id, text, sid, speed: scaled }, onChunk);
+  }
+
+  _speedScale(modelId) {
+    const entry = modelId ? this._catalog.getById(modelId) : null;
+    return entry && Number(entry.speedScale) > 0 ? Number(entry.speedScale) : 1;
   }
 
   _sendToWorker(id, message, onChunk) {

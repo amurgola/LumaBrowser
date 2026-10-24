@@ -26,7 +26,7 @@ export default class GeneralSettings {
     this._buildParts();
     new RestartNotes({ feedback: this._feedback }).install();
     document.addEventListener('settings:open', () => this.load());
-    for (const part of [this._port, this._telemetry, this._cliShim, this._jetbrains, this._vscode, this._llm, this._endpoints]) part.install();
+    for (const part of [this._port, this._telemetry, this._cliShim, this._jetbrains, this._vscode, this._windhawk, this._llm, this._endpoints]) part.install();
     this._wireSwitches();
     this._wireButtons();
     new CollapsibleSections().install();
@@ -37,6 +37,7 @@ export default class GeneralSettings {
     this._cliShim.load();
     this._jetbrains.load();
     this._vscode.load();
+    this._windhawk.load();
     try {
       await this._port.load();
       this._el.apiEnabled.checked = await window.electronAPI.getApiEnabled();
@@ -79,6 +80,7 @@ export default class GeneralSettings {
     this._cliShim = new CliShimSwitch({ feedback });
     this._jetbrains = new IdeInstallerList({ feedback, config: IdeInstallerList.JETBRAINS });
     this._vscode = new IdeInstallerList({ feedback, config: IdeInstallerList.VSCODE });
+    this._windhawk = new IdeInstallerList({ feedback, config: IdeInstallerList.WINDHAWK });
     this._llm = new LlmServerSettings({ feedback });
     this._endpoints = new EndpointToolsPanel({ feedback, settings: this._settings });
     this._guides = new GuideViewer({ feedback });

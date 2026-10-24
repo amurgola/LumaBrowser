@@ -14,7 +14,9 @@ Builds the app's outward surfaces.
   - `cliHandshake` (published as `__lumaCliHandshake`), `cliShim` (launcher
     target `APPIMAGE` or the exec path; CLI source `resources/cli` packaged,
     `<root>/cli` in dev), `idePlugin` and `vscodeExtension` (from
-    `resources/ide/` packaged, `<root>/ide/dist/` in dev);
+    `resources/ide/` packaged, `<root>/ide/dist/` in dev), `windhawkMods`
+    ([WindhawkModInstaller](../../core/shell/WindhawkModInstaller.md) over
+    `<root>/integrations/windhawk`, an app file in both cases);
   - `dashboardService`; while the API is on, the LLM server and the dashboard
     load their tabs from `http://127.0.0.1:<port>`;
   - `mcpAggregator`, restoring `core.disabledMcpTools`.

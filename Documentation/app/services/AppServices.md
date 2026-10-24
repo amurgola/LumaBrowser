@@ -31,7 +31,7 @@ into `ctx.services`. Window-time services come later from
 `llmServerService`, `imageServerService`, `musicServerService`,
 `whisperServerService`, `ttsServerService`, `groundingServerService`; gateway:
 `ipcBridge`, `restGateway`, `cliHandshake`, `cliShim`, `idePlugin`,
-`vscodeExtension`, `dashboardService`, `mcpAggregator`; chat tasks:
+`vscodeExtension`, `windhawkMods`, `dashboardService`, `mcpAggregator`; chat tasks:
 `artifactStore`, `artifactDataStore`, `liveApi`, `backgroundRunGate`,
 `artifactTaskStore`, `artifactTaskScheduler`, `scheduledTaskStore`,
 `scheduledTaskScheduler`, `emitSchedTasksEvent`, `ragService`; triggers:

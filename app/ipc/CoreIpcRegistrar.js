@@ -64,6 +64,7 @@ class CoreIpcRegistrar {
       cliShim: s.cliShim,
       idePlugin: s.idePlugin,
       vscodeExtension: s.vscodeExtension,
+      windhawkMods: s.windhawkMods,
       onSetupFinalized: () => this._ctx.deferredServices.start(),
     }).register();
     new ChromeExtensionIpcHandlers(s.chromeExtensionService, {

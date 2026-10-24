@@ -21,6 +21,11 @@ Routes the "Voice cloning" Setup tab's `setup.invoke` actions.
     `{ started: true }`; one at a time;
   - `model.cancel` -> `{ canceled }`;
   - `model.delete { id }` -> stops the engine, removes the GGUF, `{ removed: true }`;
+  - `kitten.preset { name }` -> saves the KittenTTS 2 built-in voice (null:
+    model default), `{ kittenPreset }`; an unknown name rejects
+    `Unknown KittenTTS 2 voice: <name>`. No restart: the request names the voice;
+  - `clone.model { id }` -> saves which model clones (null: first usable),
+    `{ cloneModelId }`; a model that does not clone rejects `Not a cloning model: <id>`;
   - `server.stop` -> `{ stopped: true }`;
   - `voices.*` -> [ChatterboxVoiceActions](ChatterboxVoiceActions.md).
   Unknown ids reject `Unknown engine: <id>` / `Unknown model: <id>`.

@@ -22,7 +22,9 @@ caller's `send`.
   `firstFrame` / `lastFrame` (Buffer or base64; resolving an artifact id to bytes
   is the caller's job), `send(type, payload)`. Events: `meta { modelId,
   runtimeId, port, width, height, steps, cfgScale, sampler, videoFrames, fps,
-  seed, i2v, adjustments? }`, `status { phase }`, `progress { step, totalSteps }`,
+  seed, i2v, adjustments? }`, `status { phase }` (the launcher's
+  `starting-server` / `switching-model`, then `rendering-video` right before
+  `meta`, so the chat bubble stops saying the model is starting), `progress { step, totalSteps }`,
   `preview { b64, mime }`, `done { video: { b64, mime, frameCount, fps, width,
   height, encoder }, modelId }`, `error { message }`. A missing prompt or no
   configured model returns an error without an event; every later failure also

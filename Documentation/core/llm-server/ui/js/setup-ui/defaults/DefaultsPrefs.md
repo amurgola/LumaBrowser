@@ -2,7 +2,7 @@
 
 `core/llm-server/ui/js/setup-ui/defaults/DefaultsPrefs.js`
 
-The Defaults settings outside the launch payload (auto-unload, unload on VRAM pressure, tool approval, RAM-pin status), cached so a re-render never redraws one as unset.
+The Defaults settings outside the launch payload (auto-unload, unload on VRAM pressure, GPU headroom bytes, tool approval, RAM-pin status), cached so a re-render never redraws one as unset.
 
 ## Methods
 

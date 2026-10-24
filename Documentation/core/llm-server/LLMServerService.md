@@ -49,6 +49,7 @@ Requests and starting ([LocalRequestTracker](service/LocalRequestTracker.md),
 VRAM pressure:
 - `getVramPressure()` the watchdog state; `dismissVramPressure(card)`.
 - `getUnloadOnVramPressure()`, `setUnloadOnVramPressure(value)`.
+- `getGpuHeadroomBytes()`, `setGpuHeadroomBytes(bytes)`: the per-card GPU headroom ([GpuHeadroom](../shared/runtime/GpuHeadroom.md)).
 - The watchdog's `isIdle` is ready, nothing in flight and no idle hold
   (`runtimeServer.idleHeld`); its unload stops the server; its events go to the
   pinned tab as `core.llmServer.modelEvent` `{ type, payload }`.

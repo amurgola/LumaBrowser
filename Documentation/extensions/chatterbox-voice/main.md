@@ -40,3 +40,9 @@ Base classes reused: core `RuntimeCatalog` ([AudioCppRuntimeCatalog](AudioCppRun
 `BaseRuntimeServer` (AudioCppServer, runs BaseRuntimeServerContract).
 `RuntimeDetector` does not fit: the voice picker needs a synchronous answer, so
 [AudioCppInstallation](AudioCppInstallation.md) looks binaries up synchronously.
+
+## KittenTTS 2 (2026-10-22)
+
+The manifest description names KittenTTS 2 and its Stellon Labs Community
+License terms next to Chatterbox, so the add-on listing states the commercial
+conditions before anything is downloaded.

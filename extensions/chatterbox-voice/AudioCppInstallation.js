@@ -10,9 +10,14 @@ class AudioCppInstallation {
       const entry = catalog.getById(id);
       if (!entry) continue;
       const binaryPath = AudioCppInstallation.findRuntimeBinary(runtimesRoot, id, catalog);
-      if (binaryPath) return { id, binaryPath, backend: entry.backend };
+      if (binaryPath) return { id, binaryPath, backend: entry.backend, release: AudioCppInstallation.installedRelease(runtimesRoot, id) };
     }
     return null;
+  }
+
+  static installedRelease(runtimesRoot, id) {
+    const manifest = AudioCppInstallation._readManifest(path.join(runtimesRoot, id));
+    return manifest && manifest.release && typeof manifest.release === 'object' ? manifest.release : null;
   }
 
   static findRuntimeBinary(runtimesRoot, id, catalog = AudioCppRuntimeCatalog.shared) {

@@ -9,16 +9,13 @@
 </head>
 <body class="collapsed">
   <button id="tile" class="od-tile" type="button" title="Luma On Demand: talk to this page" aria-label="Open Luma On Demand">
-    <span class="od-tile-ring"></span>
-    <svg class="od-tile-glyph" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"/>
-    </svg>
+    <svg class="od-mark od-tile-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.4" y="2.4" width="19.2" height="19.2" rx="5.2" stroke="currentColor" stroke-width="1.8"/><path d="M8.4 7H10.7V14.7H16.8V17H8.4Z" fill="currentColor"/><path class="od-mark-light" d="M12.6 7H16.8V11.2Z"/></svg>
     <span class="od-tile-dot" id="tileDot"></span>
   </button>
 
   <div id="panel" class="od-panel" hidden>
     <header class="od-head" id="head">
-      <span class="od-live" id="liveBadge"><i class="od-live-dot"></i>Live</span>
+      <span class="od-live" id="liveBadge" title="Live: talk or type"><svg class="od-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.4" y="2.4" width="19.2" height="19.2" rx="5.2" stroke="currentColor" stroke-width="1.8"/><path d="M8.4 7H10.7V14.7H16.8V17H8.4Z" fill="currentColor"/><path class="od-mark-light" d="M12.6 7H16.8V11.2Z"/></svg><span class="od-live-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="od-sr">Live</span></span>
       <div class="od-page">
         <span class="od-page-title" id="pageTitle">This page</span>
         <span class="od-page-model" id="modelLabel"></span>

@@ -8,7 +8,7 @@ The LLM Setup "Defaults" card: the runtime, model and launch settings Start uses
 
 - `render()`: defaults, the cached scan (fetched only when missing) and [DefaultsPrefs](DefaultsPrefs.md), then `renderView`.
 - `renderView(defaults)`: sets `ctx.lastDefaults` first (the gambit block reads it), paints the pill and body, wires the controls and hints, refreshes fit blocks and the installed handle. A format-bound runtime with one model pins it once (`setDefaults({ modelPath })`) and locks the picker.
-- `onChange()`: `setDefaults(DefaultsForm.read(doc))`, re-render, save note. Auto-unload, unload on VRAM pressure and tool approval save on their own and never restart the server.
+- `onChange()`: `setDefaults(DefaultsForm.read(doc))`, re-render, save note. Auto-unload, unload on VRAM pressure, GPU headroom (`setGpuHeadroom(GiB x 2^30)`) and tool approval save on their own and never restart the server.
 - `showSaveNote(serverStopped)`: a stopped notice stays until the next render; "Saved." fades after 4 s.
 - The view's `openvino` is `{ options: DefaultsOptions.openvinoDeviceOptions(hostCaps.intelNpuNames()) }` only when the default runtime is OpenVINO, else null; `defaultOpenVinoDevice` is one of `SHARED_CONTROLS`.
 - Fields `rows` ([DefaultsRows](DefaultsRows.md)), `prefs`.

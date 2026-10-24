@@ -9,7 +9,8 @@ The fill-order `--tensor-split` for a plain multi-GPU layer split: fastest card 
 - `LayerFillSplit.compute({ perGpu, gguf, contextSize, cacheTypeK, cacheTypeV, kvOnHost, swaFull, modelBytes, extraBytes = 0, flashAttnSupported, layersOnGpu })`
   returns `{ ratio, perDevice: [{ index, name, layers, bytes, budgetBytes }] }` or `null`
   (incomplete input, fewer than two cards, or the layers do not pack).
-  - card budget = `(total - max(1 GiB reserve, already-resident bytes) - fixed overhead) x CARD_SAFETY (0.95)`,
+  - card budget = `(GpuOverhead.cardRoom(card) - fixed overhead) x CARD_SAFETY (0.95)`: read live, total less
+    what already occupies the card less the GPU headroom; cached, `total - max(headroom, already-resident bytes)`,
     less `extraBytes` (projector, draft branch) on device 0, llama.cpp's main GPU;
   - layer cost = `modelBytes / blocks` + [KvCacheSizer](KvCacheSizer.md)`.atLayer`;
   - packs the last `layersOnGpu` blocks contiguously in device order; a device with

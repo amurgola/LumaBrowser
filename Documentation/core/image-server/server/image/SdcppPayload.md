@@ -8,10 +8,12 @@ names vary across builds, and parses environment budgets.
 ## Methods
 
 - `SdcppPayload.progressOf(data)` looks in `data.progress`, then
-  `data.status_detail`, then `data` itself for a numeric step
+  `data.status_detail`, then `data.preview`, then `data` itself for a numeric step
   (`step`, `current_step`, `sample_step`) and total (`total_steps`, `steps`,
-  `sample_steps`). Returns `{ step, totalSteps }` (either may be null) or `null`
-  when neither is present.
+  `sample_steps`); the first holder with either wins. Returns `{ step, totalSteps }`
+  (either may be null) or `null` when none is present. Current sd-server builds
+  report the counter only inside the `preview` object, and only while a preview
+  mode is on, which is why the request bodies always ask for one.
 - `SdcppPayload.previewOf(data)` returns `{ bytes, mime }` from
   `data.preview.b64_json` or `.b64` (mime defaults to `image/png`), else `null`.
 - `SdcppPayload.errorMessage(err)` returns a readable message: strings as-is,

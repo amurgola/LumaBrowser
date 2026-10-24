@@ -19,8 +19,23 @@ class ChatterboxSetupActions {
       'model.download': (p) => this._downloadModel(p.id),
       'model.cancel': () => this._cancelModel(),
       'model.delete': (p) => this._deleteModel(p.id),
+      'kitten.preset': (p) => this._setKittenPreset(p.name),
+      'clone.model': (p) => this._setCloneModel(p.id),
       'server.stop': () => this._stopServer(),
     };
+  }
+
+  _setKittenPreset(name) {
+    const kitten = ChatterboxModels.getModelById(ChatterboxModels.KITTEN_ID);
+    if (name != null && name !== '' && !kitten.presets.includes(String(name))) throw new Error(`Unknown KittenTTS 2 voice: ${name}`);
+    this._host.settings.setKittenPreset(name);
+    return { kittenPreset: this._host.engine.kittenPreset() };
+  }
+
+  _setCloneModel(id) {
+    if (id != null && id !== '' && !ChatterboxModels.canClone(ChatterboxModels.getModelById(id))) throw new Error(`Not a cloning model: ${id}`);
+    this._host.settings.setCloneModel(id);
+    return { cloneModelId: this._host.engine.cloneModelId() };
   }
 
   async handle(action, payload = {}) {

@@ -1,4 +1,5 @@
 const KeyedSettings = require('./KeyedSettings');
+const GpuHeadroom = require('../../shared/runtime/GpuHeadroom');
 
 class LlmServerSettings extends KeyedSettings {
   static KEYS = {
@@ -14,6 +15,7 @@ class LlmServerSettings extends KeyedSettings {
   constructor(settingsDb, { defaultModelsDir }) {
     super(settingsDb);
     this._defaultModelsDir = defaultModelsDir;
+    GpuHeadroom.load(settingsDb);
   }
 
   isEnabled() {
@@ -68,6 +70,14 @@ class LlmServerSettings extends KeyedSettings {
     const on = value === true;
     this._setOrDelete(LlmServerSettings.KEYS.unloadOnVramPressure, on ? true : null);
     return on;
+  }
+
+  getGpuHeadroomBytes() {
+    return GpuHeadroom.bytes();
+  }
+
+  setGpuHeadroomBytes(bytes) {
+    return GpuHeadroom.save(this._db, bytes);
   }
 }
 

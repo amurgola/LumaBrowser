@@ -7,6 +7,8 @@ class TtsModelConfigBuilder {
 
   static POCKET_VOICE_CACHE = 16;
 
+  static KITTEN_MAX_THREADS = 2;
+
   static DEFAULT_KOKORO_LEXICONS = ['lexicon-us-en.txt', 'lexicon-zh.txt'];
 
   static build(entry, modelDir, numThreads) {
@@ -14,7 +16,20 @@ class TtsModelConfigBuilder {
     if (entry.engine === 'kokoro') return TtsModelConfigBuilder._kokoro(entry, inDir, numThreads);
     if (entry.engine === 'pocket') return TtsModelConfigBuilder._pocket(entry, inDir, numThreads);
     if (entry.engine === 'vits') return TtsModelConfigBuilder._vits(entry, modelDir, inDir, numThreads);
+    if (entry.engine === 'kitten') return TtsModelConfigBuilder._kitten(entry, inDir, numThreads);
     throw new Error(`Unknown TTS engine: ${entry.engine}`);
+  }
+
+  static _kitten(entry, inDir, numThreads) {
+    const threads = Math.min(numThreads || TtsModelConfigBuilder.DEFAULT_THREADS, TtsModelConfigBuilder.KITTEN_MAX_THREADS);
+    return TtsModelConfigBuilder._wrap({
+      kitten: {
+        model: inDir(entry.onnxFile || 'model.fp32.onnx'),
+        voices: inDir('voices.bin'),
+        tokens: inDir('tokens.txt'),
+        dataDir: inDir('espeak-ng-data'),
+      },
+    }, threads);
   }
 
   static _kokoro(entry, inDir, numThreads) {

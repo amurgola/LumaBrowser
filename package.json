@@ -1,6 +1,6 @@
 {
   "name": "lumabrowser",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "private": true,
   "description": "Your local AI stack in one app",
   "homepage": "https://lumabyte.com",
@@ -32,6 +32,7 @@
     "test:integration:live": "jest --config=tests/integration/live/jest.config.js --runInBand",
     "verify:asar": "node scripts/verify-asar.js",
     "sync:prod": "node scripts/sync-prod.js",
+    "windhawk:check": "node tools/windhawk/check-mods.js",
     "cleanup": "node scripts/cleanup.js",
     "shots:readme": "node scripts/readme-shots.js",
     "test:clean": "npm run cleanup && npm test",

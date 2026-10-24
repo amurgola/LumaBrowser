@@ -117,8 +117,8 @@ The agent opens its own tabs, reads the pages and answers. Your tabs stay yours.
 - Video: Wan 2.2 (text and image to video), LTX-Video, AniSora, MiniMax-H3.
 - Music: MiniMax-Music3 (CUDA, Linux or WSL2, about 34 GB of video memory).
 - Speech-to-text: Parakeet, Qwen3-ASR and whisper.cpp.
-- Text-to-speech: Kokoro, Pocket TTS and Piper voices, plus Chatterbox voice
-  cloning.
+- Text-to-speech: Kokoro, Pocket TTS, KittenTTS and Piper voices, plus
+  Chatterbox and KittenTTS 2 voice cloning.
 
 **Agents and coding**
 - Chat with tools: browsing, page reading, file and image tools, a knowledge

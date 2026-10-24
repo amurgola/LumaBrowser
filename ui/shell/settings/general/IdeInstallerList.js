@@ -25,6 +25,22 @@ export default class IdeInstallerList {
     },
   };
 
+  static WINDHAWK = {
+    ns: 'windhawkMods',
+    prefix: 'gsWindhawk',
+    copy: {
+      noun: 'Mod', one: 'mod', many: 'mods',
+      notBundled: 'The Windhawk mods are not bundled in this build.',
+      noneFound: 'Windhawk was not found on this machine.',
+      restartHint: 'Manage it in Windhawk.',
+      afterInstall: 'Windhawk loads it right away.',
+      opFailed: 'The mod could not be installed.',
+      installedVerb: 'into Windhawk',
+      staleText: (ide, sourceVersion) => `Installed v${ide.installedVersion || '?'}; v${ide.version || sourceVersion} is available.`,
+      updateInPlace: true,
+    },
+  };
+
   constructor({ feedback, config }) {
     this._feedback = feedback;
     this._ns = config.ns;
@@ -52,7 +68,7 @@ export default class IdeInstallerList {
       if (this._installAll) this._installAll.disabled = true;
       return;
     }
-    if (this._help) this._help.textContent = this._defaultHelp + (s.sourceVersion ? ` ${this._copy.noun} version ${s.sourceVersion}.` : '');
+    if (this._help) this._help.textContent = this._defaultHelp + (s.sourceVersion ? ` ${this._copy.noun} version ${s.sourceVersion}.` : '') + (s.summary ? ` ${s.summary}` : '');
     this._renderRows(s);
   }
 
@@ -79,12 +95,15 @@ export default class IdeInstallerList {
     if (op === 'install') {
       const n = (r.installed || []).length;
       const message = n
-        ? `${copy.noun} installed in ${n} ${n === 1 ? copy.one : copy.many}. ${copy.afterInstall}${failed.length ? ` ${failed.length} failed${why}.` : ''}`
+        ? (copy.installedVerb
+          ? `${n} ${n === 1 ? copy.one : copy.many} installed ${copy.installedVerb}. ${copy.afterInstall}${failed.length ? ` ${failed.length} failed${why}.` : ''}`
+          : `${copy.noun} installed in ${n} ${n === 1 ? copy.one : copy.many}. ${copy.afterInstall}${failed.length ? ` ${failed.length} failed${why}.` : ''}`)
         : `Nothing was installed${why}.`;
       return [message, failed.length || !n ? 'error' : 'ok'];
     }
     const n = (r.removed || []).length;
-    return [n ? `${copy.noun} removed from ${n} ${n === 1 ? copy.one : copy.many}.` : `Nothing was removed${why}.`, failed.length ? 'error' : undefined];
+    const removed = copy.installedVerb ? `${n} ${n === 1 ? copy.one : copy.many} removed.` : `${copy.noun} removed from ${n} ${n === 1 ? copy.one : copy.many}.`;
+    return [n ? removed : `Nothing was removed${why}.`, failed.length ? 'error' : undefined];
   }
 
   _report(op, r) {
@@ -98,7 +117,7 @@ export default class IdeInstallerList {
     if (!ides.length) {
       const empty = document.createElement('div');
       empty.className = 'gs-ide-empty';
-      empty.textContent = this._copy.noneFound;
+      empty.textContent = s.emptyReason || this._copy.noneFound;
       this._list.appendChild(empty);
       return;
     }
@@ -108,6 +127,7 @@ export default class IdeInstallerList {
   static stateText(ide, sourceVersion, copy) {
     if (!ide.installed) return 'Not installed';
     if (ide.current) return `Installed${ide.installedVersion ? ` (v${ide.installedVersion})` : ''}. ${copy.restartHint}`;
+    if (copy.staleText) return copy.staleText(ide, sourceVersion);
     return `Installed v${ide.installedVersion || '?'}, will update to v${sourceVersion} on next start.`;
   }
 
@@ -120,12 +140,20 @@ export default class IdeInstallerList {
     const state = document.createElement('span');
     state.className = 'gs-ide-state' + (ide.installed ? ' on' : '');
     state.textContent = IdeInstallerList.stateText(ide, sourceVersion, this._copy);
+    if (ide.description) name.title = ide.description;
+    const buttons = [];
+    if (this._copy.updateInPlace && ide.installed && !ide.current) buttons.push(this._button('Update', 'install', ide.id));
+    buttons.push(this._button(ide.installed ? 'Remove' : 'Install', ide.installed ? 'uninstall' : 'install', ide.id));
+    row.append(name, state, ...buttons);
+    return row;
+  }
+
+  _button(label, op, id) {
     const btn = document.createElement('button');
     btn.className = 'gs-action-btn';
-    btn.textContent = this._busy ? 'Working…' : (ide.installed ? 'Remove' : 'Install');
+    btn.textContent = this._busy ? 'Working…' : label;
     btn.disabled = this._busy;
-    btn.addEventListener('click', () => this.run(ide.installed ? 'uninstall' : 'install', [ide.id]));
-    row.append(name, state, btn);
-    return row;
+    btn.addEventListener('click', () => this.run(op, [id]));
+    return btn;
   }
 }

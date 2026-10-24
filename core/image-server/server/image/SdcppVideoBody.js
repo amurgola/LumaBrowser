@@ -9,6 +9,8 @@ class SdcppVideoBody {
   static DEFAULT_CFG = 5.0;
   static DEFAULT_FORMAT = 'webm';
 
+  static PREVIEW = Object.freeze({ mode: 'proj', interval: 1 });
+
   static frameCount(videoFrames) {
     return Number(videoFrames) > 0 ? Math.floor(Number(videoFrames)) : SdcppVideoBody.DEFAULT_FRAMES;
   }
@@ -35,6 +37,8 @@ class SdcppVideoBody {
       video_frames: SdcppVideoBody.frameCount(videoFrames),
       fps: SdcppVideoBody.fps(fps),
       output_format: outputFormat || SdcppVideoBody.DEFAULT_FORMAT,
+      preview: SdcppVideoBody.PREVIEW.mode,
+      preview_interval: SdcppVideoBody.PREVIEW.interval,
       sample_params: SdcppVideoBody._sampleParams(request),
     };
   }
@@ -62,7 +66,8 @@ class SdcppVideoBody {
 
   static _addHighNoise(body, { highNoiseSteps, highNoiseCfgScale, highNoiseSampler }) {
     const hn = {};
-    if (Number(highNoiseSteps) > 0) hn.sample_steps = Math.floor(Number(highNoiseSteps));
+    const steps = Number(highNoiseSteps);
+    if (steps > 0 || steps === -1) hn.sample_steps = Math.floor(steps);
     if (typeof highNoiseCfgScale === 'number' && Number.isFinite(highNoiseCfgScale)) hn.guidance = { txt_cfg: highNoiseCfgScale };
     if (highNoiseSampler) hn.sample_method = String(highNoiseSampler);
     if (Object.keys(hn).length) body.high_noise_sample_params = hn;

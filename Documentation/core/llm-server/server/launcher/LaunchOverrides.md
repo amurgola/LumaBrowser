@@ -11,7 +11,7 @@ device.
   (`defaults.kvCacheType`), `ctx.userArgs` (`service.resolveModelLaunchFlags(path)`
   or `''`), `ctx.layout` and `ctx.overrides`:
   `{ contextSize, cacheTypeK, cacheTypeV, maxConcurrent, tensorSplitMode, cacheReuse,
-  promptCacheRam, cpuMoe, noSpecDrafter, noNgramSpec, suppressMmprojLoad, ramPin }`
+  promptCacheRam, cpuMoe, noMoeGpuCache, noSpecDrafter, noNgramSpec, suppressMmprojLoad, ramPin }`
   plus, when they apply, `noKvOffload`, `vramCapBytes` and `measuredVramBytes`.
   - The KV pair is `KvCacheModes.pair(kvMode)`; tensor split forces `f16`/`f16`.
   - `promptCacheRam` is the `LaunchPlanner.PROMPT_CACHE_RAM_SETTING_KEY` setting, default `'auto'`.

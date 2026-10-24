@@ -8,6 +8,7 @@ const VideoSlotLauncher = require('./video/VideoSlotLauncher');
 class VideoRouter {
   static ROLE = 'image-video';
   static PROTOCOL = 'sd-cpp-video';
+  static RENDERING_PHASE = 'rendering-video';
   static NO_MODEL = 'No video model configured. Pick one in Image Setup → Video.';
 
   constructor({ imageServerService, notify, scanner } = {}) {
@@ -45,6 +46,7 @@ class VideoRouter {
     if (ready.error) return VideoRouter._fail(send, ready.error);
     ready.server.markActive();
     const plan = new VideoRequestPlanner({ lorasDir: this._models.lorasDir() }).plan({ request, model, wantId });
+    send('status', { phase: VideoRouter.RENDERING_PHASE });
     send('meta', VideoRouter._meta(wantId, ready.status, plan, request.firstFrame));
     return this._run(new VideoRun({
       i2v: !!request.firstFrame,

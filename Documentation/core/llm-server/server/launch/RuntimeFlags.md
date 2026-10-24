@@ -18,10 +18,13 @@ binary's argparser would reject.
     `-md`), `draftCacheFlags` (both draft cache-type flags);
   - build gates: `loadMode` (accepted and b10105+, the luma fork, or `--no-mmap`
     already learned as rejected), `fitOff` (b10621+ or luma), `tensorSplitRuntime`
-    (CUDA 12/13 or luma ids), `tensorSplitBuild` (b9000+ or luma).
+    (CUDA 12/13 or luma ids), `tensorSplitBuild` (b9000+ or luma), `moeCache`
+    (`--moe-cache-mib` accepted and b11480+, or a luma tag luma-b4+) and
+    `moeCacheMultiGpu` (b11507+, or luma-b4+). A luma build with no readable tag gets no cache.
 - `accepts(flag)`.
 - `TENSOR_SPLIT_MIN_BUILD` (9000), `LOAD_MODE_MIN_BUILD` (10105),
-  `FIT_OFF_MIN_BUILD` (10621), `LUMA_RUNTIME_ID`, `TENSOR_SPLIT_RUNTIME_IDS`.
+  `FIT_OFF_MIN_BUILD` (10621), `MOE_CACHE_MIN_BUILD` (11480), `MOE_CACHE_MULTI_GPU_MIN_BUILD` (11507),
+  `LUMA_RUNTIME_ID`, `LUMA_MOE_CACHE_MIN_TAG` (4), `TENSOR_SPLIT_RUNTIME_IDS`.
 
 ## Why
 

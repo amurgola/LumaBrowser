@@ -12,6 +12,10 @@ class TtsModelCatalog extends MediaModelCatalog {
   static KOKORO_RECOMMENDED_ID = 'kokoro-int8-multi-lang-v1_1';
   static POCKET_RECOMMENDED_ID = 'pocket-tts-int8';
 
+  static KITTEN_DEFAULT_SID = 6;
+
+  static KITTEN_SPEED_SCALE = 1.25;
+
   static POCKET_VOICE_SET = [
     { file: 'alba.wav', name: 'Alba (female, Scottish)', source: 'alba-mackenna/casual.wav', license: 'CC-BY-4.0 (Alba MacKenna)' },
     { file: 'bill.wav', name: 'Bill (male)', source: 'voice-zero/bill_boerst.wav', license: 'CC0' },
@@ -73,6 +77,21 @@ class TtsModelCatalog extends MediaModelCatalog {
       defaultSid: 0,
       recommendedFor: 'cpu',
       quality: 'low',
+    },
+    {
+      id: 'kitten-nano-en-v0_8-fp32',
+      name: 'KittenTTS Nano (15M)',
+      description:
+        'Lightest on the CPU: about 0.07x realtime on 2 threads with a 0.35 s first chunk. '
+        + 'English only, 8 voices (4 female, 4 male). Clearer than Piper, less natural than Pocket TTS.',
+      archive: 'kitten-nano-en-v0_8-fp32.tar.bz2',
+      sizeBytes: 61 * MB,
+      engine: 'kitten',
+      license: 'Apache-2.0 (KittenML)',
+      defaultSid: TtsModelCatalog.KITTEN_DEFAULT_SID,
+      speedScale: TtsModelCatalog.KITTEN_SPEED_SCALE,
+      recommendedFor: 'cpu',
+      quality: 'light',
     },
   ];
 

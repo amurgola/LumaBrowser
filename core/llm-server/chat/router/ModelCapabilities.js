@@ -18,6 +18,16 @@ class ModelCapabilities {
     return !!(plan && plan.mmprojPath);
   }
 
+  visionSupport(rawRef) {
+    const modelRef = this._base(rawRef);
+    if (typeof modelRef !== 'string') return 'none';
+    if (!ChatModelRef.isLocal(modelRef)) return 'active';
+    const plan = this._livePlan();
+    if (!plan) return 'unknown';
+    if (plan.mmprojPath) return 'active';
+    return plan.mmprojAvailable ? 'available' : 'none';
+  }
+
   nativeToolsActive(rawRef) {
     const modelRef = this._base(rawRef);
     if (typeof modelRef !== 'string') return false;

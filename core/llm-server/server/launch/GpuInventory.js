@@ -31,12 +31,15 @@ class GpuInventory {
 
   static _cudaCards(diagnostics) {
     const devices = (diagnostics && diagnostics.cuda && diagnostics.cuda.available && diagnostics.cuda.devices) || [];
+    const live = !!(diagnostics && diagnostics._liveMemoryAt);
     const out = [];
     for (const d of devices) {
       const totalBytes = (Number(d.memoryTotalMB) || 0) * GpuInventory.MIB;
       if (totalBytes <= 0) continue;
       const freeBytes = d.memoryFreeMB != null ? (Number(d.memoryFreeMB) || 0) * GpuInventory.MIB : null;
-      out.push({ name: d.name || 'NVIDIA GPU', totalBytes, freeBytes });
+      const card = { name: d.name || 'NVIDIA GPU', totalBytes, freeBytes };
+      if (live && freeBytes != null) card.occupiedBytes = Math.max(0, totalBytes - freeBytes);
+      out.push(card);
     }
     return out;
   }

@@ -10,7 +10,8 @@ The byte-balanced `--tensor-split` for an MoE expert fill on several GPUs.
   returns `{ ratio, nCpuMoe }` (per-device layer counts) or `null`.
   - layer cost = resident bytes + KV share (`total / kvLayers` on attention blocks,
     0 on recurrent ones, `total / blocks` otherwise) + its experts once `i >= n`;
-  - card budget = `(total - 1 GiB reserve - 512 MiB / cards) x CARD_SAFETY (0.92)`;
+  - card budget = `(GpuOverhead.cardRoom(card) - 512 MiB / cards) x CARD_SAFETY (0.92)`, so a live reading
+    nets out what already occupies the card before the GPU headroom;
   - packs contiguously in device order, trying `n = nCpuMoe, nCpuMoe + 1, ...`;
     null when nothing packs or only `n = blocks` packs.
 

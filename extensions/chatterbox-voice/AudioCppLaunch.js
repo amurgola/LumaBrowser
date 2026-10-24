@@ -46,7 +46,7 @@ class AudioCppLaunch {
       .filter((m) => fs.existsSync(path.join(this._modelsDir, m.file)))
       .map((m) => this._modelEntry(m));
     if (this._models.length) return;
-    const err = new Error('No Chatterbox model downloaded yet. Download one in Setup, Voice cloning.');
+    const err = new Error('No voice model downloaded yet. Download Chatterbox or KittenTTS 2 in Setup, Voice cloning.');
     err.code = 'NO_TTS_MODEL';
     throw err;
   }
@@ -56,10 +56,10 @@ class AudioCppLaunch {
       id: m.id,
       family: m.family,
       path: AudioCppLaunch._forwardSlashes(path.join(this._modelsDir, m.file)),
-      task: m.task === 'clone' ? 'clon' : 'tts',
+      task: m.serverTask,
       mode: 'offline',
     };
-    if (m.task === 'clone' && this._voices.length) entry.voice_presets = this._voicePresets();
+    if (m.serverTask === 'clon' && this._voices.length) entry.voice_presets = this._voicePresets();
     return entry;
   }
 

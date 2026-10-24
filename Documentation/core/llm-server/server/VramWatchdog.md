@@ -19,7 +19,7 @@ spawns a process of its own.
     `start()` only when `sample` is the default;
   - `ledger()` the claims ledger (default `VramCoordinator.shared.snapshot()`);
   - `reserveBytes` a number, or `(card) => bytes` called with
-    `{ index, name, totalBytes }` (default `CudaDevicePicker.PER_CARD_RESERVE_BYTES`, 1 GiB);
+    `{ index, name, totalBytes }` (default `CudaDevicePicker.PER_CARD_RESERVE_BYTES`, the user's GPU headroom, read on every poll);
   - `isLoaded()` (default true), `isIdle()` (default false), `unloadEnabled()`
     (default false), `unload(reason, info)`, `emit(type, payload)`, `now()`, `log`;
   - `intervalMs` 5000, `confirmSamples` 2, `dwellMs` 30000, `ownLoadGraceMs` 15000.

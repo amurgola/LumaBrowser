@@ -42,7 +42,7 @@ a check: `getModelCaps` `{ caps: null }`, `getPeerGpus` `{ peers: [], active: fa
 | `getEnabled`, `setEnabled`, `getOpenTabOnLoad`, `setOpenTabOnLoad` | the service |
 | `getTraceCalls`, `setTraceCalls`, `clearTraces` | [TraceCallsSetting](ipc/TraceCallsSetting.md) |
 | `getDiagnostics`, `resetNvidiaSmiPathHint` | [LlmDiagnosticsView](ipc/LlmDiagnosticsView.md) |
-| `getVramPressure`, `dismissVramPressure`, `getUnloadOnVramPressure`, `setUnloadOnVramPressure`, `dismissNvidiaSmiPathHint` | the service (`{ state }`, `{ dismissed }`, `{ enabled }`) |
+| `getVramPressure`, `dismissVramPressure`, `getUnloadOnVramPressure`, `setUnloadOnVramPressure`, `getGpuHeadroom`, `setGpuHeadroom`, `dismissNvidiaSmiPathHint` | the service (`{ state }`, `{ dismissed }`, `{ enabled }`, `{ bytes }`) |
 | `addNvidiaSmiToPath`, `recoverDisplayDevice`, `setPcieAspmOff` | [SystemDiagnostics](SystemDiagnostics.md) |
 | `getModelsView`, `setModelsDir`, `getStorageInfo` | [LlmModelsView](ipc/LlmModelsView.md) |
 | `getModelDisplayNames`, `setModelDisplayName` | `{ names }` from the service |

@@ -2,7 +2,7 @@ import VoiceRadioRow from './VoiceRadioRow.js';
 import VoiceDownloadProgress from './VoiceDownloadProgress.js';
 
 export default class VoiceQualityChoice {
-  static TIER_ORDER = { low: 0, fast: 1, medium: 2, high: 3 };
+  static TIER_ORDER = { light: 0, low: 1, fast: 2, medium: 3, high: 4 };
 
   constructor(api) {
     this._api = api;

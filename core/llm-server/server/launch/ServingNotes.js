@@ -199,7 +199,8 @@ class ServingNotes {
       + (moe.cpuMoeAuto ? `Engaged automatically: the full ${fmt(files.modelBytes)} of weights exceeds the ${fmt(budget.vramAvailableBytes)} VRAM budget, and experts-in-RAM decodes far faster than spilling whole layers to the CPU. ` : '')
       + (loading.moeNeedsMmap
         ? 'The expert pool exceeds the comfortable RAM budget, so weights load memory-mapped: cold experts fault in from disk and the OS may evict them under pressure.'
-        : 'The expert pool is bulk-read into RAM at load (longer start, then full RAM-speed decode from the first token).'),
+        : 'The expert pool is bulk-read into RAM at load (longer start, then full RAM-speed decode from the first token).')
+      + (moe.gpuCache && moe.gpuCache.reason ? ` MoE GPU cache not used: ${moe.gpuCache.reason}.` : ''),
     );
   }
 
@@ -209,7 +210,12 @@ class ServingNotes {
     this._notes.push(
       `MoE expert offload: ${moe.cpuMoeAuto ? 'AUTO' : 'ON'} (--cpu-moe). Expert tensors (~${fmt(moe.moeSplit.expertBytes)}) stay in system RAM; `
       + `attention/embeddings (~${fmt(moe.moeSplit.residentBytes)}) plus the KV cache run on the GPU. `
-      + `The VRAM budget was sized against the resident share, not the full ${fmt(files.modelBytes)} file.`,
+      + `The VRAM budget was sized against the resident share, not the full ${fmt(files.modelBytes)} file.`
+      + (moe.gpuCache && moe.gpuCache.enabled
+        ? ` MoE GPU cache: ${fmt(moe.gpuCache.bytes)} of VRAM (--moe-cache-mib ${moe.gpuCache.mib}) holds the most recently used experts, `
+          + 'which run on the GPU; only misses are copied over PCIe. Generation is faster than whole layers of experts on the GPU, '
+          + 'prompt processing (batches above 32 tokens) bypasses the cache and runs a little slower.'
+        : ''),
     );
   }
 

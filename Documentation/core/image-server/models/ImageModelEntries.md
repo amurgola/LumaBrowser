@@ -16,7 +16,15 @@ through [ImageModelCatalog](ImageModelCatalog.md).
   `QWEN_21_PROMPT_GUIDE`, plus
   `WAN_VIDEO_DEFAULTS` and `WAN_CONSTRAINTS`. Rows copy the file and default
   objects (spread), so one row cannot mutate another; `WAN_CONSTRAINTS` is
-  shared, as in legacy.
+  shared, as in legacy. `WAN_VIDEO_DEFAULTS` is 832x480, 20 steps, cfg 3.5,
+  `euler`, 33 frames at 16 fps, flow shift 3: the official Wan 2.2 I2V config
+  runs 40 steps at cfg 3.5, 10 burns out (glow, rainbow fringes, long clips
+  collapsing to white) and 14 is still off, while 20 renders clean; the
+  official I2V shift of 5 gave worse motion in the same same-seed AniSora test
+  (2026-10-22), so 3 stays. The shared `negativePrompt` carries the official Wan
+  2.2 negative prompt's content (overexposed, static, blurry details, ...) plus
+  watermark and text terms for AniSora; it was a clear improvement on the same
+  20-step clip.
 
 ## Row shape
 
@@ -25,7 +33,16 @@ supportsI2V?, licenseNote?, files: { <role>: { role, repo, file, url,
 approxBytes, loaderFlag?, quants?, supersedes?, updateNote? } }, minVramBytes,
 defaults: { width, height, steps, cfgScale, sampler, scheduler?,
 negativePrompt?, promptGuide?, fixedSigmas?, cacheMode?, cacheOption?, videoFrames?, fps?, flowShift? }, constraints?,
-launchArgs, protocol: 'sd-cpp-http'|'sd-cpp-video', compatibleRuntimes }`.
+launchArgs, protocol: 'sd-cpp-http'|'sd-cpp-video', compatibleRuntimes,
+preferredRuntimes?, sageAttention?, recommendedLora? }`. The last three are
+launch and install preferences a row earned by measurement: a drop-in runtime
+to use when installed ([PreferredImageRuntime](../service/PreferredImageRuntime.md)),
+sd.cpp's native SageAttention ([SageAttentionPolicy](../service/SageAttentionPolicy.md)),
+and a speed LoRA ([ImageLoraEntries](ImageLoraEntries.md) id) that
+[CatalogModelInstaller](../ipc/CatalogModelInstaller.md) attaches at install.
+MiniMax-H3 sets all three (2026-10-22: the LumaByte build decodes its video in
+20 s instead of 94 s per 124 frames, SageAttention takes a step from 7.7 s to
+4.5 s on an RTX 5090, and the Turbo LoRA renders in 8 steps instead of 20).
 
 Roles map to sd-server flags in the launch planner: `diffusion`, `vae`, `llm`,
 `clip_l`, `t5xxl`, `vision` (`--llm_vision`), `highNoise`
@@ -77,8 +94,18 @@ comfortable GPU-resident size with the encoders on the CPU.
   discards `init_image` in sd.cpp. Wan rows share the 4n+1 frame grid capped at
   81 (the 5 s @ 16 fps training ceiling); LTX uses 8n+1 up to 257 at /32;
   MiniMax-H3 generates video and audio (two VAEs, a Qwen3-VL-32B `--llm`) on a
-  17k+5 frame grid fixed at 24 fps, defaulting to 124 frames (about 5.2 s) with a
-  345 ceiling. Its Turbo LoRA was trained on the full checkpoint.
+  17k+5 frame grid fixed at 24 fps with a 345 ceiling. Its canvas is the model
+  card's native 768p: 1344x768 (16:9, 1.03 MP), which
+  [VideoFrameFit](../video/VideoFrameFit.md) refits by area for other aspects
+  (a portrait source renders at 896x1152). sd.cpp's own example of 864x480 is
+  below native, and same-seed I2V tests (2026-10-22, Turbo 8 steps) at that area
+  came out crawling and deep-fried with broken audio at every clip length, while
+  768x992 was passable and 896x1152 clean; the frame count made no difference,
+  so time is saved by shortening the clip, not the canvas. The default is 90
+  frames (3.75 s): at that area with the Turbo LoRA on an RTX 5090 (LumaByte
+  build) a clip took 89 s at 56 frames, 114 s at 73, 138 s at 90 and 268 s at
+  124, sampling growing linearly to 90 and then jumping, so 90 is the knee. Its
+  Turbo LoRA was trained on the full checkpoint.
 - Every row's defaults sit on its own grid, so a default request logs no adjustment.
 
 User-facing text (labels, blurbs, quant labels, prompt guides, license notes)

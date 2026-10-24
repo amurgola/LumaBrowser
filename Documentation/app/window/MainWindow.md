@@ -20,7 +20,9 @@ Creates and manages the main window.
   5. [WindowKeys](WindowKeys.md); the stale `openDevTools` setting is deleted;
   6. the [AppTray](AppTray.md) (`<root>/assets/tray-icon.png`, `ctx.tray`);
   7. on every `did-finish-load`: zoom 1.0, `settings-loaded` `{ webhookUrl }`,
-     then [StartupTabs](StartupTabs.md)`.open()`;
+     then [StartupTabs](StartupTabs.md)`.open()`, then
+     `ctx.launchUrls.ready()` ([LaunchUrls](../process/LaunchUrls.md): command-line
+     links open after the startup tabs);
   8. on `closed`: destroy every tab, forget the window, stop the gateway;
   9. `window:state` `{ maximized }` through [WindowStateRelay](WindowStateRelay.md);
   10. minimize hides to the tray;

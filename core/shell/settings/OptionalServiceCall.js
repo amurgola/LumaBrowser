@@ -5,6 +5,7 @@ class OptionalServiceCall {
     cliShim: { missing: 'The terminal launcher is not available in this build.', failed: 'launcher operation failed' },
     idePlugin: { missing: 'The JetBrains plugin is not available in this build.', failed: 'plugin operation failed' },
     vscodeExtension: { missing: 'The VS Code extension is not available in this build.', failed: 'extension operation failed' },
+    windhawkMods: { missing: 'The Windhawk mods are not available in this build.', failed: 'Windhawk operation failed' },
   };
 
   static async run(service, messages, fn) {

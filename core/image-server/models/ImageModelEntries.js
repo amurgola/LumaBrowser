@@ -82,12 +82,15 @@ class ImageModelEntries {
   static WAN_VIDEO_DEFAULTS = {
     width: 832,
     height: 480,
-    steps: 10,
+    steps: 20,
     cfgScale: 3.5,
     sampler: 'euler',
     videoFrames: 33,
     fps: 16,
     flowShift: 3,
+    negativePrompt: 'overexposed, bright colors, static, blurry details, subtitles, text, watermark, logo, '
+      + 'worst quality, low quality, jpeg artifacts, ugly, deformed, disfigured, extra fingers, fused fingers, '
+      + 'still picture, cluttered background',
   };
 
   static ENTRIES = [
@@ -642,6 +645,7 @@ class ImageModelEntries {
         + 'on <24 GB cards.',
       family: 'wan-video',
       kind: 'video',
+      sageAttention: true,
       supportsI2V: false,
       files: {
         diffusion: {
@@ -680,6 +684,7 @@ class ImageModelEntries {
         + 'CPU weight-offload on <24 GB cards.',
       family: 'wan-video',
       kind: 'video',
+      sageAttention: true,
       supportsI2V: true,
       files: {
         diffusion: {
@@ -718,6 +723,7 @@ class ImageModelEntries {
         + 'at Q4_0. CPU weight-offload on <24 GB cards.',
       family: 'wan-video',
       kind: 'video',
+      sageAttention: true,
       supportsI2V: true,
       files: {
         diffusion: {
@@ -808,9 +814,14 @@ class ImageModelEntries {
         + 'The heavyweight of the video list: ~35 GB on disk at Q4 across the '
         + 'diffusion model, the Qwen3-VL-32B text encoder and the two VAEs, so '
         + 'it runs with CPU weight-offload on anything short of a 48 GB card. '
-        + 'Needs an sd-server build from 2026-08-04 or later. After install, the '
-        + 'row\'s "LoRAs / speed" action can fetch the community Turbo LoRA to '
-        + 'render in 6-8 steps instead of ~20 (best on the full, non-pruned quant).',
+        + 'Needs an sd-server build from 2026-08-04 or later. Installs with the '
+        + 'community Turbo LoRA attached, rendering in 8 steps instead of ~20 '
+        + '(best on the full, non-pruned quant); the row\'s "LoRAs / speed" action '
+        + 'swaps or removes it. On NVIDIA cards the LumaByte runtime decodes its '
+        + 'video about 5x faster and is used automatically when installed. Keep '
+        + 'the canvas at its native 768p (1344x768, or the same area at another '
+        + 'aspect): smaller canvases come out crawling and deep-fried with broken '
+        + 'audio, so shorten the clip rather than the frame to save time.',
       family: 'minimax-h3',
       kind: 'video',
       supportsI2V: true,
@@ -851,12 +862,12 @@ class ImageModelEntries {
       },
       minVramBytes: 40 * GB,
       defaults: {
-        width: 864,
-        height: 480,
+        width: 1344,
+        height: 768,
         steps: 20,
         cfgScale: 1.0,
         sampler: 'euler',
-        videoFrames: 124,
+        videoFrames: 90,
         fps: 24,
         flowShift: 12,
       },
@@ -866,6 +877,9 @@ class ImageModelEntries {
         fps: 24,
       },
       launchArgs: ['--rng', 'cpu'],
+      sageAttention: true,
+      preferredRuntimes: ['sd-cpp-luma'],
+      recommendedLora: 'minimax-h3-turbo-v4',
       protocol: 'sd-cpp-video',
       compatibleRuntimes: [...SD_CPP_RUNTIMES],
     },
