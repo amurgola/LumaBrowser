@@ -91,6 +91,15 @@
     const css = `
     #rpLabRoot { max-width: 1100px; }
     .rpl-status { color:var(--text-secondary); font-size:var(--text-sm); margin:8px 2px; min-height:16px; }
+    .rpl-head-btns { display:flex; gap:8px; align-items:center; }
+    .rpl-text { display:flex; flex-direction:column; gap:10px; margin:8px 2px; }
+    .rpl-text-turn { border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:10px 12px; }
+    .rpl-text-user { color:var(--text-secondary); font-size:var(--text-sm); margin-bottom:6px; }
+    .rpl-text-asst { white-space:pre-wrap; line-height:var(--leading); }
+    .rpl-text-scores ul { margin:6px 0 0; padding-left:18px; }
+    .rpl-text-checks li.ok { color:var(--text-primary); }
+    .rpl-text-checks li.bad { color:var(--danger, #c0392b); }
+    .rpl-text-checks span { color:var(--text-secondary); }
     .rpl-ctrls { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:4px 2px; }
     .rpl-ctrl { font-size:var(--text-sm); color:var(--text-primary); display:inline-flex; align-items:center; gap:6px; }
     .rpl-ctrl select { background:var(--bg-surface-2); border:1px solid var(--border-soft); color:var(--text-primary); border-radius:var(--radius-md); padding:4px 6px; font-size:var(--text-sm); }
@@ -504,6 +513,13 @@
       } else if (evt.type === 'lab:comparison') {
         upsert({ key: 'A/B final', label: 'A/B final', comparison: true,
           composite: p.composite, integrated: p.integrated, seq: '↔' });
+      } else if (evt.type === 'lab:text') {
+        if (p.phase === 'turn') {
+          status('Text run: turn ' + p.turn + ' of ' + p.of + '…');
+          appendTextTurn(p);
+        } else if (p.phase === 'done') {
+          status(p.error ? 'Text run failed: ' + p.error : 'Text run finished.');
+        }
       } else if (evt.type === 'mode:image-fail') {
         status('Reaction image failed (see step errors).');
       } else if (evt.type === 'status' || evt.type === 'mode:progress') {
@@ -521,6 +537,70 @@
       const r = await a.run({ overrides: S.overrides, options: runOptions() });
       finishRun(r);
     } catch (e) { status('Run failed: ' + (e && e.message)); }
+    finally { S.running = false; setRunningUi(false); }
+  }
+
+  function textPane() {
+    let pane = document.getElementById('rpLabText');
+    if (pane) return pane;
+    const st = document.getElementById('rpLabStatus');
+    if (!st) return null;
+    pane = el('section', 'rpl-text'); pane.id = 'rpLabText';
+    st.parentNode.insertBefore(pane, st.nextSibling);
+    return pane;
+  }
+
+  function appendTextTurn(p) {
+    const pane = textPane(); if (!pane) return;
+    const card = el('article', 'rpl-text-turn');
+    card.innerHTML = '<div class="rpl-text-user"><strong>Turn ' + Number(p.turn) + '</strong> ' + esc(p.user || '') + '</div>'
+      + '<div class="rpl-text-asst">' + esc(p.assistant || '') + '</div>';
+    pane.appendChild(card);
+    card.scrollIntoView({ block: 'nearest' });
+  }
+
+  function renderTextResult(r) {
+    const pane = textPane(); if (!pane) return;
+    const box = el('section', 'rpl-text-scores');
+    const probe = r.probe || { checks: [], passed: 0, total: 0, score: 0 };
+    const prose = r.prose || {};
+    const judge = r.judge && r.judge.scores ? Object.entries(r.judge.scores).map(([k, v]) => esc(k) + ' ' + v).join(', ') : '';
+    box.innerHTML = '<div class="rpl-console-title">Scores</div>'
+      + '<ul>'
+      + '<li>Consistency: ' + probe.passed + ' of ' + probe.total + ' checks</li>'
+      + (prose.words ? '<li>Slop per hundred words: ' + prose.perHundred + ' · in length band: ' + prose.inBand
+        + ' · speaker tags: ' + prose.tagged + ' · handoffs: ' + prose.handoff
+        + ' · words min/avg/max: ' + prose.words.min + '/' + prose.words.avg + '/' + prose.words.max + '</li>' : '')
+      + (judge ? '<li>Judge: ' + judge + (r.judge.notes ? ' <em>' + esc(r.judge.notes) + '</em>' : '') + '</li>' : '')
+      + (r.outDir ? '<li>Report: <code>' + esc(r.outDir) + '</code></li>' : '')
+      + '</ul>'
+      + '<ul class="rpl-text-checks">' + probe.checks.map((c) => '<li class="' + (c.ok ? 'ok' : 'bad') + '">'
+        + (c.ok ? '✓' : '✗') + ' ' + esc(c.label) + (c.detail ? ' <span>(' + esc(c.detail) + ')</span>' : '') + '</li>').join('') + '</ul>';
+    pane.appendChild(box);
+  }
+
+  function textOptions() {
+    const mock = document.getElementById('rpLabTextMock');
+    const judge = document.getElementById('rpLabTextJudge');
+    const turns = document.getElementById('rpLabTextTurns');
+    return {
+      mockSideCalls: !!(mock && mock.checked),
+      judge: !!(judge && judge.checked),
+      turns: turns && parseInt(turns.value, 10) > 0 ? parseInt(turns.value, 10) : undefined,
+    };
+  }
+
+  async function runText() {
+    const a = api(); if (!a || !a.runText || S.running) return;
+    S.running = true;
+    setRunningUi(true); status('Text run: starting…');
+    const pane = textPane(); if (pane) pane.innerHTML = '';
+    wireLiveEvents();
+    try {
+      const r = await a.runText({ options: textOptions() });
+      if (r && (r.success || r.probe)) renderTextResult(r);
+      else status('Text run failed: ' + ((r && r.error) || 'unknown'));
+    } catch (e) { status('Text run failed: ' + (e && e.message)); }
     finally { S.running = false; setRunningUi(false); }
   }
 
@@ -574,6 +654,8 @@
   function setRunningUi(on) {
     const btn = document.getElementById('rpLabRun');
     if (btn) btn.disabled = on;
+    const textBtn = document.getElementById('rpLabRunText');
+    if (textBtn) textBtn.disabled = on;
     document.querySelectorAll('#rpLabBody .adv-btn.sm').forEach((b) => { b.disabled = on; });
   }
 
@@ -611,11 +693,19 @@
       emo.onchange = () => { S.emotion = emo.value; };
       const res = buildResControls();
       head.parentNode.insertBefore(res, ctrls.nextSibling);
+      const text = el('div', 'rpl-ctrls');
+      text.innerHTML = '<label class="rpl-ctrl"><input type="checkbox" id="rpLabTextMock"> mock side calls</label>'
+        + '<label class="rpl-ctrl"><input type="checkbox" id="rpLabTextJudge"> judge pass</label>'
+        + '<label class="rpl-ctrl">turns <input type="number" id="rpLabTextTurns" min="1" max="10" value="10"></label>'
+        + '<span class="rpl-ctrl-hint">the text run drives the real narrator through a scripted playthrough and grades memory and prose</span>';
+      head.parentNode.insertBefore(text, res.nextSibling);
       const st = el('div', 'rpl-status'); st.id = 'rpLabStatus';
-      head.parentNode.insertBefore(st, res.nextSibling);
+      head.parentNode.insertBefore(st, text.nextSibling);
     }
     const runBtn = document.getElementById('rpLabRun');
     if (runBtn && !runBtn._wired) { runBtn._wired = true; runBtn.addEventListener('click', run); }
+    const textBtn = document.getElementById('rpLabRunText');
+    if (textBtn && !textBtn._wired) { textBtn._wired = true; textBtn.addEventListener('click', runText); }
     renderSteps();
   }
 
@@ -626,9 +716,10 @@
         + '<div class="adv-head">'
         +   '<div>'
         +     '<h2 class="adv-title">Roleplay Lab</h2>'
-        +     '<p class="adv-sub">Run the real roleplay image pipeline for a seeded scenario, inspect each step’s prompt + params, tweak the variables, and regenerate from any step. LLM is mocked; this exercises the compositing only.</p>'
+        +     '<p class="adv-sub">Run the real roleplay image pipeline for a seeded scenario, inspect each step’s prompt + params, tweak the variables, and regenerate from any step (LLM mocked; compositing only). Or run the scripted text playthrough to grade memory and prose with the real story model.</p>'
         +   '</div>'
-        +   '<button class="adv-btn primary" id="rpLabRun">Run pipeline</button>'
+        +   '<div class="rpl-head-btns"><button class="adv-btn" id="rpLabRunText">Text run</button>'
+        +   '<button class="adv-btn primary" id="rpLabRun">Run pipeline</button></div>'
         + '</div>'
         + '<div id="rpLabBody" class="loading">Press “Run pipeline” to start.</div>'
         + '</div>';

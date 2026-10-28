@@ -2,8 +2,9 @@
 
 `core/llm-server/ui/js/chat/stream/TurnSender.js`
 
-Starts turns. A send takes the composer text plus staged attachments and (with
-typed text) the editor chips, renders the user turn (from the landing it becomes
+Starts turns. A send takes the composer text plus staged attachments (images
+with the area marked on each, and the areas marked on earlier images as
+`kind: 'region'` entries) and (with typed text) the editor chips, renders the user turn (from the landing it becomes
 the conversation, titled after the text or the first image), opens the live turn
 and calls `api.chat2`. A regenerate replaces a reply in place as a new variant:
 no user message is re-sent, later turns are dropped from the context, and the
@@ -20,12 +21,15 @@ server makes it a branch; the thread reloads afterwards for the pager.
   streaming.
 - `resend(userMessage, text)`: ignored while streaming; needs a model.
 - `abort()`: `api.chatAbort()`.
+- The live user turn carries `regions` (the marked areas with their previews)
+  so [UserTurnView](../turns/UserTurnView.md) paints them at once.
 - `recoverTurnImages(userMessage)`: `{ kind: 'image', name, mime, base64 }` from
   the bytes held since send, else from the turn's persisted image artifacts.
 
 chat2 arguments: `requestId`, `conversationId` (undefined on the landing),
 `modelRef`, `messages` ([TurnFlags](TurnFlags.md)`.context`), then
-`userMessage`, `attachments`, `context` (send) or `attachments?`,
+`userMessage`, `attachments` (images, each with `region` when one was marked,
+then the region entries), `context` (send) or `attachments?`,
 `regenerateMessageId` (regenerate) or `userMessage`, `attachments?`,
 `editMessageId` (resend), then the [TurnFlags](TurnFlags.md). A
 `success: false` reply or a throw finalizes the turn as an error.

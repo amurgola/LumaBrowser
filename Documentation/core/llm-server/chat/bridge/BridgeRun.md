@@ -50,3 +50,21 @@ normalises its output onto the chat router's hooks.
    `shouldAbort`.
 6. The preview ends BEFORE any terminal hook, then [TurnFinisher](turn/TurnFinisher.md);
    a lazily created work tab is closed after, off the critical path.
+
+## Tool context
+
+Every built-in handler's `ctx` carries `conversationId`, `assistantMessageId`,
+`deps`, `hooks`, `artifacts`, `trace`, `isAborted`, `ctxPerSlot`,
+`editRegions` (an [EditRegionIndex](prompt/EditRegionIndex.md) of the regions
+the user painted in earlier turns, for `edit_image`), `kbScope`, `webSession`,
+`webTabRender`, `allowTakeover`, `takeoverWait` and `takeoverAttention`.
+
+## Outside the chat
+
+- The approval check gets a [DesktopCallRisk](../approval/DesktopCallRisk.md)
+  assessor over [BridgeGlobals](BridgeGlobals.md)`.desktopService()`, so a
+  password field or a payment window asks every time.
+- The tool context carries `takeoverAttention` (the host's, see
+  [AgentChatBridge](../AgentChatBridge.md)) for `ask_user_takeover`.
+- The event relay gets the host's [RunProgress](turn/RunProgress.md); the run
+  reports its end to it before any terminal hook (`_endProgress`).

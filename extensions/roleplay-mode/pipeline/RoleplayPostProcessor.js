@@ -1,6 +1,6 @@
 const DataMigration = require('../world/DataMigration');
+const StoryLedger = require('../world/StoryLedger');
 const SpeakerNames = require('../prompts/SpeakerNames');
-const ProseCues = require('../prompts/ProseCues');
 const RoleplayEnv = require('../images/RoleplayEnv');
 const RpDebug = require('../images/RpDebug');
 const BeatKind = require('../images/BeatKind');
@@ -10,6 +10,7 @@ const ArtAuditor = require('../audit/ArtAuditor');
 const StageCall = require('../stage/StageCall');
 const StageReconciler = require('../stage/StageReconciler');
 const WorldDelta = require('../stage/WorldDelta');
+const CastResolver = require('../world/CastResolver');
 const TurnData = require('./TurnData');
 const TurnChannel = require('./TurnChannel');
 const AssetOutcomes = require('./AssetOutcomes');
@@ -17,6 +18,9 @@ const AssetSweepPlanner = require('./AssetSweepPlanner');
 const RenderSignature = require('./RenderSignature');
 const FastReaction = require('./FastReaction');
 const ImagePhase = require('./ImagePhase');
+const ProfileCall = require('./ProfileCall');
+const ConsolidateCall = require('./ConsolidateCall');
+const ProsePolishCall = require('./ProsePolishCall');
 
 class RoleplayPostProcessor {
   constructor(chat, logger = null) {
@@ -24,14 +28,19 @@ class RoleplayPostProcessor {
     this._logger = logger;
     this._auditor = new ArtAuditor(chat);
     this._stage = new StageCall(chat, logger);
+    this._profiles = new ProfileCall(chat, logger);
+    this._consolidate = new ConsolidateCall(chat, logger);
+    this._polish = new ProsePolishCall(chat, logger);
     this._images = new ImagePhase(chat);
   }
 
-  async process({ content, assistantMessageId, meta, emit, setMeta }) {
+  async process({ content, assistantMessageId, meta, emit, setMeta, replaceContent = null, aborted = false }) {
     const turn = new TurnChannel({ emit, setMeta, messageId: assistantMessageId });
     try {
+      if (aborted || !String(content || '').trim()) { turn.progress.done(); return; }
       const data = TurnData.from(meta);
-      if (data.options.autoImage) turn.progress.say('Reading the scene…');
+      turn.progress.say('Reading the scene…');
+      content = await this._polishProse(data, content, replaceContent, turn);
       const { delta, directorShot } = await this._reconcile(data, content, TurnData.wasEmpty(meta), turn);
       if (delta.changed) {
         await turn.save(data);
@@ -47,20 +56,33 @@ class RoleplayPostProcessor {
     }
   }
 
+  async _polishProse(data, content, replaceContent, turn) {
+    if (!ProsePolishCall.wanted(data)) return content;
+    turn.progress.say('Polishing the prose…');
+    const out = await this._polish.run(data, content);
+    if (!out.changed) return content;
+    if (typeof replaceContent === 'function') {
+      try { if (!(await replaceContent(out.content))) return content; } catch (_) { return content; }
+    }
+    return out.content;
+  }
+
   async _reconcile(data, content, worldEmpty, turn) {
     const delta = new WorldDelta();
     if (DataMigration.migrate(data)) delta.changed = true;
-    const heuristicAdded = RoleplayPostProcessor._addSpeakers(data, content, delta);
+    const turnNo = StoryLedger.beginTurn(data);
+    delta.changed = true;
+    RoleplayPostProcessor._addSpeakers(data, content, delta);
     await this._audit(data, turn);
     let directorShot = null;
-    if (this._wantStage(data, content, heuristicAdded, worldEmpty)) {
-      turn.progress.say('Reading the scene…');
+    if (this._wantStage()) {
       const ex = await this._stage.run(data, content);
       if (ex) {
         directorShot = ex.shot || null;
-        StageReconciler.apply(data, ex, delta);
+        StageReconciler.apply(data, ex, delta, { turn: turnNo, messageId: turn.messageId });
       }
     }
+    await this._remember(data, content, delta, turn, worldEmpty);
     return { delta, directorShot };
   }
 
@@ -86,9 +108,21 @@ class RoleplayPostProcessor {
     }
   }
 
-  _wantStage(data, content, heuristicAdded, worldEmpty) {
-    return typeof this._chat.complete === 'function'
-      && (!!data.options.autoImage || heuristicAdded || ProseCues.movementHint(content) || ProseCues.outfitHint(content) || worldEmpty);
+  _wantStage() {
+    return typeof this._chat.complete === 'function';
+  }
+
+  async _remember(data, content, delta, turn, worldEmpty) {
+    const present = CastResolver.currentEntries(data).map((e) => e.char);
+    const candidates = ProfileCall.candidates(data, present, delta.newCharIds);
+    if (candidates.length) {
+      turn.progress.say('Getting to know ' + candidates.map((c) => c.name).join(' and ') + '…');
+      if (await this._profiles.run(data, candidates, content)) delta.changed = true;
+    }
+    if (!worldEmpty && ConsolidateCall.due(data)) {
+      turn.progress.say('Remembering the story so far…');
+      if (await this._consolidate.run(data)) delta.changed = true;
+    }
   }
 
   async _draw(data, content, delta, directorShot, turn) {

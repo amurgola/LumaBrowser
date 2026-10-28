@@ -10,15 +10,20 @@ one-place edit.
 ## Members
 
 - `LlmRuntimeDeclarations.RUNTIMES`, in order:
-  - `llama-cpp-cpu`: universal fallback; Windows zip, Linux and macOS tarballs.
+  - `llama-cpp-cpu`: universal fallback; Windows zip (x64 and arm64), Linux and macOS tarballs.
     `hostLabels['darwin-arm64']` shows it as "llama.cpp (Metal)" with a Metal
     description, since ggml-org's macOS arm64 build is Metal-accelerated.
   - `llama-cpp-cuda12`: ggml-org on Windows and Linux (`ubuntu-cuda-12.x`
     builds, `LINUX_CUDA12_ASSET`); the only companion is the cudart bundle
     (cudart + cuBLAS): `WIN_CUDA12_CUDART` / `LINUX_CUDA12_CUDART`.
-  - `llama-cpp-cuda13`: same with CUDA 13 assets; recommended for RTX 50.
+  - `llama-cpp-cuda13`: same with CUDA 13 assets; recommended for RTX 50. Also
+    the one CUDA build ggml-org ships for Windows arm64 (asset and cudart companion).
   - `llama-cpp-luma`: LumaByte's patched CUDA 12 build, Windows only, assets named like upstream.
-  - `llama-cpp-vulkan`: cross-vendor GPU build for Windows and Linux.
+  - `llama-cpp-vulkan`: cross-vendor GPU build for Windows (x64 and arm64) and Linux.
+  - `llama-cpp-opencl-adreno`: Qualcomm Adreno OpenCL build for Snapdragon X,
+    `platforms: ['win32-arm64']` (the only arch it exists for, so x64 hosts never
+    list it), `requiresHw: { kind: 'qualcomm-gpu' }`, `backendDevice: 'GPUOpenCL'`
+    (ggml's OpenCL backend names its single device without an index).
   - `llama-cpp-rocm`: AMD ROCm/HIP build, `requiresHw: { kind: 'amd-gpu' }`;
     the Windows build needs the AMD HIP SDK (hipBLAS/rocBLAS are not bundled),
     Linux needs a system ROCm.
@@ -33,7 +38,7 @@ one-place edit.
   - `mlx-lm`: Mac-only (`platforms: ['darwin']`), `acquisition: 'manual-source'`
     (pip install, detected on PATH), `launchStyle: 'mlx-server'`.
   - `harmony`: `kind: 'format'`, satisfied by any llama.cpp build at b6000+
-    (`dependsOn` lists the CPU, CUDA 12/13, Vulkan, ROCm, SYCL and OpenVINO
+    (`dependsOn` lists the CPU, CUDA 12/13, Vulkan, OpenCL-Adreno, ROCm, SYCL and OpenVINO
     builds; `minLlamaBuild`).
 - Shared pieces: `LLAMA_BIN_NAMES`, `GGML_ORG`, `LLAMA_MANUAL_SOURCE_NOTE`,
   `WIN_CUDA12_ASSET`, `WIN_CUDA12_CUDART`, `LINUX_CUDA12_ASSET`,
@@ -42,7 +47,7 @@ one-place edit.
 Entry fields: `assetPatterns` and `companionAssets` are keyed by
 `<platform>-<arch>`; `binaryNames` by platform; `backendDevice` (the
 device-name prefix the build's backend registers in `--list-devices`: `CUDA`,
-`Vulkan`, `ROCm`, `SYCL`, `OPENVINO`) and `backendLib` (the ggml library stem,
+`Vulkan`, `GPUOpenCL`, `ROCm`, `SYCL`, `OPENVINO`) and `backendLib` (the ggml library stem,
 `hip` for `libggml-hip.so`) drive the detector's
 [BackendDeviceCheck](../../shared/runtime/detect/BackendDeviceCheck.md);
 `requiresHw` feeds the UI's

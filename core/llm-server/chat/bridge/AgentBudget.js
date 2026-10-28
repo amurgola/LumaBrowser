@@ -31,14 +31,19 @@ class AgentBudget {
   }
 
   static _iterations(req) {
-    return Math.min(AgentBudget.MAX_ITERATIONS,
-      Math.max(AgentBudget.DEFAULT.maxIterations, AgentBudget._positive(req && req.maxIterations)));
+    const floor = AgentBudget._userFloor(req && req.userMaxIterations, AgentBudget.DEFAULT.maxIterations);
+    return Math.max(floor, Math.min(AgentBudget.MAX_ITERATIONS, AgentBudget._positive(req && req.maxIterations)));
   }
 
   static _timeout(req) {
     if (req && req.noTimeout) return Infinity;
-    return Math.min(AgentBudget.MAX_TIMEOUT_MS,
-      Math.max(AgentBudget.DEFAULT.timeoutMs, AgentBudget._positive(req && req.timeoutMs)));
+    const floor = AgentBudget._userFloor(req && req.userTimeoutMs, AgentBudget.DEFAULT.timeoutMs);
+    if (floor === 0) return Infinity;
+    return Math.max(floor, Math.min(AgentBudget.MAX_TIMEOUT_MS, AgentBudget._positive(req && req.timeoutMs)));
+  }
+
+  static _userFloor(value, fallback) {
+    return (typeof value === 'number' && Number.isFinite(value) && value >= 0) ? value : fallback;
   }
 
   static _carriedReasoning(req) {

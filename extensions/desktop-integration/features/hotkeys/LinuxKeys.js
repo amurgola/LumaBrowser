@@ -14,8 +14,9 @@ class LinuxKeys {
   static TOOL_TIMEOUT_MS = 2000;
   static NO_PASTE = 'Pasting into other apps on Wayland needs wtype or ydotool installed';
 
-  constructor({ platform = process.platform, env = process.env, clipboard = null, loadX11 = () => X11Api.load(), findTool = LinuxKeys._findOnPath, run = LinuxKeys._run } = {}) {
+  constructor({ platform = process.platform, env = process.env, clipboard = null, bridge = null, loadX11 = () => X11Api.load(), findTool = LinuxKeys._findOnPath, run = LinuxKeys._run } = {}) {
     this._platform = platform;
+    this._bridge = bridge;
     this._env = env;
     this._clipboard = clipboard;
     this._loadX11 = loadX11;
@@ -39,6 +40,30 @@ class LinuxKeys {
     return !!this.session;
   }
 
+  get pollsModifiers() {
+    if (this.session === 'x11') return true;
+    return this.session === 'wayland' && this._bridgeRunning();
+  }
+
+  static NO_WAYLAND_POLL = 'On Wayland no app can read which keys are held, so the shortcut hint is off (the shortcuts still work where the compositor allows global shortcuts).';
+
+  get hintUnavailableReason() {
+    if (this.session === 'wayland') {
+      if (this._bridgeRunning()) return null;
+      return this._bridge ? (this._bridge.reason || 'The X11 bridge is not running.') : LinuxKeys.NO_WAYLAND_POLL;
+    }
+    if (!this.session) return 'No display session was found.';
+    return this.unavailableReason();
+  }
+
+  get bridge() {
+    return this._bridge;
+  }
+
+  _bridgeRunning() {
+    return !!(this._bridge && this._bridge.running);
+  }
+
   get copyMode() {
     return this.session === 'wayland' ? 'primary' : 'keys';
   }
@@ -54,7 +79,7 @@ class LinuxKeys {
   }
 
   canPaste() {
-    return this.session === 'x11' || !!this._waylandTool();
+    return this.session === 'x11' || this._bridgeRunning() || !!this._waylandTool();
   }
 
   get noPasteReason() {
@@ -66,6 +91,7 @@ class LinuxKeys {
   }
 
   heldModifiers() {
+    if (this.session === 'wayland') return this._bridgeRunning() ? this._bridge.heldModifiers() : [];
     if (this.session !== 'x11') return [];
     const api = this._loadX11();
     const down = api.keysDown();
@@ -73,6 +99,7 @@ class LinuxKeys {
   }
 
   releaseKeys(vks) {
+    if (this.session === 'wayland') { if (this._bridgeRunning()) this._bridge.releaseKeys(vks); return; }
     if (this.session !== 'x11') return;
     const api = this._loadX11();
     for (const [vk, names] of LinuxKeys.MODIFIERS) {
@@ -115,6 +142,7 @@ class LinuxKeys {
   }
 
   _waylandCombo(key) {
+    if (this._bridgeRunning()) { this._bridge.sendCombo(['Control_L', key]); return undefined; }
     const tool = this._waylandTool();
     if (!tool) throw new Error(LinuxKeys.NO_PASTE);
     const r = this._run(tool.path, tool.args(key), LinuxKeys.TOOL_TIMEOUT_MS);

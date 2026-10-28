@@ -24,7 +24,8 @@ Variable).
   warning glyph in `--warning`), title, detail (ellipsized), icon buttons with
   tooltips, and a 2px progress line. Kind `keys` (the shortcut hint) shows
   `hint` (the held modifiers, muted) and one chip per `keys` entry `{ id, key,
-  label, disabled, note }`: a keycap and its label; hover lights the keycap in
+  label, disabled, note }`: a keycap and its label (a chip without a `key`, an
+  island choice with no shortcut, shows its label alone); hover lights the keycap in
   the accent and shows `note` in the caption under the pill (`state.caption`
   otherwise); a click emits the entry's id; disabled chips are dimmed, still
   show their note, and ignore clicks. The keys pill opens with a spring, its

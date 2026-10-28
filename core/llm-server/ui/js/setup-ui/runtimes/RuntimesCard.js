@@ -1,5 +1,6 @@
 import HtmlEscaper from '../../format/HtmlEscaper.js';
 import FoldMemory from '../../setup/FoldMemory.js';
+import HostRuntimeAdvice from './HostRuntimeAdvice.js';
 import RuntimeRowHtml from './RuntimeRowHtml.js';
 import RuntimeUpdateBadge from './RuntimeUpdateBadge.js';
 import RuntimeRowProgress from './RuntimeRowProgress.js';
@@ -28,7 +29,7 @@ export default class RuntimesCard {
     pill.textContent = RuntimesCard.pillText(view);
     const body = doc.getElementById('runtimesBody');
     body.className = '';
-    body.innerHTML = RuntimesCard.bodyHtml(view);
+    body.innerHTML = RuntimesCard.bodyHtml(view, HostRuntimeAdvice.forRows(view.runtimes, this._ctx.hostCaps));
     for (const r of view.runtimes) this._applyUpdate(r.id);
   }
 
@@ -49,17 +50,18 @@ export default class RuntimesCard {
     return `${inference.filter((r) => r.installed).length}/${inference.length} installed`;
   }
 
-  static bodyHtml(view) {
+  static bodyHtml(view, advice = {}) {
+    const row = (r) => RuntimeRowHtml.html(r, advice[r.id] || null);
     const installed = view.runtimes.filter((r) => r.installed);
-    const catalogue = view.runtimes.filter((r) => !r.installed);
+    const catalogue = HostRuntimeAdvice.sortRows(view.runtimes.filter((r) => !r.installed), advice);
     const installedHtml = installed.length
-      ? installed.map(RuntimeRowHtml.html).join('')
+      ? installed.map(row).join('')
       : '<div class="luma-empty">No runtime installed yet. Pick one from the catalogue below.</div>';
     return installedHtml + `
                 <details class="setup-fold" data-fold-key="llm.runtimeCatalogue" ${FoldMemory.attr('llm.runtimeCatalogue', installed.length === 0)}>
                     <summary><span class="setup-fold-title">Catalogue</span><span class="setup-fold-meta"><span class="fold-chip">${catalogue.length} available</span></span></summary>
                     <div class="setup-fold-body">
-                        ${catalogue.map(RuntimeRowHtml.html).join('')}
+                        ${catalogue.map(row).join('')}
                         ${RuntimesCard.sourceCallout(view)}
                     </div>
                 </details>`;

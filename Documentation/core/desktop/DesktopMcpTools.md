@@ -29,7 +29,7 @@ lazy "Desktop control" group.
 or `(hwnd 0); desktop_click x/y with hwnd 0 use these pixels` for a whole-desktop shot),
 `desktop_click` -> `click`, `desktop_type` -> `type`, `desktop_drag` -> `drag`,
 `desktop_set_value` -> `setValue`, `desktop_press_key` -> `pressKey`,
-`desktop_scroll` -> `scroll`, `desktop_launch` -> `launch`, `desktop_focus` -> `focus`.
+`desktop_scroll` -> `scroll`, `desktop_launch` -> `launch`, `desktop_focus` -> `focus` (awaited).
 
 The `LOOKING` tools reply through `_acted(args, r)`: a successful reply gets
 `lookAfter(args, r)`'s screenshot appended (the image plus `After the action:
@@ -61,6 +61,6 @@ thrown look never fails the action; the plain reply goes back.
   search-URL parameters.
 
 Success replies `McpResult.text({ success: true, data })`. A failure with a
-`code` (HUMAN_NEEDED, COVERED) replies `{ success: false, error, code }` as an
+`code` (HUMAN_NEEDED, COVERED, STOPPED) replies `{ success: false, error, code }` as an
 error so the agent can branch on the code; other failures, throws and unknown
 tools reply `McpResult.error`.

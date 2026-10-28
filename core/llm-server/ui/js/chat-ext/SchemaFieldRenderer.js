@@ -6,13 +6,14 @@ import TextInputField from './fields/TextInputField.js';
 import TextareaField from './fields/TextareaField.js';
 import SelectField from './fields/SelectField.js';
 import GroupField from './fields/GroupField.js';
+import SectionField from './fields/SectionField.js';
 import ImageField from './fields/ImageField.js';
 import CharArtField from './fields/CharArtField.js';
 import RepeaterField from './fields/RepeaterField.js';
 
 export default class SchemaFieldRenderer {
-  static FIELD_CLASSES = [ToggleField, ButtonField, TextInputField, TextareaField, SelectField, GroupField, ImageField,
-    CharArtField, RepeaterField];
+  static FIELD_CLASSES = [ToggleField, ButtonField, TextInputField, TextareaField, SelectField, GroupField, SectionField,
+    ImageField, CharArtField, RepeaterField];
 
   static ASSIST_TYPES = ['text', 'textarea'];
 

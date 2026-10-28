@@ -2,6 +2,7 @@ import ChatIcons from '../ChatIcons.js';
 import ByteFormatter from '../../format/ByteFormatter.js';
 import HtmlEscaper from '../../format/HtmlEscaper.js';
 import DashboardContext from './DashboardContext.js';
+import RegionStaging from '../region/RegionStaging.js';
 import TabContext from './TabContext.js';
 
 export default class AttachmentStrip {
@@ -72,6 +73,7 @@ export default class AttachmentStrip {
   }
 
   static _fileChipHtml(f, i) {
+    if (f.kind === 'region') return RegionStaging.chipHtml(f, i);
     const esc = HtmlEscaper.escape;
     const sz = f.size ? ByteFormatter.bytes(f.size, { zero: '' }) : '';
     const src = AttachmentStrip.previewSrc(f);
@@ -85,6 +87,7 @@ export default class AttachmentStrip {
         : '<span class="cm-att-ic">' + ic + '</span>')
       + '<span class="cm-att-name">' + esc(f.name || 'attachment') + '</span>'
       + (sz ? '<span class="cm-att-sz">' + esc(sz) + '</span>' : '')
+      + (src ? RegionStaging.imageButtonHtml(f, i) : '')
       + '<button class="cm-att-x" data-att-rm="' + i + '" type="button" title="Remove">×</button>'
       + '</span>';
   }
@@ -120,6 +123,10 @@ export default class AttachmentStrip {
       if (!Number.isFinite(i)) return;
       state.attachments.splice(i, 1);
       this.render();
+    }));
+    strip.querySelectorAll('[data-att-region]').forEach((btn) => btn.addEventListener('click', () => {
+      const i = Number(btn.dataset.attRegion);
+      if (Number.isFinite(i)) this._ctx.regions.edit(i);
     }));
     strip.querySelectorAll('[data-ctx-rm]').forEach((btn) => btn.addEventListener('click', () => {
       state.context = state.context.filter((c) => c.id !== btn.dataset.ctxRm);

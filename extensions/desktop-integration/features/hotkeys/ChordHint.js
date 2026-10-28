@@ -24,6 +24,10 @@ class ChordHint {
     return this._shown;
   }
 
+  get running() {
+    return !!this._timer;
+  }
+
   start() {
     if (this._timer) return;
     this._timer = this._si(() => this.tick(), ChordHint.POLL_MS);

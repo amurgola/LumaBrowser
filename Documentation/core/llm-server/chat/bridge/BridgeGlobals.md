@@ -9,7 +9,8 @@ lazily on every call because they may arrive after the bridge.
 
 - `imageRouter()` (`__lumaImageRouter`), `imageServerService()`
   (`__lumaImageServerService`), `videoRouter()` (`__lumaVideoRouter`),
-  `musicRouter()` (`__lumaMusicRouter`), `tabPreview()` (`__lumaTabPreview`):
-  the object or null.
+  `musicRouter()` (`__lumaMusicRouter`), `tabPreview()` (`__lumaTabPreview`),
+  `desktopService()` (`__lumaDesktop`, for the approval check's
+  [DesktopCallRisk](../approval/DesktopCallRisk.md) reading): the object or null.
 - `groundingAvailable()`: `__lumaVisualGrounding.isAvailable()`, false when
   absent or throwing.

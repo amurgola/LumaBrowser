@@ -5,13 +5,16 @@ const LabSetupRunner = require('./LabSetupRunner');
 const LabIntegratedScene = require('./LabIntegratedScene');
 const LabTurn = require('./LabTurn');
 const LabRunReport = require('./LabRunReport');
+const LabTextRun = require('./LabTextRun');
+const LabTextReport = require('./LabTextReport');
 
 class LabService {
   static NOT_REGISTERED = 'Roleplay mode is not registered (is the roleplay extension enabled?).';
 
-  constructor({ mode = null, generateImage = async () => null, Harness = null, imageDefaults, chatStore, broadcast, outRoot } = {}) {
+  constructor({ mode = null, generateImage = async () => null, complete = async () => ({ error: 'no model' }), Harness = null, imageDefaults, chatStore, broadcast, outRoot } = {}) {
     this._mode = mode;
     this._generateImage = generateImage;
+    this._complete = complete;
     this._Harness = Harness;
     this._scenario = new LabScenario({ imageDefaults, chatStore });
     this.broadcast = typeof broadcast === 'function' ? broadcast : () => {};
@@ -31,6 +34,17 @@ class LabService {
 
   async run({ overrides = {}, options = {} } = {}) {
     return this._invoke({ overrides, frozen: {}, options });
+  }
+
+  async runText({ options = {} } = {}) {
+    if (!this._mode || typeof this._mode.buildTurn !== 'function' || typeof this._mode.postProcess !== 'function') {
+      return { success: false, error: LabService.NOT_REGISTERED };
+    }
+    const run = new LabTextRun({ mode: this._mode, complete: this._complete, Harness: this._Harness, emit: (t, p) => this._send(t, p) });
+    const result = await run.run(options || {});
+    const outDir = path.join(this._outRoot, LabRunReport.stamp() + '-text');
+    LabTextReport.write(outDir, result);
+    return Object.assign({ success: !result.error, outDir }, result);
   }
 
   async regenerateFrom({ fromKey, overrides = {}, options = {} } = {}) {

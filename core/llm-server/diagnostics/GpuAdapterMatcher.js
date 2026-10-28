@@ -5,6 +5,7 @@ class GpuAdapterMatcher {
     0x8086: 'Intel',
     0x106b: 'Apple',
     0x1414: 'Microsoft',
+    0x17cb: 'Qualcomm',
   };
 
   static vendorName(vendorId) {

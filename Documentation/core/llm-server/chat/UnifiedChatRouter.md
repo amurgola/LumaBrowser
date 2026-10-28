@@ -71,6 +71,10 @@ Network Sharing:
 - `proxyStream(opts)`, `proxyAgent(opts)` -> [ProxyTurns](router/ProxyTurns.md).
 
 Human in the loop:
+- `addApprovalPresenter(presenter)`, `addTakeoverPresenter(presenter)`,
+  `onRunProgress(listener)`: forwarded to the bridge (a question shown off the
+  chat, see [ApprovalAttention](approval/ApprovalAttention.md); the run's step
+  budget, see [RunProgress](bridge/turn/RunProgress.md)).
 - `respondTakeover(action)`, `respondApproval(decision)`: forwarded to the
   bridge; false when nothing waits or the bridge throws.
 
@@ -83,7 +87,8 @@ Artifacts ([ArtifactAccess](router/ArtifactAccess.md)):
 [ChatTurn](router/ChatTurn.md) supersedes the in-flight turn
 ([InFlightTurn](router/InFlightTurn.md)), opens the conversation
 ([TurnConversation](router/TurnConversation.md)), persists image attachments
-([AttachmentArtifacts](router/AttachmentArtifacts.md)), applies the chat mode
+([AttachmentArtifacts](router/AttachmentArtifacts.md)) and the edit regions
+painted on images ([EditRegionRecorder](router/EditRegionRecorder.md)), applies the chat mode
 ([ChatModeTurn](router/ChatModeTurn.md)), streams into a
 [TurnStream](router/TurnStream.md), compacts
 ([CompactionGate](router/CompactionGate.md)), adds the style documents

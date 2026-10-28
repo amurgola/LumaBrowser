@@ -4,11 +4,14 @@ const ActivityPages = require('./ActivityPages');
 
 class ActivityOverlay {
   static ISLAND_TOP_GAP = 6;
+  static ISLAND_CAPTION = 'Luma island';
+  static RING_CAPTION = 'Luma ring';
   static EXIT_MS = 340;
   static TOKENS = path.join(__dirname, '..', '..', '..', 'core', 'llm-server', 'ui', 'css', 'tokens.css');
 
-  constructor({ electron = null, displayFor = null, frameFor = null, log = null, tokensCss = null } = {}) {
+  constructor({ electron = null, displayFor = null, frameFor = null, placement = null, log = null, tokensCss = null } = {}) {
     this._electron = electron;
+    this._placement = placement;
     this._displayFor = displayFor || (() => null);
     this._frameFor = frameFor || (() => null);
     this._ringBounds = null;
@@ -36,7 +39,8 @@ class ActivityOverlay {
   show(state, onAction = () => {}) {
     if (this._session) this._end(this._session);
     const session = { id: `act-${++this._counter}`, state: { ring: true, island: true, ...state }, onAction, closed: false, timer: null };
-    session.display = this._pickDisplay(state.hwnd);
+    session.display = this._pickDisplay(state.frame || state.hwnd);
+    this._aim(session);
     this._session = session;
     if (!this._peek) this._render(session, true);
     return {
@@ -49,8 +53,15 @@ class ActivityOverlay {
   update(session, patch) {
     if (session.closed || this._session !== session) return false;
     session.state = { ...session.state, ...patch };
+    if (patch && Object.prototype.hasOwnProperty.call(patch, 'frame')) this._aim(session);
     if (!this._peek) this._render(session, false);
     return true;
+  }
+
+  _aim(session) {
+    const hwnd = session.state.frame;
+    session.frame = hwnd ? this._pickFrame(hwnd) : null;
+    if (session.frame) session.display = this._displayMatching(session.frame) || session.display;
   }
 
   close(session, { after = 0 } = {}) {
@@ -146,12 +157,14 @@ class ActivityOverlay {
     if (s.ring !== false) {
       const ring = await this._ensure('ring');
       if (this._shown !== target) return;
-      const bounds = frame ? ActivityOverlay._padded(frame) : display.bounds;
+      const bounds = frame ? ActivityOverlay._clampTo(ActivityOverlay._padded(frame), display.bounds) : display.bounds;
+      const inset = frame ? ActivityOverlay._insetOf(frame, bounds) : null;
       if (first || JSON.stringify(bounds) !== JSON.stringify(this._ringBounds)) {
         this._place(ring, bounds);
         this._ringBounds = bounds;
+        this._placeOnWayland(ActivityOverlay.RING_CAPTION, bounds);
       }
-      await this._exec(ring, `window.__ring.render(${JSON.stringify({ on: true, mode: ActivityOverlay._ringMode(s), framed: !!frame, lock: target.lock || 0 })})`);
+      await this._exec(ring, `window.__ring.render(${JSON.stringify({ on: true, mode: ActivityOverlay._ringMode(s), framed: !!frame, inset, lock: target.lock || 0 })})`);
       if (!ring.isVisible()) ring.showInactive();
     } else if (this._ring) {
       await this._exec(this._ring, 'window.__ring.render({on:false})');
@@ -161,8 +174,10 @@ class ActivityOverlay {
       if (this._shown !== target) return;
       const size = await this._exec(island, `window.__island.render(${JSON.stringify(ActivityOverlay._islandState(s, !first))})`);
       if (this._shown !== target || !size) return;
-      this._place(island, ActivityOverlay._islandBounds(display.workArea || display.bounds, frame, size));
+      const bounds = ActivityOverlay._islandBounds(display.workArea || display.bounds, frame, size);
+      this._place(island, bounds);
       if (!island.isVisible()) island.showInactive();
+      this._placeOnWayland(ActivityOverlay.ISLAND_CAPTION, bounds);
       if (first) await this._exec(island, `window.__island.render(${JSON.stringify(ActivityOverlay._islandState(s, true))})`);
     } else if (this._island) {
       await this._exec(this._island, 'window.__island.render({visible:false})');
@@ -192,6 +207,7 @@ class ActivityOverlay {
       resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false,
       skipTaskbar: true, focusable: false, alwaysOnTop: true, enableLargerThanScreen: which === 'ring',
       width: which === 'ring' ? 800 : 420, height: which === 'ring' ? 600 : 80,
+      title: which === 'ring' ? ActivityOverlay.RING_CAPTION : ActivityOverlay.ISLAND_CAPTION,
       webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false },
     });
     try { win.setAlwaysOnTop(true, 'screen-saver'); } catch (_) {}
@@ -212,6 +228,12 @@ class ActivityOverlay {
 
   _place(win, bounds) {
     try { win.setBounds(bounds); } catch (_) {}
+  }
+
+  _placeOnWayland(caption, bounds) {
+    if (!this._placement) return;
+    const result = this._placement.move({ caption, x: bounds.x, y: bounds.y });
+    if (result && typeof result.catch === 'function') result.catch((err) => this._log.warn(`${caption} placement failed: ${(err && err.message) || err}`));
   }
 
   async _exec(win, code) {
@@ -258,6 +280,23 @@ class ActivityOverlay {
       try { this._tokensCss = fs.readFileSync(ActivityOverlay.TOKENS, 'utf8'); } catch (_) { this._tokensCss = ''; }
     }
     return this._tokensCss;
+  }
+
+  static _clampTo(r, d) {
+    const x = Math.max(r.x, d.x);
+    const y = Math.max(r.y, d.y);
+    const right = Math.min(r.x + r.width, d.x + d.width);
+    const bottom = Math.min(r.y + r.height, d.y + d.height);
+    return { x, y, width: Math.max(0, right - x), height: Math.max(0, bottom - y) };
+  }
+
+  static _insetOf(frame, bounds) {
+    return [
+      Math.max(0, frame.y - bounds.y),
+      Math.max(0, (bounds.x + bounds.width) - (frame.x + frame.width)),
+      Math.max(0, (bounds.y + bounds.height) - (frame.y + frame.height)),
+      Math.max(0, frame.x - bounds.x),
+    ];
   }
 
   static _padded(r) {

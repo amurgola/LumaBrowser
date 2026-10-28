@@ -8,7 +8,7 @@ class ApprovalWait extends HumanWait {
   }
 
   _normalize(decision) {
-    if (decision === 'run') return 'run';
+    if (decision === 'run' || decision === 'window') return decision;
     return decision === 'once' ? 'once' : 'reject';
   }
 

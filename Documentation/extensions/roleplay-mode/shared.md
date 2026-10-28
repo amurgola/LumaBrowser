@@ -22,6 +22,7 @@ the parity test can also require it.
 | `characterBodyRef(c)` | [CharacterArt](world/CharacterArt.md)`.bodyRef` |
 | `characterBodyRefForState(c, state)` | `CharacterArt.bodyRefForState` |
 | `migrateData(data)` | `DataMigration.migrate` |
+| `forgetTurn(data, messageId)` | `StoryLedger.forget` + `CharacterChronicle.forget` on every character |
 
 ## Globals
 

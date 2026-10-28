@@ -12,5 +12,6 @@ asks for an AI title after a first exchange.
 
 - `done(aborted)`: an abort before any text marks the turn "stopped"; voice is
   told afterwards (an abort skips its speech drain).
-- `error(message, meta?)`: `meta.code` hints (such as `RUNTIME_NOT_INSTALLED`)
-  are kept for the fix card.
+- `error(message, meta?)`: `meta.code` hints (such as `RUNTIME_NOT_INSTALLED`,
+  or `AGENT_TIMEOUT` with `meta.setting`) are kept as `errorMeta` for the fix
+  card and the error card's "Edit setting" button.

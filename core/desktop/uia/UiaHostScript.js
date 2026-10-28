@@ -70,7 +70,7 @@ function Tree($req) {
   $refs.Clear()
   $root = $AE::FromHandle([IntPtr]::new([long]$req.hwnd))
   $cr = New-Object System.Windows.Automation.CacheRequest
-  foreach ($p in @($AE::NameProperty, $AE::ControlTypeProperty, $AE::BoundingRectangleProperty, $AE::AutomationIdProperty, $AE::IsEnabledProperty, $AE::IsOffscreenProperty)) { $cr.Add($p) }
+  foreach ($p in @($AE::NameProperty, $AE::ControlTypeProperty, $AE::BoundingRectangleProperty, $AE::AutomationIdProperty, $AE::IsEnabledProperty, $AE::IsOffscreenProperty, $AE::IsPasswordProperty)) { $cr.Add($p) }
   foreach ($p in $patternProps.Values) { $cr.Add($p) }
   $cr.TreeFilter = [System.Windows.Automation.Automation]::ControlViewCondition
   $scope = $cr.Activate()
@@ -95,7 +95,7 @@ function Tree($req) {
     [void]$nodes.Add([ordered]@{
       ref = $n; role = $role; name = [string]$c.Name
       rect = @([int]$r.X, [int]$r.Y, [int]$r.Width, [int]$r.Height)
-      aid = [string]$c.AutomationId; enabled = [bool]$c.IsEnabled; patterns = $pats
+      aid = [string]$c.AutomationId; enabled = [bool]$c.IsEnabled; patterns = $pats; password = [bool]$c.IsPassword
     })
   }
   Reply ([ordered]@{ id = $req.id; ok = $true; nodes = $nodes; truncated = ($n -gt $max) })

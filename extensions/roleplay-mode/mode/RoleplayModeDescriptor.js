@@ -1,4 +1,5 @@
-const NarratorPrompt = require('../prompts/NarratorPrompt');
+const NarratorContext = require('../prompts/NarratorContext');
+const RoleplaySamplers = require('./RoleplaySamplers');
 
 class RoleplayModeDescriptor {
   static ID = 'roleplay';
@@ -8,18 +9,27 @@ class RoleplayModeDescriptor {
     return {
       id: RoleplayModeDescriptor.ID,
       label: 'Roleplay',
-      description: 'Scene-and-character roleplay with avatars and generated images.',
-      requirements: ['llm', 'image'],
+      description: 'Scene-and-character roleplay with living characters, optional avatars and generated images.',
+      requirements: ['llm'],
       chatUiUrl: chat.uiUrl('chat-ui.js'),
-      buildTurn: ({ meta }) => RoleplayModeDescriptor.buildTurn(meta),
+      buildTurn: (args) => RoleplayModeDescriptor.buildTurn(args && args.meta, args || {}),
       postProcess: (args) => postProcessor.process(args),
     };
   }
 
-  static buildTurn(meta) {
+  static buildTurn(meta, { messages = [], contextWindow = null } = {}) {
     const data = (meta && meta.data) || {};
-    const turn = { systemPrompt: NarratorPrompt.build(data), temperature: RoleplayModeDescriptor.TEMPERATURE };
+    const ctx = NarratorContext.build(data, { messages, contextWindow });
+    const turn = {
+      systemPrompt: ctx.systemPrompt,
+      postHistoryPrompt: ctx.postHistoryPrompt,
+      temperature: RoleplayModeDescriptor.TEMPERATURE,
+      compact: false,
+    };
+    if (ctx.dropped > 0) turn.messages = ctx.messages;
     if (data.llmModel && typeof data.llmModel === 'string') turn.modelRef = data.llmModel;
+    const samplers = RoleplaySamplers.forTurn(data);
+    if (samplers) turn.samplers = samplers;
     return turn;
   }
 }

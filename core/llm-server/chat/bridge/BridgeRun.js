@@ -11,10 +11,12 @@ const GroupIntent = require('./groups/GroupIntent');
 const GroupRouting = require('./groups/GroupRouting');
 const RunToolCallParser = require('./parsing/RunToolCallParser');
 const ArtifactCatalog = require('./prompt/ArtifactCatalog');
+const EditRegionIndex = require('./prompt/EditRegionIndex');
 const ImagePromptHint = require('./prompt/ImagePromptHint');
 const SystemPromptAppend = require('./prompt/SystemPromptAppend');
 const TurnPrompt = require('./prompt/TurnPrompt');
 const VisionHint = require('./prompt/VisionHint');
+const DesktopCallRisk = require('../approval/DesktopCallRisk');
 const ApprovalCheck = require('./tools/ApprovalCheck');
 const BridgeToolbox = require('./tools/BridgeToolbox');
 const ChatToolTable = require('./tools/ChatToolTable');
@@ -95,6 +97,7 @@ class BridgeRun {
       onGranted: o.onRunApproval,
       onUsed: o.onRunApprovalUsed,
       attention: this._host.approvalAttention || null,
+      risk: DesktopCallRisk.assessor(() => BridgeGlobals.desktopService()),
     });
     const loopMonitor = new ToolLoopMonitor();
     this._health.watchToolLoop(loopMonitor);
@@ -114,11 +117,13 @@ class BridgeRun {
       trace: this._trace,
       isAborted: this.control.isAborted,
       ctxPerSlot: o.ctxPerSlot,
+      editRegions: EditRegionIndex.collect(o.priorMessages),
       kbScope: this._toolSet.kbScope,
       webSession: new WebSession(),
       webTabRender: (!o.noBrowser && browserService) ? SilentTab.make(browserService, { isAborted: this.control.isAborted }) : null,
       allowTakeover: !!o.allowTakeover,
       takeoverWait: this._host.takeoverWait,
+      takeoverAttention: this._host.takeoverAttention || null,
     };
   }
 
@@ -137,6 +142,7 @@ class BridgeRun {
       hooks: this._hooks, mirror: this._mirror, trace: this._trace, images: this._images,
       artifactStore: o.deps && o.deps.artifactStore, artifacts: this._artifacts,
       conversationId: o.conversationId, assistantMessageId: o.assistantMessageId,
+      progress: this._host.runProgress || null,
     });
   }
 
@@ -166,6 +172,7 @@ class BridgeRun {
     } catch (err) {
       runError = err instanceof Error ? err : new Error(String(err));
     }
+    this._endProgress();
     await preview.end().catch(() => {});
     await this._finisher(result).finish({ result, runError });
   }
@@ -198,6 +205,12 @@ class BridgeRun {
       onWorkTab: o.pinnedTabId != null ? null : (tabId) => preview.start(tabId),
       shouldAbort: this.control.isAborted,
     });
+  }
+
+  _endProgress() {
+    const progress = this._host.runProgress;
+    if (!progress) return;
+    try { progress.end(this._o.conversationId); } catch (_) {}
   }
 
   async _systemPromptAppend() {

@@ -15,6 +15,7 @@ class RuntimeHardwareCheck {
     if (req.kind === 'apple-silicon') return RuntimeHardwareCheck._appleSilicon();
     if (req.kind === 'amd-gpu') return RuntimeHardwareCheck._vendorGpu(gpu, 'AMD');
     if (req.kind === 'intel-gpu') return RuntimeHardwareCheck._vendorGpu(gpu, 'Intel');
+    if (req.kind === 'qualcomm-gpu') return RuntimeHardwareCheck._vendorGpu(gpu, 'Qualcomm');
     if (req.kind === 'intel-sycl') return RuntimeHardwareCheck._intelCompute(gpu, intel, 'levelZeroGpu', RuntimeHardwareCheck.SYCL_NOTE);
     if (req.kind === 'intel-openvino') return RuntimeHardwareCheck._intelCompute(gpu, intel, 'openclIcd', RuntimeHardwareCheck.OPENVINO_NOTE);
     return { ...RuntimeHardwareCheck.READY };

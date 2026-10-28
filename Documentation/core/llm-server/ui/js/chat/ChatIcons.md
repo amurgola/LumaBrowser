@@ -11,7 +11,7 @@ reply before its first token.
 
 - Static strings: `plus`, `search`, `panel`, `sliders`, `chevron`, `dots`,
   `copy`, `retry`, `readAloud`, `readStop`, `alert` (a failed step), `check`, `send`, `stop`, `edit`,
-  `trash`, `pin`, `tools`, `doc`, `image`, `expand`, `paperclip`, `gear`, `x`,
+  `trash`, `pin`, `tools`, `doc`, `brush` (mark an area to edit), `image`, `expand`, `paperclip`, `gear`, `x`,
   `clock`, `play`, `pause`, `download`, `link`, `share`, `grid`, `book` (the
   documentation source pill), `mic`, `logo`.
 - `ChatIcons.pulse()`.

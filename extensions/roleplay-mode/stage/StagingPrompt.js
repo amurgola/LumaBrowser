@@ -1,8 +1,12 @@
 const CastResolver = require('../world/CastResolver');
+const CharacterProfile = require('../world/CharacterProfile');
+const CharacterState = require('../world/CharacterState');
+const StoryLedger = require('../world/StoryLedger');
 
 class StagingPrompt {
   static POSES = ['standing', 'sitting', 'kneeling', 'lying', 'away', 'jumping'];
   static PASSAGE_MAX = 4000;
+  static THREADS_SHOWN = 6;
 
   static messages(data, content) {
     const d = data || {};
@@ -13,24 +17,29 @@ class StagingPrompt {
 
   static _instructions() {
     return '/no_think\n'
-      + 'You are the STAGE MANAGER for an illustrated roleplay: continuity '
-      + 'tracker, wardrobe supervisor and shot director in one. Read the passage '
-      + 'and report the world-state AFTER it, plus the single best shot for this '
+      + 'You are the STAGE MANAGER for an interactive roleplay: continuity '
+      + 'tracker, wardrobe supervisor, chronicler and shot director in one. Read the passage '
+      + 'and report the world-state AFTER it, what happened in it, plus the single best shot for this '
       + 'moment\'s illustration. Respond with ONLY a single minified JSON object '
       + 'and nothing else: no prose, no code fences, no explanation.\n'
       + StagingPrompt._schema()
       + 'Rules:\n'
       + StagingPrompt._castRules()
       + StagingPrompt._wardrobeRules()
+      + StagingPrompt._chronicleRules()
       + StagingPrompt._shotRules();
   }
 
   static _schema() {
     return 'Schema: {"newCharacters":[{"name":string,"looks":string,"personality":string}],'
       + '"location":{"name":string,"desc":string,"isNew":boolean},'
-      + '"present":[{"name":string,"present":boolean,"emotion":string,"outfit":string,'
-      + '"slots":{"outer":string,"top":string,"bottom":string,"feet":string},'
+      + '"present":[{"name":string,"present":boolean,"emotion":string,"intent":string,"condition":string,'
+      + '"bondUser":string,"bondChange":string,"beat":string,"leftTo":string,'
+      + '"outfit":string,"slots":{"outer":string,"top":string,"bottom":string,"feet":string},'
       + '"head":string,"face":string,"outfitChanged":boolean}],'
+      + '"events":[{"kind":"event"|"reveal"|"promise"|"death"|"move"|"injury","text":string,"who":[names]}],'
+      + '"clock":{"advance":"none"|"minutes"|"hours"|"next-morning"|"days","timeOfDay":string,"weather":string},'
+      + '"threads":{"opened":[string],"closed":[string]},'
       + '"shot":{"pose":one of [' + StagingPrompt.POSES.join(', ') + '],"facing":"camera"|"away",'
       + '"framing":"full"|"close","focus":[names],"group":boolean,"contact":boolean,'
       + '"action":string,"props":[strings]}}\n';
@@ -52,12 +61,19 @@ class StagingPrompt {
       + 'key if the passage does not clearly establish a place.\n'
       + '- present: the non-player characters physically present with the '
       + 'protagonist AFTER this passage, one entry each, exact names. Mark '
-      + 'present=false only when a known character clearly just left; otherwise '
-      + 'omit absent characters. When the protagonist MOVES to a different place, '
+      + 'present=false only when a known character clearly just left, and then set '
+      + '"leftTo" to a short phrase saying where or why (e.g. "went to fetch the doctor"); '
+      + 'otherwise omit absent characters. When the protagonist MOVES to a different place, '
       + 'presence resets: only characters described at the NEW location are '
       + 'present; anyone left behind at the previous location must be marked '
       + 'present=false, even if they were present a moment ago. '
-      + '"emotion" = a brief current mood.\n';
+      + '"emotion" = a brief current mood. "intent" = what they want right now, one short phrase, '
+      + 'or "" if unchanged from before. "condition" = injuries, drunk, exhausted, soaked and the like, '
+      + 'or "" if fine; carry a standing condition forward until the passage heals it. '
+      + '"bondUser" = their standing attitude to the player in one or two words (wary, warming, trusts, '
+      + 'fond, hostile, indebted); copy the known one unless this passage changed it, and when it did '
+      + 'also set "bondChange" to why (else ""). "beat" = ONE past-tense sentence of what this character '
+      + 'did, learned or decided in this passage, naming the player as "the player"; "" if they only stood by.\n';
   }
 
   static _wardrobeRules() {
@@ -92,6 +108,19 @@ class StagingPrompt {
       + 'expression changes.\n';
   }
 
+  static _chronicleRules() {
+    return '- events: the things in THIS passage a reader would need to remember later, each ONE concrete '
+      + 'past-tense sentence with names (not pronouns). "kind": "reveal" for a secret or fact coming out, '
+      + '"promise" for a promise, deal or threat, "death" when someone dies, "move" when the party travels '
+      + 'somewhere new, "injury" for wounds and illness, else "event". Routine talk, scenery and mood are '
+      + 'NOT events. Use [] when nothing worth remembering happened.\n'
+      + '- clock: how much story time passed in this passage ("none" for a continuous beat) and the time of '
+      + 'day and weather AFTER it when the passage states or clearly implies them, else "".\n'
+      + '- threads: "opened" = new unresolved hooks introduced here (a question, a debt, a looming arrival), '
+      + 'one short phrase each; "closed" = known open threads this passage resolved, copied VERBATIM from '
+      + 'the known threads list. [] when none.\n';
+  }
+
   static _shotRules() {
     return '- shot: the illustration of THIS moment. "pose" = the dominant body pose '
       + 'of the focus character(s); use "away" ONLY when they are clearly turned '
@@ -122,10 +151,15 @@ class StagingPrompt {
     const currentScene = scenes.find((s) => s.id === currentState.sceneId) || scenes.find((s) => s.id === d.activeSceneId);
     const roster = StagingPrompt._roster(d);
     const currentPeople = StagingPrompt._currentPeople(d);
-    return 'Known characters:\n' + (roster.length ? roster.join('\n') : '(none)') + '\n'
+    const protagonist = StoryLedger.protagonist(d);
+    const threads = StoryLedger.openThreads(d).slice(-StagingPrompt.THREADS_SHOWN);
+    return 'The player: ' + (protagonist.name || 'the protagonist') + (protagonist.persona ? ' (' + protagonist.persona + ')' : '') + '\n'
+      + 'Known characters:\n' + (roster.length ? roster.join('\n') : '(none)') + '\n'
       + 'Prior current scene: ' + (currentScene && currentScene.name ? currentScene.name : '(unknown)') + '\n'
       + 'Prior present characters: ' + (currentPeople.length ? currentPeople.join(' | ') : '(none)') + '\n'
-      + 'Known locations: ' + (knownScenes.length ? knownScenes.join(', ') : '(none)');
+      + 'Known locations: ' + (knownScenes.length ? knownScenes.join(', ') : '(none)') + '\n'
+      + 'Clock before this passage: ' + StoryLedger.clockLine(d) + '\n'
+      + 'Known open threads: ' + (threads.length ? threads.join(' | ') : '(none)');
   }
 
   static _roster(d) {
@@ -134,9 +168,14 @@ class StagingPrompt {
       .filter((c) => c && c.name)
       .map((c) => {
         const known = Array.isArray(c.outfits) ? c.outfits.map((o) => o && o.desc).filter(Boolean) : [];
+        const state = CharacterState.of(c);
+        const bond = state.bondUser || CharacterProfile.bondWithUser(c);
         return '- ' + c.name
           + ' | currently wearing: ' + (c.currentOutfitDesc || '(unknown)')
-          + (known.length ? ' | known wardrobe: ' + known.join('; ') : '');
+          + (known.length ? ' | known wardrobe: ' + known.join('; ') : '')
+          + (bond ? ' | toward the player: ' + bond : '')
+          + (state.condition ? ' | condition: ' + state.condition : '')
+          + (state.intent ? ' | wants: ' + state.intent : '');
       });
   }
 

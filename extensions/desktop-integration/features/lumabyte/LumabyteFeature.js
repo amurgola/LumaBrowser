@@ -25,11 +25,12 @@ class LumabyteFeature {
       { key: 'windowText', label: 'Send the window\'s accessible text with each message', type: 'bool', default: true, help: 'Control names and roles read through UI Automation; helps any model, including ones that cannot see images.' },
       { key: 'actions', label: 'Let Lumabyte act in the window when you ask', type: 'bool', default: true, help: 'Ask it to open, click, type or scroll and it does, step by step, on the attached window only. Uses desktop control, which must be allowed in the LLM tab (Visual grounding card).' },
       { key: 'files', label: 'Let Lumabyte read files when you ask', type: 'bool', default: true, help: 'Ask it about a file ("summarize Andy.md") and it reads the file\'s text, or lists a folder; names resolve against the folder open in File Explorer. Local files only, and only the start of a large file.' },
+      { key: 'maxActions', label: 'Actions per reply', type: 'number', default: LumabyteActions.MAX_ACTIONS, min: 1, max: 30, help: 'How many clicks, keys and scrolls Lumabyte may run before it looks at the window again. Ctrl+Alt+Shift+Escape stops a run at any point.' },
       { key: 'thinking', label: 'Let the model think before answering', type: 'bool', default: false, help: 'Slower, sometimes better on hard questions.' },
     ];
   }
 
-  static defaultParts() {
+  static defaultParts(deps = {}) {
     const electron = require('electron');
     const ExtensionGlobals = require('../../../../core/shell/extensions/ExtensionGlobals');
     const win = process.platform === 'win32';
@@ -37,7 +38,7 @@ class LumabyteFeature {
     const LumabyteWindows = require('./LumabyteWindows');
     const events = win ? new (require('./WinEvents'))() : null;
     const parts = {
-      globalShortcut: electron.globalShortcut,
+      globalShortcut: deps.shortcuts || electron.globalShortcut,
       probe,
       getRouter: () => ExtensionGlobals.chatRouter(),
       getDesktop: () => global.__lumaDesktop || null,
@@ -379,6 +380,7 @@ class LumabyteFeature {
       screenshot: s.get('screenshot', true) !== false,
       windowText: s.get('windowText', true) !== false,
       thinking: s.get('thinking', false) === true,
+      maxActions: LumabyteActions.cap(s.get('maxActions', LumabyteActions.MAX_ACTIONS)),
       actions: s.get('actions', true) !== false,
       files: s.get('files', true) !== false,
     };

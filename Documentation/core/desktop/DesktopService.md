@@ -60,14 +60,25 @@ All of them live in [DesktopGuards](service/DesktopGuards.md) and
 
 ## Methods
 
-- `new DesktopService({ db, nativeImage, visualGrounding?, uia?, win = Win32, clipboard?, sleep? })`.
-  `uia`, `win` and `sleep` are injectable for tests; without `clipboard` typing is keystrokes only.
+- `new DesktopService({ db, nativeImage, visualGrounding?, uia?, win = Win32, clipboard?, sleep?, now? })`.
+  `uia`, `win`, `sleep` and `now` are injectable for tests; without `clipboard` typing is keystrokes only.
+- `control` ([DesktopRunControl](service/DesktopRunControl.md)): the user's
+  Pause and Stop. Every acting call (`click`, `type`, `pressKey`, `scroll`,
+  `drag`, `setValue`, `focus`, `launch`) waits out a pause first and returns
+  `{ success: false, code: 'STOPPED' }` once stopped; [GuardedInput](service/GuardedInput.md)
+  fails the batch in flight the same way.
+- `observedNode(hwnd, ref)`: the node a ref named in the last `desktop_observe`
+  of that window (role, name, `password`, ...), or null for another window or
+  an unknown ref. [DesktopCallRisk](../llm-server/chat/approval/DesktopCallRisk.md) reads it.
+- `activity` ([DesktopActivity](service/DesktopActivity.md)): one `start` and
+  one `end` event per acting call, naming the action, the window and the
+  arguments, for the desktop-integration extension's ring and island.
 - `supported` (getter, Windows only), `isEnabled()`, `setEnabled(on)`, `uia()`
   (the [UiaHost](uia/UiaHost.md), started lazily), `shutdown()`.
 - Agent actions, each `{ success, data }` or `{ success: false, error, code? }`, never throwing:
   `listWindows()` (`{ windows: [{ hwnd, title, app, rect, minimized, dialog?, elevated?, antiCheat?, systemPrompt? }], humanNeeded? }`;
   owned dialogs such as Run or Save As are included with `dialog: true` and resolve by hwnd or title),
-  `focus(args)`, `screenshot(args)` (`{ screenshot, mimeType, frame, method, title }`; the
+  `focus(args)` (async, like the other acting calls), `screenshot(args)` (`{ screenshot, mimeType, frame, method, title }`; the
   frame maps image pixels back for x/y), `observe(args)` (`{ text, count }`),
   `click`, `type`, `pressKey`, `scroll`, `drag`, `setValue`, `launch(args)`, `lookAfter(args, r)`. `args` names the window
   by `hwnd` or `window` (title substring, must match one window). `screenshot`,

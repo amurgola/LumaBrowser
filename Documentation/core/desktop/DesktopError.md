@@ -15,6 +15,9 @@ control stopped, plus the failure-result shape every desktop action returns.
   LumaBrowser itself under the pointer or in front).
 - `DesktopError.FOREGROUND_CHANGED` another window came to the front mid-action;
   the rest of the input was not sent.
+- `DesktopError.STOPPED` the user pressed the desktop Stop key
+  ([DesktopRunControl](service/DesktopRunControl.md)); the rest of the input
+  was not sent and the model is told not to retry.
 - `DesktopError.toResult(error)` `{ success: false, error: message, code? }` from
   any thrown value; `code` only when the error has one.
 

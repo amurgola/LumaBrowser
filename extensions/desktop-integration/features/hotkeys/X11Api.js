@@ -31,6 +31,7 @@ class X11Api {
     const keycode = (name) => f.keysymToKeycode(display, X11Api.KEYSYMS[name]);
     return {
       keycode,
+      keycodeOf: (keysym) => f.keysymToKeycode(display, keysym),
       keysDown: () => {
         const map = Buffer.alloc(32);
         f.queryKeymap(display, map);

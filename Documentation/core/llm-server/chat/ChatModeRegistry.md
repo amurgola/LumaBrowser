@@ -34,7 +34,8 @@ Extends [ContributionRegistry](../../shared/registry/ContributionRegistry.md).
   hidden: true,                // never in the picker; conversations made by the owning feature
   setupSchema: {...},          // drives the setup modal
   chatUiUrl,                   // stamped by ExtensionManager from the manifest
-  buildTurn({ meta, messages, conversationId, modelRef }),  // -> { systemPrompt?, tools?, temperature?, reactions? }
+  buildTurn({ meta, messages, conversationId, modelRef, contextWindow }),
+                               // -> { systemPrompt?, postHistoryPrompt?, messages?, samplers?, compact?, tools?, temperature?, modelRef? }
   tools: { name: async (params, ctx) => ... },              // ctx = { conversationId, meta, send, emit }
   onConversationDeleted({ conversationId, meta }),
   delegate: {                  // optional: targets the regular chat's delegate_task can start
@@ -57,7 +58,14 @@ reworking unrelated wiring, so both sides reach `ChatModeRegistry.shared`.
 ExtensionManager also calls `unregisterByExtension` on deactivate.
 
 `buildTurn` receives the `modelRef` this turn resolved to; a mode that spawns its
-own agent runs must pass it on, or they use the global default instead.
+own agent runs must pass it on, or they use the global default instead. It also
+receives `contextWindow` (tokens, or null when unknown). Besides `systemPrompt`
+a mode may return `postHistoryPrompt` (folded after the newest message, where an
+instruction carries the most weight), `messages` (its own trimmed copy of the
+thread, honoured only when it ends on the same newest message), `samplers`
+(llama-server sampler keys forwarded on the local path only) and
+`compact: false` to keep core compaction off a history the mode manages itself;
+see [ModeTurnMessages](router/ModeTurnMessages.md).
 
 `notifyConversationDeleted` must be called before the conversation's rows are
 removed so the hook can still read meta, and it must never fail or delay the

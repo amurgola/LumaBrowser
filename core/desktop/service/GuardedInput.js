@@ -1,10 +1,12 @@
 class GuardedInput {
-  constructor({ win, guards }) {
+  constructor({ win, guards, control = null }) {
     this._win = win;
     this._guards = guards;
+    this._control = control;
   }
 
   send(w, inputs) {
+    if (this._control) this._control.check();
     const popup = this._guards.checkForeground(w);
     if (popup) w.popupInFront = popup;
     try {

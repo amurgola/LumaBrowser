@@ -8,6 +8,7 @@ class LaunchErrorHints {
     if (err.runtimeId) out.runtimeId = err.runtimeId;
     if (err.runtimeName) out.runtimeName = err.runtimeName;
     if (typeof err.installable === 'boolean') out.installable = err.installable;
+    if (err.setting && typeof err.setting === 'object') out.setting = err.setting;
     return out;
   }
 

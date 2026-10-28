@@ -52,9 +52,11 @@ export default class ChatEventRouter {
   _adoptUserTurn(p) {
     const u = [...this._ctx.state.messages].reverse().find((m) => m.role === 'user' && !m.id);
     const arts = Array.isArray(p.userArtifacts) && p.userArtifacts.length ? p.userArtifacts : null;
+    const regions = Array.isArray(p.userRegions) && p.userRegions.length ? p.userRegions : null;
     if (u) {
       u.id = p.userMessageId;
       if (arts) u.toolCalls = Object.assign({}, u.toolCalls, { artifacts: arts });
+      if (regions) u.toolCalls = Object.assign({}, u.toolCalls, { editRegions: regions });
       this._ctx.userTurns.adoptId(u);
     }
     if (!arts) return;

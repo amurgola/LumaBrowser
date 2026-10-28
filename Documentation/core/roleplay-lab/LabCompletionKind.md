@@ -7,9 +7,11 @@ JSON of its messages, so the Lab can answer it with a canned mock.
 
 ## Methods
 
-- `LabCompletionKind.detect(opts)` `'stage'`, `'extract'`, `'wardrobe'`,
+- `LabCompletionKind.detect(opts)` `'stage'`, `'profile'`, `'consolidate'`, `'extract'`, `'wardrobe'`,
   `'director'` or null. Rules, first match wins:
-  1. `stage manager` -> stage (agents.js buildStagingMessages, the merged pass)
+  1. `stage manager` -> stage (StagingPrompt, the merged pass)
+  1. `casting director` -> profile (ProfilePrompt)
+  1. `character records of an interactive roleplay` / `story record of an interactive roleplay` -> consolidate (ConsolidatePrompt)
   2. `world-state` -> extract; `wardrobe supervisor` -> wardrobe;
      `cinematographer` -> director (legacy per-agent prompts)
   3. `wardrobe` / `outfit` -> wardrobe; `shot` / `director` / `camera` -> director;

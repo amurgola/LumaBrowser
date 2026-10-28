@@ -17,7 +17,8 @@ the Lab service for the core `core.rpLab.*` IPC controller.
   [LabFlag](mode/LabFlag.md) and sets `global.__lumaRpLabService` to a
   [LabService](lab/LabService.md) built over `context.chat.generateImage`, core
   `roleplay-lab/LabHarness` (through CoreRequire), the image server's
-  `getDefaults()` and the chat router's `chatStore` ([HostGlobals](HostGlobals.md)).
+  `getDefaults()` and the chat router's `chatStore` ([HostGlobals](HostGlobals.md)),
+  plus `context.chat.complete` for the Lab's text run.
   Resolves `{}`.
 - `deactivate()` clears `global.__lumaRpLabService` if it is still ours. The
   chat mode is unregistered by the extension manager.
@@ -39,4 +40,4 @@ the Lab service for the core `core.rpLab.*` IPC controller.
 
 ## Renderer contract (for the renderer porter)
 
-Chat events emitted by postProcess, unchanged names and payloads: `mode:world { messageId, characters, scenes, activeSceneId, currentState, newCharIds, newSceneId, sceneChanged }`, `mode:progress { messageId, label }` or `{ messageId, done: true }`, `mode:image-start { messageId }`, `mode:image-stage { messageId, stage, b64, mime }`, `mode:image { messageId, b64, mime }`, `mode:image-fail { messageId, canceled? }`, `mode:scene-art { sceneId, b64, mime }`. The Lab adds `lab:step` (LabHarness) and `lab:comparison { composite, integrated }` on `core.rpLab.event`. IPC: `ext.roleplay-mode.getLabFlag` / `setLabFlag(on)` -> `{ enabled }`, and the four debug channels (see RoleplayIpcHandlers). The setup tab is `{ id: 'roleplay-lab', label: 'Roleplay Lab', file: './rp-lab.js' }`.
+Chat events emitted by postProcess, unchanged names and payloads: `mode:world { messageId, characters, scenes, activeSceneId, currentState, newCharIds, newSceneId, sceneChanged }`, `mode:progress { messageId, label }` or `{ messageId, done: true }`, `mode:image-start { messageId }`, `mode:image-stage { messageId, stage, b64, mime }`, `mode:image { messageId, b64, mime }`, `mode:image-fail { messageId, canceled? }`, `mode:scene-art { sceneId, b64, mime }`, and from core's ModeReaction when the polish pass rewrote a reply, `mode:content { messageId, content }`. The Lab adds `lab:step` (LabHarness), `lab:text` (the text run) and `lab:comparison { composite, integrated }` on `core.rpLab.event`. IPC: `ext.roleplay-mode.getLabFlag` / `setLabFlag(on)` -> `{ enabled }`, and the four debug channels (see RoleplayIpcHandlers). The setup tab is `{ id: 'roleplay-lab', label: 'Roleplay Lab', file: './rp-lab.js' }`.

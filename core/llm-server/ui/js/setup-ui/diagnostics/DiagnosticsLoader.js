@@ -67,6 +67,7 @@ export default class DiagnosticsLoader {
   async _renderCards() {
     const cards = this._ctx.cards;
     await cards.runtimes.render();
+    if (cards.drivers) cards.drivers.render().catch(() => {});
     await cards.models.render();
     await cards.defaults.render();
     ApiSecurityCard.render(this._ctx.doc, this._ctx.api.apiSecurity).catch(() => {});

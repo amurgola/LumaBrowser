@@ -6,6 +6,8 @@ The LLM Setup "Runtimes" card: installed runtimes as the working set, everything
 
 ## Methods
 
+- `RuntimesCard.bodyHtml(view, advice = {})`: `advice` is the [HostRuntimeAdvice](HostRuntimeAdvice.md) map `renderView` computes from the context's HostCaps; the catalogue is sorted by it, recommended build first.
+
 - `render()`: fetches `getRuntimesView()`, paints, re-renders the models card (its badges depend on install status), then checks upstream without blocking.
 - `renderView(view)`, `refreshUpdates()`; statics `pillText(view)`, `bodyHtml(view)` (the Catalogue fold opens by default only when nothing is installed), `sourceCallout(view)`.
 

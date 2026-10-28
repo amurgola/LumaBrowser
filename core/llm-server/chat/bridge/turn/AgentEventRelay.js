@@ -13,6 +13,13 @@ class AgentEventRelay {
     else if (evt.type === 'tool-result') this._onToolResult(evt);
     else if (evt.type === 'compacting' || evt.type === 'compacted') this._onCompaction(evt);
     else if (evt.type === 'final') this._onFinal();
+    else if (evt.type === 'iteration') this._onIteration(evt);
+  }
+
+  _onIteration(evt) {
+    const progress = this._o.progress;
+    if (!progress || typeof progress.report !== 'function') return;
+    try { progress.report({ conversationId: this._o.conversationId, iteration: evt.iteration, maxIterations: evt.maxIterations }); } catch (_) {}
   }
 
   _onTool(evt) {

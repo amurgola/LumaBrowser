@@ -59,7 +59,7 @@ class LumabyteChat {
       if (turn.aborted) return emit({ type: 'done', text: '', aborted: true });
       const last = done.slice(-stepCount);
       turnMessages.push({ role: 'user', content: step ? LumabyteChat.followUp(prompt, LumabyteActions.report(last), ctx, LumabyteActions.outputs(last)) : LumabyteChat.userMessage(prompt, ctx) });
-      const messages = [{ role: 'system', content: LumabyteChat.systemPrompt(ctx, { vision: !!ctx.png, canAct: caps.canAct, actReason: caps.actReason, canRead: caps.canRead }) }, ...history, ...turnMessages];
+      const messages = [{ role: 'system', content: LumabyteChat.systemPrompt(ctx, { vision: !!ctx.png, canAct: caps.canAct, actReason: caps.actReason, canRead: caps.canRead, maxActions: opts.maxActions }) }, ...history, ...turnMessages];
       emit({ type: 'status', text: 'Thinking', seen: { screenshot: !!ctx.png, text: !!ctx.text, notes: ctx.notes } });
       const reply = LumabyteChat.clean(await this._stream(types, caps, opts, messages, ctx, emit, turn));
       if (turn.aborted) return this._finish(att, emit, '', done, true);
@@ -67,7 +67,7 @@ class LumabyteChat {
       if (!plan) return this._finish(att, emit, LumabyteChat.plainText(reply, caps), done, false);
       if (plan.say) emit({ type: 'status', text: plan.say });
       const onStep = (s) => emit({ type: 'step', index: done.length + s.index, text: s.text, state: s.state, error: s.error });
-      const results = await this._actions.run(att.hwnd, plan.actions, onStep, { folder: ctx.folder ? ctx.folder.folder : null });
+      const results = await this._actions.run(att.hwnd, plan.actions, onStep, { folder: ctx.folder ? ctx.folder.folder : null, max: opts.maxActions });
       done.push(...results);
       stepCount = results.length;
       turnMessages.push({ role: 'assistant', content: reply });
@@ -138,7 +138,7 @@ class LumabyteChat {
     }
   }
 
-  static systemPrompt(ctx, { vision, canAct = false, actReason = null, canRead = false }) {
+  static systemPrompt(ctx, { vision, canAct = false, actReason = null, canRead = false, maxActions = LumabyteActions.MAX_ACTIONS }) {
     const sees = [vision ? 'a screenshot of the window' : null, ctx.text ? 'its accessible text (control roles and names, numbered [n] when they can be clicked)' : null].filter(Boolean);
     const lines = [
       `You are Lumabyte, LumaBrowser's desktop companion, attached to the ${ctx.app.name} window "${ctx.title}".`,
@@ -160,7 +160,7 @@ class LumabyteChat {
         `Action types: ${kinds.join('; ')}.${canAct ? ' Use the [n] refs from the window text; use description ("the Save button") only when there is no ref.' : ''}`,
       );
       if (canRead) lines.push('To learn what is in a file (summarize it, answer about it), read it with a read action rather than opening it in an app.');
-      lines.push('After the actions run you get a fresh look at the window and anything you read. Act again if the request needs more steps, otherwise answer in plain text. Answer questions that need no action in plain text.');
+      lines.push(`Up to ${LumabyteActions.cap(maxActions)} actions per reply, in order. After the actions run you get a fresh look at the window and anything you read. Act again if the request needs more steps, otherwise answer in plain text. Answer questions that need no action in plain text.`);
     }
     if (!canAct) {
       lines.push(`You cannot click or type in this window right now (${actReason || 'acting is unavailable'}). If asked to, say what the user should click instead, and that they can let you act by fixing that.${canRead ? '' : ' Never write action JSON.'}`);

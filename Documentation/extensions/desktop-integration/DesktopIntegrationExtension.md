@@ -56,3 +56,14 @@ and the shared `handoff`, `speech`, `windows` objects.
   handshake, to exist.
 - `/api` is already behind ApiSecurity (network origin rules and an optional
   API key); the desktop token is checked in addition.
+
+## Shortcuts and the X11 bridge
+
+`_buildParts` makes one [X11Bridge](features/hotkeys/X11Bridge.md) for the
+whole extension (`X11Bridge.forSession`: a Linux Wayland session with
+XWayland, else null) and one [GlobalShortcuts](shared/GlobalShortcuts.md)
+over Electron's `globalShortcut` (null outside Electron) and that bridge.
+Both reach features as `deps.bridge` and `deps.shortcuts`; the hotkeys feature
+starts and stops the bridge, every feature registers its keys on
+`deps.shortcuts`, and `deactivate` disposes the shortcuts and stops the
+bridge. Tests override both (`bridge`, `shortcuts`).

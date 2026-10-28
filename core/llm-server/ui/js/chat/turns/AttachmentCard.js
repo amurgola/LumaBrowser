@@ -13,6 +13,7 @@ export default class AttachmentCard {
   }
 
   static metaText(att) {
+    if (att.kind === 'region') return 'marked area' + (att.meta ? ': ' + att.meta : '');
     if (att.kind === 'failed') return 'failed' + (att.meta ? ': ' + att.meta : '');
     if (att.kind === 'binary') return att.meta ? att.meta + ' · not embedded' : 'not embedded';
     return att.meta || '';

@@ -19,4 +19,5 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `rpLab.run(args)` | invoke `core.rpLab.run` |
 | `rpLab.regenerateFrom(args)` | invoke `core.rpLab.regenerateFrom` |
 | `rpLab.regenerateStep(args)` | invoke `core.rpLab.regenerateStep` |
+| `rpLab.runText(args)` | invoke `core.rpLab.runText` |
 | `rpLab.onEvent(cb)` | subscribe `core.rpLab.event` |

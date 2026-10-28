@@ -15,6 +15,9 @@ class EditGuide {
       '    mustache, write "A cat wearing a funky colorful hat AND a big bushy mustache, ...".',
       '  - `strength` decides how much is re-drawn, so set it from the buckets above.',
       '  - `references` and a `frame` other than match are ignored in this mode.',
+      '  - With a marked region (`regionId`) only the painted area is re-drawn as an inpaint: still describe the',
+      '    FINAL image, with the change the user asked for in that spot, and prefer strength 0.8 or higher. A small',
+      '    area is worked on as an enlarged close-up around it, so describe what is in or right next to the area.',
     ].join('\n');
   }
 
@@ -37,6 +40,10 @@ class EditGuide {
       '    reference.',
       `  - When a face or head is replaced, ask for the head to keep the size and angle it has in ${t(1)}.`,
       `  - \`strength\` is ignored by this model. It takes at most ${profile.maxReferences} references.`,
+      '  - With a marked region (`regionId`) write the instruction for what changes INSIDE that area only; where it',
+      '    sits is added for you, and the picture outside it is restored from the source afterwards. A small area is',
+      '    edited on an enlarged close-up around it, so the model sees only what is in or right next to the area:',
+      '    refer to that, not to things elsewhere in the picture.',
     ].join('\n');
   }
 }

@@ -14,3 +14,9 @@ and a curl example) and the action buttons. Every value is escaped.
 - `TriggerHeaderHtml.html({ t, baseUrls, watch, secret, pending })`.
 - `sourceFact(t)`, `extraFacts(t, pending)`, `driftHtml(t)`,
   `approvalHtml(pending)`, `sourceRows(info)`, `kind(t)`.
+
+## Unattended runs
+
+The facts line names the approval mode either way: `_approvalFact` for `ask`,
+else `UNATTENDED` ("runs state-changing tools unattended (desktop control too,
+when allowed)").

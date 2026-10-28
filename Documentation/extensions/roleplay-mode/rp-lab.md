@@ -22,6 +22,10 @@ the emotion select, the dimension matrix and a status line.
 - Run: `rpLab.run({ overrides, options })`; live `lab:step`,
   `mode:image-stage`, `mode:image`, `lab:comparison`, `mode:image-fail` and
   `mode:progress` events from `rpLab.onEvent` render step cards as they come.
+- Text run: `rpLab.runText({ options: { mockSideCalls, judge, turns } })`
+  drives the scripted playthrough with the real story model; `lab:text` events
+  append each turn to a pane under the status line, and the result renders the
+  consistency checks and prose scores (and the judge's, when asked).
 - Each step card shows the image, inputs, an editable prompt and the params
   (steps, sampler, scheduler, strength, cfgScale, seed; numbers clamped);
   edits become per-step overrides. "Regenerate" calls

@@ -32,7 +32,12 @@ desktop tools) and [CardText](approval/CardText.md) (one-line clipping).
   `{ key, label, carry, test }`. Today one: `family:desktop-input` ("desktop
   control", `carry: true`), every `desktop_*` tool except `desktop_launch`, which
   starts programs and keeps its own grant.
-- `isCarried(key)`: true for a family marked `carry`, whose grant outlives the
+- `scopedKeyOf(toolName, params)`: the key "allow in this window" stores,
+  `<family key>@<hwnd>` (`SCOPE_SEPARATOR`), for a family call naming one real
+  window handle; null for hwnd 0 (the whole desktop), a title lookup or a tool
+  without a family. `familyKeyOf(key)` strips the window again.
+- `isCarried(key)`: true for a family marked `carry` (a window-scoped key of
+  one counts too), whose grant outlives the
   run and lasts for the conversation ([ConversationGrants](approval/ConversationGrants.md)).
 - `familyOf(toolName)`: the tool's family, or null.
 - `grantKeyOf(toolName)`: the key a run grant is stored under: the family key,

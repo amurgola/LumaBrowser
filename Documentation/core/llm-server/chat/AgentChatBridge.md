@@ -83,9 +83,18 @@ mode's sub-agent, GambitBridgeTurn and the eval adapter.
 - `activeRunCount()`: live runs on this bridge.
 - `respondTakeover(action)`: `'continue' | 'skip' | 'stop'` (anything else is
   continue); false when nothing is waiting.
-- `respondApproval(decision)`: `'once' | 'run' | 'reject'` (anything else is
-  reject); false when nothing is waiting.
+- `respondApproval(decision)`: `'once' | 'run' | 'window' | 'reject'` (anything
+  else is reject); false when nothing is waiting.
 - `hasPendingTakeover()`, `hasPendingApproval()`.
+- `addApprovalPresenter(presenter)` -> remove(): somewhere else to show an
+  approval question while the window is not focused (see
+  [ApprovalAttention](approval/ApprovalAttention.md)).
+- `addTakeoverPresenter(presenter)` -> remove(): the same for a takeover
+  question (a second `ApprovalAttention`, titled `TAKEOVER_TITLE` "LumaBrowser
+  needs you", raised by [TakeoverHandler](bridge/tools/handlers/TakeoverHandler.md)).
+- `runProgress` ([RunProgress](bridge/turn/RunProgress.md)) and
+  `onRunProgress(listener)` -> remove(): where every live run is in its step
+  budget; handed to every run as `host.runProgress`.
 - `buildPreviewSystemPrompt(options)`: see
   [PreviewSystemPrompt](bridge/prompt/PreviewSystemPrompt.md).
 - `runForEval(options)`: see [EvalTurn](bridge/eval/EvalTurn.md). `deps` is

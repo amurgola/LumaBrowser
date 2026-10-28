@@ -9,4 +9,6 @@ inert one-liners.
 ## Methods
 
 - `AttachmentCard.create(attachment)`.
-- `AttachmentCard.metaText(attachment)`.
+- `AttachmentCard.metaText(attachment)`: `failed: reason`, `size · not embedded`,
+  `marked area: note` for a region marker (the share viewer shows those as
+  cards; the chat's own turn view draws region chips instead), else the meta.

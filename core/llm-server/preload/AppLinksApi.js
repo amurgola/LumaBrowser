@@ -21,6 +21,7 @@ class AppLinksApi extends PreloadSection {
       run: (args) => ipcRenderer.invoke('core.rpLab.run', args || {}),
       regenerateFrom: (args) => ipcRenderer.invoke('core.rpLab.regenerateFrom', args || {}),
       regenerateStep: (args) => ipcRenderer.invoke('core.rpLab.regenerateStep', args || {}),
+      runText: (args) => ipcRenderer.invoke('core.rpLab.runText', args || {}),
       onEvent: PreloadSection.subscribe(ipcRenderer, 'core.rpLab.event'),
     };
   }

@@ -1,10 +1,22 @@
+const EditRegionIndex = require('./EditRegionIndex');
+
 class ArtifactCatalog {
   static HEADER = '[Artifacts created earlier in THIS conversation; you can pass these ids to edit_image, etc.:\n';
   static HISTORY_NOTE = '\n  Every version is kept. An edit builds ONLY on the version id you pass. If the user'
     + ' rejects the last edit ("no, not like that", "undo that", "instead…"), edit the'
     + ' version BEFORE it, not the latest, or the mistake is carried into the new result.';
+  static REGION_NOTE = '\n  A "marked region" is an area the user painted by hand on that image, with their note on what'
+    + ' should change there. Pass its id as edit_image `regionId` (with that exact image as `artifactId`): only the'
+    + ' painted area is redrawn and the rest of the picture is kept pixel for pixel. A region marked in the'
+    + ' message you are answering is used automatically on its image; pass `regionId: "none"` to edit the whole image.';
 
   static collect(priorMessages) {
+    const chains = ArtifactCatalog._chains(priorMessages);
+    ArtifactCatalog._attachRegions(chains, EditRegionIndex.collect(priorMessages));
+    return chains.map(ArtifactCatalog._publicEntry);
+  }
+
+  static _chains(priorMessages) {
     const byRoot = new Map();
     let order = 0;
     for (const artifact of ArtifactCatalog._artifactsOf(priorMessages)) {
@@ -18,15 +30,26 @@ class ArtifactCatalog {
       if (!prev.versions.some((v) => v.id === artifact.id)) prev.versions.push({ id: artifact.id, version });
       if (version >= prev.version) byRoot.set(rootId, ArtifactCatalog._entry(artifact, version, prev.order, prev.versions));
     }
-    return [...byRoot.values()].sort((x, y) => x.order - y.order).map(ArtifactCatalog._publicEntry);
+    return [...byRoot.values()].sort((x, y) => x.order - y.order);
+  }
+
+  static _attachRegions(chains, regions) {
+    for (const region of regions.list()) {
+      const chain = chains.find((c) => c.versions.some((v) => v.id === region.artifactId));
+      if (!chain) continue;
+      chain.regions = chain.regions || [];
+      chain.regions.push({ id: region.id, artifactId: region.artifactId, note: region.note || '', coverage: region.coverage, current: !!region.current });
+    }
   }
 
   static render(catalog) {
     if (!catalog.length) return '';
     const anyHistory = catalog.some((a) => Array.isArray(a.versions) && a.versions.length > 1);
+    const anyRegion = catalog.some((a) => Array.isArray(a.regions) && a.regions.length);
     return ArtifactCatalog.HEADER
       + catalog.map(ArtifactCatalog._line).join('\n')
       + (anyHistory ? ArtifactCatalog.HISTORY_NOTE : '')
+      + (anyRegion ? ArtifactCatalog.REGION_NOTE : '')
       + ']\n\n';
   }
 
@@ -44,18 +67,29 @@ class ArtifactCatalog {
     return { id: artifact.id, type: artifact.type || 'artifact', title: artifact.title || '', version, order, versions };
   }
 
-  static _publicEntry({ id, type, title, versions }) {
+  static _publicEntry({ id, type, title, versions, regions }) {
     const out = { id, type, title };
     if (versions.length > 1) out.versions = versions.slice().sort((x, y) => x.version - y.version);
+    if (regions && regions.length) out.regions = regions;
     return out;
   }
 
   static _line(a) {
+    return ArtifactCatalog._chainLine(a) + (a.regions || []).map(ArtifactCatalog._regionLine).join('');
+  }
+
+  static _chainLine(a) {
     const line = '  - ' + a.type + ' "' + (a.title || 'untitled') + '" → id `' + a.id + '`';
     if (!Array.isArray(a.versions) || a.versions.length < 2) return line;
     const latest = a.versions[a.versions.length - 1];
     const earlier = a.versions.slice(0, -1).reverse().map((v) => 'v' + v.version + ' `' + v.id + '`').join(', ');
     return line + ' (v' + latest.version + ', latest; earlier versions: ' + earlier + ')';
+  }
+
+  static _regionLine(r) {
+    const share = typeof r.coverage === 'number' ? ', about ' + Math.max(1, Math.round(r.coverage * 100)) + '% of the image' : '';
+    const when = r.current ? 'marked in the message you are answering' : 'marked in an earlier message';
+    return '\n      marked region `' + r.id + '` on `' + r.artifactId + '`: ' + (r.note ? '"' + r.note + '"' : 'no note') + ' (' + when + share + ')';
   }
 }
 

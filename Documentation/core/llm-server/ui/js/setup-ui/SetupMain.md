@@ -16,7 +16,10 @@ modules own.
   tabs, the body click router, live events, fit-test and gambit events, the
   Refresh button) and resolves after the first `load()`.
 - `load({ force }?)`: the [DiagnosticsLoader](diagnostics/DiagnosticsLoader.md)
-  pass. Only Refresh forces a host re-probe.
+  pass. Only Refresh and a finished driver install force a host re-probe.
+- Cards built: runtimes, runtimeActions, fitTest, gambit, models, defaults,
+  plan and `drivers` (the [DriverInstallPanel](diagnostics/DriverInstallPanel.md),
+  whose reload is a forced `load`).
 - Public fields for the page entry: `navigator` ([SetupNavigator](nav/SetupNavigator.md)),
   `advanced` ([AdvancedView](advanced/AdvancedView.md)), `extensionTabs`
   ([SetupExtensionTabs](extensions/SetupExtensionTabs.md)), `ctx` ([SetupContext](SetupContext.md)).

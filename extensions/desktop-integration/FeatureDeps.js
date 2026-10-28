@@ -21,6 +21,8 @@ class FeatureDeps {
       speech: this._shared.speech,
       overlay: this._shared.overlay || null,
       hints: this._shared.hints || null,
+      shortcuts: this._shared.shortcuts || null,
+      bridge: this._shared.bridge || null,
       settings: new FeatureSettings(context.db, id),
       log: FeatureDeps.logger(context.logger, id),
       appInfo: this._shared.appInfo(),

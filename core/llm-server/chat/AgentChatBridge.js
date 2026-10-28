@@ -4,6 +4,7 @@ const PreviewSystemPrompt = require('./bridge/prompt/PreviewSystemPrompt');
 const ApprovalWait = require('./bridge/waits/ApprovalWait');
 const TakeoverWait = require('./bridge/waits/TakeoverWait');
 const ApprovalAttention = require('./approval/ApprovalAttention');
+const RunProgress = require('./bridge/turn/RunProgress');
 
 class AgentChatBridge {
   constructor({ router }) {
@@ -14,7 +15,12 @@ class AgentChatBridge {
     this._approvalWait = new ApprovalWait();
     this._approvalAttention = new ApprovalAttention({ getWindow: () => AgentChatBridge._mainWindow(router) });
     this._takeoverWait = new TakeoverWait();
+    this._takeoverAttention = new ApprovalAttention({ getWindow: () => AgentChatBridge._mainWindow(router), title: AgentChatBridge.TAKEOVER_TITLE, tail: AgentChatBridge.TAKEOVER_TAIL });
+    this.runProgress = new RunProgress();
   }
+
+  static TAKEOVER_TITLE = 'LumaBrowser needs you';
+  static TAKEOVER_TAIL = 'The run waits in the chat until you say you are done.';
 
   run(options) {
     this._aborted = false;
@@ -64,6 +70,18 @@ class AgentChatBridge {
     return this._approvalWait.isPending();
   }
 
+  addApprovalPresenter(presenter) {
+    return this._approvalAttention.addPresenter(presenter);
+  }
+
+  addTakeoverPresenter(presenter) {
+    return this._takeoverAttention.addPresenter(presenter);
+  }
+
+  onRunProgress(listener) {
+    return this.runProgress.subscribe(listener);
+  }
+
   buildPreviewSystemPrompt(options) {
     return new PreviewSystemPrompt(this.router).build(options);
   }
@@ -86,6 +104,8 @@ class AgentChatBridge {
       approvalWait: this._approvalWait,
       takeoverWait: this._takeoverWait,
       approvalAttention: this._approvalAttention,
+      takeoverAttention: this._takeoverAttention,
+      runProgress: this.runProgress,
     };
   }
 }

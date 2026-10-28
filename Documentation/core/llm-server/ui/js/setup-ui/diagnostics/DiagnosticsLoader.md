@@ -6,7 +6,7 @@ The Setup load: the cached snapshot first, spinners only on never-painted cards,
 
 ## Methods
 
-- `load({ force }?)`: `force` (Refresh) re-runs the heavy host probes; otherwise main serves its cached snapshot. Without the preload every card reads "llmDiagAPI not exposed: the preload script failed to load."; a failed request writes its error into every card. Fresh data is cached and updates [HostCaps](HostCaps.md).
+- `load({ force }?)`: `force` (Refresh) re-runs the heavy host probes; otherwise main serves its cached snapshot. Without the preload every card reads "llmDiagAPI not exposed: the preload script failed to load."; a failed request writes its error into every card. Fresh data is cached and updates [HostCaps](HostCaps.md). After the runtimes card, the [DriverInstallPanel](DriverInstallPanel.md) (`cards.drivers`, Linux) is rendered under the GPU card without blocking the model cards.
 
 ## Globals
 

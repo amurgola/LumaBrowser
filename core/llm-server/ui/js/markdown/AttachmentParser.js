@@ -5,6 +5,8 @@ export default class AttachmentParser {
 
   static IMAGE_RE = /^\[Attached image: ([^\]]*?)\]$/;
 
+  static REGION_RE = /^\[Marked area on ([^\]]*?)\]$/;
+
   static FAILED_RE = /^\[Attachment failed: ([^\]]*?)\]$/;
 
   static BINARY_RE = new RegExp(AttachmentParser.DASH + '\\s*\\(binary, not embedded\\)\\s*$');
@@ -46,6 +48,7 @@ export default class AttachmentParser {
     let m;
     if ((m = line.match(AttachmentParser.FAILED_RE))) return { attachment: AttachmentParser._failed(m[1]), end: i + 1 };
     if ((m = line.match(AttachmentParser.IMAGE_RE))) return { attachment: AttachmentParser._marker('image', m[1]), end: i + 1 };
+    if ((m = line.match(AttachmentParser.REGION_RE))) return { attachment: AttachmentParser._region(m[1]), end: i + 1 };
     if ((m = line.match(AttachmentParser.FILE_RE))) return AttachmentParser._fileAt(lines, i, m[1]);
     return null;
   }
@@ -59,6 +62,11 @@ export default class AttachmentParser {
       lang: '',
       content: '',
     };
+  }
+
+  static _region(label) {
+    const bits = label.split(AttachmentParser.DASH);
+    return { kind: 'region', name: bits[0].trim() || 'image', meta: bits.slice(1).join(AttachmentParser.DASH).trim(), lang: '', content: '' };
   }
 
   static _marker(kind, label) {

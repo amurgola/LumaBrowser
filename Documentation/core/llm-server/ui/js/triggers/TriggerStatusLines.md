@@ -11,3 +11,10 @@ note.
 ## Methods
 
 - `build(trigger, state, now?)`, `gating(trigger)`, `lastRefused(deliveries, now?)`; `REFUSED` labels.
+
+## Unattended runs
+
+`gating` names the approval mode either way: `asks before state-changing
+tools` for `ask`, else `UNATTENDED` ("runs state-changing tools unattended
+(desktop control too, when allowed)"), so an `auto` trigger's default is said
+where its other gating is listed instead of being invisible.

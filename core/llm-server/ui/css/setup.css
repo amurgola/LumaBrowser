@@ -793,6 +793,16 @@
             color: var(--text-dim);
             line-height: 1.5;
         }
+        .runtime-advice {
+            grid-column: 1 / 2;
+            font-size: var(--text-sm);
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        .runtime-advice-recommended { color: var(--text-secondary); }
+        .runtime-advice-unsuited { color: var(--text-muted); }
+        .runtime-row.advice-unsuited .runtime-name { color: var(--text-muted); }
+        .runtime-advice-badge { white-space: nowrap; }
         .runtime-detail-row {
             grid-column: 1 / 2;
             display: flex;

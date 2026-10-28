@@ -2,17 +2,19 @@ import HtmlEscaper from '../../format/HtmlEscaper.js';
 import RuntimeProvenanceHtml from './RuntimeProvenanceHtml.js';
 
 export default class RuntimeRowHtml {
-  static html(r) {
+  static html(r, advice = null) {
     const esc = HtmlEscaper.escape;
     const secondary = RuntimeRowHtml.secondaryActions(r);
     return `
-                <div class="runtime-row collapsed" data-runtime-row="${esc(r.id)}">
+                <div class="runtime-row collapsed${advice ? ' advice-' + esc(advice.tier) : ''}" data-runtime-row="${esc(r.id)}">
                     <div class="runtime-head" data-runtime-toggle>
                         <span class="runtime-caret" aria-hidden="true"></span>
                         <span class="runtime-name">${esc(r.name)}</span>
                         ${RuntimeRowHtml.badges(r).join(' ')}
+                        ${RuntimeRowHtml.adviceBadge(advice)}
                     </div>
                     <div class="runtime-actions">${RuntimeRowHtml._primaryAction(r)}</div>
+                    ${RuntimeRowHtml.adviceLine(advice)}
                     <div class="runtime-details">
                         <div class="runtime-desc">${esc(r.description || '')}</div>
                         ${RuntimeRowHtml._detailRows(r)}
@@ -25,6 +27,19 @@ export default class RuntimeRowHtml {
                     </div>
                 </div>
             `;
+  }
+
+  static adviceBadge(advice) {
+    if (!advice) return '';
+    const esc = HtmlEscaper.escape;
+    if (advice.tier === 'recommended') return `<span class="luma-badge accent runtime-advice-badge" title="${esc(advice.why)}">&#9670; recommended for this PC</span>`;
+    if (advice.tier === 'unsuited') return `<span class="luma-badge muted runtime-advice-badge" title="${esc(advice.why)}">not for this PC</span>`;
+    return '';
+  }
+
+  static adviceLine(advice) {
+    if (!advice || !advice.why) return '';
+    return `<div class="runtime-advice runtime-advice-${HtmlEscaper.escape(advice.tier)}">${HtmlEscaper.escape(advice.why)}</div>`;
   }
 
   static statusLabel(r) {

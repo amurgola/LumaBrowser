@@ -45,3 +45,9 @@ Refs are valid until the next `tree` call for any window.
   marshals is released instead of leaked.
 - Chromium may turn accessibility back off after a quiet period, so the wake is
   repeated on every observe of a Chromium window (it is cheap).
+
+## Node fields
+
+`tree` nodes carry `ref`, `role`, `name`, `rect`, `aid`, `enabled`, `patterns`
+and `password` (`IsPassword`, cached with the other properties). The script
+text is pinned by its test's length and hash; an edit updates both.

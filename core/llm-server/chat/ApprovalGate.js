@@ -21,13 +21,27 @@ class ApprovalGate {
     Object.freeze({ key: 'family:desktop-input', label: 'desktop control', carry: true, test: (n) => n.startsWith('desktop_') && n !== 'desktop_launch' }),
   ]);
 
+  static SCOPE_SEPARATOR = '@';
+
   static isCarried(key) {
-    return ApprovalGate.GRANT_FAMILIES.some((f) => f.carry && f.key === key);
+    const familyKey = ApprovalGate.familyKeyOf(key);
+    return ApprovalGate.GRANT_FAMILIES.some((f) => f.carry && f.key === familyKey);
   }
 
   static grantKeyOf(toolName) {
     const family = ApprovalGate.familyOf(toolName);
     return family ? family.key : String(toolName || '');
+  }
+
+  static scopedKeyOf(toolName, params) {
+    const family = ApprovalGate.familyOf(toolName);
+    const hwnd = params && params.hwnd != null ? Number(params.hwnd) : NaN;
+    if (!family || !Number.isInteger(hwnd) || hwnd <= 0) return null;
+    return `${family.key}${ApprovalGate.SCOPE_SEPARATOR}${hwnd}`;
+  }
+
+  static familyKeyOf(key) {
+    return String(key || '').split(ApprovalGate.SCOPE_SEPARATOR)[0];
   }
 
   static familyOf(toolName) {

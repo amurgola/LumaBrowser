@@ -10,10 +10,12 @@ each file as a card. View-time only: message content is never rewritten.
 
 - `AttachmentParser.parse(content)` returns `{ text, attachments }`, each
   attachment `{ kind, name, meta, lang, content }` with kind `file`, `image`,
-  `binary` or `failed`. Recognised leading lines:
+  `region`, `binary` or `failed`. Recognised leading lines:
   - `[Attached: name · 12.3 KB]` followed by a fenced block (kind `file`; the
     block must close, otherwise the header stays visible text);
   - `[Attached image: name · 2 MB]`;
+  - `[Marked area on name <DASH> note]` (kind `region`: `name` is the image,
+    `meta` the user's note, possibly empty);
   - `[Attached: name · 1 MB <DASH> (binary, not embedded)]`;
   - `[Attachment failed: name <DASH> reason]`.
   The first other line ends the block; one blank separator line is dropped.

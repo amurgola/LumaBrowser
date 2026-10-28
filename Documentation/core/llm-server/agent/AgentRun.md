@@ -29,3 +29,9 @@ assistant message, and either review a no-tool reply with the
 [FinalAnswerGate](FinalAnswerGate.md) or run the batch with
 [ToolBatchRunner](ToolBatchRunner.md), which answers the dropped calls too. The reasoning tail rides as carried
 notes on the batch's first result.
+
+## Iteration events
+
+Every iteration starts with `onEvent({ type: 'iteration', iteration (1-based),
+maxIterations, elapsedMs })`, before the request is prepared, so a display
+outside the chat can show the run's place in its budget.

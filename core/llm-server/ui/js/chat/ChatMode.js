@@ -30,6 +30,7 @@ import ModeTheme from './modes/ModeTheme.js';
 import ArtifactPanel from './panel/ArtifactPanel.js';
 import MediaArtifactCache from './panel/MediaArtifactCache.js';
 import PanelEditor from './panel/PanelEditor.js';
+import RegionStaging from './region/RegionStaging.js';
 import ArtifactsSidebar from './sidebar/ArtifactsSidebar.js';
 import ConversationList from './sidebar/ConversationList.js';
 import Sidebar from './sidebar/Sidebar.js';
@@ -51,6 +52,7 @@ import LiveArtifacts from './turns/LiveArtifacts.js';
 import PreviewSlot from './turns/PreviewSlot.js';
 import ReplyChoiceChips from './turns/ReplyChoiceChips.js';
 import RuntimeFixCard from './turns/RuntimeFixCard.js';
+import SettingLink from './turns/SettingLink.js';
 import TabPreviewCard from './turns/TabPreviewCard.js';
 import TableSort from './turns/TableSort.js';
 import ThinkPane from './turns/ThinkPane.js';
@@ -69,12 +71,12 @@ export default class ChatMode {
     sidebar: Sidebar, sideModes: SidebarModes, convList: ConversationList, artsSidebar: ArtifactsSidebar,
     footAlign: SidebarFootAlignment, main: MainColumn, codeBar: CodeBlockBar, fileDrop: FileDrop,
     panel: ArtifactPanel, panelEditor: PanelEditor,
-    composer: ComposerView, availability: Availability, attachments: AttachmentStrip, paste: ClipboardAttach, tabs: TabContext, dashboard: DashboardContext,
+    composer: ComposerView, availability: Availability, attachments: AttachmentStrip, paste: ClipboardAttach, regions: RegionStaging, tabs: TabContext, dashboard: DashboardContext,
     docs: DocsSourceContext, commands: ComposerCommands, thinkPill: ThinkPill,
     gear: GearPanel, gearTools: GearToolList, models: ModelPicker, usage: UsageMeter,
     turns: TurnRenderer, userTurns: UserTurnView, chain: ToolChainView, previewSlot: PreviewSlot,
     tabPreview: TabPreviewCard, artifactChips: ArtifactChips, liveArtifacts: LiveArtifacts, thinkPane: ThinkPane, tableSort: TableSort,
-    runtimeFix: RuntimeFixCard, errorCard: ErrorCard, turnActions: TurnActions, turnEditor: AssistantTurnEditor, userEditor: UserTurnEditor,
+    runtimeFix: RuntimeFixCard, settingLink: SettingLink, errorCard: ErrorCard, turnActions: TurnActions, turnEditor: AssistantTurnEditor, userEditor: UserTurnEditor,
     choiceChips: ReplyChoiceChips,
     voice: VoiceBridge, sender: TurnSender, stream: StreamView, events: ChatEventRouter, finisher: StreamFinisher,
     conversation: ConversationView, landing: LandingView, convMenu: ConversationMenu,

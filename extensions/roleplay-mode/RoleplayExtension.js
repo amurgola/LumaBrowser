@@ -37,6 +37,7 @@ class RoleplayExtension {
     this._labService = new LabService({
       mode,
       generateImage: (opts) => chat.generateImage(opts),
+      complete: (opts) => chat.complete(opts),
       Harness: this._requireCore('roleplay-lab/LabHarness'),
       imageDefaults: () => RoleplayExtension._imageDefaults(),
       chatStore: () => RoleplayExtension._chatStore(),

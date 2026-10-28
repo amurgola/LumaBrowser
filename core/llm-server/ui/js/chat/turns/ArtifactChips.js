@@ -27,7 +27,11 @@ export default class ArtifactChips {
 
   userImages(m) {
     if (m && Array.isArray(m.images) && m.images.length) {
-      return m.images.map((im) => ArtifactChips.liveImageThumb(im.dataUrl, im.name));
+      const arts = TurnData.imageArtifacts(m);
+      return m.images.map((im, i) => {
+        const thumb = ArtifactChips.liveImageThumb(im.dataUrl, im.name);
+        return arts.length === m.images.length && arts[i] ? this._withMark(thumb, arts[i]) : thumb;
+      });
     }
     return TurnData.imageArtifacts(m).map((af) => this._mediaThumb(af, 'image'));
   }
@@ -84,7 +88,19 @@ export default class ArtifactChips {
     wrap.addEventListener('click', () => this._ctx.panel.open(af));
     const paint = kind === 'video' ? (e) => ArtifactChips._paintVideo(wrap, e) : (e) => ArtifactChips._paintImage(wrap, e);
     this._whenLoaded(af, wrap, paint);
-    return wrap;
+    return kind === 'image' ? this._withMark(wrap, af) : wrap;
+  }
+
+  _withMark(thumb, af) {
+    const box = Dom.el('div', 'cm-art-thumb-box');
+    box.appendChild(thumb);
+    const mark = Dom.el('button', 'cm-art-mark', ChatIcons.brush);
+    mark.type = 'button';
+    mark.title = 'Mark an area to edit';
+    mark.setAttribute('aria-label', 'Mark an area of ' + (af.title || 'this image') + ' to edit');
+    mark.addEventListener('click', (e) => { e.stopPropagation(); this._ctx.regions.markArtifact({ id: af.id, title: af.title }); });
+    box.appendChild(mark);
+    return box;
   }
 
   _audioPlayer(af) {

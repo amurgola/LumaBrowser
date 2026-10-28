@@ -14,8 +14,17 @@ class ModeReaction {
         meta: this._store.getMeta(conversationId),
         emit: (type, payload) => { try { send(type, payload); } catch (_) {} },
         setMeta: (patch) => this._store.setMeta(conversationId, patch),
+        replaceContent: (text) => this._replaceContent(assistantMessageId, text, send),
       }))
       .catch((err) => console.error('[llm-chat] mode postProcess failed:', err && err.message));
+  }
+
+  _replaceContent(messageId, text, send) {
+    const content = String(text == null ? '' : text);
+    if (!messageId || !content.trim() || typeof this._store.updateMessage !== 'function') return false;
+    const ok = this._store.updateMessage(messageId, { content });
+    if (ok) { try { send('mode:content', { messageId, content }); } catch (_) {} }
+    return !!ok;
   }
 }
 

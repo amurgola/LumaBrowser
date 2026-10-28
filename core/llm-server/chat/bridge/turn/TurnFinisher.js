@@ -10,8 +10,16 @@ class TurnFinisher {
     this._reportUsage();
     if (runError) return this._fail(runError);
     if (this._o.isAborted()) return this._stopped();
-    if (result.error && !result.finalResponse) return this._fail(new Error(result.error === 'aborted' ? 'stopped' : result.error));
+    if (result.error && !result.finalResponse) return this._fail(TurnFinisher.errorOf(result));
     return this._complete(result);
+  }
+
+  static AGENT_TIMEOUT = 'AGENT_TIMEOUT';
+
+  static errorOf(result) {
+    const error = new Error(result.error === 'aborted' ? 'stopped' : result.error);
+    if (result.timedOut) Object.assign(error, { code: TurnFinisher.AGENT_TIMEOUT, setting: { tune: 'agentTimeoutMinutes' } });
+    return error;
   }
 
   async _complete(result) {

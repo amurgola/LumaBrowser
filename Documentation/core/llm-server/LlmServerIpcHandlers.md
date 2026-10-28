@@ -48,6 +48,7 @@ a check: `getModelCaps` `{ caps: null }`, `getPeerGpus` `{ peers: [], active: fa
 | `getModelDisplayNames`, `setModelDisplayName` | `{ names }` from the service |
 | `getPreflight` | `Preflight.collectIssues` (image server from deps or the global) |
 | `checkSystemLibraries` | [SystemLibrariesCheck](ipc/SystemLibrariesCheck.md) |
+| `getDriverInstallPlan`, `installDrivers` | [IntelDriverInstall](ipc/IntelDriverInstall.md) |
 | `scanExistingLibraries`, `importExistingModel` | [ExistingLlmModels](ipc/ExistingLlmModels.md) |
 | `pickModelsDir`, `pickDirectory` | `PathPicker.pick` -> `{ canceled }` or `{ canceled: false, dir }` |
 | `getRuntimesView`, `checkRuntimeUpdates`, `getRuntimePrerelease`, `pickRuntimeBinary`, `registerRuntimeBinary`, `locateRuntime`, `installRuntime`, `uninstallRuntime` | [LlmRuntimeSetup](ipc/LlmRuntimeSetup.md); install progress on `core.llmServer.runtimeEvent` `{ id, type, payload }` |

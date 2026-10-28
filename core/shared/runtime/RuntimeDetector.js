@@ -47,8 +47,9 @@ class RuntimeDetector {
   }
 
   _detectableEntries(entries) {
+    const hostKeys = [process.platform, `${process.platform}-${process.arch}`];
     return entries.filter((entry) => entry.kind === this._expectedKind
-      && (!Array.isArray(entry.platforms) || entry.platforms.includes(process.platform)));
+      && (!Array.isArray(entry.platforms) || entry.platforms.some((key) => hostKeys.includes(key))));
   }
 
   async _detectEntry(entry, { runtimesRoot, cuda, gpu, manualBinaries }) {

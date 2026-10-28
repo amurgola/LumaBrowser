@@ -25,12 +25,18 @@ per-platform backend ([SelectionKeys](SelectionKeys.md)):
 | Windows | Ctrl+C with SendInput ([NativeKeys](NativeKeys.md)) | Ctrl+V | |
 | macOS | Cmd+C posted with CoreGraphics ([MacKeys](MacKeys.md)) | Cmd+V | Needs Accessibility permission (System Settings > Privacy & Security > Accessibility); the first failed try asks macOS to show its prompt, and the action answers `NO_PERMISSION` (403) until it is granted. |
 | Linux X11 | Ctrl+C with XTEST ([LinuxKeys](LinuxKeys.md)) | Ctrl+V | Needs libX11 and libXtst (on every X desktop). An unchanged clipboard falls back to the primary selection. |
-| Linux Wayland | The primary selection (the highlighted text), no keystroke | `wtype` (wlroots desktops: Sway, Hyprland) or `ydotool` (needs its daemon) if installed | Without either, Rewrite leaves its answer on the clipboard for a manual paste. Global shortcuts themselves are limited on Wayland. |
+| Linux Wayland | The primary selection (the highlighted text), no keystroke | Ctrl+V through the [X11 bridge](X11Bridge.md)'s XTEST when it runs; else `wtype` (wlroots desktops: Sway, Hyprland) or `ydotool` (needs its daemon) if installed | Without any of those, Rewrite leaves its answer on the clipboard for a manual paste. The shortcuts themselves run through the bridge (`waylandBridge` setting, on by default): Electron registers nothing on native Wayland. |
 
 Elsewhere they report `UNSUPPORTED`. The clipboard and screenshot actions work
 on every platform (the screenshot uses `desktopCapturer` off Windows). The
-shortcut hint, the window pick and the screen-text fallback's window capture
-are still Windows-only.
+shortcut hint runs wherever the held keys can be read: Windows, macOS,
+Linux X11, and Linux Wayland through the X11 bridge when XWayland is up
+(`GET /` says why not in `hint.reason`, and `bridge` carries the bridge's state); the window pick
+works on Windows (pointer hit test) and on KDE Wayland (the clicked window is
+the one KWin activates, [KWinHintTarget](KWinHintTarget.md)); the screen-text
+fallback's window capture follows the pick. The
+first time the hint can run, one notification tells the user to hold the
+chord in any app (the `hintIntroduced` setting remembers it).
 
 Selection grabbing ([SelectionClipboard](SelectionClipboard.md)): Luma does not
 take focus. It waits up to 1.5 s for the hotkey's Ctrl/Alt/Shift/Win to be
@@ -41,7 +47,8 @@ selected (`NO_SELECTION`).
 
 ## Routes
 
-- `GET /api/desktop/hotkeys/` -> `{ success, platform, actions: [{ id, label, description, supported, binding, registered, conflict }], busy: [ids], speaking }`.
+- `GET /api/desktop/hotkeys/` -> `{ success, platform, actions: [{ id, label, description, supported, binding, registered, conflict }], busy: [ids], speaking, hint: { on, reason } }`
+  (`hint.reason` says why the shortcut hint is off: Wayland, no overlay, a setting; null while it runs).
   `binding` is the normalized accelerator (`''` when unbound); `conflict` says
   why a binding is not registered (taken by another program, bound to two
   actions, invalid).

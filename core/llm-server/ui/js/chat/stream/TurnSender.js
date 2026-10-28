@@ -26,7 +26,7 @@ export default class TurnSender {
     this._startAssistant();
     await this._send({
       userMessage: turn.composed,
-      attachments: turn.images.map((im) => ({ kind: 'image', name: im.name, mime: im.mime, base64: im.base64 })),
+      attachments: TurnSender._wireAttachments(turn),
       context: turn.context.length ? turn.context : undefined,
     });
   }
@@ -97,7 +97,18 @@ export default class TurnSender {
     const context = v ? state.context.map(({ id, ...c }) => c) : [];
     if (v) state.context = [];
     this._ctx.attachments.render();
-    return { composed: UserMessageComposer.compose(v, attachments), images: UserMessageComposer.images(attachments), context };
+    return {
+      composed: UserMessageComposer.compose(v, attachments),
+      images: UserMessageComposer.images(attachments),
+      regions: UserMessageComposer.regions(attachments),
+      areas: UserMessageComposer.markedAreas(attachments),
+      context,
+    };
+  }
+
+  static _wireAttachments(turn) {
+    const images = turn.images.map((im) => ({ kind: 'image', name: im.name, mime: im.mime, base64: im.base64, ...(im.region ? { region: im.region } : {}) }));
+    return images.concat(turn.regions || []);
   }
 
   _userMessage(turn) {
@@ -106,6 +117,7 @@ export default class TurnSender {
     if (turn.images.length) {
       userMsg.images = turn.images.map((im) => ({ name: im.name, dataUrl: 'data:' + im.mime + ';base64,' + im.base64 }));
     }
+    if (turn.areas && turn.areas.length) userMsg.regions = turn.areas;
     return userMsg;
   }
 

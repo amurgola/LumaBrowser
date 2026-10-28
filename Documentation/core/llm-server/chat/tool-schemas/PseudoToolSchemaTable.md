@@ -24,6 +24,8 @@ injects, as opposed to browser and extension tools).
   fine-tuned router depends on them) and adds `part` for paged reading.
 - `edit_artifact` has `html`, `js`, `libs`: the only way to edit a live module
   (a `content` blob renders blank).
+- `edit_image.regionId` names a region the user painted (the catalog lists
+  them); `"none"` edits the whole image. Pixel masks never cross the schema.
 - `create_live_artifact.js` names every injected value, including
   `luma.ext(id)` for extension data (the Hub, id `personal-hub`).
 - Known drift kept from legacy and pinned by `ToolDocSurfaces.test.js`:

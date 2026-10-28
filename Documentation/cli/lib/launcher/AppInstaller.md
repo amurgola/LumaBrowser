@@ -12,7 +12,7 @@ Downloads and prepares the LumaBrowser build for this platform.
   throws when it has no asset for this platform (naming the ones it has), reuses a current cached
   build unless forced, else downloads into `~/.lumabrowser` with a progress bar, prepares it and
   writes the [InstallRecord](../connect/InstallRecord.md). Resolves the record.
-- `platformKey()`: `win32-x64`, `darwin-arm64`, `darwin-x64`, `linux-x64`, else `<platform>-<arch>`.
+- `platformKey()`: `win32-x64`, `win32-arm64`, `darwin-arm64`, `darwin-x64`, `linux-x64`, else `<platform>-<arch>`.
 - `AppInstaller.renderBar(pct)`: `[####------...]`, 20 cells.
 
 Preparing: Windows runs the portable exe as is; Linux marks the AppImage executable; macOS unzips with

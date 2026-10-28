@@ -30,7 +30,7 @@ class AppInstaller {
   }
 
   platformKey() {
-    if (this.platform === 'win32') return 'win32-x64';
+    if (this.platform === 'win32') return this.arch === 'arm64' ? 'win32-arm64' : 'win32-x64';
     if (this.platform === 'darwin') return this.arch === 'arm64' ? 'darwin-arm64' : 'darwin-x64';
     if (this.platform === 'linux') return 'linux-x64';
     return `${this.platform}-${this.arch}`;

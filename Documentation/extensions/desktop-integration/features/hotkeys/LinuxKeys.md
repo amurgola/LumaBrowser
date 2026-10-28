@@ -19,7 +19,22 @@ The selection actions' keyboard and clipboard parts on Linux, with the
   (wlroots desktops) or `ydotool key 29:1 47:1 47:0 29:0` (needs `ydotoold`),
   whichever is on `PATH` first (`WAYLAND_TOOLS`, `TOOL_TIMEOUT_MS` 2000);
   without either `canPaste()` is false and `noPasteReason` says what to install.
-  No key map, so `heldModifiers()` is empty and no window is tracked.
+  No key map of its own, so `heldModifiers()` is empty and no window is
+  tracked, unless the [X11Bridge](X11Bridge.md) is running (`bridge`, given by
+  [SelectionKeys](SelectionKeys.md)): then `heldModifiers()` and
+  `releaseKeys()` go through it, and `canPaste()` is true with Ctrl+V sent by
+  its XTEST injection (`sendCombo(['Control_L', 'v'])`), which the compositor
+  forwards to the focused app the way it does for xdotool.
 
 The primary selection can be stale: it holds the last highlighted text even
 after the highlight is gone in some apps.
+
+## The shortcut hint
+
+- `pollsModifiers`: true on X11 (`heldModifiers` reads `XQueryKeymap`) and on
+  Wayland while the bridge runs; false on Wayland otherwise, where no client
+  may read the keyboard state.
+- `hintUnavailableReason`: why the hint cannot run here (Wayland without a
+  running bridge: the bridge's own `reason`, or `NO_WAYLAND_POLL` without one;
+  no display session; the X11 libraries missing), or null. The
+  [hotkeys feature](HotkeysFeature.md) shows it in `GET /` and the settings tab.

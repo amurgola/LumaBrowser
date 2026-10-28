@@ -12,7 +12,8 @@ hardware readiness. Fail-soft and offline.
 - `expectedKind` getter.
 - `detectRuntimes({ runtimesRoot, cuda, gpu, manualBinaries })` resolves
   `{ runtimesRoot, platformKey, runtimes }`. For each entry of
-  `expectedKind` whose `platforms` (if any) include this host:
+  `expectedKind` whose `platforms` (if any) include this host, as a
+  platform (`darwin`) or a platform-arch key (`win32-arm64`):
   1. extension entries with a `detect` hook go through
      [ExtensionRuntimeProbe](detect/ExtensionRuntimeProbe.md); everything else
      through [BinaryRuntimeProbe](detect/BinaryRuntimeProbe.md)

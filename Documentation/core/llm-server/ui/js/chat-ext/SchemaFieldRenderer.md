@@ -15,6 +15,6 @@ the field type's controls, then the AI-fill box on text fields with `assist`.
   inserted as HTML (schema-authored).
 - Field types: [ToggleField](fields/ToggleField.md), [ButtonField](fields/ButtonField.md),
   [TextInputField](fields/TextInputField.md), [TextareaField](fields/TextareaField.md),
-  [SelectField](fields/SelectField.md), [GroupField](fields/GroupField.md),
+  [SelectField](fields/SelectField.md), [GroupField](fields/GroupField.md), [SectionField](fields/SectionField.md),
   [ImageField](fields/ImageField.md), [CharArtField](fields/CharArtField.md),
   [RepeaterField](fields/RepeaterField.md), all extending [SchemaField](fields/SchemaField.md).

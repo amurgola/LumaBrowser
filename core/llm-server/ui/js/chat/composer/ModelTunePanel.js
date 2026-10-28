@@ -11,6 +11,12 @@ export default class ModelTunePanel {
     { id: 'maxParallelToolCalls', label: 'Parallel tools', kind: 'number', min: 1, max: 8, step: 1, suffix: 'at once',
       hint: 'How many tool calls from one reply may run together (only reads overlap; writes still go one by one). '
         + 'One is the measured default: on a 27B model, more made runs slower and less accurate.' },
+    { id: 'agentTimeoutMinutes', label: 'Run timeout', kind: 'number', min: 0, max: 240, step: 1, suffix: 'minutes',
+      hint: 'How long one Tools-on turn may run before it stops and asks you to send "continue"; time spent inside '
+        + 'tools does not count. 0 means no limit. A mode that needs longer (Code, say) keeps its own.' },
+    { id: 'agentMaxIterations', label: 'Run steps', kind: 'number', min: 1, max: 400, step: 1, suffix: 'steps',
+      hint: 'How many replies (each with its tool calls) one Tools-on turn may take before it stops. '
+        + 'A mode that needs more keeps its own.' },
   ];
 
   static LAUNCH_FIELDS = [
@@ -29,7 +35,7 @@ export default class ModelTunePanel {
     return !!(api && api.modelSettings && api.modelSettings.get);
   }
 
-  async open(ref, label) {
+  async open(ref, label, { highlight = null } = {}) {
     const { api } = this._ctx;
     const r = await api.modelSettings.get(ref);
     if (!(r && r.success && r.view)) return;
@@ -38,6 +44,20 @@ export default class ModelTunePanel {
     this._back = this._build();
     this._ctx.root.appendChild(this._back);
     this._arm();
+    if (highlight) this._outline(highlight);
+  }
+
+  static OUTLINE_CLASS = 'cm-setting-hl';
+
+  _outline(fieldId) {
+    const el = this._back.querySelector('[data-field="' + fieldId + '"]');
+    if (!el) return;
+    const row = el.closest('.cm-tune-row');
+    row.classList.add(ModelTunePanel.OUTLINE_CLASS);
+    el.addEventListener('input', () => row.classList.remove(ModelTunePanel.OUTLINE_CLASS), { once: true });
+    if (typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'center' });
+    el.focus();
+    if (typeof el.select === 'function') el.select();
   }
 
   _build() {
@@ -117,6 +137,7 @@ export default class ModelTunePanel {
     if (field.id === 'temperature' && value == null) return 'chat mode decides';
     if (field.id === 'maxReplyTokens' && value == null) return 'no limit';
     if (field.id === 'maxParallelToolCalls' && value == null) return 'one at a time';
+    if (field.id === 'agentTimeoutMinutes' && value === 0) return 'no limit';
     if (field.id === 'kvCacheType' && value == null) return 'Full (f16)';
     if (field.kind === 'select') {
       const hit = field.options.find((o) => o.id === value);

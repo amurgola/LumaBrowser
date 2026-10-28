@@ -19,6 +19,10 @@ class BridgeGlobals {
     return global.__lumaTabPreview || null;
   }
 
+  static desktopService() {
+    return global.__lumaDesktop || null;
+  }
+
   static groundingAvailable() {
     const grounding = global.__lumaVisualGrounding;
     try { return !!(grounding && grounding.isAvailable()); } catch (_) { return false; }

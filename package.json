@@ -1,6 +1,6 @@
 {
   "name": "lumabrowser",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "private": true,
   "description": "Your local AI stack in one app",
   "homepage": "https://lumabyte.com",
@@ -205,18 +205,8 @@
     ],
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
+        "nsis",
+        "portable"
       ],
       "icon": "icon/icon.png"
     },

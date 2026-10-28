@@ -26,6 +26,16 @@ export default class ChatExtStyles {
       .cm-xgroup{border:0;border-top:1px solid var(--border-soft);border-radius:0;padding:var(--space-4) 0 0;margin:0;
         display:flex;flex-direction:column;gap:var(--space-3);}
       .cm-xgroup > .cm-xgroup-title{font-weight:var(--weight-semibold);font-size:var(--text-md);margin:0;padding:0;}
+      /* A section is a group that writes into the same model and folds away behind its title. */
+      .cm-xsection{border:0;border-top:1px solid var(--border-soft);border-radius:0;padding:var(--space-4) 0 0;margin:0;
+        display:flex;flex-direction:column;gap:var(--space-3);}
+      .cm-xsection > .cm-xsection-title{all:unset;cursor:pointer;display:flex;align-items:center;gap:var(--space-2);
+        font-weight:var(--weight-semibold);font-size:var(--text-md);color:inherit;}
+      .cm-xsection-caret{display:inline-block;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;
+        border-top:6px solid currentColor;transition:transform .15s ease;}
+      .cm-xsection.is-collapsed .cm-xsection-caret{transform:rotate(-90deg);}
+      .cm-xsection-body{display:flex;flex-direction:column;gap:var(--space-3);}
+      .cm-xsection.is-collapsed > .cm-xsection-body, .cm-xsection.is-collapsed > .cm-xhint{display:none;}
       .cm-xrep{border:0;border-top:1px solid var(--border-soft);border-radius:0;padding:var(--space-4) 0 0;}
       .cm-xrep-list{display:flex;flex-direction:column;gap:var(--space-3);}
       .cm-xrep-item{border:1px solid var(--border-soft);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4) var(--space-4);

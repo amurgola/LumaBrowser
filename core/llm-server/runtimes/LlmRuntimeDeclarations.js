@@ -28,6 +28,7 @@ class LlmRuntimeDeclarations {
       repo: LlmRuntimeDeclarations.GGML_ORG,
       assetPatterns: {
         'win32-x64': /^llama-.+-bin-win-cpu-x64\.zip$/i,
+        'win32-arm64': /^llama-.+-bin-win-cpu-arm64\.zip$/i,
         'linux-x64': /^llama-.+-bin-ubuntu-x64\.(?:zip|tar\.gz|tgz)$/i,
         'darwin-arm64': /^llama-.+-bin-macos-arm64\.(?:zip|tar\.gz|tgz)$/i,
         'darwin-x64': /^llama-.+-bin-macos-x64\.(?:zip|tar\.gz|tgz)$/i,
@@ -75,6 +76,7 @@ class LlmRuntimeDeclarations {
       repo: LlmRuntimeDeclarations.GGML_ORG,
       assetPatterns: {
         'win32-x64': /^llama-.+-bin-win-cuda[-_]?(?:cu)?[-_]?13(?:\.\d+)?-x64\.zip$/i,
+        'win32-arm64': /^llama-.+-bin-win-cuda[-_]?(?:cu)?[-_]?13(?:\.\d+)?-arm64\.zip$/i,
         'linux-x64': /^llama-.+-bin-ubuntu-cuda-13(?:\.\d+)?-x64\.(?:tar\.gz|tgz|zip)$/i,
       },
       manualSourceUrl: 'https://github.com/ggml-org/llama.cpp',
@@ -87,6 +89,7 @@ class LlmRuntimeDeclarations {
       backendLib: 'cuda',
       companionAssets: {
         'win32-x64': /^cudart-llama-bin-win-cu?(?:da[-_]?)?13(?:\.\d+)?-x64\.zip$/i,
+        'win32-arm64': /^cudart-llama-bin-win-cu?(?:da[-_]?)?13(?:\.\d+)?-arm64\.zip$/i,
         'linux-x64': /^cudart-llama-.*bin-ubuntu-cuda-13(?:\.\d+)?-x64\.(?:tar\.gz|tgz|zip)$/i,
       },
     },
@@ -114,18 +117,35 @@ class LlmRuntimeDeclarations {
       name: 'llama.cpp (Vulkan)',
       kind: 'inference',
       description:
-        'Cross-vendor GPU acceleration via Vulkan. Works on NVIDIA, AMD, and Intel GPUs that ship Vulkan drivers.',
+        'Cross-vendor GPU acceleration via Vulkan. Works on NVIDIA, AMD, Intel and Qualcomm Adreno GPUs that ship Vulkan drivers.',
       repo: LlmRuntimeDeclarations.GGML_ORG,
       assetPatterns: {
         'win32-x64': /^llama-.+-bin-win-vulkan-x64\.zip$/i,
+        'win32-arm64': /^llama-.+-bin-win-vulkan-arm64\.zip$/i,
         'linux-x64': /^llama-.+-bin-ubuntu-vulkan-x64\.(?:zip|tar\.gz|tgz)$/i,
       },
       binaryNames: LlmRuntimeDeclarations.LLAMA_BIN_NAMES,
       requiresHw: { kind: 'gpu-any' },
-      requirementNote: 'Needs a GPU with a Vulkan driver; most modern AMD/Intel/NVIDIA cards qualify.',
+      requirementNote: 'Needs a GPU with a Vulkan driver; most modern AMD/Intel/NVIDIA cards and Snapdragon X Adreno GPUs qualify.',
       protocol: 'openai-compat',
       backendDevice: 'Vulkan',
       backendLib: 'vulkan',
+    },
+    {
+      id: 'llama-cpp-opencl-adreno',
+      name: 'llama.cpp (OpenCL, Adreno)',
+      kind: 'inference',
+      description:
+        'Qualcomm Adreno GPU acceleration via OpenCL, for Snapdragon X Windows on Arm laptops. ggml-org builds it for Windows arm64 only; the Vulkan build reaches the same GPU with a less tuned path.',
+      repo: LlmRuntimeDeclarations.GGML_ORG,
+      platforms: ['win32-arm64'],
+      assetPatterns: { 'win32-arm64': /^llama-.+-bin-win-opencl-adreno-arm64\.zip$/i },
+      binaryNames: LlmRuntimeDeclarations.LLAMA_BIN_NAMES,
+      requiresHw: { kind: 'qualcomm-gpu' },
+      requirementNote: 'Needs a Qualcomm Adreno GPU with its OpenCL driver (Snapdragon X on Windows on Arm).',
+      protocol: 'openai-compat',
+      backendDevice: 'GPUOpenCL',
+      backendLib: 'opencl',
     },
     {
       id: 'llama-cpp-rocm',
@@ -206,7 +226,7 @@ class LlmRuntimeDeclarations {
       kind: 'format',
       description:
         "OpenAI's Harmony response format, used by gpt-oss-* models for prompts, reasoning, and tool calls. Not a separate binary: support is baked into recent llama.cpp builds (b6000+), so it lights up as soon as a current llama.cpp runtime is installed.",
-      dependsOn: ['llama-cpp-cpu', 'llama-cpp-cuda12', 'llama-cpp-cuda13', 'llama-cpp-vulkan', 'llama-cpp-rocm', 'llama-cpp-sycl', 'llama-cpp-openvino'],
+      dependsOn: ['llama-cpp-cpu', 'llama-cpp-cuda12', 'llama-cpp-cuda13', 'llama-cpp-vulkan', 'llama-cpp-opencl-adreno', 'llama-cpp-rocm', 'llama-cpp-sycl', 'llama-cpp-openvino'],
       minLlamaBuild: 6000,
     },
   ];

@@ -172,7 +172,7 @@ class DesktopMcpTools {
       desktop_set_value: async (args) => DesktopMcpTools._reply(await d.setValue(args)),
       desktop_press_key: async (args) => this._acted(args, await d.pressKey(args)),
       desktop_scroll: async (args) => this._acted(args, await d.scroll(args)),
-      desktop_focus: (args) => DesktopMcpTools._reply(d.focus(args)),
+      desktop_focus: async (args) => DesktopMcpTools._reply(await d.focus(args)),
       desktop_launch: async (args) => DesktopMcpTools._reply(await d.launch(args)),
     };
   }

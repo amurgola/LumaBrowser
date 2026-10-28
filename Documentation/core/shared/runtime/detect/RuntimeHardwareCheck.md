@@ -18,7 +18,7 @@ Never gates installs.
   - `gpu-any`: needs an adapter whose vendor is not Microsoft; on Linux also a
     GPU-backed Vulkan device (`gpu.vulkanDevice` if given, else
     `linuxVulkanDeviceLikely()`)
-  - `amd-gpu` / `intel-gpu`: needs an adapter whose vendor is `AMD` / `Intel`,
+  - `amd-gpu` / `intel-gpu` / `qualcomm-gpu`: needs an adapter whose vendor is `AMD` / `Intel` / `Qualcomm`,
     else note "No AMD GPU detected." / "No Intel GPU detected."
   - `intel-sycl`: an Intel adapter, and on Linux the Level Zero GPU driver
     (`libze_intel_gpu`), else `SYCL_NOTE` naming the packages

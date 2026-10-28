@@ -29,6 +29,7 @@ const FitTestSession = require('./ipc/FitTestSession');
 const GambitSession = require('./ipc/GambitSession');
 const HfRepoBrowser = require('./ipc/HfRepoBrowser');
 const HiddenRunConversations = require('./ipc/HiddenRunConversations');
+const IntelDriverInstall = require('./ipc/IntelDriverInstall');
 const LlmAvailability = require('./ipc/LlmAvailability');
 const LlmDefaultsUpdater = require('./ipc/LlmDefaultsUpdater');
 const LlmDiagnosticsView = require('./ipc/LlmDiagnosticsView');
@@ -109,6 +110,7 @@ class LlmServerIpcHandlers {
       existing: new ExistingLlmModels({ llmServerService: svc, modelsView }),
       runtimes: new LlmRuntimeSetup({ llmServerService: svc }),
       sysLibs: new SystemLibrariesCheck({ llmServerService: svc, deps }),
+      drivers: new IntelDriverInstall({ llmServerService: svc }),
       defaults: new LlmDefaultsUpdater(svc),
       gambit: new GambitSession({ llmServerService: svc, chatRouter: router, fitTests }),
       localModels: new LocalModelOptions({ llmServerService: svc }),
@@ -145,7 +147,7 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('clearTraces', () => trace.clear());
   }
 
-  static _registerDiagnostics(svc, { diagnostics }) {
+  static _registerDiagnostics(svc, { diagnostics, drivers }) {
     LlmServerIpcHandlers._handle('getDiagnostics', (_e, options) => diagnostics.diagnostics(options));
     LlmServerIpcHandlers._handle('getVramPressure', () => ({ state: svc.getVramPressure() }));
     LlmServerIpcHandlers._handle('dismissVramPressure', (_e, card) => ({ dismissed: !!svc.dismissVramPressure(card) }));
@@ -158,6 +160,8 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('addNvidiaSmiToPath', (_e, directory) => SystemDiagnostics.addDirectoryToUserPath(directory));
     LlmServerIpcHandlers._handle('recoverDisplayDevice', (_e, instanceId) => SystemDiagnostics.recoverDisplayDevice(instanceId));
     LlmServerIpcHandlers._handle('setPcieAspmOff', () => SystemDiagnostics.setPcieAspmOff());
+    LlmServerIpcHandlers._handle('getDriverInstallPlan', () => drivers.plan());
+    LlmServerIpcHandlers._handle('installDrivers', () => drivers.install());
   }
 
   static _registerModelsDir(svc, { modelsView, existing, sysLibs, preflightOptions }) {

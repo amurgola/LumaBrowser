@@ -4,7 +4,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const RP_DATA_VERSION = 1;
+  const RP_DATA_VERSION = 2;
 
   function activeScene(data) {
     data = data || {};
@@ -105,10 +105,34 @@
         c.figure = { b64: c.art.fullBody.b64, mime: c.art.fullBody.mime || 'image/png' };
         changed = true;
       }
+      if (!c.profile || typeof c.profile !== 'object') { c.profile = { voice: '', wants: '', hides: '', tells: [], bonds: {} }; changed = true; }
+      if (!c.chronicle || typeof c.chronicle !== 'object') { c.chronicle = { arc: '', beats: [] }; changed = true; }
+      if (!c.state || typeof c.state !== 'object') { c.state = { present: false }; changed = true; }
+    }
+    if (!data.story || typeof data.story !== 'object') {
+      data.story = { turn: 0, clock: { day: 1, timeOfDay: '', weather: '' }, summary: '', summaryTurn: 0, ledger: [], threads: [] };
+      changed = true;
     }
     if (data.version !== RP_DATA_VERSION) {
       data.version = RP_DATA_VERSION;
       changed = true;
+    }
+    return changed;
+  }
+
+  function forgetTurn(data, messageId) {
+    if (!data || typeof data !== 'object' || !messageId) return false;
+    let changed = false;
+    if (data.story && Array.isArray(data.story.ledger)) {
+      const before = data.story.ledger.length;
+      data.story.ledger = data.story.ledger.filter((r) => !r || r.messageId !== messageId);
+      if (data.story.ledger.length !== before) changed = true;
+    }
+    for (const c of Array.isArray(data.characters) ? data.characters : []) {
+      if (!c || !c.chronicle || !Array.isArray(c.chronicle.beats)) continue;
+      const before = c.chronicle.beats.length;
+      c.chronicle.beats = c.chronicle.beats.filter((b) => !b || b.messageId !== messageId);
+      if (c.chronicle.beats.length !== before) changed = true;
     }
     return changed;
   }
@@ -123,5 +147,6 @@
     characterBodyRef,
     characterBodyRefForState,
     migrateData,
+    forgetTurn,
   };
 }));

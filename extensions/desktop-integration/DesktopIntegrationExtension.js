@@ -13,7 +13,12 @@ const AppWindows = require('./shared/AppWindows');
 const ChatHandoff = require('./shared/ChatHandoff');
 const Speech = require('./shared/Speech');
 const ActivityOverlay = require('./shared/ActivityOverlay');
+const GlobalShortcuts = require('./shared/GlobalShortcuts');
+const KWinPlacement = require('./shared/KWinPlacement');
+const KWinScripting = require('./shared/KWinScripting');
+const KWinWindows = require('./shared/KWinWindows');
 const HintContributions = require('./shared/HintContributions');
+const X11Bridge = require('./features/hotkeys/X11Bridge');
 
 class DesktopIntegrationExtension {
   static APP_NAME = 'LumaBrowser';
@@ -42,6 +47,8 @@ class DesktopIntegrationExtension {
       parts.registry.disposeAll();
       try { parts.speech.stop(); } catch (_) {}
       try { parts.overlay.dispose(); } catch (_) {}
+      try { parts.shortcuts.dispose(); } catch (_) {}
+      if (parts.bridge) { try { parts.bridge.stop(); } catch (_) {} }
       parts.handshake.remove();
     }
     this._parts = null;
@@ -69,9 +76,18 @@ class DesktopIntegrationExtension {
       getTts: () => (context.sharedServices && context.sharedServices.ttsServer) || null,
       send: (channel, payload) => RendererBroadcast.send(channel, payload),
     });
-    const overlay = o.overlay || new ActivityOverlay({ displayFor: DesktopIntegrationExtension._displayFor, frameFor: DesktopIntegrationExtension._frameFor, log: FeatureDeps.logger(context.logger, 'overlay') });
+    const overlayLog = FeatureDeps.logger(context.logger, 'overlay');
+    const kwin = KWinWindows.shared({ log: overlayLog });
+    const overlay = o.overlay || new ActivityOverlay({
+      displayFor: (hwnd) => DesktopIntegrationExtension._kwinDisplay(kwin, hwnd) || DesktopIntegrationExtension._displayFor(hwnd),
+      frameFor: (hwnd) => (kwin && kwin.frameOf(hwnd)) || DesktopIntegrationExtension._frameFor(hwnd),
+      placement: KWinPlacement.forSession({ scripting: KWinScripting.shared({ log: overlayLog }), log: overlayLog }),
+      log: overlayLog,
+    });
     const hints = o.hints || new HintContributions({ log: FeatureDeps.logger(context.logger, 'hints') });
-    const parts = { token, broadcast, clients, windows, handoff, speech, overlay, hints, version, now };
+    const bridge = o.bridge !== undefined ? o.bridge : X11Bridge.forSession({ log: FeatureDeps.logger(context.logger, 'x11-bridge') });
+    const shortcuts = o.shortcuts || new GlobalShortcuts({ globalShortcut: DesktopIntegrationExtension._globalShortcut(), bridge, log: FeatureDeps.logger(context.logger, 'shortcuts') });
+    const parts = { token, broadcast, clients, windows, handoff, speech, overlay, hints, bridge, shortcuts, version, now };
     parts.handshake = new DesktopHandshake({
       filePath: o.handshakePath, version, now,
       getToken: () => token.get(),
@@ -81,7 +97,7 @@ class DesktopIntegrationExtension {
       enabled: () => (parts.registry ? parts.registry.enabledIds() : []),
       isEnabled: (id) => !!(parts.registry && parts.registry.routerFor(String(id))),
     };
-    const deps = new FeatureDeps(context, { broadcast, handoff, speech, overlay, hints, windows, clients, features, appInfo: () => this._appInfo(parts) });
+    const deps = new FeatureDeps(context, { broadcast, handoff, speech, overlay, hints, bridge, shortcuts, windows, clients, features, appInfo: () => this._appInfo(parts) });
     parts.registry = new FeatureRegistry({
       db: context.db,
       buildDeps: (descriptor) => deps.build(descriptor),
@@ -168,6 +184,12 @@ class DesktopIntegrationExtension {
     return screen.screenToDipRect(null, rect);
   }
 
+  static _kwinDisplay(kwin, hwnd) {
+    const frame = kwin && hwnd ? kwin.frameOf(hwnd) : null;
+    if (!frame) return null;
+    try { return require('electron').screen.getDisplayMatching(frame); } catch (_) { return null; }
+  }
+
   static _displayFor(hwnd) {
     if (process.platform !== 'win32' || !hwnd) return null;
     const { screen } = require('electron');
@@ -175,6 +197,10 @@ class DesktopIntegrationExtension {
     const rect = Win32Windows.windowRect(hwnd);
     if (!rect || rect.width <= 0 || rect.height <= 0) return null;
     return screen.getDisplayMatching(screen.screenToDipRect(null, rect));
+  }
+
+  static _globalShortcut() {
+    try { return require('electron').globalShortcut || null; } catch (_) { return null; }
   }
 
   static _appVersion() {

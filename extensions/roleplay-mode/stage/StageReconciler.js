@@ -2,17 +2,22 @@ const CastResolver = require('../world/CastResolver');
 const SceneLocator = require('../world/SceneLocator');
 const CurrentState = require('../world/CurrentState');
 const RoleplayIds = require('../world/RoleplayIds');
+const CharacterState = require('../world/CharacterState');
+const CharacterChronicle = require('../world/CharacterChronicle');
+const CharacterProfile = require('../world/CharacterProfile');
+const StoryLedger = require('../world/StoryLedger');
 const OutfitWardrobe = require('../pipeline/OutfitWardrobe');
 
 class StageReconciler {
-  static apply(data, ex, delta) {
+  static apply(data, ex, delta, turn = {}) {
     StageReconciler._characters(data, ex.characters, delta);
     if (ex.location) StageReconciler._location(data, ex.location, delta);
-    if (ex.currentState) StageReconciler._presentCast(data, ex.currentState, delta);
+    if (ex.currentState) StageReconciler._presentCast(data, ex.currentState, delta, turn);
     else if (data.currentState && data.currentState.sceneId !== data.activeSceneId) {
       data.currentState.sceneId = data.activeSceneId || data.currentState.sceneId || null;
       delta.changed = true;
     }
+    if (ex.chronicle) StageReconciler._chronicle(data, ex.chronicle, delta, turn);
   }
 
   static _characters(data, newChars, delta) {
@@ -43,13 +48,15 @@ class StageReconciler {
     delta.changed = true;
   }
 
-  static _presentCast(data, state, delta) {
+  static _presentCast(data, state, delta, turn) {
     const sceneId = StageReconciler._stateScene(data, state, delta);
     const entries = [];
+    const presentIds = new Set();
     for (const sc of state.characters || []) {
-      const entry = StageReconciler._presentEntry(data, sc, delta);
-      if (entry) entries.push(entry);
+      const entry = StageReconciler._presentEntry(data, sc, delta, sceneId, turn);
+      if (entry) { entries.push(entry); presentIds.add(entry.charId); }
     }
+    StageReconciler._departures(data, state, presentIds, sceneId, delta, turn);
     if (CurrentState.replace(data, { sceneId, characters: entries })) delta.changed = true;
   }
 
@@ -65,10 +72,19 @@ class StageReconciler {
     return sceneId;
   }
 
-  static _presentEntry(data, sc, delta) {
+  static _presentEntry(data, sc, delta, sceneId, turn) {
     let char = CastResolver.byName(data, sc.name);
     if (!char && sc.present !== false) char = delta.addCharacter(data, { name: sc.name });
-    if (!char || sc.present === false) return null;
+    if (!char) return null;
+    if (sc.beat && CharacterChronicle.addBeat(char, { turn: turn.turn, messageId: turn.messageId, text: sc.beat })) delta.changed = true;
+    if (sc.bondChange && sc.bondUser && CharacterProfile.setBond(char, CharacterProfile.BOND_USER, sc.bondUser)) delta.changed = true;
+    if (sc.present === false) {
+      if (CharacterState.depart(char, { turn: turn.turn, sceneId, note: sc.leftTo })) delta.changed = true;
+      return null;
+    }
+    if (CharacterState.arrive(char, sceneId, {
+      emotion: sc.emotion, intent: sc.intent, condition: sc.condition, bondUser: sc.bondUser, bondNote: sc.bondChange,
+    })) delta.changed = true;
     const acc = StageReconciler._wardrobe(char, sc, delta);
     const entry = {
       charId: char.id,
@@ -81,6 +97,16 @@ class StageReconciler {
     if (sc.slots) entry.slots = sc.slots;
     if (acc.head || acc.face) entry.accessories = acc;
     return entry;
+  }
+
+  static _departures(data, state, presentIds, sceneId, delta, turn) {
+    const before = CastResolver.currentEntries(data).map((e) => e.char);
+    const named = new Set((state.characters || []).map((c) => String(c.name || '').toLowerCase()));
+    for (const char of before) {
+      if (presentIds.has(char.id) || named.has(String(char.name || '').toLowerCase())) continue;
+      const prevScene = data.currentState && data.currentState.sceneId;
+      if (CharacterState.depart(char, { turn: turn.turn, sceneId: prevScene || sceneId, note: '' })) delta.changed = true;
+    }
   }
 
   static _wardrobe(char, sc, delta) {
@@ -96,6 +122,19 @@ class StageReconciler {
     }
     if (sc.outfit && OutfitWardrobe.ensure(char, sc.outfit, delta.pendingOutfits, sc.slots)) delta.changed = true;
     return acc;
+  }
+
+  static _chronicle(data, chronicle, delta, turn) {
+    if (StoryLedger.record(data, chronicle.events, turn)) delta.changed = true;
+    if (chronicle.clock && StoryLedger.advanceClock(data, chronicle.clock)) delta.changed = true;
+    if (chronicle.threads && StoryLedger.threads(data, chronicle.threads, turn.turn)) delta.changed = true;
+    for (const e of chronicle.events || []) {
+      if (e.kind !== 'death') continue;
+      for (const name of e.who || []) {
+        const char = CastResolver.byName(data, name);
+        if (char && CharacterState.depart(char, { turn: turn.turn, sceneId: data.activeSceneId, note: 'dead: ' + e.text })) delta.changed = true;
+      }
+    }
   }
 }
 

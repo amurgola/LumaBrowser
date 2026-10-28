@@ -19,6 +19,10 @@ postProcess.
   `fromKey` from their saved PNGs.
 - `regenerateStep({ stepKey, overrides })` -> `{ success, error, stepKey, step }`,
   a fresh seed unless the override pins one.
+- `runText({ options })` -> `{ success, outDir, transcript, data, probe, prose,
+  judge, error }`: the scripted text playthrough through [LabTextRun](LabTextRun.md),
+  written by [LabTextReport](LabTextReport.md) under `<outRoot>/<stamp>-text`.
+  `options.turns`, `options.mockSideCalls`, `options.judge`.
 - `LabService.NOT_REGISTERED`.
 
 ## Wiring

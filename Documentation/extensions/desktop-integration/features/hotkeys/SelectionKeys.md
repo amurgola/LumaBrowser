@@ -10,5 +10,6 @@ uses: [NativeKeys](NativeKeys.md) on Windows, [MacKeys](MacKeys.md) on macOS,
 SelectionClipboard documents). Any other platform gets `UNSUPPORTED`, a backend
 whose `supported` is false.
 
-- `SelectionKeys.create({ platform?, clipboard? })`: `clipboard` is Electron's
-  (LinuxKeys reads the primary selection through it).
+- `SelectionKeys.create({ platform?, clipboard?, bridge? })`: `clipboard` is
+  Electron's (LinuxKeys reads the primary selection through it); `bridge` is
+  the [X11Bridge](X11Bridge.md) of a Linux Wayland session, handed to LinuxKeys.

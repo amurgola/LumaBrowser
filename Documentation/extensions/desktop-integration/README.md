@@ -189,6 +189,8 @@ Built per feature by [FeatureDeps](FeatureDeps.md):
 | `speech` | [Speech](shared/Speech.md): also `pause()`, `resume()`, `playback()`, `onState(fn)` |
 | `overlay` | [ActivityOverlay](shared/ActivityOverlay.md): the desktop ring and island (`show(state, onAction)`) |
 | `hints` | [HintContributions](shared/HintContributions.md): add keys to the Ctrl+Alt+Shift shortcut hint (`add(featureId, provider)`) |
+| `shortcuts` | [GlobalShortcuts](shared/GlobalShortcuts.md): the global-shortcut backend to register on (`register(accelerator, callback)`, `unregister`): Electron, or the X11 bridge while it runs on Wayland; pass it to [HotkeyBindings](features/hotkeys/HotkeyBindings.md) as its `globalShortcut` |
+| `bridge` | the extension's [X11Bridge](features/hotkeys/X11Bridge.md) on a Linux Wayland session with XWayland, else null; the hotkeys feature starts and stops it |
 | `windows` | [AppWindows](shared/AppWindows.md): `getMainWindow()` (Electron BrowserWindow or null), `focusMainWindow()` (restore, show, raise; true when done) |
 | `browser` | the core BrowserService (`context.browser`) or null: `createTab(url, { kind: 'user' })`, `getMainWindow()`, tab queries |
 | `services` | `context.sharedServices`: `database`, `llm`, `browser`, `ttsServer`, `sttServer`, `activityLog`, `identity`, `dashboard` (DashboardService, `ensureTab({ activate })`; a live getter), ... (raw core services; prefer the shared services above) |
@@ -274,3 +276,4 @@ Declared optional in the manifest, so present only while installed and enabled:
 - [ui/DesktopRenderer](ui/DesktopRenderer.md), [ui/DesktopSettingsTab](ui/DesktopSettingsTab.md), [ui/SpeechPlayer](ui/SpeechPlayer.md)
 - [features/ping](features/ping/index.md)
 - [features/lumabyte](features/lumabyte/index.md): attach Luma to any window, a docked button and a grounded panel
+- [features/agent-run](features/agent-run/index.md): pause, continue or stop the agent's desktop run and answer its approvals from any app; the run on the ring and island

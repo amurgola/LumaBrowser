@@ -4,8 +4,9 @@
 
 Wires the [lumabyte feature](index.md).
 
-- `static settingsSchema()`, `static defaultParts()` (Electron's
-  `globalShortcut`, a [WindowProbe](WindowProbe.md), the chat router, a
+- `static settingsSchema()`, `static defaultParts(deps)` (the extension's
+  shortcut backend `deps.shortcuts`, [GlobalShortcuts](../../shared/GlobalShortcuts.md):
+  Electron, or the X11 bridge on Wayland; Electron's own without one, a [WindowProbe](WindowProbe.md), the chat router, a
   [ThreadStore](ThreadStore.md) at `<userData>/lumabyte/threads.json`,
   [LumabyteWindows](LumabyteWindows.md), and on Windows a
   [WindowContext](WindowContext.md) over desktop control's `Win32` capture, its

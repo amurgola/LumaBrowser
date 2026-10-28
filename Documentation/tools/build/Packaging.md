@@ -24,7 +24,8 @@ Identical to legacy except where the rebuild's layout needs it:
   stand-alone MCP server now requires. Natives electron-builder unpacks on its
   own (better-sqlite3, @napi-rs/canvas) are kept by the afterPack repack.
   Preloads and workers are not unpacked: Electron loads them through the archive.
-- Targets: win nsis + portable (x64), linux AppImage + deb (x64), mac dmg + zip
+- Targets: win nsis + portable (no arch in the config: the host's, or the CLI's
+  `--x64` / `--arm64`; CI builds both), linux AppImage + deb (x64), mac dmg + zip
   (hardened runtime, notarize, `build/entitlements.mac.plist`); NSIS includes
   `build/installer.nsh` and shows `LICENSE`.
 
@@ -63,13 +64,17 @@ with `--if-present` until the IDE port adds their npm scripts.
 
 ## CI (.github/workflows/build.yml)
 
-Manual dispatch, or a published GitHub release. Matrix ubuntu-latest / windows-2022 / macos-latest (arm64 only),
+Manual dispatch, or a published GitHub release. Matrix ubuntu-latest / windows-2022 (x64) /
+windows-11-arm (arm64: native, so `npm ci` installs the win32-arm64 prebuilds; the portable's
+`artifactName` is overridden on the CLI to carry `-arm64`) / macos-latest (arm64 only),
 Node 24 (better-sqlite3 13, used by the docs index build, needs 22+), electron-builder cache, `npm ci`, optional IDE plugins, unsigned unless
 the signing secrets are set, three build attempts, then
 `verify-asar.js --asar` on the leg's output and an artifact upload. A
 separate `addons` job builds the add-on zips once. Every build runs with
 `--publish never`. On a release event the build checks out the release's tag and
-a `release` job downloads every artifact and attaches the files to that release
+a `release` job downloads every artifact, folds the Windows arm64 leg's `latest.yml`
+into the x64 one ([UpdateManifestMerger](release/UpdateManifestMerger.md); electron-updater
+reads one manifest per platform) and attaches the files to that release
 (`gh release upload --clobber`, so a re-run replaces them).
 
 ## Docker (docker/, docker-compose*.yml)

@@ -5,8 +5,9 @@
 The artifact side panel docked right of the chat: a sandboxed iframe and the
 Monaco editor, laid out per type (`data-layout` `iframe`, `monaco`, or `split`
 for HTML source over its live preview). Its header is the `apHead` template
-(share, download, pop out, close) whose buttons resolve handlers on the chat's
-Resonant.
+(mark an area, share, download, pop out, close) whose buttons resolve handlers
+on the chat's Resonant; the brush (`.cm-ap-mark`) shows only for a loaded
+image artifact and opens the region editor on it (`ctx.regions.markArtifact`).
 
 ## Methods
 

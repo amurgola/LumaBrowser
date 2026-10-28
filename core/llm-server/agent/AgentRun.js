@@ -31,6 +31,7 @@ class AgentRun {
     this._steps = [];
     this._finalResponse = '';
     this._error = null;
+    this._timedOut = false;
     this._iterations = 0;
   }
 
@@ -136,6 +137,7 @@ class AgentRun {
     for (let i = 0; i < this._o.maxIterations; i++) {
       if (this._shouldStop(i)) break;
       this._iterations = i + 1;
+      this._emit({ type: 'iteration', iteration: i + 1, maxIterations: this._o.maxIterations, elapsedMs: this._clock.elapsedMs() });
       await this._prepareRequest(i, noticeRun);
       const result = await this._complete(i);
       if (!result.success) { this._failWith(i, result.error); break; }
@@ -146,6 +148,7 @@ class AgentRun {
   _shouldStop(i) {
     if (this._clock.expired()) {
       this._error = AgentLoopText.timedOut(this._clock.timeoutMs, i, this._o.maxIterations, this._toolCalls);
+      this._timedOut = true;
       return true;
     }
     if (this._aborting()) { this._error = 'aborted'; return true; }
@@ -216,6 +219,7 @@ class AgentRun {
       steps: this._steps,
       systemPrompt: this._systemPrompt,
       error: this._error,
+      timedOut: this._timedOut,
       overflowRecoveries: this._recovery.count,
       compactions: this._compactor.count,
     };

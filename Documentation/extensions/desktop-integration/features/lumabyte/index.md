@@ -31,8 +31,9 @@ are Win32). Wiring: [LumabyteFeature](LumabyteFeature.md).
 - **Doing things**: ask it to act ("go into the out folder", "search for
   invoices") and it clicks, types, presses keys and scrolls in that window,
   showing each step, then answers about the result
-  ([LumabyteActions](LumabyteActions.md)). Needs desktop control allowed in the
-  LLM tab (Visual grounding card) and the `actions` setting on.
+  ([LumabyteActions](LumabyteActions.md)), up to `maxActions` per reply. Needs
+  desktop control allowed in the LLM tab (Visual grounding card) and the
+  `actions` setting on.
 - **Reading files**: ask about a file ("summarize Andy.md") and it reads its text
   (or lists a folder) instead of opening it in an app; names resolve against the
   folder open in File Explorer ([LumabyteFiles](LumabyteFiles.md)). Needs only the
@@ -59,6 +60,7 @@ are Win32). Wiring: [LumabyteFeature](LumabyteFeature.md).
 | `windowText` | bool | true (UI Automation control names and roles) |
 | `actions` | bool | true (act in the window when asked, through desktop control) |
 | `files` | bool | true (read a file's text or list a folder when asked) |
+| `maxActions` | number (1 to 30) | 12 (clicks, keys and scrolls per reply before Lumabyte looks again; Ctrl+Alt+Shift+Escape stops a run) |
 | `thinking` | bool | false (reasoning off for quicker replies) |
 
 ## Files

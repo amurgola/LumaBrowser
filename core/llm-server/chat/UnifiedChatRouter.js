@@ -27,6 +27,7 @@ const ModeReaction = require('./router/ModeReaction');
 const ChatModeTurn = require('./router/ChatModeTurn');
 const TurnConversation = require('./router/TurnConversation');
 const AttachmentArtifacts = require('./router/AttachmentArtifacts');
+const EditRegionRecorder = require('./router/EditRegionRecorder');
 const ChatTurn = require('./router/ChatTurn');
 const ProxyTurns = require('./router/ProxyTurns');
 const ArtifactAccess = require('./router/ArtifactAccess');
@@ -97,6 +98,18 @@ class UnifiedChatRouter {
 
   respondApproval(decision) {
     try { return !!(this.agentBridge && this.agentBridge.respondApproval(decision)); } catch (_) { return false; }
+  }
+
+  addApprovalPresenter(presenter) {
+    return this.agentBridge.addApprovalPresenter(presenter);
+  }
+
+  addTakeoverPresenter(presenter) {
+    return this.agentBridge.addTakeoverPresenter(presenter);
+  }
+
+  onRunProgress(listener) {
+    return this.agentBridge.onRunProgress(listener);
   }
 
 
@@ -183,6 +196,7 @@ class UnifiedChatRouter {
       getDocs: typeof seams.getDocsKnowledgeBase === 'function' ? seams.getDocsKnowledgeBase : () => null,
       conversation: new TurnConversation({ chatStore, llmServerService: this.llmServerService }),
       attachments: new AttachmentArtifacts({ chatStore, getAgentDeps }),
+      regions: new EditRegionRecorder({ chatStore }),
       modes: new ChatModeTurn({ chatStore, modeRegistry: seams.modeRegistry || ChatModeRegistry.shared }),
       reaction: new ModeReaction({ chatStore }),
       contextWindow: this._window,

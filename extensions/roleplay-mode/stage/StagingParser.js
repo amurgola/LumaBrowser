@@ -1,9 +1,14 @@
 const StagingPrompt = require('./StagingPrompt');
+const StoryLedger = require('../world/StoryLedger');
 
 class StagingParser {
   static ACTION_MAX = 160;
   static FOCUS_MAX = 2;
   static PROPS_MAX = 3;
+  static EVENTS_MAX = 6;
+  static THREADS_MAX = 4;
+  static WHO_MAX = 4;
+  static CLOCK_ADVANCES = ['none', 'minutes', 'hours', 'next-morning', 'days'];
 
   static parse(text) {
     const obj = StagingParser.sliceJson(text);
@@ -13,6 +18,7 @@ class StagingParser {
       characters: StagingParser._newCharacters(obj),
       location,
       currentState: StagingParser._currentState(obj, location),
+      chronicle: StagingParser._chronicle(obj),
       shot: obj.shot ? StagingParser.normalizeShot(obj.shot) : null,
     };
   }
@@ -91,12 +97,42 @@ class StagingParser {
       name: String(c.name || '').trim(),
       present: !(c.present === false || c.present === 'false'),
       emotion: String(c.emotion || c.mood || '').trim(),
+      intent: String(c.intent || '').trim(),
+      condition: c.condition === undefined || c.condition === null ? null : String(c.condition).trim(),
+      bondUser: String(c.bondUser || c.bond || '').trim(),
+      bondChange: String(c.bondChange || '').trim(),
+      beat: String(c.beat || '').trim(),
+      leftTo: String(c.leftTo || '').trim(),
       outfit: String(c.outfit || c.clothing || c.clothes || '').trim(),
       slots: StagingParser.normalizeSlots(c.slots),
       head: String(c.head || c.headwear || '').trim(),
       face: String(c.face || c.eyewear || c.facewear || '').trim(),
       outfitChanged: StagingParser._true(c.outfitChanged) || StagingParser._true(c.changed),
     };
+  }
+
+  static _chronicle(obj) {
+    const hasAny = Array.isArray(obj.events) || (obj.clock && typeof obj.clock === 'object') || (obj.threads && typeof obj.threads === 'object');
+    if (!hasAny) return null;
+    const events = (Array.isArray(obj.events) ? obj.events : [])
+      .map((e) => (e && typeof e === 'object' ? {
+        kind: StoryLedger.KINDS.indexOf(String(e.kind || '').toLowerCase()) >= 0 ? String(e.kind).toLowerCase() : 'event',
+        text: String(e.text || e.summary || '').trim(),
+        who: StagingParser._strings(e.who, StagingParser.WHO_MAX),
+      } : null))
+      .filter((e) => e && e.text)
+      .slice(0, StagingParser.EVENTS_MAX);
+    const clock = obj.clock && typeof obj.clock === 'object' ? {
+      advance: StagingParser.CLOCK_ADVANCES.indexOf(String(obj.clock.advance || '').toLowerCase()) >= 0 ? String(obj.clock.advance).toLowerCase() : 'none',
+      days: Number(obj.clock.days) || 0,
+      timeOfDay: String(obj.clock.timeOfDay || '').trim(),
+      weather: obj.clock.weather === undefined || obj.clock.weather === null ? null : String(obj.clock.weather).trim(),
+    } : null;
+    const threads = obj.threads && typeof obj.threads === 'object' ? {
+      opened: StagingParser._strings(obj.threads.opened, StagingParser.THREADS_MAX),
+      closed: StagingParser._strings(obj.threads.closed, StagingParser.THREADS_MAX),
+    } : { opened: [], closed: [] };
+    return { events, clock, threads };
   }
 
   static _strings(list, max) {

@@ -32,7 +32,8 @@ The model asks for actions with a block alone in its reply:
 - `observe(hwnd)`: the numbered elements, or null.
 - `canRead()`, `folderOf(hwnd, { exe, title })`: whether reads are possible, and
   the folder open in File Explorer (null otherwise).
-- `run(hwnd, actions, onStep, { folder })`: up to `MAX_ACTIONS` (5) in order,
+- `run(hwnd, actions, onStep, { folder, max })`: up to `max` (`cap(max)`: a
+  whole number from 1, else `MAX_ACTIONS`, 12) in order,
   `SETTLE_MS` (700) after each window action, stopping at the first failure;
   reads resolve names against `folder` and carry their `output`; `onStep({ index, text, state })`
   with `run`, then `done` or `fail`.

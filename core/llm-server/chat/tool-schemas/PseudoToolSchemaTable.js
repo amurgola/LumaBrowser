@@ -71,6 +71,10 @@ class PseudoToolSchemaTable {
         artifactId: { type: 'string', description: 'Id of the source image artifact. Each edit is saved as a new version and the source is kept. When the user rejects the last edit, pass the id of the version BEFORE it (the catalog lists earlier version ids), not the latest.' },
         prompt: { type: 'string', description: 'The edit to apply, worded as the EDIT MODEL guide says: an instruction for an edit model, the full final image for img2img' },
         strength: { type: 'number', description: 'img2img only, an edit model ignores it: 0.35-0.5 small recolor, 0.8-0.9 add a feature' },
+        regionId: {
+          type: 'string',
+          description: 'A region the user painted on the source image (the artifact catalog lists each as "marked region rgn_…" with the user\'s note). Only that area is redrawn; the rest is kept pixel for pixel, and the frame stays "match". A region marked in the message being answered is used on its image automatically; pass "none" to edit the whole image instead.',
+        },
         frame: {
           type: 'string',
           enum: ['match', 'square', 'portrait', 'landscape', 'tall', 'wide'],

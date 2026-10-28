@@ -12,9 +12,12 @@ unpeeks. A fired shortcut (`suppress()`) hides it and keeps it away until the
 modifiers are released, so the action's own island takes over.
 
 Electron has no global key-up event, so key state is polled: the modifier
-virtual keys through `NativeKeys.heldModifiers()` (GetAsyncKeyState) every
-`POLL_MS` (40 ms), Windows only, and only while the feature runs with
-`shortcutHints` and `overlayIsland` on. The timer is `unref`'d.
+virtual keys through the platform backend's `heldModifiers()` (GetAsyncKeyState
+on Windows, CGEventSource flags on macOS, XQueryKeymap on Linux X11, and on
+Wayland the [X11 bridge](X11Bridge.md)'s report of the same map through
+XWayland; without the bridge the hint is off there) every `POLL_MS` (40 ms), and
+only while the feature runs with `shortcutHints` and `overlayIsland` on. The
+timer is `unref`'d. `running` says whether the poll is on.
 
 ## Methods
 

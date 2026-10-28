@@ -20,13 +20,21 @@ jobs:
               dist/latest*.yml
             asar_path: dist/linux-unpacked/resources/app.asar
           - os: windows-2022
-            build_cmd: npm run build:win -- --publish never
+            build_cmd: npm run build:win -- --x64 --publish never
             artifact_name: windows-installer
             artifact_path: |
               dist/*.exe
               dist/*.exe.blockmap
               dist/latest*.yml
             asar_path: dist/win-unpacked/resources/app.asar
+          - os: windows-11-arm
+            build_cmd: npm run build:win -- --arm64 --publish never -c.portable.artifactName=LumaBrowser-${version}-arm64-portable.exe
+            artifact_name: windows-arm64-installer
+            artifact_path: |
+              dist/*.exe
+              dist/*.exe.blockmap
+              dist/latest*.yml
+            asar_path: dist/win-arm64-unpacked/resources/app.asar
           - os: macos-latest
             build_cmd: npm run build:mac -- --arm64 --publish never
             artifact_name: macos-arm64
@@ -62,7 +70,7 @@ jobs:
             ~/.cache/electron-builder
             ~/AppData/Local/electron-builder/Cache
             ~/Library/Caches/electron-builder
-          key: electron-builder-${{ runner.os }}
+          key: electron-builder-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install dependencies
         run: npm ci
@@ -80,7 +88,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             ide/jetbrains/.intellijPlatform
-          key: jetbrains-plugin-${{ runner.os }}-${{ hashFiles('ide/jetbrains/build.gradle.kts', 'ide/jetbrains/gradle.properties', 'ide/jetbrains/gradle/wrapper/gradle-wrapper.properties') }}
+          key: jetbrains-plugin-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ide/jetbrains/build.gradle.kts', 'ide/jetbrains/gradle.properties', 'ide/jetbrains/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build JetBrains plugin
         run: npm run build:jetbrains --if-present -- --force --require
@@ -173,10 +181,19 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Merge the Windows update manifests
+        run: |
+          node scripts/merge-update-manifests.js \
+            --into artifacts/windows-installer/latest.yml \
+            artifacts/windows-arm64-installer/latest.yml
 
       - name: Point update manifests at the release assets
         env:

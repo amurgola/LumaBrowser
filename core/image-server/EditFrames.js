@@ -31,7 +31,7 @@ class EditFrames {
     return { width: EditFrames._alignNearest(width, grid), height: EditFrames._alignNearest(height, grid) };
   }
 
-  static resolveFrame({ frame, srcDims, native, grid = EditFrames.DEFAULT_GRID } = {}) {
+  static resolveFrame({ frame, srcDims, native, grid = EditFrames.DEFAULT_GRID, fill = false } = {}) {
     const g = Number(grid) > 1 ? Number(grid) : EditFrames.DEFAULT_GRID;
     const nativeSize = EditFrames._nativeSize(native);
     const name = EditFrames.NAMES.includes(frame) ? frame : 'match';
@@ -39,7 +39,7 @@ class EditFrames {
       const area = nativeSize.width * nativeSize.height;
       return { ...EditFrames.sizeForAspect(EditFrames.ASPECTS[name], area, g), frame: name, scaled: false };
     }
-    return EditFrames._resolveMatch(srcDims, nativeSize, g);
+    return EditFrames._resolveMatch(srcDims, nativeSize, g, fill);
   }
 
   static listFrames({ native, grid = EditFrames.DEFAULT_GRID } = {}) {
@@ -51,7 +51,7 @@ class EditFrames {
     });
   }
 
-  static _resolveMatch(srcDims, nativeSize, grid) {
+  static _resolveMatch(srcDims, nativeSize, grid, fill = false) {
     const sw = Number(srcDims && srcDims.width);
     const sh = Number(srcDims && srcDims.height);
     if (!(sw > 0 && sh > 0)) return EditFrames._nativeCanvas(nativeSize, grid);
@@ -59,8 +59,9 @@ class EditFrames {
     const srcArea = sw * sh;
     const outOfBand = srcArea < nativeArea * EditFrames.MATCH_MIN_AREA_FRACTION
       || srcArea > nativeArea * EditFrames.MATCH_MAX_AREA_FRACTION;
-    const targetArea = outOfBand ? nativeArea : srcArea;
-    return { ...EditFrames.sizeForAspect([sw, sh], targetArea, grid), frame: 'match', scaled: outOfBand };
+    const scaled = fill || outOfBand;
+    const targetArea = scaled ? nativeArea : srcArea;
+    return { ...EditFrames.sizeForAspect([sw, sh], targetArea, grid), frame: 'match', scaled };
   }
 
   static _nativeCanvas(nativeSize, grid) {

@@ -20,7 +20,8 @@ class ActivityPages {
 html,body{margin:0;height:100%;background:transparent;overflow:hidden;pointer-events:none}
 .ring{position:fixed;inset:0;opacity:0;transition:opacity .45s ease}
 .ring.on{opacity:1}
-/* The lit area: the whole monitor, or a picked window (inset by the pad so its glow can spill outside). */
+/* The lit area: the whole monitor, or a picked window (inset by the pad so its glow can spill outside; a side
+   the screen cut the pad off gets its own inset from render(), 0 at the edge). */
 .box{position:absolute;inset:0}
 .ring.framed .box{inset:${pad}px;border-radius:10px}
 /* The edge light: brightest along the top, thinning down the sides, barely there at the bottom. */
@@ -91,6 +92,7 @@ html,body{margin:0;height:100%;background:transparent;overflow:hidden;pointer-ev
 (function(){var lock=null;
 window.__ring={render:function(s){var r=document.getElementById('ring');s=s||{};
 var cls='ring'+(s.on?' on':'')+(s.mode?' '+s.mode:'')+(s.framed?' framed':'');
+var box=r.querySelector('.box');if(box){box.style.inset=(s.framed&&s.inset)?s.inset.map(function(v){return v+'px'}).join(' '):''}
 // A new aim (another window, or back to the monitor) replays the ignition.
 if(s.mode==='armed'&&s.lock!==lock&&lock!==null){r.className=cls.replace(' armed','');void r.offsetWidth;}
 lock=s.mode==='armed'?s.lock:null;
@@ -142,6 +144,7 @@ svg .fill{fill:currentColor;stroke:none}
   font-size:var(--text-sm,12px);white-space:nowrap;transition:background .12s ease,color .12s ease}
 .chip:hover{background:var(--surface-active,rgba(255,255,255,.07));color:var(--text-primary,#e6e9f2)}
 .chip{animation:chipIn .36s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:calc(var(--i,0) * 45ms + 90ms)}
+.chip.nokey{padding-left:10px}
 .chip.off kbd,.chip.off span{opacity:.4}
 .chip.off:hover{background:transparent;color:var(--text-secondary,#8a95ad)}
 @keyframes chipIn{from{opacity:0;transform:translateY(5px) scale(.94)}to{opacity:1;transform:none}}
@@ -193,8 +196,8 @@ pill.className='pill'+(s.visible?' in':'')+' '+(s.kind||'')+(s.paused?' paused':
 document.getElementById('hint').textContent=s.hint||'';
 var k=document.getElementById('keys');var ksig=JSON.stringify(s.keys||[]);
 if(k.dataset.sig!==ksig){k.dataset.sig=ksig;k.innerHTML='';hover=null;(s.keys||[]).forEach(function(key,i){var c=document.createElement('button');
-c.className='chip'+(key.disabled?' off':'');c.style.setProperty('--i',i);if(key.disabled)c.setAttribute('aria-disabled','true');
-c.innerHTML='<kbd>'+esc(key.key)+'</kbd><span>'+esc(key.label)+'</span>';
+c.className='chip'+(key.disabled?' off':'')+(key.key?'':' nokey');c.style.setProperty('--i',i);if(key.disabled)c.setAttribute('aria-disabled','true');
+c.innerHTML=(key.key?'<kbd>'+esc(key.key)+'</kbd>':'')+'<span>'+esc(key.label)+'</span>';
 c.addEventListener('mouseenter',function(){hover=key.id;caption(key.note||key.label);});
 c.addEventListener('mouseleave',function(){if(hover===key.id){hover=null;caption(base);}});
 c.addEventListener('click',function(){if(!key.disabled)emit(key.id);});k.appendChild(c);});}

@@ -3,7 +3,8 @@
 `core/llm-server/chat/bridge/tools/handlers/EditImageHandler.js`
 
 `edit_image`: edits an image artifact and saves the next version of its chain.
-A [ChatToolHandler](ChatToolHandler.md).
+A [ChatToolHandler](ChatToolHandler.md). A region the user painted confines
+the edit ([EditRegion](../media/EditRegion.md)).
 
 ## Methods
 
@@ -20,4 +21,17 @@ A [ChatToolHandler](ChatToolHandler.md).
   [MediaRenderOutcome](../media/MediaRenderOutcome.md) (with the stderr tail).
   Success: `createVersion` and a message naming version, id, canvas, frame,
   references used, dropped or ignored.
+- Regions: `regionId` (or the region painted on this image in the message
+  being answered) resolves through `EditRegion.resolve` (an unknown id or one
+  on another image is an error). With a region the frame is forced to `match`
+  (a requested reshape is reported ignored), the img2img fallback gets the
+  grown inpaint `mask`, an edit model's prompt gets the region hint appended,
+  and the render goes through `region.finish` before `createVersion`, so the
+  saved version is the source with only the painted area changed when a bitmap
+  codec is available. A small region is edited on its close-up
+  ([RegionCrop](../../../../../image-server/region/RegionCrop.md)): the
+  picture sent (`refImages[0]` or `initImage`) is `region.sourceBytes()`, the
+  mask the close-up's part, and the canvas is matched to `region.canvasDims`
+  with `fill`, so the model's whole native area goes to the detail; the
+  composite pastes the result back. The message carries `region.summary`.
 - `NO_SERVER`, `NO_ARTIFACT`, `DEFAULT_STRENGTH`.

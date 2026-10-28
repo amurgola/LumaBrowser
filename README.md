@@ -44,6 +44,7 @@ Download the latest build from [GitHub Releases](https://github.com/amurgola/Lum
 | Platform | File |
 |---|---|
 | Windows x64 | Installer or portable `.exe` |
+| Windows arm64 (Snapdragon X) | Installer or portable `.exe` named `-arm64` |
 | Linux x64 | AppImage |
 | macOS (Apple Silicon) | `.dmg` |
 
@@ -130,6 +131,22 @@ The agent opens its own tabs, reads the pages and answers. Your tabs stay yours.
 - **Tool Forge**: the agent writes, tests and publishes new sandboxed tools
   that only get the network access they declare.
 - Connect outside MCP servers over stdio, streamable HTTP or SSE.
+
+**Computer use that stays on your machine**
+- **Desktop control** (Windows): the agent sees and operates other apps,
+  accessibility tree first and vision second, with a small local grounding
+  model finding what the tree does not list. No per-step cost: a long task is
+  free to run as long as it needs.
+- Screenshots never leave the machine, and a window is captured on its own,
+  never the whole screen with whatever else is open.
+- It works inside your own logged-in apps and browser profile, so there is no
+  second login and no bot check for being a headless browser.
+- Clicks land where they should on 4K, high-DPI and multi-monitor setups:
+  everything is measured in physical pixels and mapped back per window.
+- **Ctrl+Alt+Shift** in any app: the screen edge lights the window the agent is
+  working on, the island says what it is doing, and Space pauses, Escape
+  stops, Y and N answer its approvals. Typing into a password field or acting
+  in a checkout always asks first.
 
 **Automation and triggers**
 - Forward web notifications from any tab to a webhook.

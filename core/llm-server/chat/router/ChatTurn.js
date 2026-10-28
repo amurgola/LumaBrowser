@@ -2,6 +2,7 @@ const ChatModelRef = require('./ChatModelRef');
 const ChatStyleDocs = require('./ChatStyleDocs');
 const DocsSourceGrant = require('./DocsSourceGrant');
 const MessageImages = require('./MessageImages');
+const ModeTurnMessages = require('./ModeTurnMessages');
 const TurnStream = require('./TurnStream');
 
 class ChatTurn {
@@ -26,11 +27,11 @@ class ChatTurn {
     if (!args.nested) this._supersedePrevious();
     const opened = this._openConversation();
     if (opened.error) return { success: false, error: opened.error };
-    const { choicesOn, userRow, userArtifacts, images } = this._persistUserSide();
+    const { choicesOn, userRow, userArtifacts, userRegions, images } = this._persistUserSide();
     let runMessages = await this._applyMode();
     const asst = this._addPlaceholder();
     if (!asst) return { success: false, error: 'Message to regenerate was not found.' };
-    this._announce(asst, userRow, userArtifacts);
+    this._announce(asst, userRow, userArtifacts, userRegions);
     this._openStream(asst);
     runMessages = await this._d.compaction.maybeCompact(runMessages, this._modelRef, this._mode.turn, this._stream.hooks, this._convId);
     runMessages = this._withStyleDocs(runMessages, choicesOn);
@@ -91,12 +92,22 @@ class ChatTurn {
     const images = MessageImages.imagesOf(a.attachments);
     const userRow = conversation.addUserMessage(this._convId, a.userMessage, this._modelRef, !!a.regenerateMessageId, a.editMessageId);
     const userArtifacts = this._d.attachments.persist(images, this._convId, userRow);
+    const userRegions = this._userRegions(a.attachments, images, userArtifacts, userRow);
     conversation.rememberModel(this._convId, this._selectedRef);
-    return { choicesOn, userRow, userArtifacts, images };
+    return { choicesOn, userRow, userArtifacts, userRegions, images };
+  }
+
+  _userRegions(attachments, images, artifacts, userRow) {
+    const recorder = this._d.regions;
+    if (!recorder || !Array.isArray(attachments)) return [];
+    return recorder.record({ attachments, images, artifacts, userRow });
   }
 
   async _applyMode() {
-    this._mode = await this._d.modes.resolve({ conversationId: this._convId, messages: this._args.messages, modelRef: this._modelRef });
+    this._mode = await this._d.modes.resolve({
+      conversationId: this._convId, messages: this._args.messages, modelRef: this._modelRef,
+      contextWindow: this._d.contextWindow.forRef(this._modelRef),
+    });
     const turn = this._mode.turn;
     if (!turn) return this._args.messages;
     if (turn.agent && !this._agentMode) {
@@ -105,8 +116,13 @@ class ChatTurn {
     }
     if (typeof turn.temperature === 'number' && this._temperature == null) this._temperature = turn.temperature;
     if (turn.modelRef && typeof turn.modelRef === 'string' && turn.modelRef !== this._selectedRef) this._pinModeModel(turn.modelRef);
-    if (turn.systemPrompt && !this._agentMode) return [{ role: 'system', content: String(turn.systemPrompt) }, ...this._args.messages];
-    return this._args.messages;
+    return ModeTurnMessages.apply(turn, this._args.messages, { prependSystem: !this._agentMode });
+  }
+
+  _withModeSamplers(extra) {
+    const samplers = this._mode.turn && this._mode.turn.samplers;
+    if (!samplers || typeof samplers !== 'object') return extra;
+    return { ...(extra || {}), samplerOverrides: { ...samplers } };
   }
 
   _pinModeModel(ref) {
@@ -136,12 +152,13 @@ class ChatTurn {
     });
   }
 
-  _announce(asst, userRow, userArtifacts) {
+  _announce(asst, userRow, userArtifacts, userRegions = []) {
     this._args.send('meta', {
       conversationId: this._convId,
       assistantMessageId: asst.id,
       userMessageId: userRow ? userRow.id : undefined,
       userArtifacts: userArtifacts.length ? userArtifacts : undefined,
+      userRegions: userRegions.length ? userRegions : undefined,
     });
   }
 
@@ -209,7 +226,7 @@ class ChatTurn {
       hooks: this._stream.hooks,
       modeTurn: this._mode.turn,
       images,
-      llmExtra: this._withSettingsRef(dial.agentExtra),
+      llmExtra: this._withSettingsRef(this._withModeSamplers(dial.agentExtra)),
       choicesOn,
       voiceOn: a.voice === true,
       docsGrant: this._docsGrant,
@@ -221,14 +238,18 @@ class ChatTurn {
   }
 
   static _modelBudget(overrides) {
-    const pool = overrides && overrides.maxParallelToolCalls;
-    return typeof pool === 'number' ? { maxParallelToolCalls: pool } : null;
+    const o = overrides || {};
+    const out = {};
+    if (typeof o.maxParallelToolCalls === 'number') out.maxParallelToolCalls = o.maxParallelToolCalls;
+    if (typeof o.agentTimeoutMinutes === 'number') out.userTimeoutMs = o.agentTimeoutMinutes * 60 * 1000;
+    if (typeof o.agentMaxIterations === 'number') out.userMaxIterations = o.agentMaxIterations;
+    return Object.keys(out).length ? out : null;
   }
 
   _dispatchPlain(asst, dial, images) {
     const trace = { conversationId: this._convId, turnId: asst.id, callType: 'chat' };
     return this._d.dispatcher.dispatch(this._modelRef, dial.messages, this._temperature, this._stream.hooks, images, null,
-      { ...(this._withSettingsRef(dial.plainExtra) || {}), trace });
+      { ...(this._withSettingsRef(this._withModeSamplers(dial.plainExtra)) || {}), trace });
   }
 
   _withSettingsRef(extra) {

@@ -1,5 +1,7 @@
 # HintTarget
 
+On KDE Wayland the same role is played by [KWinHintTarget](KWinHintTarget.md), fed by KWin's activation reports instead of a pointer hit test.
+
 `extensions/desktop-integration/features/hotkeys/HintTarget.js`
 
 The window the shortcut hint ([ChordHint](ChordHint.md)) is aimed at. While the

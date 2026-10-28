@@ -100,7 +100,7 @@ class AgentLoopText {
     const minutes = Math.round(timeoutMs / 60000 * 10) / 10;
     return `Execution timed out after ${minutes} minutes `
       + `(${iterationsDone} of ${maxIterations} iterations): ${AgentLoopText._completedCalls(toolCalls)}. `
-      + 'Send "continue" to pick up from here.';
+      + 'Send "continue" to pick up from here, or raise "Run timeout" in this model\'s Tune settings.';
   }
 
   static summaryRequest(toolCalls, finalResponse) {

@@ -39,3 +39,10 @@ None directly. The entry `renderer.js` writes `window.__ext_timed_tasks`
 (`{ activate, deactivate }`), the shell's extension renderer contract. The
 classes it builds read `window.llmSlotAPI`, `window.electronAPI` and
 `window.LumaModal` (through Dialogs).
+
+## Unattended
+
+The create form says under the prompt (`#tt-bar-unattended`) that a task runs
+unattended: tools that change things run without asking, desktop control
+included once it is allowed, and that Ctrl+Alt+Shift+Escape stops a desktop
+run.

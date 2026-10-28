@@ -5,6 +5,8 @@ import TriggerText from './TriggerText.js';
 const esc = HtmlEscaper.escape;
 
 export default class TriggerStatusLines {
+  static UNATTENDED = 'runs state-changing tools unattended (desktop control too, when allowed)';
+
   static REFUSED = {
     duplicate: 'duplicate delivery', unarmed: 'refused: not armed', rate_limited: 'rate limited', rejected: 'rejected',
     no_secret: 'refused: secret not set', queue_dropped: 'dropped: queue full', dropped: 'dropped', error: 'failed',
@@ -38,6 +40,7 @@ export default class TriggerStatusLines {
     if (s.cooldownMs) bits.push('cooldown ' + Math.round(s.cooldownMs / 1000) + ' s');
     if (s.batch) bits.push('batch ' + Math.round(s.batch.windowMs / 1000) + ' s / ' + s.batch.max);
     if (s.approval === 'ask') bits.push('asks before state-changing tools' + (Array.isArray(s.approvedTools) && s.approvedTools.length ? ' (always allowed: ' + s.approvedTools.join(', ') + ')' : ''));
+    else bits.push(TriggerStatusLines.UNATTENDED);
     if (s.quietHours) bits.push(TriggerStatusLines._quietHours(s.quietHours));
     if (t.kind === 'webhook' && (s.preset === 'slack' || s.preset === 'github')) bits.push(s.botGuard === false ? 'bot loop guard OFF' : 'ignores bot messages');
     if (s.memory) bits.push('remembers' + (s.memory.runs ? ' the last ' + s.memory.runs + ' runs' : '') + (t.memory ? ' · notes saved' : ''));

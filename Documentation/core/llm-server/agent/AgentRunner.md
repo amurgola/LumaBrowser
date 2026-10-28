@@ -25,12 +25,14 @@ run would send.
 ## Run result
 
 `{ finalResponse, tabId, createdTab, iterations, durationMs, toolCalls, steps,
-systemPrompt, error, overflowRecoveries, compactions }`, plus `summary` when
+systemPrompt, error, timedOut, overflowRecoveries, compactions }`, plus `summary` when
 the run ended with an answer and no error, and `screenshot` (data URL) when
 `includeScreenshot` was set. `toolCalls` is `[{ tool, params, durationMs,
 success, error }]`; `steps` is the per-iteration trace (tool steps, nudges,
 compactions, overflow recoveries, notice relays, `llmError`). `error` is
-`null`, `'aborted'`, the timeout report, or the completion error.
+`null`, `'aborted'`, the timeout report, or the completion error; `timedOut`
+is true when the wall clock ended the run (the chat offers the Run timeout
+setting on it).
 
 ## Events (`onEvent`)
 

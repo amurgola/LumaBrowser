@@ -6,7 +6,7 @@ Pairs Chromium GPU adapters with nvidia-smi devices and Windows registry rows.
 
 ## Methods
 
-- `vendorName(vendorId)` NVIDIA, AMD, Intel, Apple, Microsoft, else `0x<hex>`;
+- `vendorName(vendorId)` NVIDIA, AMD, Intel, Apple, Microsoft, Qualcomm, else `0x<hex>`;
   null for null.
 - `pciKey(vendorId, deviceId)` the `vendor:device` key.
 - `indexNvidiaByName(cuda)`, `indexNvidiaByPci(cuda)` Maps (lower-cased name,

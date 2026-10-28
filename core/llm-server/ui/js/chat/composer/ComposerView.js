@@ -78,6 +78,11 @@ export default class ComposerView {
     if (ta) ta.focus();
   }
 
+  text() {
+    const ta = this._ctx.root.querySelector('.cm-composer textarea');
+    return ta ? ta.value : '';
+  }
+
   clearReplyBox() {
     const ta = this._ctx.els.composerBar.querySelector('.cm-composer textarea');
     if (ta) { ta.value = ''; ta.style.height = 'auto'; }
@@ -123,10 +128,10 @@ export default class ComposerView {
     else btn.hidden = true;
   }
 
-  openSetup() {
+  openSetup(page = 'settings') {
     this._ctx.switchToSetup();
     const nav = this._ctx.collaborators.setupNav;
-    if (nav) { try { nav.go('settings'); } catch (_) {} }
+    if (nav) { try { nav.go(page || 'settings'); } catch (_) {} }
   }
 
   _wireOpenSetup(btn) {

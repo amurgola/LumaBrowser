@@ -7,7 +7,9 @@ Resolves a named edit frame (`match`, `square`, `portrait`, `landscape`, `tall`,
 
 ## Methods
 
-- `EditFrames.resolveFrame({ frame, srcDims, native, grid = 64 })` returns
+- `EditFrames.resolveFrame({ frame, srcDims, native, grid = 64, fill = false })`
+  (`fill`: a match canvas takes the native area whatever the source's size,
+  marked `scaled`; the close-up of a small painted region asks for it) returns
   `{ width, height, frame, scaled }`. Unknown or missing frames are `match`.
   Named frames get the model's native area at the frame's aspect. `match`
   follows the source size, pulled into the band [0.25, 1.2] x native area

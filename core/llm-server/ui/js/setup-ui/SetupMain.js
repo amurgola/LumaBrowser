@@ -1,6 +1,7 @@
 import AdvancedView from './advanced/AdvancedView.js';
 import DefaultsCard from './defaults/DefaultsCard.js';
 import DiagnosticsLoader from './diagnostics/DiagnosticsLoader.js';
+import DriverInstallPanel from './diagnostics/DriverInstallPanel.js';
 import HostFixActions from './diagnostics/HostFixActions.js';
 import SetupExtensionTabs from './extensions/SetupExtensionTabs.js';
 import FitTestController from './fit-test/FitTestController.js';
@@ -53,6 +54,7 @@ export default class SetupMain {
     cards.models = new ModelsCard(ctx, this._modelList);
     cards.defaults = new DefaultsCard(ctx);
     cards.plan = new PlanExplainer(ctx);
+    cards.drivers = new DriverInstallPanel({ api: ctx.api, doc: ctx.doc, reload: () => this.load({ force: true }) });
     this._library = new LibraryRefresher(ctx);
     ctx.refreshLibrary = (opts) => this._library.request(opts);
     this._loader = new DiagnosticsLoader(ctx);
@@ -71,6 +73,7 @@ export default class SetupMain {
     this._clickRouter = new SetupClickRouter(ctx, {
       rows: ctx.cards.defaults.rows,
       hostFixes: new HostFixActions({ api: ctx.api, reload: () => this.load() }),
+      driverInstall: ctx.cards.drivers,
       rename: new ModelRename(ctx),
       runtimeActions: ctx.cards.runtimeActions,
       modelSearch: this._modelSearch,

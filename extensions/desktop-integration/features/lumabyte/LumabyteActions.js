@@ -1,5 +1,5 @@
 class LumabyteActions {
-  static MAX_ACTIONS = 5;
+  static MAX_ACTIONS = 12;
   static SETTLE_MS = 700;
   static TYPES = ['click', 'type', 'key', 'scroll', 'read'];
   static DESKTOP_TYPES = ['click', 'type', 'key', 'scroll'];
@@ -33,10 +33,10 @@ class LumabyteActions {
     return r && r.success && r.data ? String(r.data.text || '') : null;
   }
 
-  async run(hwnd, actions, onStep = () => {}, { folder = null } = {}) {
+  async run(hwnd, actions, onStep = () => {}, { folder = null, max = LumabyteActions.MAX_ACTIONS } = {}) {
     const d = this._getDesktop();
     const results = [];
-    for (const [index, action] of actions.slice(0, LumabyteActions.MAX_ACTIONS).entries()) {
+    for (const [index, action] of actions.slice(0, LumabyteActions.cap(max)).entries()) {
       const text = LumabyteActions.describe(action);
       onStep({ index, text, state: 'run' });
       let r;
@@ -52,6 +52,11 @@ class LumabyteActions {
       if (action.type !== 'read') await this._sleep(LumabyteActions.SETTLE_MS);
     }
     return results;
+  }
+
+  static cap(max) {
+    const n = Math.floor(Number(max));
+    return Number.isFinite(n) && n >= 1 ? n : LumabyteActions.MAX_ACTIONS;
   }
 
   async _read(a, folder) {

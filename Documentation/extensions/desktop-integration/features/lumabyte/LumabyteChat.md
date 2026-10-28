@@ -34,5 +34,5 @@ One grounded turn.
   Explorer adds the open folder and selection (`[Open folder: ...]`,
   `[Selected: ...]`), so a bare name like `Andy.md` resolves; what was read goes
   into the `followUp`.
-- `static systemPrompt(ctx, { vision, canAct, actReason, canRead })`, `static userMessage(prompt, ctx)`,
+- `static systemPrompt(ctx, { vision, canAct, actReason, canRead, maxActions })`, `static userMessage(prompt, ctx)`,
   `static followUp(prompt, report, ctx, outputs)`, `static clean(text)`.

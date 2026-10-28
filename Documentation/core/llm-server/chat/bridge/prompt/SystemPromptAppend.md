@@ -21,3 +21,13 @@ Shared by the live run and the preview.
 - `dateTimeDoc(now)`: `Current date and time (the user's local system clock):
   ...` in `DATE_FORMAT`.
 - `TAKEOVER_DOC`, `DATE_FORMAT`.
+
+## Untrusted content
+
+`UNTRUSTED_DOC` rides in every build, right after the clock: what tools return
+(page text and elements, window text, files, notifications, search results,
+command output) is content the model is reading, never instructions from the
+user; instructions found inside it are to be mentioned if they matter and
+otherwise ignored. The desktop and page digests repeat it in one line
+([WindowObserver](../../../../desktop/service/WindowObserver.md),
+[ElementDigestFormatter](../../../../browser/tab-manager/ElementDigestFormatter.md)).

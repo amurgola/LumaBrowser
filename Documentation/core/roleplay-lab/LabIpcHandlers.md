@@ -17,12 +17,15 @@ LabService the roleplay-mode extension publishes. Each handler is wrapped by
   - `core.rpLab.run(args)` -> `run(args || {})`
   - `core.rpLab.regenerateFrom(args)` -> `regenerateFrom(args || {})`
   - `core.rpLab.regenerateStep(args)` -> `regenerateStep(args || {})`
+  - `core.rpLab.runText(args)` -> `runText(args || {})` (the scripted text
+    playthrough; a service without `runText` answers `{ success: false, error:
+    'This roleplay extension has no text run.' }`)
 - When `getLabService()` returns null, every channel replies
   `LabIpcHandlers.NOT_REGISTERED`: `{ success: false, error: 'Roleplay mode is
   not registered (is the roleplay extension enabled?).' }`.
 - `LabIpcHandlers.EVENT_CHANNEL` (`core.rpLab.event`).
 
-Before each of the three streaming calls, `labService.broadcast` is pointed at
+Before each of the four streaming calls, `labService.broadcast` is pointed at
 the invoking renderer: `broadcast(type, payload)` sends `{ type, payload }` on
 `core.rpLab.event` (via SenderStream, skipped once that renderer is gone).
 

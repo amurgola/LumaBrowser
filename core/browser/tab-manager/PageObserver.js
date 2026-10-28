@@ -1,5 +1,6 @@
 const ElementDigest = require('../extraction/ElementDigest');
 const ElementDigestFormatter = require('./ElementDigestFormatter');
+const PageBlockDetector = require('./PageBlockDetector');
 
 class PageObserver {
   static async observe(page) {
@@ -9,12 +10,15 @@ class PageObserver {
   }
 
   static _summary(result) {
+    const blocked = PageBlockDetector.detect(result);
+    const text = ElementDigestFormatter.format(result);
     return {
-      text: ElementDigestFormatter.format(result),
+      text: blocked ? `${text}\n${blocked.note}` : text,
       count: result.viewport.length + result.below.length,
       dropped: result.dropped || 0,
       title: result.title,
       url: result.url,
+      ...(blocked ? { blocked: { kind: blocked.kind, label: blocked.label } } : {}),
     };
   }
 }

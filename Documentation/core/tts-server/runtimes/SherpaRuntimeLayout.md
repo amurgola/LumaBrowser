@@ -8,8 +8,8 @@ STT) lives on disk, its pinned version, and whether it is installed.
 ## Methods
 
 - `SherpaRuntimeLayout.platformPackageName()` returns
-  `sherpa-onnx-<win|linux|darwin>-<arch>` for win-x64, linux-x64, linux-arm64,
-  darwin-x64, darwin-arm64; else `null`.
+  `sherpa-onnx-<win|linux|darwin>-<arch>` for win-x64, win-arm64, linux-x64,
+  linux-arm64, darwin-x64, darwin-arm64; else `null`.
 - `SherpaRuntimeLayout.tarballUrl(packageName, version)` returns the public npm
   registry tarball URL.
 - `SherpaRuntimeLayout.runtimeDir(runtimesRoot)` is `<root>/tts-sherpa`.

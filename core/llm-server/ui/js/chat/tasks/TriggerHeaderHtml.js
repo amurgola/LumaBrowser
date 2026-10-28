@@ -50,7 +50,7 @@ export default class TriggerHeaderHtml {
     if (src.filter) facts.push('filter: ' + esc(Object.keys(src.filter).join(', ')));
     if (src.cooldownMs) facts.push('cooldown ' + Math.round(src.cooldownMs / 1000) + ' s');
     if (src.batch) facts.push('batch ' + Math.round(src.batch.windowMs / 1000) + ' s / ' + src.batch.max);
-    if (src.approval === 'ask') facts.push(TriggerHeaderHtml._approvalFact(src));
+    facts.push(src.approval === 'ask' ? TriggerHeaderHtml._approvalFact(src) : TriggerHeaderHtml.UNATTENDED);
     if (src.quietHours) facts.push('quiet ' + esc(src.quietHours.start + '–' + src.quietHours.end) + (src.quietHours.mode === 'skip' ? ' (skips)' : ' (holds)'));
     if (src.memory) facts.push('remembers' + (src.memory.runs ? ' the last ' + esc(String(src.memory.runs)) + ' runs' : ''));
     if (!isFile && !isPage && !isNotif && (src.preset === 'slack' || src.preset === 'github')) facts.push(src.botGuard === false ? 'bot loop guard OFF' : 'ignores bot messages');
@@ -96,6 +96,8 @@ export default class TriggerHeaderHtml {
   static _lastFired(t) {
     return t.lastFiredAt ? 'Last fired ' + RunTimeText.when(t.lastFiredAt) + (t.lastStatus ? ' (' + t.lastStatus + ')' : '') : 'Never fired';
   }
+
+  static UNATTENDED = 'runs state-changing tools unattended (desktop control too, when allowed)';
 
   static _approvalFact(src) {
     const always = Array.isArray(src.approvedTools) && src.approvedTools.length ? ' (always: ' + esc(src.approvedTools.join(', ')) + ')' : '';

@@ -15,6 +15,8 @@ class LabIpcHandlers {
     this._handleStreaming('core.rpLab.run', (svc, args) => svc.run(args));
     this._handleStreaming('core.rpLab.regenerateFrom', (svc, args) => svc.regenerateFrom(args));
     this._handleStreaming('core.rpLab.regenerateStep', (svc, args) => svc.regenerateStep(args));
+    this._handleStreaming('core.rpLab.runText', (svc, args) => (typeof svc.runText === 'function'
+      ? svc.runText(args) : { success: false, error: 'This roleplay extension has no text run.' }));
   }
 
   static _scenario(svc) {

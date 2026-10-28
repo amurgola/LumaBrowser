@@ -92,6 +92,7 @@ export default class ArtifactPanel {
   title(title, type, building) {
     const el = this._el();
     el.querySelector('.cm-ap-title').textContent = (title || 'Artifact') + (type ? '  ·  ' + type : '');
+    this._setMark(false);
     const badge = el.querySelector('.cm-ap-badge');
     if (badge) badge.hidden = !building;
     const share = el.querySelector('.cm-ap-share');
@@ -115,15 +116,27 @@ export default class ArtifactPanel {
       + '<span class="cm-ap-ic">' + ChatIcons.doc + '</span>'
       + '<span class="cm-ap-title">Artifact</span>'
       + '<span class="cm-ap-badge" hidden>building…</span>'
+      + '<button class="cm-ap-btn cm-ap-mark" res-onclick="res.apMark" title="Mark an area to edit" hidden>' + ChatIcons.brush + '</button>'
       + '<button class="cm-ap-btn cm-ap-share" res-onclick="res.apShare" title="Copy share link" disabled hidden>' + ChatIcons.link + '</button>'
       + '<button class="cm-ap-btn cm-ap-dl" res-onclick="res.apDl" title="Download artifact" disabled>' + ChatIcons.download + '</button>'
       + '<button class="cm-ap-btn cm-ap-pop" res-onclick="res.apPop" title="Open in a full browser tab" disabled>' + ChatIcons.expand + '</button>'
       + '<button class="cm-ap-btn cm-ap-close" res-onclick="res.apClose" title="Close panel">' + ChatIcons.x + '</button>'
       + '</div>');
+    R.handler('apMark', () => this._mark());
     R.handler('apShare', () => this._share());
     R.handler('apDl', () => ArtifactDownloader.download(this._ctx.api, this._ctx.state.panel));
     R.handler('apPop', () => this._popOut());
     R.handler('apClose', () => this.close());
+  }
+
+  _mark() {
+    const p = this._ctx.state.panel;
+    if (p && p.id && p.type === 'image' && p.b64) this._ctx.regions.markArtifact({ id: p.id, title: p.title });
+  }
+
+  _setMark(on) {
+    const btn = this._el().querySelector('.cm-ap-mark');
+    if (btn) btn.hidden = !on;
   }
 
   async _share() {
@@ -154,6 +167,7 @@ export default class ArtifactPanel {
     Object.assign(this._ctx.state.panel, { b64: entry.b64, mime: entry.mime, building: false });
     this.title(this._ctx.state.panel.title, type, false);
     this._setButtons(!!a.url, true);
+    this._setMark(type === 'image');
     frame.srcdoc = spec.doc(entry.b64, entry.mime, false);
   }
 

@@ -18,3 +18,10 @@ Turns AgentRunner's loop events into the chat's.
     callId? }`.
   - `compacting` / `compacted`: `onStatus` with `midTurn: true`.
   - `final`: a `cancel` card when the iteration had been suppressed as a call.
+
+## Run progress
+
+An `iteration` event (`{ iteration, maxIterations, elapsedMs }`, one per loop
+iteration from [AgentRun](../../../agent/AgentRun.md)) is reported to
+`o.progress` ([RunProgress](RunProgress.md)) as `{ conversationId, iteration,
+maxIterations }`; nothing without one, and a throwing report is ignored.

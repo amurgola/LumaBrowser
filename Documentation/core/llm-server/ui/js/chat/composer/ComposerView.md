@@ -27,7 +27,10 @@ AI disclaimer under the reply composer.
   or no model; while streaming, disabled except in the conversation that is
   streaming (one stream at a time). An enabled Send (not Stop) gets
   `cm-send-ready`, the only state with the accent fill.
-- `focus()`, `clearReplyBox()`.
-- `openSetup()`: switches to Setup and asks `setupNav.go('settings')`; the
-  no-model notice and an [ErrorCard](../turns/ErrorCard.md) use it.
+- `focus()`, `text()` (what is typed in the composer on screen, the one
+  `focus()` lands in; the region editor's Edit now sends it), `clearReplyBox()`.
+- `openSetup(page = 'settings')`: switches to Setup and asks
+  `setupNav.go(page)`; the no-model notice and an
+  [ErrorCard](../turns/ErrorCard.md)'s [SettingLink](../turns/SettingLink.md)
+  use it.
 - `ComposerView.NO_MODEL`, `SEND_TITLE`.

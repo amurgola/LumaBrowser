@@ -1,3 +1,4 @@
+const AgentBudget = require('../chat/bridge/AgentBudget');
 const ChatModelRef = require('../chat/router/ChatModelRef');
 const ModelOverrides = require('../../shared/llm/ModelOverrides');
 
@@ -94,6 +95,8 @@ class ModelSettings {
       temperature: null,
       maxReplyTokens: null,
       maxParallelToolCalls: null,
+      agentTimeoutMinutes: AgentBudget.DEFAULT.timeoutMs / 60000,
+      agentMaxIterations: AgentBudget.DEFAULT.maxIterations,
       ...(isLocal ? { kvCacheType: d.kvCacheType || null } : {}),
     };
   }

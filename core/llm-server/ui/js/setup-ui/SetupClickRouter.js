@@ -17,6 +17,7 @@ export default class SetupClickRouter {
     if (!target || !target.closest) return;
     if (this._parts.rows.handleClick(target, this._ctx.doc)) return;
     if (this._hostFix(target)) return;
+    if (this._driverInstall(target)) return;
     if (this._tune(target)) return;
     if (await this._directory(target)) return;
     if (this._fitOrGambit(target)) return;
@@ -70,6 +71,16 @@ export default class SetupClickRouter {
     const copy = target.closest('[data-copy-cmd]');
     if (copy) { fixes.copyCommand(copy); return true; }
     if (target.closest('[data-dismiss-hint]')) { fixes.dismissPathHint(); return true; }
+    return false;
+  }
+
+  _driverInstall(target) {
+    const panel = this._parts.driverInstall;
+    if (!panel) return false;
+    const install = target.closest('[data-install-drivers]');
+    if (install) { panel.install(install); return true; }
+    const copy = target.closest('[data-copy-driver-cmd]');
+    if (copy) { panel.copy(copy); return true; }
     return false;
   }
 

@@ -3,6 +3,7 @@ class DesktopError extends Error {
   static COVERED = 'COVERED';
   static REFUSED = 'REFUSED';
   static FOREGROUND_CHANGED = 'FOREGROUND_CHANGED';
+  static STOPPED = 'STOPPED';
 
   constructor(message, code) {
     super(message);

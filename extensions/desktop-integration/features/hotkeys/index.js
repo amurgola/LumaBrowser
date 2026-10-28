@@ -8,7 +8,7 @@ module.exports = {
   settingsSchema: HotkeysFeature.settingsSchema(),
 
   create(deps) {
-    const feature = new HotkeysFeature(deps, HotkeysFeature.defaultParts());
+    const feature = new HotkeysFeature(deps, HotkeysFeature.defaultParts(deps));
     feature.start();
     return feature.instance();
   },

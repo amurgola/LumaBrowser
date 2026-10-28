@@ -5,8 +5,12 @@ class ModelOverrides {
   static MAX_TEMPERATURE = 2;
   static MAX_REPLY_TOKENS = 1000000;
   static MAX_PARALLEL_TOOL_CALLS = 8;
+  static MAX_AGENT_TIMEOUT_MINUTES = 240;
+  static MAX_AGENT_ITERATIONS = 400;
 
-  static REQUEST_FIELDS = Object.freeze(['reasoningEffort', 'temperature', 'maxReplyTokens', 'maxParallelToolCalls']);
+  static REQUEST_FIELDS = Object.freeze([
+    'reasoningEffort', 'temperature', 'maxReplyTokens', 'maxParallelToolCalls', 'agentTimeoutMinutes', 'agentMaxIterations',
+  ]);
   static LAUNCH_FIELDS = Object.freeze(['kvCacheType']);
 
   static clean(raw, { launch = false } = {}) {
@@ -34,6 +38,8 @@ class ModelOverrides {
     if (field === 'temperature') return ModelOverrides._temperature(value);
     if (field === 'maxReplyTokens') return ModelOverrides._replyTokens(value);
     if (field === 'maxParallelToolCalls') return ModelOverrides._parallelToolCalls(value);
+    if (field === 'agentTimeoutMinutes') return ModelOverrides._agentTimeoutMinutes(value);
+    if (field === 'agentMaxIterations') return ModelOverrides._agentIterations(value);
     if (field === 'kvCacheType') return KvCacheModes.MODE_IDS.includes(value) ? String(value) : null;
     return null;
   }
@@ -42,6 +48,18 @@ class ModelOverrides {
     const n = Math.floor(Number(value));
     if (!Number.isFinite(n) || n < 1) return null;
     return Math.min(n, ModelOverrides.MAX_PARALLEL_TOOL_CALLS);
+  }
+
+  static _agentTimeoutMinutes(value) {
+    const n = Math.floor(Number(value));
+    if (!Number.isFinite(n) || n < 0) return null;
+    return Math.min(n, ModelOverrides.MAX_AGENT_TIMEOUT_MINUTES);
+  }
+
+  static _agentIterations(value) {
+    const n = Math.floor(Number(value));
+    if (!Number.isFinite(n) || n < 1) return null;
+    return Math.min(n, ModelOverrides.MAX_AGENT_ITERATIONS);
   }
 
   static _dial(value) {

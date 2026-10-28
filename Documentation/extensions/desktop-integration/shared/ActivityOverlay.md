@@ -39,11 +39,15 @@ a new frame bumps the ring's `lock`, which replays its ignition.
   a match, the cursor's display is used. `tokensCss` defaults to Luma's
   `core/llm-server/ui/css/tokens.css`, inlined into both pages.
 - `show(state, onAction?)` -> `{ id, update(patch), close({ after? }) }`.
-  `state`: `{ kind: 'speech' | 'busy' | 'done' | 'error', title, detail,
+  `state`: `{ kind: 'speech' | 'busy' | 'done' | 'error' | 'keys', title, detail,
   actions: [{ id, label, icon: 'pause' | 'play' | 'stop' | 'open' | 'close', primary? }],
-  progress (0..1 or null), paused, ring (default true), island (default
-  true), hwnd }`. `onAction(id)` runs for a click while the session is current.
-- `update(patch)` repaints (an update with `ring: false` turns the ring off);
+  keys, hint, caption, progress (0..1 or null), paused, ring (default true),
+  island (default true), hwnd, frame }`. `frame`, a window handle, frames the
+  session on that window like a peek (the ring wraps it, the island sits at its
+  top, on the window's monitor). `onAction(id)` runs for a click while the
+  session is current.
+- `update(patch)` repaints (an update with `ring: false` turns the ring off; a
+  patch with `frame` re-aims the session, 0 or null back to the monitor);
   false once closed or replaced.
 - `close({ after })` retracts at once, or after `after` ms (a "Done" moment);
   the windows hide `EXIT_MS` later.
@@ -64,3 +68,25 @@ top center, light sweeping down both sides to meet at the bottom in about
 comets orbit the edge; framed on a window, the same with a crisp outline and an
 outer glow). All motion is off under
 `prefers-reduced-motion`.
+
+## Wayland placement
+
+On a Wayland session the compositor ignores the island's `setBounds` and
+centres the window. With a `placement` ([KWinPlacement](KWinPlacement.md))
+given to the constructor, the overlay asks KWin to move the island to the
+bounds it computed right after each show, and the ring whenever its bounds
+change, a framed window included (`_placeOnWayland(caption, bounds)`; the
+size goes through `setBounds`, which Wayland honours). The windows carry the
+captions `ISLAND_CAPTION` (`Luma island`) and `RING_CAPTION` (`Luma ring`) so
+the script can find them. On KDE the extension also resolves `frameFor` and
+`displayFor` through [KWinWindows](KWinWindows.md), so a picked window's
+frame comes from KWin.
+
+## A framed window at the screen edge
+
+The framed ring is the window's rect plus `ActivityPages.RING_PAD` on every
+side, clamped to the display (`_clampTo`); the page gets `inset`
+(`[top, right, bottom, left]`, `_insetOf`) so its box sits flush on the sides
+the display cut the pad off. A compositor clamps a window to the screen in
+any case, which left the glow drawn against the wrong edge for a maximized
+window.

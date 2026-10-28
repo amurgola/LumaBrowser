@@ -25,17 +25,30 @@ body.platform-win32 .win-ctrl { height: 40px; }
 
 html:has(> body.platform-linux) {
     background: transparent;
-    border-radius: 10px;
-    overflow: hidden;
 }
 body.platform-linux {
-    background: var(--bg-root);
+    background: transparent;
     border-radius: 10px;
     overflow: hidden;
 }
-html:has(> body.platform-linux.window-maximized),
-body.platform-linux.window-maximized {
+body.platform-linux::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: var(--bg-root);
+    border-radius: 10px;
+    z-index: -1;
+    pointer-events: none;
+}
+body.platform-linux .browser-container {
+    margin-bottom: 10px;
+}
+body.platform-linux.window-maximized,
+body.platform-linux.window-maximized::before {
     border-radius: 0;
+}
+body.platform-linux.window-maximized .browser-container {
+    margin-bottom: 0;
 }
 body.platform-linux .app-titlebar {
     border-top-left-radius: 10px;

@@ -8,7 +8,7 @@ Carries the server launcher's machine-readable failure fields (`code`, `runtimeI
 
 All static.
 
-- `of(err)`: the hint fields present on an error (truthy `code`, `runtimeId`, `runtimeName`; boolean `installable`), `{}` for none.
+- `of(err)`: the hint fields present on an error (truthy `code`, `runtimeId`, `runtimeName`; boolean `installable`; an object `setting`, the SettingLink target of the setting behind the failure, such as `{ tune: 'agentTimeoutMinutes' }`), `{}` for none.
 - `failureFrom(err)`: a thrown start as `{ success: false, error, code, runtimeId, runtimeName, installable }`.
 - `errorFrom(result)`: an Error with the result's message (default `START_FAILED`, "Failed to start the local server.") and its hint fields.
 

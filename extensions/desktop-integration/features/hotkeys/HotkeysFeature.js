@@ -9,6 +9,8 @@ const RegionOverlay = require('./RegionOverlay');
 const ScreenTextReader = require('./ScreenTextReader');
 const SelectionClipboard = require('./SelectionClipboard');
 const SelectionRewriter = require('./SelectionRewriter');
+const X11Bridge = require('./X11Bridge');
+const KWinHintTarget = require('./KWinHintTarget');
 
 class HotkeysFeature {
   static ACTIONS = [
@@ -23,6 +25,8 @@ class HotkeysFeature {
   static HINT_CAPTION = 'Press a key. To work on one window only, click it first.';
   static TITLE_CHARS = 40;
   static REPEAT_MS = 400;
+  static INTRO_KEY = 'hintIntroduced';
+  static INTRO_TITLE = 'Luma is one chord away in every app';
   static STATUS = { UNKNOWN_ACTION: 400, UNSUPPORTED: 501, BUSY: 409, CANCELED: 409, NO_SELECTION: 422, EMPTY_CLIPBOARD: 422, EMPTY: 422, TOO_LONG: 422, NO_TTS: 503, NO_MODEL: 503, TIMEOUT: 504, FOCUS_LOST: 409, NO_PERMISSION: 403 };
   static QUIET = new Set(['CANCELED', 'BUSY']);
 
@@ -45,18 +49,22 @@ class HotkeysFeature {
       { key: 'overlayIsland', label: 'Show the activity island', type: 'bool', default: true, help: 'A pill at the top of the screen while an action runs, with Pause, Stop and Continue in LumaBrowser for reading aloud. Failures show there too.' },
       { key: 'shortcutHints', label: 'Show the shortcut keys while the modifiers are held', type: 'bool', default: true, help: 'Hold Ctrl+Alt+Shift (or whatever your shortcuts share) for a moment: the screen edge lights up and the island lists the keys you can press next. Click a window while holding them to aim the actions at that window only. Needs the activity island.' },
       { key: 'overlayRing', label: 'Light the screen edge while active', type: 'bool', default: true, help: 'A soft glow around the monitor you are working on while Luma reads or rewrites.' },
+      { key: 'waylandBridge', label: 'Wayland: watch the keyboard through XWayland', type: 'bool', default: true, help: 'Linux Wayland desktops only. Electron cannot register global shortcuts there, so a small helper beside the app watches the keys the way X11 apps do (through XWayland) and runs the shortcuts and the shortcut hint. Works on KDE Plasma with no desktop setting; the focused app still receives the chord too.' },
       { key: 'notifyFailures', label: 'Show a notification when an action fails', type: 'bool', default: true, help: 'Used when the activity island is off.' },
     ];
   }
 
-  static defaultParts() {
+  static defaultParts(deps = {}) {
     const electron = require('electron');
     const ExtensionGlobals = require('../../../../core/shell/extensions/ExtensionGlobals');
     const win = process.platform === 'win32' ? require('../../../../core/desktop/Win32') : null;
+    const bridge = deps.bridge !== undefined ? deps.bridge : X11Bridge.forSession({ log: console });
     return {
       globalShortcut: electron.globalShortcut,
+      bridge,
+      hintTarget: deps.hintTarget !== undefined ? deps.hintTarget : KWinHintTarget.forSession(),
       clipboard: electron.clipboard,
-      keys: SelectionKeys.create({ clipboard: electron.clipboard }),
+      keys: SelectionKeys.create({ clipboard: electron.clipboard, bridge }),
       getRouter: () => ExtensionGlobals.chatRouter(),
       region: new RegionCapture({ electron, win, overlay: new RegionOverlay({ BrowserWindow: electron.BrowserWindow }) }),
       notify: (title, body) => HotkeysFeature._electronNotify(electron, title, body),
@@ -76,7 +84,7 @@ class HotkeysFeature {
       stopSpeaking: () => this._actions.stopSpeaking(),
       log: deps.log,
     });
-    this._target = new HintTarget({ keys: parts.keys });
+    this._target = parts.hintTarget || new HintTarget({ keys: parts.keys });
     this._hint = null;
     this._actions = new HotkeyActions({
       speech: deps.speech,
@@ -91,7 +99,8 @@ class HotkeysFeature {
       now: parts.now,
       activity: this._activity,
     });
-    this._bindings = new HotkeyBindings({ globalShortcut: parts.globalShortcut, onFire: (id) => this.fire(id), log: deps.log });
+    this._bindings = this._newBindings();
+    if (parts.bridge && typeof parts.bridge.onStateChange === 'function') parts.bridge.onStateChange(() => this._bridgeChanged());
     this._chord = new ChordHint({
       held: () => parts.keys.heldModifiers(),
       groups: () => this._hintGroups(),
@@ -114,18 +123,80 @@ class HotkeysFeature {
   }
 
   start() {
+    this._applyBridge();
+    this.applyBindings();
+    if (this._applyHint()) this._introduceHint();
+  }
+
+  _bridgeWanted() {
+    return !!this._parts.bridge && this._deps.settings.get('waylandBridge', true) !== false;
+  }
+
+  _shortcutBackend() {
+    return this._bridgeWanted() ? this._parts.bridge : this._parts.globalShortcut;
+  }
+
+  _newBindings() {
+    return new HotkeyBindings({ globalShortcut: this._shortcutBackend(), onFire: (id) => this.fire(id), log: this._deps.log });
+  }
+
+  _applyBridge() {
+    const bridge = this._parts.bridge;
+    if (!bridge) return;
+    if (this._bridgeWanted() && !this._disposed) bridge.start();
+    else bridge.stop();
+  }
+
+  _bridgeChanged() {
+    if (this._disposed) return;
+    const bridge = this._parts.bridge;
+    if (bridge && !bridge.running && bridge.reason) this._deps.log.warn(`shortcut hint paused: ${bridge.reason}`);
+    if (this._applyHint()) this._introduceHint();
+  }
+
+  _switchBackend() {
+    this._bindings.unregisterAll();
+    this._applyBridge();
+    this._bindings = this._newBindings();
     this.applyBindings();
     this._applyHint();
   }
 
+  bridgeStatus() {
+    const bridge = this._parts.bridge;
+    if (!bridge) return null;
+    return { wanted: this._bridgeWanted(), running: !!bridge.running, reason: bridge.running ? null : (bridge.reason || null) };
+  }
+
   _applyHint() {
-    const keys = this._parts.keys;
-    const s = this._deps.settings;
-    const want = !this._disposed && process.platform === 'win32' && !!this._deps.overlay && !!keys && typeof keys.heldModifiers === 'function'
-      && s.get('shortcutHints', true) !== false && s.get('overlayIsland', true) !== false;
+    const want = !this._disposed && !this.hintUnavailableReason();
     if (want) this._chord.start();
     else this._chord.stop();
     return want;
+  }
+
+  hintUnavailableReason() {
+    const keys = this._parts.keys;
+    const s = this._deps.settings;
+    if (!this._deps.overlay) return 'The activity overlay is not available.';
+    if (!keys || typeof keys.heldModifiers !== 'function' || keys.supported === false) return 'This platform cannot read which keys are held.';
+    if (keys.pollsModifiers === false) return keys.hintUnavailableReason || 'This session cannot read which keys are held.';
+    if (s.get('overlayIsland', true) === false) return 'The activity island is off (setting).';
+    if (s.get('shortcutHints', true) === false) return 'The shortcut hint is off (setting).';
+    return null;
+  }
+
+  _introduceHint() {
+    const s = this._deps.settings;
+    if (s.get(HotkeysFeature.INTRO_KEY, false) === true) return false;
+    const modifiers = Object.keys(this._hintGroups())[0] || 'Ctrl+Alt+Shift';
+    try { this._notify(HotkeysFeature.INTRO_TITLE, HotkeysFeature.introBody(modifiers)); } catch (_) {}
+    s.set(HotkeysFeature.INTRO_KEY, true);
+    return true;
+  }
+
+  static introBody(modifiers) {
+    return `Hold ${modifiers.split('+').join(' + ')} for a moment in any app to see what Luma can do there: read aloud, rewrite, send to chat, attach Lumabyte, and pause or stop a desktop run.`;
   }
 
   _hintGroups() {
@@ -203,7 +274,10 @@ class HotkeysFeature {
 
   _framedCaption(hwnd) {
     let title = '';
-    try { title = this._parts.keys.windowTitle ? String(this._parts.keys.windowTitle(hwnd) || '') : ''; } catch (_) { title = ''; }
+    try {
+      if (typeof this._target.titleOf === 'function') title = String(this._target.titleOf(hwnd) || '');
+      if (!title && this._parts.keys.windowTitle) title = String(this._parts.keys.windowTitle(hwnd) || '');
+    } catch (_) { title = ''; }
     title = title.replace(/\s+/g, ' ').trim();
     if (title.length > HotkeysFeature.TITLE_CHARS) title = `${title.slice(0, HotkeysFeature.TITLE_CHARS - 3).trimEnd()}...`;
     return `${title ? `Working on ${title}` : 'Working on this window'}. Click the desktop for the whole screen.`;
@@ -251,6 +325,8 @@ class HotkeysFeature {
       }),
       busy: this._actions.busy(),
       speaking: this._actions.speaking(),
+      hint: { on: this._chord.running, reason: this.hintUnavailableReason() },
+      bridge: this.bridgeStatus(),
     };
   }
 
@@ -271,10 +347,12 @@ class HotkeysFeature {
   onSettingsChanged(key) {
     if (String(key).startsWith(HotkeysFeature.BINDING_PREFIX)) this.applyBindings();
     if (key === 'shortcutHints' || key === 'overlayIsland') this._applyHint();
+    if (key === 'waylandBridge') this._switchBackend();
   }
 
   dispose() {
     this._disposed = true;
+    if (this._parts.bridge) { try { this._parts.bridge.stop(); } catch (_) {} }
     if (this._unhost) this._unhost();
     this._chord.stop();
     this._bindings.dispose();

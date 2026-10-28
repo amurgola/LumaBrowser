@@ -8,7 +8,7 @@ module.exports = {
   settingsSchema: LumabyteFeature.settingsSchema(),
 
   create(deps) {
-    const feature = new LumabyteFeature(deps, LumabyteFeature.defaultParts());
+    const feature = new LumabyteFeature(deps, LumabyteFeature.defaultParts(deps));
     feature.start();
     return feature.instance();
   },

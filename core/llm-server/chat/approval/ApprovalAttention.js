@@ -1,30 +1,49 @@
 class ApprovalAttention {
   static TITLE = 'LumaBrowser needs your approval';
+  static TAIL = 'It is waiting in the chat.';
   static MAX_BODY = 180;
 
-  constructor({ getWindow, notify = ApprovalAttention._electronNotify } = {}) {
+  constructor({ getWindow, notify = ApprovalAttention._electronNotify, title = ApprovalAttention.TITLE, tail = ApprovalAttention.TAIL } = {}) {
     this._getWindow = typeof getWindow === 'function' ? getWindow : () => null;
     this._notify = notify;
+    this._title = title;
+    this._tail = tail;
     this._flashing = null;
+    this._presenters = new Set();
   }
 
-  request(detail) {
+  request(detail, info = {}) {
     const win = this._window();
     if (!win || win.isFocused()) return;
     try { win.flashFrame(true); this._flashing = win; } catch (_) {}
-    if (!this._notify) return;
+    const presented = this._present('request', { detail: String(detail || ''), ...(info || {}) });
+    if (!this._notify || presented) return;
     this._notify({
-      title: ApprovalAttention.TITLE,
-      body: ApprovalAttention._body(detail),
+      title: this._title,
+      body: ApprovalAttention._body(detail, this._tail),
       onClick: () => ApprovalAttention._bringBack(win),
     });
   }
 
   clear() {
+    this._present('clear');
     const win = this._flashing;
     this._flashing = null;
     if (!win || ApprovalAttention._gone(win)) return;
     try { win.flashFrame(false); } catch (_) {}
+  }
+
+  addPresenter(presenter) {
+    this._presenters.add(presenter);
+    return () => { this._presenters.delete(presenter); };
+  }
+
+  _present(method, payload) {
+    let shown = false;
+    for (const p of this._presenters) {
+      try { if (typeof p[method] === 'function' && p[method](payload) === true) shown = true; } catch (_) {}
+    }
+    return shown;
   }
 
   _window() {
@@ -33,10 +52,10 @@ class ApprovalAttention {
     return win && !ApprovalAttention._gone(win) ? win : null;
   }
 
-  static _body(detail) {
+  static _body(detail, tail = ApprovalAttention.TAIL) {
     const text = String(detail || 'An agent wants to make a change.').replace(/\s+/g, ' ').trim();
     const cut = text.length > ApprovalAttention.MAX_BODY ? text.slice(0, ApprovalAttention.MAX_BODY - 3) + '...' : text;
-    return `${cut} It is waiting in the chat.`;
+    return `${cut} ${tail}`;
   }
 
   static _bringBack(win) {

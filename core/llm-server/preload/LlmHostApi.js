@@ -16,6 +16,8 @@ class LlmHostApi extends PreloadSection {
       dismissNvidiaSmiPathHint: () => ipcRenderer.invoke('core.llmServer.dismissNvidiaSmiPathHint'),
       recoverDisplayDevice: (instanceId) => ipcRenderer.invoke('core.llmServer.recoverDisplayDevice', instanceId),
       setPcieAspmOff: () => ipcRenderer.invoke('core.llmServer.setPcieAspmOff'),
+      getDriverInstallPlan: () => ipcRenderer.invoke('core.llmServer.getDriverInstallPlan'),
+      installDrivers: () => ipcRenderer.invoke('core.llmServer.installDrivers'),
     };
   }
 

@@ -13,7 +13,10 @@ will actually run on this machine.
   is the reference-image edit guide, written in the family's image naming from
   `EditProfiles` (generic word naming for an unknown family), teaching
   instruction-style prompts, one keep sentence, pointing at images instead of
-  describing them, and the reference cap.
+  describing them, and the reference cap. Both guides end with the marked
+  region rule: img2img still describes the final image (the inpaint mask does
+  the confining, strength 0.8 or higher), an edit model gets an instruction for
+  what changes inside the area only (the location is appended for it).
 
 ## Why
 

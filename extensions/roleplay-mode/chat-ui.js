@@ -152,6 +152,25 @@
     };
   }
 
+  async function toneAssist({ api, rootModel, value, setStatus }) {
+    const scenario = String((rootModel && rootModel.scenario) || '').trim();
+    const seed = String(value || '').trim();
+    const sys = 'You set the prose tone for an interactive roleplay narrator. Reply with ONLY one short line '
+      + '(under 16 words) naming the tone and register, like "dry noir, clipped sentences, wry humour under the menace". '
+      + 'No sentences about the story, no preamble, no quotation marks.';
+    const lines = ['Choose the writing tone for this roleplay.'];
+    if (scenario) lines.push('The premise: "' + scenario.slice(0, 600) + '". Match its mood and period.');
+    if (seed) lines.push('The player asked for something like: "' + seed + '". Refine that.');
+    setStatus('Finding the tone…');
+    return {
+      messages: noThinkMessages(sys, lines.join('\n')),
+      temperature: 0.8,
+      timeoutMs: 300000,
+      noThink: true,
+      modelRef: await ensureAssistModel(api, rootModel),
+    };
+  }
+
   function cleanStyleText(t) {
     return cleanAiText(t).replace(/\s*\n+\s*/g, ', ').replace(/\s*,\s*(?:,\s*)+/g, ', ');
   }
@@ -302,6 +321,25 @@
     return ref;
   }
 
+  const LENGTH_OPTIONS = [
+    { value: 'snappy', label: 'Snappy (40 to 120 words)' },
+    { value: 'balanced', label: 'Balanced (120 to 250 words)' },
+    { value: 'lush', label: 'Lush (250 to 400 words)' },
+  ];
+
+  function characterProfileField() {
+    return {
+      key: 'profile', type: 'group', label: 'Profile (optional)',
+      fields: [
+        { key: 'voice', type: 'text', label: 'Voice', placeholder: 'How they talk: register, rhythm, a habit, one example line' },
+        { key: 'wants', type: 'text', label: 'Wants', half: true, placeholder: 'What they want in this story' },
+        { key: 'hides', type: 'text', label: 'Hides', half: true, placeholder: 'What they conceal' },
+        { key: 'tells', type: 'text', label: 'Tells', half: true, placeholder: 'Two physical habits that show feeling; separate with ;' },
+        { key: 'bondUser', type: 'text', label: 'Toward you', half: true, placeholder: 'wary, curious, warm, hostile…' },
+      ],
+    };
+  }
+
   function buildSchema(modelOpts, llm) {
     const all = modelOpts || [];
     const dflt = { value: '', label: 'Use image-server default' };
@@ -310,115 +348,160 @@
     const llmOpts = (llm && llm.options) || [{ value: '', label: 'Use current chat model' }];
     return {
       title: 'New roleplay',
-      subtitle: 'Describe the scenario, or tap a star to have one invented for you. Characters and scenes are optional: leave them empty and they\'ll be created automatically as the story unfolds.',
+      subtitle: 'A premise, who you are, and a tone are all it takes. Characters, places and everything else grow as the story unfolds; open More to set them up yourself.',
       submitLabel: 'Start roleplay',
       fields: [
         {
-          key: 'scenario', type: 'textarea', label: 'Scenario', required: true,
-          placeholder: 'Set the premise, tone, and where things begin…',
+          key: 'scenario', type: 'textarea', label: 'Premise', required: true,
+          placeholder: 'Set the premise, where things begin, and what is at stake…',
           assist: scenarioAssist,
           assistClean: cleanAiText,
-          assistTitle: 'Blank: invent a surprise scenario. Typed: build it out from your idea.',
+          assistTitle: 'Blank: invent a surprise premise. Typed: build it out from your idea.',
         },
         {
-          key: 'style', type: 'text', label: 'Art style',
-          hint: 'applied to every generated image',
-          placeholder: 'e.g. anime, My Hero Academia style, vibrant, detailed',
-          assist: styleAssist,
+          key: 'protagonist', type: 'group', label: 'You',
+          fields: [
+            { key: 'name', type: 'text', label: 'Name', half: true, placeholder: 'How the characters address you' },
+            { key: 'pronouns', type: 'text', label: 'Pronouns', half: true, placeholder: 'e.g. she/her' },
+            { key: 'persona', type: 'text', label: 'Who you are', placeholder: 'One line: your role, your look, what the cast knows about you' },
+          ],
+        },
+        {
+          key: 'tone', type: 'text', label: 'Tone', half: true,
+          hint: 'how the narrator writes',
+          placeholder: 'e.g. dry noir, clipped sentences',
+          assist: toneAssist,
           assistClean: cleanStyleText,
-          assistTitle: 'Pick an art style that fits the scenario, or build on what you typed.',
+          assistTitle: 'Pick a writing tone that fits the premise, or refine what you typed.',
         },
         {
-          key: 'llmModel', type: 'select', label: 'Language model', half: true,
-          hint: 'writes the story; unset keeps the current chat model',
-          options: llmOpts,
+          key: 'lengthMode', type: 'select', label: 'Reply length', half: true,
+          hint: 'shorter in quick exchanges either way',
+          options: LENGTH_OPTIONS,
         },
         {
-          key: 'llmCtx', type: 'select', label: 'Context length', half: true,
-          hint: 'how much story the model keeps in memory (local models only)',
-          options: CTX_OPTIONS,
-        },
-        {
-          key: 'baseModel', type: 'select', label: 'Base image model', half: true,
-          hint: 'draws character and scene art (a generation model, e.g. Anima)', options: genOpts,
-        },
-        {
-          key: 'editModel', type: 'select', label: 'Scene image model', half: true,
-          hint: 'places talking characters into scenes (an edit model, e.g. Qwen-Image-Edit)',
-          options: editOpts,
-        },
-        {
-          key: 'characters', type: 'repeater', label: 'Characters (optional)', itemLabel: 'Character',
-          hint: 'anyone you add starts on stage; new characters also join automatically as the story unfolds',
-          assistAdd: characterAssistAdd,
-          assistAddLabel: 'Add character with AI',
-          assistTitle: 'Invent a character who fits the scenario and art style.',
+          key: 'more', type: 'section', label: 'More', collapsed: true,
+          hint: 'Models, art, pre-made characters and scenes, image options.',
           fields: [
             {
-              key: 'name', type: 'text', label: 'Name', required: true,
-              assist: charNameAssist, assistClean: cleanNameText,
-              assistTitle: 'Invent a name that fits the story (or refine what you typed).',
+              key: 'style', type: 'text', label: 'Art style',
+              hint: 'applied to every generated image',
+              placeholder: 'e.g. anime, My Hero Academia style, vibrant, detailed',
+              assist: styleAssist,
+              assistClean: cleanStyleText,
+              assistTitle: 'Pick an art style that fits the premise, or build on what you typed.',
             },
             {
-              key: 'description', type: 'textarea', label: 'Persona & history', placeholder: 'Personality, background, speaking style, relationship to you…',
-              assist: charPersonaAssist, assistClean: cleanAiText,
-              assistTitle: 'Write their persona and history from the story, style, and name.',
+              key: 'llmModel', type: 'select', label: 'Language model', half: true,
+              hint: 'writes the story; unset keeps the current chat model',
+              options: llmOpts,
             },
-            charArtField(),
-          ],
-        },
-        {
-          key: 'scenes', type: 'repeater', label: 'Scenes (optional)', itemLabel: 'Scene',
-          hint: 'empty environments the story moves through; characters are placed into them later',
-          fields: [
-            { key: 'name', type: 'text', label: 'Name', required: true, placeholder: 'e.g. The Café' },
-            { key: 'description', type: 'textarea', label: 'Description', placeholder: 'What this place looks and feels like…' },
-            { key: 'bg', type: 'image', label: 'Scene art', genFromKey: 'description', styleFromKey: 'style', modelFromKey: 'baseModel', promptPrefix: 'wide establishing shot of an empty environment, no people, scenery,', width: 768, height: 512 },
-          ],
-        },
-        {
-          key: 'options', type: 'group', label: 'Options',
-          fields: [
             {
-              key: 'imageProfile', type: 'select', label: 'Image generation profile',
-              hint: 'Balanced is recommended. Fast reduces edit resolution and passes; Quality keeps native edits and relighting.',
-              options: [
-                { value: 'balanced', label: 'Balanced (recommended)' },
-                { value: 'fast', label: 'Fast (shortest wait)' },
-                { value: 'quality', label: 'Quality (slower, maximum detail)' },
-              ],
+              key: 'llmCtx', type: 'select', label: 'Context length', half: true,
+              hint: 'how much story the model keeps in memory (local models only)',
+              options: CTX_OPTIONS,
             },
-            { key: 'autoImage', type: 'toggle', label: 'Create an image when the visible scene changes' },
-            { key: 'sceneBackground', type: 'toggle', label: 'Update the chat background to match the environment' },
-            { key: 'autoAvatarArt', type: 'toggle', label: 'Auto-generate character art as new characters appear' },
             {
-              key: 'harmonizeMode', type: 'select', label: 'Extra AI relighting pass',
-              hint: 'Auto enables relighting only for Quality.',
-              options: [
-                { value: 'auto', label: 'Auto (follow the profile)' },
-                { value: 'on', label: 'Always on' },
-                { value: 'off', label: 'Always off' },
+              key: 'baseModel', type: 'select', label: 'Base image model', half: true,
+              hint: 'draws character and scene art (a generation model, e.g. Anima)', options: genOpts,
+            },
+            {
+              key: 'editModel', type: 'select', label: 'Scene image model', half: true,
+              hint: 'places talking characters into scenes (an edit model, e.g. Qwen-Image-Edit)',
+              options: editOpts,
+            },
+            {
+              key: 'characters', type: 'repeater', label: 'Characters (optional)', itemLabel: 'Character',
+              hint: 'anyone you add starts on stage; new characters also join automatically as the story unfolds',
+              assistAdd: characterAssistAdd,
+              assistAddLabel: 'Add character with AI',
+              assistTitle: 'Invent a character who fits the premise and tone.',
+              fields: [
+                {
+                  key: 'name', type: 'text', label: 'Name', required: true,
+                  assist: charNameAssist, assistClean: cleanNameText,
+                  assistTitle: 'Invent a name that fits the story (or refine what you typed).',
+                },
+                {
+                  key: 'description', type: 'textarea', label: 'Who they are', placeholder: 'Personality, background, relationship to you…',
+                  assist: charPersonaAssist, assistClean: cleanAiText,
+                  assistTitle: 'Write who they are from the premise, tone, and name.',
+                },
+                { key: 'appearance', type: 'text', label: 'Looks', placeholder: 'Hair, build, features, usual outfit' },
+                characterProfileField(),
+                charArtField(),
               ],
             },
             {
-              key: 'harmonizeStrength', type: 'number', label: 'Blend strength',
-              hint: '0 to 1. Lower keeps the composite crisper, higher relights more (default 0.07)',
-              min: 0, max: 1, step: 0.05,
+              key: 'scenes', type: 'repeater', label: 'Scenes (optional)', itemLabel: 'Scene',
+              hint: 'empty environments the story moves through; characters are placed into them later',
+              fields: [
+                { key: 'name', type: 'text', label: 'Name', required: true, placeholder: 'e.g. The Café' },
+                { key: 'description', type: 'textarea', label: 'Description', placeholder: 'What this place looks and feels like…' },
+                { key: 'bg', type: 'image', label: 'Scene art', genFromKey: 'description', styleFromKey: 'style', modelFromKey: 'baseModel', promptPrefix: 'wide establishing shot of an empty environment, no people, scenery,', width: 768, height: 512 },
+              ],
             },
-          ],
-        },
-        {
-          key: 'diagnostics', type: 'group', label: 'Diagnostics',
-          fields: [
             {
-              key: 'runTest', type: 'button', label: 'Run image pipeline test',
-              hint: 'Generates scene → face → angry → full body → in-scene composite with the selected models and reports per-step timing. Uses a throwaway test character; your roleplay is untouched.',
-              onClick: ({ api, rootModel, setStatus }) => runPipelineTest(api, rootModel, setStatus),
+              key: 'options', type: 'group', label: 'Options',
+              fields: [
+                { key: 'autoImage', type: 'toggle', label: 'Create an image when the visible scene changes' },
+                { key: 'sceneBackground', type: 'toggle', label: 'Update the chat background to match the environment' },
+                { key: 'autoAvatarArt', type: 'toggle', label: 'Auto-generate character art as new characters appear' },
+                {
+                  key: 'prosePolish', type: 'toggle', label: 'Polish each reply (an extra pass that rewrites stock phrases; best on larger models)',
+                },
+                { key: 'noSamplers', type: 'toggle', label: 'Turn off the anti-repetition samplers (DRY, XTC) on local models' },
+                {
+                  key: 'imageProfile', type: 'select', label: 'Image generation profile',
+                  hint: 'Balanced is recommended. Fast reduces edit resolution and passes; Quality keeps native edits and relighting.',
+                  options: [
+                    { value: 'balanced', label: 'Balanced (recommended)' },
+                    { value: 'fast', label: 'Fast (shortest wait)' },
+                    { value: 'quality', label: 'Quality (slower, maximum detail)' },
+                  ],
+                },
+                {
+                  key: 'harmonizeMode', type: 'select', label: 'Extra AI relighting pass',
+                  hint: 'Auto enables relighting only for Quality.',
+                  options: [
+                    { value: 'auto', label: 'Auto (follow the profile)' },
+                    { value: 'on', label: 'Always on' },
+                    { value: 'off', label: 'Always off' },
+                  ],
+                },
+                {
+                  key: 'harmonizeStrength', type: 'number', label: 'Blend strength',
+                  hint: '0 to 1. Lower keeps the composite crisper, higher relights more (default 0.07)',
+                  min: 0, max: 1, step: 0.05,
+                },
+              ],
+            },
+            {
+              key: 'diagnostics', type: 'group', label: 'Diagnostics',
+              fields: [
+                {
+                  key: 'runTest', type: 'button', label: 'Run image pipeline test',
+                  hint: 'Generates scene → face → angry → full body → in-scene composite with the selected models and reports per-step timing. Uses a throwaway test character; your roleplay is untouched.',
+                  onClick: ({ api, rootModel, setStatus }) => runPipelineTest(api, rootModel, setStatus),
+                },
+              ],
             },
           ],
         },
       ],
     };
+  }
+
+  function schemaFieldsFlat(schema) {
+    const out = [];
+    const walk = (fields) => {
+      for (const f of fields || []) {
+        out.push(f);
+        if (f.type === 'section') walk(f.fields);
+      }
+    };
+    walk(schema && schema.fields);
+    return out;
   }
 
   async function fetchImageModels(api) {
@@ -871,6 +954,7 @@
       if (data) {
         if (data.images && data.images[msg.id]) delete data.images[msg.id];
         if (data.lastShot && data.lastShot.messageId === msg.id) data.lastShot = null;
+        if (shared() && shared().forgetTurn) { try { shared().forgetTurn(data, msg.id); } catch (_) {} }
         try { await ctx.setMeta({ data }); } catch (_) {}
       }
       turnEl.remove();
@@ -926,6 +1010,7 @@
     data.images = {};
     data.lastShot = null;
     data.assetRetry = {};
+    resetMemory(data);
     try { await ctx.setMeta({ data }); } catch (_) {}
     if (ctx.refresh) ctx.refresh();
   }
@@ -984,6 +1069,36 @@
     }, 0);
   }
 
+  function normalizeProfile(c) {
+    const form = c.profile && typeof c.profile === 'object' ? c.profile : {};
+    const tells = Array.isArray(form.tells)
+      ? form.tells
+      : String(form.tells || '').split(/;|\n/).map((t) => t.trim()).filter(Boolean);
+    const bonds = Object.assign({}, form.bonds && typeof form.bonds === 'object' ? form.bonds : {});
+    if (form.bondUser !== undefined) {
+      const b = String(form.bondUser || '').trim();
+      if (b) bonds.user = b; else delete bonds.user;
+    }
+    c.profile = {
+      voice: String(form.voice || '').trim(),
+      wants: String(form.wants || '').trim(),
+      hides: String(form.hides || '').trim(),
+      tells: tells.slice(0, 3),
+      bonds,
+    };
+    return c;
+  }
+
+  function normalizeProtagonist(p) {
+    const src = p && typeof p === 'object' ? p : {};
+    return {
+      name: String(src.name || '').trim(),
+      pronouns: String(src.pronouns || '').trim(),
+      appearance: String(src.appearance || '').trim(),
+      persona: String(src.persona || '').trim(),
+    };
+  }
+
   function normalizeRoleplayData(data, prev) {
     prev = prev || {};
     data.characters = (data.characters || [])
@@ -991,7 +1106,11 @@
       .map((c, i) => (c.id ? c : Object.assign({
         id: mkId('char', i),
         seed: Math.floor(Math.random() * 2000000000),
-      }, c)));
+      }, c)))
+      .map(normalizeProfile);
+    data.protagonist = normalizeProtagonist(data.protagonist);
+    data.tone = String(data.tone || '').trim();
+    if (!['snappy', 'balanced', 'lush'].includes(data.lengthMode)) data.lengthMode = 'balanced';
     data.scenes = (data.scenes || [])
       .filter((s) => s && s.name)
       .map((s, i) => (s.id ? s : Object.assign({ id: mkId('scene', i) }, s)));
@@ -1033,8 +1152,44 @@
     }
     data.currentState.characters = Array.isArray(data.currentState.characters) ? data.currentState.characters : [];
     data.images = data.images || prev.images || {};
+    data.story = data.story || prev.story;
+    const prevChars = Array.isArray(prev.characters) ? prev.characters : [];
+    for (const c of data.characters) {
+      const was = prevChars.find((p) => p && p.id === c.id);
+      if (!was) continue;
+      if (!c.chronicle && was.chronicle) c.chronicle = was.chronicle;
+      if (!c.state && was.state) c.state = was.state;
+      for (const [who, text] of Object.entries((was.profile && was.profile.bonds) || {})) {
+        if (who !== 'user' && !c.profile.bonds[who]) c.profile.bonds[who] = text;
+      }
+    }
     if (shared()) { try { shared().migrateData(data); } catch (_) {} }
     return data;
+  }
+
+  function resetMemory(data) {
+    data.story = { turn: 0, clock: { day: 1, timeOfDay: '', weather: '' }, summary: '', summaryTurn: 0, ledger: [], threads: [] };
+    for (const c of (data.characters || [])) {
+      if (!c) continue;
+      c.chronicle = { arc: '', beats: [] };
+      c.state = { present: false };
+    }
+    for (const sc of (data.scenes || [])) { if (sc) delete sc.memory; }
+  }
+
+  function profileFormView(cur) {
+    const view = Object.assign({}, cur);
+    view.characters = (cur.characters || []).map((c) => {
+      if (!c) return c;
+      const p = c.profile && typeof c.profile === 'object' ? c.profile : {};
+      return Object.assign({}, c, {
+        profile: Object.assign({}, p, {
+          tells: Array.isArray(p.tells) ? p.tells.join('; ') : (p.tells || ''),
+          bondUser: (p.bonds && p.bonds.user) || '',
+        }),
+      });
+    });
+    return view;
   }
 
   async function editRoleplaySettings(api, ctx) {
@@ -1045,12 +1200,23 @@
       subtitle: 'Update the scenario, style, models, characters, scenes, and options.',
       submitLabel: 'Save',
     });
-    const edited = await window.LumaChatExt.openSchemaModal(schema, { api, initial: cur });
+    const edited = await window.LumaChatExt.openSchemaModal(schema, { api, initial: profileFormView(cur) });
     if (!edited) return;
     await applyLlmChoice(api, edited, llm.locals);
     const next = normalizeRoleplayData(edited, cur);
     await ctx.setMeta({ data: next });
     if (ctx.refresh) ctx.refresh();
+  }
+
+  function rosterTitle(ch) {
+    const bits = [ch.name + (ch.description ? ': ' + ch.description : '')];
+    const st = ch.state && typeof ch.state === 'object' ? ch.state : {};
+    const bond = st.bondUser || (ch.profile && ch.profile.bonds && ch.profile.bonds.user) || '';
+    if (bond) bits.push(bond + ' toward you');
+    if (st.intent) bits.push('wants: ' + st.intent);
+    if (st.condition) bits.push(st.condition);
+    if (st.present === false && st.lastSeen) bits.push('off stage' + (st.lastSeen.note ? ': ' + st.lastSeen.note : ''));
+    return bits.join(' | ');
   }
 
   function renderRoster(ctx) {
@@ -1073,7 +1239,7 @@
     for (const ch of chars) {
       const chip = document.createElement('div');
       chip.className = 'rp-roster-chip';
-      chip.title = ch.name + (ch.description ? ': ' + ch.description : '');
+      chip.title = rosterTitle(ch);
       const av = charAvatarFor(ch, null);
       if (av && av.b64) {
         const img = document.createElement('img');
@@ -1113,23 +1279,27 @@
     const chars = Array.isArray(data.characters) ? data.characters : [];
     const ch = chars.find((c) => c.id === charId);
     if (!ch) return;
-    const subject = [ch.appearance, ch.description].filter(Boolean).join('\n') || ch.name;
     const schema = {
       title: (ch.name || 'Character'),
-      subtitle: 'Generate a face with the base model, then ref-conditioned emotion + full-body shots. Tweak the description to steer the look.',
+      subtitle: 'Who they are, how they talk and what they want keep them consistent; the art studio generates a face, then emotion and full-body shots.',
       submitLabel: 'Save',
       fields: [
         {
-          key: 'description', type: 'textarea', label: 'Appearance & persona', placeholder: 'How they look (hair, build, clothing, features) and who they are…',
+          key: 'description', type: 'textarea', label: 'Who they are', placeholder: 'Personality, background, relationship to you…',
           assist: charPersonaAssist, assistClean: cleanAiText,
-          assistTitle: 'Write their persona and history from the story and name.',
+          assistTitle: 'Write who they are from the story and name.',
         },
+        { key: 'appearance', type: 'text', label: 'Looks', placeholder: 'Hair, build, features, usual outfit' },
+        characterProfileField(),
         charArtField(),
       ],
     };
+    const view = profileFormView({ characters: [ch] }).characters[0];
     const initial = {
       name: ch.name || '',
-      description: subject,
+      description: ch.description || '',
+      appearance: ch.appearance || '',
+      profile: view.profile,
       style: data.style || '',
       baseModel: data.baseModel || '',
       editModel: data.editModel || '',
@@ -1138,9 +1308,13 @@
     };
     const edited = await window.LumaChatExt.openSchemaModal(schema, { api, initial });
     if (!edited) return;
-    const nextChars = chars.map((c) => (c.id === charId
-      ? Object.assign({}, c, { art: edited.art || c.art, description: edited.description || c.description })
-      : c));
+    const merged = normalizeProfile(Object.assign({}, ch, {
+      art: edited.art || ch.art,
+      description: edited.description !== undefined ? edited.description : ch.description,
+      appearance: edited.appearance !== undefined ? edited.appearance : ch.appearance,
+      profile: Object.assign({}, edited.profile || {}, { bonds: (ch.profile && ch.profile.bonds) || {} }),
+    }));
+    const nextChars = chars.map((c) => (c.id === charId ? merged : c));
     await ctx.setMeta({ data: { characters: nextChars } });
     renderRoster(ctx);
     if (ctx.refresh) ctx.refresh();
@@ -1403,6 +1577,7 @@
         c.currentOutfitDesc = '';
         c.currentSlots = null;
       }
+      resetMemory(data);
       try { await ctx.setMeta({ data }); } catch (_) {}
     },
 
@@ -1518,6 +1693,16 @@
         const turnEl = ctx.turnElForMessage(p.messageId);
         const asst = turnEl && turnEl.querySelector('.cm-asst');
         if (asst) clearSceneLoading(asst);
+        return;
+      }
+
+      if (evt.type === 'mode:content') {
+        const turnEl = ctx.turnElForMessage(p.messageId);
+        const body = turnEl && turnEl.querySelector('.cm-asst-body');
+        if (!body || typeof p.content !== 'string') return;
+        turnEl._rpContent = p.content;
+        body.dataset.rpRendered = '1';
+        renderRoleplayBody(body, p.content, ((ctx.meta && ctx.meta.data && ctx.meta.data.characters) || []), ctx);
         return;
       }
 

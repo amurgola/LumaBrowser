@@ -3,10 +3,12 @@ const AntiCheatDetector = require('./AntiCheatDetector');
 const DesktopError = require('./DesktopError');
 const DesktopKeys = require('./DesktopKeys');
 const Win32 = require('./Win32');
+const DesktopActivity = require('./service/DesktopActivity');
 const DesktopClickLadder = require('./service/DesktopClickLadder');
 const DesktopDrag = require('./service/DesktopDrag');
 const DesktopGuards = require('./service/DesktopGuards');
 const DesktopKeyboard = require('./service/DesktopKeyboard');
+const DesktopRunControl = require('./service/DesktopRunControl');
 const DesktopScroll = require('./service/DesktopScroll');
 const DesktopTyping = require('./service/DesktopTyping');
 const GuardedInput = require('./service/GuardedInput');
@@ -31,14 +33,16 @@ class DesktopService {
   static LAUNCH_MAX_CHARS = 1024;
   static DESKTOP_HWND = 0;
 
-  constructor({ db, nativeImage, visualGrounding = null, uia = null, win = Win32, clipboard = null, sleep = DesktopService._realSleep } = {}) {
+  constructor({ db, nativeImage, visualGrounding = null, uia = null, win = Win32, clipboard = null, sleep = DesktopService._realSleep, now = Date.now } = {}) {
     this.win = win;
     this._db = db;
     this._nativeImage = nativeImage;
     this._uia = uia;
     this._sleep = sleep;
     this._guards = new DesktopGuards(win);
-    this._input = new GuardedInput({ win, guards: this._guards });
+    this.control = new DesktopRunControl({ now });
+    this.activity = new DesktopActivity();
+    this._input = new GuardedInput({ win, guards: this._guards, control: this.control });
     this._frames = new ScreenFrames();
     this._observation = new UiaObservation();
     this._observer = new WindowObserver({ win, sleep });
@@ -133,14 +137,14 @@ class DesktopService {
     return { success: true, data: { windows, ...(human ? { humanNeeded: human.message } : {}) } };
   }
 
-  focus(args) {
-    const { w, result } = this._target(args);
-    if (result) return result;
-    const refusal = this._guards.promptRefusal(w) || this._guards.humanNeeded();
-    if (refusal) return DesktopError.toResult(refusal);
-    return this.win.focusWindow(w.hwnd)
-      ? { success: true, data: { hwnd: w.hwnd, title: w.title } }
-      : { success: false, error: `Windows refused to bring "${w.title}" to the front.` };
+  async focus(args) {
+    return this._act('focus', args, {}, (w) => {
+      const refusal = this._guards.promptRefusal(w) || this._guards.humanNeeded();
+      if (refusal) return DesktopError.toResult(refusal);
+      return this.win.focusWindow(w.hwnd)
+        ? { success: true, data: { hwnd: w.hwnd, title: w.title } }
+        : { success: false, error: `Windows refused to bring "${w.title}" to the front.` };
+    });
   }
 
   screenshot(args = {}) {
@@ -167,14 +171,16 @@ class DesktopService {
     }
   }
 
+  observedNode(hwnd, ref) {
+    return this._observation.isFor(Number(hwnd)) ? this._observation.node(Number(hwnd), Number(ref)) : null;
+  }
+
   async click(args = {}) {
-    const { w, result } = this._target(args, { allowDesktop: true });
-    return result || DesktopService._notePopup(w, await this._clickLadder.click(w, args));
+    return this._act('click', args, { allowDesktop: true }, async (w) => DesktopService._notePopup(w, await this._clickLadder.click(w, args)));
   }
 
   async type(args = {}) {
-    const { w, result } = this._target(args, { allowDesktop: true });
-    return result || DesktopService._notePopup(w, await this._typing.type(w, args));
+    return this._act('type', args, { allowDesktop: true }, async (w) => DesktopService._notePopup(w, await this._typing.type(w, args)));
   }
 
   async lookAfter(args = {}, r = null) {
@@ -185,18 +191,18 @@ class DesktopService {
   }
 
   async pressKey(args = {}) {
-    const { w, result } = this._target(args, { allowDesktop: true });
-    if (result) return result;
-    try {
-      DesktopKeys.comboEvents(args.keys);
-      this._guards.preInput(w);
-      if (!(await this.bringToFront(w))) return { success: false, error: `Could not bring "${w.title}" to the front.` };
-      const outcome = await this._keyboard.combo(w, args.keys);
-      const opened = outcome.foregroundChanged ? this._guards.foregroundWindow() : null;
-      return DesktopService._notePopup(w, { success: true, data: { keys: args.keys, ...(opened ? { nowInFront: DesktopService._brief(opened) } : {}) } });
-    } catch (e) {
-      return DesktopError.toResult(e);
-    }
+    return this._act('pressKey', args, { allowDesktop: true }, async (w) => {
+      try {
+        DesktopKeys.comboEvents(args.keys);
+        this._guards.preInput(w);
+        if (!(await this.bringToFront(w))) return { success: false, error: `Could not bring "${w.title}" to the front.` };
+        const outcome = await this._keyboard.combo(w, args.keys);
+        const opened = outcome.foregroundChanged ? this._guards.foregroundWindow() : null;
+        return DesktopService._notePopup(w, { success: true, data: { keys: args.keys, ...(opened ? { nowInFront: DesktopService._brief(opened) } : {}) } });
+      } catch (e) {
+        return DesktopError.toResult(e);
+      }
+    });
   }
 
   async launch(args = {}) {
@@ -205,6 +211,16 @@ class DesktopService {
     const problem = DesktopService._launchProblem(args);
     if (problem) return { success: false, error: problem };
     const app = String(args.app).trim();
+    const info = DesktopActivity.describe('launch', null, args);
+    const held = await this.control.hold(info);
+    if (held) return held;
+    this.activity.start(info);
+    const r = await this._launch(app, args);
+    this.activity.end(info, r);
+    return r;
+  }
+
+  async _launch(app, args) {
     const before = new Set(this.win.listTopLevelWindows().map((w) => w.hwnd));
     try {
       this.win.shellOpen(app, args.args ? String(args.args) : null);
@@ -221,27 +237,25 @@ class DesktopService {
   }
 
   async scroll(args = {}) {
-    const { w, result } = this._target(args, { allowDesktop: true });
-    return result || DesktopService._notePopup(w, await this._scroll.scroll(w, args));
+    return this._act('scroll', args, { allowDesktop: true }, async (w) => DesktopService._notePopup(w, await this._scroll.scroll(w, args)));
   }
 
   async drag(args = {}) {
-    const { w, result } = this._target(args);
-    return result || DesktopService._notePopup(w, await this._drag.drag(w, args));
+    return this._act('drag', args, {}, async (w) => DesktopService._notePopup(w, await this._drag.drag(w, args)));
   }
 
   async setValue(args = {}) {
-    const { w, result } = this._target(args);
-    if (result) return result;
-    const invalid = this._setValueProblem(w, args);
-    if (invalid) return { success: false, error: invalid };
-    const refusal = this._guards.targetRefusal(w);
-    if (refusal) return DesktopError.toResult(refusal);
-    try {
-      return await this._setRange(Number(args.ref), typeof args.value === 'number' ? args.value : String(args.value));
-    } catch (e) {
-      return DesktopError.toResult(e);
-    }
+    return this._act('setValue', args, {}, async (w) => {
+      const invalid = this._setValueProblem(w, args);
+      if (invalid) return { success: false, error: invalid };
+      const refusal = this._guards.targetRefusal(w);
+      if (refusal) return DesktopError.toResult(refusal);
+      try {
+        return await this._setRange(Number(args.ref), typeof args.value === 'number' ? args.value : String(args.value));
+      } catch (e) {
+        return DesktopError.toResult(e);
+      }
+    });
   }
 
   _buildActions({ visualGrounding, clipboard }) {
@@ -267,6 +281,23 @@ class DesktopService {
     this._typing = new DesktopTyping(parts);
     this._scroll = new DesktopScroll(parts);
     this._drag = new DesktopDrag(parts);
+  }
+
+  async _act(action, args, opts, run) {
+    const { w, result } = this._target(args, opts);
+    if (result) return result;
+    const info = DesktopActivity.describe(action, w, args);
+    const held = await this.control.hold(info);
+    if (held) return held;
+    this.activity.start(info);
+    let r;
+    try {
+      r = await run(w);
+    } catch (e) {
+      r = DesktopError.toResult(e);
+    }
+    this.activity.end(info, r);
+    return r;
   }
 
   _target(args = {}, opts = {}) {

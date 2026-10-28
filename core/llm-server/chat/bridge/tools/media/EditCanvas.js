@@ -13,17 +13,17 @@ class EditCanvas {
     return EditFrames.NAMES.includes(raw) ? raw : EditCanvas.DEFAULT_FRAME;
   }
 
-  static async resolve({ frame, srcDims, choice, imageRouter }) {
-    const canvas = await EditCanvas._modelCanvas({ frame, srcDims, choice, imageRouter });
+  static async resolve({ frame, srcDims, choice, imageRouter, fill = false }) {
+    const canvas = await EditCanvas._modelCanvas({ frame, srcDims, choice, imageRouter, fill });
     return canvas || EditCanvas._sourceShaped(srcDims);
   }
 
-  static async _modelCanvas({ frame, srcDims, choice, imageRouter }) {
-    if (choice.remoteEdit) return EditFrames.resolveFrame({ frame, srcDims, native: null, grid: EditCanvas.REMOTE_GRID });
+  static async _modelCanvas({ frame, srcDims, choice, imageRouter, fill }) {
+    if (choice.remoteEdit) return EditFrames.resolveFrame({ frame, srcDims, native: null, grid: EditCanvas.REMOTE_GRID, fill });
     if (!choice.editCapable || !imageRouter || typeof imageRouter.getFrameSizes !== 'function') return null;
     try {
       const sizes = await imageRouter.getFrameSizes(choice.editModelId || null);
-      return sizes ? EditFrames.resolveFrame({ frame, srcDims, native: sizes.native, grid: sizes.grid }) : null;
+      return sizes ? EditFrames.resolveFrame({ frame, srcDims, native: sizes.native, grid: sizes.grid, fill }) : null;
     } catch (_) {
       return null;
     }
