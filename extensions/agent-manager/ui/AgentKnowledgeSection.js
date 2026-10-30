@@ -17,17 +17,29 @@ export default class AgentKnowledgeSection {
       return;
     }
     this._wrap.innerHTML = this._listHtml()
-      + '<div class="am-kb-actions"><button type="button" class="luma-btn" data-kb-add>Add documents…</button></div>';
+      + '<div class="am-kb-actions">'
+      + '<button type="button" class="luma-btn" data-kb-add>Add documents…</button> '
+      + '<button type="button" class="luma-btn" data-kb-add-folder title="Every PDF, Markdown, text or HTML file in the folder and its subfolders">Add folder…</button>'
+      + '</div>';
     this._wrap.querySelector('[data-kb-add]').addEventListener('click', () => this.add());
+    this._wrap.querySelector('[data-kb-add-folder]').addEventListener('click', () => this.addFolder());
     this._wrap.querySelectorAll('[data-kb-remove]').forEach((btn) => {
       btn.addEventListener('click', () => this.remove(Number(btn.dataset.kbRemove)));
     });
   }
 
-  async add() {
+  add() {
+    return this._addVia('kb.add');
+  }
+
+  addFolder() {
+    return this._addVia('kb.addFolder');
+  }
+
+  async _addVia(action) {
     this._errBox.textContent = '';
     try {
-      const r = await this._inv('kb.add', { agentId: this._agent.id });
+      const r = await this._inv(action, { agentId: this._agent.id });
       if (!r.canceled) this._docs = r.documents || this._docs;
       const failed = (r.results || []).filter((x) => !x.success);
       if (failed.length) this._errBox.textContent = failed.map((f) => (f.path || 'file') + ': ' + (f.error || 'failed')).join('; ');

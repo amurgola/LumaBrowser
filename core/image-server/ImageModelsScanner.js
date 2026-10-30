@@ -3,9 +3,12 @@ const path = require('path');
 const ImageModelCatalog = require('./models/ImageModelCatalog');
 const ImageModelFiles = require('./ImageModelFiles');
 const ImageModelRecord = require('./ImageModelRecord');
+const ModelFolderRegistry = require('../shared/ModelFolderRegistry');
 
 class ImageModelsScanner {
   static SKIPPED_DIRS = new Set(['loras']);
+
+  static FOLDER_KIND = 'image';
 
   constructor({ catalog = new ImageModelCatalog() } = {}) {
     this._catalog = catalog;
@@ -34,9 +37,11 @@ class ImageModelsScanner {
 
   async _readModels(modelsDir, entries) {
     const catalogList = this._catalog.list();
+    const foreign = ModelFolderRegistry.foldersExcept(ImageModelsScanner.FOLDER_KIND);
     const models = [];
     for (const entry of entries) {
       if (!entry.isDirectory() || ImageModelsScanner.SKIPPED_DIRS.has(entry.name.toLowerCase())) continue;
+      if (ModelFolderRegistry.isOneOf(path.join(modelsDir, entry.name), foreign)) continue;
       const record = await this.readModelDir(path.join(modelsDir, entry.name), entry.name, catalogList);
       if (record) models.push(record);
     }

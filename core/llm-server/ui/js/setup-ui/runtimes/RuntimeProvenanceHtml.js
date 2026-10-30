@@ -11,7 +11,7 @@ export default class RuntimeProvenanceHtml {
   static NO_PREBUILT = 'no prebuilt for this platform';
 
   static html(r) {
-    if (r.kind === 'format' || !(r.repo && r.repo.owner && r.repo.repo)) return '';
+    if (!(r.repo && r.repo.owner && r.repo.repo)) return '';
     return RuntimeProvenanceHtml._sourceRow(r) + RuntimeProvenanceHtml._downloadedRows(r);
   }
 

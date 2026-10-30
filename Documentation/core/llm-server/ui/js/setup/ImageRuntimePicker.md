@@ -7,11 +7,14 @@ Picks the image runtime for setup.
 ## Methods
 
 - `ImageRuntimePicker.pick(view)` walks `ORDER` (`sd-cpp-cuda12`,
-  `sd-cpp-vulkan`, `sd-cpp-cpu`): first a runtime whose `hardware.ready` is true
-  and that is obtainable (installed, or a prebuilt asset exists for this host),
-  then any with `assetSupported !== false`, then `sd-cpp-cpu`, then the first
-  row, else `null`. On Linux the CUDA row is filtered out of the view, so an
-  NVIDIA host gets Vulkan.
+  `sd-cpp-luma`, `sd-cpp-vulkan`, `sd-cpp-cpu`): first a runtime whose
+  `hardware.ready` is true and that is obtainable (installed, or a prebuilt
+  asset exists for this host), then any with `assetSupported !== false`, then
+  `sd-cpp-cpu`, then the first row, else `null`. On Linux the CUDA row is
+  filtered out of the view, so an NVIDIA host gets Vulkan. `sd-cpp-luma` sits
+  after upstream CUDA 12, so x64 hosts are unchanged; on Windows on Arm (RTX
+  Spark), where upstream ships no build and every leejet row lacks an asset, it
+  is the pick.
 
 ## Globals
 

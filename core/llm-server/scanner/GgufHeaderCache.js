@@ -3,7 +3,7 @@ const fs = require('fs');
 class GgufHeaderCache {
   static MAX_ENTRIES = 256;
 
-  static SCHEMA_VERSION = 9;
+  static SCHEMA_VERSION = 10;
 
   constructor({ parse, persistPath = () => '' }) {
     this._parse = parse;

@@ -26,9 +26,13 @@ the header is unavailable or undecided.
 2. One gap: a decoder header says nothing about a detached MTP head unless the
    tensor scan ran. With `role: 'main'` and no `tensorScan`, an `mtp-` name still
    counts (`roleSource: 'filename'`, reason recorded).
-3. Parse failure, or a header with no architecture and no type (`role: null`):
-   the name's role token (`mmproj`, `mtp`, `draft`, `embedding`, `reranker`),
-   else `main`.
+3. Parse failure: the name's role token (`mmproj`, `mtp`, `draft`,
+   `embedding`, `reranker`), else `main`.
+4. A header that parsed but names no architecture and no type (`role: null`):
+   the name's role token when it has one; otherwise `diffusion`
+   (`roleSource: 'header'`). llama.cpp always writes `general.architecture`,
+   the image converters often do not, so such a file is an image or video GGUF
+   and the scanner drops it from the LLM list.
 
 ## Why
 

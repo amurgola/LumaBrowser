@@ -53,6 +53,12 @@ class CudaDeviceProbe {
     return CudaDeviceProbe.withLiveMemory(diagnostics);
   }
 
+  static liveCardTotals() {
+    const snap = CudaDeviceProbe._stream().snapshot();
+    if (!snap || !snap.outcome || snap.outcome.kind !== 'ok') return null;
+    return CudaDeviceProbe._liveRows(() => snap.rows).map((row) => ({ index: row.index, totalBytes: row.totalBytes }));
+  }
+
   static readComputeApps() {
     return CudaDeviceProbe._stream().cachedComputeApps();
   }

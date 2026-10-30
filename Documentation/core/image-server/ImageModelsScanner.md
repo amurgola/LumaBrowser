@@ -15,7 +15,10 @@ pin target and the setup UI.
   - `{ modelsDir, models: [], missing: true }` when it does not exist,
   - `{ modelsDir, models: [], error }` when it cannot be listed,
   - else `{ modelsDir, models }` in directory order. Loose files, the `loras/`
-    LoRA library (any case) and folders without a diffusion file are skipped.
+    LoRA library (any case), folders without a diffusion file, and a folder
+    another service registered as its own library in
+    [ModelFolderRegistry](../shared/ModelFolderRegistry.md) (`FOLDER_KIND` is
+    `'image'`; the LLM folder, should it be placed under this one) are skipped.
 - `readModelDir(dir, name, catalogList?)` resolves one folder's record or `null`.
 
 Layout, as the downloader writes it:

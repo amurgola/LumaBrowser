@@ -8,8 +8,9 @@ class ToolGroupState {
     this._conversationId = conversationId;
     this.available = AvailableGroups.for(allows, extTools, { kbHasDocs });
     this.availableKeys = new Set(this.available.map((g) => g.key));
+    this._forced = new Set(forcedActive);
     this.active = new Set(this._persistedKeys());
-    for (const name of forcedActive) this.active.add(name);
+    for (const name of this._forced) this.active.add(name);
   }
 
   activate(keys) {
@@ -62,7 +63,8 @@ class ToolGroupState {
       if (!store || !this._conversationId) return;
       if (store.getConversation && !store.getConversation(this._conversationId)) return;
       const meta = store.getMeta(this._conversationId);
-      store.setMeta(this._conversationId, { data: { ...(meta.data || {}), activeToolGroups: [...this.active] } });
+      const activeToolGroups = [...this.active].filter((key) => !this._forced.has(key));
+      store.setMeta(this._conversationId, { data: { ...(meta.data || {}), activeToolGroups } });
     } catch (_) {}
   }
 }

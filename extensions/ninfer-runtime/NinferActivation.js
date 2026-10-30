@@ -4,13 +4,14 @@ const NinferModelEntries = require('./NinferModelEntries');
 class NinferActivation {
   static UNAVAILABLE_WARNING = 'context.llmCatalog is unavailable; this LumaBrowser build predates LLM runtime extensions.';
 
-  static async activate(context, platform = process.platform) {
+  static async activate(context, platform = process.platform, arch = process.arch) {
     const api = context && context.llmCatalog;
     if (!api || typeof api.registerRuntime !== 'function') {
       if (context && context.logger) context.logger.warn(NinferActivation.UNAVAILABLE_WARNING);
       return {};
     }
-    if (!NinferCatalog.RUNTIME_ENTRY.platforms.includes(platform)) return {};
+    const hostKeys = [platform, `${platform}-${arch}`];
+    if (!NinferCatalog.RUNTIME_ENTRY.platforms.some((key) => hostKeys.includes(key))) return {};
     NinferActivation._registerRuntime(api);
     NinferActivation._registerModels(api);
     NinferActivation._logRegistered(context);

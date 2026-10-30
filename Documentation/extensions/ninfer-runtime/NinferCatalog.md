@@ -8,7 +8,9 @@ installer and planner use.
 ## Statics
 
 - `RUNTIME_ID` (`'ninfer'`), `GiB`.
-- `RUNTIME_ENTRY`: `acquisition: 'extension'`, platforms win32 and linux,
+- `RUNTIME_ENTRY`: `acquisition: 'extension'`, platforms `win32-x64` and
+  `linux-x64` (the prebuilt archive is linux-x64 and the source build packs the
+  x86_64-linux libcudart, so Windows on Arm and Linux arm64 get no row),
   `requiresHw` (CUDA 13, GPU name `RTX 5090` with its note), a platform-specific
   `requirementNote`, `protocol: 'openai-compat'`, the `request` dialect,
   `launchStyle: 'ninfer'`, `modelKinds: ['ninfer']`, repo, manual source URL,

@@ -16,7 +16,12 @@ class CudaDeviceParser {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean)
-      .map(CudaDeviceParser._parseLine);
+      .map(CudaDeviceParser._parseLine)
+      .filter(CudaDeviceParser.isCudaGpu);
+  }
+
+  static isCudaGpu(device) {
+    return !!device && (device.computeCapability != null || device.memoryTotalMB != null);
   }
 
   static parsePciDeviceId(text) {
@@ -29,7 +34,8 @@ class CudaDeviceParser {
 
   static parseCudaVersion(xml) {
     if (!xml) return null;
-    const match = xml.match(/<cuda_version>([^<]+)<\/cuda_version>/i);
+    const match = xml.match(/<cuda_version>([^<]+)<\/cuda_version>/i)
+      || xml.match(/<cuda_umd_version>([^<]+)<\/cuda_umd_version>/i);
     return match ? match[1].trim() : null;
   }
 
@@ -42,7 +48,7 @@ class CudaDeviceParser {
       memoryTotalMB: number(parts[2]),
       memoryFreeMB: number(parts[3]),
       memoryUsedMB: number(parts[4]),
-      computeCapability: parts[5] || null,
+      computeCapability: /^\d+\.\d+$/.test(parts[5] || '') ? parts[5] : null,
       pcie: CudaDeviceParser._pcie(number(parts[6]), number(parts[7]), number(parts[8]), number(parts[9])),
       pciDeviceId: CudaDeviceParser.parsePciDeviceId(parts[10]),
       pciBusId: parts[11] || null,

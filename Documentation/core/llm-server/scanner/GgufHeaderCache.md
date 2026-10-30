@@ -17,7 +17,7 @@ file, so a rescan or a warm boot resolves unchanged models with zero disk reads.
   `path|size|modifiedAt`, or `path|size` when no stamp was given.
 - `flush()` writes the successful (`ok`) entries when anything new parsed; a
   write error is ignored and retried on the next dirty flush.
-- `SCHEMA_VERSION` (9), `MAX_ENTRIES` (256, oldest evicted first).
+- `SCHEMA_VERSION` (10), `MAX_ENTRIES` (256, oldest evicted first).
 
 ## Why
 
@@ -26,7 +26,7 @@ boot; a large library made that a startup stall. Only successful parses persist
 so a timeout or a momentarily locked file is retried next boot instead of frozen.
 Entries of another schema are dropped on hydrate so a model re-parses once
 after the parser gains fields (history in the source comment: v2 KV lengths
-through v8 per-tensor byte layout, v9 header role, parameter count, chat
+through v8 per-tensor byte layout, v9 header role, parameter count, chat template (v10 re-derives the role so image and video GGUFs cached as `main` become `diffusion`), chat
 template and dominant tensor type). The modification time joined the key with
 v9: a file rewritten in place to the same byte size (a re-quantised upload, a
 restored download) used to keep serving the old header.

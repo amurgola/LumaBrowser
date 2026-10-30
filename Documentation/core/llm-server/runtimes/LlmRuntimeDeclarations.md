@@ -37,9 +37,6 @@ one-place edit.
     `spawnEnv: { GGML_OPENVINO_DEVICE: 'GPU' }`, which a user's own value overrides.
   - `mlx-lm`: Mac-only (`platforms: ['darwin']`), `acquisition: 'manual-source'`
     (pip install, detected on PATH), `launchStyle: 'mlx-server'`.
-  - `harmony`: `kind: 'format'`, satisfied by any llama.cpp build at b6000+
-    (`dependsOn` lists the CPU, CUDA 12/13, Vulkan, OpenCL-Adreno, ROCm, SYCL and OpenVINO
-    builds; `minLlamaBuild`).
 - Shared pieces: `LLAMA_BIN_NAMES`, `GGML_ORG`, `LLAMA_MANUAL_SOURCE_NOTE`,
   `WIN_CUDA12_ASSET`, `WIN_CUDA12_CUDART`, `LINUX_CUDA12_ASSET`,
   `LINUX_CUDA12_CUDART`.

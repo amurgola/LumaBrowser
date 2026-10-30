@@ -38,6 +38,10 @@ the background.
   `timeoutMs`, 2 s), then `withLiveMemory`. Never rejects. The LLM launch uses it
   right before placement.
   `query` is a test seam defaulting to the stream snapshot's rows.
+- `CudaDeviceProbe.liveCardTotals()` returns `[{ index, totalBytes }]` from the
+  stream's last good reading (cards with no total dropped), or null when the
+  stream has not read successfully. Never spawns. LlmDiagnosticsCache uses it to
+  notice a resized VRAM carve-out under a persisted snapshot.
 - `CudaDeviceProbe.readComputeApps()` returns `{ pid: bytes }` of resident VRAM
   per CUDA process: the stream's last list, refreshed in the background when a
   card's used bytes moved (`NvidiaSmiStream.cachedComputeApps`). Empty before

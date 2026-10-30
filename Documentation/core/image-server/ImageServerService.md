@@ -30,6 +30,12 @@ the classes in [service/](service/).
 - Every slot gets the persisted idle timeout and is wired to the VRAM
   coordinator (`releaseOnIdle`, `markResidentOnReady`) under its role id.
 
+On construction the service registers its models folder in
+[ModelFolderRegistry](../shared/ModelFolderRegistry.md) (kind `'image'`), so the
+other model service's scanner never walks into it; the provider reads the
+current `getModelsDirConfig().effectivePath`, so a changed setting is seen at
+the next scan.
+
 ## Methods
 
 Slots:

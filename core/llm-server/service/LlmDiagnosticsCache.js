@@ -1,10 +1,13 @@
+const CudaDeviceProbe = require('../../shared/runtime/CudaDeviceProbe');
 const CudaSnapshot = require('../../shared/runtime/CudaSnapshot');
 
 class LlmDiagnosticsCache {
   static STORAGE_KEY = 'core.llmServer.diagnosticsCache';
-  static SCHEMA = 3;
+  static SCHEMA = 4;
+  static TOTAL_DRIFT_MB = 256;
 
-  constructor({ settingsDb, smiPath, gather, invalidateRuntimes, getRuntimesDir = null }) {
+  constructor({ settingsDb, smiPath, gather, invalidateRuntimes, getRuntimesDir = null, liveCardTotals = () => CudaDeviceProbe.liveCardTotals() }) {
+    this._liveCardTotals = liveCardTotals;
     this._getRuntimesDir = getRuntimesDir;
     this._db = settingsDb;
     this._smiPath = smiPath;
@@ -43,8 +46,20 @@ class LlmDiagnosticsCache {
   _servableCache() {
     const cached = this.getCached();
     if (!cached || cached._schema !== LlmDiagnosticsCache.SCHEMA || CudaSnapshot.isTransientCudaFailure(cached.cuda)) return null;
+    if (this._cardTotalsMoved(cached)) return null;
     this._overlayHintFlag(cached);
     return cached;
+  }
+
+  _cardTotalsMoved(cached) {
+    let live = null;
+    try { live = this._liveCardTotals(); } catch (_) { live = null; }
+    if (!Array.isArray(live) || live.length === 0) return false;
+    const cards = (cached.cuda && cached.cuda.available && Array.isArray(cached.cuda.devices) ? cached.cuda.devices : [])
+      .filter((d) => d && Number(d.memoryTotalMB) > 0);
+    if (cards.length !== live.length) return true;
+    const MIB = 1024 * 1024;
+    return live.some((row, i) => Math.abs(row.totalBytes / MIB - Number(cards[i].memoryTotalMB)) > LlmDiagnosticsCache.TOTAL_DRIFT_MB);
   }
 
   async _probe() {

@@ -35,6 +35,12 @@ classes in [service/](service/); every legacy public method keeps its name.
 - Read-only pinned-tab getters: `tabViewManager`, `pinnedTabId`, `tabHtmlUrl`,
   `tabHtmlFileUrl`, `tabHtmlPath`, `tabPreloadPath`, `tabLoadedOk`.
 
+On construction the service registers its models folder in
+[ModelFolderRegistry](../shared/ModelFolderRegistry.md) (kind `'llm'`), so the
+other model service's scanner never walks into it; the provider reads the
+current `getModelsDirConfig().effectivePath`, so a changed setting is seen at
+the next scan.
+
 ## Methods
 
 Requests and starting ([LocalRequestTracker](service/LocalRequestTracker.md),

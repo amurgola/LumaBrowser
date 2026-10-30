@@ -50,12 +50,6 @@ export default class RuntimeRowHtml {
   }
 
   static badges(r) {
-    if (r.kind === 'format') {
-      return [
-        `<span class="luma-badge ${r.installed ? 'ok' : 'muted'}">${r.installed ? 'available' : 'unavailable'}</span>`,
-        '<span class="runtime-kind-tag">format</span>',
-      ];
-    }
     const esc = HtmlEscaper.escape;
     const out = [`<span class="luma-badge ${r.installed ? 'ok' : 'muted'}">${RuntimeRowHtml.statusLabel(r)}</span>`];
     if (r.staleManualRegistration && !r.installed) out.push('<span class="luma-badge bad" title="Registered binary no longer exists at its saved path">registered path missing</span>');
@@ -82,7 +76,6 @@ export default class RuntimeRowHtml {
   }
 
   static secondaryActions(r) {
-    if (r.kind === 'format') return [];
     const id = HtmlEscaper.escape(r.id);
     const out = [];
     if (r.installed && r.source === 'managed') out.push(`<button class="luma-btn luma-btn--sm" data-runtime-action="uninstall" data-runtime-id="${id}">Uninstall</button>`);
@@ -109,7 +102,6 @@ export default class RuntimeRowHtml {
   }
 
   static _primaryAction(r) {
-    if (r.kind === 'format') return '';
     return `<button class="luma-btn luma-btn--sm" data-runtime-action="install" data-runtime-id="${HtmlEscaper.escape(r.id)}">${r.installed ? 'Update' : 'Install'}</button>`;
   }
 
@@ -119,9 +111,6 @@ export default class RuntimeRowHtml {
     if (r.version) meta.push(`<div class="runtime-meta-row"><span class="runtime-meta-label">Version</span><span class="runtime-meta-value">${esc(r.version)}</span></div>`);
     if (r.binaryPath) meta.push(`<div class="runtime-meta-row"><span class="runtime-meta-label">Path</span><span class="runtime-meta-value dim">${esc(r.binaryPath)}</span></div>`);
     const rows = meta.length ? [`<div class="runtime-meta">${meta.join('')}</div>`] : [];
-    if (r.kind === 'format' && r.providedBy && r.providedBy.length > 0) {
-      rows.push(`<div class="runtime-detail-row"><span>Provided by</span><span><b>${esc(r.providedBy.map((p) => p.id + (p.version ? ' (' + p.version + ')' : '')).join(', '))}</b></span></div>`);
-    }
     if (r.requirementNote) rows.push(`<div class="runtime-detail-row"><span>Requires</span><span>${esc(r.requirementNote)}</span></div>`);
     rows.push(RuntimeRowHtml._backendRow(r));
     rows.push(RuntimeProvenanceHtml.html(r));
@@ -129,7 +118,7 @@ export default class RuntimeRowHtml {
   }
 
   static _sourceNote(r) {
-    if (r.kind === 'format' || r.acquisition !== 'manual-source' || !r.manualSourceNote) return '';
+    if (r.acquisition !== 'manual-source' || !r.manualSourceNote) return '';
     return `<div class="runtime-detail-row"><span>How to build</span><span>${HtmlEscaper.escape(r.manualSourceNote)}</span></div>`;
   }
 }

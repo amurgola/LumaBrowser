@@ -109,14 +109,15 @@ class EditRegion {
     return { ...image, bytes: out.bytes, mime: out.mime, width: out.width, height: out.height, composited: true };
   }
 
-  summary(composited) {
+  summary(composited, { held = false } = {}) {
     const share = typeof this.coverage === 'number' ? `, about ${Math.max(1, Math.round(this.coverage * 100))}% of the image` : '';
     const note = this.note ? ` ("${this.note}")` : '';
     const crop = this._crop ? `; edited on a ${this._crop.rect.width}x${this._crop.rect.height} close-up around the area, enlarged for detail` : '';
+    const hold = held ? '; the model was held to the area by its mask while rendering' : '';
     const outcome = composited
       ? 'the source is restored pixel for pixel outside it'
       : 'the result could NOT be composited back onto the source (no bitmap codec), so the whole render is kept';
-    return `; confined to marked region ${this.id}${note}${share}${crop}; ${outcome}`;
+    return `; confined to marked region ${this.id}${note}${share}${crop}${hold}; ${outcome}`;
   }
 
   static _isNone(raw) {

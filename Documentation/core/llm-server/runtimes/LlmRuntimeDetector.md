@@ -5,7 +5,7 @@
 The LLM server's runtime detector. Extends
 [RuntimeDetector](../../shared/runtime/RuntimeDetector.md) over
 [LlmRuntimeCatalog](LlmRuntimeCatalog.md) for the `inference` kind, and adds
-the llama.cpp version parser and the format roll-up (Harmony).
+the llama.cpp version parser and the backend device check.
 
 ## Methods
 
@@ -15,7 +15,7 @@ the llama.cpp version parser and the format roll-up (Harmony).
   `SysdepsChecker`) names what a backend library cannot find on Linux.
 - `detectRuntimes({ runtimesRoot, cuda, gpu, manualBinaries })`: inherited;
   resolves `{ runtimesRoot, platformKey, runtimes }` with one row per
-  inference runtime for this host plus one row per non-inference entry.
+  inference runtime for this host.
 - `_afterDetect(detail, entry)`: for an installed GPU build (an entry with
   `backendDevice`) that ran `--version` cleanly, `listBackendDevices` runs
   [BackendDeviceCheck](../../shared/runtime/detect/BackendDeviceCheck.md) and
@@ -33,20 +33,11 @@ the llama.cpp version parser and the format roll-up (Harmony).
     no version instead of an error line;
   - other output -> its first line; empty -> `null`.
 
-Format rows (`_rollUp`): `{ id, name, kind, description, installed,
-providedBy, minLlamaBuild }`. An entry is installed when any installed
-`dependsOn` runtime meets `minLlamaBuild`; each such runtime is listed in
-`providedBy` as `{ id, version, buildNumber }` (or `{ id, version }` when the
-entry has no minimum).
+Harmony (gpt-oss) once had its own `format` row rolled up from the llama.cpp
+builds; every current build supports it, so the row was removed (2026-10). The
+chat-side gpt-oss handling lives in `core/llm-server/chat/Harmony*.js`.
 
 ## Why
-
-The managed manifest's release tag (`bNNNN`) is read before `--version`
-because some forks (janhq's CUDA builds) report a rebased `version: 1 (hash)`
-that would parse as build 1 and wrongly disqualify a current build.
-`--version` stays the fallback for PATH and manual runtimes, which have no
-manifest. Build numbers come from
-[LlamaBuildNumber](../../shared/runtime/detect/LlamaBuildNumber.md).
 
 The device check exists because the ggml backends are loaded with `dlopen`
 and release builds load them silently: a ROCm build without the HIP SDK, or a

@@ -4,7 +4,9 @@ class ArtifactCatalog {
   static HEADER = '[Artifacts created earlier in THIS conversation; you can pass these ids to edit_image, etc.:\n';
   static HISTORY_NOTE = '\n  Every version is kept. An edit builds ONLY on the version id you pass. If the user'
     + ' rejects the last edit ("no, not like that", "undo that", "instead…"), edit the'
-    + ' version BEFORE it, not the latest, or the mistake is carried into the new result.';
+    + ' version BEFORE it, not the latest, or the mistake is carried into the new result. For a new change'
+    + ' unrelated to the last edit, build on the EARLIEST version that already has everything the user wants:'
+    + ' every pass through the model softens the picture a little, so long chains decay.';
   static REGION_NOTE = '\n  A "marked region" is an area the user painted by hand on that image, with their note on what'
     + ' should change there. Pass its id as edit_image `regionId` (with that exact image as `artifactId`): only the'
     + ' painted area is redrawn and the rest of the picture is kept pixel for pixel. A region marked in the'

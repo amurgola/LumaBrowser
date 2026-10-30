@@ -11,8 +11,13 @@ const GgufRoleResolver = require('./scanner/GgufRoleResolver');
 const GgufParseWorkerClient = require('./scanner/GgufParseWorkerClient');
 const ModelSidecars = require('./scanner/ModelSidecars');
 const BoundedParallel = require('./scanner/BoundedParallel');
+const GgufFileName = require('./models/GgufFileName');
+const GgufRoleTable = require('./GgufRoleTable');
+const ModelFolderRegistry = require('../shared/ModelFolderRegistry');
 
 class LlmModelsScanner {
+  static FOLDER_KIND = 'llm';
+
   static PARSE_CONCURRENCY = 4;
 
   static HEADER_CACHE_FILE = 'gguf-header-cache.json';
@@ -40,13 +45,36 @@ class LlmModelsScanner {
   async scan(rootDir) {
     const unavailable = await LlmModelsScanner._checkRoot(rootDir);
     if (unavailable) return unavailable;
-    const walk = await new ModelDirWalker().walk(rootDir);
+    const walk = await new ModelDirWalker().walk(rootDir, { excludeDirs: ModelFolderRegistry.foldersExcept(LlmModelsScanner.FOLDER_KIND) });
     const roles = await GgufRoleResolver.resolve(walk.ggufs, this._headerCache, LlmModelsScanner.PARSE_CONCURRENCY);
-    const models = this._buildModels(walk, rootDir, roles);
+    const { ggufs, diffusion } = LlmModelsScanner._withoutDiffusion(walk.ggufs, roles);
+    const models = this._buildModels({ ...walk, ggufs }, rootDir, roles);
     await this._readHeaders(models);
     await ModelSidecars.attach(models);
     LlmModelsScanner._sort(models);
-    return { available: true, dir: rootDir, models, truncated: walk.visited >= ModelDirWalker.MAX_ENTRIES };
+    return {
+      available: true,
+      dir: rootDir,
+      models,
+      truncated: walk.visited >= ModelDirWalker.MAX_ENTRIES,
+      skipped: { diffusion, excludedDirs: walk.excluded || [] },
+    };
+  }
+
+  static _withoutDiffusion(files, roles) {
+    const stems = new Set();
+    for (const file of files) {
+      const info = roles.get(file.path);
+      if (info && info.role === GgufRoleTable.ROLES.DIFFUSION) stems.add(`${file.directory}|${GgufFileName.split(file.name).stem}`);
+    }
+    if (!stems.size) return { ggufs: files, diffusion: [] };
+    const diffusion = [];
+    const ggufs = [];
+    for (const file of files) {
+      if (stems.has(`${file.directory}|${GgufFileName.split(file.name).stem}`)) diffusion.push(file.path);
+      else ggufs.push(file);
+    }
+    return { ggufs, diffusion };
   }
 
   _buildModels(walk, rootDir, roles) {

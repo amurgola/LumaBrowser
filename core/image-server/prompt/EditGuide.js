@@ -40,10 +40,20 @@ class EditGuide {
       '    reference.',
       `  - When a face or head is replaced, ask for the head to keep the size and angle it has in ${t(1)}.`,
       `  - \`strength\` is ignored by this model. It takes at most ${profile.maxReferences} references.`,
+      '  - Text in the picture: quote both strings and keep the lettering style, as in',
+      '    "Replace the text \'OPEN\' with \'CLOSED\', keeping the same font, size and colour."',
+      '  - After the render, parts the model did not visibly change are restored from the source, so a slight',
+      '    colour drift never creeps in. A DELIBERATE change to the whole picture that is subtle (a warmer tone,',
+      '    a slight colour grade, a soft-focus look) would be undone by that: pass `keepUnchanged: false` for it.',
+      '    A restyle or a change of scene is detected as whole-picture on its own.',
       '  - With a marked region (`regionId`) write the instruction for what changes INSIDE that area only; where it',
       '    sits is added for you, and the picture outside it is restored from the source afterwards. A small area is',
       '    edited on an enlarged close-up around it, so the model sees only what is in or right next to the area:',
       '    refer to that, not to things elsewhere in the picture.',
+      '  - A frame other than match EXTENDS the picture: the source is kept whole inside the new shape and only the',
+      '    new space is painted in. Say what the new space should show ("continue the room", "show the legs and',
+      '    feet standing on the same floor"). `anchor` places the source in the new frame: center (default), top',
+      '    (a head-shot made full-body: the head stays at the top, the body is added below), bottom, left, right.',
     ].join('\n');
   }
 }

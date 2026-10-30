@@ -186,6 +186,60 @@ class ImageModelEntries {
       compatibleRuntimes: [...SD_CPP_RUNTIMES],
     },
     {
+      id: 'qwen-image-edit-2511',
+      label: 'Qwen-Image-Edit 2511',
+      blurb:
+        'Alibaba\'s 20B Qwen-Image-Edit (2511): 2509 with less image drift between '
+        + 'edits and better consistency for several people in one picture. Same '
+        + 'Qwen2.5-VL text encoder, vision projector and VAE as 2509; ~18 GB total '
+        + 'at Q4_0. Heavy: needs CPU offload on <24 GB cards.',
+      family: 'qwen-image-edit',
+      kind: 'edit',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'unsloth/Qwen-Image-Edit-2511-GGUF',
+          file: 'qwen-image-edit-2511-Q4_0.gguf',
+          url: `${HF}/unsloth/Qwen-Image-Edit-2511-GGUF/resolve/main/qwen-image-edit-2511-Q4_0.gguf?download=true`,
+          approxBytes: 11852773984,
+          quants: [
+            { id: 'Q4_0', label: 'Q4_0 - recommended (safe, balanced)', file: 'qwen-image-edit-2511-Q4_0.gguf', url: `${HF}/unsloth/Qwen-Image-Edit-2511-GGUF/resolve/main/qwen-image-edit-2511-Q4_0.gguf?download=true`, approxBytes: 11852773984, recVramBytes: 14 * GB, default: true },
+            { id: 'Q4_K_M', label: 'Q4_K_M - may render black (sd.cpp #1385)', file: 'qwen-image-edit-2511-Q4_K_M.gguf', url: `${HF}/unsloth/Qwen-Image-Edit-2511-GGUF/resolve/main/qwen-image-edit-2511-Q4_K_M.gguf?download=true`, approxBytes: 12842830432, recVramBytes: 16 * GB },
+            { id: 'Q5_0', label: 'Q5_0 - balanced (safe)', file: 'qwen-image-edit-2511-Q5_0.gguf', url: `${HF}/unsloth/Qwen-Image-Edit-2511-GGUF/resolve/main/qwen-image-edit-2511-Q5_0.gguf?download=true`, approxBytes: 14400813664, recVramBytes: 18 * GB },
+            { id: 'Q6_K', label: 'Q6_K - high quality (safe)', file: 'qwen-image-edit-2511-Q6_K.gguf', url: `${HF}/unsloth/Qwen-Image-Edit-2511-GGUF/resolve/main/qwen-image-edit-2511-Q6_K.gguf?download=true`, approxBytes: 17947757152, recVramBytes: 20 * GB },
+            { id: 'Q8_0', label: 'Q8_0 - near-lossless (safe)', file: 'qwen-image-edit-2511-Q8_0.gguf', url: `${HF}/unsloth/Qwen-Image-Edit-2511-GGUF/resolve/main/qwen-image-edit-2511-Q8_0.gguf?download=true`, approxBytes: 22354590304, recVramBytes: 24 * GB },
+          ],
+        },
+        vae: {
+          role: 'vae',
+          repo: 'Comfy-Org/Qwen-Image_ComfyUI',
+          file: 'qwen_image_vae.safetensors',
+          url: `${HF}/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors?download=true`,
+          approxBytes: 253806246,
+        },
+        llm: {
+          role: 'llm',
+          repo: 'mradermacher/Qwen2.5-VL-7B-Instruct-GGUF',
+          file: 'Qwen2.5-VL-7B-Instruct.Q4_K_M.gguf',
+          url: `${HF}/mradermacher/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/Qwen2.5-VL-7B-Instruct.Q4_K_M.gguf?download=true`,
+          approxBytes: 4683072512,
+        },
+        vision: {
+          role: 'vision',
+          repo: 'mradermacher/Qwen2.5-VL-7B-Instruct-GGUF',
+          file: 'Qwen2.5-VL-7B-Instruct.mmproj-Q8_0.gguf',
+          url: `${HF}/mradermacher/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/Qwen2.5-VL-7B-Instruct.mmproj-Q8_0.gguf?download=true`,
+          approxBytes: 853119712,
+          loaderFlag: '--llm_vision',
+        },
+      },
+      minVramBytes: 24 * GB,
+      defaults: { width: 1024, height: 1024, steps: 20, cfgScale: 4.0, sampler: 'euler' },
+      launchArgs: ['--flow-shift', '3.1', '--offload-to-cpu', '--model-args', 'qwen_image_zero_cond_t=true'],
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
       id: 'qwen-image-2-1',
       label: 'Qwen-Image 2.1',
       blurb:

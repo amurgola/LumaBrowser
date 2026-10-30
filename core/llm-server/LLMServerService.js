@@ -1,5 +1,6 @@
 const path = require('path');
 const AppPaths = require('../shared/AppPaths');
+const ModelFolderRegistry = require('../shared/ModelFolderRegistry');
 const ManagedRuntimeSettings = require('../shared/runtime/ManagedRuntimeSettings');
 const VramCoordinator = require('../shared/runtime/VramCoordinator');
 const NvidiaSmiStream = require('../shared/runtime/NvidiaSmiStream');
@@ -265,6 +266,7 @@ class LLMServerService {
 
   _createStores(rootDir) {
     this._settings = new LlmServerSettings(this.settingsDb, { defaultModelsDir: () => this.getDefaultModelsDir() });
+    ModelFolderRegistry.register(LlmModelsScanner.FOLDER_KIND, () => this.getModelsDirConfig().effectivePath);
     this._ui = new LlmUiState(this.settingsDb, { isConfigured: () => LLMServerService._isConfigured(this.getDefaults()) });
     this._launchFlags = new ModelLaunchFlags(this.settingsDb);
     this.modelSettings = new ModelSettings({

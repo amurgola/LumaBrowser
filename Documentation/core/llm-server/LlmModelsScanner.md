@@ -12,12 +12,18 @@ and annotated with the parsed GGUF header. Parts live in `core/llm-server/scanne
 - `new LlmModelsScanner({ headerCache = defaultHeaderCache(), registry })`;
   `registry` is the [RuntimeCatalogRegistry](runtimes/RuntimeCatalogRegistry.md)
   for classification (default the shared one).
-- `scan(rootDir)` resolves `{ available: true, dir, models, truncated }`, or
-  `{ available: false, reason, models: [], dir }` for no directory ("No directory
-  configured", `dir: null`), a missing one ("Directory does not exist: ...",
-  `missing: true`), a file ("Not a directory: ...") or a stat error (its message).
-  Models sort by `relativeDirectory`, then `name`. `truncated` is true when the
-  walk hit 4000 entries.
+- `scan(rootDir)` resolves `{ available: true, dir, models, truncated, skipped }`,
+  or `{ available: false, reason, models: [], dir }` for no directory ("No
+  directory configured", `dir: null`), a missing one ("Directory does not
+  exist: ...", `missing: true`), a file ("Not a directory: ...") or a stat
+  error (its message). Models sort by `relativeDirectory`, then `name`.
+  `truncated` is true when the walk hit 4000 entries. `skipped` is
+  `{ diffusion: [paths], excludedDirs: [dirs] }`: image and video GGUFs whose
+  header role is `diffusion` are dropped before grouping together with their
+  later shards, and folders registered by another service in
+  [ModelFolderRegistry](../shared/ModelFolderRegistry.md) (the image models
+  folder, which sits under the LLM one by default) are never walked
+  (`FOLDER_KIND` is `'llm'`).
 - `LlmModelsScanner.spawnParseWorker()` is
   `new Worker(path.join(__dirname, 'ggufParseWorker.js'))`.
 - `LlmModelsScanner.defaultHeaderCache()` a [GgufHeaderCache](scanner/GgufHeaderCache.md)
@@ -32,8 +38,7 @@ relativeDirectory, role?, roleSource?, roleReason?, weights[{ path, name,
 sizeBytes, modifiedAt, shardIndex, shardTotal }], weightsCount,
 weightsExpectedShards, weightsTotalBytes, mmproj, mmprojTotalBytes, drafter?,
 drafterTotalBytes?, mtp?, mtpTotalBytes?, totalBytes, sidecars,
-unpairedCompanions?, pairing?, gguf?, mlx?, addon?, formatRequirements,
-preferredRuntimes, compatibleRuntimes, mtpCapable, mtpGrafted? }`.
+unpairedCompanions?, pairing?, gguf?, mlx?, addon?, preferredRuntimes, compatibleRuntimes, mtpCapable, mtpGrafted? }`.
 
 GGUF entries carry `role` (`main`, `draft`, `embedding`, `reranker`, `mmproj`,
 `mtp`) with `roleSource` `'header'` or `'filename'`; weights entries list the

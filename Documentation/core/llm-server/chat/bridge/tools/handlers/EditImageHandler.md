@@ -25,13 +25,36 @@ the edit ([EditRegion](../media/EditRegion.md)).
   being answered) resolves through `EditRegion.resolve` (an unknown id or one
   on another image is an error). With a region the frame is forced to `match`
   (a requested reshape is reported ignored), the img2img fallback gets the
-  grown inpaint `mask`, an edit model's prompt gets the region hint appended,
-  and the render goes through `region.finish` before `createVersion`, so the
-  saved version is the source with only the painted area changed when a bitmap
-  codec is available. A small region is edited on its close-up
-  ([RegionCrop](../../../../../image-server/region/RegionCrop.md)): the
-  picture sent (`refImages[0]` or `initImage`) is `region.sourceBytes()`, the
-  mask the close-up's part, and the canvas is matched to `region.canvasDims`
-  with `fill`, so the model's whole native area goes to the detail; the
-  composite pastes the result back. The message carries `region.summary`.
-- `NO_SERVER`, `NO_ARTIFACT`, `DEFAULT_STRENGTH`.
+  grown inpaint `mask`, and an edit model (local, unified or remote) gets the
+  region two ways at once: the hint appended to its prompt, and the same
+  picture riding again as `initImage` with the grown `mask` at
+  `REGION_EDIT_STRENGTH` (1.0), which holds the model to the painted area in
+  latent space (sd.cpp masks any model's denoise; measured on Qwen-Image 2.1,
+  a reference-only run redrew the object larger and elsewhere, the held run
+  kept it in place). The render goes through `region.finish` before
+  `createVersion`, so the saved version is the source with only the painted
+  area changed when a bitmap codec is available. A small region is edited on
+  its close-up ([RegionCrop](../../../../../image-server/region/RegionCrop.md)):
+  the picture sent (`refImages[0]` and `initImage`) is `region.sourceBytes()`,
+  the mask the close-up's part, and the canvas is matched to
+  `region.canvasDims` with `fill`, so the model's whole native area goes to
+  the detail; the composite pastes the result back. The message carries
+  `region.summary`, with `held` for an edit-capable choice.
+- Region steps: a region edit asks for `choice.regionSteps` when the family
+  documents fewer steps for localized edits (Qwen-Image 2.1 base: 12); the
+  message says so.
+- Reframes: a frame other than `match` on an edit-capable choice runs as an
+  outpaint ([EditOutpaint](../media/EditOutpaint.md)): the source is fitted
+  into the frame's canvas at `anchor` (center, top, bottom, left, right), the
+  padded canvas rides as reference and init image with the new space masked at
+  `REGION_EDIT_STRENGTH`, the prompt gets the outpaint hint, and `finish`
+  composites the render into the new space only. With no codec or no new
+  space the plain reframe runs as before; the img2img fallback still ignores
+  frames.
+- Kept pixels: a whole-image edit on an edit-capable choice (no region, no
+  outpaint) goes through
+  [EditDiffComposite](../../../../../image-server/region/EditDiffComposite.md)
+  unless `keepUnchanged: false` is passed: the source is restored wherever the
+  render did not visibly change, and the message says how much changed, or
+  that the change was whole-picture and the render was kept.
+- `NO_SERVER`, `NO_ARTIFACT`, `DEFAULT_STRENGTH`, `REGION_EDIT_STRENGTH`.

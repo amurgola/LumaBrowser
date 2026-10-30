@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const ModelFolderRegistry = require('../../shared/ModelFolderRegistry');
 
 class ModelDirWalker {
   static MAX_DEPTH = 5;
@@ -10,8 +11,8 @@ class ModelDirWalker {
 
   static ADDON_EXTS = Object.freeze({ '.ninfer': 'ninfer' });
 
-  async walk(rootDir) {
-    this._reset();
+  async walk(rootDir, { excludeDirs = [] } = {}) {
+    this._reset(excludeDirs);
     const queue = [{ dir: rootDir, depth: 0 }];
     const visitedDirs = new Set();
     while (queue.length > 0 && this._visited < ModelDirWalker.MAX_ENTRIES) {
@@ -20,14 +21,16 @@ class ModelDirWalker {
       visitedDirs.add(dir);
       await this._readDir(dir, depth, queue);
     }
-    return { ggufs: this._ggufs, addonFiles: this._addonFiles, mlxDirs: this._mlxDirs, visited: this._visited };
+    return { ggufs: this._ggufs, addonFiles: this._addonFiles, mlxDirs: this._mlxDirs, visited: this._visited, excluded: this._excluded };
   }
 
-  _reset() {
+  _reset(excludeDirs) {
     this._ggufs = [];
     this._addonFiles = [];
     this._mlxDirs = new Map();
     this._visited = 0;
+    this._excludeDirs = excludeDirs || [];
+    this._excluded = [];
   }
 
   async _readDir(dir, depth, queue) {
@@ -42,6 +45,7 @@ class ModelDirWalker {
       if (this._visited > ModelDirWalker.MAX_ENTRIES) break;
       const abs = path.join(dir, entry.name);
       if (entry.isDirectory()) {
+        if (ModelFolderRegistry.isOneOf(abs, this._excludeDirs)) { this._excluded.push(abs); continue; }
         if (depth + 1 <= ModelDirWalker.MAX_DEPTH) queue.push({ dir: abs, depth: depth + 1 });
       } else if (entry.isFile()) {
         await this._collectFile(dir, abs, entry.name);

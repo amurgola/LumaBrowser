@@ -35,7 +35,9 @@ class LlmRuntimeCatalog extends RuntimeCatalog {
   cudaRuntimePreference(cudaVersion) {
     const match = String(cudaVersion || '').match(/^(\d+)/);
     const major = match ? Number(match[1]) : null;
-    return major != null && major >= 13 ? ['llama-cpp-cuda13', 'llama-cpp-cuda12'] : ['llama-cpp-cuda12'];
+    const ranked = major != null && major >= 13 ? ['llama-cpp-cuda13', 'llama-cpp-cuda12'] : ['llama-cpp-cuda12'];
+    const prebuilt = ranked.filter((id) => this.getAssetPattern(this.getById(id)));
+    return prebuilt.length > 0 ? prebuilt : ranked;
   }
 }
 

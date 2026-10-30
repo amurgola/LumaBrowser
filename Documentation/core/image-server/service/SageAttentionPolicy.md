@@ -19,6 +19,10 @@ CUDA SageAttention (`--sage-attn`).
      `computeCapability` is unknown or below `MIN_COMPUTE_CAPABILITY` (8.0), or
      the binary's help does not list the flag.
   4. Otherwise `{ true, note: 'SageAttention on' }`.
+
+  A pin (`cudaDevice` `"0"` or `"0,1"`) is matched against each card's `index`,
+  or its position in `diagnostics.cuda.devices` when it has none: the parsed
+  diagnostics never carry one, and their position is the CUDA ordinal.
 - Statics: `FLAG`, `MIN_COMPUTE_CAPABILITY`, `ENV`, `CUDA_RUNTIME`.
 
 ## Why

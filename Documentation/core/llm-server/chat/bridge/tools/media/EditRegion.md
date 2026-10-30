@@ -35,14 +35,17 @@ the source outside the region once the render is back.
   through [RegionComposite](../../../../../image-server/region/RegionComposite.md)
   (with the grown mask, the feather and the crop rect), or the raw image with
   `composited: false`.
-- `summary(composited)`: the clause for the tool's result message; names the
-  close-up's size when one was used.
+- `summary(composited, { held })`: the clause for the tool's result message;
+  names the close-up's size when one was used and, with `held`, that the edit
+  model was kept to the area by its mask while rendering.
 
 ## Why
 
 Every edit route gets the same contract from one object: img2img gets a real
-inpaint mask, an edit model gets the location in words, and both get the pixel
-composite, so "only this area changes" holds whichever model is configured. The
+inpaint mask, an edit model gets the location in words and the same mask on an
+init image (the handler sends `sourceBytes()` as both reference and init with
+`inpaintMask()` at full strength), and both get the pixel composite, so "only
+this area changes" holds whichever model is configured. The
 close-up lives here too, so the handler only swaps the picture, the canvas
 size and the mask it sends, and the composite puts the result back where it
 came from.

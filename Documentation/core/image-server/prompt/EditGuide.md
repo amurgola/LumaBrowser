@@ -16,7 +16,13 @@ will actually run on this machine.
   describing them, and the reference cap. Both guides end with the marked
   region rule: img2img still describes the final image (the inpaint mask does
   the confining, strength 0.8 or higher), an edit model gets an instruction for
-  what changes inside the area only (the location is appended for it).
+  what changes inside the area only (the location is appended for it). The
+  reference guide also teaches the text-edit form ("Replace the text 'OPEN'
+  with 'CLOSED', keeping the same font, size and colour"), that untouched
+  parts are restored from the source after the render and a deliberate subtle
+  whole-picture change needs `keepUnchanged: false`, and that a frame other
+  than match extends the picture with the source kept whole, placed by
+  `anchor`.
 
 ## Why
 

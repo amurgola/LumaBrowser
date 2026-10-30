@@ -220,15 +220,6 @@ class LlmRuntimeDeclarations {
       requiresHw: { kind: 'apple-silicon' },
       requirementNote: 'Runs only on Apple Silicon (M-series) Macs.',
     },
-    {
-      id: 'harmony',
-      name: 'Harmony format',
-      kind: 'format',
-      description:
-        "OpenAI's Harmony response format, used by gpt-oss-* models for prompts, reasoning, and tool calls. Not a separate binary: support is baked into recent llama.cpp builds (b6000+), so it lights up as soon as a current llama.cpp runtime is installed.",
-      dependsOn: ['llama-cpp-cpu', 'llama-cpp-cuda12', 'llama-cpp-cuda13', 'llama-cpp-vulkan', 'llama-cpp-opencl-adreno', 'llama-cpp-rocm', 'llama-cpp-sycl', 'llama-cpp-openvino'],
-      minLlamaBuild: 6000,
-    },
   ];
 }
 

@@ -19,6 +19,7 @@ class AgentSetupInvoke {
       case 'import': return this._dialogs.importFromFile();
       case 'kb.list': return { documents: m.knowledge.documents(m.requireAgent(p.agentId).id) };
       case 'kb.add': return this._dialogs.addKnowledge(m.requireAgent(p.agentId));
+      case 'kb.addFolder': return this._dialogs.addKnowledgeFolder(m.requireAgent(p.agentId));
       case 'kb.remove': return { documents: m.knowledge.removeDocument(m.requireAgent(p.agentId).id, p.docId) };
       default: throw new Error(`Unknown action: ${action}`);
     }

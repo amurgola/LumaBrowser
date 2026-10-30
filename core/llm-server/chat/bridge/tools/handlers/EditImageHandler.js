@@ -3,8 +3,10 @@ const EditProfiles = require('../../../../../image-server/prompt/EditProfiles');
 const ArtifactId = require('../artifacts/ArtifactId');
 const EditCanvas = require('../media/EditCanvas');
 const EditModelChoice = require('../media/EditModelChoice');
+const EditOutpaint = require('../media/EditOutpaint');
 const EditReferences = require('../media/EditReferences');
 const EditRegion = require('../media/EditRegion');
+const EditDiffComposite = require('../../../../../image-server/region/EditDiffComposite');
 const MediaRenderOutcome = require('../media/MediaRenderOutcome');
 const MediaProgressSink = require('../media/MediaProgressSink');
 const MediaTitle = require('../media/MediaTitle');
@@ -15,6 +17,7 @@ class EditImageHandler extends ChatToolHandler {
   static NO_SERVER = 'Image server not initialised on this build.';
   static NO_ARTIFACT = 'edit_image requires "artifactId": pass the id of a previously generated image artifact.';
   static DEFAULT_STRENGTH = 0.8;
+  static REGION_EDIT_STRENGTH = 1.0;
 
   names() {
     return ['edit_image'];
@@ -54,16 +57,22 @@ class EditImageHandler extends ChatToolHandler {
     const wantedFrame = EditCanvas.requestedFrame(params);
     const frame = region ? EditCanvas.DEFAULT_FRAME : wantedFrame;
     const canvas = await EditCanvas.resolve({ frame, srcDims: region ? region.canvasDims : srcDims, choice, imageRouter: router, fill: !!(region && region.cropped) });
+    const outpaint = !region && choice.editCapable && frame !== EditCanvas.DEFAULT_FRAME
+      ? EditOutpaint.prepare({ frame, canvas, srcBuf, anchor: params && params.anchor })
+      : null;
     const extraRefs = choice.editCapable ? references.refs : [];
+    const picture = region ? region.sourceBase64() : (outpaint ? outpaint.sourceBase64() : src.content);
     return {
-      choice, references, canvas, frame, extraRefs, artifactId, srcBuf, region,
+      choice, references, canvas, frame, extraRefs, artifactId, srcBuf, region, outpaint,
       prompt,
       strength: EditImageHandler._strength(params),
       title: MediaTitle.from(params, prompt),
       frameIgnored: !choice.editCapable && frame !== EditCanvas.DEFAULT_FRAME,
       regionFrameIgnored: !!region && wantedFrame !== EditCanvas.DEFAULT_FRAME,
       refsIgnored: !choice.editCapable && references.refs.length > 0,
-      refImages: [region ? region.sourceBase64() : src.content, ...extraRefs.map((r) => r.content)],
+      keepUnchanged: !region && !outpaint && choice.editCapable && !(params && params.keepUnchanged === false),
+      regionSteps: region ? choice.regionSteps : null,
+      refImages: [picture, ...extraRefs.map((r) => r.content)],
     };
   }
 
@@ -77,26 +86,39 @@ class EditImageHandler extends ChatToolHandler {
     }
     const failure = MediaRenderOutcome.failureOf(result, sink, ctx.isAborted, 'edit_image', MediaRenderOutcome.images('edit_image'));
     if (failure) return failure;
-    const image = plan.region ? plan.region.finish(result.images[0]) : result.images[0];
-    return EditImageHandler._persist(image, plan, ctx);
+    return EditImageHandler._persist(EditImageHandler._finish(result.images[0], plan), plan, ctx);
+  }
+
+  static _finish(image, plan) {
+    if (plan.region) return plan.region.finish(image);
+    if (plan.outpaint) return plan.outpaint.finish(image);
+    if (!plan.keepUnchanged || !image || !image.bytes) return image;
+    const out = EditDiffComposite.apply({ sourceBytes: plan.srcBuf, outputBytes: image.bytes });
+    if (!out) return image;
+    return { ...image, bytes: out.bytes, mime: out.mime, width: out.width, height: out.height, kept: { share: out.share, global: out.global } };
   }
 
   static _request(plan, send) {
-    const { choice, canvas, refImages, region } = plan;
+    const { choice, canvas, refImages, region, outpaint } = plan;
     const size = { width: canvas.width, height: canvas.height };
     const editPrompt = EditImageHandler._editPrompt(plan);
-    if (choice.remoteEdit) return { prompt: editPrompt, refImages, ...size, slot: 'edit', send };
-    if (choice.editModelId) return { prompt: editPrompt, modelRef: choice.editModelId, refImages, ...size, slot: 'edit', send };
-    if (choice.unifiedGenEdit) return { prompt: editPrompt, refImages, ...size, slot: 'generate', send };
+    const masked = region || outpaint;
+    const held = masked ? { initImage: masked.sourceBytes(), mask: masked.inpaintMask(), strength: EditImageHandler.REGION_EDIT_STRENGTH } : {};
+    const steps = plan.regionSteps ? { steps: plan.regionSteps } : {};
+    if (choice.remoteEdit) return { prompt: editPrompt, refImages, ...held, ...steps, ...size, slot: 'edit', send };
+    if (choice.editModelId) return { prompt: editPrompt, modelRef: choice.editModelId, refImages, ...held, ...steps, ...size, slot: 'edit', send };
+    if (choice.unifiedGenEdit) return { prompt: editPrompt, refImages, ...held, ...steps, ...size, slot: 'generate', send };
     const mask = region ? { mask: region.inpaintMask() } : {};
     const initImage = region ? region.sourceBytes() : plan.srcBuf;
     return { prompt: plan.prompt, initImage, strength: plan.strength, ...mask, ...size, slot: 'generate', send };
   }
 
-  static _editPrompt({ extraRefs, choice, prompt, region }) {
+  static _editPrompt({ extraRefs, choice, prompt, region, outpaint }) {
     const profile = choice.profile;
     const named = extraRefs.length ? `${EditProfiles.referencePreamble(extraRefs, profile ? profile.refTag : 'word')} ${prompt}` : prompt;
-    return region ? `${named} ${region.promptHint()}` : named;
+    if (region) return `${named} ${region.promptHint()}`;
+    if (outpaint) return `${named} ${outpaint.promptHint()}`;
+    return named;
   }
 
   static _strength(params) {
@@ -119,15 +141,25 @@ class EditImageHandler extends ChatToolHandler {
       return { success: false, error: `Could not persist edited image: ${err.message}` };
     }
     ChatToolHandler.publish(ctx, artifact);
-    return { success: true, artifact, message: EditImageHandler._message(artifact, plan, !!img.composited) };
+    return { success: true, artifact, message: EditImageHandler._message(artifact, plan, !!img.composited, img.kept || null) };
   }
 
-  static _message(artifact, plan, composited) {
-    const { choice, canvas, frame, extraRefs, references, strength, region } = plan;
+  static _keptClause(kept) {
+    if (!kept) return '';
+    const share = Math.max(1, Math.round(kept.share * 100));
+    if (kept.global) return `; a whole-picture change (about ${share}% of the pixels), so the full render is kept`;
+    return `; about ${share}% of the picture changed and the rest is restored from the source (a deliberate subtle change to the whole picture needs keepUnchanged: false)`;
+  }
+
+  static _message(artifact, plan, composited, kept = null) {
+    const { choice, canvas, frame, extraRefs, references, strength, region, outpaint } = plan;
     const n = extraRefs.length;
     return `Edited image "${artifact.title}" saved as v${artifact.version} id ${artifact.id} (from ${plan.artifactId}, which is kept unchanged as the earlier version${choice.editCapable ? '' : `; strength ${strength}`}`
       + `, ${canvas.width}x${canvas.height} ${canvas.frame} frame${canvas.scaled ? ', source scaled into the model\'s working size' : ''}`
-      + `${region ? region.summary(composited) : ''}`
+      + `${region ? region.summary(composited, { held: choice.editCapable }) : ''}`
+      + `${plan.regionSteps ? `; ${plan.regionSteps} steps (a localized edit needs fewer than a whole-frame one)` : ''}`
+      + `${outpaint ? outpaint.summary(composited) : ''}`
+      + `${EditImageHandler._keptClause(kept)}`
       + `${plan.regionFrameIgnored ? '; the requested frame was IGNORED because a region edit keeps the source shape' : ''}`
       + `${plan.frameIgnored ? `; "${frame}" frame IGNORED because no edit-capable model is configured, the img2img fallback keeps the source shape` : ''}`
       + `${n ? `; used ${n} reference image${n === 1 ? '' : 's'} (${extraRefs.map((r, i) => `image ${i + 2} = ${r.id}${r.use ? ` ${r.use}` : ''}`).join(', ')})` : ''}`

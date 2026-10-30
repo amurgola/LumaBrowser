@@ -10,6 +10,7 @@ requirement never blocks the in-app tab).
 `list` -> `{ agents (with kbDocs) }`; `create` -> `{ agent }`; `update { id, patch }`
 -> `{ agent }`; `delete { id }` -> `{ removed }`; `tools` -> `{ groups }`;
 `export { id }`, `import` ([AgentFileDialogs](AgentFileDialogs.md));
-`kb.list { agentId }` -> `{ documents }`; `kb.add { agentId }`;
+`kb.list { agentId }` -> `{ documents }`; `kb.add { agentId }` (file picker);
+`kb.addFolder { agentId }` (folder picker, every supported document inside, recursively);
 `kb.remove { agentId, docId }` -> `{ documents }`. Unknown: `Unknown action: <a>`.
 Agent lookups accept an id or a name and throw `Agent not found`.

@@ -22,14 +22,13 @@ hardware readiness. Fail-soft and offline.
      acquisition, `installable` and `hardware`;
   3. `_decorateDetail(detail, entry)` runs, then the async
      `_afterDetect(detail, entry)`.
-  Then `_rollUp({ entries, detectedById, results })` may append rows.
 - `parseVersionOutput(stdout, stderr)` **must be implemented**: the version
   label from a clean `--version` run, or `null`. The base throws.
 - `readVersion(binaryPath)` runs [VersionProbe](detect/VersionProbe.md) with
   `parseVersionOutput`. Override only for runtimes that cannot be probed that
   way; a bare string or null return is still accepted.
-- `_decorateDetail(detail, entry)`, `_afterDetect(detail, entry)` (async),
-  `_rollUp(ctx)`: optional hooks, no-ops in the base.
+- `_decorateDetail(detail, entry)`, `_afterDetect(detail, entry)` (async):
+  optional hooks, no-ops in the base.
 
 ## Why
 

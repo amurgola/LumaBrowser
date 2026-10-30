@@ -44,10 +44,13 @@ export default class HostRuntimeAdvice {
   }
 
   static adviceFor(r, host) {
-    if (!r || r.kind === 'format') return null;
+    if (!r) return null;
     const backend = HostRuntimeAdvice.backendOf(r);
     if (!backend) return null;
     if (r.id === host.primary) return { tier: 'recommended', why: HostRuntimeAdvice._primaryWhy(backend, host) };
+    if (r.assetSupported === false && !r.installed && r.acquisition !== 'extension') {
+      return { tier: 'unsuited', why: 'No prebuilt download exists for this PC\'s platform; it could only be built from source.' };
+    }
     const rule = HostRuntimeAdvice.RULES[backend];
     return rule ? rule(r, host) : null;
   }

@@ -1,4 +1,5 @@
 const DocumentParser = require('./DocumentParser');
+const KnowledgePathExpander = require('./KnowledgePathExpander');
 
 class RagDocumentImporter {
   static DEFAULT_SCOPE = 'kb';
@@ -27,8 +28,9 @@ class RagDocumentImporter {
   }
 
   async _ingestAll(paths, scope) {
-    const results = [];
-    for (const filePath of paths) {
+    const { files, emptyFolders } = KnowledgePathExpander.expand(paths);
+    const results = emptyFolders.map((folder) => KnowledgePathExpander.emptyFolderResult(folder));
+    for (const filePath of files) {
       results.push({ path: filePath, ...(await this._rag.ingestFile(filePath, { scope })) });
     }
     return results;

@@ -1,3 +1,5 @@
+const KnowledgePathExpander = require('../../core/rag/KnowledgePathExpander');
+
 class AgentKnowledgeBase {
   static SCOPE_PREFIX = 'agent:';
 
@@ -31,8 +33,9 @@ class AgentKnowledgeBase {
 
   async ingest(agentId, paths) {
     const rag = this.requireRag();
-    const results = [];
-    for (const filePath of paths) {
+    const { files, emptyFolders } = KnowledgePathExpander.expand(paths);
+    const results = emptyFolders.map((folder) => KnowledgePathExpander.emptyFolderResult(folder));
+    for (const filePath of files) {
       results.push({ path: filePath, ...(await rag.ingestFile(filePath, { scope: AgentKnowledgeBase.scopeFor(agentId) })) });
     }
     return results;

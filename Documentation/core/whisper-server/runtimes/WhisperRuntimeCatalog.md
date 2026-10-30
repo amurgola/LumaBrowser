@@ -25,4 +25,15 @@ Windows only and no macOS server binary (xcframework only), so every entry is
 manual-source on darwin: build with cmake and register via Locate. The tests
 pin the real asset list so an upstream rename trips them.
 
+Build b5454 (2026-10) renamed the x64 CUDA zip to
+`whisper-bin-win-cuda-12.4.0-x64.zip` (both names match) and added Windows on
+Arm: `whisper-bin-win-cpu-arm64.zip` and `whisper-bin-win-cuda-13.4-arm64.zip`,
+which `whisper-cpp-cpu` and `whisper-cpp-cublas` now take on `win32-arm64`, plus
+`whisper-bin-ubuntu-arm64.tar.gz` for `linux-arm64`. The arm64 CUDA build is
+CUDA 13 only; `requiresHw` stays at CUDA 12 because every NVIDIA Windows on Arm
+machine ships an R580+ driver. Semver releases (v1.9.5) carry no assets; the
+resolver walks back to the newest `bNNNN` release that has one.
+`MANUAL_DARWIN`'s note no longer names macOS alone, since any host without an
+asset falls back to it.
+
 The CPU description's em-dash was replaced with a colon (user-facing text rule).

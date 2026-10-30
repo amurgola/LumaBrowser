@@ -11,6 +11,10 @@ class ImageRuntimeCatalog extends RuntimeCatalog {
 
   static WIN_CUDA12_ASSET = /^sd-.+-bin-win-cuda[-_]?(?:cu)?[-_]?12(?:\.\d+)?-x64\.zip$/i;
 
+  static WIN_ARM64_CUDA13_ASSET = /^sd-.+-bin-win-cuda[-_]?(?:cu)?[-_]?13(?:\.\d+)?-arm64\.zip$/i;
+
+  static CUDART_ARM64_COMPANION = /^cudart-sd-bin-win-cu(?:da)?[-_]?13(?:\.\d+)?-arm64\.zip$/i;
+
   static RUNTIMES = [
     {
       id: 'sd-cpp-cpu',
@@ -19,7 +23,7 @@ class ImageRuntimeCatalog extends RuntimeCatalog {
       description: 'Pure CPU image generation. Slow, but the universal fallback: runs anywhere without GPU drivers.',
       repo: { owner: 'leejet', repo: 'stable-diffusion.cpp' },
       assetPatterns: {
-        'win32-x64': /^sd-.+-bin-win-(?:avx2|avx|noavx)-x64\.zip$/i,
+        'win32-x64': /^sd-.+-bin-win-(?:avx2|avx|noavx|cpu)-x64\.zip$/i,
         'linux-x64': /^sd-.+-bin-(?:linux-)?(?:ubuntu[-.\d]*)?-?(?:avx2|avx|noavx|x86_64|x64)\.(?:zip|tar\.gz|tgz)$/i,
         'darwin-arm64': /^sd-.+-bin-(?:darwin-)?macos(?:-[\d.]+)?-arm64\.(?:zip|tar\.gz|tgz)$/i,
         'darwin-x64': /^sd-.+-bin-(?:darwin-)?macos(?:-[\d.]+)?-(?:x64|x86_64)\.(?:zip|tar\.gz|tgz)$/i,
@@ -50,18 +54,24 @@ class ImageRuntimeCatalog extends RuntimeCatalog {
       name: 'stable-diffusion.cpp (LumaByte)',
       kind: 'image-inference',
       description:
-        "LumaByte's patched stable-diffusion.cpp build (CUDA 12): upstream plus the luma-sdcpp patch stack. Reference images for an edit are prepared in a fraction of the time (a three-image Qwen-Image 2.1 edit went from 38 s to 12 s) and MiniMax-H3 video decodes about 5x faster (a 124-frame clip from 94 s to 20 s), with pixel-identical output. Models that benefit use it automatically once it is installed. Windows only for now.",
+        "LumaByte's patched stable-diffusion.cpp build (CUDA 12, or CUDA 13 on Windows on Arm): upstream plus the luma-sdcpp patch stack. Reference images for an edit are prepared in a fraction of the time (a three-image Qwen-Image 2.1 edit went from 38 s to 12 s) and MiniMax-H3 video decodes about 5x faster (a 124-frame clip from 94 s to 20 s), with pixel-identical output. Models that benefit use it automatically once it is installed. The only GPU image build for Windows on Arm (RTX Spark). Windows only for now.",
       repo: { owner: 'amurgola', repo: 'luma-sdcpp' },
       platforms: ['win32'],
-      assetPatterns: { 'win32-x64': ImageRuntimeCatalog.WIN_CUDA12_ASSET },
+      assetPatterns: {
+        'win32-x64': ImageRuntimeCatalog.WIN_CUDA12_ASSET,
+        'win32-arm64': ImageRuntimeCatalog.WIN_ARM64_CUDA13_ASSET,
+      },
       manualSourceUrl: 'https://github.com/amurgola/luma-sdcpp',
       manualSourceNote:
-        'To build locally: run scripts/checkout.ps1 then scripts/build-windows-cuda.ps1 in the luma-sdcpp repo, then use Locate to register work/stable-diffusion.cpp/build/bin/sd-server.',
+        'To build locally: run scripts/checkout.ps1 then scripts/build-windows-cuda.ps1 (or build-windows-cuda-arm64.ps1 on Windows on Arm) in the luma-sdcpp repo, then use Locate to register work/stable-diffusion.cpp/build/bin/sd-server.',
       binaryNames: ImageRuntimeCatalog.SD_BIN_NAMES,
       requiresHw: { kind: 'nvidia-cuda', cudaMajor: 12 },
-      requirementNote: 'Needs an NVIDIA GPU and the CUDA 12 driver runtime. Windows only for now.',
+      requirementNote: 'Needs an NVIDIA GPU and the CUDA 12 driver runtime; on Windows on Arm, a CUDA 13 driver (R580 or newer). Windows only for now.',
       protocol: 'sd-cpp-http',
-      companionAssets: { 'win32-x64': ImageRuntimeCatalog.CUDART_COMPANION },
+      companionAssets: {
+        'win32-x64': ImageRuntimeCatalog.CUDART_COMPANION,
+        'win32-arm64': ImageRuntimeCatalog.CUDART_ARM64_COMPANION,
+      },
     },
     {
       id: 'sd-cpp-vulkan',

@@ -21,7 +21,9 @@ read time. Extends [RuntimeCatalog](../../shared/runtime/RuntimeCatalog.md).
   `uninstall`, `planLaunch`) or `null`.
 - `cudaRuntimePreference(cudaVersion)` returns
   `['llama-cpp-cuda13', 'llama-cpp-cuda12']` for a driver reporting CUDA 13 or
-  newer, else `['llama-cpp-cuda12']`.
+  newer, else `['llama-cpp-cuda12']`, minus any id with no prebuilt asset for
+  this host (Windows on Arm keeps only `llama-cpp-cuda13`). If that would leave
+  nothing, the unfiltered list is returned so callers still have an id to name.
 - Inherited: `platformKey`, `getAssetPattern`, `getRepo`,
   `getCompanionAssetPatterns`, `getBinaryNames`.
 

@@ -1,5 +1,5 @@
 export default class ImageRuntimePicker {
-  static ORDER = ['sd-cpp-cuda12', 'sd-cpp-vulkan', 'sd-cpp-cpu'];
+  static ORDER = ['sd-cpp-cuda12', 'sd-cpp-luma', 'sd-cpp-vulkan', 'sd-cpp-cpu'];
 
   static CPU_ID = 'sd-cpp-cpu';
 

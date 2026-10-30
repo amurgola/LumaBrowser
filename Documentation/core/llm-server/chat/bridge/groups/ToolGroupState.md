@@ -19,4 +19,5 @@ One run's lazy tool-group state.
 
 Persistence (`setMeta(id, { data: { ...data, activeToolGroups } })`) is
 best-effort and skipped for a conversation `getConversation` does not know
-(the sharing proxy's throwaway ids).
+(the sharing proxy's throwaway ids). `forcedActive` names are never written:
+they belong to the mode running this turn, not to the conversation.

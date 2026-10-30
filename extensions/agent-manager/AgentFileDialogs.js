@@ -43,6 +43,18 @@ class AgentFileDialogs {
     return { canceled: false, results, documents: knowledge.documents(agent.id) };
   }
 
+  async addKnowledgeFolder(agent) {
+    const knowledge = this._manager.knowledge;
+    knowledge.requireRag();
+    const res = await this._electronDialog().showOpenDialog({
+      title: `Add a folder of knowledge documents to "${agent.name}"`,
+      properties: ['openDirectory'],
+    });
+    if (res.canceled || !res.filePaths.length) return { canceled: true, results: [], documents: knowledge.documents(agent.id) };
+    const results = await knowledge.ingest(agent.id, res.filePaths);
+    return { canceled: false, results, documents: knowledge.documents(agent.id) };
+  }
+
   static _readBundle(filePath) {
     try {
       return JSON.parse(fs.readFileSync(filePath, 'utf8'));

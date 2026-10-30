@@ -17,8 +17,11 @@ otherwise upload one over the other, leaving one architecture without updates.
   and `sha512`: electron-updater picks the first `.exe` whose name carries
   `process.arch`, and falls back to the first entry when none does, so the
   x64 manifest (whose installer name carries no arch) is always the primary.
-  Throws `Version mismatch` when a secondary's `version:` differs, and
-  `has no version line` / `has no files list` for a malformed input.
+  Throws `Version mismatch` when a secondary's `version:` differs,
+  `Duplicate installer name` when two entries share a `url` (the release upload
+  would collide; `nsis.buildUniversalInstaller: false` in package.json is what
+  gives the arm64 installer its `-arm64` suffix), and `has no version line` /
+  `has no files list` for a malformed input.
 
 Text-level on purpose: the `files:` block is every indented line after it,
 so unknown keys pass through untouched and the release job needs no YAML

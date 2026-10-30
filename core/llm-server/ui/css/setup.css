@@ -779,14 +779,6 @@
             font-weight: 500;
             font-size: var(--text-md);
         }
-        .runtime-kind-tag {
-            font-size: var(--text-xs);
-            font-weight: 500;
-            padding: 1px 6px;
-            border-radius: var(--radius-sm);
-            background: var(--bg-surface-2);
-            color: var(--text-secondary);
-        }
         .runtime-desc {
             grid-column: 1 / 2;
             font-size: var(--text-sm);

@@ -32,4 +32,7 @@ name the right id, with the regions the user painted on each image.
 AgentRunner carries tool results only inside one run and the renderer strips
 toolCalls from the wire history, so without this the model cannot know an id
 from an earlier turn. Earlier versions are listed so a rejected edit can be
-redone from the version before it.
+redone from the version before it, and so an unrelated new change can build on
+the earliest version that already has what the user wants: instruction edit
+models soften the picture a little on every pass (reliable for about five
+chained edits, visibly degraded by ten in the published measurements).

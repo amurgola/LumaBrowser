@@ -1,5 +1,6 @@
 const path = require('path');
 const AppPaths = require('../shared/AppPaths');
+const ModelFolderRegistry = require('../shared/ModelFolderRegistry');
 const ManagedRuntimeSettings = require('../shared/runtime/ManagedRuntimeSettings');
 const VramCoordinator = require('../shared/runtime/VramCoordinator');
 const HotswapCoordinator = require('../shared/runtime/HotswapCoordinator');
@@ -156,6 +157,7 @@ class ImageServerService {
 
   _createStores() {
     this._settings = new ImageServerSettings(this.settingsDb, { defaultModelsDir: () => this.getDefaultModelsDir() });
+    ModelFolderRegistry.register(ImageModelsScanner.FOLDER_KIND, () => this.getModelsDirConfig().effectivePath);
     this._displayNames = new ImageModelDisplayNames(this.settingsDb);
     this._remoteServers = new RemoteImageServerStore(this.settingsDb);
     this._selection = new ImageServerSelection({

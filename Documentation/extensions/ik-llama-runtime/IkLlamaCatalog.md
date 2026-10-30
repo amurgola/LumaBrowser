@@ -7,12 +7,14 @@ are folded into the runtime-catalog fingerprint.
 
 ## Methods
 
-- `IkLlamaCatalog.buildRuntimeEntries({ platform?, isa? })` returns the rows for
-  the host (default `process.platform` and [HostIsa](HostIsa.md)`.detect`),
-  dropping rows whose `platforms` exclude it: `ik-llama-cuda13`,
-  `ik-llama-cuda12` (win32, linux), `ik-llama-vulkan` (linux), `ik-llama-cpu`
-  (win32, linux, darwin; the darwin description says the Apple Silicon build
-  uses Metal). Every row has `kind: 'inference'`, `acquisition: 'github-release'`,
+- `IkLlamaCatalog.buildRuntimeEntries({ platform?, arch?, isa? })` returns the
+  rows for the host (default `process.platform`, `process.arch` and
+  [HostIsa](HostIsa.md)`.detect`), dropping rows whose `platforms` (a platform
+  or a `platform-arch` key, as in RuntimeDetector) exclude it:
+  `ik-llama-cuda13`, `ik-llama-cuda12` (win32-x64, linux-x64), `ik-llama-vulkan`
+  (linux-x64), `ik-llama-cpu` (win32-x64, linux-x64, darwin; the darwin
+  description says the Apple Silicon build uses Metal). Thireus publishes x64
+  builds only, so a Windows on Arm or Linux arm64 host gets no rows. Every row has `kind: 'inference'`, `acquisition: 'github-release'`,
   the Thireus repo, llama.cpp binary names, `protocol: 'openai-compat'`,
   `optional: true`, the manual-source URL and note, copies of
   `UNSUPPORTED_FLAGS` and `EXTRA_ARGS`, `skipFeatures: []`,

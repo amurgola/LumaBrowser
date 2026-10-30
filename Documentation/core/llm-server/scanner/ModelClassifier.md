@@ -2,24 +2,22 @@
 
 `core/llm-server/scanner/ModelClassifier.js`
 
-Tags a scanned model with required formats, preferred and compatible runtimes,
-and MTP capability.
+Tags a scanned model with preferred and compatible runtimes, and MTP capability.
 
 ## Methods
 
 - `ModelClassifier.classify(model, registry = RuntimeCatalogRegistry.shared)` returns
-  `{ formatRequirements, preferredRuntimes, compatibleRuntimes, mtpCapable }`:
+  `{ preferredRuntimes, compatibleRuntimes, mtpCapable }`:
   - `mlx`: only `mlx-lm`;
   - add-on: the sidecar's `requiresRuntime`, else `registry.runtimesForModelKind(kind)`;
   - `mmproj-only` / `mtp-only`: no runtimes, never MTP-capable;
-  - otherwise: `harmony` for `gpt-oss`; preferred = runtimes whose
+  - otherwise: preferred = runtimes whose
     `nativeQuantPattern` matches the name, directory and weight file names
     (`runtimesPreferringQuant`); compatible = `LLAMA_CPP_RUNTIMES`
     (cuda13, cuda12, rocm, sycl, vulkan, openvino, cpu); MTP-capable when an `mtp` token appears or a
     detached head was paired. A throwing registry means no preference.
 - `ModelClassifier.augmentFromGguf(model)` corrects from a parsed header: a
-  `gptoss`/`gpt-oss` architecture or `gpt-oss` general name adds `harmony` once;
-  a boolean `mtpGrafted` is recorded, and `true` sets `mtpCapable`.
+  boolean `mtpGrafted` is recorded, and `true` sets `mtpCapable`.
 - `LLAMA_CPP_RUNTIMES`.
 
 ## Why

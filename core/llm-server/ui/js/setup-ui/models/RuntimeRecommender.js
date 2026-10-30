@@ -44,7 +44,7 @@ export default class RuntimeRecommender {
 
   tagsHtml(model) {
     const rec = this.recommend(model);
-    const tags = (model.formatRequirements || []).map((fmt) => this._formatTag(fmt));
+    const tags = [];
     if (rec) tags.push(this._recommendedTag(rec));
     for (const rid of (model.compatibleRuntimes || [])) {
       if (rec && rec.id === rid) continue;
@@ -52,11 +52,6 @@ export default class RuntimeRecommender {
       tags.push(this._compatibleTag(rid));
     }
     return tags.join('');
-  }
-
-  _formatTag(fmt) {
-    const installed = this._runtimes.isInstalled(fmt);
-    return `<span class="runtime-tag format" title="Format ${installed ? 'available' : 'not yet available'}">requires ${HtmlEscaper.escape(fmt)}${installed ? '' : ' · missing'}</span>`;
   }
 
   _recommendedTag(rec) {

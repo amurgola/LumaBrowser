@@ -14,3 +14,6 @@ The native file dialogs of the in-app Agents tab (Electron required lazily).
 - `addKnowledge(agent)` (requires the RAG service first) picks pdf, txt, md,
   markdown, html or htm files and ingests them into the agent's scope ->
   `{ canceled, results, documents }`.
+- `addKnowledgeFolder(agent)` (requires the RAG service first) picks one folder
+  (`openDirectory`) and ingests every supported document under it, recursively,
+  through [AgentKnowledgeBase](AgentKnowledgeBase.md)`.ingest` -> the same shape.

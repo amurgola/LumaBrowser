@@ -14,5 +14,8 @@ Adds documents to the knowledge base for the management UI, one
   ingests the picks into scope `kb`. Cancelled: `{ success: true, results: [], canceled: true }`.
 - `ingest({ path? , paths?, scope? })` ingests one path or a list into `scope`
   (default `kb`); `{ success: false, error: 'No path(s) provided.' }` when there are none.
-- Both return `{ success: true, results: [{ path, ...ingestFile result }] }`.
+  A folder path stands for every supported document inside it, recursively
+  ([KnowledgePathExpander](KnowledgePathExpander.md)); a folder without documents
+  yields one failed result for that folder.
+- Both return `{ success: true, results: [{ path, ...ingestFile result }] }`, one per file.
 - `RagDocumentImporter.DIALOG_OPTIONS`, `DEFAULT_SCOPE`.

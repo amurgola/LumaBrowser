@@ -1,6 +1,7 @@
 class UpdateManifestMerger {
   static VERSION_LINE = /^version:\s*(.+?)\s*$/;
   static FILES_LINE = /^files:\s*$/;
+  static URL_LINE = /^\s+-\s+url:\s*(.+?)\s*$/;
   static INDENTED = /^\s+\S/;
 
   static merge(primaryText, secondaryTexts) {
@@ -13,6 +14,9 @@ class UpdateManifestMerger {
       }
       extra.push(...secondary.fileLines);
     });
+    const urls = [...primary.fileLines, ...extra].map((line) => line.match(UpdateManifestMerger.URL_LINE)).filter(Boolean).map((m) => m[1]);
+    const dup = urls.find((url, i) => urls.indexOf(url) !== i);
+    if (dup) throw new Error(`Duplicate installer name ${dup}: every leg must name its installer per arch, or the release upload collides.`);
     const lines = primary.lines.slice();
     lines.splice(primary.filesEnd, 0, ...extra);
     return lines.join('\n');

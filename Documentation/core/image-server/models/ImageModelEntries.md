@@ -7,7 +7,7 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 
 ## Members
 
-- `ImageModelEntries.ENTRIES`: Z-Image Turbo, Qwen-Image-Edit 2509,
+- `ImageModelEntries.ENTRIES`: Z-Image Turbo, Qwen-Image-Edit 2509, Qwen-Image-Edit 2511,
   Qwen-Image 2.1, Qwen-Image 2.1 Turbo, SD 1.5, SDXL base, Sprite Shaper XL, FLUX.1 Schnell,
   Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B, MOSS-Image (images), then Wan 2.2 T2V, Wan 2.2
   I2V, AniSora V3.2, LTX-Video 2B and MiniMax-H3 (video).
@@ -57,6 +57,12 @@ comfortable GPU-resident size with the encoders on the CPU.
   safe Q4_0 / Q6_K / Q8_0 are recommended. `--offload-to-cpu` streams weights
   from RAM and was measured both fastest and the only OOM-proof option at 1 MP.
   The mmproj vision tower is required for references.
+- Qwen-Image-Edit 2511: 2509's successor with the same companions (unsloth
+  GGUFs, same quant caveat), less image drift between edits and better
+  multi-person consistency. sd.cpp needs `--model-args
+  qwen_image_zero_cond_t=true` for it or editing quality "degrades
+  significantly" (docs/qwen_image_edit.md); the official ComfyUI template runs
+  shift 3.1 at cfg 4.0 (Qwen 40 steps, Comfy 20), hence the row's defaults.
 - Qwen-Image 2.1: one 7B model that both generates and edits (`kind:
   'generate'` + `supportsEdit`), so it can be both defaults without loading
   twice. Its VAE is new; the shipped file is madebyollin's texture-fix decoder

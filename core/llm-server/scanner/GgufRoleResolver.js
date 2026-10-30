@@ -45,6 +45,12 @@ class GgufRoleResolver {
   static fromFilename(file, header = null) {
     const nameHint = GgufFileName.roleHint(file.name);
     const usable = header && header.ok ? header : null;
+    if (usable && !nameHint) {
+      return {
+        role: 'diffusion', roleSource: 'header', nameHint, header: usable,
+        roleReason: 'header names no architecture or type: not a llama.cpp model (an image or video GGUF)',
+      };
+    }
     const why = usable ? 'header undecided' : 'header unavailable';
     return {
       role: nameHint || 'main',

@@ -11,15 +11,27 @@ class EditModelChoice {
     return choice;
   }
 
+  static REGION_STEPS = { 'qwen-image-2': 12 };
+
   constructor() {
     this.editModelId = null;
     this.unifiedGenEdit = false;
     this.editFamily = null;
+    this.editDefaults = null;
     this.remoteEdit = false;
   }
 
   get editCapable() {
     return !!(this.remoteEdit || this.editModelId || this.unifiedGenEdit);
+  }
+
+  get regionSteps() {
+    if (this.remoteEdit || !this.editFamily) return null;
+    const steps = EditModelChoice.REGION_STEPS[this.editFamily];
+    if (!steps) return null;
+    const d = this.editDefaults || {};
+    if (Array.isArray(d.fixedSigmas) || (Number(d.steps) > 0 && Number(d.steps) <= steps)) return null;
+    return steps;
   }
 
   get profile() {
@@ -40,10 +52,14 @@ class EditModelChoice {
       if (this.editModelId && lookup) {
         const rec = await lookup(this.editModelId);
         this.editFamily = (rec && rec.family) || null;
+        this.editDefaults = (rec && rec.defaults) || null;
       } else if (!this.editModelId && defaults.modelId && lookup) {
         const rec = await lookup(defaults.modelId);
         this.unifiedGenEdit = !!(rec && rec.supportsEdit);
-        if (this.unifiedGenEdit) this.editFamily = rec.family || null;
+        if (this.unifiedGenEdit) {
+          this.editFamily = rec.family || null;
+          this.editDefaults = rec.defaults || null;
+        }
       }
     } catch (_) {}
   }

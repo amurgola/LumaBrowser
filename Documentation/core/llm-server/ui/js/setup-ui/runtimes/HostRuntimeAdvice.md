@@ -11,7 +11,7 @@ and what it needs.
 
 - `HostRuntimeAdvice.forRows(rows, caps)`: `{ [runtimeId]: { tier, why } }`
   for the runtime rows given, from the [HostCaps](../diagnostics/HostCaps.md);
-  formats (`harmony`) and ids naming no backend are skipped.
+  ids naming no backend are skipped.
 - `HostRuntimeAdvice.host(caps)`: the host in the rules' terms (`nvidia`,
   `cudaMajor`, `intel`, `amd`, `darwin`, `gpu`, `npu`, `npuUsable`) and the
   `primary` id: the CPU build on macOS (it is the Metal build there), the
@@ -19,8 +19,10 @@ and what it needs.
 - `HostRuntimeAdvice.backendOf(row)`: `cuda`, `vulkan`, `rocm`, `sycl`,
   `openvino`, `mlx`, `cpu` or null, from the id (extension forks follow the
   same naming; `ninfer` and `llama-cpp-luma` are CUDA builds).
-- `HostRuntimeAdvice.adviceFor(row, host)`: the primary is `recommended`;
-  `RULES` place every other backend: a vendor build on its vendor's GPU is an
+- `HostRuntimeAdvice.adviceFor(row, host)`: the primary is `recommended`; a
+  row with `assetSupported: false` that is not installed and not an extension
+  runtime is `unsuited` (no prebuilt download for this platform, e.g. CUDA 12
+  on Windows on Arm); `RULES` place every other backend: a vendor build on its vendor's GPU is an
   `alternative` with what it needs (ROCm or HIP SDK, the oneAPI runtime, the
   Intel compute runtime), a vendor build without that vendor is `unsuited`,
   CPU builds are a `fallback`, ik_llama.cpp forks are alternatives to the

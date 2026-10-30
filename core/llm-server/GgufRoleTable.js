@@ -3,9 +3,17 @@ const GgufTensorLayout = require('./GgufTensorLayout');
 class GgufRoleTable {
   static ROLES = Object.freeze({
     MAIN: 'main', DRAFT: 'draft', MMPROJ: 'mmproj', EMBEDDING: 'embedding', RERANKER: 'reranker', MTP: 'mtp',
+    DIFFUSION: 'diffusion',
   });
 
   static PROJECTOR_ARCHES = new Set(['clip', 'mmproj']);
+
+  static DIFFUSION_ARCHES = new Set([
+    'flux', 'flux2', 'sd1', 'sd2', 'sdxl', 'sd3', 'sd35', 'wan', 'wan21', 'wan22', 'hidream', 'ltxv', 'ltx', 'hyvid',
+    'hunyuan_video', 'hunyuan_image', 'qwen_image', 'qwen_image_edit', 'qwen_image21', 'chroma', 'chroma_radiance',
+    'aura', 'auraflow', 'cosmos', 'lumina2', 'z_image', 'zimage', 'pixart', 'kolors', 'omnigen', 'minimax_h3',
+    'moss_image', 'vae', 'sd_vae', 'wan_vae', 'controlnet', 'esrgan', 'upscaler',
+  ]);
 
   static ENCODER_ARCHES = new Set([
     'bert', 'nomic-bert', 'nomic-bert-moe', 'jina-bert-v2', 'jina-bert-v3', 'xlm-roberta', 'roberta', 'roberta-bert',
@@ -33,6 +41,7 @@ class GgufRoleTable {
       || GgufRoleTable._typed(type)
       || GgufRoleTable._pooled(pooling, arch)
       || GgufRoleTable._encoder(arch)
+      || GgufRoleTable._diffusion(arch)
       || GgufRoleTable._detachedMtp(facts.tensorScan);
     if (decided) return decided;
     if (arch) return { role: GgufRoleTable.ROLES.MAIN, reason: `architecture ${arch} is a decoder` };
@@ -41,6 +50,22 @@ class GgufRoleTable {
 
   static isKnownRole(role) {
     return Object.values(GgufRoleTable.ROLES).includes(role);
+  }
+
+  static isDiffusionArch(arch) {
+    const a = GgufRoleTable._lower(arch);
+    if (!a) return false;
+    if (GgufRoleTable.DIFFUSION_ARCHES.has(a)) return true;
+    for (const known of GgufRoleTable.DIFFUSION_ARCHES) {
+      if (a.startsWith(known) && /^[0-9_.-]/.test(a.slice(known.length))) return true;
+    }
+    return false;
+  }
+
+  static _diffusion(arch) {
+    return GgufRoleTable.isDiffusionArch(arch)
+      ? { role: GgufRoleTable.ROLES.DIFFUSION, reason: `architecture ${arch} is an image or video model, not a language model` }
+      : null;
   }
 
   static _projector(arch, type, hasClipKeys) {

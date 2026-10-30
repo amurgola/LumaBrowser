@@ -95,8 +95,9 @@ class TerminalCommandRunner {
   }
 
   _writeScript(command, title) {
-    const dir = this._fs.mkdtempSync(path.join(this._tmpDir, 'luma-terminal-'));
-    const files = { dir, script: path.join(dir, 'run.sh'), status: path.join(dir, 'status'), started: path.join(dir, 'started') };
+    const join = path.posix.join;
+    const dir = this._fs.mkdtempSync(join(this._tmpDir, 'luma-terminal-'));
+    const files = { dir, script: join(dir, 'run.sh'), status: join(dir, 'status'), started: join(dir, 'started') };
     this._fs.writeFileSync(files.script, TerminalCommandRunner.script(command, { ...files, title }), { mode: 0o755 });
     return files;
   }

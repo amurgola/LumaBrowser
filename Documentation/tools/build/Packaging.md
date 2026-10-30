@@ -25,7 +25,9 @@ Identical to legacy except where the rebuild's layout needs it:
   own (better-sqlite3, @napi-rs/canvas) are kept by the afterPack repack.
   Preloads and workers are not unpacked: Electron loads them through the archive.
 - Targets: win nsis + portable (no arch in the config: the host's, or the CLI's
-  `--x64` / `--arm64`; CI builds both), linux AppImage + deb (x64), mac dmg + zip
+  `--x64` / `--arm64`; CI builds both; `nsis.buildUniversalInstaller: false` so a
+  single-arch build is named per arch, `LumaBrowser Setup <v>-arm64.exe`, while x64
+  as the default arch keeps `LumaBrowser Setup <v>.exe`), linux AppImage + deb (x64), mac dmg + zip
   (hardened runtime, notarize, `build/entitlements.mac.plist`); NSIS includes
   `build/installer.nsh` and shows `LICENSE`.
 
@@ -65,8 +67,9 @@ with `--if-present` until the IDE port adds their npm scripts.
 ## CI (.github/workflows/build.yml)
 
 Manual dispatch, or a published GitHub release. Matrix ubuntu-latest / windows-2022 (x64) /
-windows-11-arm (arm64: native, so `npm ci` installs the win32-arm64 prebuilds; the portable's
-`artifactName` is overridden on the CLI to carry `-arm64`) / macos-latest (arm64 only),
+windows-11-arm (arm64: native, so `npm ci` installs the win32-arm64 prebuilds; the installer
+gets its `-arm64` suffix from `buildUniversalInstaller: false` and the portable's fixed
+`artifactName` is overridden on the CLI to carry `-arm64`, so neither collides with the x64 leg's file) / macos-latest (arm64 only),
 Node 24 (better-sqlite3 13, used by the docs index build, needs 22+), electron-builder cache, `npm ci`, optional IDE plugins, unsigned unless
 the signing secrets are set, three build attempts, then
 `verify-asar.js --asar` on the leg's output and an artifact upload. A

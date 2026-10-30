@@ -17,15 +17,10 @@ class RuntimeDetector {
   }
 
   async detectRuntimes({ runtimesRoot, cuda, gpu, manualBinaries } = {}) {
-    const entries = this._catalog.getCatalog();
-    const detectedById = new Map();
     const results = [];
-    for (const entry of this._detectableEntries(entries)) {
-      const detail = await this._detectEntry(entry, { runtimesRoot, cuda, gpu, manualBinaries });
-      results.push(detail);
-      detectedById.set(entry.id, detail);
+    for (const entry of this._detectableEntries(this._catalog.getCatalog())) {
+      results.push(await this._detectEntry(entry, { runtimesRoot, cuda, gpu, manualBinaries }));
     }
-    this._rollUp({ entries, detectedById, results });
     return { runtimesRoot, platformKey: `${process.platform}-${process.arch}`, runtimes: results };
   }
 
@@ -38,9 +33,6 @@ class RuntimeDetector {
   }
 
   _decorateDetail(detail, entry) {
-  }
-
-  _rollUp({ entries, detectedById, results }) {
   }
 
   async _afterDetect(detail, entry) {

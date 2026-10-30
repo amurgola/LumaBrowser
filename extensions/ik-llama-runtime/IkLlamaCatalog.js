@@ -27,10 +27,12 @@ class IkLlamaCatalog {
 
   static buildRuntimeEntries(opts = {}) {
     const platform = opts.platform || process.platform;
+    const arch = opts.arch || process.arch;
+    const hostKeys = [platform, `${platform}-${arch}`];
     const isa = opts.isa || HostIsa.detect({ platform }).isa;
     const common = IkLlamaCatalog._commonFields(isa);
     const rows = IkLlamaCatalog._rows(common, isa, platform);
-    return rows.filter((r) => r.platforms.includes(platform));
+    return rows.filter((r) => r.platforms.some((key) => hostKeys.includes(key)));
   }
 
   static _commonFields(isa) {
@@ -64,7 +66,7 @@ class IkLlamaCatalog {
         id: 'ik-llama-cuda13',
         name: 'ik_llama.cpp (CUDA 13)',
         description: `${blurb}NVIDIA GPU acceleration via CUDA 13 (native Blackwell kernels). ${isaNote}`,
-        platforms: ['win32', 'linux'],
+        platforms: ['win32-x64', 'linux-x64'],
         assetPatterns: patterns('cuda13'),
         companionAssets: companions('cuda13'),
         requiresHw: { kind: 'nvidia-cuda', cudaMajor: 13 },
@@ -75,7 +77,7 @@ class IkLlamaCatalog {
         id: 'ik-llama-cuda12',
         name: 'ik_llama.cpp (CUDA 12)',
         description: `${blurb}NVIDIA GPU acceleration via CUDA 12. ${isaNote}`,
-        platforms: ['win32', 'linux'],
+        platforms: ['win32-x64', 'linux-x64'],
         assetPatterns: patterns('cuda12'),
         companionAssets: companions('cuda12'),
         requiresHw: { kind: 'nvidia-cuda', cudaMajor: 12 },
@@ -86,7 +88,7 @@ class IkLlamaCatalog {
         id: 'ik-llama-vulkan',
         name: 'ik_llama.cpp (Vulkan)',
         description: `${blurb}Cross-vendor GPU acceleration via Vulkan; Linux builds only. ${isaNote}`,
-        platforms: ['linux'],
+        platforms: ['linux-x64'],
         assetPatterns: patterns('vulkan'),
         requiresHw: { kind: 'gpu-any' },
         requirementNote: 'Needs a GPU with a Vulkan driver.',
@@ -96,7 +98,7 @@ class IkLlamaCatalog {
         id: 'ik-llama-cpu',
         name: 'ik_llama.cpp (CPU)',
         description: `${blurb}Pure CPU inference, where the fork's MoE kernels matter most. ${platform === 'darwin' ? 'The Apple Silicon build uses Metal.' : isaNote}`,
-        platforms: ['win32', 'linux', 'darwin'],
+        platforms: ['win32-x64', 'linux-x64', 'darwin'],
         assetPatterns: patterns('cpu'),
         requiresHw: null,
       },

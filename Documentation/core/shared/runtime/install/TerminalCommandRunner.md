@@ -13,7 +13,9 @@ ended.
   `os.tmpdir()`, `process.env`, [PathBinaryLookup](../detect/PathBinaryLookup.md)`.find`).
 - `run(command, { title })` resolves `{ ok, code, terminal, error }`: `code` is
   the command's exit code, 130 when the window was closed on it, null when no
-  terminal ran it or the wait timed out. Linux only.
+  terminal ran it or the wait timed out. Linux only, so the script, status and
+  started paths are joined with `path.posix` (they are quoted into a sh script,
+  and the tests run on Windows too).
 - `TerminalCommandRunner.script(command, { status, started, title })`: the
   bash script the terminal runs: a started marker, the command, its exit code
   written to the status file, a readable summary, then a pause on Enter. An

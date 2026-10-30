@@ -29,7 +29,8 @@ class SageAttentionPolicy {
   }
 
   static _pinnedCards(cudaDevice, diagnostics) {
-    const all = CudaDeviceProbe.diagnosticsDevices(diagnostics) || [];
+    const all = (CudaDeviceProbe.diagnosticsDevices(diagnostics) || [])
+      .map((d, i) => (Number.isInteger(d.index) ? d : { ...d, index: i }));
     const pinned = String(cudaDevice == null ? '' : cudaDevice).split(',').map((s) => s.trim()).filter(Boolean);
     if (!pinned.length) return all;
     return pinned.map((idx) => all.find((d) => String(d.index) === idx)).filter(Boolean);

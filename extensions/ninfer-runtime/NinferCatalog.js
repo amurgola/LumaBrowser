@@ -28,7 +28,7 @@ class NinferCatalog {
       + 'built-in MTP speculative decoding. Runs inside WSL2 on Windows and '
       + 'natively on Linux. Loads only its own .ninfer model files: see the '
       + 'add-on models in the Models card.',
-    platforms: ['win32', 'linux'],
+    platforms: ['win32-x64', 'linux-x64'],
     requiresHw: {
       kind: 'nvidia-cuda',
       cudaMajor: 13,
