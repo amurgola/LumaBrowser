@@ -78,6 +78,7 @@ class LaunchOverrides {
       if (measured == null) return;
       const mmprojBytes = ctx.withVision ? (Number(ctx.model && ctx.model.mmprojTotalBytes) || 0) : 0;
       ctx.overrides.measuredVramBytes = measured + mmprojBytes;
+      ctx.overrides.measuredFullOffload = mmprojBytes === 0 && ContextEstimator.measuredFullOffload(fitEntry, ctx.overrides.contextSize, ctx.kvMode);
     } catch (_) {}
   }
 }

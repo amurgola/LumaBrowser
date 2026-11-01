@@ -3,6 +3,7 @@ const LaunchCostInput = require('./LaunchCostInput');
 const PartialOffloadSizer = require('./PartialOffloadSizer');
 const SlidingWindowLayout = require('./SlidingWindowLayout');
 const GpuOverhead = require('./GpuOverhead');
+const UnifiedShare = require('./UnifiedShare');
 
 class OffloadDecision {
   static ALL_LAYERS = 999;
@@ -13,6 +14,7 @@ class OffloadDecision {
     OffloadDecision._applyMeasurement(decision, state);
     OffloadDecision._decideFit(decision, state);
     OffloadDecision._decideLayers(decision, state);
+    OffloadDecision._decidePinnedHost(decision, state);
     return decision;
   }
 
@@ -36,8 +38,18 @@ class OffloadDecision {
       ? decision.measuredVramBytes : decision.headerEstimatedBytes;
   }
 
-  static _decideFit(decision, { budget, flags }) {
-    decision.fullOffload = budget.totalVram > 0 && decision.modelEstimatedBytes <= budget.vramAvailableBytes;
+  static _decideFit(decision, { budget, flags, files, overrides }) {
+    decision.measuredFullOffload = !!budget.unifiedMemory && overrides.measuredFullOffload === true && decision.measuredVramBytes != null;
+    const fitsPinned = budget.totalVram > 0
+      && (decision.modelEstimatedBytes <= budget.vramAvailableBytes || decision.measuredFullOffload);
+    decision.unifiedHostBytes = UnifiedShare.hostBytes(budget, files.gguf);
+    decision.hostOffPoolBytes = 0;
+    if (!fitsPinned && decision.measuredVramBytes == null && decision.unifiedHostBytes > 0
+      && decision.headerEstimatedBytes - decision.unifiedHostBytes <= budget.vramAvailableBytes) {
+      decision.hostOffPoolBytes = decision.unifiedHostBytes;
+      decision.modelEstimatedBytes = decision.headerEstimatedBytes - decision.unifiedHostBytes;
+    }
+    decision.fullOffload = fitsPinned || decision.hostOffPoolBytes > 0;
     decision.singleGpuFits = decision.fullOffload && budget.perGpu.length > 1
       && decision.modelEstimatedBytes <= budget.largestGpuUsableBytes;
     decision.swaFull = decision.fullOffload && flags.swaFull && decision.swaFullAffordable && !!decision.swaLayout;
@@ -53,6 +65,10 @@ class OffloadDecision {
     } else {
       decision.ngl = 0;
     }
+  }
+
+  static _decidePinnedHost(decision, { budget }) {
+    decision.pinnedHostOff = !!(budget && budget.unifiedMemory) && (!decision.fullOffload || decision.hostOffPoolBytes > 0);
   }
 
   static _partialInput({ files, kv, flags, spec, vision, budget, moe }) {

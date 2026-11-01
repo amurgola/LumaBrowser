@@ -8,6 +8,8 @@ const RamPinService = require('../shared/runtime/rampin/RamPinService');
 const LlmRuntimeServer = require('./server/LlmRuntimeServer');
 const ServerLauncher = require('./server/ServerLauncher');
 const VramWatchdog = require('./server/VramWatchdog');
+const CudaDevicePicker = require('../shared/runtime/CudaDevicePicker');
+const NvidiaUnifiedMemory = require('./diagnostics/NvidiaUnifiedMemory');
 const ModelCapsCache = require('./server/ModelCapsCache');
 const RpcPeers = require('./server/RpcPeers');
 const LlmRuntimeCatalog = require('./runtimes/LlmRuntimeCatalog');
@@ -340,6 +342,8 @@ class LLMServerService {
       isLoaded: () => rs.state === 'ready',
       isIdle: () => rs.state === 'ready' && this._requests.inFlight() === 0 && !rs.idleHeld,
       unloadEnabled: () => this.getUnloadOnVramPressure(),
+      reserveBytes: (card) => (NvidiaUnifiedMemory.isUnifiedDevice(this._diagnostics.getCached(), card.index)
+        ? 0 : CudaDevicePicker.PER_CARD_RESERVE_BYTES),
       unload: async () => {
         console.log('[llm-server] unloading: VRAM critically low while idle (core.llm.unloadOnVramPressure)');
         await rs.stop();

@@ -5,6 +5,7 @@ const LlmRuntimeServer = require('../LlmRuntimeServer');
 const FitGenerationClient = require('./FitGenerationClient');
 const DepthProbe = require('./DepthProbe');
 const VramFootprint = require('./VramFootprint');
+const NvidiaUnifiedMemory = require('../../diagnostics/NvidiaUnifiedMemory');
 const CancellableDelay = require('./CancellableDelay');
 
 class FitComboRunner {
@@ -16,7 +17,7 @@ class FitComboRunner {
     planFor,
     createSupervisor = () => new LlmRuntimeServer(),
     findFreePort = () => LlmRuntimeServer.findFreePort(),
-    createFootprint = () => new VramFootprint(),
+    createFootprint = (opts) => new VramFootprint(opts),
     client = new FitGenerationClient(),
     depthProbe = null,
     settleMs = FitComboRunner.TEARDOWN_SETTLE_MS,
@@ -111,7 +112,7 @@ class FitComboRunner {
 
   async _loadAndMeasure(job, port, launch, row) {
     const supervisor = this._createSupervisor();
-    const footprint = this._createFootprint();
+    const footprint = this._createFootprint({ unifiedMemory: NvidiaUnifiedMemory.anyUnified(job.diagnostics) });
     await footprint.captureBaseline();
     const loadFailure = await this._load(supervisor, launch, job, row);
     if (loadFailure) return loadFailure;

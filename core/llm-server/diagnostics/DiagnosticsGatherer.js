@@ -5,6 +5,7 @@ const RegistryVramProbe = require('./RegistryVramProbe');
 const LinuxDrmVramProbe = require('./LinuxDrmVramProbe');
 const LlamaDeviceProbe = require('./LlamaDeviceProbe');
 const LlamaDeviceVram = require('./LlamaDeviceVram');
+const NvidiaUnifiedMemory = require('./NvidiaUnifiedMemory');
 const NpuProbe = require('./NpuProbe');
 const UnifiedMemoryProbe = require('./UnifiedMemoryProbe');
 const SharedGpuMemory = require('./SharedGpuMemory');
@@ -31,6 +32,7 @@ class DiagnosticsGatherer {
     await this._probeGpuDisksAndRamModules();
     await this._probeLlamaDevices();
     this._readMemory();
+    await this._applyNvidiaUnifiedMemory();
     await this._applySharedGpuMemory();
     await this._probeWindowsGpuHealth();
     return this._buildReport();
@@ -76,6 +78,13 @@ class DiagnosticsGatherer {
 
   async _probeWindowsGpuHealth() {
     if (process.platform === 'win32') this._gpu.health = await GpuHealthProbe.probe(this._gpu);
+  }
+
+  async _applyNvidiaUnifiedMemory() {
+    if (!NvidiaUnifiedMemory.anySuspect(this._cuda)) return;
+    let listing = null;
+    try { listing = await LlamaDeviceProbe.probeCuda({ runtimesRoot: this._runtimesRoot }); } catch (_) { listing = null; }
+    this._cuda = NvidiaUnifiedMemory.apply(this._cuda, { listing, totalRamBytes: this._memory.totalBytes });
   }
 
   _readMemory() {

@@ -115,9 +115,13 @@ class PlanSummary {
   }
 
   static _accounting(state) {
-    const { budget, splits, apiKey, skippedFlags, offload, decodeEstimate, flags, files, port, notes } = state;
+    const { budget, splits, apiKey, skippedFlags, offload, decodeEstimate, flags, files, port, notes, loading } = state;
     return {
       rpc: budget.rpcEnabled ? PlanSummary._rpc(budget, splits) : null,
+      spawnEnv: loading.spawnEnv || null,
+      unifiedMemory: budget.unifiedMemory
+        ? { sharedRoomBytes: budget.sharedRoomBytes, hostOffPoolBytes: offload.hostOffPoolBytes || 0, pinnedHostOff: !!loading.pinnedHostOff }
+        : null,
       apiKeyRequired: !!apiKey,
       skippedFlags,
       vramAvailableBytes: budget.vramAvailableBytes,

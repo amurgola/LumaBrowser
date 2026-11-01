@@ -13,11 +13,18 @@ class LaunchFinalizer {
   finalize(ctx, launch) {
     launch.authKey = ctx.launchKey;
     launch.cudaDevice = ctx.cudaDevice;
-    launch.extraEnv = OpenVinoDevice.spawnEnv((ctx.runtime && ctx.runtime.spawnEnv) || null, ctx.openvinoDevice);
+    launch.extraEnv = LaunchFinalizer._spawnEnv(ctx, launch);
     launch.healthTimeoutMs = LaunchFinalizer.healthTimeoutMs(ctx.model.weightsTotalBytes);
     LaunchFinalizer._applyLayoutSplit(ctx, launch);
     this._weightLedgerBySplit(launch);
     return launch;
+  }
+
+  static _spawnEnv(ctx, launch) {
+    const runtimeEnv = OpenVinoDevice.spawnEnv((ctx.runtime && ctx.runtime.spawnEnv) || null, ctx.openvinoDevice);
+    const planEnv = launch.plan && launch.plan.spawnEnv;
+    if (!planEnv || typeof planEnv !== 'object') return runtimeEnv;
+    return { ...(runtimeEnv || {}), ...planEnv };
   }
 
   static healthTimeoutMs(weightsTotalBytes) {

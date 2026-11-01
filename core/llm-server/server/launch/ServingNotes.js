@@ -26,7 +26,17 @@ class ServingNotes {
     this._noteDistributed();
     this._noteExpertOffload();
     this._noteLoadModeFallback();
+    this._notePinnedHost();
     return this._notes;
+  }
+
+  _notePinnedHost() {
+    const { loading, offload } = this._s;
+    if (!loading.pinnedHostOff) return;
+    const why = offload.hostOffPoolBytes > 0
+      ? 'the model fits the GPU pool only once the input embeddings leave it, so it loads about twice as slowly in exchange for staying fully on the GPU'
+      : 'the CPU-side layers would otherwise sit in the same shared segment the GPU weights spill into and overflow it';
+    this._notes.push(`Pinned host memory: OFF (GGML_CUDA_NO_PINNED=1): on this unified-memory GPU ${why}.`);
   }
 
   _noteSlots() {
@@ -131,6 +141,10 @@ class ServingNotes {
   }
 
   _noteMeasuredBasis() {
+    if (this._s.offload.measuredFullOffload && this._s.offload.modelEstimatedBytes > this._s.budget.vramAvailableBytes) {
+      this._notes.push('Measured fit: the fit test ran this exact context and KV mode fully on the GPU, so the launch keeps every '
+        + 'layer there although the measured peak (which counts pinned host buffers) reads above the unified-memory budget.');
+    }
     const { offload, kv } = this._s;
     if (offload.measuredVramBytes == null) return;
     this._notes.push(

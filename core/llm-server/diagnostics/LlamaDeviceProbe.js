@@ -5,7 +5,9 @@ const RuntimeSpawnEnv = require('../../shared/runtime/server/RuntimeSpawnEnv');
 
 class LlamaDeviceProbe {
   static RUNTIME_IDS = ['llama-cpp-vulkan', 'llama-cpp-sycl', 'llama-cpp-rocm'];
+  static CUDA_RUNTIME_IDS = ['llama-cpp-cuda13', 'llama-cpp-cuda12', 'llama-cpp-luma'];
   static BINARY_NAMES = ['llama-server'];
+  static WINDOWS_BINARY_NAMES = ['llama-server.exe'];
   static SEARCH_DEPTH = 3;
   static TIMEOUT_MS = 15000;
   static MIB = 1024 * 1024;
@@ -15,6 +17,15 @@ class LlamaDeviceProbe {
   static async probe({ runtimesRoot, platform = process.platform, run = DiagnosticsCommand.run, findBinary = BinaryLookup.findBinaryIn } = {}) {
     if (platform !== 'linux' || !runtimesRoot) return null;
     for (const runtimeId of LlamaDeviceProbe.RUNTIME_IDS) {
+      const devices = await LlamaDeviceProbe._listWith(runtimesRoot, runtimeId, { platform, run, findBinary });
+      if (devices && devices.length > 0) return { runtimeId, devices };
+    }
+    return null;
+  }
+
+  static async probeCuda({ runtimesRoot, platform = process.platform, run = DiagnosticsCommand.run, findBinary = BinaryLookup.findBinaryIn } = {}) {
+    if (!runtimesRoot) return null;
+    for (const runtimeId of LlamaDeviceProbe.CUDA_RUNTIME_IDS) {
       const devices = await LlamaDeviceProbe._listWith(runtimesRoot, runtimeId, { platform, run, findBinary });
       if (devices && devices.length > 0) return { runtimeId, devices };
     }
@@ -35,8 +46,9 @@ class LlamaDeviceProbe {
 
   static async _listWith(runtimesRoot, runtimeId, { platform, run, findBinary }) {
     let binaryPath = null;
+    const names = platform === 'win32' ? LlamaDeviceProbe.WINDOWS_BINARY_NAMES : LlamaDeviceProbe.BINARY_NAMES;
     try {
-      binaryPath = await findBinary(ManagedDir.pathFor(runtimesRoot, runtimeId), LlamaDeviceProbe.BINARY_NAMES, { maxDepth: LlamaDeviceProbe.SEARCH_DEPTH });
+      binaryPath = await findBinary(ManagedDir.pathFor(runtimesRoot, runtimeId), names, { maxDepth: LlamaDeviceProbe.SEARCH_DEPTH });
     } catch (_) {}
     if (!binaryPath) return null;
     const spawn = RuntimeSpawnEnv.build(binaryPath, { platform });

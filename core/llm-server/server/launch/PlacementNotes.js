@@ -61,10 +61,26 @@ class PlacementNotes {
       const occupied = budget.perGpu.reduce((sum, g) => sum + (Number(g.occupiedBytes) || 0), 0);
       const inUse = occupied > 0 ? `${ByteLadder.format(occupied)} already in use, ` : '';
       this._notes.push(`VRAM usable: ${ByteLadder.format(budget.vramAvailableBytes)} across ${cards} adapter${cards === 1 ? '' : 's'} `
-        + `(after ${inUse}${ByteLadder.format(GpuOverhead.PER_CARD_RESERVE)}/card headroom).`);
+        + `(after ${inUse}${ByteLadder.format(GpuOverhead.PER_CARD_RESERVE)}/card headroom${this._unifiedSuffix()}).`);
+      if (budget.unifiedMemory) this._noteUnified();
     } else {
       this._notes.push('No GPU VRAM detected; CPU inference only.');
     }
+  }
+
+  _unifiedSuffix() {
+    const { budget } = this._s;
+    return budget.unifiedMemory ? `, including ${ByteLadder.format(budget.sharedRoomBytes)} of shared unified memory` : '';
+  }
+
+  _noteUnified() {
+    const { budget } = this._s;
+    const card = budget.perGpu.find((g) => g.unifiedMemory) || budget.perGpu[0];
+    this._notes.push(`Unified memory: ${card.name} computes out of system RAM. nvidia-smi meters only the `
+      + `${ByteLadder.format(card.totalBytes)} dedicated carve-out, but the CUDA backend also allocates up to `
+      + `${ByteLadder.format(card.sharedBytes || 0)} of shared system memory once the carve-out is full, at the same bandwidth. `
+      + `This launch budgets ${ByteLadder.format(budget.sharedRoomBytes)} of that after the RAM the OS and LumaBrowser keep. `
+      + 'A larger carve-out (NVIDIA app, reboot) moves memory between the two pools; it does not add any.');
   }
 
   _noteNeed() {
@@ -77,8 +93,9 @@ class PlacementNotes {
   }
 
   _needBreakdown() {
-    const { files, vision, kv, flags, spec } = this._s;
+    const { files, vision, kv, flags, spec, offload } = this._s;
     const parts = [`${ByteLadder.format(this._s.model.weightsTotalBytes)} weights`];
+    if (offload.hostOffPoolBytes > 0) parts[0] += ` less ${ByteLadder.format(offload.hostOffPoolBytes)} of input embeddings kept in plain RAM`;
     if (vision.effectiveMmprojBytes > 0) parts.push(`${ByteLadder.format(vision.effectiveMmprojBytes)} mmproj`);
     const kvLabel = kv.cacheTypeK === 'q8_0' || kv.cacheTypeV === 'q8_0' ? 'q8 KV' : 'f16 KV';
     const hybrid = HybridAttentionLayout.of(files.gguf);

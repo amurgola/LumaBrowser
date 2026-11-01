@@ -1,5 +1,6 @@
 const GpuInventory = require('./GpuInventory');
 const GpuOverhead = require('./GpuOverhead');
+const UnifiedShare = require('./UnifiedShare');
 
 class VramBudget {
   static resolve({ diagnostics, overrides, flags }) {
@@ -7,6 +8,7 @@ class VramBudget {
     budget.perGpu = GpuInventory.fromDiagnostics(diagnostics);
     if (budget.rpcEnabled) budget.perGpu.push(...GpuInventory.remoteDevices(budget.rpcServers));
     budget.totalVram = budget.perGpu.reduce((s, g) => s + g.totalBytes, 0);
+    VramBudget._resolveUnified(budget, diagnostics);
     budget.vramAvailableBytes = VramBudget._available(budget, overrides);
     VramBudget._resolveLargestCard(budget);
     return budget;
@@ -18,8 +20,23 @@ class VramBudget {
     return { rpcServers, rpcFlagSupported: flags.rpc, rpcEnabled: rpcServers.length > 0 && flags.rpc };
   }
 
+  static _resolveUnified(budget, diagnostics) {
+    budget.unifiedMemory = UnifiedShare.anyUnified(budget.perGpu);
+    const ramTotal = Number(diagnostics && diagnostics.memory && diagnostics.memory.totalBytes) || 0;
+    budget.sharedRoomBytes = 0;
+    for (const card of budget.perGpu) {
+      if (!card.unifiedMemory) continue;
+      card.sharedRoomBytes = UnifiedShare.roomBytes(card, ramTotal);
+      budget.sharedRoomBytes += card.sharedRoomBytes;
+    }
+  }
+
+  static _cardRoom(card) {
+    return GpuOverhead.cardRoom(card) + (Number(card.sharedRoomBytes) || 0);
+  }
+
   static _available(budget, overrides) {
-    let available = budget.perGpu.reduce((sum, g) => sum + GpuOverhead.cardRoom(g), 0);
+    let available = budget.perGpu.reduce((sum, g) => sum + VramBudget._cardRoom(g), 0);
     const cap = Number(overrides.vramCapBytes);
     if (Number.isFinite(cap) && cap > 0) available = Math.min(available, cap);
     return available;
@@ -28,7 +45,7 @@ class VramBudget {
   static _resolveLargestCard(budget) {
     budget.largestGpuIndex = GpuInventory.largestIndex(budget.perGpu);
     budget.largestGpuUsableBytes = budget.largestGpuIndex >= 0
-      ? GpuOverhead.cardRoom(budget.perGpu[budget.largestGpuIndex])
+      ? VramBudget._cardRoom(budget.perGpu[budget.largestGpuIndex])
       : 0;
   }
 }

@@ -3,7 +3,7 @@ const CudaSnapshot = require('../../shared/runtime/CudaSnapshot');
 
 class LlmDiagnosticsCache {
   static STORAGE_KEY = 'core.llmServer.diagnosticsCache';
-  static SCHEMA = 4;
+  static SCHEMA = 5;
   static TOTAL_DRIFT_MB = 256;
 
   constructor({ settingsDb, smiPath, gather, invalidateRuntimes, getRuntimesDir = null, liveCardTotals = () => CudaDeviceProbe.liveCardTotals() }) {

@@ -1,3 +1,5 @@
+const NvidiaUnifiedMemory = require('./NvidiaUnifiedMemory');
+
 class ResourceBudget {
   static MIB = 1024 * 1024;
   static GIB = 1024 * ResourceBudget.MIB;
@@ -12,12 +14,22 @@ class ResourceBudget {
     return { ram: ResourceBudget._ram(memory), vram: ResourceBudget._vram(gpu, cuda) };
   }
 
+  static ramReserveBytes(totalBytes) {
+    const total = Number(totalBytes) || 0;
+    return Math.max(ResourceBudget.RAM_RESERVE_MIN,
+      Math.min(ResourceBudget.RAM_RESERVE_MAX, Math.round(total * ResourceBudget.RAM_RESERVE_FRACTION)));
+  }
+
+  static ramMaxBytes(totalBytes) {
+    const total = Number(totalBytes) || 0;
+    return Math.max(0, total - ResourceBudget.ramReserveBytes(total));
+  }
+
   static _ram(memory) {
     const total = Number(memory && memory.totalBytes) || 0;
     const free = Number(memory && memory.freeBytes) || 0;
-    const reserve = Math.max(ResourceBudget.RAM_RESERVE_MIN,
-      Math.min(ResourceBudget.RAM_RESERVE_MAX, Math.round(total * ResourceBudget.RAM_RESERVE_FRACTION)));
-    const max = Math.max(0, total - reserve);
+    const reserve = ResourceBudget.ramReserveBytes(total);
+    const max = ResourceBudget.ramMaxBytes(total);
     return {
       totalBytes: total,
       reserveBytes: reserve,
@@ -49,10 +61,12 @@ class ResourceBudget {
   static _nvidiaRows(devices) {
     const rows = [];
     for (const device of devices) {
-      const totalBytes = (Number(device.memoryTotalMB) || 0) * ResourceBudget.MIB;
+      const totalBytes = NvidiaUnifiedMemory.cudaTotalBytes(device);
       if (totalBytes <= 0) continue;
-      const freeBytes = device.memoryFreeMB != null ? Number(device.memoryFreeMB) * ResourceBudget.MIB : null;
-      rows.push(ResourceBudget._row(device.name || 'NVIDIA GPU', 'NVIDIA', 'nvidia-smi', totalBytes, freeBytes));
+      const sharedBytes = NvidiaUnifiedMemory.sharedBytes(device);
+      const freeBytes = device.memoryFreeMB != null ? Number(device.memoryFreeMB) * ResourceBudget.MIB + sharedBytes : null;
+      const source = sharedBytes > 0 ? 'nvidia-unified' : 'nvidia-smi';
+      rows.push(ResourceBudget._row(device.name || 'NVIDIA GPU', 'NVIDIA', source, totalBytes, freeBytes));
     }
     return rows;
   }

@@ -40,6 +40,14 @@ class FitRows {
     return row ? Math.round(Number(row.vramBytes)) : null;
   }
 
+  static measuredFullOffload(fitEntry, tokens, kv) {
+    const rows = fitEntry && Array.isArray(fitEntry.results) ? fitEntry.results : null;
+    if (!rows) return false;
+    const want = kv || FitRows.DEFAULT_KV;
+    return rows.some((r) => r && r.status === 'ok' && r.fullOffload === true
+      && Number(r.contextTokens) === Number(tokens) && FitRows.kvOf(r) === want);
+  }
+
   static _highestPrecision(rows) {
     for (const mode of KvCacheModes.MODES) {
       const hit = rows.find((r) => FitRows.kvOf(r) === mode.id);

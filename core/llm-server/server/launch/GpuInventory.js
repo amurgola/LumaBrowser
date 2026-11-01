@@ -39,9 +39,17 @@ class GpuInventory {
       const freeBytes = d.memoryFreeMB != null ? (Number(d.memoryFreeMB) || 0) * GpuInventory.MIB : null;
       const card = { name: d.name || 'NVIDIA GPU', totalBytes, freeBytes };
       if (live && freeBytes != null) card.occupiedBytes = Math.max(0, totalBytes - freeBytes);
+      GpuInventory._markUnified(card, d);
       out.push(card);
     }
     return out;
+  }
+
+  static _markUnified(card, device) {
+    const shared = device.unifiedMemory ? (Number(device.unifiedMemory.sharedMB) || 0) * GpuInventory.MIB : 0;
+    if (shared <= 0) return;
+    card.sharedBytes = shared;
+    card.unifiedMemory = true;
   }
 
   static _adapters(diagnostics) {

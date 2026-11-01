@@ -1,4 +1,5 @@
 const PromptCacheRam = require('./PromptCacheRam');
+const UnifiedShare = require('./UnifiedShare');
 
 class LoadingPolicy {
   static MOE_RAM_FIT_FRACTION = 0.7;
@@ -9,8 +10,14 @@ class LoadingPolicy {
     const policy = { ramTotalBytes: LoadingPolicy._ramTotal(state.diagnostics) };
     LoadingPolicy._decideMmap(policy, state);
     LoadingPolicy._spellNoMmap(policy, state.flags);
+    LoadingPolicy._spellPinnedHost(policy, state.offload);
     LoadingPolicy._sizePromptCache(policy, state);
     return policy;
+  }
+
+  static _spellPinnedHost(policy, offload) {
+    policy.pinnedHostOff = !!(offload && offload.pinnedHostOff);
+    policy.spawnEnv = UnifiedShare.spawnEnv(policy.pinnedHostOff);
   }
 
   static _ramTotal(diagnostics) {

@@ -1,5 +1,6 @@
 const NvidiaSmiStream = require('../../../shared/runtime/NvidiaSmiStream');
 const ProcessMemory = require('../../../shared/runtime/ProcessMemory');
+const GpuProcessMemory = require('../../../shared/runtime/GpuProcessMemory');
 const CancellableDelay = require('./CancellableDelay');
 
 class VramFootprint {
@@ -14,9 +15,15 @@ class VramFootprint {
     };
   }
 
-  constructor({ nvidiaSmi = VramFootprint.streamQueries(), processMemory = ProcessMemory, sleep = CancellableDelay.sleep } = {}) {
+  constructor({
+    nvidiaSmi = VramFootprint.streamQueries(), processMemory = ProcessMemory, gpuProcessMemory = GpuProcessMemory,
+    unifiedMemory = false, sleep = CancellableDelay.sleep,
+  } = {}) {
     this._nvidiaSmi = nvidiaSmi;
     this._processMemory = processMemory;
+    this._gpuProcessMemory = gpuProcessMemory;
+    this._unifiedMemory = !!unifiedMemory;
+    this._countersInflight = null;
     this._sleep = sleep;
     this._baselineFree = null;
     this._pid = null;
@@ -63,7 +70,7 @@ class VramFootprint {
   resolve() {
     const peak = this._peak;
     if (peak.vramSeen && peak.vram > 0) return { vramBytes: peak.vram, vramApprox: false };
-    if (this._baselineFree != null && peak.freeSeen && Number.isFinite(peak.minFree)) {
+    if (!this._unifiedMemory && this._baselineFree != null && peak.freeSeen && Number.isFinite(peak.minFree)) {
       const delta = this._baselineFree - peak.minFree;
       if (delta > 0) return { vramBytes: delta, vramApprox: true };
     }
@@ -77,7 +84,19 @@ class VramFootprint {
   async _processVramBytes() {
     if (!this._pid) return null;
     const apps = await this._nvidiaSmi.queryComputeApps();
-    return apps[this._pid] != null ? apps[this._pid] : null;
+    if (apps[this._pid] != null) return apps[this._pid];
+    return this._counterVramBytes();
+  }
+
+  async _counterVramBytes() {
+    if (!this._gpuProcessMemory || !this._gpuProcessMemory.applies()) return null;
+    if (!this._countersInflight) {
+      this._countersInflight = Promise.resolve(this._gpuProcessMemory.read(this._pid))
+        .catch(() => null)
+        .finally(() => { this._countersInflight = null; });
+    }
+    const usage = await this._countersInflight;
+    return usage && usage.totalBytes > 0 ? usage.totalBytes : null;
   }
 
   async _freeVramBytes() {
