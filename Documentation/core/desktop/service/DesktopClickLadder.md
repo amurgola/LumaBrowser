@@ -19,6 +19,10 @@
     `{ method: 'pointer', ref, scrolled?, hit? }`.
   - `x`/`y`: pixels of the last screenshot of this window ([ScreenFrames](ScreenFrames.md)).
     `{ method: 'pointer', screen, hit? }`.
+  - `sx`/`sy`: physical screen pixels already, from a caller with its own picture
+    of the window (a window tab's [WindowTabInput](../../../extensions/desktop-integration/features/window-tabs/WindowTabInput.md));
+    refused outside the window's rect. Not offered to the model, whose
+    coordinates come from screenshots. `{ method: 'pointer', screen, hit? }`.
   - `description`: [VisionLocator](VisionLocator.md) on the full-size window
     capture, then a pointer click.
     `{ method: 'vision+pointer', screen, ms, hit? }` (no grounding profile name).

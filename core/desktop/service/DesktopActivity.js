@@ -1,5 +1,5 @@
 class DesktopActivity {
-  static ARG_KEYS = ['hwnd', 'window', 'ref', 'x', 'y', 'description', 'button', 'double', 'text', 'submit', 'keys', 'direction', 'amount', 'app', 'args', 'value'];
+  static ARG_KEYS = ['hwnd', 'window', 'ref', 'x', 'y', 'description', 'button', 'double', 'text', 'submit', 'keys', 'direction', 'amount', 'app', 'args', 'value', 'source'];
 
   constructor() {
     this._listeners = new Set();

@@ -17,5 +17,8 @@ paints them on the activity ring and island.
   affects the action. `listening` says whether anyone subscribed.
 - `static describe(action, w, args)` the event body: `hwnd` and `title` from
   the resolved window (null for `launch`), `args` only the keys in `ARG_KEYS`
-  (enough for a one-line description, never a screenshot).
+  (enough for a one-line description, never a screenshot). `source` is among
+  them: `'user'` marks input a person passed through a window tab
+  ([WindowTabInput](../../../extensions/desktop-integration/features/window-tabs/WindowTabInput.md)),
+  which RunPresence leaves off the island.
 - `start(info)`, `end(info, r)`.

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Window</title>
+<link id="icon" rel="icon" href="data:,">
+<link rel="stylesheet" href="../../../../../core/llm-server/ui/css/tokens.css">
+<link rel="stylesheet" href="window-tab.css">
+</head>
+<body>
+<main class="tab">
+  <header class="bar">
+    <img id="app-icon" class="app-icon" alt="" hidden>
+    <div class="titles">
+      <h1 id="title">Window</h1>
+      <p id="meta" class="meta">Live view of a desktop window in LumaBrowser.</p>
+    </div>
+    <span id="status" class="status" data-state="starting">Starting</span>
+    <nav class="controls" aria-label="Window tab controls">
+      <button id="control" class="toggle" type="button" aria-pressed="false" title="Send your clicks, keys and scrolling on the view to the window">Control</button>
+      <button id="text-toggle" class="toggle" type="button" aria-pressed="false" title="Show the window's text as read through UI Automation">Text</button>
+      <button id="restore" type="button" hidden title="Bring the window back from the taskbar">Restore</button>
+      <button id="pick" type="button" title="Show another window in this tab">Another window</button>
+    </nav>
+  </header>
+  <div class="body">
+    <div id="stage" class="stage" tabindex="0" aria-label="Live view of the window">
+      <video id="video" autoplay muted playsinline></video>
+      <div id="overlay" class="overlay" hidden>
+        <div class="card">
+          <h2 id="overlay-title">Starting the capture</h2>
+          <p id="overlay-text">One moment.</p>
+          <div class="row">
+            <button id="overlay-restore" type="button" hidden>Restore the window</button>
+            <button id="overlay-retry" type="button" hidden>Try again</button>
+            <button id="overlay-pick" type="button" hidden>Pick a window</button>
+          </div>
+        </div>
+      </div>
+      <div id="hint" class="hint" hidden>Control is on: clicks and keys go to the window.</div>
+    </div>
+    <section id="text-panel" class="text-panel collapsed">
+      <h2>Window text</h2>
+      <p id="text-note" class="note"></p>
+      <pre id="text"></pre>
+    </section>
+    <section id="picker" class="picker" hidden>
+      <h2>Open another window in this tab</h2>
+      <ul id="windows" class="windows"></ul>
+      <button id="picker-close" type="button">Close</button>
+    </section>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+</main>
+<script src="window-tab.js"></script>
+</body>
+</html>

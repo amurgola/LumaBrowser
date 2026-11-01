@@ -7,11 +7,14 @@
 ## Methods
 
 - `new DesktopScroll(parts)` (`win`, `guards`, `input`, `frames`, `vision`, `bringToFront`, `sleep`).
-- `scroll(w, { direction = 'down', amount = 3, x, y, description, zoom })` never
+- `scroll(w, { direction = 'down', amount = 3, x, y, sx, sy, description, zoom })` never
   throws. `guards.targetRefusal` first, so an anti-cheat game is refused before
-  any vision call. The point: x/y of the last screenshot when there is one, else
-  a `description` found by [VisionLocator](VisionLocator.md), else the window
-  centre. For the desktop target (hwnd 0) the point travels with it so the window
+  any vision call. The point: `sx`/`sy` when given (physical screen pixels from
+  a caller with its own picture of the window, a window tab's
+  [WindowTabInput](../../../extensions/desktop-integration/features/window-tabs/WindowTabInput.md);
+  not offered to the model), else x/y of the last screenshot when there is one,
+  else a `description` found by [VisionLocator](VisionLocator.md), else the
+  window centre. For the desktop target (hwnd 0) the point travels with it so the window
   under it is vetted. Then `guards.preInput`, brings the window to the front, puts
   the cursor there and sends `amount` wheel notches (1 to `MAX_NOTCHES` 10, 120
   each, 20 ms apart): vertical for up/down, horizontal for left/right; up and

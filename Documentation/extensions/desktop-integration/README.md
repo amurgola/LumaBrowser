@@ -276,4 +276,5 @@ Declared optional in the manifest, so present only while installed and enabled:
 - [ui/DesktopRenderer](ui/DesktopRenderer.md), [ui/DesktopSettingsTab](ui/DesktopSettingsTab.md), [ui/SpeechPlayer](ui/SpeechPlayer.md)
 - [features/ping](features/ping/index.md)
 - [features/lumabyte](features/lumabyte/index.md): attach Luma to any window, a docked button and a grounded panel
+- [features/window-tabs](features/window-tabs/index.md): any window as a live tab the chat reads, Tab Share streams and your input passes through
 - [features/agent-run](features/agent-run/index.md): pause, continue or stop the agent's desktop run and answer its approvals from any app; the run on the ring and island

@@ -31,9 +31,23 @@ class DesktopClickLadder {
 
   _dispatch(w, args, opts) {
     if (args.ref != null) return this._byRef(w, args, opts);
+    if (args.sx != null && args.sy != null) return this._byScreenPoint(w, args, opts);
     if (args.x != null && args.y != null) return this._byPoint(w, args, opts);
     if (args.description) return this._byDescription(w, args, opts);
     return { success: false, error: 'Pass ref (from desktop_observe), x/y (from desktop_screenshot), or description.' };
+  }
+
+  async _byScreenPoint(w, args, opts) {
+    const sx = Number(args.sx);
+    const sy = Number(args.sy);
+    if (!Number.isFinite(sx) || !Number.isFinite(sy)) return { success: false, error: 'sx/sy must be numbers (physical screen pixels).' };
+    if (!w.desktop && !DesktopClickLadder._inside(w.rect, sx, sy)) return { success: false, error: 'That point is outside the window (it may have moved).' };
+    const hit = await this._parts.pointer.click(w, sx, sy, opts);
+    return { success: true, data: { method: 'pointer', screen: DesktopClickLadder._rounded(sx, sy), ...(hit ? { hit } : {}) } };
+  }
+
+  static _inside(rect, sx, sy) {
+    return !!rect && sx >= rect.x && sy >= rect.y && sx < rect.x + rect.width && sy < rect.y + rect.height;
   }
 
   async _byRef(w, args, opts) {

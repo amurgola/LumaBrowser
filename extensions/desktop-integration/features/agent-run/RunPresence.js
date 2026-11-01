@@ -88,6 +88,7 @@ class RunPresence {
 
   onActivity(e) {
     if (!e || !e.action) return;
+    if (e.args && e.args.source === 'user') return;
     if (e.phase === 'start') this._started(e);
     else if (e.phase === 'end') this._ended(e);
   }

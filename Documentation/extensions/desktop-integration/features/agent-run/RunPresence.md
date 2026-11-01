@@ -25,7 +25,9 @@ event per action) and [DesktopRunControl](../../../../core/desktop/service/Deskt
   elapsed seconds on the detail line (`Step 7 of 24 · 42 s · in Notepad`),
   refreshed every `TICK_MS` (1 s) while the island is up and not paused; a
   `done` one drops the counter (the line then says `Action <n> · in <title>`).
-- `onActivity(event)`: a `start` opens or updates a `busy` island framed on the
+- `onActivity(event)`: an event whose `args.source` is `'user'` (input a person
+  passed through a [window tab](../window-tabs/index.md)) is ignored: not a
+  run, nothing to show or count. A `start` opens or updates a `busy` island framed on the
   window (`title` the [ActionSentence](ActionSentence.md), `detail`
   the step line above, actions `CONTROLS`); an `end` marks the step done and
   starts the idle timer (`IDLE_MS`, 6 s), shows the error (`ERROR_MS`) when it

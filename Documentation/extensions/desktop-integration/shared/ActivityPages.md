@@ -9,16 +9,27 @@ Variable).
 
 ## Pages
 
-- `ringHtml(tokensCss)`: the edge light (an inset glow masked to thin out from
-  the top down), a halo and a bright band at the top center where the island
-  sits. `window.__ring.render({ on, mode, framed, lock })`, `mode` one of
-  `live`, `paused`, `busy`, `armed` or empty. Armed layers: the ignition (a
-  conic mask on the registered `--a` angle, revealing from the top center both
-  ways, with a hot head), a crisp comet line and its soft bloom (a rotating
-  conic gradient inside an edge-band mask; only `transform` and `opacity` run
-  continuously, so the loop stays on the compositor). `framed` insets the light
-  by `RING_PAD` (18 px) with rounded corners and an outer glow; a changed
-  `lock` while armed replays the ignition.
+- `ringHtml(tokensCss)`: the edge light (an inset glow and line all round, a
+  brighter crown and side fades so the top is brightest and the bottom barely
+  there), a halo and a bright band at the top center where the island sits.
+  `window.__ring.render({ on, mode, framed, lock })`, `mode` one of `live`,
+  `paused`, `busy`, `armed` or empty. The moving parts live in four edge
+  strips (`_strip(side)`: top, right, bottom, left, each laid out along its own
+  x axis clockwise and turned into place), clipped by `overflow: hidden` and
+  never by a mask: the ignition (bodies revealed by a `scaleX` from the end the
+  sweep enters, A clockwise and B counter-clockwise from the top center, a hot
+  flare just behind each head, meeting at the bottom center), and two comets
+  (a crisp line and a blurred bloom, half a lap apart) translated along each
+  strip. The page's script writes the `@keyframes` for the box's size into
+  `#dyn` on render and resize, so the sweep and the comets keep one speed
+  whatever the edges' lengths; only `transform` and `opacity` animate, so the
+  loop stays on the compositor. `framed` insets the light by `RING_PAD` (18 px)
+  with rounded corners and an outer glow; a changed `lock` while armed replays
+  the ignition.
+  Why no masks: the earlier ring hid full-screen fills (a solid ignition fill,
+  a 300vmax conic gradient) behind CSS masks; under the real app's GPU load the
+  mask layer could land a frame late and the whole screen flashed orange
+  (2026-10-30). Edge-shaped content inside a clip cannot flood the screen.
 - `islandHtml(tokensCss)`: the pill. Mark per kind (`speech`: four animated
   bars, flat while paused; `busy`: a spinner; `done`: a check; `error`: a
   warning glyph in `--warning`), title, detail (ellipsized), icon buttons with

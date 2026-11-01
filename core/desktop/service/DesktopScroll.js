@@ -31,6 +31,9 @@ class DesktopScroll {
   }
 
   async _point(w, args) {
+    if (args.sx != null && args.sy != null && Number.isFinite(Number(args.sx)) && Number.isFinite(Number(args.sy))) {
+      return { sx: Number(args.sx), sy: Number(args.sy) };
+    }
     if (args.description && args.x == null) {
       const found = await this._parts.vision.locate(w, args.description, { zoom: args.zoom === true });
       return found.result ? { result: found.result } : { ...found.point, vision: true };
