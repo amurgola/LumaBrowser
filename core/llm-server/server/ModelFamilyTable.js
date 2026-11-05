@@ -62,6 +62,28 @@ class ModelFamilyTable {
         + 'reasoning across turns. Its sparse attention corrupts output on a quantized KV cache, so the KV '
         + 'cache is kept at f16.',
     },
+    deepseek4: {
+      label: 'DeepSeek V4',
+      architectures: ['deepseek41', 'deepseek4'],
+      namePattern: /\bdeepseek[-_ ]?v?4(?:\.\d)?\b/i,
+      flags: ['--jinja'],
+      nativeToolCalls: true,
+      note:
+        'DeepSeek V4 and V4.1 answer tool requests in DSML markup regardless of the prompt, which llama-server '
+        + 'parses only through the jinja path with tools registered on the request, so tool calls are native. '
+        + 'No sampler is set: DeepSeek publishes none for the 1017 release.',
+    },
+    ricursive: {
+      label: 'Ripple',
+      architectures: ['ricursive'],
+      namePattern: /\bripple[-_ ]?\d+b\b/i,
+      flags: ['--jinja'],
+      nativeToolCalls: false,
+      note:
+        'ricursiveAI Ripple (dense 65B, hybrid sliding-window attention) ships a plain ChatML template that '
+        + 'llama-server renders through the jinja path; it carries no tool markup, so tools go through the text '
+        + 'fence. Loads only on the LumaByte runtime (luma-b7 or later, patch 0011). No sampler is published.',
+    },
   };
 }
 

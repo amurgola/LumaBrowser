@@ -14,7 +14,8 @@ Adds the columns that shipped after their table did.
   every conversation's rows are linked into the chain they were shown as
   ([MessageTree](../../llm-server/chat/MessageTree.md)`.legacyParents`), in
   one transaction.
-- `SettingsMigrations.ADDED_COLUMNS`: `[table, column, ddl]` in shipping order.
+- `SettingsMigrations.ADDED_COLUMNS`: `[table, column, ddl]` in shipping order
+  (the newest: `llm_messages.sent_content`, the text a user turn was sent as).
 
 ## Notes
 

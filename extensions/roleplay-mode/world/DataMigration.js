@@ -45,7 +45,7 @@ class DataMigration {
 
   static _addRecords(c) {
     let changed = false;
-    if (!c.profile || typeof c.profile !== 'object') { c.profile = { voice: '', wants: '', hides: '', tells: [], bonds: {} }; changed = true; }
+    if (!c.profile || typeof c.profile !== 'object') { c.profile = { history: '', voice: '', wants: '', hides: '', tells: [], bonds: {} }; changed = true; }
     if (!c.chronicle || typeof c.chronicle !== 'object') { c.chronicle = { arc: '', beats: [] }; changed = true; }
     if (!c.state || typeof c.state !== 'object') { c.state = { present: false }; changed = true; }
     return changed;

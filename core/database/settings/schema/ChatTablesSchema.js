@@ -41,6 +41,7 @@ class ChatTablesSchema {
       variant_group   TEXT,
       variant_active  INTEGER NOT NULL DEFAULT 1,
       parent_id       TEXT,
+      sent_content    TEXT,
       created_at      TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (conversation_id) REFERENCES llm_conversations(id)
     );

@@ -43,7 +43,7 @@ export default class RegionViewport {
 
   zoomAt(factor, vx, vy) {
     const before = this.zoom;
-    const next = RegionViewport._clamp(before * factor, RegionViewport.MIN_ZOOM, RegionViewport.MAX_ZOOM);
+    const next = RegionViewport._clamp(before * factor, RegionViewport.MIN_ZOOM, this.maxZoom());
     if (next === before) return false;
     const ratio = next / before;
     this.x = vx - (vx - this.x) * ratio;
@@ -51,6 +51,10 @@ export default class RegionViewport {
     this.zoom = next;
     this.layout();
     return true;
+  }
+
+  maxZoom() {
+    return RegionViewport.MAX_ZOOM;
   }
 
   panBy(dx, dy) {

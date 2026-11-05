@@ -10,7 +10,7 @@ class EvalTurn {
 
   async run({
     task, variant = {}, modelRef = null, timeoutMs = EvalTurn.TIMEOUT_MS, prompt = null, priorMessages = [],
-    conversationId = null, nativeHistory = false, nativeTools = null, agentEffort = null, parallel = null,
+    conversationId = null, nativeHistory = null, nativeTools = null, agentEffort = null, parallel = null,
     promptExperiments = null,
   }) {
     const started = Date.now();
@@ -37,7 +37,7 @@ class EvalTurn {
     return {
       systemPromptOverride: typeof v.buildPrompt === 'function' ? v.buildPrompt : (v.systemPrompt != null ? v.systemPrompt : null),
       allowedTools: Array.isArray(task && task.allowedTools) ? task.allowedTools : null,
-      nativeHistory: !!nativeHistory,
+      nativeHistory: nativeHistory == null ? null : !!nativeHistory,
       nativeTools: nativeTools === 'off' ? 'off' : null,
       agentEffort: agentEffort || null,
       parallel: (parallel > 1) ? parallel : null,

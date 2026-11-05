@@ -11,6 +11,7 @@ class PseudoToolSchemaTable {
   static ENTRIES = Object.freeze([
     {
       name: 'create_artifact',
+      complexity: 'heavy',
       description: 'Render a self-contained artifact in the chat side panel. '
         + 'Use this whenever the user asks for a document, README, article, page, image or program '
         + 'to look at, rather than pasting it into the reply. ALWAYS pass `type` and `content`.',
@@ -32,6 +33,7 @@ class PseudoToolSchemaTable {
     },
     {
       name: 'edit_artifact',
+      complexity: 'heavy',
       description: 'Revise an artifact created earlier this conversation. Prefer targeted replacements over a full rewrite.',
       properties: {
         artifactId: { type: 'string', description: 'Id of the artifact to edit (art_…)' },
@@ -46,6 +48,7 @@ class PseudoToolSchemaTable {
     },
     {
       name: 'create_live_artifact',
+      complexity: 'heavy',
       description: 'Render an INTERACTIVE module inline in the chat, reactive via ResonantJS (R), optionally Chart.js. Use for live widgets: calculators, charts, toggles, simulations, live web/API lookups.',
       properties: {
         title: { type: 'string', description: 'Short title' },
@@ -151,6 +154,7 @@ class PseudoToolSchemaTable {
     },
     {
       name: 'validate_code',
+      complexity: 'heavy',
       description: 'Statically check a code snippet for errors.',
       properties: {
         code: { type: 'string', description: 'The source to check' },

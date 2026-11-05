@@ -11,7 +11,8 @@ The chat agent's lenient tool-call parser for calls the strict fence matcher mis
   balanced braces; an unterminated trailing fence; bare `{"tool": ...}`
   objects, skipping markers inside an accepted call, plus the last unbalanced
   one), then [XmlToolCallParser](XmlToolCallParser.md)`.parseAll`, then
-  `.parseLast`, then `HarmonyLeakedToolCallParser.parseAll`.
+  `.parseLast`, then [DsmlToolCallParser](DsmlToolCallParser.md)`.parseAll`
+  (DeepSeek's markup), then `HarmonyLeakedToolCallParser.parseAll`.
 - `LooseToolCallParser.parseFirst(content)`: the first call or null.
 - Each candidate is read by [ToolJson](ToolJson.md); repaired calls carry
   `__repaired`.

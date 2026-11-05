@@ -9,7 +9,7 @@ capturing sink, so every decision chat() makes applies by construction.
 
 - `new EvalTurn(router)`: needs `chat(opts)`, optionally `chatStore` and `abort()`.
 - `run({ task, variant = {}, modelRef = null, timeoutMs = TIMEOUT_MS, prompt =
-  null, priorMessages = [], conversationId = null, nativeHistory = false,
+  null, priorMessages = [], conversationId = null, nativeHistory = null,
   nativeTools = null, agentEffort = null, parallel = null, promptExperiments =
   null })` resolves `{ finalResponse, iterations, durationMs, timings,
   turnTimings, toolCalls: [{ tool, params, success, error }], artifacts, error,

@@ -7,10 +7,14 @@ lives in the services under [ipc/](ipc/) and in [ImageRouter](ImageRouter.md).
 
 ## Methods
 
-- `ImageIpcHandlers.register(service, { notify })` registers the 48 channels below
+- `ImageIpcHandlers.register(service, { notify, llmService?, civitaiClient? })` registers the 53 channels below
   on `ipcMain`, wires [ImageServerBroadcast](ipc/ImageServerBroadcast.md) to
   `service.runtimeServer`, and returns `{ router }` (the ImageRouter the chat agent
-  bridge shares, one queue and one abort). `service` is the ImageServerService.
+  bridge shares, one queue and one abort). `service` is the ImageServerService;
+  `llmService` (optional) lets a CivitAI import read the creator's description with
+  the local model ([CivitaiDescriptionReader](civitai/CivitaiDescriptionReader.md)),
+  wired into the importer's [CivitaiRecipe](civitai/CivitaiRecipe.md) beside a shared
+  [CivitaiClient](civitai/CivitaiClient.md).
 
 Every handler is `IpcEnvelope.enveloped` (`{ success: true, ... }`, or
 `{ success: false, error, ...fields }` on a throw; a service result that already
@@ -38,7 +42,8 @@ check throws) and `getServerStatus`.
 | `updateModelFile` | [ModelFileUpdater](ipc/ModelFileUpdater.md) |
 | `listLoras`, `importLora`, `loraCatalog`, `downloadLora` | [ImageLoraLibrary](ipc/ImageLoraLibrary.md) |
 | `setModelLoras` | [ModelLoraAttacher](ipc/ModelLoraAttacher.md) |
-| `getPromptProfiles`, `pickImportFile`, `importModelFromUrl`, `importModelFromRepo`, `importModelFromFile` | [ImageModelImporter](ipc/ImageModelImporter.md) |
+| `getPromptProfiles`, `pickImportFile`, `importModelFromUrl`, `importModelFromRepo`, `importModelFromFile`, `importModelFromCivitai` | [ImageModelImporter](ipc/ImageModelImporter.md) |
+| `civitaiSearch`, `civitaiPreview`, `getCivitaiSettings`, `setCivitaiSettings` | [CivitaiBrowser](civitai/CivitaiBrowser.md) (`civitaiClient` is its test seam) |
 | `scanExistingLibraries`, `importExistingModel` | [ExistingModelAdopter](ipc/ExistingModelAdopter.md) |
 | `generate`, `generateAbort` | [ImageGenerationRequests](ipc/ImageGenerationRequests.md); events on `core.imageServer.imageEvent` `{ requestId, type, payload }` |
 

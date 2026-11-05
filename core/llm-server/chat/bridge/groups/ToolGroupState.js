@@ -11,6 +11,35 @@ class ToolGroupState {
     this._forced = new Set(forcedActive);
     this.active = new Set(this._persistedKeys());
     for (const name of this._forced) this.active.add(name);
+    const prompt = this._persistedList('promptToolGroups');
+    this._promptFrozen = prompt !== null;
+    this.promptKeys = new Set(prompt || []);
+    for (const name of this._forced) this.promptKeys.add(name);
+    this._delivered = new Set(this._persistedList('deliveredToolGroups') || []);
+  }
+
+  freezePromptKeys() {
+    if (this._promptFrozen) return false;
+    for (const key of this.active) this.promptKeys.add(key);
+    this._promptFrozen = true;
+    this._persist();
+    return true;
+  }
+
+  pendingManualKeys() {
+    return [...this.active].filter((key) => !this.promptKeys.has(key) && !this._delivered.has(key));
+  }
+
+  markDelivered(keys) {
+    let changed = false;
+    for (const key of keys || []) {
+      if (!this._delivered.has(key)) {
+        this._delivered.add(key);
+        changed = true;
+      }
+    }
+    if (changed) this._persist();
+    return changed;
   }
 
   activate(keys) {
@@ -48,12 +77,16 @@ class ToolGroupState {
   }
 
   _persistedKeys() {
+    return this._persistedList('activeToolGroups') || [];
+  }
+
+  _persistedList(key) {
     try {
-      if (!this._chatStore || !this._conversationId) return [];
+      if (!this._chatStore || !this._conversationId) return null;
       const data = this._chatStore.getMeta(this._conversationId).data || {};
-      return Array.isArray(data.activeToolGroups) ? data.activeToolGroups : [];
+      return Array.isArray(data[key]) ? data[key] : null;
     } catch (_) {
-      return [];
+      return null;
     }
   }
 
@@ -63,8 +96,11 @@ class ToolGroupState {
       if (!store || !this._conversationId) return;
       if (store.getConversation && !store.getConversation(this._conversationId)) return;
       const meta = store.getMeta(this._conversationId);
-      const activeToolGroups = [...this.active].filter((key) => !this._forced.has(key));
-      store.setMeta(this._conversationId, { data: { ...(meta.data || {}), activeToolGroups } });
+      const notForced = (set) => [...set].filter((key) => !this._forced.has(key));
+      const data = { ...(meta.data || {}), activeToolGroups: notForced(this.active) };
+      if (this._promptFrozen) data.promptToolGroups = notForced(this.promptKeys);
+      if (this._delivered.size) data.deliveredToolGroups = [...this._delivered];
+      store.setMeta(this._conversationId, { data });
     } catch (_) {}
   }
 }

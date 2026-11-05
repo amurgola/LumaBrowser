@@ -57,7 +57,11 @@ Messages:
   follows: a variant passes its turn's parent (from `startVariant`); omitted, it
   continues the visible thread ([MessageTree](chat/MessageTree.md)`.leafId`).
 - `updateMessage(id, patch)` writes only the provided `content`, `reasoning`,
-  `tokensIn`, `tokensOut`, `error`, `toolCalls`; `false` for an unknown id.
+  `tokensIn`, `tokensOut`, `error`, `toolCalls`, `sentContent`; `false` for an
+  unknown id. `sentContent` (hydrated from `sent_content`, null by default) is
+  the exact text a user turn was sent to the model as, recorded by the chat
+  bridge so later turns re-send it byte for byte and the server's KV cache
+  keeps everything after it.
 - `getMessage(id)`, `listMessages(conversationId)` (every variant, oldest first).
 - `listActiveMessages(conversationId)` the active branch
   ([MessageTree](chat/MessageTree.md)`.activePath`), with `variantCount` (0

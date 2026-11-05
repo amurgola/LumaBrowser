@@ -8,6 +8,8 @@ class ImageServerSettings {
     videoModelId: 'core.imageServer.defaults.videoModelId',
     pinModelRam: 'core.imageServer.defaults.pinModelRam',
     autoUnloadMs: 'core.imageServer.defaults.autoUnloadMs',
+    civitaiToken: 'core.imageServer.civitai.token',
+    civitaiNsfw: 'core.imageServer.civitai.nsfw',
   };
 
   static DEFAULT_AUTO_UNLOAD_MS = 15 * 60 * 1000;
@@ -72,6 +74,17 @@ class ImageServerSettings {
     const value = Math.max(0, Math.floor(Number(ms) || 0));
     this._db.set(ImageServerSettings.KEYS.autoUnloadMs, value);
     return value;
+  }
+
+  getCivitaiSettings() {
+    const token = String(this._db.get(ImageServerSettings.KEYS.civitaiToken, '') || '').trim();
+    return { token: token || null, nsfw: !!this._db.get(ImageServerSettings.KEYS.civitaiNsfw, false) };
+  }
+
+  setCivitaiSettings(patch = {}) {
+    if (patch.token !== undefined) this._setOrDelete(ImageServerSettings.KEYS.civitaiToken, String(patch.token || '').trim() || null);
+    if (patch.nsfw !== undefined) this._setOrDelete(ImageServerSettings.KEYS.civitaiNsfw, patch.nsfw ? true : null);
+    return this.getCivitaiSettings();
   }
 
   _setOrDelete(key, value) {

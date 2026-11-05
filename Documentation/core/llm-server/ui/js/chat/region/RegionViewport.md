@@ -17,7 +17,8 @@ follows for free and `pointToImage` keeps working through
   `viewportSize()`.
 - `fit()`: zoom 1, centred.
 - `zoomAt(factor, vx, vy)`: zooms about a viewport point so the image point
-  under it stays under it; clamped to `MIN_ZOOM`..`MAX_ZOOM` (1..8). False
+  under it stays under it; clamped to `MIN_ZOOM`..`maxZoom()` (1..8; the
+  media viewer's [MediaViewport](../panel/media/MediaViewport.md) raises it). False
   when nothing changed.
 - `panBy(dx, dy)`: false at fit.
 - `toViewport(point)`, `rectToViewport(rect)`: image space to viewport CSS

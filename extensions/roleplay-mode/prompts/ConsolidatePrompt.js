@@ -11,20 +11,24 @@ class ConsolidatePrompt {
   static foldMessages(data, char, beats) {
     const p = CharacterProfile.of(char);
     const ch = CharacterChronicle.of(char);
+    const others = Object.entries(p.bonds).filter(([k]) => k !== CharacterProfile.BOND_USER).map(([k, v]) => k + ': ' + v);
     const system = '/no_think\n'
       + 'You keep the character records of an interactive roleplay. Fold the listed beats into this character\'s '
       + 'rolling arc and update the growth fields. Respond with ONLY one minified JSON object, no prose, no fences.\n'
-      + 'Schema: {"arc":string,"wants":string,"hides":string,"bondUser":string}\n'
+      + 'Schema: {"arc":string,"wants":string,"hides":string,"bondUser":string,"bonds":{"<name>":string}}\n'
       + 'Rules:\n'
       + '- arc: ' + ConsolidatePrompt.ARC_WORDS + ', past tense, third person, names not pronouns. Merge the previous '
       + 'arc with the new beats: keep every fact still true (promises, injuries, who knows what, debts), drop '
       + 'what later beats made stale, never invent.\n'
       + '- wants: what they want NOW given everything so far (may differ from the start). hides: what they still '
       + 'conceal, or "" once it is out. bondUser: their standing attitude to the player in one or two words.\n'
-      + '- Growth is welcome and must be earned by the beats; identity (looks, voice, tells) is not yours to change.';
+      + '- bonds: their standing with each OTHER character the beats involve, one short line per name (keep the '
+      + 'known ones unless the beats changed them; add a name only when the beats show a relation). {} when none.\n'
+      + '- Growth is welcome and must be earned by the beats; identity (looks, past, voice, tells) is not yours to change.';
     const user = 'Character: ' + char.name + '\n'
       + 'Summary: ' + (p.summary || '(none)') + '\n'
       + 'Wants: ' + (p.wants || '(unknown)') + ' | Hides: ' + (p.hides || '(nothing)') + ' | Toward the player: ' + (CharacterProfile.bondWithUser(char) || '(unknown)') + '\n'
+      + 'With others: ' + (others.length ? others.join('; ') : '(none known)') + '\n'
       + 'Previous arc: ' + (ch.arc || '(none yet)') + '\n'
       + 'Beats to fold (oldest first):\n' + beats.map((b) => '- ' + b.text).join('\n') + '\n\nJSON:';
     return [{ role: 'system', content: system }, { role: 'user', content: user }];
@@ -51,7 +55,7 @@ class ConsolidatePrompt {
     return [{ role: 'system', content: system }, { role: 'user', content: user }];
   }
 
-  static parseFold(text) {
+  static parseFold(text, knownNames = null) {
     if (!text || typeof text !== 'string') return null;
     const s = text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/```(?:json)?/gi, '').trim();
     const a = s.indexOf('{');
@@ -65,7 +69,26 @@ class ConsolidatePrompt {
       wants: obj.wants === undefined || obj.wants === null ? undefined : String(obj.wants).trim(),
       hides: obj.hides === undefined || obj.hides === null ? undefined : String(obj.hides).trim(),
       bondUser: obj.bondUser === undefined || obj.bondUser === null ? undefined : String(obj.bondUser).trim(),
+      bonds: ConsolidatePrompt._bonds(obj.bonds, knownNames),
     };
+  }
+
+  static _bonds(raw, knownNames) {
+    const out = {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+    const known = Array.isArray(knownNames) ? knownNames.filter(Boolean) : null;
+    for (const [k, v] of Object.entries(raw)) {
+      let key = String(k || '').trim();
+      const text = String(v || '').trim();
+      if (!key || !text || key.toLowerCase() === CharacterProfile.BOND_USER) continue;
+      if (known) {
+        const match = known.find((n) => String(n).toLowerCase() === key.toLowerCase());
+        if (!match) continue;
+        key = match;
+      }
+      out[key] = text;
+    }
+    return out;
   }
 
   static parseSummary(text) {

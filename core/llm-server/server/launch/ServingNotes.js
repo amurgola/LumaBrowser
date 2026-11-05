@@ -4,6 +4,8 @@ const SlotPlan = require('./SlotPlan');
 const PromptCacheRam = require('./PromptCacheRam');
 
 class ServingNotes {
+  static LAZY_TABLE_BYTES = 4 * 1024 * 1024 * 1024;
+
   static MIB = 1024 * 1024;
 
   static build(state) {
@@ -222,15 +224,60 @@ class ServingNotes {
     const { moe, files } = this._s;
     const fmt = ByteLadder.format;
     this._notes.push(
-      `MoE expert offload: ${moe.cpuMoeAuto ? 'AUTO' : 'ON'} (--cpu-moe). Expert tensors (~${fmt(moe.moeSplit.expertBytes)}) stay in system RAM; `
-      + `attention/embeddings (~${fmt(moe.moeSplit.residentBytes)}) plus the KV cache run on the GPU. `
+      `MoE expert offload: ${moe.cpuMoeAuto ? 'AUTO' : 'ON'} (--cpu-moe). ${this._expertHomeText()}`
+      + `attention/norms/shared experts (~${fmt(moe.moeSplit.residentBytes)}) plus the KV cache run on the GPU. `
       + `The VRAM budget was sized against the resident share, not the full ${fmt(files.modelBytes)} file.`
       + (moe.gpuCache && moe.gpuCache.enabled
         ? ` MoE GPU cache: ${fmt(moe.gpuCache.bytes)} of VRAM (--moe-cache-mib ${moe.gpuCache.mib}) holds the most recently used experts, `
-          + 'which run on the GPU; only misses are copied over PCIe. Generation is faster than whole layers of experts on the GPU, '
-          + 'prompt processing (batches above 32 tokens) bypasses the cache and runs a little slower.'
+          + 'which run on the GPU; only misses are copied over PCIe. Generation is faster than whole layers of experts on the GPU. '
+          + `Prompt processing bypasses the cache (batches above 32 tokens) and stages each layer's experts on the GPU per micro-batch, `
+          + this._promptBatchText()
+          + this._ramTierText()
         : ''),
     );
+  }
+
+  _ramTierText() {
+    const { ramTier, loading } = this._s;
+    const fmt = ByteLadder.format;
+    if (!ramTier || !loading.moeNeedsMmap) return '';
+    const profile = ramTier.profilePath
+      ? ` The runtime keeps a profile of expert use at ${ramTier.profilePath} and seeds the GPU cache with the most used experts at the next start.`
+      : '';
+    if (!ramTier.enabled) return ` No locked RAM tier: ${ramTier.reason}.${profile}`;
+    return ` RAM tier: ${fmt(ramTier.bytes)} of the experts are locked in RAM (--moe-ram-mib ${ramTier.mib}), the most used first once the profile has data, `
+      + 'so neither a prompt scan nor another process can page them out and their misses come from RAM, not the SSD.'
+      + ServingNotes._registerText(ramTier) + profile;
+  }
+
+  static _registerText(ramTier) {
+    if (ramTier.registerMib == null) return '';
+    const cards = ramTier.registerCards > 1 ? `, a ${ramTier.registerCards}-card share since every card maps a registration` : '';
+    return ` ${ByteLadder.format(ramTier.registerMib * 1024 * 1024)} of the tier is registered with the GPU so its misses upload by DMA (--moe-ram-register-mib ${ramTier.registerMib}${cards}).`;
+  }
+
+  _promptBatchText() {
+    const { gpuCache } = this._s.moe;
+    const fmt = ByteLadder.format;
+    if (gpuCache.promptBatch) {
+      return `so micro-batches are ${gpuCache.promptBatch} tokens (-b/-ub) to amortise that upload: about 3.8x the prompt speed of the 512 default `
+        + `(${fmt(gpuCache.promptReserveBytes)} of VRAM held back for the prompt compute buffer).`;
+    }
+    return `so a bigger micro-batch would amortise that upload, but its compute buffer would take too much of the spare VRAM on this model, `
+      + `so micro-batches stay at the 512 default (${fmt(gpuCache.promptReserveBytes)} held back for its compute buffer).`;
+  }
+
+  _expertHomeText() {
+    const { moe, loading } = this._s;
+    const fmt = ByteLadder.format;
+    const tables = moe.moeHostBytes > ServingNotes.LAZY_TABLE_BYTES
+      ? ` A further ~${fmt(moe.moeHostBytes)} of CPU-side lookup tables (Engram, input embeddings) is read row by row from the file as tokens need it (--lazy-mode auto), never loaded whole.`
+      : '';
+    if (!loading.moeNeedsMmap) return `Expert tensors (~${fmt(moe.moeSplit.expertBytes)}) stay in system RAM;${tables} `;
+    const ram = loading.ramTotalBytes > 0 ? ` exceed the ${fmt(loading.ramTotalBytes)} of system RAM` : ' exceed the comfortable RAM budget';
+    return `Expert tensors (~${fmt(moe.moeSplit.expertBytes)})${ram}, so the weights load memory-mapped: the OS page cache keeps `
+      + 'the most recently used experts in RAM and the rest stream from the SSD on demand, so decode speed follows the hit rate of '
+      + `that page cache (and of the GPU cache in front of it) rather than RAM bandwidth.${tables} `;
   }
 
   _noteLoadModeFallback() {

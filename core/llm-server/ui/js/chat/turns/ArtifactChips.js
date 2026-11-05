@@ -13,12 +13,26 @@ export default class ArtifactChips {
     if (!arts.length) return null;
     const box = Dom.el('div', 'cm-artifacts');
     const seen = new Set();
+    let media = 0;
     for (const af of arts) {
       if (!af || seen.has(af.id)) continue;
       seen.add(af.id);
+      if (ArtifactChips.isVisual(af)) media++;
       box.appendChild(this._entry(af));
     }
+    const layout = ArtifactChips.layoutFor(media);
+    if (layout) box.classList.add('cm-artifacts--' + layout);
     return box;
+  }
+
+  static isVisual(af) {
+    return !!af && (af.type === 'image' || af.type === 'video');
+  }
+
+  static layoutFor(count) {
+    if (count === 1) return 'hero';
+    if (count > 1) return 'grid';
+    return '';
   }
 
   static signature(m) {
@@ -72,7 +86,7 @@ export default class ArtifactChips {
   _mediaThumb(af, kind) {
     const fallback = kind === 'video' ? 'Video' : 'Image';
     const wrap = Dom.el('button', 'cm-art-thumb');
-    wrap.title = (af.title || fallback) + '. Click to view larger';
+    wrap.title = (af.title || fallback) + '. Click to open the viewer';
     wrap.setAttribute('aria-label', 'Open ' + kind + ': ' + (af.title || kind));
     const media = kind === 'video'
       ? '<video class="cm-art-thumb-img" muted loop autoplay playsinline hidden></video>'
@@ -83,7 +97,7 @@ export default class ArtifactChips {
       + '</div>'
       + '<div class="cm-art-thumb-cap">'
       +   '<span class="cm-art-thumb-title">' + HtmlEscaper.escape(af.title || fallback) + '</span>'
-      +   '<span class="cm-art-thumb-hint">click to view larger</span>'
+      +   '<span class="cm-art-thumb-hint">click to open the viewer</span>'
       + '</div>';
     wrap.addEventListener('click', () => this._ctx.panel.open(af));
     const paint = kind === 'video' ? (e) => ArtifactChips._paintVideo(wrap, e) : (e) => ArtifactChips._paintImage(wrap, e);
@@ -114,7 +128,7 @@ export default class ArtifactChips {
     wrap.querySelector('button').addEventListener('click', () => this._ctx.panel.open(af));
     this._whenLoaded(af, wrap, (entry) => {
       const audio = wrap.querySelector('audio');
-      audio.src = entry.dataUrl;
+      audio.src = entry.url || entry.dataUrl;
       audio.hidden = false;
     });
     return wrap;
@@ -131,7 +145,7 @@ export default class ArtifactChips {
 
   static _paintImage(wrap, entry) {
     const img = wrap.querySelector('.cm-art-thumb-img');
-    img.src = entry.dataUrl;
+    img.src = entry.url || entry.dataUrl;
     img.hidden = false;
     ArtifactChips._removeSkeleton(wrap);
   }
@@ -141,10 +155,10 @@ export default class ArtifactChips {
     if (entry.mime && /^image\//i.test(entry.mime)) {
       const img = document.createElement('img');
       img.className = 'cm-art-thumb-img';
-      img.src = entry.dataUrl;
+      img.src = entry.url || entry.dataUrl;
       if (vid) vid.replaceWith(img);
     } else if (vid) {
-      vid.src = entry.dataUrl;
+      vid.src = entry.url || entry.dataUrl;
       vid.hidden = false;
       try { const p = vid.play(); if (p && p.catch) p.catch(() => {}); } catch (_) {}
     }

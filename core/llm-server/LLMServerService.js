@@ -227,6 +227,18 @@ class LLMServerService {
     return { success: true, enabled: next };
   }
 
+  async releaseRuntime(runtimeId) {
+    const status = this.runtimeServer.getStatus();
+    const server = !!(runtimeId && status.state !== 'idle' && status.plan && status.plan.runtimeId === runtimeId);
+    if (server) await this.runtimeServer.stop();
+    const router = !!(await this.groupRouter.releaseRuntime(runtimeId));
+    return { server, router };
+  }
+
+  resumeRuntime(released) {
+    if (released && released.router) this.groupRouter.apply();
+  }
+
   async shutdown() {
     try {
       await this.runtimeServer.stop();

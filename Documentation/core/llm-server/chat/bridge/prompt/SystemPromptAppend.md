@@ -8,7 +8,8 @@ Shared by the live run and the preview.
 ## Methods (all static)
 
 - `build({ allows, extTools, groups = null, visionHint = null,
-  modeSystemPrompt = null, activeGroups = null, imagePromptHint = null,
+  modeSystemPrompt = null, activeGroups = null (the run passes the group
+  state's frozen `promptKeys`, not every active group), imagePromptHint = null,
   takeover = false, nativeTools = false, nativeExclude = [], now = new Date() })`:
   joined with blank lines: the date-time doc; the manuals of ACTIVE groups
   (fence examples stripped by `ToolGroups.docWithoutFenceExamples` on a
@@ -18,9 +19,20 @@ Shared by the live run and the preview.
   when `takeover`; the vision hint; the mode prompt. `groups` is the run's
   available groups; without it they come from
   [AvailableGroups](../groups/AvailableGroups.md)`.for(allows, extTools)`.
-- `dateTimeDoc(now)`: `Current date and time (the user's local system clock):
-  ...` in `DATE_FORMAT`.
+- `dateTimeDoc(now)`: `Current date (the user's local calendar): ...` in
+  `DATE_FORMAT` (weekday, date and time zone; never the time of day).
 - `TAKEOVER_DOC`, `DATE_FORMAT`.
+
+## Why the clock is not here
+
+This doc opens the system prompt. With the time to the minute in it, the
+first turn of every new minute changed the prompt a few tokens in, and
+llama-server re-read the whole conversation: measured on Qwen3.8-27B
+(2026-11-04) as 3401 of 3404 prompt tokens re-processed on that turn, with
+`--cache-reuse 256` making no difference, against 20 tokens when the opening
+is stable. The time of day now rides the tail of the latest message
+([TurnReminder](../turn/TurnReminder.md)`.clockLine`), which is new on every
+turn anyway; the date here changes once a day.
 
 ## Untrusted content
 

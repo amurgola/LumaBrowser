@@ -10,7 +10,10 @@ with its curated catalog row. Used by [ImageModelsScanner](ImageModelsScanner.md
 - `ImageModelRecord.build({ id, dir, manifest, files, catalogEntry, catalogList })`
   returns `{ id, name, label, dir, family, kind, supportsI2V, supportsEdit,
   files, minVramBytes, defaults, constraints, protocol, compatibleRuntimes,
-  launchArgs, preferredRuntimes, sageAttention, licenseNote, fileUpdates, manifest }`:
+  launchArgs, preferredRuntimes, sageAttention, licenseNote, fileUpdates, civitai, manifest }`:
+  - `civitai` the manifest's CivitAI origin block (model, version and file ids,
+    hashes, trigger words, page URL) or `null`, so the setup card can link back
+    and a re-sync or update check knows what to ask for.
   - `preferredRuntimes` (catalog, else manifest, else `[]`) and `sageAttention`
     (`true` only when the catalog or manifest says exactly `true`) are launch
     preferences read by [PreferredImageRuntime](service/PreferredImageRuntime.md)

@@ -2,6 +2,7 @@ const AgentLoopText = require('../../../agent/AgentLoopText');
 const IterationStream = require('./IterationStream');
 const NativeCallStream = require('./NativeCallStream');
 const TurnReminder = require('./TurnReminder');
+const RequestComplexity = require('../../RequestComplexity');
 
 class CompletionDriver {
   static DEFAULT_TEMPERATURE = 0.2;
@@ -19,7 +20,8 @@ class CompletionDriver {
     o.reasoning.beginIteration();
     const stream = new IterationStream({ hooks: o.hooks, mirror: o.mirror, allows: o.toolSet.allows });
     const native = new NativeCallStream({ hooks: o.hooks, mirror: o.mirror });
-    const sendMsgs = TurnReminder.append(msgs, this._reminder());
+    const sendMsgs = TurnReminder.appendKeeping(msgs, this._reminder());
+    this._noteFirstSend(sendMsgs);
     const completion = await o.router._completeOnce(
       o.modelRef, sendMsgs, this._temperature(opts),
       (p) => { if (o.hooks.onStatus) o.hooks.onStatus(p); },
@@ -38,6 +40,15 @@ class CompletionDriver {
     return completion;
   }
 
+  _noteFirstSend(sendMsgs) {
+    const o = this._o;
+    if (this._firstSent || typeof o.onFirstSend !== 'function') return;
+    this._firstSent = true;
+    const last = sendMsgs[sendMsgs.length - 1];
+    if (!last || last.role !== 'user' || typeof last.content !== 'string' || last[TurnReminder.BASE] === '') return;
+    try { o.onFirstSend(last.content); } catch (_) {}
+  }
+
   static _isSummaryRequest(msgs) {
     const sys = msgs && msgs[0] && msgs[0].role === 'system' ? String(msgs[0].content || '') : '';
     return sys.startsWith(AgentLoopText.SUMMARY_INSTRUCTION);
@@ -50,6 +61,7 @@ class CompletionDriver {
       nativeTools: o.nativePlan.enabled,
       offFormat: o.parser.sawOffFormat,
       parallel: o.parallel,
+      now: typeof o.now === 'function' ? o.now() : new Date(),
     });
   }
 
@@ -68,6 +80,7 @@ class CompletionDriver {
         callType: (opts && opts.purpose === 'compact') ? 'compact' : 'chat',
       },
       pinTemperature: true,
+      complexity: (opts && opts.purpose === 'compact') ? RequestComplexity.LIGHT : RequestComplexity.ofAllows(o.toolSet.allows),
       maxTokens: o.replyCap.maxTokens(sendMsgs),
       parallelToolCalls: !!o.parallel,
     };

@@ -41,6 +41,7 @@ class ImageModelRecord {
       sageAttention: ImageModelRecord._pick(sources, 'sageAttention') === true,
       licenseNote: ImageModelRecord._pick(sources, 'licenseNote'),
       fileUpdates: ImageModelRecord._fileUpdates({ id, family, files }, catalogList),
+      civitai: (manifest && manifest.civitai) || null,
       manifest: manifest || null,
     };
   }

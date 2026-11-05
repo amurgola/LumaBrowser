@@ -25,13 +25,15 @@ One launch of a model on an image slot. A new instance per launch, created by
   3. Two ports from the slot's window: public (auth proxy) then private (sd-server, loopback).
   4. `hotswap.acquire(role)`; when it evicted a sibling, re-read live VRAM.
   5. `placement.place(...)` with `ImageSlotPlacement.requiredBytes(model, role)`.
-  6. Plan: [VaeTilingPolicy](VaeTilingPolicy.md), `ClipPlacement.decide` (with the
-     debited cards and [UserGpuPin](UserGpuPin.md)),
+  6. Plan: [VaeTilingPolicy](VaeTilingPolicy.md), `ClipPlacement.decide`
+     (placement plus the CPU-runtime verdict),
      [SageAttentionPolicy](SageAttentionPolicy.md)`.decide` (skipped on a CPU
-     runtime; its flag probe goes through `capabilities.supportsFlag`), then
-     `launchPlanner.plan({ model, runtime, diagnostics (filtered to the pinned
-     card), port: private, publicPort, overrides: { offloadToCpu, vaeTiling,
-     loraDir, autoFit, clipOnCpu, sageAttention, autoFitForm } })`;
+     runtime; its flag probe goes through `capabilities.supportsFlag`), the
+     `--eager-load` and (when tiling) `--vae-tile-size` probes through the same
+     `supportsFlag`, then `launchPlanner.plan({ model, runtime, diagnostics
+     (filtered to the pinned card), port: private, publicPort, overrides: {
+     offloadToCpu, vaeTiling, loraDir, autoFit, clipOnCpu, sageAttention,
+     eagerLoad, vaeTileSize (VaeTilingPolicy.TILE_SIZE or null), autoFitForm } })`;
      `launch.cudaDevice` is set. `autoFitForm` is probed only when auto-fit is emitted.
   7. Log the [ImageLaunchLog](ImageLaunchLog.md) line (with the runtime swap and
      SageAttention notes) and `server.start(launch)`.

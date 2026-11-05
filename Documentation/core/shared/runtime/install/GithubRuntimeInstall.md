@@ -14,7 +14,10 @@ not share state.
   1. host asset regex, or a typed refusal ([AcquisitionGuard](AcquisitionGuard.md))
   2. release and asset ([ReleaseAssetResolver](ReleaseAssetResolver.md)), event `resolved`
   3. download to `<root>/.tmp` ([AssetDownload](AssetDownload.md)), events `download`
-  4. wipe `<root>/<id>` and extract into it, events `extract` start/done
+  4. wipe `<root>/<id>` and extract into it, events `extract` start/done; a
+     file the wipe could not delete is held by a running process, so the
+     install throws `RUNTIME_IN_USE` (detail `{ managedDir, files }`, message
+     naming up to `IN_USE_FILES_SHOWN` = 4 files) instead of extracting
   5. companions on top ([CompanionAssets](CompanionAssets.md))
   6. find the binary up to 3 levels deep, else `BINARY_NOT_FOUND_AFTER_EXTRACT`
   7. Linux: link shared libs beside the binary ([SharedLibLinker](SharedLibLinker.md))
@@ -27,4 +30,8 @@ not share state.
 
 The steps used to be one 200-line function. As a per-call object each step is
 named and the shared values (release, asset, staging path) are fields instead
-of locals threaded through. `sysdeps` is `null` off Linux.
+of locals threaded through. `sysdeps` is `null` off Linux. The in-use refusal
+exists because a server launched from the folder (the group router runs from
+the LumaByte build) kept its DLLs locked: tar, extract-zip and Expand-Archive
+then failed one after another, five-minute timeouts apart, while Setup showed
+"Extracting" the whole time.

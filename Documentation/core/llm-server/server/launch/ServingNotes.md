@@ -16,6 +16,18 @@ The plan notes for the optional serving features of a launch.
   unsupported, or skipped because the model fits locally or runs expert offload);
   MoE expert offload (fill, all experts in RAM with or without the MoE GPU cache and why the cache is off, or why offload is off or not needed);
   and the load-mode fallback when both spellings are rejected.
+- On an over-RAM pool the all-experts note ends with the RAM tier ([MoeRamTierPlan](MoeRamTierPlan.md)): the
+  bytes locked in RAM (`--moe-ram-mib`), that the most used experts go first once the profile has data, the
+  part of the tier registered with the GPU for DMA uploads (`--moe-ram-register-mib`, named as a per-card share
+  on a multi-card launch), or
+  why there is no tier (a mainline or luma-b4 build, the Setup opt-out), plus the profile file the runtime keeps
+  to seed its GPU cache at the next start when one is named.
+- The all-experts note says where the experts live. A pool that fits RAM "stays in system RAM"; one that
+  exceeds it (DeepSeek-V4.1-Flash: 289 GB of experts against 190 GB, 2026-11-02) loads memory-mapped, so the
+  note says the OS page cache keeps the recently used experts and the rest stream from the SSD, and that decode
+  follows the hit rate of that cache and the GPU cache in front of it. Host tables over `LAZY_TABLE_BYTES`
+  (4 GiB, llama.cpp's `--lazy-mode auto` threshold) get a sentence of their own: DeepSeek's 203 GB Engram table
+  is read row by row as tokens need it, never loaded whole, so it costs disk space, not RAM.
 
 ## Why
 

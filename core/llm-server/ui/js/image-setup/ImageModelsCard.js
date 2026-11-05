@@ -54,6 +54,8 @@ export default class ImageModelsCard {
     } else if (type === 'file-start' || type === 'download') {
       ImageModelsCard.applyProgress(store.activeDl, type, payload);
       this.patchDownloadRow();
+    } else if (type === 'recipe') {
+      if (store.activeDl) { store.activeDl.recipe = payload || null; this.patchDownloadRow(); }
     } else if (type === 'done' || type === 'canceled' || type === 'error') {
       if (type === 'error') store.downloadError = (payload && payload.message) || 'Download failed.';
       store.activeDl = null;
@@ -221,9 +223,13 @@ export default class ImageModelsCard {
     chrome.innerHTML = `
       <div class="img-section-title">
         <span></span>
-        <button class="luma-btn luma-btn--sm img-import-btn" data-act="import-open"${this._panel.store.activeDl ? ' disabled' : ''}>+ Import custom model</button>
+        <span class="img-section-actions">
+          <button class="luma-btn luma-btn--sm img-import-btn" data-act="civitai-open"${this._panel.store.activeDl ? ' disabled' : ''}>Browse CivitAI</button>
+          <button class="luma-btn luma-btn--sm img-import-btn" data-act="import-open"${this._panel.store.activeDl ? ' disabled' : ''}>+ Import custom model</button>
+        </span>
       </div>`;
     chrome.querySelector('[data-act="import-open"]').addEventListener('click', () => this._panel.importModal.open());
+    chrome.querySelector('[data-act="civitai-open"]').addEventListener('click', () => this._panel.civitaiModal.open());
   }
 
   _setRows(installed) {

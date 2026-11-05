@@ -19,7 +19,8 @@ Sharing peer) through [RemoteImageAdapter](../server/image/RemoteImageAdapter.md
   - `onMeta`, `onStatus`, `onProgress` are re-emitted; `onPreview` only with `b64`.
   - `onDone({ images, modelId })` notifies `<done> in N.Ns (remote)`, sends
     `done` with the host's images as received, and resolves
-    `{ success: true, images }` converted to `{ bytes, mime, width, height, seed }`.
+    `{ success: true, images, modelId }` converted to
+    `{ bytes, mime, width, height, seed }` (the host's model id, or null).
 
 ## Why
 

@@ -22,7 +22,7 @@ and `<script id="rp-shared">` for `/llm-ui/ext/roleplay-mode/shared.js` (see
   the reply length (Snappy / Balanced / Lush), then a collapsed `More` section
   holding the art style, language model and context, base and edit image models
   (generation models vs edit or `supportsEdit` models, video excluded),
-  characters (name, who they are, looks, a profile group: voice, wants, hides,
+  characters (name, who they are, looks, a profile group: past, voice, wants, hides,
   tells, toward you; the art studio), scenes, options (images, prose polish,
   samplers off, image profile and relighting) and a pipeline-test button. A
   local LLM pick re-points the server via `api.setDefaults`. The result is

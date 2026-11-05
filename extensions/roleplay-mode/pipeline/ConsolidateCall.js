@@ -48,11 +48,12 @@ class ConsolidateCall {
     const started = Date.now();
     try {
       const r = await this._chat.complete(ConsolidateCall.foldRequest(data, char, beats));
-      const fold = r && r.text ? ConsolidatePrompt.parseFold(r.text) : null;
+      const others = (Array.isArray(data.characters) ? data.characters : []).filter((c) => c && c.name && c !== char).map((c) => c.name);
+      const fold = r && r.text ? ConsolidatePrompt.parseFold(r.text, others) : null;
       RpDebug.log('post.consolidate.fold', { ms: Date.now() - started, name: char.name, ok: !!fold, folded: beats.length });
       if (!fold) return false;
       CharacterChronicle.applyFold(char, fold.arc, beats.length);
-      CharacterProfile.apply(char, { wants: fold.wants, hides: fold.hides, bondUser: fold.bondUser }, { growthOnly: true });
+      CharacterProfile.apply(char, { wants: fold.wants, hides: fold.hides, bondUser: fold.bondUser, bonds: fold.bonds }, { growthOnly: true });
       return true;
     } catch (e) {
       RpDebug.log('post.consolidate.error', { ms: Date.now() - started, error: e && e.message });

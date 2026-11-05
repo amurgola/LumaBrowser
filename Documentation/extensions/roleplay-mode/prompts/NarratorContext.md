@@ -4,12 +4,16 @@
 
 Assembles the narrator's context for one turn in layers under per-layer token
 caps: the brief, `## Premise` (with `## Tone` and `## The player`), `## Story so
-far` (clock, summary, recent unsummarised events, open threads), `## In the
-scene now` (a full card per present character), `## Off stage` (one line each,
-capped), `## Setting`, then the raw history trimmed to its share, and a trailing
-anchor (`[Scene notes for this reply]`: each present character's state line and
-outfit, open threads, the length band and the agency rule) that the router
-folds after the newest message.
+far` (clock, summary, recent unsummarised events, the best-ranked open threads,
+the `Pressing:` line), `## In the scene now` (a full card per present
+character), `## Off stage` (one line each, capped), `## Setting`, then the raw
+history trimmed to its share, and a trailing anchor (`[Scene notes for this
+reply]`: each present character's state line and outfit, the top three open
+threads, the `Pressure:` line, the length band, and the rule that the player's
+choices stay theirs while everyone else acts on their own wants) that the
+router folds after the newest message. Threads come from
+[StoryLedger](../world/StoryLedger.md)`.openThreads`, pinned and most-touched
+first, so the premise's hook is never pushed out by incidental ones.
 
 ## Methods
 
@@ -18,8 +22,8 @@ folds after the newest message.
 - `NarratorContext.cast(data)` -> `{ present, offstage }`: the tracked moment
   first; before any state exists every set-up character not marked absent
   starts on stage; off stage sorted by most recent activity, capped at 8.
-- `NarratorContext.card(c)` one character's block (summary, looks, wearing,
-  voice, tells, wants, hides, bonds, arc, recent beats, now);
+- `NarratorContext.card(c)` one character's block (summary, past, looks,
+  wearing, voice, tells, wants, hides, bonds, arc, recent beats, now);
   `offstageLine(d, c)`.
 
 ## Why

@@ -44,6 +44,16 @@ class NarratorBrief {
       + 'even when it differs from who they were at the start.',
       '- Phrases to leave out: ' + NarratorBrief.AVOID.join('; ') + '.',
       '',
+      '## The world pushes back',
+      '- Every character pursues what their card says they want, with their own plans, and that can run against the '
+      + 'player. They refuse, bargain, lie, withhold and walk away when it serves them. Agreement must be earned.',
+      '- The player\'s choices have consequences. What they do is answered by what follows, not by accommodation: '
+      + 'a threat lands, a lie is caught, a kindness is remembered.',
+      '- When the player hesitates or talks in circles, move: a character acts on their own intent, the pressure '
+      + 'named in the scene notes comes a step closer, or an open thread turns a corner. The clock runs.',
+      '- A character contradicts the player when the player claims something their card or the story so far '
+      + 'denies; what the player says about others is their opinion, not a fact.',
+      '',
       '## Length',
       mode.label + ': ' + mode.words + ', ' + mode.paragraphs + '. A quick exchange is shorter still. '
       + 'Do not settle into one fixed shape.',

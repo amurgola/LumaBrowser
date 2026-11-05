@@ -5,6 +5,10 @@ const ChunkMeta = require('./ChunkMeta');
 const DownloadError = require('./DownloadError');
 
 class DownloadVerifier {
+  static READ_BYTES = 8 * 1024 * 1024;
+
+  static TICK_MS = 250;
+
   static async verifyPartial({ partPath, metaPath = null, total, sha256, digest = null, onVerify, forLabel = '' }) {
     const size = PartialFile.size(partPath);
     DownloadVerifier._assertSize({ partPath, metaPath, size, total, forLabel });
@@ -17,7 +21,7 @@ class DownloadVerifier {
   static sha256File(filePath, onTick) {
     return new Promise((resolve, reject) => {
       const hash = crypto.createHash('sha256');
-      const stream = fs.createReadStream(filePath);
+      const stream = fs.createReadStream(filePath, { highWaterMark: DownloadVerifier.READ_BYTES });
       let read = 0;
       stream.on('data', (buf) => {
         read += buf.length;
@@ -38,11 +42,23 @@ class DownloadVerifier {
 
   static async _digestWithProgress(partPath, size, onVerify, forLabel) {
     DownloadVerifier._callQuietly(onVerify, 0, size);
+    const tick = DownloadVerifier._throttledTick(size, onVerify);
     try {
-      return await DownloadVerifier.sha256File(partPath, (read) => { if (onVerify) onVerify(read, size); });
+      return await DownloadVerifier.sha256File(partPath, tick);
     } catch (err) {
       throw new Error(`Download verification failed${forLabel}: ${err.message}`);
     }
+  }
+
+  static _throttledTick(size, onVerify) {
+    if (!onVerify) return null;
+    let last = Date.now();
+    return (read) => {
+      const now = Date.now();
+      if (read < size && now - last < DownloadVerifier.TICK_MS) return;
+      last = now;
+      onVerify(read, size);
+    };
   }
 
   static _assertDigest({ partPath, metaPath, digest, sha256, forLabel }) {

@@ -6,9 +6,11 @@ The Image Models card: a one-time scaffold of two remembered folds holding two S
 
 ## Methods
 
-- `paint()`; `onModelEvent(evt)` (start: full repaint; file-start and download: one-row patch; done, canceled, error: refresh models and defaults); `patchDownloadRow()`; `paintInstalledMeta()` (count plus the model per job); `paintCatalogMeta()` (count left plus "downloading N%"); `onQuantChange(row, control)` (updates the size chip in place so the open dropdown stays open).
+- `paint()`; `onModelEvent(evt)` (start: full repaint; file-start and download: one-row patch; recipe: stores a CivitAI import's derivation stage on the active download and patches the row; done, canceled, error: refresh models and defaults); `patchDownloadRow()`; `paintInstalledMeta()` (count plus the model per job); `paintCatalogMeta()` (count left plus "downloading N%"); `onQuantChange(row, control)` (updates the size chip in place so the open dropdown stays open).
 - `ImageModelsCard.newDownload(payload)`, `applyProgress(dl, type, payload)`, `jobsByModel(installed, defaults)`.
 - Installed models are hidden from the catalogue; the first run (nothing installed, no stored fold) opens it.
+
+The catalogue chrome carries two buttons: "Browse CivitAI" ([CivitaiModal](CivitaiModal.md)) and "+ Import custom model" ([ImportModelModal](ImportModelModal.md)), both disabled while a download runs.
 
 ## Globals
 

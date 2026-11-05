@@ -2,7 +2,7 @@
 
 `core/llm-server/ui/js/wizard/HfSearchPanel.js`
 
-The live Hugging Face search under the recommendation: Search or Enter, results with downloads and gated marks, a repo opens its quants once (multi-part quants are refused with "paste URL"), and a pick becomes `state.override` (MLX picks carry `runtimeId: 'mlx-lm'`) with a Clear chip. Toggling MLX (Mac only) clears a pick.
+The live Hugging Face search under the recommendation: Search or Enter (`searchModels` with `fit: true`, so the list is trending first and sized for this PC), results with downloads and gated marks, a repo opens its quants once (multi-part quants are refused with "paste URL"), and a pick becomes `state.override` (MLX picks carry `runtimeId: 'mlx-lm'`) with a Clear chip. Toggling MLX (Mac only) clears a pick.
 
 ## Methods
 

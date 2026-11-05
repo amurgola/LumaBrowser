@@ -19,12 +19,21 @@ binary's argparser would reject.
   - build gates: `loadMode` (accepted and b10105+, the luma fork, or `--no-mmap`
     already learned as rejected), `fitOff` (b10621+ or luma), `tensorSplitRuntime`
     (CUDA 12/13 or luma ids), `tensorSplitBuild` (b9000+ or luma), `moeCache`
-    (`--moe-cache-mib` accepted and b11480+, or a luma tag luma-b4+) and
-    `moeCacheMultiGpu` (b11507+, or luma-b4+). A luma build with no readable tag gets no cache.
-- `accepts(flag)`.
+    (`--moe-cache-mib` accepted and b11480+, or a luma tag luma-b4+),
+    `moeCacheMultiGpu` (b11507+, or luma-b4+), `moeTiers` (luma-b5+ with
+    `--moe-ram-mib` and `--moe-profile` accepted: the luma patch stack's expert
+    tiers, never mainline) and `moeRamRegister` (luma-b6+ with
+    `--moe-ram-register-mib` accepted). The luma gates read `lumaTag`: the tag
+    number from the install manifest (`luma-b6`), else from a tag-shaped version
+    label, else null, in which case the build is taken as current and a rejected
+    flag is learned after one failed start (a hand-built binary registered with
+    Locate, or an install from before manifests). A luma binary's own `--version`
+    prints upstream's build count, which says nothing about the patch stack.
+- `accepts(flag)`; `RuntimeFlags.lumaTag(runtime)`.
 - `TENSOR_SPLIT_MIN_BUILD` (9000), `LOAD_MODE_MIN_BUILD` (10105),
   `FIT_OFF_MIN_BUILD` (10621), `MOE_CACHE_MIN_BUILD` (11480), `MOE_CACHE_MULTI_GPU_MIN_BUILD` (11507),
-  `LUMA_RUNTIME_ID`, `LUMA_MOE_CACHE_MIN_TAG` (4), `TENSOR_SPLIT_RUNTIME_IDS`.
+  `LUMA_RUNTIME_ID`, `LUMA_MOE_CACHE_MIN_TAG` (4), `LUMA_MOE_TIERS_MIN_TAG` (5),
+  `LUMA_MOE_REGISTER_MIN_TAG` (6), `MOE_RAM_REGISTER_FLAG`, `TENSOR_SPLIT_RUNTIME_IDS`.
 
 ## Why
 

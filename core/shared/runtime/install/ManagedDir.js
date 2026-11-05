@@ -18,13 +18,21 @@ class ManagedDir {
     await fs.promises.mkdir(dir, { recursive: true });
   }
 
-  static async wipeContents(dir) {
-    if (!(await BinaryLookup.pathExists(dir))) return;
+  static async wipeContents(dir, { rm = ManagedDir._rm } = {}) {
+    if (!(await BinaryLookup.pathExists(dir))) return [];
+    const leftovers = [];
     for (const entry of await fs.promises.readdir(dir, { withFileTypes: true })) {
       try {
-        await fs.promises.rm(path.join(dir, entry.name), { recursive: true, force: true });
-      } catch (_) {}
+        await rm(path.join(dir, entry.name));
+      } catch (_) {
+        leftovers.push(entry.name);
+      }
     }
+    return leftovers;
+  }
+
+  static _rm(target) {
+    return fs.promises.rm(target, { recursive: true, force: true });
   }
 
   static async remove(dir) {

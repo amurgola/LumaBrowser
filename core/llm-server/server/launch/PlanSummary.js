@@ -94,7 +94,7 @@ class PlanSummary {
     };
   }
 
-  static _experts({ moe }) {
+  static _experts({ moe, ramTier }) {
     return {
       cpuMoe: moe.cpuMoeEnabled,
       cpuMoeRequested: moe.cpuMoeRequested,
@@ -111,6 +111,11 @@ class PlanSummary {
       } : null,
       moeGpuCacheMib: moe.gpuCache && moe.gpuCache.enabled ? moe.gpuCache.mib : null,
       moeGpuCacheOffReason: moe.cpuMoeEnabled && moe.gpuCache && !moe.gpuCache.enabled ? moe.gpuCache.reason : null,
+      moeCacheSingleCardBytes: moe.gpuCache && moe.gpuCache.enabled ? moe.gpuCache.singleCardBytes || null : null,
+      moeRamMib: ramTier && ramTier.enabled ? ramTier.mib : null,
+      moeRamOffReason: ramTier && !ramTier.enabled && moe.cpuMoeEnabled ? ramTier.reason : null,
+      moeRamRegisterMib: ramTier && ramTier.enabled && ramTier.registerMib != null ? ramTier.registerMib : null,
+      moeProfilePath: ramTier ? ramTier.profilePath : null,
     };
   }
 

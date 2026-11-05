@@ -88,8 +88,9 @@ class NarratorContext {
       lines.push('Recent events:');
       for (const r of recent) lines.push('- ' + r.text);
     }
-    const threads = StoryLedger.openThreads(d).slice(-NarratorContext.THREADS_MAX);
+    const threads = StoryLedger.openThreads(d).slice(0, NarratorContext.THREADS_MAX);
     if (threads.length) lines.push('Open threads: ' + threads.join('; ') + '.');
+    if (story.pressure) lines.push('Pressing: ' + PromptBudget.clip(story.pressure, 120));
     return lines;
   }
 
@@ -109,6 +110,7 @@ class NarratorContext {
     const head = ['**' + c.name + '**'];
     if (p.summary) head.push(p.summary);
     const lines = [head.join(': ')];
+    if (p.history) lines.push('  past: ' + p.history);
     if (p.appearance) lines.push('  looks: ' + p.appearance);
     const outfit = (c.currentOutfitDesc || '').trim();
     if (outfit) lines.push('  wearing: ' + outfit);
@@ -173,9 +175,12 @@ class NarratorContext {
       const bits = [CharacterState.line(c), (c.currentOutfitDesc || '').trim() ? 'wearing ' + c.currentOutfitDesc.trim() : ''].filter(Boolean);
       lines.push('- ' + c.name + (bits.length ? ': ' + bits.join('; ') : ''));
     }
-    const threads = StoryLedger.openThreads(d).slice(-3);
+    const threads = StoryLedger.openThreads(d).slice(0, 3);
     if (threads.length) lines.push('Open: ' + threads.join('; ') + '.');
-    lines.push(mode.words + ', one beat, end on a handoff, the player\'s choices stay theirs.');
+    const pressure = StoryLedger.of(d).pressure;
+    if (pressure) lines.push('Pressure: ' + pressure);
+    lines.push(mode.words + ', one beat, end on a handoff. The player\'s choices stay theirs; everyone else acts on '
+      + 'their own wants, and the pressure above comes closer unless the player turns it.');
     return PromptBudget.clip(lines.join('\n'), cap);
   }
 

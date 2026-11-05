@@ -25,7 +25,8 @@ the emotion select, the dimension matrix and a status line.
 - Text run: `rpLab.runText({ options: { mockSideCalls, judge, turns } })`
   drives the scripted playthrough with the real story model; `lab:text` events
   append each turn to a pane under the status line, and the result renders the
-  consistency checks and prose scores (and the judge's, when asked).
+  consistency checks, the cast and initiative checks with each pair's voice and
+  dialogue overlap, and the prose scores (and the judge's, when asked).
 - Each step card shows the image, inputs, an editable prompt and the params
   (steps, sampler, scheduler, strength, cfgScale, seed; numbers clamped);
   edits become per-step overrides. "Regenerate" calls

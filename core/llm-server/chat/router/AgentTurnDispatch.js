@@ -24,6 +24,7 @@ class AgentTurnDispatch {
       temperature: t.temperature,
       conversationId: t.convId,
       assistantMessageId: t.asstId,
+      userMessageId: t.userMessageId || null,
       deps,
       hooks: t.hooks,
       priorMessages: this._priorMessages(t.convId, t.asstId),
@@ -124,7 +125,7 @@ class AgentTurnDispatch {
 
   static _evalExtras(evalOverrides) {
     return {
-      nativeHistory: !!(evalOverrides && evalOverrides.nativeHistory),
+      nativeHistory: (evalOverrides && evalOverrides.nativeHistory != null) ? !!evalOverrides.nativeHistory : true,
       nativeToolsOverride: (evalOverrides && evalOverrides.nativeTools === 'off') ? 'off' : null,
       systemPromptOverride: evalOverrides ? (evalOverrides.systemPromptOverride ?? null) : undefined,
       promptExperiments: (evalOverrides && Array.isArray(evalOverrides.promptExperiments)) ? evalOverrides.promptExperiments : null,

@@ -30,6 +30,7 @@ class ImageManifestBuilder {
       promptStyle: entry.promptStyle || null,
       ...ImageManifestBuilder._installTail(entry, now),
       ...(entry.linkedFrom ? { linkedFrom: entry.linkedFrom } : {}),
+      ...(entry.civitai ? { civitai: entry.civitai } : {}),
     };
   }
 

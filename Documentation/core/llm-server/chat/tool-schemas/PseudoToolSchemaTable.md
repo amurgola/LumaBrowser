@@ -8,7 +8,7 @@ injects, as opposed to browser and extension tools).
 ## Members
 
 - `PseudoToolSchemaTable.ENTRIES` (frozen, registration order):
-  `{ name, description, properties, required }` for `create_artifact`,
+  `{ name, description, properties, required, complexity? }` for `create_artifact`,
   `edit_artifact`, `create_live_artifact`, `generate_image`, `edit_image`,
   `generate_video`, `animate_image`, `generate_music`, `web_search`,
   `search_knowledge_base`, `validate_code`, `get_artifact_data`,
@@ -17,6 +17,10 @@ injects, as opposed to browser and extension tools).
 
 ## Rules
 
+- `complexity: 'heavy'` marks the tools that start long work behind short
+  prompts (`create_artifact`, `edit_artifact`, `create_live_artifact`,
+  `validate_code`); [RequestComplexity](../RequestComplexity.md) reads it and
+  [ToolSchemas](../ToolSchemas.md) never copies it into the schema the model sees.
 - Descriptions carry the same teaching as the prose manuals. `create_artifact`
   explains `type` because Qwen3.8 sent `content` alone and llama.cpp does not
   enforce `required`.

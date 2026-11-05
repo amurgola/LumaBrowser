@@ -13,6 +13,8 @@ const SharedLibLinker = require('./SharedLibLinker');
 class GithubRuntimeInstall {
   static BINARY_SEARCH_DEPTH = 3;
 
+  static IN_USE_FILES_SHOWN = 4;
+
   constructor(entry, { runtimesRoot, onEvent, channel } = {}, services) {
     this._entry = entry;
     this._runtimesRoot = runtimesRoot;
@@ -57,9 +59,20 @@ class GithubRuntimeInstall {
 
   async _extractMainAsset() {
     this._emit('extract', { phase: 'start' });
-    await ManagedDir.wipeContents(this._managedDir);
+    const leftovers = await ManagedDir.wipeContents(this._managedDir);
+    if (leftovers.length > 0) throw GithubRuntimeInstall._inUse(this._entry, this._managedDir, leftovers);
     await this._services.extractor.extract(this._stagingPath, this._managedDir);
     this._emit('extract', { phase: 'done' });
+  }
+
+  static _inUse(entry, managedDir, leftovers) {
+    const shown = leftovers.slice(0, GithubRuntimeInstall.IN_USE_FILES_SHOWN).join(', ');
+    const more = leftovers.length > GithubRuntimeInstall.IN_USE_FILES_SHOWN ? ` and ${leftovers.length - GithubRuntimeInstall.IN_USE_FILES_SHOWN} more` : '';
+    return new RuntimeInstallError(
+      `${entry.name} is still in use: ${shown}${more} in ${managedDir} could not be replaced. Stop every server running from this runtime (the model server, the group router) and try again.`,
+      'RUNTIME_IN_USE',
+      { managedDir, files: leftovers },
+    );
   }
 
   async _installCompanions() {

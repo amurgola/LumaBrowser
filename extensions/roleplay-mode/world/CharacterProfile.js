@@ -1,5 +1,5 @@
 class CharacterProfile {
-  static IDENTITY_KEYS = ['voice', 'tells'];
+  static IDENTITY_KEYS = ['history', 'voice', 'tells'];
   static GROWTH_KEYS = ['wants', 'hides'];
   static TELLS_MAX = 3;
   static BOND_USER = 'user';
@@ -10,6 +10,7 @@ class CharacterProfile {
     return {
       summary: String(c.description || p.summary || '').trim(),
       appearance: String(c.appearance || p.appearance || '').trim(),
+      history: String(p.history || '').trim(),
       voice: String(p.voice || '').trim(),
       wants: String(p.wants || '').trim(),
       hides: String(p.hides || '').trim(),

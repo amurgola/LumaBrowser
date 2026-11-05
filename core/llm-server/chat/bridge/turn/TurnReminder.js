@@ -32,9 +32,35 @@ class TurnReminder {
     '</tool_format_reminder>',
   ].join('\n');
 
-  static compose({ turnReminder = null, nativeTools = false, offFormat = false, parallel = false } = {}) {
+  static TIME_FORMAT = { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' };
+
+  static clockLine(now) {
+    if (!(now instanceof Date) || Number.isNaN(now.getTime())) return null;
+    return `Current time (the user's local clock): ${now.toLocaleTimeString(undefined, TurnReminder.TIME_FORMAT)}.`;
+  }
+
+  static compose({ turnReminder = null, nativeTools = false, offFormat = false, parallel = false, now = null } = {}) {
     const format = nativeTools ? null : TurnReminder._formatBlock(offFormat, parallel);
-    return [turnReminder, format].filter(Boolean).join('\n\n') || null;
+    return [TurnReminder.clockLine(now), turnReminder, format].filter(Boolean).join('\n\n') || null;
+  }
+
+  static BASE = Symbol('lumaReminderBase');
+
+  static appendKeeping(msgs, reminder) {
+    if (!reminder || !Array.isArray(msgs) || !msgs.length) return msgs;
+    const last = msgs[msgs.length - 1];
+    if (last && Object.prototype.hasOwnProperty.call(last, TurnReminder.BASE)) {
+      const base = last[TurnReminder.BASE];
+      last.content = base ? `${base}\n\n${reminder}` : reminder;
+      return msgs;
+    }
+    if (!last || typeof last.content !== 'string') {
+      msgs.push({ role: 'user', content: reminder, [TurnReminder.BASE]: '' });
+      return msgs;
+    }
+    last[TurnReminder.BASE] = last.content;
+    last.content = `${last.content}\n\n${reminder}`;
+    return msgs;
   }
 
   static append(msgs, reminder) {

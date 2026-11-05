@@ -6,7 +6,12 @@ The narrator's standing brief, the cacheable head of every turn: role and
 format, the prose rules (concrete detail, no narrated feeling, dialogue that
 stands alone, varied rhythm, one beat, a handoff, characters know only their
 card and the story so far, growth on the card is the current truth), the
-length mode, the player's agency, and a short list of phrases to leave out.
+drive rules under `## The world pushes back` (characters pursue their own
+wants and can refuse, bargain, lie and leave; the player's choices have
+consequences rather than accommodation; when the player stalls a character
+acts, the pressure comes closer or a thread turns; player claims about others
+are contested against the cards), the length mode, the player's agency, and a
+short list of phrases to leave out.
 
 ## Methods
 

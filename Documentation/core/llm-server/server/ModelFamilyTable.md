@@ -90,3 +90,37 @@ attention, 262144 context, no grafted MTP head.
   caps it at n-max 4, measured +26% code edits / +10% prose.
 - Not set: `nativeToolExclude` (the edit_artifact quirk was measured on the 27B
   only).
+
+### deepseek4 (DeepSeek V4 and V4.1, archs `deepseek41`, `deepseek4`; name fallback `DeepSeek-V4*`)
+
+V4.1-Flash-1017: 552B MoE, 40 layers, 384 experts with 6 routed plus 1 shared,
+an MXFP8 Engram table, 1M native context; runs through the LumaByte runtime
+(patch 0005, PR 30817).
+
+- Detected by architecture first, else by a `DeepSeek-V4` / `DeepSeek V4.1`
+  name; V3.2 is left out on purpose (no measured recipe).
+- `nativeToolCalls: true` with `--jinja`: the model is trained on its DSML
+  markup (`<｜DSML｜ calls>` with a leading space in every tag on V4.1) and emits
+  it whatever the text fence asks for; llama-server parses it into `tool_calls`
+  only through the jinja path with tools registered on the request. On the
+  fence path (2026-11-04) the call arrived in the chat as raw text and nothing
+  ran; [DsmlToolCallParser](../chat/bridge/parsing/DsmlToolCallParser.md) now
+  recovers that shape as well, as a backstop.
+- Not set: sampler defaults (DeepSeek publishes none for the 1017 release),
+  `--reasoning-preserve` (not measured on this template), KV quantisation.
+
+### ricursive (ricursiveAI Ripple, arch `ricursive`; name fallback `Ripple-NNB`)
+
+Ripple-65B-Preview: dense 65B, 80 layers, four sliding-window layers (window
+1024, RoPE) to one full-attention layer without positional encoding, gated
+attention, a per-layer value residual, clamped SwiGLU, 1M context. Mainline
+llama.cpp does not know the architecture; it loads only on the LumaByte
+runtime from luma-b7 (patch 0011), where the GGUF conversion also lives.
+
+- Detected by architecture first, else by a `Ripple-65B` style name (a size
+  suffix is required so unrelated "ripple" names stay unclaimed).
+- `--jinja` with `nativeToolCalls: false`: the tokenizer ships a plain ChatML
+  template (`<|im_start|>role ... <|im_end|>`) with no tool markup, so the
+  jinja path renders it faithfully and tools go through the text fence.
+- Not set: sampler defaults (none published), `--reasoning-preserve` (the
+  template has no reasoning channel), KV quantisation, speculation.

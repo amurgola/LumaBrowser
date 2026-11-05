@@ -103,6 +103,7 @@ class StagingParser {
       bondChange: String(c.bondChange || '').trim(),
       beat: String(c.beat || '').trim(),
       leftTo: String(c.leftTo || '').trim(),
+      revealed: StagingParser._true(c.revealed),
       outfit: String(c.outfit || c.clothing || c.clothes || '').trim(),
       slots: StagingParser.normalizeSlots(c.slots),
       head: String(c.head || c.headwear || '').trim(),
@@ -130,8 +131,9 @@ class StagingParser {
     } : null;
     const threads = obj.threads && typeof obj.threads === 'object' ? {
       opened: StagingParser._strings(obj.threads.opened, StagingParser.THREADS_MAX),
+      advanced: StagingParser._strings(obj.threads.advanced, StagingParser.THREADS_MAX),
       closed: StagingParser._strings(obj.threads.closed, StagingParser.THREADS_MAX),
-    } : { opened: [], closed: [] };
+    } : { opened: [], advanced: [], closed: [] };
     return { events, clock, threads };
   }
 

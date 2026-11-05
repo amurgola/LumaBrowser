@@ -1,3 +1,4 @@
+const DsmlToolCallParser = require('./DsmlToolCallParser');
 const XmlToolCallParser = require('./XmlToolCallParser');
 
 class ToolCallSniffer {
@@ -9,7 +10,8 @@ class ToolCallSniffer {
     const m = /"(?:tool|name)"\s*:\s*"([a-zA-Z0-9_]+)"/.exec(buf);
     if (m) return m[1];
     const x = XmlToolCallParser.FN_NAME.exec(buf);
-    return (x && x[1] !== XmlToolCallParser.PLACEHOLDER_NAME) ? x[1] : null;
+    if (x && x[1] !== XmlToolCallParser.PLACEHOLDER_NAME) return x[1];
+    return DsmlToolCallParser.toolName(buf);
   }
 
   static target(buf) {
@@ -18,6 +20,8 @@ class ToolCallSniffer {
       if (json != null) return json;
       const xml = ToolCallSniffer._xmlValue(buf, key);
       if (xml != null) return xml;
+      const dsml = DsmlToolCallParser.paramValue(buf, key, ToolCallSniffer.TARGET_MAX);
+      if (dsml != null) return dsml;
     }
     return null;
   }
@@ -33,6 +37,7 @@ class ToolCallSniffer {
     const s = String(content);
     if (/```\s*tool\b/i.test(s)) return true;
     if (XmlToolCallParser.OPEN.test(s)) return true;
+    if (DsmlToolCallParser.hasOpener(s)) return true;
     return ToolCallSniffer.KNOWN_CALL.test(s);
   }
 

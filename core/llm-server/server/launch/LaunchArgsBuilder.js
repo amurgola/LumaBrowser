@@ -109,7 +109,14 @@ class LaunchArgsBuilder {
   _addExpertOffload(moe) {
     if (moe.gpuExpertLayers <= 0) {
       this._push('--cpu-moe');
-      if (moe.gpuCache && moe.gpuCache.enabled) this._push('--moe-cache-mib', String(moe.gpuCache.mib));
+      if (moe.gpuCache && moe.gpuCache.enabled) {
+        this._push('--moe-cache-mib', String(moe.gpuCache.mib));
+        if (moe.gpuCache.promptBatch) this._push('-b', String(moe.gpuCache.promptBatch), '-ub', String(moe.gpuCache.promptBatch));
+      }
+      const tier = this._s.ramTier;
+      if (tier && tier.enabled) this._push('--moe-ram-mib', String(tier.mib));
+      if (tier && tier.enabled && tier.registerMib != null) this._push('--moe-ram-register-mib', String(tier.registerMib));
+      if (tier && tier.profilePath) this._push('--moe-profile', tier.profilePath);
       return;
     }
     this._push('--n-cpu-moe', String(moe.nCpuMoe));

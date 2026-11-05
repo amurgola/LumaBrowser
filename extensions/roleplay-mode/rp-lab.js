@@ -574,8 +574,11 @@
       + (judge ? '<li>Judge: ' + judge + (r.judge.notes ? ' <em>' + esc(r.judge.notes) + '</em>' : '') + '</li>' : '')
       + (r.outDir ? '<li>Report: <code>' + esc(r.outDir) + '</code></li>' : '')
       + '</ul>'
-      + '<ul class="rpl-text-checks">' + probe.checks.map((c) => '<li class="' + (c.ok ? 'ok' : 'bad') + '">'
-        + (c.ok ? '✓' : '✗') + ' ' + esc(c.label) + (c.detail ? ' <span>(' + esc(c.detail) + ')</span>' : '') + '</li>').join('') + '</ul>';
+      + '<ul class="rpl-text-checks">' + probe.checks.concat((r.cast && r.cast.checks) || []).map((c) => '<li class="' + (c.ok ? 'ok' : 'bad') + '">'
+        + (c.ok ? '✓' : '✗') + ' ' + esc(c.label) + (c.detail ? ' <span>(' + esc(c.detail) + ')</span>' : '') + '</li>').join('') + '</ul>'
+      + (r.cast && r.cast.voice && r.cast.voice.pairs.length
+        ? '<ul>' + r.cast.voice.pairs.map((p) => '<li>' + esc(p.a) + ' / ' + esc(p.b) + ': voice overlap ' + p.voice + ', dialogue overlap ' + p.dialogue + '</li>').join('') + '</ul>'
+        : '');
     pane.appendChild(box);
   }
 

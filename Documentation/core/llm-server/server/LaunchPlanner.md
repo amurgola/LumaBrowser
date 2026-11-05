@@ -24,7 +24,9 @@ snapshot. The work is done by small stage classes in [launch/](launch/).
     `noAutoCpuMoe`, `tensorSplitMode`, `manualTensorSplitActive`, `rpcServers`,
     `rpcSkippedFitsLocal`, `rpcSkippedMoeOffload`, `vramCapBytes`,
     `measuredVramBytes`, `ramPin` (`{ freeBytes }`), `useMmap` (hotswap),
-    `suppressMmprojLoad`, `noSpecDrafter`, `noNgramSpec`, `quantizeDraftCache`.
+    `suppressMmprojLoad`, `noSpecDrafter`, `noNgramSpec`, `quantizeDraftCache`,
+    `noMoeRamTier`, `moeProfileDir` (the folder for a model's expert use profile,
+    see [MoeRamTierPlan](launch/MoeRamTierPlan.md)).
   - `apiKey` (a non-empty string becomes `--api-key`), `userArgs` (free text or
     an array, appended last through [UserArgs](UserArgs.md)).
   - Throws `LaunchPlanner: model is required`, `runtime is required`,

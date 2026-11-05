@@ -36,14 +36,14 @@ export default class HfSearchPanel {
     this._status.textContent = 'Searching…';
     this._results.innerHTML = '';
     let result;
-    try { result = await this._wizard.api().searchModels({ query, limit: HfSearchPanel.RESULT_LIMIT, mlx: this._mlx }); } catch (e) { result = { success: false, error: e.message }; }
+    try { result = await this._wizard.api().searchModels({ query, limit: HfSearchPanel.RESULT_LIMIT, mlx: this._mlx, fit: true }); } catch (e) { result = { success: false, error: e.message }; }
     this._go.disabled = false;
     if (!result || !result.success) {
       this._status.innerHTML = '<span class="wz-bad">' + HtmlEscaper.escape((result && result.error) || 'Search failed.') + '</span>';
       return;
     }
     const rows = result.results || [];
-    this._status.textContent = rows.length ? rows.length + ' models: most-downloaded first' : 'No matches.';
+    this._status.textContent = rows.length ? rows.length + ' models: trending first, sized for this PC' : 'No matches.';
     for (const model of rows) this._results.appendChild(this._resultRow(model));
   }
 

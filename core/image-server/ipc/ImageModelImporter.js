@@ -3,6 +3,8 @@ const path = require('path');
 const ImageModelCatalog = require('../models/ImageModelCatalog');
 const ImagePromptProfiles = require('../prompt/ImagePromptProfiles');
 const PathPicker = require('../../shared/ipc/PathPicker');
+const CivitaiModelResolver = require('../civitai/CivitaiModelResolver');
+const CivitaiRecipe = require('../civitai/CivitaiRecipe');
 const AllInOneCheckpoint = require('./AllInOneCheckpoint');
 const CatalogModelInstaller = require('./CatalogModelInstaller');
 const FileCopyProgress = require('./FileCopyProgress');
@@ -19,12 +21,17 @@ class ImageModelImporter {
 
   static REPO_URL_HINT = 'Paste a HuggingFace model page URL, e.g. https://huggingface.co/circlestone-labs/Anima';
 
-  constructor({ imageServerService, slot, catalog = new ImageModelCatalog(), fetchSiblings = HfRepoSiblings.fetchListing, pickPath = PathPicker.pick }) {
+  constructor({
+    imageServerService, slot, catalog = new ImageModelCatalog(), fetchSiblings = HfRepoSiblings.fetchListing, pickPath = PathPicker.pick,
+    civitai = null, recipes = null,
+  }) {
     this._svc = imageServerService;
     this._slot = slot;
     this._catalog = catalog;
     this._fetchSiblings = fetchSiblings;
     this._pickPath = pickPath;
+    this._civitai = civitai;
+    this._recipes = recipes;
   }
 
   static promptProfiles() {
@@ -58,27 +65,72 @@ class ImageModelImporter {
     return ImageDownloadSlot.reportingFailures(send, () => this._fromRepo(args || {}, send));
   }
 
+  fromCivitai(args, send) {
+    return ImageDownloadSlot.reportingFailures(send, () => this._fromCivitai(args || {}, send));
+  }
+
+  resolveCivitai(args) {
+    return this._civitaiResolver().resolve(args || {});
+  }
+
   async _fromUrl(args, send) {
     const synth = ImportedEntryBuilder.build({
       name: args.name, url: args.url, baseType: args.baseType, loaderFlag: args.loaderFlag,
       kind: args.kind, approxBytes: args.approxBytes, promptStyle: args.promptStyle,
     });
     if (synth.error) return { success: false, error: synth.error };
-    const { entry } = synth;
+    return this._downloadEntry(synth.entry, send);
+  }
+
+  async _fromCivitai(args, send) {
+    const resolved = await this.resolveCivitai(args);
+    if (resolved.error) return { success: false, error: resolved.error };
+    const { entry, file } = resolved;
+    let derivation = null;
+    const result = await this._downloadEntry(entry, send, CivitaiModelResolver.expectations(file), {
+      onStarted: () => { derivation = this._deriveRecipe(resolved, send); },
+      finalize: async () => {
+        const derived = derivation ? await derivation : null;
+        if (derived) CivitaiRecipe.apply(entry, derived);
+      },
+    });
+    return result.success ? { ...result, civitai: entry.civitai } : result;
+  }
+
+  async _deriveRecipe({ model, version, map, entry }, send) {
+    if (!this._recipes) return null;
+    send('recipe', { id: entry.id, stage: 'reading' });
+    try {
+      const derived = await this._recipes.derive({ model, version, map, entry });
+      send('recipe', { id: entry.id, stage: 'done', defaults: derived.defaults, sources: derived.sources, warnings: derived.warnings, imageSamples: derived.images ? derived.images.samples : 0 });
+      return derived;
+    } catch (err) {
+      send('recipe', { id: entry.id, stage: 'failed', error: (err && err.message) || String(err) });
+      return null;
+    }
+  }
+
+  _downloadEntry(entry, send, expectations = {}, { onStarted = null, finalize = null } = {}) {
     const { modelsDir, dir } = this._target(entry.id);
-    const files = [{ role: 'diffusion', url: entry.files.diffusion.url, destPath: path.join(dir, entry.files.diffusion.file) }];
-    return this._slot.run({
+    const missing = ImportCompanions.check(entry, dir, modelsDir);
+    if (missing) return Promise.resolve({ success: false, error: missing.error });
+    const files = [{ role: 'diffusion', url: entry.files.diffusion.url, destPath: path.join(dir, entry.files.diffusion.file), ...expectations }];
+    const wasBusy = this._slot.busy;
+    const pending = this._slot.run({
       files,
       dir,
       send,
       start: { id: entry.id, dir, files: ImageDownloadSlot.startFiles(files) },
-      onDownloaded: () => {
+      onDownloaded: async () => {
         const refusal = ImageModelImporter._allInOneRefusal(entry, path.join(dir, entry.files.diffusion.file))
           || ImageModelImporter._companionFailure(entry, dir, modelsDir);
         if (refusal) return ImageModelImporter._fail(send, refusal);
+        if (finalize) await finalize();
         return ImageModelImporter._finishImport(send, entry, dir);
       },
     });
+    if (onStarted && !wasBusy) onStarted();
+    return pending;
   }
 
   async _fromFile(args, send) {
@@ -91,6 +143,8 @@ class ImageModelImporter {
     const early = ImageModelImporter._allInOneRefusal(entry, args.filePath);
     if (early) return ImageModelImporter._fail(send, early);
     const { modelsDir, dir } = this._target(entry.id);
+    const missing = ImportCompanions.check(entry, dir, modelsDir);
+    if (missing) return { success: false, error: missing.error };
     const destPath = path.join(dir, entry.files.diffusion.file);
     await ImageModelImporter._copyIn(args.filePath, destPath, entry.id, dir, send);
     const failure = ImageModelImporter._companionFailure(entry, dir, modelsDir);
@@ -132,6 +186,11 @@ class ImageModelImporter {
     } catch (err) {
       return { error: `Could not read the HuggingFace repo "${repoId}": ${err.message}` };
     }
+  }
+
+  _civitaiResolver() {
+    if (!this._civitai) this._civitai = new CivitaiModelResolver();
+    return this._civitai;
   }
 
   _target(id) {

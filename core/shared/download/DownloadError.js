@@ -1,7 +1,9 @@
 const HubAuth = require('./HubAuth');
+const CivitaiAuth = require('./CivitaiAuth');
 
 class DownloadError extends Error {
   static ACCESS_DENIED = 'HF_ACCESS_DENIED';
+  static CIVITAI_ACCESS_DENIED = 'CIVITAI_ACCESS_DENIED';
   static NOT_FOUND = 'DOWNLOAD_NOT_FOUND';
   static INTEGRITY = 'DOWNLOAD_INTEGRITY';
   static NO_SPACE = 'DOWNLOAD_NO_SPACE';
@@ -38,6 +40,7 @@ class DownloadError extends Error {
 
   static fromStatus(status, { url = '', forLabel = '', headers = {} } = {}) {
     if ((status === 401 || status === 403) && HubAuth.isHubUrl(url)) return DownloadError._hubAccess(status, forLabel);
+    if ((status === 401 || status === 403) && CivitaiAuth.isCivitaiUrl(url)) return DownloadError._civitaiAccess(status, forLabel);
     if (status === 404) {
       return new DownloadError(`Download failed${forLabel}: the file is not there (HTTP 404). It may have been moved or removed upstream.`,
         { code: DownloadError.NOT_FOUND, status });
@@ -74,6 +77,15 @@ class DownloadError extends Error {
     return new DownloadError(
       `Hugging Face refused the download${forLabel} (HTTP ${status}): this repo is gated or private. ${why}`,
       { code: DownloadError.ACCESS_DENIED, status });
+  }
+
+  static _civitaiAccess(status, forLabel) {
+    const why = CivitaiAuth.hasToken()
+      ? 'Your CivitAI API key was refused: it may be revoked, or this version is early access for supporters only.'
+      : 'No CivitAI API key is set: this version needs a logged-in account, so add an API key from your CivitAI account settings and try again.';
+    return new DownloadError(
+      `CivitAI refused the download${forLabel} (HTTP ${status}). ${why}`,
+      { code: DownloadError.CIVITAI_ACCESS_DENIED, status });
   }
 }
 

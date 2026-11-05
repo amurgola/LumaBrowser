@@ -12,7 +12,10 @@ MoE expert offload (`--cpu-moe` / `--n-cpu-moe`) for one launch.
   `cpuMoeEnabled`, `nCpuMoe`, `gpuExpertLayers`, `perLayerExpertBytes`,
   `expertBytesAt(i)`, `residentBytesAt(i)`, `tensorSplitRatio`,
   `budgetWeightsBytes`, `cpuExpertBytes`, `cpuPoolBytes`, `gpuCache`
-  (`{ enabled, bytes, mib, reason }` from [MoeGpuCachePlan](MoeGpuCachePlan.md)).
+  (`{ enabled, bytes, mib, promptBatch, promptBufferBytes, promptReserveBytes, reason, singleCardBytes }`
+  from [MoeGpuCachePlan](MoeGpuCachePlan.md)), `stagingBytes`, `perCardHoldBytes` (staging plus
+  the prompt buffer: what every card running layers keeps free beside weights, cache share and KV;
+  [SplitPlan](SplitPlan.md) hands it to the layer split as `perCardExtraBytes`).
 - `expertBytesRange(from, to)`: routed-expert bytes of layers `[from, to)`.
 - `FILL_SAFETY` (0.85), `FILL_SAFETY_EXACT` (0.93).
 
@@ -27,7 +30,15 @@ MoE expert offload (`--cpu-moe` / `--n-cpu-moe`) for one launch.
    offload is switched off (it would only slow decode).
 2b. GPU cache: when [MoeGpuCachePlan](MoeGpuCachePlan.md) says so, the same spare
    VRAM becomes a `--moe-cache-mib` cache instead, and every layer's experts stay
-   in RAM (`nCpuMoe` = blocks, `gpuExpertLayers` 0, so step 3 does not run).
+   in RAM (`nCpuMoe` = blocks, `gpuExpertLayers` 0, so step 3 does not run). With every
+   layer's experts at home every local card stages for its own layers, so the cards past the
+   first hold back `stagingBytes` too, and on 2+ cards the cache is also capped at what the
+   fill-order split can pack (`LayerFillSplit.budgetTotal` with the staging and the biggest
+   prompt buffer held back per card, less the resident share and one layer of packing slack):
+   the cache is split like the layers, so a cache the split cannot pack would leave llama.cpp to
+   its free-memory split. DeepSeek-V4.1-Flash on a 5090 + 3090 (2026-11-02): 20.7 GB cache,
+   `--tensor-split 26,14`, where the pool alone had allowed 32.9 GB and the 5090 ran out of
+   memory allocating its 5.7 GB prompt buffer.
 3. Balance: on 2+ local cards without a manual split, [MoeLayerSplit](MoeLayerSplit.md)
    may demote more layers; `nCpuMoe` follows it.
 4. Budget weights: resident + GPU-side experts, or + the cache bytes (never more than the file), then

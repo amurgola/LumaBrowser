@@ -14,7 +14,9 @@ Who owns `--tensor-split` for one launch and with what ratio.
     no MoE fill with GPU expert layers, no manual split, `--tensor-split`
     accepted, 2+ cards, `ngl > 0` and a header; it packs every block on a full
     offload, else the partial split's layers, with the projector and draft branch
-    charged to device 0.
+    charged to device 0 and an expert offload's per-card hold-back
+    ([MoeExpertPlan](MoeExpertPlan.md)`.perCardHoldBytes`: staged expert tensor plus prompt
+    activations) charged to every card.
 
 ## Why
 

@@ -9,7 +9,7 @@ The Image section of the LLM tab's Setup view (cards `cardImageDefaults`, `cardI
 - `new ImageSetupPanel({ getApi?, modelList? })`: `getApi` returns llmDiagAPI (the panel uses `.image` and the root's `getDiagnostics` for usable VRAM); default `window.llmDiagAPI`. `modelList` defaults to [ModelList](../models/ModelList.md) (tests pass a stub).
 - `open()`: without `llmDiagAPI.image.getEnabled` every card says "Image server is not available in this build."; the first call wires events and the page-head `#reloadBtn` (a forced runtime rescan); every call runs `refreshAll()`.
 - `refreshAll()`, `refreshRuntimes(opts)` (load, paint, then the fire-and-forget update check), `refreshModels()`, `refreshServer()`, `refreshModelsAndDefaults()`, and the load-only `reload('enabled' | 'defaults' | 'server' | 'catalog' | 'vram')`.
-- Shared parts for the cards: `store`, `defaultsCard`, `runtimesCard`, `modelsCard`, `actions` ([ImageModelActions](ImageModelActions.md)), `importModal`, `loraModal`, `api()`, `hasApi()`.
+- Shared parts for the cards: `store`, `defaultsCard`, `runtimesCard`, `modelsCard`, `actions` ([ImageModelActions](ImageModelActions.md)), `importModal`, `civitaiModal` ([CivitaiModal](CivitaiModal.md)), `loraModal`, `api()`, `hasApi()`, `openExternal(url)` (an http or https URL through the root API's `openExternal`; anything else is ignored).
 
 ## Collaborators
 

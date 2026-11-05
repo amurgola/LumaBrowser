@@ -3,6 +3,7 @@ const CudaDeviceProbe = require('../../shared/runtime/CudaDeviceProbe');
 class VaeTilingPolicy {
   static GB = 1024 * 1024 * 1024;
   static ROOMY_CARD_BYTES = 40 * VaeTilingPolicy.GB;
+  static TILE_SIZE = 1024;
   static ENV_IMAGE = 'SD_EDIT_VAE_TILING';
   static ENV_VIDEO = 'SD_VIDEO_VAE_TILING';
 

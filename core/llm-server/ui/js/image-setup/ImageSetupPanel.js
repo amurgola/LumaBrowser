@@ -5,6 +5,7 @@ import ImageModelActions from './ImageModelActions.js';
 import ImageModelsCard from './ImageModelsCard.js';
 import ImageRuntimesCard from './ImageRuntimesCard.js';
 import ImageSetupStore from './ImageSetupStore.js';
+import CivitaiModal from './CivitaiModal.js';
 import ImportModelModal from './ImportModelModal.js';
 import LoraModal from './LoraModal.js';
 
@@ -23,6 +24,7 @@ export default class ImageSetupPanel {
     this.modelsCard = new ImageModelsCard(this);
     this.actions = new ImageModelActions(this);
     this.importModal = new ImportModelModal(this);
+    this.civitaiModal = new CivitaiModal(this);
     this.loraModal = new LoraModal(this);
     this._booted = false;
   }
@@ -34,6 +36,11 @@ export default class ImageSetupPanel {
 
   api() {
     return this._getRoot().image;
+  }
+
+  openExternal(url) {
+    const root = this._getRoot();
+    if (root && root.openExternal && /^https?:/i.test(String(url || ''))) root.openExternal(url);
   }
 
   async open() {

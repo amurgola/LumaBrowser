@@ -13,7 +13,8 @@ class ImportedEntryBuilder {
   static build(opts) {
     const invalid = ImportedEntryBuilder._validate(opts);
     if (invalid) return { error: invalid };
-    const fileName = opts.srcPath ? path.basename(opts.srcPath) : ImportedEntryBuilder.filenameFromUrl(opts.url);
+    const fileName = ImportedEntryBuilder._explicitFileName(opts.fileName)
+      || (opts.srcPath ? path.basename(opts.srcPath) : ImportedEntryBuilder.filenameFromUrl(opts.url));
     if (!fileName) return { error: 'Could not infer a filename from the URL. Use a direct .safetensors / .gguf URL.' };
     const ext = path.extname(fileName).toLowerCase();
     if (opts.baseType === 'flux' && ext === '.safetensors') return { error: ImportedEntryBuilder.FLUX_SINGLE_FILE };
@@ -77,13 +78,23 @@ class ImportedEntryBuilder {
       baseType: opts.baseType,
       promptStyle: profileId || undefined,
       files: { diffusion },
-      defaults: { ...(base.defaults || {}), ...ImagePromptProfiles.profileDefaultsPatch(profileId) },
+      defaults: { ...(base.defaults || {}), ...ImagePromptProfiles.profileDefaultsPatch(profileId), ...ImportedEntryBuilder._patch(opts.defaults) },
       minVramBytes: base.minVramBytes,
       launchArgs: base.launchArgs || [],
       licenseNote: base.licenseNote || null,
       protocol: 'sd-cpp-http',
       compatibleRuntimes: [...ImportBases.COMPATIBLE_RUNTIMES],
     };
+  }
+
+  static _explicitFileName(fileName) {
+    const name = String(fileName || '').trim();
+    if (!name || /[\\/]/.test(name) || name === '.' || name === '..') return null;
+    return name;
+  }
+
+  static _patch(defaults) {
+    return defaults && typeof defaults === 'object' && !Array.isArray(defaults) ? defaults : {};
   }
 
   static _kind(requested, base) {

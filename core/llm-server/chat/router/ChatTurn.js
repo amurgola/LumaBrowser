@@ -28,6 +28,7 @@ class ChatTurn {
     const opened = this._openConversation();
     if (opened.error) return { success: false, error: opened.error };
     const { choicesOn, userRow, userArtifacts, userRegions, images } = this._persistUserSide();
+    this._userMessageId = userRow ? userRow.id : null;
     let runMessages = await this._applyMode();
     const asst = this._addPlaceholder();
     if (!asst) return { success: false, error: 'Message to regenerate was not found.' };
@@ -223,6 +224,7 @@ class ChatTurn {
       temperature: this._temperature,
       convId: this._convId,
       asstId: asst.id,
+      userMessageId: this._userMessageId,
       hooks: this._stream.hooks,
       modeTurn: this._mode.turn,
       images,

@@ -34,12 +34,12 @@ class StagingPrompt {
     return 'Schema: {"newCharacters":[{"name":string,"looks":string,"personality":string}],'
       + '"location":{"name":string,"desc":string,"isNew":boolean},'
       + '"present":[{"name":string,"present":boolean,"emotion":string,"intent":string,"condition":string,'
-      + '"bondUser":string,"bondChange":string,"beat":string,"leftTo":string,'
+      + '"bondUser":string,"bondChange":string,"beat":string,"leftTo":string,"revealed":boolean,'
       + '"outfit":string,"slots":{"outer":string,"top":string,"bottom":string,"feet":string},'
       + '"head":string,"face":string,"outfitChanged":boolean}],'
       + '"events":[{"kind":"event"|"reveal"|"promise"|"death"|"move"|"injury","text":string,"who":[names]}],'
       + '"clock":{"advance":"none"|"minutes"|"hours"|"next-morning"|"days","timeOfDay":string,"weather":string},'
-      + '"threads":{"opened":[string],"closed":[string]},'
+      + '"threads":{"opened":[string],"advanced":[string],"closed":[string]},'
       + '"shot":{"pose":one of [' + StagingPrompt.POSES.join(', ') + '],"facing":"camera"|"away",'
       + '"framing":"full"|"close","focus":[names],"group":boolean,"contact":boolean,'
       + '"action":string,"props":[strings]}}\n';
@@ -73,7 +73,9 @@ class StagingPrompt {
       + '"bondUser" = their standing attitude to the player in one or two words (wary, warming, trusts, '
       + 'fond, hostile, indebted); copy the known one unless this passage changed it, and when it did '
       + 'also set "bondChange" to why (else ""). "beat" = ONE past-tense sentence of what this character '
-      + 'did, learned or decided in this passage, naming the player as "the player"; "" if they only stood by.\n';
+      + 'did, learned or decided in this passage, naming the player as "the player"; "" if they only stood by. '
+      + '"revealed" = true ONLY when what this character hides (their "hides" in the roster) came into the open '
+      + 'in THIS passage: they said it, showed it, or the player learned it; else false.\n';
   }
 
   static _wardrobeRules() {
@@ -117,8 +119,9 @@ class StagingPrompt {
       + '- clock: how much story time passed in this passage ("none" for a continuous beat) and the time of '
       + 'day and weather AFTER it when the passage states or clearly implies them, else "".\n'
       + '- threads: "opened" = new unresolved hooks introduced here (a question, a debt, a looming arrival), '
-      + 'one short phrase each; "closed" = known open threads this passage resolved, copied VERBATIM from '
-      + 'the known threads list. [] when none.\n';
+      + 'one short phrase each; "advanced" = known open threads this passage moved forward without resolving '
+      + '(a clue, a step, a complication), copied VERBATIM from the known threads list; "closed" = known open '
+      + 'threads this passage resolved, copied VERBATIM. [] when none.\n';
   }
 
   static _shotRules() {
@@ -152,7 +155,7 @@ class StagingPrompt {
     const roster = StagingPrompt._roster(d);
     const currentPeople = StagingPrompt._currentPeople(d);
     const protagonist = StoryLedger.protagonist(d);
-    const threads = StoryLedger.openThreads(d).slice(-StagingPrompt.THREADS_SHOWN);
+    const threads = StoryLedger.openThreads(d).slice(0, StagingPrompt.THREADS_SHOWN);
     return 'The player: ' + (protagonist.name || 'the protagonist') + (protagonist.persona ? ' (' + protagonist.persona + ')' : '') + '\n'
       + 'Known characters:\n' + (roster.length ? roster.join('\n') : '(none)') + '\n'
       + 'Prior current scene: ' + (currentScene && currentScene.name ? currentScene.name : '(unknown)') + '\n'
@@ -169,13 +172,15 @@ class StagingPrompt {
       .map((c) => {
         const known = Array.isArray(c.outfits) ? c.outfits.map((o) => o && o.desc).filter(Boolean) : [];
         const state = CharacterState.of(c);
-        const bond = state.bondUser || CharacterProfile.bondWithUser(c);
+        const profile = CharacterProfile.of(c);
+        const bond = state.bondUser || profile.bonds[CharacterProfile.BOND_USER];
         return '- ' + c.name
           + ' | currently wearing: ' + (c.currentOutfitDesc || '(unknown)')
           + (known.length ? ' | known wardrobe: ' + known.join('; ') : '')
           + (bond ? ' | toward the player: ' + bond : '')
           + (state.condition ? ' | condition: ' + state.condition : '')
-          + (state.intent ? ' | wants: ' + state.intent : '');
+          + (state.intent ? ' | wants: ' + state.intent : '')
+          + (profile.hides ? ' | hides: ' + profile.hides : '');
       });
   }
 

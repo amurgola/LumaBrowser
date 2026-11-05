@@ -80,8 +80,10 @@ class LlmRuntimeSetup {
 
   async install(id, opts, send) {
     const stream = this._invalidatingStream(send);
+    let released = null;
     try {
       stream('start', {});
+      released = await this._releaseRuntime(id);
       const result = await this._installer.installRuntime(id, {
         runtimesRoot: this._svc.getRuntimesDir(),
         onEvent: stream,
@@ -92,7 +94,18 @@ class LlmRuntimeSetup {
       return { result };
     } catch (err) {
       throw LlmRuntimeSetup._reportInstallFailure(stream, err);
+    } finally {
+      this._resumeRuntime(released);
     }
+  }
+
+  _releaseRuntime(id) {
+    if (typeof this._svc.releaseRuntime !== 'function') return null;
+    return this._svc.releaseRuntime(id);
+  }
+
+  _resumeRuntime(released) {
+    if (released && typeof this._svc.resumeRuntime === 'function') this._svc.resumeRuntime(released);
   }
 
   async uninstall(id) {

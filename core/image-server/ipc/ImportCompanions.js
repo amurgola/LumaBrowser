@@ -13,7 +13,8 @@ class ImportCompanions {
     + 'Install "Qwen-Image-Edit 2509" first so its encoder can be reused by this checkpoint.';
 
   static ANIMA_MISSING = 'No installed Anima companion set (Qwen-Image VAE + Qwen3 text encoder) found. '
-    + 'Download "Anima" from the catalog first so its VAE + text encoder can be reused by this checkpoint.';
+    + 'Install "Anima" or "Anima Turbo" from the catalog first so its VAE + text encoder can be reused by this checkpoint. '
+    + 'Those catalog rows come from the "Anima Image Model" add-on; if they are missing, enable it under Settings > Extensions.';
 
   static attach(entry, dir, modelsDir) {
     if (ImportBases.QWEN_COMPANION_BASES.includes(entry.baseType)) return ImportCompanions.attachQwen(entry, dir, modelsDir);
@@ -21,21 +22,39 @@ class ImportCompanions {
     return null;
   }
 
+  static check(entry, dir, modelsDir) {
+    let found = null;
+    if (ImportBases.QWEN_COMPANION_BASES.includes(entry.baseType)) found = ImportCompanions._findQwen(entry, dir, modelsDir);
+    else if (entry.baseType === 'anima') found = ImportCompanions._findAnima(dir, modelsDir);
+    return found && found.error ? { error: found.error } : null;
+  }
+
   static attachQwen(entry, dir, modelsDir) {
-    const wantFamily = (entry && entry.family) || 'qwen-image-edit';
-    const sets = ImportCompanions._siblings(dir, modelsDir).filter((s) => s.fileOf('llm') && s.fileOf('vision') && s.fileOf('vae'));
-    const comp = sets.find((s) => s.family === wantFamily)
-      || (wantFamily === 'qwen-image-edit' ? sets.find((s) => !s.family) : null);
-    if (!comp) return { error: wantFamily === 'qwen-image-2' ? ImportCompanions.QWEN_21_MISSING : ImportCompanions.QWEN_EDIT_MISSING };
+    const { comp, error } = ImportCompanions._findQwen(entry, dir, modelsDir);
+    if (error) return { error };
     const visionFlag = (comp.files.vision && comp.files.vision.loaderFlag) || ImportCompanions.DEFAULT_VISION_FLAG;
     return ImportCompanions._link(entry, comp, dir, 'Qwen', [['vae'], ['llm'], ['vision', visionFlag]]);
   }
 
   static attachAnima(entry, dir, modelsDir) {
+    const { comp, error } = ImportCompanions._findAnima(dir, modelsDir);
+    if (error) return { error };
+    return ImportCompanions._link(entry, comp, dir, 'Anima', [['vae'], ['llm']]);
+  }
+
+  static _findQwen(entry, dir, modelsDir) {
+    const wantFamily = (entry && entry.family) || 'qwen-image-edit';
+    const sets = ImportCompanions._siblings(dir, modelsDir).filter((s) => s.fileOf('llm') && s.fileOf('vision') && s.fileOf('vae'));
+    const comp = sets.find((s) => s.family === wantFamily)
+      || (wantFamily === 'qwen-image-edit' ? sets.find((s) => !s.family) : null);
+    if (!comp) return { error: wantFamily === 'qwen-image-2' ? ImportCompanions.QWEN_21_MISSING : ImportCompanions.QWEN_EDIT_MISSING };
+    return { comp };
+  }
+
+  static _findAnima(dir, modelsDir) {
     const comp = ImportCompanions._siblings(dir, modelsDir)
       .find((s) => (s.family === 'anima' || s.id === 'anima') && s.fileOf('vae') && s.fileOf('llm'));
-    if (!comp) return { error: ImportCompanions.ANIMA_MISSING };
-    return ImportCompanions._link(entry, comp, dir, 'Anima', [['vae'], ['llm']]);
+    return comp ? { comp } : { error: ImportCompanions.ANIMA_MISSING };
   }
 
   static _siblings(dir, modelsDir) {

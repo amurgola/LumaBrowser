@@ -3,16 +3,19 @@
 `extensions/roleplay-mode/world/CharacterProfile.js`
 
 A character's profile: the facts that keep them recognisable from scene to
-scene. Identity fields (summary, appearance, voice, tells) are fixed once set;
-growth fields (wants, hides, bonds) may be rewritten by consolidation as the
-story changes them. `summary` and `appearance` stay on the character row as
-`description` and `appearance` (the image pipeline reads them); the rest lives
-in `char.profile = { voice, wants, hides, tells: [], bonds: { user, <name> } }`.
+scene. Identity fields (summary, appearance, history, voice, tells) are fixed
+once set; growth fields (wants, hides, bonds) may be rewritten by consolidation
+as the story changes them. `summary` and `appearance` stay on the character row
+as `description` and `appearance` (the image pipeline reads them); the rest
+lives in `char.profile = { history, voice, wants, hides, tells: [], bonds: { user, <name> } }`.
+`history` is their past before the story (the casting call writes it, the
+setup's profile editor shows it as "Past"); bonds with other characters are
+written by the casting call and grown by the fold.
 
 ## Methods
 
-- `CharacterProfile.of(char)` the merged view `{ summary, appearance, voice,
-  wants, hides, tells, bonds }`, never null; `tells` accepts a list or an
+- `CharacterProfile.of(char)` the merged view `{ summary, appearance, history,
+  voice, wants, hides, tells, bonds }`, never null; `tells` accepts a list or an
   `"a; b"` string and is capped at `TELLS_MAX` (3); blank bond keys or values
   are dropped.
 - `CharacterProfile.isBlank(char)` true when voice, wants and tells are all

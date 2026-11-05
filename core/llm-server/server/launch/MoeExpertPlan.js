@@ -2,6 +2,7 @@ const MoeEstimator = require('../../models/MoeEstimator');
 const FullOffloadCost = require('./FullOffloadCost');
 const LaunchCostInput = require('./LaunchCostInput');
 const MoeLayerSplit = require('./MoeLayerSplit');
+const LayerFillSplit = require('./LayerFillSplit');
 const MoeGpuCachePlan = require('./MoeGpuCachePlan');
 
 class MoeExpertPlan {
@@ -45,8 +46,9 @@ class MoeExpertPlan {
     this.residentBytesAt = () => 0;
     this.nCpuMoe = 0;
     this.gpuExpertLayers = 0;
-    this.gpuCache = { enabled: false, bytes: 0, mib: 0, reason: null };
+    this.gpuCache = { enabled: false, bytes: 0, mib: 0, promptBatch: null, promptBufferBytes: 0, promptReserveBytes: 0, reason: null };
     this.stagingBytes = 0;
+    this.perCardHoldBytes = 0;
   }
 
   _resolveEngagement() {
@@ -76,12 +78,16 @@ class MoeExpertPlan {
       return;
     }
     this._resolveGpuCache(fillBudget, blocks);
+    this.perCardHoldBytes = this.stagingBytes + this.gpuCache.promptBufferBytes;
   }
 
   _resolveGpuCache(fillBudget, blocks) {
     const { overrides, flags, budget } = this._state;
+    const extraCards = Math.max(0, MoeGpuCachePlan._localCards(budget) - 1);
+    let cacheBudget = fillBudget - this.stagingBytes * extraCards;
+    if (extraCards > 0) cacheBudget = Math.min(cacheBudget, this._splitCapacity(blocks));
     this.gpuCache = MoeGpuCachePlan.resolve({
-      overrides, flags, budget, gguf: this._gguf, fillBudget,
+      overrides, flags, budget, gguf: this._gguf, fillBudget: cacheBudget,
       expertBytes: this.moeSplit.expertBytes,
       cpuExpertBytes: this.expertBytesRange(0, this.nCpuMoe),
       maxExpertSliceBytes: this._maxExpertSliceBytes(blocks),
@@ -89,6 +95,15 @@ class MoeExpertPlan {
     if (!this.gpuCache.enabled) return;
     this.gpuExpertLayers = 0;
     this.nCpuMoe = blocks;
+    this.gpuCache.singleCardBytes = Math.ceil(this.residentFullBytes + this.stagingBytes + this.gpuCache.promptBufferBytes
+      + MoeGpuCachePlan.floorBytesPerCard(this._gguf, this._maxExpertSliceBytes(blocks)));
+  }
+
+  _splitCapacity(blocks) {
+    const { budget, flags } = this._state;
+    const hold = this.stagingBytes + MoeGpuCachePlan.PROMPT_BATCH * MoeGpuCachePlan.PROMPT_TOKEN_BYTES;
+    const capacity = LayerFillSplit.budgetTotal(budget.perGpu, flags.flashAttn, hold) - this.residentFullBytes;
+    return Math.max(0, capacity - capacity / blocks);
   }
 
   _maxExpertSliceBytes(blocks) {
@@ -115,6 +130,7 @@ class MoeExpertPlan {
 
   _fillBudget() {
     const residentFull = FullOffloadCost.bytes(LaunchCostInput.build(this._state, this.moeSplit.residentBytes, false));
+    this.residentFullBytes = residentFull;
     this.stagingBytes = this._maxLayerExpertBytes(this._gguf.blockCount);
     const spare = this._state.budget.vramAvailableBytes - residentFull - this.stagingBytes;
     return spare > 0 ? spare * (this.moeExact ? MoeExpertPlan.FILL_SAFETY_EXACT : MoeExpertPlan.FILL_SAFETY) : 0;

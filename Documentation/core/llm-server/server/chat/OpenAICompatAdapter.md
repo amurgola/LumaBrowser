@@ -15,7 +15,7 @@ as NInfer whose catalog entry carries a request profile.
 - `chat(options)` throws `chat: messages is required` on a missing or empty
   `messages`, otherwise starts a streaming completion and returns `{ abort() }`.
   Options: `messages, temperature, maxTokens, tools, parallelToolCalls,
-  chatTemplateKwargs, reasoningBudget, samplerOverrides, familySamplerDefaults, onDelta,
+  chatTemplateKwargs, reasoningBudget, samplerOverrides, familySamplerDefaults, moeCacheBatch, onDelta,
   onReasoningDelta, onToolCallDelta, onDone, onError`.
   - `onDelta(text, frame)` gets answer text; `onReasoningDelta(text, frame)`
     gets `delta.reasoning_content`; `onToolCallDelta({ index, id, name, argsDelta })`

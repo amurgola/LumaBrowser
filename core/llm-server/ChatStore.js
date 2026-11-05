@@ -58,7 +58,7 @@ class ChatStore {
     updateMessage: `
       UPDATE llm_messages
       SET content = @content, reasoning = @reasoning, tokens_in = @tokens_in,
-          tokens_out = @tokens_out, error = @error, tool_calls = @tool_calls
+          tokens_out = @tokens_out, error = @error, tool_calls = @tool_calls, sent_content = @sent_content
       WHERE id = @id`,
     getMessage: 'SELECT * FROM llm_messages WHERE id = ?',
     listMessages: 'SELECT * FROM llm_messages WHERE conversation_id = ? ORDER BY created_at ASC, rowid ASC',
@@ -363,6 +363,7 @@ class ChatStore {
       variantGroup: row.variant_group || null,
       variantActive: row.variant_active == null ? true : !!row.variant_active,
       parentId: row.parent_id || null,
+      sentContent: row.sent_content || null,
       createdAt: row.created_at,
     };
   }
@@ -386,6 +387,7 @@ class ChatStore {
       tokens_out: pick('tokensOut', 'tokens_out'),
       error: pick('error', 'error'),
       tool_calls: patch.toolCalls !== undefined ? ChatStore._serializeToolCalls(patch.toolCalls) : existing.tool_calls,
+      sent_content: pick('sentContent', 'sent_content'),
     };
   }
 

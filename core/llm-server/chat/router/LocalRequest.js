@@ -1,6 +1,7 @@
 const MessageImages = require('./MessageImages');
 const FamilySampler = require('./FamilySampler');
 const RequestSettings = require('./RequestSettings');
+const RequestComplexity = require('../RequestComplexity');
 const RequestProfile = require('../../server/chat/RequestProfile');
 
 class LocalRequest {
@@ -75,6 +76,7 @@ class LocalRequest {
       chatTemplateKwargs: extra && extra.chatTemplateKwargs,
       reasoningBudget: extra && extra.reasoningBudget,
       maxTokens: RequestSettings.maxTokens(extra),
+      moeCacheBatch: RequestComplexity.moeCacheBatch(extra, tools),
       onDelta: (t) => {
         if (!firstToken) { firstToken = true; log.line(`first token after ${Date.now() - sentAt}ms`); }
         hooks.onDelta(t);

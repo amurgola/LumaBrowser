@@ -1,5 +1,6 @@
 const BalancedJson = require('../../../../shared/llm/BalancedJson');
 const HarmonyLeakedToolCallParser = require('../../HarmonyLeakedToolCallParser');
+const DsmlToolCallParser = require('./DsmlToolCallParser');
 const ToolJson = require('./ToolJson');
 const XmlToolCallParser = require('./XmlToolCallParser');
 
@@ -21,6 +22,8 @@ class LooseToolCallParser {
     if (xml.length) return xml;
     const oneXml = XmlToolCallParser.parseLast(s);
     if (oneXml) return [oneXml];
+    const dsml = DsmlToolCallParser.parseAll(s);
+    if (dsml.length) return dsml;
     return HarmonyLeakedToolCallParser.parseAll(s, BalancedJson.extractObject);
   }
 

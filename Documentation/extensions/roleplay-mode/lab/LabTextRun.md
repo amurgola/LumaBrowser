@@ -14,8 +14,11 @@ memory before the next line.
 - `new LabTextRun({ mode, complete, Harness, emit, ModeTurnMessages })`.
 - `run({ turns?, mockSideCalls?, judge?, scenario? })` ->
   `{ transcript: [{ turn, user, assistant, messageId, contextTokens }], data,
-  probe, prose, judge, error }`. With `mockSideCalls` a `LabHarness` with the
+  probe, cast, prose, judge, error }` (`cast` from [CastProbe](CastProbe.md)).
+  The narrator request carries the mode's `samplers` so a real run gets DRY
+  and XTC like a chat turn. With `mockSideCalls` a `LabHarness` with the
   scenario's canned replies is installed for the side calls and stepped aside
   (`active = false`) around each narrator call, which always runs for real.
   Emits `lab:text { phase: 'turn', turn, of, user, assistant }` per turn and
-  `lab:text { phase: 'done', probe, prose, judge, error }` at the end.
+  `lab:text { phase: 'done', probe, cast, prose, judge, error }` at the end.
+  From the terminal: `npm run rp:text` ([TextRunCli](../../../tools/roleplay/TextRunCli.md)).

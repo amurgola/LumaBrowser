@@ -20,8 +20,11 @@ off to `ParallelDownload` or `SequentialDownload`.
     `onVerify(readBytes, totalBytes)` during checksum hashing.
   - `parallel: 1` forces the sequential path.
   - `headers` extra request headers for the probe, every chunk and the
-    sequential stream; defaults to [HubAuth](HubAuth.md)`.headersFor(url)`, so
-    a Hub URL carries the token and any other host carries nothing.
+    sequential stream; defaults to [HubAuth](HubAuth.md)`.headersFor(url)`
+    merged with [CivitaiAuth](CivitaiAuth.md)`.headersFor(url)`, so a Hub URL
+    carries the HF token, a civitai.com URL the CivitAI key, and any other host
+    nothing (axios drops Authorization on a cross-host redirect, so CivitAI's
+    signed storage URL never sees the key).
   - `expectedSize` / `expectedSha256` what the listing promised (see
     [HfPinnedRepo](../../llm-server/models/HfPinnedRepo.md)). A served size
     that differs, or a served `X-Linked-Etag` digest that differs, is refused

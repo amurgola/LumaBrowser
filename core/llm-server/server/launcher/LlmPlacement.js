@@ -10,7 +10,7 @@ class LlmPlacement {
   place(ctx) {
     try {
       const probe = ctx.plan();
-      const need = probe.plan && probe.plan.modelEstimatedBytes;
+      const need = LlmPlacement.placementNeed(ctx, probe.plan);
       const placement = this._reserve(ctx, LlmPlacement.requestedBytes(ctx, need));
       ctx.cudaDevice = placement.cudaDevice;
       ctx.tensorSplit = placement.split || null;
@@ -35,6 +35,19 @@ class LlmPlacement {
       requiredBytes,
       settingsDb: ctx.settingsDb, diagnostics: ctx.diag,
     });
+  }
+
+  static placementNeed(ctx, plan) {
+    if (!plan) return undefined;
+    const single = Number(plan.moeCacheSingleCardBytes);
+    if (single > 0 && LlmPlacement._mixedCards(ctx.diag)) return single;
+    return plan.modelEstimatedBytes;
+  }
+
+  static _mixedCards(diag) {
+    let names = [];
+    try { names = CudaDeviceProbe.readDevices(diag).map((d) => String(d.name || '').trim().toLowerCase()); } catch (_) { return false; }
+    return names.length >= 2 && new Set(names).size > 1;
   }
 
   static requestedBytes(ctx, need) {

@@ -6,15 +6,19 @@ The fill-order `--tensor-split` for a plain multi-GPU layer split: fastest card 
 
 ## Methods
 
-- `LayerFillSplit.compute({ perGpu, gguf, contextSize, cacheTypeK, cacheTypeV, kvOnHost, swaFull, modelBytes, extraBytes = 0, flashAttnSupported, layersOnGpu })`
+- `LayerFillSplit.compute({ perGpu, gguf, contextSize, cacheTypeK, cacheTypeV, kvOnHost, swaFull, modelBytes, extraBytes = 0, perCardExtraBytes = 0, flashAttnSupported, layersOnGpu })`
   returns `{ ratio, perDevice: [{ index, name, layers, bytes, budgetBytes }] }` or `null`
   (incomplete input, fewer than two cards, or the layers do not pack).
   - card budget = `(GpuOverhead.cardRoom(card) - fixed overhead) x CARD_SAFETY (0.95)`: read live, total less
     what already occupies the card less the GPU headroom; cached, `total - max(headroom, already-resident bytes)`,
-    less `extraBytes` (projector, draft branch) on device 0, llama.cpp's main GPU;
+    less `extraBytes` (projector, draft branch) on device 0, llama.cpp's main GPU, less
+    `perCardExtraBytes` (an expert offload's staged expert tensor and prompt activations,
+    [MoeExpertPlan](MoeExpertPlan.md)`.perCardHoldBytes`) on every card;
   - layer cost = `modelBytes / blocks` + [KvCacheSizer](KvCacheSizer.md)`.atLayer`;
   - packs the last `layersOnGpu` blocks contiguously in device order; a device with
     faster cards after it takes layers only while those cannot hold the rest.
+- `LayerFillSplit.budgetTotal(perGpu, flashAttnSupported, perCardExtraBytes = 0)`: the sum of those
+  card budgets, what a split can place; the expert plan caps a two-card cache at it.
 - `LayerFillSplit.describe(layerFill)`: `<name> takes N layers ≈ X of Y budget, ...` for notes.
 
 ## Why

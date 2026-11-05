@@ -58,7 +58,7 @@ class RemoteImageRun extends ImageRun {
     this._notify(`${this.doneLabel} in ${(ms / 1000).toFixed(1)}s (remote)`, 'success');
     const images = (result && result.images) || [];
     this._send('done', { images, modelId: (result && result.modelId) || null });
-    this._finish({ success: true, images: images.map(RemoteImageRun._toLocalShape) });
+    this._finish({ success: true, images: images.map(RemoteImageRun._toLocalShape), modelId: (result && result.modelId) || null });
   }
 
   static _toLocalShape(img) {

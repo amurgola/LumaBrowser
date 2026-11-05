@@ -11,9 +11,19 @@ class ModelWizard {
   }
 
   async hardware(diagOut) {
-    const diag = await this._gather({ savedNvidiaSmiPath: this._svc.getSavedNvidiaSmiPath() });
+    const diag = await this._diagnostics();
     if (diagOut) diagOut.diag = diag;
     return HwBudget.build(diag, { cudaRuntimePreference: (cudaVersion) => this._catalog.cudaRuntimePreference(cudaVersion) });
+  }
+
+  async _diagnostics() {
+    if (typeof this._svc.ensureDiagnostics === 'function') {
+      try {
+        const cached = await this._svc.ensureDiagnostics();
+        if (cached && typeof cached === 'object') return cached;
+      } catch (_) {}
+    }
+    return this._gather({ savedNvidiaSmiPath: this._svc.getSavedNvidiaSmiPath() });
   }
 
   async recommend(answers) {

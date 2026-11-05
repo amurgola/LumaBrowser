@@ -18,6 +18,15 @@ class StageReconciler {
       delta.changed = true;
     }
     if (ex.chronicle) StageReconciler._chronicle(data, ex.chronicle, delta, turn);
+    if (ex.currentState) StageReconciler._reveals(data, ex.currentState, delta, turn);
+  }
+
+  static _reveals(data, state, delta, turn) {
+    for (const sc of state.characters || []) {
+      if (!sc || !sc.revealed) continue;
+      const char = CastResolver.byName(data, sc.name);
+      if (char && StageReconciler._secretOut(data, char, turn)) delta.changed = true;
+    }
   }
 
   static _characters(data, newChars, delta) {
@@ -129,13 +138,46 @@ class StageReconciler {
     if (chronicle.clock && StoryLedger.advanceClock(data, chronicle.clock)) delta.changed = true;
     if (chronicle.threads && StoryLedger.threads(data, chronicle.threads, turn.turn)) delta.changed = true;
     for (const e of chronicle.events || []) {
-      if (e.kind !== 'death') continue;
-      for (const name of e.who || []) {
-        const char = CastResolver.byName(data, name);
-        if (char && CharacterState.depart(char, { turn: turn.turn, sceneId: data.activeSceneId, note: 'dead: ' + e.text })) delta.changed = true;
+      if (e.kind === 'death') {
+        for (const name of e.who || []) {
+          const char = CastResolver.byName(data, name);
+          if (char && CharacterState.depart(char, { turn: turn.turn, sceneId: data.activeSceneId, note: 'dead: ' + e.text })) delta.changed = true;
+        }
+      } else if (e.kind === 'reveal') {
+        for (const name of e.who || []) {
+          const char = CastResolver.byName(data, name);
+          if (char && StageReconciler.tellsSecret(CharacterProfile.of(char).hides, e.text) && StageReconciler._secretOut(data, char, turn, false)) delta.changed = true;
+        }
       }
     }
   }
+
+  static _secretOut(data, char, turn, record = true) {
+    const hides = CharacterProfile.of(char).hides;
+    if (!hides) return false;
+    CharacterProfile.apply(char, { hides: '' }, { growthOnly: true });
+    if (record) {
+      const rows = StoryLedger.of(data).ledger.filter((r) => r.turn === turn.turn && r.kind === 'reveal' && (r.who || []).includes(char.name));
+      if (!rows.length) {
+        StoryLedger.record(data, [{ kind: 'reveal', text: char.name + '\'s secret came out: ' + hides, who: [char.name] }], turn);
+      }
+    }
+    return true;
+  }
+
+  static tellsSecret(hides, text) {
+    const words = (s) => new Set(String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/)
+      .filter((w) => w.length >= 4 && !StageReconciler.STOP.has(w)));
+    const a = words(hides);
+    if (!a.size) return false;
+    let shared = 0;
+    for (const w of words(text)) if (a.has(w)) shared += 1;
+    return shared >= Math.min(2, a.size);
+  }
+
+  static STOP = new Set(['that', 'this', 'with', 'from', 'they', 'them', 'their', 'have', 'been', 'were', 'what', 'when',
+    'where', 'will', 'would', 'about', 'into', 'than', 'then', 'there', 'here', 'them', 'some', 'only', 'also', 'just',
+    'does', 'player', 'himself', 'herself', 'itself', 'themselves', 'because', 'before', 'after', 'while', 'really']);
 }
 
 module.exports = StageReconciler;

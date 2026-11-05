@@ -79,6 +79,22 @@ class GroupRouterService {
     try { await this.ramPin.stop(); } catch (_) {}
   }
 
+  releaseRuntime(runtimeId) {
+    this._chain = this._chain.then(() => this._releaseOnce(runtimeId)).catch((err) => {
+      this.lastError = (err && err.message) || String(err);
+      console.warn('[group-router] release failed:', this.lastError);
+      return false;
+    });
+    return this._chain;
+  }
+
+  async _releaseOnce(runtimeId) {
+    if (!runtimeId || this.runtimeId !== runtimeId) return false;
+    if (this.runtimeServer.getStatus().state === 'idle') return false;
+    await this.runtimeServer.stop();
+    return true;
+  }
+
   async classify(message, { timeoutMs = GroupRouterService.DEFAULT_TIMEOUT_MS } = {}) {
     if (!this.isEnabled() || !this.isReady()) return null;
     const t0 = Date.now();

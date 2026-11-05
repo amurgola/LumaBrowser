@@ -33,6 +33,10 @@ the chat agent which lazy tool groups a message needs before the main model runs
 - `classify(message, { timeoutMs = 1500 })` the group keys (`[]` for none), or
   null when disabled, not ready, slow or failed. Records `lastLatencyMs`.
 - `stop()` stops server and pin, ignoring errors (quit path).
+- `releaseRuntime(runtimeId)` stops the server while it runs from that runtime
+  (same `runtimeId`, state not idle) and resolves whether it did; false for
+  another runtime, an empty id or an idle server. Serialized behind `apply()`,
+  never rejects. The pin stays and the next `apply()` starts the router again.
 - `DEFAULT_TIMEOUT_MS` 1500, `PRIME_TIMEOUT_MS` 10000.
 
 ## Start

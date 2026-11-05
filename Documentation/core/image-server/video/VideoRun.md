@@ -17,7 +17,7 @@ forwards progress and base64 previews, aborts.
 - Done: `markActive()`, a COLD / warm console line with frames, fps and encoder,
   `Video generated in <s>s`, then `done { video: { b64, mime (default
   video/webm), frameCount, fps, width, height, encoder }, modelId }`; resolves
-  `{ success: true, video }` with the adapter's raw video.
+  `{ success: true, video, modelId }` with the adapter's raw video.
 - A result without `video.bytes` sends `error { message: 'video encode produced no
   output.' }`, notifies `Video generation failed: no output.` and resolves that error.
 

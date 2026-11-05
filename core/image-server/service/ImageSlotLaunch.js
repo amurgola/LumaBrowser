@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const CudaPin = require('../../shared/runtime/CudaPin');
 const ClipPlacement = require('../server/ClipPlacement');
+const ImageLaunchPlanner = require('../server/ImageLaunchPlanner');
 const ImageSlotRoles = require('./ImageSlotRoles');
 const ImageSlotPlacement = require('./ImageSlotPlacement');
 const ImageLaunchInputs = require('./ImageLaunchInputs');
@@ -9,7 +10,6 @@ const ImageLaunchLog = require('./ImageLaunchLog');
 const PreferredImageRuntime = require('./PreferredImageRuntime');
 const SageAttentionPolicy = require('./SageAttentionPolicy');
 const VaeTilingPolicy = require('./VaeTilingPolicy');
-const UserGpuPin = require('./UserGpuPin');
 
 class ImageSlotLaunch {
   static LORA_DIR = 'loras';
@@ -99,6 +99,10 @@ class ImageSlotLaunch {
     this._vaeTiling = VaeTilingPolicy.decide({ model: this._model, profile: this._profile, offloadToCpu, cudaDevice, diagnostics: this._diag });
     this._clip = this._decideTextEncoders();
     this._sage = await this._decideSageAttention(cudaDevice);
+    const [eagerLoad, tileSize] = await Promise.all([
+      this._supportsFlag(ImageLaunchPlanner.EAGER_LOAD_FLAG),
+      this._vaeTiling ? this._supportsFlag(ImageLaunchPlanner.VAE_TILE_SIZE_FLAG) : false,
+    ]);
     const launch = this._deps.launchPlanner.plan({
       model: this._model,
       runtime: this._runtime,
@@ -112,11 +116,17 @@ class ImageSlotLaunch {
         autoFit,
         clipOnCpu: this._clip.clipOnCpu,
         sageAttention: this._sage.sageAttention,
+        eagerLoad,
+        vaeTileSize: tileSize ? VaeTilingPolicy.TILE_SIZE : null,
         autoFitForm: autoFit ? await this._deps.capabilities.autoFitFlagForm(this._runtime.binaryPath) : undefined,
       },
     });
     launch.cudaDevice = cudaDevice;
     return launch;
+  }
+
+  _supportsFlag(flag) {
+    return this._deps.capabilities.supportsFlag(this._runtime.binaryPath, flag);
   }
 
   _decideSageAttention(cudaDevice) {
@@ -132,15 +142,7 @@ class ImageSlotLaunch {
 
   _decideTextEncoders() {
     const { cudaDevice, offloadToCpu, autoFit } = this._placement;
-    return ClipPlacement.decide({
-      model: this._model,
-      cudaDevice,
-      offloadToCpu,
-      autoFit: !!autoFit,
-      requiredBytes: this._requiredBytes,
-      devices: this._deps.vramCoordinator.debitedDevices(this._diag, { excludeServerId: this._role }),
-      userPinned: UserGpuPin.isPinnedToGpu(this._service.settingsDb, this._role),
-    });
+    return ClipPlacement.decide({ model: this._model, cudaDevice, offloadToCpu, autoFit: !!autoFit, cpuOnly: this._cpuOnly });
   }
 
   _logLaunch() {

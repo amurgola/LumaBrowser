@@ -11,19 +11,21 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
   returns `{ binaryPath, args, plan }`.
   - `plan = { port (publicPort when given, else port), privatePort, modelId,
     runtimeId, offloadToCpu, autoFit, vaeTiling, flashAttention, sageAttention,
-    files: { role: basename } }`.
+    eagerLoad, vaeTileSize (the emitted value or null), files: { role: basename } }`.
   - Throws `ImageLaunchPlanner: model is required`, `runtime is required`,
     `runtime has no binaryPath`, `port is required` (must be a number),
     `model.files.diffusion.path is required`.
   - `overrides`: `offloadToCpu`, `autoFit` (true or a `--max-vram` budget
     string), `autoFitForm` ('bare' for pre-on|off builds), `vaeTiling`,
+    `vaeTileSize` (pixels, emitted only with `vaeTiling`), `eagerLoad`,
     `loraDir`, `clipOnCpu` (false drops the catalog's `--clip-on-cpu`),
     `sageAttention` (decided by [SageAttentionPolicy](../service/SageAttentionPolicy.md)).
 - `ImageLaunchPlanner.inferLoaderFlag(filePath)` is `--diffusion-model` for
   `.gguf`, else `-m`.
 - `ImageLaunchPlanner.preferSdServer(binaryPath)` keeps an `sd-server*` path,
   otherwise returns the `sd-server[.exe]` sibling.
-- Statics: `GIB`, `HOST`, `FILE_ROLE_FLAGS`, `PERFORMANCE_FLAGS`, `SAGE_ATTENTION_FLAG`.
+- Statics: `GIB`, `HOST`, `FILE_ROLE_FLAGS`, `PERFORMANCE_FLAGS`, `SAGE_ATTENTION_FLAG`,
+  `EAGER_LOAD_FLAG`, `VAE_TILE_SIZE_FLAG`.
 
 ## Argv order
 
@@ -32,8 +34,9 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
    `--tokenizer`, `--clip_l`, `--t5xxl`, `--llm_vision`*, `--clip_vision`* (* the role's own
    `loaderFlag` wins).
 3. `--diffusion-fa --diffusion-conv-direct --vae-conv-direct` unless the runtime
-   lists them in `unsupportedFlags`, then `--sage-attn` (override, same check).
-4. `--vae-tiling` (override), `--lora-model-dir <dir>` (override).
+   lists them in `unsupportedFlags`, then `--eager-load` (override, same check),
+   then `--sage-attn` (override, same check).
+4. `--vae-tiling [--vae-tile-size <px>]` (overrides), `--lora-model-dir <dir>` (override).
 5. `--auto-fit on [--max-vram <budget>]`, or `--offload-to-cpu`, never both.
 6. The model's `launchArgs`, then the runtime's `extraArgs` (last, so they win).
 
@@ -56,6 +59,12 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
   4.5 s on an RTX 5090, 2026-10-22).
 - VAE tiling keeps an edit model's reference encode small (un-tiled wan_vae is
   7 to 8 GB, the "failed to encode reference image 0" OOM), so it stays resident.
+  sd-server's default 256 px tiles turn a 1 MP Qwen-Image decode from 0.7 s into
+  8.3 s per request (49 tiles, measured 2026-11-04); the 1024 px tile from
+  [VaeTilingPolicy](../service/VaeTilingPolicy.md) is one tile at 1 MP, so the
+  cap only bites on larger images.
+- `--eager-load` moves the lazy per-module tensor loads (4.5 s inside the first
+  request on a Qwen-Image 2.1 edit) to launch time, before the slot reports ready.
 - The LoRA folder backs each request's structured `lora` list; prompt `<lora:>`
   tags are ignored by the server APIs.
 - Auto-fit spreads modules across GPUs from real tensor sizes (how MiniMax-H3's

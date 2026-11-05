@@ -49,10 +49,18 @@ export default class ModelSearchDownload {
   _onModelEvent(event) {
     if (!event || !this._search.state) return;
     const payload = event.payload;
-    if (event.type === 'resume') this._sub.textContent = 'Resuming…';
+    if (event.type === 'resume') this._sub.textContent = this._partLabel + 'Resuming…';
     else if (event.type === 'part' && payload) this._onPart(payload);
     else if (event.type === 'companion-start' && payload) this._onCompanion(payload);
     else if (event.type === 'download' && payload) this._onProgress(payload);
+    else if (event.type === 'verify' && payload) this._onVerify(payload);
+  }
+
+  _onVerify({ read, total }) {
+    const fraction = total ? read / total : null;
+    if (this._bar) this._bar.classList.toggle('indeterminate', fraction == null);
+    if (fraction != null) this._fill.style.width = Math.max(0, Math.min(1, fraction)) * 100 + '%';
+    this._sub.textContent = this._prefix() + 'Verifying ' + ByteFormatter.gb(read) + (total ? ' / ' + ByteFormatter.gb(total) : '');
   }
 
   _onPart(payload) {
@@ -70,10 +78,13 @@ export default class ModelSearchDownload {
     const fraction = total ? received / total : null;
     if (this._bar) this._bar.classList.toggle('indeterminate', fraction == null);
     if (fraction != null) this._fill.style.width = Math.max(0, Math.min(1, fraction)) * 100 + '%';
-    const prefix = this._companionLabel
+    this._sub.textContent = this._prefix() + ByteFormatter.gb(received) + (total ? ' / ' + ByteFormatter.gb(total) : ' downloaded');
+  }
+
+  _prefix() {
+    return this._companionLabel
       ? this._companionLabel.charAt(0).toUpperCase() + this._companionLabel.slice(1) + ' · '
       : this._partLabel;
-    this._sub.textContent = prefix + ByteFormatter.gb(received) + (total ? ' / ' + ByteFormatter.gb(total) : ' downloaded');
   }
 
   async _request(sel) {

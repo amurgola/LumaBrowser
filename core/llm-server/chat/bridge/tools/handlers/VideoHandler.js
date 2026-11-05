@@ -2,6 +2,7 @@ const ArtifactId = require('../artifacts/ArtifactId');
 const MediaProgressSink = require('../media/MediaProgressSink');
 const MediaRenderOutcome = require('../media/MediaRenderOutcome');
 const MediaTitle = require('../media/MediaTitle');
+const MediaRenderInfo = require('../media/MediaRenderInfo');
 const BridgeGlobals = require('../../BridgeGlobals');
 const ChatToolHandler = require('./ChatToolHandler');
 
@@ -29,7 +30,8 @@ class VideoHandler extends ChatToolHandler {
     }
     const failure = MediaRenderOutcome.failureOf(result, sink, ctx.isAborted, tool, MediaRenderOutcome.video(tool));
     if (failure) return failure;
-    return VideoHandler._persist(result.video, MediaTitle.from(params, prompt), ctx);
+    const render = MediaRenderInfo.from({ tool, prompt, media: result.video, result });
+    return VideoHandler._persist(result.video, MediaTitle.from(params, prompt), ctx, render);
   }
 
   static _frames(params, artifactStore) {
@@ -49,7 +51,7 @@ class VideoHandler extends ChatToolHandler {
     return params && Number(params.durationSec) > 0 ? Number(params.durationSec) : null;
   }
 
-  static _persist(video, title, ctx) {
+  static _persist(video, title, ctx, render = null) {
     let artifact;
     try {
       artifact = ctx.deps.artifactStore.create({
@@ -63,7 +65,7 @@ class VideoHandler extends ChatToolHandler {
     } catch (err) {
       return { success: false, error: `Could not persist video artifact: ${err.message}` };
     }
-    ChatToolHandler.publish(ctx, artifact);
+    ChatToolHandler.publish(ctx, MediaRenderInfo.attach(artifact, render));
     return {
       success: true,
       artifact,

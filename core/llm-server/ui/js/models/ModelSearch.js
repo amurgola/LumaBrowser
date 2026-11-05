@@ -3,12 +3,14 @@ import Dom from '../dom/Dom.js';
 import HostPlatform from '../wizard/HostPlatform.js';
 import ModelSearchDetail from './ModelSearchDetail.js';
 import ModelSearchDownload from './ModelSearchDownload.js';
-import SearchText from './SearchText.js';
+import ModelSearchRow from './ModelSearchRow.js';
 
 export default class ModelSearch {
   static DEBOUNCE_MS = 200;
 
   static RESULT_LIMIT = 30;
+
+  static DEFAULT_SORT = 'trending';
 
   static EMPTY_DETAIL = '<div class="ms-detail ms-empty-detail">'
     + 'Search for a model on the left, then pick one to see its card and download a quant.</div>';
@@ -23,6 +25,7 @@ export default class ModelSearch {
     this._searchSeq = 0;
     this._expandSeq = 0;
     this._offModelEvent = null;
+    this._repoLoads = new Map();
     this._detail = new ModelSearchDetail(this);
     this._onKeydown = (event) => this._handleKeydown(event);
   }
@@ -33,7 +36,8 @@ export default class ModelSearch {
 
   open() {
     if (!this.overlay) this._build();
-    this.state = { sort: 'downloads', mlx: false, results: [], selectedRepo: null, sel: null, downloading: false };
+    this.state = { sort: ModelSearch.DEFAULT_SORT, mlx: false, fit: true, results: [], selectedRepo: null, sel: null, downloading: false };
+    this._repoLoads.clear();
     this.overlay.hidden = false;
     this._resetControls();
     const input = this.overlay.querySelector('.ms-search-in');
@@ -67,9 +71,11 @@ export default class ModelSearch {
     this.overlay.addEventListener('click', (event) => { if (event.target === this.overlay) this.close(); });
     this.overlay.querySelector('.ms-search-in').addEventListener('input', () => this._debounceSearch());
     this.overlay.querySelector('.ms-sort').addEventListener('change', (event) => this._onSort(event.target.value));
+    this.overlay.querySelector('.ms-fit').addEventListener('change', (event) => this._onFit(event.target.checked));
     const mlx = this.overlay.querySelector('.ms-mlx');
     if (mlx) mlx.addEventListener('change', (event) => this._onMlx(event.target.checked));
     this.overlay.addEventListener('click', (event) => this._onOverlayClick(event));
+    this.overlay.addEventListener('mouseover', (event) => this._onOverlayHover(event));
     document.body.appendChild(this.overlay);
   }
 
@@ -77,7 +83,8 @@ export default class ModelSearch {
     document.removeEventListener('keydown', this._onKeydown);
     document.addEventListener('keydown', this._onKeydown);
     this.overlay.querySelector('.ms-search-in').value = '';
-    this.overlay.querySelector('.ms-sort').value = 'downloads';
+    this.overlay.querySelector('.ms-sort').value = ModelSearch.DEFAULT_SORT;
+    this.overlay.querySelector('.ms-fit').checked = true;
     const mlx = this.overlay.querySelector('.ms-mlx');
     if (mlx) mlx.checked = false;
     this._setSubtitle();
@@ -95,6 +102,11 @@ export default class ModelSearch {
 
   _onSort(sort) {
     this.state.sort = sort;
+    this._runSearch();
+  }
+
+  _onFit(checked) {
+    this.state.fit = checked;
     this._runSearch();
   }
 
@@ -116,7 +128,9 @@ export default class ModelSearch {
     const status = this.overlay.querySelector('.ms-status');
     status.textContent = 'Searching…';
     let result;
-    try { result = await this.api().searchModels({ query, sort: this.state.sort, limit: ModelSearch.RESULT_LIMIT, mlx: this.state.mlx }); } catch (err) { result = { success: false, error: err.message }; }
+    try {
+      result = await this.api().searchModels({ query, sort: this.state.sort, limit: ModelSearch.RESULT_LIMIT, mlx: this.state.mlx, fit: this.state.fit });
+    } catch (err) { result = { success: false, error: err.message }; }
     if (!this.state || seq !== this._searchSeq) return;
     this._paintResults(result, query, status);
   }
@@ -129,21 +143,16 @@ export default class ModelSearch {
       return;
     }
     this.state.results = result.results || [];
-    status.textContent = this.state.results.length
-      ? this.state.results.length + (query ? ' matches' : ' models')
-      : 'No matches.';
+    status.innerHTML = ModelSearchRow.statusHtml(this.state.results.length, query, result.hidden);
     resultsEl.innerHTML = '';
     for (const model of this.state.results) resultsEl.appendChild(this._resultRow(model));
   }
 
   _resultRow(model) {
-    const esc = HtmlEscaper.escapeKeepingApostrophes;
     const row = Dom.el('button', 'ms-row' + (this.state.selectedRepo === model.repoId ? ' sel' : ''));
     row.type = 'button';
     row.dataset.repo = model.repoId;
-    row.innerHTML = '<div class="ms-row-id">' + esc(model.repoId) + (model.gated ? ' <span class="ms-gated">gated</span>' : '') + '</div>'
-      + '<div class="ms-row-stats"><span>↓ ' + esc(SearchText.count(model.downloads)) + '</span>'
-      + '<span>♥ ' + esc(SearchText.count(model.likes)) + '</span></div>';
+    row.innerHTML = ModelSearchRow.html(model);
     return row;
   }
 
@@ -166,11 +175,24 @@ export default class ModelSearch {
   }
 
   _loadRepo(repoId) {
-    const api = this.api();
-    return Promise.all([
-      api.expandModelRepo(repoId, { mlx: this.state.mlx }).catch((err) => ({ success: false, error: err.message })),
-      api.getModelReadme(repoId).catch(() => ({ success: false })),
-    ]);
+    const key = (this.state.mlx ? 'mlx:' : 'gguf:') + repoId;
+    let load = this._repoLoads.get(key);
+    if (!load) {
+      const api = this.api();
+      load = Promise.all([
+        api.expandModelRepo(repoId, { mlx: this.state.mlx }).catch((err) => ({ success: false, error: err.message })),
+        api.getModelReadme(repoId).catch(() => ({ success: false })),
+      ]);
+      this._repoLoads.set(key, load);
+      load.then(([expanded]) => { if (!expanded || !expanded.success) this._repoLoads.delete(key); });
+    }
+    return load;
+  }
+
+  _onOverlayHover(event) {
+    if (!this.state) return;
+    const row = event.target.closest && event.target.closest('.ms-row');
+    if (row && row.dataset.repo) this._loadRepo(row.dataset.repo);
   }
 
   _onOverlayClick(event) {
@@ -199,10 +221,15 @@ export default class ModelSearch {
       + '<div class="ms-search-bar">'
       + '<input class="ms-search-in" type="text" placeholder="Search models…" autocomplete="off" spellcheck="false" />'
       + '<select class="ms-sort" title="Order results by">'
+      + '<option value="trending">Trending</option>'
       + '<option value="downloads">Most downloaded</option>'
       + '<option value="likes">Most liked</option>'
       + '<option value="lastModified">Recently updated</option>'
       + '</select>'
+      + '</div>'
+      + '<div class="ms-search-bar ms-toggles">'
+      + '<label class="ms-mlx-toggle ms-fit-toggle" title="Hide models whose Q4 quant would not fit the GPU or RAM of this PC">'
+      + '<input type="checkbox" class="ms-fit" checked /> Fits this PC</label>'
       + (this._isMac
         ? '<label class="ms-mlx-toggle" title="Search Apple MLX models (runs on the Apple Silicon GPU) instead of GGUF">'
           + '<input type="checkbox" class="ms-mlx" /> MLX</label>'

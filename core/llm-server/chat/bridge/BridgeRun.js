@@ -13,6 +13,7 @@ const RunToolCallParser = require('./parsing/RunToolCallParser');
 const ArtifactCatalog = require('./prompt/ArtifactCatalog');
 const EditRegionIndex = require('./prompt/EditRegionIndex');
 const ImagePromptHint = require('./prompt/ImagePromptHint');
+const ManualDelivery = require('./prompt/ManualDelivery');
 const SystemPromptAppend = require('./prompt/SystemPromptAppend');
 const TurnPrompt = require('./prompt/TurnPrompt');
 const VisionHint = require('./prompt/VisionHint');
@@ -44,7 +45,7 @@ class BridgeRun {
     extraTools: null, llmExtra: null, noBrowser: false, ctxPerSlot: null, kbScope: null, allowTakeover: false,
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
     approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null,
-    approvedTools: null, onRunApproval: null, onRunApprovalUsed: null,
+    approvedTools: null, onRunApproval: null, onRunApprovalUsed: null, userMessageId: null,
   };
 
   constructor(host, options) {
@@ -69,7 +70,7 @@ class BridgeRun {
       router: this._router, deps: o.deps, modelRef: o.modelRef, allowedTools: o.allowedTools, extraTools: o.extraTools,
       refreshAllowedTools: o.refreshAllowedTools, kbScope: o.kbScope, conversationId: o.conversationId,
     });
-    this._nativePlan = NativeToolPlan.forRun({ router: this._router, modelRef: o.modelRef, override: o.nativeToolsOverride });
+    this._nativePlan = NativeToolPlan.forRun({ router: this._router, modelRef: o.modelRef, override: o.nativeToolsOverride, ctxPerSlot: o.ctxPerSlot });
     this._budget = AgentBudget.resolve(o.agentBudget, { nativeTools: this._nativePlan.enabled });
     this._health = new RunHealth();
     this._parser = new RunToolCallParser({ health: this._health, maxMalformedReprompts: AgentBudget.maxMalformedReprompts(this._budget) });
@@ -137,6 +138,7 @@ class BridgeRun {
       parallel: this._budget.maxParallelToolCalls > 1, control: this.control, mirror: this._mirror,
       reasoning: new ReasoningRelay(this._hooks), images: this._images, health: this._health,
       replyCap: new ReplyCap(o.ctxPerSlot), parser: this._parser, nativePlan: this._nativePlan, toolSet: this._toolSet,
+      onFirstSend: (text) => this._onFirstSend(text),
     });
     this._relay = new AgentEventRelay({
       hooks: this._hooks, mirror: this._mirror, trace: this._trace, images: this._images,
@@ -157,7 +159,7 @@ class BridgeRun {
 
   _prepareTurn() {
     const o = this._o;
-    this._turn = TurnPrompt.from(o.messages, { nativeHistory: o.nativeHistory });
+    this._turn = TurnPrompt.from(o.messages, { nativeHistory: o.nativeHistory, sentForms: o.priorMessages });
     this._toolSet.groups.activate(GroupIntent.infer(this._turn.prompt, this._toolSet.groups.availableKeys));
     this._catalog = ArtifactCatalog.collect(o.priorMessages);
     this._visionHint = VisionHint.forTurn(this._images.count, this._toolSet.visionActive);
@@ -179,11 +181,16 @@ class BridgeRun {
 
   async _runAgent(preview) {
     const o = this._o;
-    await new GroupRouting(this._router).route(this._turn.prompt, (keys) => this._toolSet.groups.activate(keys));
+    const groups = this._toolSet.groups;
+    await new GroupRouting(this._router).route(this._turn.prompt, (keys) => groups.activate(keys));
+    groups.freezePromptKeys();
+    this._pendingManuals = groups.pendingManualKeys();
     const systemPromptAppend = await this._systemPromptAppend();
     const tools = this._toolSet.runToolList({ allowTakeover: o.allowTakeover });
     return this._agent.run({
-      prompt: ArtifactCatalog.render(this._catalog) + this._turn.body(),
+      prompt: ArtifactCatalog.render(this._catalog)
+        + ManualDelivery.render(groups, this._pendingManuals, { nativeTools: this._nativePlan.enabled })
+        + this._turn.body(),
       priorTurns: this._turn.priorTurns,
       resultSpill: RunResultSpill.create(this._router, o.conversationId, o.assistantMessageId),
       conversationId: o.conversationId,
@@ -223,12 +230,20 @@ class BridgeRun {
       groups: groups.available,
       visionHint: this._visionHint,
       modeSystemPrompt: o.modeSystemPrompt,
-      activeGroups: groups.active,
+      activeGroups: groups.promptKeys,
       imagePromptHint,
       takeover: o.allowTakeover,
       nativeTools: this._nativePlan.enabled,
       nativeExclude: this._nativePlan.exclude,
     });
+  }
+
+  _onFirstSend(text) {
+    const o = this._o;
+    this._toolSet.groups.markDelivered(this._pendingManuals || []);
+    const store = this._router && this._router.chatStore;
+    if (!store || !o.userMessageId || typeof store.updateMessage !== 'function') return;
+    try { store.updateMessage(o.userMessageId, { sentContent: text }); } catch (_) {}
   }
 
   _onToolResultEvicted({ tool, params }) {

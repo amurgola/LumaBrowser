@@ -32,7 +32,7 @@ class OpenAICompatAdapter extends ChatAdapter {
     return { abort: () => stream.abort() };
   }
 
-  _buildBody({ messages, temperature, maxTokens, tools, parallelToolCalls, chatTemplateKwargs, reasoningBudget, samplerOverrides, familySamplerDefaults }) {
+  _buildBody({ messages, temperature, maxTokens, tools, parallelToolCalls, chatTemplateKwargs, reasoningBudget, samplerOverrides, familySamplerDefaults, moeCacheBatch }) {
     const body = OpenAiChatBody.build({
       messages,
       stream: true,
@@ -45,6 +45,7 @@ class OpenAICompatAdapter extends ChatAdapter {
       samplerOverrides,
       chatTemplateKwargs,
       reasoningBudget,
+      moeCacheBatch,
     });
     if (this.model) body.model = this.model;
     return RequestProfile.apply(body, this.request);

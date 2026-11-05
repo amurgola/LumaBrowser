@@ -42,7 +42,17 @@ class LocalImageRun extends ImageRun {
     this._notify(`${this.doneLabel} in ${(ms / 1000).toFixed(1)}s`, 'success');
     const images = (result && result.images) || [];
     this._send('done', { images: images.map(LocalImageRun._toWire), modelId: this._wantId });
-    this._finish({ success: true, images });
+    this._finish({ success: true, images, modelId: this._wantId, settings: LocalImageRun._settings(this._plan.params) });
+  }
+
+  static _settings(p) {
+    const params = p || {};
+    return {
+      steps: params.steps != null ? params.steps : null,
+      cfgScale: params.cfgScale != null ? params.cfgScale : null,
+      sampler: params.sampler || null,
+      scheduler: params.scheduler || null,
+    };
   }
 
   _log(ms) {

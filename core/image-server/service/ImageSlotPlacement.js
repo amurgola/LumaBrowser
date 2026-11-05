@@ -1,4 +1,5 @@
 const ImageSlotRoles = require('./ImageSlotRoles');
+const UserGpuPin = require('./UserGpuPin');
 const CudaDevicePicker = require('../../shared/runtime/CudaDevicePicker');
 const CudaDeviceProbe = require('../../shared/runtime/CudaDeviceProbe');
 
@@ -8,6 +9,8 @@ class ImageSlotPlacement {
   static PAD_BYTES = 2 * ImageSlotPlacement.GB;
   static FALLBACK_BYTES = { video: 16 * ImageSlotPlacement.GB, edit: 12 * ImageSlotPlacement.GB, generate: 8 * ImageSlotPlacement.GB };
   static AUTO_FIT_FLAG = '--auto-fit';
+  static MAX_VRAM_FLAG = '--max-vram';
+  static MIN_SHARED_BUDGET_BYTES = 8 * ImageSlotPlacement.GB;
 
   constructor({ vramCoordinator, capabilities, gpuReady = () => CudaDeviceProbe.whenReady(ImageSlotPlacement.GPU_READY_MS) }) {
     this._vram = vramCoordinator;
@@ -38,8 +41,28 @@ class ImageSlotPlacement {
     await this._gpuReady();
     const request = { serverId: role, role: 'image', requiredBytes, settingsDb, diagnostics };
     const single = this._reserveOneCard(request);
-    if (!single.offloadToCpu) return single;
+    if (!single.offloadToCpu) return (await this._preferStrongestCard(single, request, runtime)) || single;
     return (await this._autoFitRescue(request, runtime)) || single;
+  }
+
+  async _preferStrongestCard(single, request, runtime) {
+    try {
+      if (single.cudaDevice == null || UserGpuPin.isPinnedToGpu(request.settingsDb, request.serverId)) return null;
+      const cards = this._vram.debitedDevices(request.diagnostics, { excludeServerId: request.serverId });
+      const strongest = ImageSlotPlacement.strongestCard(cards);
+      if (cards.length < 2 || !strongest || String(strongest.index) === String(single.cudaDevice)) return null;
+      const room = CudaDevicePicker.cardRoomBytes(strongest);
+      if (room < ImageSlotPlacement.MIN_SHARED_BUDGET_BYTES) return null;
+      if (!(await this._capabilities.supportsFlag(runtime.binaryPath, ImageSlotPlacement.MAX_VRAM_FLAG))) return null;
+      this._vram.hold(request.serverId, { devices: [strongest.index], bytes: room, role: 'image' });
+      return { cudaDevice: String(strongest.index), offloadToCpu: false, autoFit: ImageSlotPlacement.budgetString([strongest.index], cards) };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static strongestCard(cards) {
+    return (cards || []).slice().sort((a, b) => (b.totalBytes - a.totalBytes) || (a.index - b.index))[0] || null;
   }
 
   _reserveOneCard(request) {

@@ -15,7 +15,9 @@
   - `onPreview({ bytes, mime })` sends `preview { b64, mime }` (no bytes: dropped).
   - `onDone({ images })` calls `server.markActive()`, logs the timing, notifies
     `<done> in N.Ns`, sends `done { images: [{ b64, mime, width, height, seed }], modelId }`
-    and resolves `{ success: true, images }` with the adapter's raw images.
+    and resolves `{ success: true, images, modelId, settings }` with the
+    adapter's raw images, the model id and the sampler settings
+    (`{ steps, cfgScale, sampler, scheduler }`) for the chat viewer.
   - The idle hold is released once on every outcome.
 
 ## Why

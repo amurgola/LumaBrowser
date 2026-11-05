@@ -17,6 +17,13 @@ class LazySchemaStubber {
     });
   }
 
+  static dropInactive(fullSchemas, groups, activeGroups) {
+    if (!Array.isArray(groups) || groups.length === 0) return fullSchemas;
+    const inactive = LazySchemaStubber._inactiveToolOwners(groups, activeGroups);
+    if (inactive.size === 0) return fullSchemas;
+    return fullSchemas.filter((schema) => !inactive.has(FunctionSchema.nameOf(schema)));
+  }
+
   static _inactiveToolOwners(groups, activeGroups) {
     const active = activeGroups instanceof Set ? activeGroups : new Set(activeGroups || []);
     const inactive = new Map();

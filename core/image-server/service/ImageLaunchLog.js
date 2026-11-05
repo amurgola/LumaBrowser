@@ -8,7 +8,8 @@ class ImageLaunchLog {
     const tiling = `VAE tiling ${vaeTiling ? 'on' : 'OFF'}`;
     return [
       cudaDevice != null && cudaDevice !== '' ? ` → CUDA device ${cudaDevice}` : '',
-      autoFit ? ` (auto-fit split, budgets ${autoFit})` : '',
+      autoFit && String(cudaDevice).includes(',') ? ` (auto-fit split, budgets ${autoFit})` : '',
+      autoFit && !String(cudaDevice).includes(',') ? ` (VRAM budget ${autoFit}, card shared)` : '',
       (profile.isEdit || profile.isWanVideo) && !offloadToCpu ? ` (resident, ${tiling})` : '',
       profile.isWanVideo && offloadToCpu ? ` (${tiling})` : '',
       offloadToCpu ? ' (CPU weight-offload on)' : '',

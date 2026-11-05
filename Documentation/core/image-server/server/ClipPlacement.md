@@ -2,34 +2,31 @@
 
 `core/image-server/server/ClipPlacement.js`
 
-Decides, per launch, whether an image model's text encoders load on the GPU or
-stay on the CPU (`--clip-on-cpu`).
+Decides, per launch, whether an image model's text encoders stay on the CPU
+(the catalog's `--clip-on-cpu`). On a GPU runtime they never do.
 
 ## Methods
 
-- `ClipPlacement.decide({ model, cudaDevice, offloadToCpu, autoFit, requiredBytes, devices, encoderBytes?, userPinned? })`
+- `ClipPlacement.decide({ model, cudaDevice, offloadToCpu, autoFit, cpuOnly?, env? })`
   returns `{ clipOnCpu, note }`:
   - `clipOnCpu: undefined, note: null` when `model.launchArgs` lacks `--clip-on-cpu`;
-  - `true` (keep the CPU posture) when weights are offloaded, auto-fit splits,
-    `cudaDevice` is empty or names several cards, or the encoder size is unknown;
-  - `false` when `userPinned` (the placement canvas pinned this card);
-  - otherwise `false` only if the pinned card's room
-    (`CudaDevicePicker.cardRoomBytes`, after the per-card reserve) covers
-    `requiredBytes` plus the encoder bytes.
-  `note` reads `text encoders on CPU: <why>` or `text encoders on GPU: <why>`,
-  with sizes in GB to one decimal.
-- `ClipPlacement.textEncoderBytes(model, { statSync? })` sums the sizes of the
-  `t5xxl`, `clip_l`, `clip_g`, `llm` and `vision` files; unreadable files count 0.
-- Statics: `GB`, `TEXT_ENCODER_KEYS`.
+  - `true` (keep the posture) on a CPU-only runtime or when `env.SD_CLIP_ON_CPU`
+    is `1`;
+  - otherwise `false` (drop the flag). `note` reads `text encoders on GPU: <why>`
+    naming the budget, the offload staging, the pinned card or sd-server's own
+    placement, or `text encoders on CPU: <why>`.
+- Statics: `ENV` (`SD_CLIP_ON_CPU`).
 
 ## Why
 
-Flux-class catalog rows (Chroma, FLUX.2 klein) pin `--clip-on-cpu` so small
-cards give the diffusion model the whole card. On a card with room that costs a
-fixed CPU T5 pass per image (measured 2026-08-29: the floor of a 60 s Chroma
-render), so the choice is made per launch from the real card and file sizes.
-A user pin wins over the arithmetic because measured spill into WDDM shared
-memory on a 5090 still ran 2.6x faster than fully resident on a 3090; offload,
-auto-fit and multi-card pins are real limits and win over the pin.
-
-`vision` is the Qwen-VL mmproj tower, which loads with the conditioner.
+Flux-class and Qwen rows pin `--clip-on-cpu` so small cards give the diffusion
+model the whole card. A CPU conditioner is the slowest part of an edit by far:
+on a Qwen-Image 2.1 edit the Qwen3-VL text and vision pass took 26.9 s on the
+CPU against 2.1 s on the 5090 (measured 2026-11-04). The same measurement showed
+sd-server needs no help with the memory side: under a `--max-vram` budget the
+encoders lived in pinned RAM and the conditioner still ran on the GPU in 2.5 s,
+and `--offload-to-cpu` stages whole modules into VRAM when there is room. So the
+room arithmetic this module used to do (weights plus encoder bytes against the
+pinned card's free VRAM) is gone; the flag is dropped on every GPU placement and
+kept only where there is no GPU, or when the user forces it with the env
+variable to reproduce the old behaviour.

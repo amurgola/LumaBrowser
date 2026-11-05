@@ -3,6 +3,11 @@ const IpcEnvelope = require('../shared/ipc/IpcEnvelope');
 const PathPicker = require('../shared/ipc/PathPicker');
 const SenderStream = require('../shared/ipc/SenderStream');
 const ImageRouter = require('./ImageRouter');
+const CivitaiBrowser = require('./civitai/CivitaiBrowser');
+const CivitaiClient = require('./civitai/CivitaiClient');
+const CivitaiDescriptionReader = require('./civitai/CivitaiDescriptionReader');
+const CivitaiModelResolver = require('./civitai/CivitaiModelResolver');
+const CivitaiRecipe = require('./civitai/CivitaiRecipe');
 const CatalogModelInstaller = require('./ipc/CatalogModelInstaller');
 const ExistingModelAdopter = require('./ipc/ExistingModelAdopter');
 const ImageDefaultsUpdater = require('./ipc/ImageDefaultsUpdater');
@@ -24,10 +29,10 @@ class ImageIpcHandlers {
   static RUNTIME_EVENT_CHANNEL = 'core.imageServer.runtimeEvent';
   static IMAGE_EVENT_CHANNEL = 'core.imageServer.imageEvent';
 
-  static register(service, { notify } = {}) {
+  static register(service, { notify, llmService = null, civitaiClient = null } = {}) {
     const router = new ImageRouter({ imageServerService: service, notify });
     const slot = new ImageDownloadSlot();
-    const services = ImageIpcHandlers._services(service, router, slot);
+    const services = ImageIpcHandlers._services(service, router, slot, llmService, civitaiClient);
     ImageServerBroadcast.wire(service.runtimeServer);
     ImageIpcHandlers._registerSetup(service, services);
     ImageIpcHandlers._registerRuntimes(services);
@@ -39,9 +44,20 @@ class ImageIpcHandlers {
     return { router };
   }
 
-  static _services(service, router, slot) {
+  static _services(service, router, slot, llmService = null, civitaiClient = null) {
     const loras = new ImageLoraLibrary({ imageServerService: service, slot });
     const attacher = new ModelLoraAttacher({ imageServerService: service });
+    const client = civitaiClient || new CivitaiClient();
+    const importer = new ImageModelImporter({
+      imageServerService: service,
+      slot,
+      civitai: new CivitaiModelResolver({ client }),
+      recipes: new CivitaiRecipe({
+        client,
+        reader: llmService ? new CivitaiDescriptionReader({ llm: llmService }) : null,
+        nsfw: () => !!(service.getCivitaiSettings && service.getCivitaiSettings().nsfw),
+      }),
+    });
     return {
       models: new ImageModelsView({ imageServerService: service }),
       runtimes: new ImageRuntimeSetup({ imageServerService: service }),
@@ -51,7 +67,8 @@ class ImageIpcHandlers {
       installer: new CatalogModelInstaller({ imageServerService: service, slot, loras, attacher }),
       loras,
       attacher,
-      importer: new ImageModelImporter({ imageServerService: service, slot }),
+      importer,
+      civitai: new CivitaiBrowser({ client, imageServerService: service }),
       adopter: new ExistingModelAdopter(service),
       remover: new InstalledModelRemover(service),
       updater: new ModelFileUpdater({ imageServerService: service, slot }),
@@ -119,13 +136,18 @@ class ImageIpcHandlers {
     ImageIpcHandlers._handle('setModelLoras', IpcEnvelope.enveloped((_e, args) => attacher.attach(args)));
   }
 
-  static _registerImports({ importer, adopter }) {
+  static _registerImports({ importer, adopter, civitai }) {
     const events = (event) => SenderStream.create(event, ImageIpcHandlers.MODEL_EVENT_CHANNEL);
     ImageIpcHandlers._handle('getPromptProfiles', IpcEnvelope.enveloped(() => ImageModelImporter.promptProfiles()));
     ImageIpcHandlers._handle('pickImportFile', IpcEnvelope.enveloped((event) => importer.pickFile(event)));
     ImageIpcHandlers._handle('importModelFromUrl', IpcEnvelope.enveloped((event, args) => importer.fromUrl(args, events(event))));
     ImageIpcHandlers._handle('importModelFromRepo', IpcEnvelope.enveloped((event, args) => importer.fromRepo(args, events(event))));
     ImageIpcHandlers._handle('importModelFromFile', IpcEnvelope.enveloped((event, args) => importer.fromFile(args, events(event))));
+    ImageIpcHandlers._handle('importModelFromCivitai', IpcEnvelope.enveloped((event, args) => importer.fromCivitai(args, events(event))));
+    ImageIpcHandlers._handle('civitaiSearch', IpcEnvelope.enveloped((_e, args) => civitai.search(args)));
+    ImageIpcHandlers._handle('civitaiPreview', IpcEnvelope.enveloped((_e, args) => civitai.preview(args)));
+    ImageIpcHandlers._handle('getCivitaiSettings', IpcEnvelope.enveloped(() => civitai.getSettings()));
+    ImageIpcHandlers._handle('setCivitaiSettings', IpcEnvelope.enveloped((_e, patch) => civitai.setSettings(patch)));
     ImageIpcHandlers._handle('scanExistingLibraries', IpcEnvelope.enveloped((_e, args) => adopter.scan(args)));
     ImageIpcHandlers._handle('pickLibraryDir', IpcEnvelope.enveloped((event) => ImageIpcHandlers._pickDir(event, {
       title: 'Choose a ComfyUI, Forge or Stable Diffusion WebUI folder',

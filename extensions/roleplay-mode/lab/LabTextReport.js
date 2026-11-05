@@ -34,6 +34,15 @@ class LabTextReport {
     }
     lines.push('', '## Consistency checks', '');
     for (const c of (r.probe && r.probe.checks) || []) lines.push('- ' + (c.ok ? '[x]' : '[ ]') + ' ' + c.label + (c.detail ? ' (' + c.detail + ')' : ''));
+    if (r.cast) {
+      lines.push('', '## Cast and initiative', '');
+      for (const c of r.cast.checks || []) lines.push('- ' + (c.ok ? '[x]' : '[ ]') + ' ' + c.label + (c.detail ? ' (' + c.detail + ')' : ''));
+      for (const p of (r.cast.voice && r.cast.voice.pairs) || []) lines.push('- ' + p.a + ' / ' + p.b + ': voice overlap ' + p.voice + ', dialogue overlap ' + p.dialogue);
+      if (r.cast.initiative) {
+        const i = r.cast.initiative;
+        lines.push('- Moved on turns: ' + (i.movedTurns.join(', ') || 'none') + '; unprompted: ' + (i.unpromptedTurns.join(', ') || 'none') + '; longest gap: ' + i.longestGap);
+      }
+    }
     lines.push('', '## Transcript', '');
     (r.transcript || []).forEach((t, i) => {
       const reply = r.prose && r.prose.replies ? r.prose.replies[i] : null;

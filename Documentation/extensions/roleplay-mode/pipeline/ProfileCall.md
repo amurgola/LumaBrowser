@@ -13,4 +13,5 @@ writes the result onto the character. Best effort and bounded.
 - `ProfileCall.request(data, char, content)` temperature 0.4, 60 s, `noThink`,
   the setup's model.
 - `run(data, chars, content)` true when any card changed; a failure is logged
-  and leaves the card as it was.
+  and leaves the card as it was. The reply's bonds are parsed against the other
+  characters' names, so only cast members get a bond line.

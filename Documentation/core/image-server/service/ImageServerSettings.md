@@ -18,5 +18,10 @@ defaults and idle auto-unload threshold.
 - `getAutoUnloadMs()` unset is `DEFAULT_AUTO_UNLOAD_MS` (15 min); a persisted
   0, negative or non-number is 0 (disabled). `setAutoUnloadMs(ms)` floors,
   clamps at 0, stores and returns the value.
+- `getCivitaiSettings()` `{ token, nsfw }` (`token` null when unset);
+  `setCivitaiSettings({ token?, nsfw? })` changes only the fields present, an
+  empty token or a false `nsfw` deletes its key; returns the settings. The key
+  unlocks login-gated CivitAI downloads ([CivitaiAuth](../../shared/download/CivitaiAuth.md));
+  `nsfw` widens listings and sample reads to adult content.
 - Statics `KEYS` (every `core.imageServer.*` key, never renamed),
   `DEFAULT_AUTO_UNLOAD_MS`, `DEFAULT_ID_FIELDS`.

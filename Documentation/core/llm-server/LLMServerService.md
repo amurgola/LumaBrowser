@@ -115,6 +115,13 @@ Pinned tab ([PinnedLlmTab](service/PinnedLlmTab.md)):
 - `setEnabled(enabled)` -> `{ success: true, enabled }`; enabling creates the tab,
   disabling removes it.
 
+- `releaseRuntime(runtimeId)` stops the chat server when its plan's `runtimeId`
+  is that runtime and the server is not idle, then asks the group router to
+  release it; resolves `{ server, router }`. `resumeRuntime(released)` calls
+  `groupRouter.apply()` when the router was stopped. Used by
+  [LlmRuntimeSetup](ipc/LlmRuntimeSetup.md) around an install, since the
+  installer wipes the runtime's folder and a loaded DLL keeps it locked.
+
 Lifecycle: construction starts the shared `NvidiaSmiStream` (the
 `nvidiaSmiStream` option injects one) so placement and diagnostics read a live
 VRAM snapshot before any model loads; `shutdown()` stops the server (warning on

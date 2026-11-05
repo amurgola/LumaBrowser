@@ -331,6 +331,7 @@
     return {
       key: 'profile', type: 'group', label: 'Profile (optional)',
       fields: [
+        { key: 'history', type: 'textarea', label: 'Past', placeholder: 'Two or three sentences of their life before the story: where they come from, what shaped them' },
         { key: 'voice', type: 'text', label: 'Voice', placeholder: 'How they talk: register, rhythm, a habit, one example line' },
         { key: 'wants', type: 'text', label: 'Wants', half: true, placeholder: 'What they want in this story' },
         { key: 'hides', type: 'text', label: 'Hides', half: true, placeholder: 'What they conceal' },
@@ -1080,6 +1081,7 @@
       if (b) bonds.user = b; else delete bonds.user;
     }
     c.profile = {
+      history: String(form.history || '').trim(),
       voice: String(form.voice || '').trim(),
       wants: String(form.wants || '').trim(),
       hides: String(form.hides || '').trim(),

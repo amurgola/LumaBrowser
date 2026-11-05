@@ -3,6 +3,7 @@ class LabCompletionKind {
     { kind: 'stage', any: ['stage manager'] },
     { kind: 'profile', any: ['casting director'] },
     { kind: 'consolidate', any: ['character records of an interactive roleplay', 'story record of an interactive roleplay'] },
+    { kind: 'pressure', any: ['story editor'] },
     { kind: 'extract', any: ['world-state'] },
     { kind: 'wardrobe', any: ['wardrobe supervisor'] },
     { kind: 'director', any: ['cinematographer'] },

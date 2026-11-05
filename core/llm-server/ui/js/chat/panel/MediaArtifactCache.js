@@ -26,8 +26,29 @@ export default class MediaArtifactCache {
     const mime = r.artifact.language || 'image/png';
     const b64 = r.artifact.content || '';
     if (!b64) return null;
-    const entry = { b64, mime, dataUrl: 'data:' + mime + ';base64,' + b64 };
+    const entry = MediaArtifactCache.entry(b64, mime);
     this._entries.set(id, entry);
     return entry;
+  }
+
+  static entry(b64, mime) {
+    let dataUrl = null;
+    const inline = () => { if (dataUrl === null) dataUrl = 'data:' + mime + ';base64,' + b64; return dataUrl; };
+    const entry = { b64, mime, url: null };
+    Object.defineProperty(entry, 'dataUrl', { get: inline, enumerable: true });
+    entry.url = MediaArtifactCache._blobUrl(b64, mime) || inline();
+    return entry;
+  }
+
+  static _blobUrl(b64, mime) {
+    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function' || typeof Blob === 'undefined') return null;
+    try {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return URL.createObjectURL(new Blob([bytes], { type: mime }));
+    } catch (_) {
+      return null;
+    }
   }
 }

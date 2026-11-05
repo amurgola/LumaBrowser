@@ -19,6 +19,7 @@ const RenderSignature = require('./RenderSignature');
 const FastReaction = require('./FastReaction');
 const ImagePhase = require('./ImagePhase');
 const ProfileCall = require('./ProfileCall');
+const PressureCall = require('./PressureCall');
 const ConsolidateCall = require('./ConsolidateCall');
 const ProsePolishCall = require('./ProsePolishCall');
 
@@ -29,6 +30,7 @@ class RoleplayPostProcessor {
     this._auditor = new ArtAuditor(chat);
     this._stage = new StageCall(chat, logger);
     this._profiles = new ProfileCall(chat, logger);
+    this._pressure = new PressureCall(chat, logger);
     this._consolidate = new ConsolidateCall(chat, logger);
     this._polish = new ProsePolishCall(chat, logger);
     this._images = new ImagePhase(chat);
@@ -122,6 +124,10 @@ class RoleplayPostProcessor {
     if (!worldEmpty && ConsolidateCall.due(data)) {
       turn.progress.say('Remembering the story so far…');
       if (await this._consolidate.run(data)) delta.changed = true;
+    }
+    if (PressureCall.due(data)) {
+      turn.progress.say('Weighing what comes next…');
+      if (await this._pressure.run(data, content)) delta.changed = true;
     }
   }
 

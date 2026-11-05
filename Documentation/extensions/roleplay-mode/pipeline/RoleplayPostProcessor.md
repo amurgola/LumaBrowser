@@ -13,6 +13,8 @@ The mode's server-side reaction after each assistant turn.
   stored reply through `replaceContent` so the stage call reads the same text),
   reconcile (migration, the story turn counter, speakers, audit, the stage call
   on every turn, [casting](ProfileCall.md) for present characters without a
-  profile, [consolidation](ConsolidateCall.md) when due), save and announce,
+  profile, [consolidation](ConsolidateCall.md) when due, the
+  [pressure line](PressureCall.md) on the first turn and after each summary),
+  save and announce,
   then draw: skip an unchanged moment, try the fast composite, else run the
   image phase. A cancel ends with `mode:image-fail { canceled: true }`.

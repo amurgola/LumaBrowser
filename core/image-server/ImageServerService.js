@@ -15,6 +15,7 @@ const ImageModelsScanner = require('./ImageModelsScanner');
 const ImagePinTarget = require('./rampin/ImagePinTarget');
 const ImageSlotRoles = require('./service/ImageSlotRoles');
 const ImageServerSettings = require('./service/ImageServerSettings');
+const CivitaiAuth = require('../shared/download/CivitaiAuth');
 const ImageModelDisplayNames = require('./service/ImageModelDisplayNames');
 const RemoteImageServerStore = require('./service/RemoteImageServerStore');
 const ImageServerSelection = require('./service/ImageServerSelection');
@@ -90,6 +91,13 @@ class ImageServerService {
   getDefaults() { return this._settings.getDefaults(); }
   setDefaults(patch) { return this._settings.setDefaults(patch); }
 
+  getCivitaiSettings() { return this._settings.getCivitaiSettings(); }
+  setCivitaiSettings(patch) {
+    const saved = this._settings.setCivitaiSettings(patch);
+    CivitaiAuth.setToken(saved.token);
+    return saved;
+  }
+
 
   getManualRuntimeBinary(runtimeId) { return this._runtimeSettings.getManualRuntimeBinary(runtimeId); }
   setManualRuntimeBinary(runtimeId, binaryPath) { return this._runtimeSettings.setManualRuntimeBinary(runtimeId, binaryPath); }
@@ -157,6 +165,7 @@ class ImageServerService {
 
   _createStores() {
     this._settings = new ImageServerSettings(this.settingsDb, { defaultModelsDir: () => this.getDefaultModelsDir() });
+    CivitaiAuth.setToken(this._settings.getCivitaiSettings().token);
     ModelFolderRegistry.register(ImageModelsScanner.FOLDER_KIND, () => this.getModelsDirConfig().effectivePath);
     this._displayNames = new ImageModelDisplayNames(this.settingsDb);
     this._remoteServers = new RemoteImageServerStore(this.settingsDb);

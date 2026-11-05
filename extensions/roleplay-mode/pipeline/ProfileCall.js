@@ -43,7 +43,8 @@ class ProfileCall {
     const started = Date.now();
     try {
       const r = await this._chat.complete(ProfileCall.request(data, char, content));
-      const patch = r && r.text ? ProfilePrompt.parse(r.text) : null;
+      const others = (Array.isArray(data.characters) ? data.characters : []).filter((c) => c && c.name && c !== char).map((c) => c.name);
+      const patch = r && r.text ? ProfilePrompt.parse(r.text, others) : null;
       RpDebug.log('post.profile', { ms: Date.now() - started, name: char.name, ok: !!patch, error: r && r.error });
       return patch ? CharacterProfile.apply(char, patch) : false;
     } catch (e) {

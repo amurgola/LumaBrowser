@@ -10,6 +10,7 @@ const EditDiffComposite = require('../../../../../image-server/region/EditDiffCo
 const MediaRenderOutcome = require('../media/MediaRenderOutcome');
 const MediaProgressSink = require('../media/MediaProgressSink');
 const MediaTitle = require('../media/MediaTitle');
+const MediaRenderInfo = require('../media/MediaRenderInfo');
 const BridgeGlobals = require('../../BridgeGlobals');
 const ChatToolHandler = require('./ChatToolHandler');
 
@@ -86,7 +87,9 @@ class EditImageHandler extends ChatToolHandler {
     }
     const failure = MediaRenderOutcome.failureOf(result, sink, ctx.isAborted, 'edit_image', MediaRenderOutcome.images('edit_image'));
     if (failure) return failure;
-    return EditImageHandler._persist(EditImageHandler._finish(result.images[0], plan), plan, ctx);
+    const finished = EditImageHandler._finish(result.images[0], plan);
+    const render = MediaRenderInfo.from({ tool: 'edit_image', prompt: plan.prompt, media: finished, result });
+    return EditImageHandler._persist(finished, plan, ctx, render);
   }
 
   static _finish(image, plan) {
@@ -126,7 +129,7 @@ class EditImageHandler extends ChatToolHandler {
     return (Number.isFinite(requested) && requested >= 0 && requested <= 1) ? requested : EditImageHandler.DEFAULT_STRENGTH;
   }
 
-  static _persist(img, plan, ctx) {
+  static _persist(img, plan, ctx, render = null) {
     let artifact;
     try {
       artifact = ctx.deps.artifactStore.createVersion({
@@ -140,7 +143,7 @@ class EditImageHandler extends ChatToolHandler {
     } catch (err) {
       return { success: false, error: `Could not persist edited image: ${err.message}` };
     }
-    ChatToolHandler.publish(ctx, artifact);
+    ChatToolHandler.publish(ctx, MediaRenderInfo.attach(artifact, render));
     return { success: true, artifact, message: EditImageHandler._message(artifact, plan, !!img.composited, img.kept || null) };
   }
 

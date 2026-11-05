@@ -2,6 +2,7 @@ class StoryLedger {
   static KINDS = ['event', 'reveal', 'promise', 'death', 'move', 'injury'];
   static LEDGER_MAX = 60;
   static THREADS_MAX = 8;
+  static THREAD_MOVES_MAX = 24;
   static TEXT_MAX = 200;
   static SUMMARY_EVERY_TURNS = 10;
   static SUMMARY_LEDGER_ROWS = 20;
@@ -16,6 +17,8 @@ class StoryLedger {
       clock: { day: Number(clock.day) || 1, timeOfDay: String(clock.timeOfDay || '').trim(), weather: String(clock.weather || '').trim() },
       summary: String(s.summary || '').trim(),
       summaryTurn: Number(s.summaryTurn) || 0,
+      pressure: String(s.pressure || '').trim(),
+      pressureTurn: Number(s.pressureTurn) || 0,
       ledger: Array.isArray(s.ledger) ? s.ledger.filter((r) => r && r.text) : [],
       threads: Array.isArray(s.threads) ? s.threads.filter((t) => t && t.text) : [],
     };
@@ -62,31 +65,87 @@ class StoryLedger {
     return before !== JSON.stringify(story.clock);
   }
 
-  static threads(data, { opened = [], closed = [] }, turn) {
+  static setPressure(data, text, turn) {
     const story = StoryLedger._ensure(data);
+    const clean = String(text || '').trim().slice(0, StoryLedger.TEXT_MAX * 2);
+    const t = Number(turn) || story.turn;
+    if (story.pressure === clean && story.pressureTurn === t) return false;
+    story.pressure = clean;
+    story.pressureTurn = t;
+    return true;
+  }
+
+  static threads(data, { opened = [], closed = [], advanced = [] }, turn) {
+    const story = StoryLedger._ensure(data);
+    const t = Number(turn) || 0;
     let changed = false;
-    for (const t of closed) {
-      const key = StoryLedger._norm(t);
+    for (const text of closed) {
+      const key = StoryLedger._norm(text);
       for (const th of story.threads) {
-        if (th.open && StoryLedger._norm(th.text) === key) { th.open = false; th.closedTurn = turn; changed = true; }
+        if (th.open && StoryLedger._norm(th.text) === key) { th.open = false; th.closedTurn = t; changed = true; }
       }
     }
-    for (const t of opened) {
-      const text = String(t || '').trim().slice(0, StoryLedger.TEXT_MAX);
-      if (!text || story.threads.some((th) => StoryLedger._norm(th.text) === StoryLedger._norm(text))) continue;
-      story.threads.push({ text, open: true, turn });
+    for (const text of advanced) {
+      const th = StoryLedger._find(story, text);
+      if (th && th.open) { StoryLedger._touch(th, t); changed = true; }
+    }
+    for (const raw of opened) {
+      const text = String(raw || '').trim().slice(0, StoryLedger.TEXT_MAX);
+      if (!text) continue;
+      const known = StoryLedger._find(story, text);
+      if (known) {
+        if (known.open) { StoryLedger._touch(known, t); changed = true; }
+        continue;
+      }
+      story.threads.push({ text, open: true, turn: t, lastTurn: t, touched: 0, moves: [t] });
       changed = true;
     }
     if (story.threads.filter((th) => th.open).length > StoryLedger.THREADS_MAX) {
-      const open = story.threads.filter((th) => th.open);
-      story.threads = story.threads.filter((th) => !th.open).concat(open.slice(-StoryLedger.THREADS_MAX));
+      const keep = StoryLedger._ranked(story.threads.filter((th) => th.open)).slice(0, StoryLedger.THREADS_MAX);
+      story.threads = story.threads.filter((th) => !th.open || keep.includes(th));
       changed = true;
     }
     return changed;
   }
 
+  static pinThread(data, text, turn) {
+    const story = StoryLedger._ensure(data);
+    const clean = String(text || '').trim().slice(0, StoryLedger.TEXT_MAX);
+    if (!clean) return false;
+    const t = Number(turn) || story.turn;
+    let th = StoryLedger._find(story, clean);
+    let changed = false;
+    if (!th) {
+      th = { text: clean, open: true, turn: t, lastTurn: t, touched: 0, moves: [t] };
+      story.threads.push(th);
+      changed = true;
+    } else if (!th.open) {
+      th.open = true;
+      delete th.closedTurn;
+      changed = true;
+    }
+    for (const other of story.threads) {
+      if (other !== th && other.pinned) { delete other.pinned; changed = true; }
+    }
+    if (!th.pinned) { th.pinned = true; changed = true; }
+    return changed;
+  }
+
+  static pinnedThread(data) {
+    const th = StoryLedger.of(data).threads.find((t) => t.open && t.pinned);
+    return th ? th.text : '';
+  }
+
   static openThreads(data) {
-    return StoryLedger.of(data).threads.filter((t) => t.open).map((t) => t.text);
+    return StoryLedger._ranked(StoryLedger.of(data).threads.filter((t) => t.open)).map((t) => t.text);
+  }
+
+  static threadMoves(data) {
+    const turns = new Set();
+    for (const th of StoryLedger.of(data).threads) {
+      for (const t of Array.isArray(th.moves) ? th.moves : []) if (Number.isFinite(t)) turns.add(t);
+    }
+    return Array.from(turns).sort((a, b) => a - b);
   }
 
   static unsummarised(data) {
@@ -127,6 +186,29 @@ class StoryLedger {
     return bits.join(', ');
   }
 
+  static _ranked(threads) {
+    const score = (th) => [th.pinned ? 1 : 0, Number(th.touched) || 0, Number(th.lastTurn) || Number(th.turn) || 0];
+    return threads.slice().sort((a, b) => {
+      const sa = score(a);
+      const sb = score(b);
+      for (let i = 0; i < sa.length; i += 1) if (sa[i] !== sb[i]) return sb[i] - sa[i];
+      return 0;
+    });
+  }
+
+  static _touch(th, turn) {
+    th.touched = (Number(th.touched) || 0) + 1;
+    th.lastTurn = turn;
+    const moves = Array.isArray(th.moves) ? th.moves : [];
+    if (moves[moves.length - 1] !== turn) moves.push(turn);
+    th.moves = moves.slice(-StoryLedger.THREAD_MOVES_MAX);
+  }
+
+  static _find(story, text) {
+    const key = StoryLedger._norm(text);
+    return key ? story.threads.find((th) => StoryLedger._norm(th.text) === key) || null : null;
+  }
+
   static _row(e, turn, messageId) {
     if (!e || typeof e !== 'object') return null;
     const text = String(e.text || '').trim().slice(0, StoryLedger.TEXT_MAX);
@@ -154,6 +236,8 @@ class StoryLedger {
     if (!Number.isFinite(s.clock.day)) s.clock.day = 1;
     if (typeof s.summary !== 'string') s.summary = '';
     if (!Number.isFinite(s.summaryTurn)) s.summaryTurn = 0;
+    if (typeof s.pressure !== 'string') s.pressure = '';
+    if (!Number.isFinite(s.pressureTurn)) s.pressureTurn = 0;
     if (!Array.isArray(s.ledger)) s.ledger = [];
     if (!Array.isArray(s.threads)) s.threads = [];
     return s;

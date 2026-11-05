@@ -13,6 +13,7 @@ steady cost instead of re-summarising its whole history every turn.
   0.2, 90 s, `noThink`.
 - `run(data)` folds the first character past
   [CharacterChronicle](../world/CharacterChronicle.md)`.needsFold` (applying
-  the arc and the growth fields through `CharacterProfile.apply(…, { growthOnly })`),
+  the arc and the growth fields, bonds with other cast members included,
+  through `CharacterProfile.apply(…, { growthOnly })`),
   then rewrites the summary when [StoryLedger](../world/StoryLedger.md)`.needsSummary`.
   Returns true when anything changed; failures leave the records untouched.

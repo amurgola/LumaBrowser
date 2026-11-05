@@ -1,6 +1,7 @@
 const CoreRequire = require('../CoreRequire');
 const LabTextScenario = require('./LabTextScenario');
 const ConsistencyProbe = require('./ConsistencyProbe');
+const CastProbe = require('./CastProbe');
 const ProseScore = require('./ProseScore');
 const ProseJudge = require('./ProseJudge');
 
@@ -39,10 +40,11 @@ class LabTextRun {
       this._active = null;
     }
     const probe = ConsistencyProbe.run({ data: meta.data, transcript, facts: scenario.facts });
+    const cast = CastProbe.run({ data: meta.data, transcript });
     const prose = ProseScore.run({ data: meta.data, transcript });
     const judge = options.judge && transcript.length ? await this._judge(meta.data, transcript) : null;
-    this._emit('lab:text', { phase: 'done', probe, prose, judge, error });
-    return { transcript, data: meta.data, probe, prose, judge, error };
+    this._emit('lab:text', { phase: 'done', probe, cast, prose, judge, error });
+    return { transcript, data: meta.data, probe, cast, prose, judge, error };
   }
 
   async _turn(meta, history, userText, turnNo) {
@@ -51,6 +53,7 @@ class LabTextRun {
     const messages = this._shape.apply(turn, history.slice());
     const r = await this._narrate({
       messages, temperature: turn.temperature, modelRef: turn.modelRef || meta.data.llmModel || undefined,
+      samplers: turn.samplers || undefined,
       timeoutMs: LabTextRun.TURN_TIMEOUT_MS, trace: { conversationId: 'rp-lab-text', callType: 'rp-lab-text' },
     });
     if (!r || !r.text) throw new Error('turn ' + turnNo + ': the story model returned nothing' + (r && r.error ? ' (' + r.error + ')' : ''));

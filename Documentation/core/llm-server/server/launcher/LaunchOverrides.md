@@ -11,12 +11,15 @@ device.
   (`defaults.kvCacheType`), `ctx.userArgs` (`service.resolveModelLaunchFlags(path)`
   or `''`), `ctx.layout` and `ctx.overrides`:
   `{ contextSize, cacheTypeK, cacheTypeV, maxConcurrent, tensorSplitMode, cacheReuse,
-  promptCacheRam, cpuMoe, noMoeGpuCache, noSpecDrafter, noNgramSpec, suppressMmprojLoad, ramPin }`
+  promptCacheRam, cpuMoe, noMoeGpuCache, noSpecDrafter, noNgramSpec, suppressMmprojLoad, ramPin, moeProfileDir }`
   plus, when they apply, `noKvOffload`, `vramCapBytes` and `measuredVramBytes`.
   - The KV pair is `KvCacheModes.pair(kvMode)`; tensor split forces `f16`/`f16`.
   - `promptCacheRam` is the `LaunchPlanner.PROMPT_CACHE_RAM_SETTING_KEY` setting, default `'auto'`.
   - `suppressMmprojLoad` is `!withVision`.
   - `ramPin` is `{ freeBytes: freeMemory() }` when `service.ramPin.isActiveFor(path)`, else null.
+  - `moeProfileDir` is `service.moeProfileDir()` when the service offers one, else the app's
+    `userData/moe-profiles` (`MOE_PROFILE_DIR`), created before the spawn since the luma runtime writes the
+    model's expert use profile there itself ([MoeRamTierPlan](../launch/MoeRamTierPlan.md)); null outside Electron.
   - `measuredVramBytes` is `ContextEstimator.measuredComboVram(fitEntry, contextSize, kvMode)`,
     plus `model.mmprojTotalBytes` for a vision start.
   - Last, `ctx.openvinoDevice`: for the `llama-cpp-openvino` runtime,

@@ -7,7 +7,7 @@ Builds the `manifest.json` written beside a freshly installed image model in its
 ## Methods
 
 - `ImageManifestBuilder.forCatalog(entry, files, now?)` id, label, family, `kind` (or null), `supportsI2V` / `supportsEdit` / `constraints` when the entry has them, the files bag, defaults, protocol (default `sd-cpp-http`), compatibleRuntimes, `downloadedAt`.
-- `forImport(entry, now?)` id, label, family, `kind` (default `generate`), `supportsEdit` / `constraints`, `imported: true`, `baseType`, `promptStyle`, the files bag, defaults, minVramBytes, launchArgs, licenseNote, protocol, compatibleRuntimes, `downloadedAt`, and `linkedFrom` when the weights are a link into another tool's library.
+- `forImport(entry, now?)` id, label, family, `kind` (default `generate`), `supportsEdit` / `constraints`, `imported: true`, `baseType`, `promptStyle`, the files bag, defaults, minVramBytes, launchArgs, licenseNote, protocol, compatibleRuntimes, `downloadedAt`, `linkedFrom` when the weights are a link into another tool's library, and `civitai` (the origin block from [CivitaiModelResolver](../civitai/CivitaiModelResolver.md): ids, hashes, trigger words, page URL) when the import came from CivitAI.
 - `forRepo(entry, now?)` id, label, family, then the same install tail as an import (no import or category fields: the id is a real catalog id and the scanner inherits the rest).
 
 ## Why

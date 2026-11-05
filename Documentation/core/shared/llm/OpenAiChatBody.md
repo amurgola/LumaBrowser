@@ -25,6 +25,11 @@ The one builder for an OpenAI-compatible `/v1/chat/completions` request body.
   - `reasoningBudget`: sent as `reasoning_budget` for any number.
   - `promptCacheKey`, `promptCacheRetention` (default `'24h'`): retention is
     added only if `extra` did not already set `prompt_cache_retention`.
+  - `moeCacheBatch`: a positive whole number is sent as `moe_cache_batch` on a
+    `local` server only (the LumaByte runtime's per-request limit on the prompt
+    batch its MoE expert cache serves, see
+    [RequestComplexity](../../llm-server/chat/RequestComplexity.md); other
+    builds ignore the field).
   - `extra`: caller pass-through fields, spread last.
 - `OpenAiChatBody.ANTI_REPETITION_SAMPLER` is `{ repeat_penalty: 1.1, repeat_last_n: 256 }`.
 

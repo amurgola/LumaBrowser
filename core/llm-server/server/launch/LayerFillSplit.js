@@ -11,11 +11,16 @@ class LayerFillSplit {
     const layers = Math.min(blocks, Math.max(0, Math.floor(Number(input.layersOnGpu) || 0)));
     if (!LayerFillSplit._usable(input, blocks, layers)) return null;
     const extraBytes = input.extraBytes || 0;
-    const budgets = LayerFillSplit._budgets(input.perGpu, input.flashAttnSupported, extraBytes);
+    const budgets = LayerFillSplit._budgets(input.perGpu, input.flashAttnSupported, extraBytes, input.perCardExtraBytes || 0);
     const costAt = LayerFillSplit._costFunction(input, blocks);
     const packed = LayerFillSplit._pack(input.perGpu, budgets, costAt, blocks - layers, blocks);
     if (!packed) return null;
     return LayerFillSplit._result(input.perGpu, packed, budgets, extraBytes);
+  }
+
+  static budgetTotal(perGpu, flashAttnSupported, perCardExtraBytes = 0) {
+    if (!Array.isArray(perGpu) || !perGpu.length) return 0;
+    return LayerFillSplit._budgets(perGpu, flashAttnSupported, 0, perCardExtraBytes).reduce((s, b) => s + b, 0);
   }
 
   static describe(layerFill) {
@@ -28,12 +33,13 @@ class LayerFillSplit {
     return !!blocks && layers > 0 && Array.isArray(perGpu) && perGpu.length >= 2 && Number(modelBytes) > 0;
   }
 
-  static _budgets(perGpu, flashAttnSupported, extraBytes) {
+  static _budgets(perGpu, flashAttnSupported, extraBytes, perCardExtraBytes) {
     const fixed = GpuOverhead.fixed(flashAttnSupported);
     return perGpu.map((g, i) => {
       const total = Number(g && g.totalBytes) || 0;
       const cachedResident = g && g.freeBytes != null ? Math.max(0, total - Number(g.freeBytes)) : 0;
-      return Math.max(0, (GpuOverhead.cardRoom(g, { cachedResident }) - fixed) * LayerFillSplit.CARD_SAFETY - (i === 0 ? extraBytes : 0));
+      return Math.max(0, (GpuOverhead.cardRoom(g, { cachedResident }) - fixed) * LayerFillSplit.CARD_SAFETY
+        - perCardExtraBytes - (i === 0 ? extraBytes : 0));
     });
   }
 

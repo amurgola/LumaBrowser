@@ -44,6 +44,7 @@ Slots:
 - `serverForRole(role)` edit and video map to their slots; anything else is generate.
 - `getApiKeyForLaunch()` `{ required, key (first key), keyCount }`; no ApiSecurity is `{ false, null, 0 }`.
 - `getAutoUnloadMs()`, `setAutoUnloadMs(ms)` (applied to every slot; 0 disables).
+- `getCivitaiSettings()`, `setCivitaiSettings(patch)`: the CivitAI API key and adult-content choice ([ImageServerSettings](service/ImageServerSettings.md)); a saved key is applied to [CivitaiAuth](../shared/download/CivitaiAuth.md) on save and at construction, so it outranks the environment from the first download on.
 - `shutdown()` stops every slot, warning per failure. It keeps the RAM pin: chat
   routing calls it mid-session to reclaim VRAM, and the app-quit path unpins.
 

@@ -9,11 +9,18 @@ for HTML source over its live preview). Its header is the `apHead` template
 on the chat's Resonant; the brush (`.cm-ap-mark`) shows only for a loaded
 image artifact and opens the region editor on it (`ctx.regions.markArtifact`).
 
+Images and videos open in the [MediaViewer](media/MediaViewer.md)
+(`data-layout="media"`: zoom, pan, filmstrip over the conversation's media,
+details), which drives the header as it moves between items. A
+[PanelResizer](PanelResizer.md) handle on the left edge sets the width; the
+theater button (or F while media shows) gives the panel the whole stage and
+Escape (before the chat's own Escape) steps back. Closing leaves theater.
+
 ## Methods
 
 - `build()`.
-- `open(artifact)`: image, video and audio from the
-  [MediaArtifactCache](MediaArtifactCache.md); code read-only in the editor with
+- `open(artifact)`: image and video in the viewer, audio in the frame, all
+  from the [MediaArtifactCache](MediaArtifactCache.md); code read-only in the editor with
   its stored language (else the title's extension); HTML as the split view (the
   served URL previews, the source becomes editable once loaded); svg and
   markdown from the served URL with a cache-busting query. Late answers for an
@@ -27,4 +34,4 @@ image artifact and opens the region editor on it (`ctx.regions.markArtifact`).
 - `close()`, `setOpen(on)` (root `cm-has-panel`, body `cm-panel-open`),
   `setLayout(layout)`, `title(title, type, building)` (also syncs the share
   button: shown while the web backend runs, enabled for a saved artifact),
-  `clearBuilding()`.
+  `clearBuilding()`, `toggleTheater()`.

@@ -38,6 +38,7 @@ class SplitPlan {
       swaFull: offload.swaFull,
       modelBytes: moe.budgetWeightsBytes,
       extraBytes: (vision.effectiveMmprojBytes || 0) + spec.mtpBranchBytes + spec.specDrafterBytes,
+      perCardExtraBytes: moe.perCardHoldBytes || 0,
       flashAttnSupported: flags.flashAttn,
       layersOnGpu: offload.fullOffload ? files.gguf.blockCount : (offload.partial ? offload.partial.ngl : 0),
     });

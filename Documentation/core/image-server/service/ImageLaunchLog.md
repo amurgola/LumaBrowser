@@ -8,7 +8,8 @@ The one console line an image slot launch prints.
 
 - `ImageLaunchLog.line({ role, modelId, placement, profile, vaeTiling, cpuOnly, clipNote, runtimeNote?, sageNote? })`
   `[image-server] <role> model "<id>"` followed, in order, by
-  ` → CUDA device <d>`, ` (auto-fit split, budgets <b>)`,
+  ` → CUDA device <d>`, ` (auto-fit split, budgets <b>)` (several cards) or
+  ` (VRAM budget <b>, card shared)` (one card under a budget),
   ` (resident, VAE tiling on|OFF)` (edit-class or Wan video, not offloaded),
   ` (VAE tiling on|OFF)` (Wan video, offloaded), ` (CPU weight-offload on)`,
   ` (CPU runtime, no GPU placement)`, ` (<clipNote>)`, ` (<runtimeNote>)`

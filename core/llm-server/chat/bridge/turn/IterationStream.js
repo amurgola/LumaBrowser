@@ -1,3 +1,4 @@
+const DsmlToolCallParser = require('../parsing/DsmlToolCallParser');
 const XmlToolCallParser = require('../parsing/XmlToolCallParser');
 const ArtifactStreamPreview = require('./ArtifactStreamPreview');
 const PendingToolCard = require('./PendingToolCard');
@@ -23,16 +24,21 @@ class IterationStream {
   }
 
   _opensToolCall() {
-    return this._buf.indexOf(IterationStream.FENCE) !== -1 || XmlToolCallParser.OPEN.test(this._buf);
+    return this._buf.indexOf(IterationStream.FENCE) !== -1 || XmlToolCallParser.OPEN.test(this._buf)
+      || DsmlToolCallParser.EARLY.test(this._buf);
   }
 
   _suppress() {
     this._mirror.suppressForTool();
-    const fenceAt = this._buf.indexOf(IterationStream.FENCE);
-    const xmlAt = this._buf.search(XmlToolCallParser.OPEN);
-    const start = Math.min(fenceAt === -1 ? Infinity : fenceAt, xmlAt === -1 ? Infinity : xmlAt);
-    this._pending.begin(Number.isFinite(start) ? start : 0);
+    const start = IterationStream._callStart(this._buf);
+    this._pending.begin(start);
     this._pending.update(this._buf, true);
+  }
+
+  static _callStart(buf) {
+    const at = [buf.indexOf(IterationStream.FENCE), buf.search(XmlToolCallParser.OPEN), buf.search(DsmlToolCallParser.EARLY)]
+      .filter((i) => i !== -1);
+    return at.length ? Math.min(...at) : 0;
   }
 }
 

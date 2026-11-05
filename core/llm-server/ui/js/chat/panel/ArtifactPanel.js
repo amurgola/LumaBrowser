@@ -3,6 +3,8 @@ import ShareLinks from '../common/ShareLinks.js';
 import MonacoLanguages from '../../monaco/MonacoLanguages.js';
 import ArtifactDownloader from './ArtifactDownloader.js';
 import PanelDocuments from './PanelDocuments.js';
+import PanelResizer from './PanelResizer.js';
+import MediaViewer from './media/MediaViewer.js';
 
 export default class ArtifactPanel {
   static MEDIA = {
@@ -11,8 +13,15 @@ export default class ArtifactPanel {
     audio: { doc: PanelDocuments.audio, title: 'Audio', fail: 'Failed to load audio.' },
   };
 
+  static VIEWER_TYPES = new Set(['image', 'video']);
+
   constructor(ctx) {
     this._ctx = ctx;
+    this._viewer = new MediaViewer(ctx, {
+      onShow: (item, entry) => this._onViewerShow(item, entry),
+      onDownload: () => ArtifactDownloader.download(this._ctx.api, this._ctx.state.panel),
+    });
+    this._resizer = null;
   }
 
   build() {
@@ -24,14 +33,21 @@ export default class ArtifactPanel {
       +   '<div class="cm-ap-monaco" data-monaco-host></div>'
       +   '<iframe class="cm-ap-frame" referrerpolicy="no-referrer" '
       +     'sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals"></iframe>'
+      +   '<div class="cm-ap-media"></div>'
       + '</div>';
     R.processIncludes(this._el());
     PanelDocuments.installScrollbar(this._frame());
+    this._el().querySelector('.cm-ap-media').appendChild(this._viewer.element());
+    const { els, root } = this._ctx;
+    this._resizer = new PanelResizer({ panel: this._el(), stage: els.stage || this._el().parentNode, root, onResize: () => this._relayout() });
+    this._resizer.install();
+    document.addEventListener('keydown', (e) => this._onKey(e));
   }
 
   open(a) {
     if (!a) return undefined;
     const type = a.type || 'html';
+    if (ArtifactPanel.VIEWER_TYPES.has(type)) return this._openViewer(a, type);
     if (ArtifactPanel.MEDIA[type]) return this._openMedia(a, type);
     if (type === 'code') return this._openCode(a);
     if (type === 'html') return this._openHtml(a);
@@ -71,6 +87,8 @@ export default class ArtifactPanel {
 
   close() {
     this._ctx.state.panel = null;
+    this._viewer.reset();
+    if (this._resizer) this._resizer.setTheater(false);
     this.setOpen(false);
     const frame = this._frame();
     if (frame) { frame.removeAttribute('srcdoc'); frame.src = 'about:blank'; }
@@ -85,8 +103,50 @@ export default class ArtifactPanel {
   setLayout(layout) {
     const body = this._el() && this._el().querySelector('.cm-ap-body');
     if (!body) return;
+    if (layout !== 'media' && body.dataset.layout === 'media') this._viewer.reset();
     body.dataset.layout = layout;
     if (layout === 'monaco' || layout === 'split') this._editor().relayoutSoon();
+  }
+
+  toggleTheater() {
+    if (this._resizer) this._resizer.toggleTheater();
+    this._syncTheater();
+  }
+
+  _onKey(e) {
+    if (e.defaultPrevented || !this._ctx.state.panel || !this._el().isConnected) return;
+    if (document.querySelector('.cm-modal-back')) return;
+    const theater = this._resizer && this._resizer.isTheater();
+    if (e.key === 'Escape' && theater && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+      e.preventDefault();
+      this.toggleTheater();
+      return;
+    }
+    if (this._layout() !== 'media') return;
+    if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !MediaViewer._typing(e.target)) {
+      e.preventDefault();
+      this.toggleTheater();
+      return;
+    }
+    this._viewer.onKey(e);
+  }
+
+  _relayout() {
+    if (this._layout() === 'media') this._viewer.relayout();
+    else if (this._layout() === 'monaco' || this._layout() === 'split') this._editor().relayoutSoon();
+  }
+
+  _syncTheater() {
+    const btn = this._el().querySelector('.cm-ap-theater');
+    if (!btn) return;
+    const on = !!(this._resizer && this._resizer.isTheater());
+    btn.classList.toggle('is-on', on);
+    btn.title = on ? 'Back to the chat (Esc)' : 'Theater: give the panel the whole stage (F)';
+  }
+
+  _layout() {
+    const body = this._el() && this._el().querySelector('.cm-ap-body');
+    return body ? body.dataset.layout : '';
   }
 
   title(title, type, building) {
@@ -119,6 +179,7 @@ export default class ArtifactPanel {
       + '<button class="cm-ap-btn cm-ap-mark" res-onclick="res.apMark" title="Mark an area to edit" hidden>' + ChatIcons.brush + '</button>'
       + '<button class="cm-ap-btn cm-ap-share" res-onclick="res.apShare" title="Copy share link" disabled hidden>' + ChatIcons.link + '</button>'
       + '<button class="cm-ap-btn cm-ap-dl" res-onclick="res.apDl" title="Download artifact" disabled>' + ChatIcons.download + '</button>'
+      + '<button class="cm-ap-btn cm-ap-theater" res-onclick="res.apTheater" title="Theater: give the panel the whole stage (F)">' + ChatIcons.theater + '</button>'
       + '<button class="cm-ap-btn cm-ap-pop" res-onclick="res.apPop" title="Open in a full browser tab" disabled>' + ChatIcons.expand + '</button>'
       + '<button class="cm-ap-btn cm-ap-close" res-onclick="res.apClose" title="Close panel">' + ChatIcons.x + '</button>'
       + '</div>');
@@ -126,6 +187,7 @@ export default class ArtifactPanel {
     R.handler('apShare', () => this._share());
     R.handler('apDl', () => ArtifactDownloader.download(this._ctx.api, this._ctx.state.panel));
     R.handler('apPop', () => this._popOut());
+    R.handler('apTheater', () => this.toggleTheater());
     R.handler('apClose', () => this.close());
   }
 
@@ -150,6 +212,32 @@ export default class ArtifactPanel {
   _popOut() {
     const p = this._ctx.state.panel;
     if (p && p.id) { try { this._ctx.api.artifact.open(p.id); } catch (_) {} }
+  }
+
+  _openViewer(a, type) {
+    this._setPanel({ id: a.id, title: a.title || (type === 'video' ? 'Video' : 'Image'), type, url: a.url || null, building: true, b64: null, mime: null });
+    this.title(this._ctx.state.panel.title, type, true);
+    this._setButtons(!!a.url, false);
+    this.setLayout('media');
+    const frame = this._frame();
+    if (frame) { frame.removeAttribute('srcdoc'); frame.src = 'about:blank'; }
+    this.setOpen(true);
+    this._syncTheater();
+    const shown = this._viewer.open(a);
+    if (!MediaViewer._typing(document.activeElement)) this._viewer.focus();
+    return shown;
+  }
+
+  _onViewerShow(item, entry) {
+    const a = item.artifact;
+    const type = a.type || 'image';
+    this._setPanel({
+      id: a.id, title: a.title || (type === 'video' ? 'Video' : 'Image'), type, url: a.url || null,
+      building: !entry, b64: entry ? entry.b64 : null, mime: entry ? entry.mime : null,
+    });
+    this.title(this._ctx.state.panel.title, type, !entry);
+    this._setButtons(!!a.url, !!entry);
+    this._setMark(!!entry && type === 'image');
   }
 
   async _openMedia(a, type) {

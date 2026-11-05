@@ -1,6 +1,7 @@
 const MediaRenderOutcome = require('../media/MediaRenderOutcome');
 const MediaProgressSink = require('../media/MediaProgressSink');
 const MediaTitle = require('../media/MediaTitle');
+const MediaRenderInfo = require('../media/MediaRenderInfo');
 const BridgeGlobals = require('../../BridgeGlobals');
 const ChatToolHandler = require('./ChatToolHandler');
 
@@ -25,10 +26,11 @@ class GenerateImageHandler extends ChatToolHandler {
     }
     const failure = MediaRenderOutcome.failureOf(result, sink, ctx.isAborted, 'generate_image', MediaRenderOutcome.images('generate_image'));
     if (failure) return failure;
-    return GenerateImageHandler._persist(result.images[0], MediaTitle.from(params, prompt), ctx);
+    const render = MediaRenderInfo.from({ tool: 'generate_image', prompt, media: result.images[0], result });
+    return GenerateImageHandler._persist(result.images[0], MediaTitle.from(params, prompt), ctx, render);
   }
 
-  static _persist(img, title, ctx) {
+  static _persist(img, title, ctx, render = null) {
     let artifact;
     try {
       artifact = ctx.deps.artifactStore.create({
@@ -42,7 +44,7 @@ class GenerateImageHandler extends ChatToolHandler {
     } catch (err) {
       return { success: false, error: `Could not persist image artifact: ${err.message}` };
     }
-    ChatToolHandler.publish(ctx, artifact);
+    ChatToolHandler.publish(ctx, MediaRenderInfo.attach(artifact, render));
     return {
       success: true,
       artifact,

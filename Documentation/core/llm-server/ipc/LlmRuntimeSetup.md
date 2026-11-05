@@ -21,8 +21,12 @@ registering or locating a llama.cpp build, install and uninstall.
   (`BinaryLookup.findBinaryIn`) and registers it: `{ binaryPath, dir }`,
   `{ canceled: true }`, or throws `runtimeId is required`, `Unknown runtime: <id>`,
   or `No <name> executable (<names>) found in that folder.` with `notFound: true`.
-- `install(id, opts, send)` sends `start`, streams installer events (cache dropped
-  before `finalize` goes out and again after); on Linux, a successful install of
+- `install(id, opts, send)` sends `start`, then asks the service to release the
+  runtime (`releaseRuntime(id)`: the chat server and group router running from
+  it stop, since the installer wipes its folder) and streams installer events
+  (cache dropped before `finalize` goes out and again after); `resumeRuntime`
+  brings the router back in a `finally`, on success or failure. A service
+  without those two hooks installs as before. On Linux, a successful install of
   one of `LlamaDeviceProbe.RUNTIME_IDS` (Vulkan, SYCL, ROCm) also clears the
   cached diagnostics (`setCachedDiagnostics(null)`); `opts.channel === 'prerelease'`
   selects the pre-release build; resolves `{ result }`. A failure sends

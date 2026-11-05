@@ -8,6 +8,7 @@ const DownloadError = require('./DownloadError');
 const DownloadRetry = require('./DownloadRetry');
 const FreeSpaceGuard = require('./FreeSpaceGuard');
 const HubAuth = require('./HubAuth');
+const CivitaiAuth = require('./CivitaiAuth');
 const ParallelDownload = require('./ParallelDownload');
 const SequentialDownload = require('./SequentialDownload');
 
@@ -35,7 +36,7 @@ class ResumableDownload {
     const partPath = PartialFile.pathFor(destPath);
     this._job = {
       url, destPath, partPath, controller, onResume, onProgress, onVerify, parallel, chunkSize, verify, attempts, sleep,
-      headers: headers || HubAuth.headersFor(url),
+      headers: headers || { ...HubAuth.headersFor(url), ...CivitaiAuth.headersFor(url) },
       expectedSize: Number(expectedSize) || 0,
       expectedSha256: expectedSha256 ? String(expectedSha256).toLowerCase() : null,
       metaPath: ChunkMeta.pathFor(partPath),

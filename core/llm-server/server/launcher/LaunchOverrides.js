@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const KvCacheModes = require('../../../shared/llm/KvCacheModes');
 const LaunchPlanner = require('../LaunchPlanner');
 const ContextEstimator = require('../../ContextEstimator');
@@ -45,7 +47,24 @@ class LaunchOverrides {
       noNgramSpec: !!defaults.noNgramSpec,
       suppressMmprojLoad: !ctx.withVision,
       ramPin: LaunchOverrides._ramPin(ctx, freeMemory),
+      moeProfileDir: LaunchOverrides._moeProfileDir(ctx),
     };
+  }
+
+  static MOE_PROFILE_DIR = 'moe-profiles';
+
+  static _moeProfileDir(ctx) {
+    try {
+      const service = ctx.service;
+      const base = service && typeof service.moeProfileDir === 'function'
+        ? service.moeProfileDir()
+        : path.join(require('electron').app.getPath('userData'), LaunchOverrides.MOE_PROFILE_DIR);
+      if (!base) return null;
+      fs.mkdirSync(base, { recursive: true });
+      return base;
+    } catch (_) {
+      return null;
+    }
   }
 
   static _promptCacheRam(settingsDb) {

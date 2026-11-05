@@ -12,6 +12,9 @@ Every `DownloadError` extends `Error` with `code`, `status` (HTTP, or null),
 
 - `HF_ACCESS_DENIED` 401/403 on a Hub host: the repo is gated or private. The
   message says whether no `HF_TOKEN` is set or the set one lacks access.
+- `CIVITAI_ACCESS_DENIED` 401/403 on civitai.com: the version needs a logged-in
+  account (early access, or the creator's setting). The message says whether no
+  CivitAI API key is set ([CivitaiAuth](CivitaiAuth.md)) or the set one was refused.
 - `DOWNLOAD_NOT_FOUND` 404.
 - `DOWNLOAD_INTEGRITY` size or sha256 mismatch; never retried.
 - `DOWNLOAD_NO_SPACE` the free-space guard refused.
@@ -22,7 +25,7 @@ Every `DownloadError` extends `Error` with `code`, `status` (HTTP, or null),
 ## Methods
 
 - `DownloadError.fromStatus(status, { url, forLabel, headers })` maps a status
-  as above; `url` decides whether 401/403 is the Hub access error.
+  as above; `url` decides whether 401/403 is the Hub or CivitAI access error.
 - `DownloadError.fromRequest(err, { url, forLabel })` normalises an axios or
   plain error (typed errors pass through unchanged).
 - `DownloadError.retryAfterMs(headers)` reads delay-seconds or an HTTP date.

@@ -13,6 +13,7 @@ const MoeExpertPlan = require('./launch/MoeExpertPlan');
 const OffloadDecision = require('./launch/OffloadDecision');
 const SplitPlan = require('./launch/SplitPlan');
 const LoadingPolicy = require('./launch/LoadingPolicy');
+const MoeRamTierPlan = require('./launch/MoeRamTierPlan');
 const FamilyTuning = require('./launch/FamilyTuning');
 const LaunchArgsBuilder = require('./launch/LaunchArgsBuilder');
 const KvCacheSizer = require('./launch/KvCacheSizer');
@@ -107,6 +108,7 @@ class LaunchPlanner extends MediaLaunchPlanner {
   _resolveServing() {
     const s = this._s;
     s.loading = LoadingPolicy.resolve(s);
+    s.ramTier = MoeRamTierPlan.resolve(s);
     s.family = FamilyTuning.resolve(s);
     s.skippedFlags = [
       ...(s.flags.flashAttn ? [] : ['--flash-attn']),

@@ -22,6 +22,7 @@ class OpenAiChatBody {
     reasoningBudget = null,
     promptCacheKey = null,
     promptCacheRetention = '24h',
+    moeCacheBatch = null,
     extra = null,
   } = {}) {
     const body = OpenAiChatBody._baseBody({
@@ -31,6 +32,7 @@ class OpenAiChatBody {
     OpenAiChatBody._applyThinkingControls(body, chatTemplateKwargs, reasoningBudget);
     OpenAiChatBody._applyTools(body, tools, toolChoice, parallelToolCalls);
     OpenAiChatBody._applyPromptCache(body, promptCacheKey, promptCacheRetention);
+    OpenAiChatBody._applyMoeCacheBatch(body, local, moeCacheBatch);
     return body;
   }
 
@@ -71,6 +73,11 @@ class OpenAiChatBody {
     body.tools = tools;
     body.tool_choice = toolChoice;
     if (parallelToolCalls === true) body.parallel_tool_calls = true;
+  }
+
+  static _applyMoeCacheBatch(body, local, moeCacheBatch) {
+    if (!local || !Number.isInteger(moeCacheBatch) || moeCacheBatch <= 0) return;
+    body.moe_cache_batch = moeCacheBatch;
   }
 
   static _applyPromptCache(body, promptCacheKey, promptCacheRetention) {

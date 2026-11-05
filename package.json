@@ -1,6 +1,6 @@
 {
   "name": "lumabrowser",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "private": true,
   "description": "Your local AI stack in one app",
   "homepage": "https://lumabyte.com",
@@ -37,6 +37,8 @@
     "shots:readme": "node scripts/readme-shots.js",
     "test:clean": "npm run cleanup && npm test",
     "profile:performance": "node scripts/profile-performance.js",
+    "bench:llm-launch": "node scripts/bench-llm-launch.js",
+    "rp:text": "node scripts/rp-text-run.js",
     "profile:summarize-runtime": "node scripts/summarize-runtime-trace.js",
     "crash:repro": "node scripts/crash-repro.js",
     "test:performance": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js --config=tests/performance.config.js --runInBand --silent",

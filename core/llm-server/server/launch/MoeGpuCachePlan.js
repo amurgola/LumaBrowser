@@ -7,15 +7,39 @@ class MoeGpuCachePlan {
 
   static MIN_SLOTS_PER_CARD_FACTOR = 4;
 
+  static PROMPT_BATCH = 4096;
+
+  static PROMPT_TOKEN_BYTES = 256 * 1024;
+  static PROMPT_BATCH_STEPS = [4096, 2048, 1024, 512];
+  static MAX_PROMPT_RESERVE_SHARE = 0.35;
+
   static resolve(input) {
     const off = MoeGpuCachePlan._offReason(input);
-    if (off) return { enabled: false, bytes: 0, mib: 0, reason: off };
-    const bytes = Math.min(Math.floor(input.fillBudget), Math.ceil(input.expertBytes));
-    if (bytes < MoeGpuCachePlan._floorBytes(input)) {
-      return { enabled: false, bytes: 0, mib: 0, reason: 'too little spare VRAM for a useful expert cache' };
-    }
+    if (off) return MoeGpuCachePlan._off(off);
+    const prompt = MoeGpuCachePlan.promptReserve(input);
+    const bytes = Math.min(Math.floor(input.fillBudget - prompt.reserveBytes), Math.ceil(input.expertBytes));
+    if (bytes < MoeGpuCachePlan._floorBytes(input)) return MoeGpuCachePlan._off('too little spare VRAM for a useful expert cache');
     const mib = Math.floor(bytes / MoeGpuCachePlan.MIB);
-    return { enabled: true, bytes: mib * MoeGpuCachePlan.MIB, mib, reason: null };
+    return {
+      enabled: true, bytes: mib * MoeGpuCachePlan.MIB, mib, reason: null,
+      promptBatch: prompt.batch > 512 ? prompt.batch : null, promptBufferBytes: prompt.bufferBytes, promptReserveBytes: prompt.reserveBytes,
+    };
+  }
+
+  static _off(reason) {
+    return { enabled: false, bytes: 0, mib: 0, promptBatch: null, promptBufferBytes: 0, promptReserveBytes: 0, reason };
+  }
+
+  static promptReserve({ fillBudget, budget }) {
+    const cards = Math.max(1, MoeGpuCachePlan._localCards(budget));
+    const limit = Math.max(0, Number(fillBudget) || 0) * MoeGpuCachePlan.MAX_PROMPT_RESERVE_SHARE;
+    const steps = MoeGpuCachePlan.PROMPT_BATCH_STEPS;
+    let batch = steps[steps.length - 1];
+    for (const step of steps) {
+      if (step * MoeGpuCachePlan.PROMPT_TOKEN_BYTES * cards <= limit) { batch = step; break; }
+    }
+    const bufferBytes = batch * MoeGpuCachePlan.PROMPT_TOKEN_BYTES;
+    return { batch, bufferBytes, reserveBytes: bufferBytes * cards };
   }
 
   static _offReason({ overrides, flags, budget, gguf, expertBytes, cpuExpertBytes }) {
@@ -38,8 +62,15 @@ class MoeGpuCachePlan {
   }
 
   static _floorBytes({ budget, gguf, maxExpertSliceBytes }) {
-    const perCard = (Number(gguf.expertUsedCount) + 1) * (Number(maxExpertSliceBytes) || 0) * MoeGpuCachePlan.MIN_SLOTS_PER_CARD_FACTOR;
-    return Math.max(MoeGpuCachePlan.MIN_BYTES, perCard * MoeGpuCachePlan._localCards(budget));
+    return Math.max(MoeGpuCachePlan.MIN_BYTES, MoeGpuCachePlan._perCardSlotBytes(gguf, maxExpertSliceBytes) * MoeGpuCachePlan._localCards(budget));
+  }
+
+  static floorBytesPerCard(gguf, maxExpertSliceBytes) {
+    return Math.max(MoeGpuCachePlan.MIN_BYTES, MoeGpuCachePlan._perCardSlotBytes(gguf, maxExpertSliceBytes));
+  }
+
+  static _perCardSlotBytes(gguf, maxExpertSliceBytes) {
+    return (Number(gguf.expertUsedCount) + 1) * (Number(maxExpertSliceBytes) || 0) * MoeGpuCachePlan.MIN_SLOTS_PER_CARD_FACTOR;
   }
 }
 

@@ -21,6 +21,10 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
 
   static SAGE_ATTENTION_FLAG = '--sage-attn';
 
+  static EAGER_LOAD_FLAG = '--eager-load';
+
+  static VAE_TILE_SIZE_FLAG = '--vae-tile-size';
+
   static inferLoaderFlag(filePath) {
     const ext = path.extname(filePath || '').toLowerCase();
     return ext === '.gguf' ? '--diffusion-model' : '-m';
@@ -55,6 +59,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
       ...this._listenArgs(),
       ...this._fileRoleArgs(),
       ...this._performanceArgs(),
+      ...this._eagerLoadArgs(),
       ...this._sageAttentionArgs(),
       ...this._vaeTilingArgs(),
       ...this._loraDirArgs(),
@@ -81,6 +86,8 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
       vaeTiling: args.includes('--vae-tiling'),
       flashAttention: args.includes('--diffusion-fa'),
       sageAttention: args.includes(ImageLaunchPlanner.SAGE_ATTENTION_FLAG),
+      eagerLoad: args.includes(ImageLaunchPlanner.EAGER_LOAD_FLAG),
+      vaeTileSize: ImageLaunchPlanner._valueAfter(args, ImageLaunchPlanner.VAE_TILE_SIZE_FLAG),
       files: ImageLaunchPlanner._fileBasenames(model.files),
     };
   }
@@ -117,8 +124,16 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
     return this._overrides.sageAttention && !this._unsupported.has(flag) ? [flag] : [];
   }
 
+  _eagerLoadArgs() {
+    const flag = ImageLaunchPlanner.EAGER_LOAD_FLAG;
+    return this._overrides.eagerLoad && !this._unsupported.has(flag) ? [flag] : [];
+  }
+
   _vaeTilingArgs() {
-    return this._overrides.vaeTiling && !this._unsupported.has('--vae-tiling') ? ['--vae-tiling'] : [];
+    if (!this._overrides.vaeTiling || this._unsupported.has('--vae-tiling')) return [];
+    const size = this._overrides.vaeTileSize;
+    if (!size || this._unsupported.has(ImageLaunchPlanner.VAE_TILE_SIZE_FLAG)) return ['--vae-tiling'];
+    return ['--vae-tiling', ImageLaunchPlanner.VAE_TILE_SIZE_FLAG, String(size)];
   }
 
   _loraDirArgs() {
@@ -158,6 +173,11 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
     if (!diagnostics) return 0;
     const vram = (diagnostics.budget || {}).vram || {};
     return Number(vram.maxBytes) || Number(vram.totalBytes) || 0;
+  }
+
+  static _valueAfter(args, flag) {
+    const at = args.indexOf(flag);
+    return at >= 0 && at + 1 < args.length ? args[at + 1] : null;
   }
 
   static _fileBasenames(files) {

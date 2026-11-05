@@ -15,6 +15,12 @@ class RuntimeFlags {
 
   static LUMA_MOE_CACHE_MIN_TAG = 4;
 
+  static LUMA_MOE_TIERS_MIN_TAG = 5;
+
+  static LUMA_MOE_REGISTER_MIN_TAG = 6;
+
+  static MOE_RAM_REGISTER_FLAG = '--moe-ram-register-mib';
+
   static TENSOR_SPLIT_RUNTIME_IDS = ['llama-cpp-cuda12', 'llama-cpp-cuda13', 'llama-cpp-luma'];
 
   constructor(runtime) {
@@ -27,6 +33,7 @@ class RuntimeFlags {
     this.specDialect = runtime.specDialect === 'ik' ? 'ik' : 'mainline';
     this.build = LlamaBuildNumber.parse(runtime.version);
     this.isLuma = runtime.id === RuntimeFlags.LUMA_RUNTIME_ID;
+    this.lumaTag = this.isLuma ? RuntimeFlags.lumaTag(runtime) : null;
     this._resolveFeatureFlags();
     this._resolveSpeculationFlags();
     this._resolveBuildGates();
@@ -34,6 +41,15 @@ class RuntimeFlags {
 
   accepts(flag) {
     return !this.unsupported.has(flag);
+  }
+
+  static lumaTag(runtime) {
+    const manifestTag = runtime.manifest && runtime.manifest.release && runtime.manifest.release.tag;
+    for (const text of [manifestTag, runtime.version]) {
+      const match = /luma-b(\d+)/i.exec(String(text || ''));
+      if (match) return Number(match[1]);
+    }
+    return null;
   }
 
   _resolveFeatureFlags() {
@@ -72,12 +88,19 @@ class RuntimeFlags {
   _resolveMoeCacheGate(build) {
     const accepted = this.accepts('--moe-cache-mib');
     if (this.isLuma) {
-      this.moeCache = accepted && Number(this.build) >= RuntimeFlags.LUMA_MOE_CACHE_MIN_TAG;
+      const atLeast = (minTag) => this.lumaTag == null || this.lumaTag >= minTag;
+      this.moeCache = accepted && atLeast(RuntimeFlags.LUMA_MOE_CACHE_MIN_TAG);
       this.moeCacheMultiGpu = this.moeCache;
+      this.moeTiers = this.moeCache && atLeast(RuntimeFlags.LUMA_MOE_TIERS_MIN_TAG)
+        && this.accepts('--moe-ram-mib') && this.accepts('--moe-profile');
+      this.moeRamRegister = this.moeTiers && atLeast(RuntimeFlags.LUMA_MOE_REGISTER_MIN_TAG)
+        && this.accepts(RuntimeFlags.MOE_RAM_REGISTER_FLAG);
       return;
     }
     this.moeCache = accepted && build >= RuntimeFlags.MOE_CACHE_MIN_BUILD;
     this.moeCacheMultiGpu = accepted && build >= RuntimeFlags.MOE_CACHE_MULTI_GPU_MIN_BUILD;
+    this.moeTiers = false;
+    this.moeRamRegister = false;
   }
 }
 

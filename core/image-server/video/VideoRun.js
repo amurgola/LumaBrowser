@@ -29,7 +29,7 @@ class VideoRun extends LocalImageRun {
     this._logVideo(ms, video);
     this._notify(`${this.doneLabel} in ${(ms / 1000).toFixed(1)}s`, 'success');
     this._send('done', { video: VideoRun._toWire(video), modelId: this._wantId });
-    this._finish({ success: true, video });
+    this._finish({ success: true, video, modelId: this._wantId });
   }
 
   _failNoOutput() {

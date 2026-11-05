@@ -119,7 +119,7 @@ class CoreIpcRegistrar {
   _registerMediaServers() {
     const s = this._s;
     const notify = (message, type) => this._ctx.notifyModelStatus(message, type);
-    const image = AppGlobals.publish('__lumaImageRouter', ImageIpcHandlers.register(s.imageServerService, { notify }).router);
+    const image = AppGlobals.publish('__lumaImageRouter', ImageIpcHandlers.register(s.imageServerService, { notify, llmService: s.llmService }).router);
     const video = AppGlobals.publish('__lumaVideoRouter', VideoIpcHandlers.register(s.imageServerService, { notify }).router);
     const music = AppGlobals.publish('__lumaMusicRouter', MusicIpcHandlers.register(s.musicServerService, { notify }).router);
     WhisperIpcHandlers.register(s.whisperServerService);

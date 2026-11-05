@@ -14,7 +14,8 @@ normalises its output onto the chat router's hooks.
   back to `BridgeRun.DEFAULTS`. Creates `control` ([RunControl](turn/RunControl.md)).
 - `start()` returns `{ abort, done }`. Setup is synchronous (and throws for a
   missing `deps`); `done` runs the turn and resolves after the terminal hook.
-- `BridgeRun.DEFAULTS`, `IMAGES_GROUP`.
+- `BridgeRun.DEFAULTS` (now also `userMessageId`, the stored user row this
+  turn's task came from), `IMAGES_GROUP`.
 
 ## Flow
 
@@ -33,14 +34,18 @@ normalises its output onto the chat router's hooks.
    [CompletionDriver](turn/CompletionDriver.md), [AgentEventRelay](turn/AgentEventRelay.md).
 3. Agent: `new AgentRunner({ browserTools, sendCompletion }, { browserService },
    deps.db)`.
-4. Turn: [TurnPrompt](prompt/TurnPrompt.md), groups pre-activated by
-   [GroupIntent](groups/GroupIntent.md), the [ArtifactCatalog](prompt/ArtifactCatalog.md),
-   the [VisionHint](prompt/VisionHint.md).
-5. `done`: [GroupRouting](groups/GroupRouting.md), the
+4. Turn: [TurnPrompt](prompt/TurnPrompt.md) (with `priorMessages` as the sent
+   forms, so prior user turns are re-sent as the model saw them), groups
+   pre-activated by [GroupIntent](groups/GroupIntent.md), the
+   [ArtifactCatalog](prompt/ArtifactCatalog.md), the [VisionHint](prompt/VisionHint.md).
+5. `done`: [GroupRouting](groups/GroupRouting.md), then the group state's
+   `freezePromptKeys` (the conversation's first turn fixes the groups the
+   system prompt carries) and `pendingManualKeys`, the
    [ImagePromptHint](prompt/ImagePromptHint.md) when the images group is
-   active, [SystemPromptAppend](prompt/SystemPromptAppend.md) (with the run's
-   own available groups), `RunToolSet#runToolList`, then `agent.run` with the
-   catalog plus task, `priorTurns`, the [RunResultSpill](RunResultSpill.md)
+   active, [SystemPromptAppend](prompt/SystemPromptAppend.md) (with the frozen
+   `promptKeys` as its active groups), `RunToolSet#runToolList`, then `agent.run` with the
+   catalog, the pending manuals ([ManualDelivery](prompt/ManualDelivery.md))
+   and the task, `priorTurns`, the [RunResultSpill](RunResultSpill.md)
    writer, `tabId`/`lazyTab` (a pinned tab is used as is), `autoCloseTab:
    false`, the budget, `tools`, `systemPromptAppend`, `systemPromptOverride`,
    `promptExperiments`, `nativeTools`, `nativeToolsTokens`,
@@ -50,6 +55,11 @@ normalises its output onto the chat router's hooks.
    `shouldAbort`.
 6. The preview ends BEFORE any terminal hook, then [TurnFinisher](turn/TurnFinisher.md);
    a lazily created work tab is closed after, off the critical path.
+7. On the run's first request (the driver's `onFirstSend`): the pending manuals
+   are marked delivered and the task text as sent is written to the user row
+   (`chatStore.updateMessage(userMessageId, { sentContent })`), so later turns
+   re-send it byte for byte and the server's KV cache keeps everything after
+   it. A turn without `userMessageId` (the sharing proxy) records nothing.
 
 ## Tool context
 

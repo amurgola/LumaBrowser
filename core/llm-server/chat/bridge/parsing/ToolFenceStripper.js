@@ -1,9 +1,12 @@
 class ToolFenceStripper {
+  static DSML_TAIL = /<(?:[｜|](?:D(?:S(?:M(?:L(?:[｜|][\s\S]*)?)?)?)?)?)?$/;
+
   static stripDebris(text) {
     return String(text || '')
       .replace(/```tool[\s\S]*?(?:```|$)/g, '')
       .replace(/<tool_call>[\s\S]*?(?:<\/tool_call>|$)/gi, '')
       .replace(/<function\s*(?:=|name\s*=)[\s\S]*?(?:<\/function>|$)/gi, '')
+      .replace(ToolFenceStripper.DSML_TAIL, '')
       .replace(/[`\s]+$/, '');
   }
 
