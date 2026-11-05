@@ -15,7 +15,7 @@ class ImageSlotRoles {
   }
 
   static pickerRole(role) {
-    return role === ImageSlotRoles.EDIT ? ImageSlotRoles.EDIT : ImageSlotRoles.GENERATE;
+    return ImageSlotRoles.normalize(role);
   }
 
   static defaultKey(role) {

@@ -76,7 +76,33 @@ class InternalTabLoader {
 
   _onFinishLoad() {
     this._service.tabLoadedOk = !this._navFailed;
-    if (this._service.tabLoadedOk) this._attempts = 0;
+    if (!this._service.tabLoadedOk) return;
+    if (this._needsIdentityCheck()) this._verifyOurPage();
+    else this._attempts = 0;
+  }
+
+  _needsIdentityCheck() {
+    if (!this._service.tabMarkerId || typeof this._wc.executeJavaScript !== 'function') return false;
+    if (InternalTabLoader._isServingFile(this._service)) return false;
+    return !String(this._wc.getURL() || '').startsWith('file:');
+  }
+
+  _verifyOurPage() {
+    const marker = this._service.tabMarkerId;
+    this._wc.executeJavaScript(`!!document.getElementById(${JSON.stringify(marker)})`, true)
+      .then((ours) => {
+        if (ours === false) this._onForeignPage();
+        else this._attempts = 0;
+      })
+      .catch(() => {});
+  }
+
+  _onForeignPage() {
+    if (this._wc.isDestroyed() || this._service.tabLoadedOk !== true) return;
+    this._navFailed = true;
+    this._service.tabLoadedOk = false;
+    this._attempts += 1;
+    this._scheduleRetry(this._nextUrl());
   }
 
   _nextUrl() {

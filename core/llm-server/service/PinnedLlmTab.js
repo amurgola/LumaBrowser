@@ -4,6 +4,7 @@ const InternalTabLoader = require('../../shell/InternalTabLoader');
 
 class PinnedLlmTab {
   static GATEWAY_PATH = '/llm-ui/llm-tab.html';
+  static MARKER_ID = 'setupRoot';
   static TITLE = 'LLM';
   static KIND = 'llm';
 
@@ -12,6 +13,7 @@ class PinnedLlmTab {
     this.tabHtmlPath = path.join(rootDir, 'ui', 'llm-tab.html');
     this.tabHtmlFileUrl = pathToFileURL(this.tabHtmlPath).href;
     this.tabHtmlUrl = this.tabHtmlFileUrl;
+    this.tabMarkerId = PinnedLlmTab.MARKER_ID;
     this.tabPreloadPath = path.join(rootDir, 'llm-tab-preload.js');
     this.tabViewManager = null;
     this.pinnedTabId = null;

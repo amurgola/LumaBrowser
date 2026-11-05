@@ -125,6 +125,13 @@ class TerminalSession {
     this.send('abort-result', { ok: true });
   }
 
+  history() {
+    if (!this.conversationId) return this.fail('send hello first', 'no-session');
+    const router = this.getRouter();
+    const messages = router && router.chatStore ? this._history(router.chatStore) : [];
+    return this.send('history', { conversationId: this.conversationId, messages });
+  }
+
   openInApp() {
     if (!this.conversationId) return this.fail('send hello first', 'no-session');
     const svc = this.getLlmServer();
@@ -157,6 +164,7 @@ class TerminalSession {
       case 'approve': return this.approve(p);
       case 'abort': return this.abort();
       case 'list-agents': return this.listAgents();
+      case 'history': return this.history();
       case 'open-in-app': return this.openInApp();
       case 'commit-message': return this.commitMessage(p);
       default: return this.fail(`unknown frame type: ${type}`);

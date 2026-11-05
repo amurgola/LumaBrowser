@@ -7,6 +7,9 @@ class AppLinksApi extends PreloadSection {
       apiSecurity: {
         get: () => ipcRenderer.invoke('core.settings.apiSecurity.get'),
       },
+      apiServer: {
+        status: () => ipcRenderer.invoke('core.settings.getApiStatus'),
+      },
       getPersona: () => ipcRenderer.invoke('core.settings.getPersona'),
       debug: {
         getLogs: () => ipcRenderer.invoke('core.debug.getLogs'),

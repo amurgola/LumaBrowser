@@ -1132,6 +1132,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/setup-ui/defaults/PollingHint.md](core/llm-server/ui/js/setup-ui/defaults/PollingHint.md): base class of the Defaults card's live caption hints: fetch a status, paint the hint, poll again while it is still on its way.
 - [core/llm-server/ui/js/setup-ui/defaults/RamPinHint.md](core/llm-server/ui/js/setup-ui/defaults/RamPinHint.md): the "RAM pin" row's caption: pin progress, pinned size or refusal; keeps polling while enabled but not yet started.
 - [core/llm-server/ui/js/setup-ui/diagnostics/ApiSecurityCard.md](core/llm-server/ui/js/setup-ui/diagnostics/ApiSecurityCard.md): the Server Info "API Security" card: whether the local LLM and Image servers are gated by a Bearer key right now.
+- [core/llm-server/ui/js/setup-ui/diagnostics/ApiServerBanner.md](core/llm-server/ui/js/setup-ui/diagnostics/ApiServerBanner.md): the Setup header's warning while the REST gateway is not listening (port held by another program): why, who holds it, and the link to Settings > API & MCP.
 - [core/llm-server/ui/js/setup-ui/diagnostics/BudgetCard.md](core/llm-server/ui/js/setup-ui/diagnostics/BudgetCard.md): the Server Info "Model budget" card: the RAM and VRAM the launch planner may spend after reserves, per adapter, with an explanation when no adapter reports VRAM.
 - [core/llm-server/ui/js/setup-ui/diagnostics/CpuCard.md](core/llm-server/ui/js/setup-ui/diagnostics/CpuCard.md): the Server Info "CPU" card: model, logical cores and base clock.
 - [core/llm-server/ui/js/setup-ui/diagnostics/CudaCard.md](core/llm-server/ui/js/setup-ui/diagnostics/CudaCard.md): the Server Info "CUDA" card: the CUDA version and each NVIDIA device from nvidia-smi, or why CUDA was not detected, with the nvidia-smi PATH hint.
@@ -1474,6 +1475,8 @@ Small building blocks shared by more than one subsystem.
 - [core/network-sharing/host/llm/SseChannel.md](core/network-sharing/host/llm/SseChannel.md): lazily opened SSE response; has `open`, `data`, `event`, `done`.
 - [core/network-sharing/host/llm/TurnUsageMeter.md](core/network-sharing/host/llm/TurnUsageMeter.md): records a shared turn's usage once; has `setUsage`, `bank`.
 - [core/network-sharing/host/media/SharedImageJob.md](core/network-sharing/host/media/SharedImageJob.md): one queued shared image request; has `run`.
+- [core/network-sharing/host/media/SharedMediaJob.md](core/network-sharing/host/media/SharedMediaJob.md): base of the shared image and video jobs (refusal, NDJSON stream, queue, disconnect abort, usage); has `run`.
+- [core/network-sharing/host/media/SharedVideoJob.md](core/network-sharing/host/media/SharedVideoJob.md): one queued shared video request on the host video slot, clip streamed back base64; has `run`.
 - [core/network-sharing/host/media/SharedVoice.md](core/network-sharing/host/media/SharedVoice.md): host speech-to-text and TTS for shared clients; has `status`, `transcribe`, `synthesisRefusal`.
 - [core/network-sharing/host/media/VoiceViews.md](core/network-sharing/host/media/VoiceViews.md): path-free voice readiness views; has `stt`, `tts`.
 - [core/network-sharing/host/media/VoiceAudioInput.md](core/network-sharing/host/media/VoiceAudioInput.md): reads audio from a transcribe request; has `read`, `isUsable`.
@@ -1636,6 +1639,7 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/server/image/SdCppHttpAdapter.md](core/image-server/server/image/SdCppHttpAdapter.md): ImageAdapter for sd-server image generation; has `protocolId`, `healthCheck`, `generate`.
 - [core/image-server/server/image/SdCppVideoAdapter.md](core/image-server/server/image/SdCppVideoAdapter.md): ImageAdapter for sd-server video generation; has `protocolId`, `healthCheck`, `generate`.
 - [core/image-server/server/image/RemoteImageAdapter.md](core/image-server/server/image/RemoteImageAdapter.md): ImageAdapter for a Network Sharing peer's image server; has `protocolId`, `healthCheck`, `generate`.
+- [core/image-server/server/image/RemoteVideoAdapter.md](core/image-server/server/image/RemoteVideoAdapter.md): RemoteImageAdapter fixed to a Network Sharing peer's video slot; has `protocolId`, `healthCheck`, `generate`.
 - [core/image-server/server/image/RemoteImageStream.md](core/image-server/server/image/RemoteImageStream.md): one remote image request's event stream; has `onResponse`, `fail`, `abort`.
 - [core/image-server/server/image/SdcppImageBody.md](core/image-server/server/image/SdcppImageBody.md): builds the sd-server image request body; has `build`.
 - [core/image-server/server/image/SdcppVideoBody.md](core/image-server/server/image/SdcppVideoBody.md): builds the sd-server video request body; has `build`, `frameCount`, `fps`.
@@ -1672,6 +1676,7 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/video/VideoFrameFit.md](core/image-server/video/VideoFrameFit.md): fits the video canvas to a start frame's aspect; has `fit`.
 - [core/image-server/video/VideoRequestPlanner.md](core/image-server/video/VideoRequestPlanner.md): video request to adapter parameters; has `plan`, `frameCount`, `fps`.
 - [core/image-server/video/VideoRun.md](core/image-server/video/VideoRun.md): one local video render; has `start`, `abort`.
+- [core/image-server/video/RemoteVideoRun.md](core/image-server/video/RemoteVideoRun.md): video render relayed to a sharing peer, clip resolved in the local shape; has `start`, `abort`.
 - [core/image-server/ipc/ImageModelManifest.md](core/image-server/ipc/ImageModelManifest.md): image model manifest read and write with a contained model folder; has `read`, `write`, `modelDir`.
 - [core/image-server/ipc/ImageSlots.md](core/image-server/ipc/ImageSlots.md): operations across all image slots; has `stopHosting`, `stopAll`, `status`.
 - [core/image-server/ipc/ImageModelsView.md](core/image-server/ipc/ImageModelsView.md): installed and catalog image model views; has `view`, `catalogView`, `setModelsDir`.
@@ -2037,6 +2042,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shell/harness-connections/connectors/CodexConnector.md](core/shell/harness-connections/connectors/CodexConnector.md): connects Codex to LumaBrowser over the Responses wire API (and upgrades chat-era tables); has `plan`, `inspect`, `legacyPriors`.
 - [core/shell/harness-connections/connectors/OpenCodeConnector.md](core/shell/harness-connections/connectors/OpenCodeConnector.md): connects OpenCode to LumaBrowser; has `plan`, `inspect`, `legacyPriors`.
 - [core/shell/harness-connections/connectors/ClineConnector.md](core/shell/harness-connections/connectors/ClineConnector.md): connects Cline to LumaBrowser; has `plan`, `inspect`, `legacyPriors`.
+- [core/shell/harness-connections/connectors/JetBrainsAirConnector.md](core/shell/harness-connections/connectors/JetBrainsAirConnector.md): registers LumaBrowser as a JetBrains Air ACP agent (~/.jetbrains/acp.json) and our MCP server (~/.jetbrains/mcp/mcp.json); has `plan`, `inspect`, `detectInstalled`.
 - [core/shell/shellClassifier/ShellClassifier.md](core/shell/shellClassifier/ShellClassifier.md): sorts a shell command line into readonly, normal, mass-destructive or forbidden; has `classify`.
 - [core/shell/shellClassifier/ShellWriteBoundary.md](core/shell/shellClassifier/ShellWriteBoundary.md): checks whether a command line's writes stay inside allowed roots; has `check`.
 - [core/shell/shellClassifier/ShellTier.md](core/shell/shellClassifier/ShellTier.md): shell classifier tiers on a mildest-to-harshest ladder; has `severity`, `compare`, `harshest`, `worst`, `isWorse`, `isAtLeast`, `sortWorstFirst`.
@@ -2080,6 +2086,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shell/settings/AppPreferences.md](core/shell/settings/AppPreferences.md): update checks, bookmarks bar and DNS provider; has getters and setters.
 - [core/shell/settings/StartupSettings.md](core/shell/settings/StartupSettings.md): run on startup, start hidden and restore tabs; has `getRunOnStartup`, `setRunOnStartup`, `setStartHidden`, `setRestoreTabs`.
 - [core/shell/settings/McpServerEntry.md](core/shell/settings/McpServerEntry.md): MCP server entry and config export; has `build`, `clientConfig`, `exportConfig`.
+- [core/shell/settings/AcpAgentEntry.md](core/shell/settings/AcpAgentEntry.md): the `luma acp` command an editor runs (app binary in Node mode on the installed or bundled CLI); has `build`.
 - [core/shell/settings/AgentHarnessSettings.md](core/shell/settings/AgentHarnessSettings.md): connect your coding agent settings; has `list`, `connect`, `disconnect`, `preview`, `writeSkills`.
 - [core/shell/settings/EndpointSettings.md](core/shell/settings/EndpointSettings.md): disabled API groups and tools; has `getAvailable`, `setConfig`.
 - [core/shell/settings/SetupCompletion.md](core/shell/settings/SetupCompletion.md): first-run wizard record; has `get`, `complete`, `reset`.
@@ -3511,8 +3518,10 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [app/ready/AppMenu.md](app/ready/AppMenu.md): the application menu.
 - [app/ready/BackgroundStarts.md](app/ready/BackgroundStarts.md): starts the work that must not compete with the first window paint.
 - [app/ready/DeferredServices.md](app/ready/DeferredServices.md): the deferred startup phase, run once per process.
+- [app/ready/GatewayBinder.md](app/ready/GatewayBinder.md): binds the REST gateway to its configured port and retries (2 s x 30, then every 30 s) when the bind fails; the port is never swapped; the first failure is reported once.
 - [app/ready/HeavyServices.md](app/ready/HeavyServices.md): the heavy half of startup, exposed by [WindowServices](app/browser/WindowServices.md) and run by [DeferredServices](app/ready/DeferredServices.md).
 - [app/ready/InternalBearerInjector.md](app/ready/InternalBearerInjector.md): the one `onBeforeSendHeaders` listener each session gets.
+- [app/ready/PortConflict.md](app/ready/PortConflict.md): explains a port the gateway could not bind: another LumaBrowser (its /api/health says so) or another program, named from the OS listener table where possible.
 - [app/ready/ReadyPhase.md](app/ready/ReadyPhase.md): everything that waits for Electron's ready event.
 - [app/ready/SessionSetup.md](app/ready/SessionSetup.md): session-wide browser policy once the app is ready.
 - [app/ready/SettledStarts.md](app/ready/SettledStarts.md): the ready-time starts that follow the main ready phase (their own `whenReady` callback, as in legacy).
@@ -3806,6 +3815,12 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [cli/lib/BridgeLink.md](cli/lib/BridgeLink.md): the bridge socket as the small `link` the full-screen [App](cli/lib/tui/session/App.md) consumes, so the app can run in tests and replays without a socket.
 - [cli/lib/FrameWaiters.md](cli/lib/FrameWaiters.md): request and reply over the bridge's one-way frame stream, shared by both sessions.
 - [cli/lib/RollbackBuffer.md](cli/lib/RollbackBuffer.md): holds back streamed text that might turn out to be a tool call.
+- [cli/lib/acp/AcpCommand.md](cli/lib/acp/AcpCommand.md): `luma acp`: LumaBrowser as an Agent Client Protocol agent over stdio (JetBrains Air, Zed); has `parse`, `run`, `connect`.
+- [cli/lib/acp/AcpAgent.md](cli/lib/acp/AcpAgent.md): the ACP method table (initialize, session/new, session/load, session/prompt, session/cancel, session/set_config_option, session/close) over a JsonRpcStdio; has `register`, `newSession`, `loadSession`, `prompt`, `cancel`.
+- [cli/lib/acp/AcpSession.md](cli/lib/acp/AcpSession.md): one ACP session over one bridge socket: hello, turns as session/update notifications, approvals as permission requests, cancel as abort, the agent config option; has `open`, `prompt`, `cancel`, `replayHistory`, `configOptions`, `setConfigOption`.
+- [cli/lib/acp/AcpToolCards.md](cli/lib/acp/AcpToolCards.md): the bridge's tool frames as ACP tool_call and tool_call_update objects (kinds, titles, locations, diffs, command output, delegations); has `approval`, `approvalDone`, `run`, `done`, `commandOutput`, `delegation`, `closeOpen`.
+- [cli/lib/acp/AcpPromptBlocks.md](cli/lib/acp/AcpPromptBlocks.md): ACP prompt content blocks as the bridge prompt (text with mentions inlined, images, editor context); has `toBridgePrompt`, `pathOf`.
+- [cli/lib/acp/JsonRpcStdio.md](cli/lib/acp/JsonRpcStdio.md): JSON-RPC 2.0 over newline-delimited JSON on stdin/stdout, requests both ways; has `handle`, `start`, `request`, `notify`.
 - [cli/lib/connect/AppDiscovery.md](cli/lib/connect/AppDiscovery.md): finds the running LumaBrowser, or starts it hidden and waits for it.
 - [cli/lib/connect/AppExecutable.md](cli/lib/connect/AppExecutable.md): finds the LumaBrowser executable to start when the app is not running.
 - [cli/lib/connect/AppHealth.md](cli/lib/connect/AppHealth.md): tells a live app from a stale handshake file.

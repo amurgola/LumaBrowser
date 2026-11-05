@@ -23,6 +23,7 @@ class HostSettings {
     shareRemoteLlms: { key: 'core.sharing.shareRemoteLlms', fallback: true },
     shareImageGen: { key: 'core.sharing.shareImageGen', fallback: true },
     shareImageEdit: { key: 'core.sharing.shareImageEdit', fallback: true },
+    shareVideoGen: { key: 'core.sharing.shareVideoGen', fallback: true },
     shareGpus: { key: 'core.sharing.shareGpus', fallback: false },
     shareAgents: { key: 'core.sharing.shareAgents', fallback: true },
     shareVoice: { key: 'core.sharing.shareVoice', fallback: true },

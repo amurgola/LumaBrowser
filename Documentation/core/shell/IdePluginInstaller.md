@@ -9,9 +9,12 @@ by copying it into each IDE's per-user plugins folder. Extends
 
 ## Methods
 
-- `new IdePluginInstaller({ sourceDir, version?, platform?, homeDir?, appData?, fsOps? })`
+- `new IdePluginInstaller({ sourceDir, version?, platform?, homeDir?, appData?, fsOps?, settings? })`
   `sourceDir` is the unpacked plugin (`resources/ide/luma-jetbrains`); throws
-  without it. `appData` is Windows `%APPDATA%`.
+  without it. `appData` is Windows `%APPDATA%`. `settings` (the settings
+  database) backs the "install automatically in every IDE" switch under
+  `AUTO_INSTALL_KEY` (`core.idePlugin.autoInstall`); with it on, boot installs
+  into every IDE found, not only stale copies.
 - `available()`: `sourceDir/lib` is a folder.
 - `sourceVersion()`: `version` from `sourceDir/luma-plugin.json`, else the
   `jetbrains.json` sidecar beside `sourceDir`, else the app version.

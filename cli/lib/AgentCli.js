@@ -21,6 +21,7 @@ Usage:
   luma docs [topic]                 product docs for agents (local-api, api, tools, remote-access); no app needed
   luma skill install                write the luma skill into ~/.claude/skills and ~/.agents/skills
   luma trace [id|last] [--turn N] [--call N] [--json]   per-call LLM trace of a conversation; no app needed
+  luma acp [--agent <name>] [--yes]  serve LumaBrowser as an ACP agent over stdio (JetBrains Air, Zed); luma acp --help
 
 Flags:
   -p, --print          print mode: one turn, answer to stdout, then exit
@@ -45,6 +46,7 @@ Environment:  NO_COLOR, LUMA_CLI_THEME=light|dark, LUMA_CLI_ASCII=1
 
   static async main(argv) {
     if (argv[0] === 'trace') return require('./trace/TraceCommand').run(argv.slice(1));
+    if (argv[0] === 'acp') return require('./acp/AcpCommand').run(argv.slice(1));
     const opts = AgentCli._parse(argv);
     if (!opts) return 1;
     if (opts.help) { process.stdout.write(AgentCli.HELP); return 0; }

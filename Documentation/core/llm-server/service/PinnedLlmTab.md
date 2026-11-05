@@ -10,8 +10,9 @@ with a message for its renderer, and keeps its load from stranding on an error p
 - `new PinnedLlmTab({ rootDir, isEnabled })`. Public fields: `tabHtmlPath`
   (`<rootDir>/ui/llm-tab.html`), `tabHtmlFileUrl`, `tabHtmlUrl` (file:// until
   `setWebBaseUrl`), `tabPreloadPath` (`<rootDir>/llm-tab-preload.js`),
-  `tabViewManager`, `pinnedTabId`, `tabLoadedOk`. The first three URL fields plus
-  `tabLoadedOk` are the [InternalTabLoader](../../shell/InternalTabLoader.md) host contract.
+  `tabViewManager`, `pinnedTabId`, `tabLoadedOk`, `tabMarkerId` (`setupRoot`, a DOM id only
+  llm-tab.html has). The first three URL fields plus `tabLoadedOk` and `tabMarkerId` are the
+  [InternalTabLoader](../../shell/InternalTabLoader.md) host contract.
 - `setWebBaseUrl(baseUrl)` `tabHtmlUrl = <base without trailing slashes>/llm-ui/llm-tab.html`; falsy keeps file://.
 - `attach(tabViewManager)` and forget the id when that tab is closed underneath.
 - `ensure({ activate = false })` null while the feature is off or unattached;

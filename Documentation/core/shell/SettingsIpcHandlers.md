@@ -10,17 +10,17 @@ enveloped), the shapes the renderer has always read.
 
 - `new SettingsIpcHandlers({ db, restGateway, mcpAggregator, apiSecurity,
   mainWindowGetter, rootDir, onSetupFinalized?, cliShim?, idePlugin?, vscodeExtension?, windhawkMods? })`.
-- `register()` registers the 56 channels below.
+- `register()` registers the 58 channels below.
 
 ## Channels
 
 | Channels | Routes to |
 |---|---|
 | `cliShim.status/install/uninstall` | [OptionalServiceCall](settings/OptionalServiceCall.md) over [CliShim](CliShim.md) |
-| `idePlugin.status/install(ids)/uninstall(ids)` | OptionalServiceCall over [IdePluginInstaller](IdePluginInstaller.md), ids via `ideIds` |
+| `idePlugin.status/install(ids)/uninstall(ids)/setAutoInstall(enabled)` | OptionalServiceCall over [IdePluginInstaller](IdePluginInstaller.md), ids via `ideIds`; `setAutoInstall(true)` also installs everywhere now |
 | `vscodeExtension.status/install(ids)/uninstall(ids)` | OptionalServiceCall over [VscodeExtensionInstaller](VscodeExtensionInstaller.md) |
 | `windhawkMods.status/install(ids)/uninstall(ids)` | OptionalServiceCall over [WindhawkModInstaller](WindhawkModInstaller.md); install and uninstall show one UAC prompt |
-| `getApiPort`, `getEffectiveApiPort`, `setApiPort`, `get/setApiEnabled`, `get/setMcpEnabled` | [ApiServerSettings](settings/ApiServerSettings.md) |
+| `getApiPort`, `getEffectiveApiPort`, `getApiStatus`, `setApiPort`, `get/setApiEnabled`, `get/setMcpEnabled` | [ApiServerSettings](settings/ApiServerSettings.md) |
 | `getPersona`, `setPersona` | [OnboardingPersona](settings/OnboardingPersona.md) |
 | `get/setAutoCheckUpdates`, `get/setDnsProvider`, `get/setShowBookmarksBar` | [AppPreferences](settings/AppPreferences.md) |
 | `getGuide(type)` | [SettingsGuides](settings/SettingsGuides.md) |

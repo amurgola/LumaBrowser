@@ -2,13 +2,15 @@
 
 `core/network-sharing/host/routes/MediaRoutes.js`
 
-`/sharing` image and voice routes. Routing only.
+`/sharing` image, video and voice routes. Routing only.
 
 ## Methods
 
 - `new MediaRoutes(service, auth)`; `mount(router)` adds:
   - `POST /image/generate`, `POST /image/edit` (`requireToken`): a new
     [SharedImageJob](../media/SharedImageJob.md) per request.
+  - `POST /video/generate` (`requireToken`): a new
+    [SharedVideoJob](../media/SharedVideoJob.md) per request.
   - `GET /voice/status` (`requireToken`): [SharedVoice](../media/SharedVoice.md)`.status()`.
   - `POST /voice/prewarm`, `/voice/transcribe`, `/voice/synthesize`
     (`requireToken`, then `SharedVoice.gate()`): `prewarm()`, `transcribe(req)`

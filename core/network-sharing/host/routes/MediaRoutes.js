@@ -1,5 +1,6 @@
 const express = require('express');
 const SharedImageJob = require('../media/SharedImageJob');
+const SharedVideoJob = require('../media/SharedVideoJob');
 const SharedVoice = require('../media/SharedVoice');
 const VoiceSynthesisStream = require('../media/VoiceSynthesisStream');
 const RouteReply = require('./RouteReply');
@@ -16,6 +17,7 @@ class MediaRoutes {
 
   mount(router) {
     this._mountImage(router);
+    this._mountVideo(router);
     this._mountVoice(router);
   }
 
@@ -23,6 +25,10 @@ class MediaRoutes {
     const requireToken = this._auth.requireToken;
     router.post('/image/generate', requireToken, (req, res) => new SharedImageJob(this._service, SharedImageJob.GENERATE_ROLE).run(req, res));
     router.post('/image/edit', requireToken, (req, res) => new SharedImageJob(this._service, SharedImageJob.EDIT_ROLE).run(req, res));
+  }
+
+  _mountVideo(router) {
+    router.post('/video/generate', this._auth.requireToken, (req, res) => new SharedVideoJob(this._service).run(req, res));
   }
 
   _mountVoice(router) {

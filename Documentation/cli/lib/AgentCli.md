@@ -7,7 +7,9 @@
 ## Methods (static)
 
 - `AgentCli.main(argv)`: resolves the exit code (0 done, 1 error, 2 aborted, 3 app unreachable):
-  1. `trace ...` goes to [TraceCommand](trace/TraceCommand.md) before parsing (it has its own flags);
+  1. `trace ...` goes to [TraceCommand](trace/TraceCommand.md) and `acp ...` to
+     [AcpCommand](acp/AcpCommand.md) before parsing (each has its own flags, and
+     `acp` owns stdin and stdout for the protocol);
   2. [AgentArgs](AgentArgs.md) parses; a bad flag prints `luma: <error>` plus `HELP` and returns 1;
   3. `--help` prints `HELP`;
   4. `docs` and `skill` go to [DocsCommand](docs/DocsCommand.md) / [SkillCommand](docs/SkillCommand.md)

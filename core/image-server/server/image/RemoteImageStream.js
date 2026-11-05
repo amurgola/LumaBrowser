@@ -4,8 +4,11 @@ class RemoteImageStream {
 
   static PASS_THROUGH = { meta: 'onMeta', status: 'onStatus', progress: 'onProgress', preview: 'onPreview' };
 
-  constructor(callbacks) {
+  static DEFAULT_NOUN = 'remote image server';
+
+  constructor(callbacks, { noun = RemoteImageStream.DEFAULT_NOUN } = {}) {
     this._callbacks = callbacks;
+    this._noun = noun;
     this._finished = false;
     this._aborted = false;
     this._buffer = '';
@@ -36,14 +39,14 @@ class RemoteImageStream {
     res.data.on('data', (chunk) => {
       if (body.length < RemoteImageStream.ERROR_BODY_MAX) body += chunk.toString('utf8');
     });
-    res.data.on('end', () => this.fail(`remote image server HTTP ${res.status}${body ? `: ${body.slice(0, RemoteImageStream.ERROR_DETAIL_MAX)}` : ''}`));
-    res.data.on('error', () => this.fail(`remote image server HTTP ${res.status}`));
+    res.data.on('end', () => this.fail(`${this._noun} HTTP ${res.status}${body ? `: ${body.slice(0, RemoteImageStream.ERROR_DETAIL_MAX)}` : ''}`));
+    res.data.on('error', () => this.fail(`${this._noun} HTTP ${res.status}`));
   }
 
   _readEvents(stream) {
     stream.on('data', (chunk) => this._onChunk(chunk));
     stream.on('end', () => this._onEnd());
-    stream.on('error', (err) => this.fail((err && err.message) || 'remote image stream error'));
+    stream.on('error', (err) => this.fail((err && err.message) || `${this._noun} stream error`));
   }
 
   _onChunk(chunk) {
@@ -55,7 +58,7 @@ class RemoteImageStream {
 
   _onEnd() {
     if (this._buffer) this._handleLine(this._buffer);
-    if (!this._finished && !this._aborted) this.fail('remote image stream ended without a result');
+    if (!this._finished && !this._aborted) this.fail(`${this._noun} stream ended without a result`);
   }
 
   _handleLine(line) {

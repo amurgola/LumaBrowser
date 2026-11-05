@@ -22,8 +22,11 @@ mutates the host. One instance per build.
     per-request window or null.
   - `gpus` (only when `shareGpus` is on and the lender's `describeShare()` is
     available): `{ available: true, busy, devices }`.
-  - `image.generate` / `image.edit`: `{ available: false }` unless shared, else
-    `{ available, modelId, modelLabel, endpoint: '/sharing/image/<kind>', models }`.
+  - `image.generate` / `image.edit` / `image.video`: `{ available: false }`
+    unless shared (`shareImageGen`, `shareImageEdit`, `shareVideoGen`), else
+    `{ available, modelId, modelLabel, endpoint, models }` with the endpoint
+    `/sharing/image/<kind>` for the image slots and
+    `HostManifestBuilder.VIDEO_ENDPOINT` (`/sharing/video/generate`) for video.
   - `thinking`: `{ available, positions, hostDefault }` from the running
     server's probed caps and [HostDialPosition](HostDialPosition.md) (default `'default'`).
   Each section fails alone with a `[sharing] manifest ... build failed:` warning.

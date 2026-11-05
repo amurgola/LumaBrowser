@@ -11,7 +11,10 @@ read degrades to null when a service cannot enumerate.
 - `new HostModelInventory({ llmServerService, imageServerService })`.
 - `localLlmModels()`: `listInstalledChatModels()` or null.
 - `localContextWindow()`: `getEffectiveContext().ctxPerSlot` floored, or null.
-- `imageModels(kind)`: `[{ id, label, current }]` for `'generate'` or `'edit'`, or null.
+- `imageModels(kind)`: `[{ id, label, current }]` for `'generate'`, `'edit'`
+  or `'video'`, or null.
+- `HostModelInventory.kindOf(role)`: `image-edit` -> `edit`, `image-video` ->
+  `video`, anything else `generate`.
 - `imageModelDenied(role, modelId)`: null when allowed (no model always is),
   `'model selection is not supported on this host'` when the slot cannot be
   enumerated, `'model is not available'` when the id is not in the slot's list.

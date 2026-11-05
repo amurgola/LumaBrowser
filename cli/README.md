@@ -22,6 +22,7 @@ Subsequent runs launch from cache, with no re-download unless you ask for one.
 | `npx lumabrowser uninstall` | Remove the cached installation. |
 | `npx lumabrowser help` | Show all commands. |
 | `npx lumabrowser agent <name>` | Talk to one of your agents from the terminal (see below). |
+| `luma acp` | Serve your agents to an editor over the Agent Client Protocol (JetBrains Air, Zed). See below. |
 
 ## Agents in your terminal: `luma`
 
@@ -65,6 +66,18 @@ Commands: `/help`, `/agents`, `/agent <name>` (switch agent, new conversation), 
 Environment: `NO_COLOR` turns colour off, `LUMA_CLI_THEME=light|dark` overrides the background detection (the session asks the terminal for its background colour and picks a light or dark palette), `LUMA_CLI_ASCII=1` swaps box-drawing glyphs for ASCII.
 
 Exit codes: 0 done, 1 error, 2 stopped, 3 LumaBrowser unreachable.
+
+### In your editor: `luma acp`
+
+Editors that host agents over the Agent Client Protocol (JetBrains Air in the 2026.3 IDEs and the Air app, Zed) can run your LumaBrowser agents the same way: `luma acp` speaks ACP on stdin and stdout and does the work in the running LumaBrowser, so the editor shows the streamed answer, each tool step with its diff or output, and asks you before a mutating tool runs. The session is a Code conversation in LumaBrowser too, so you can pick it up in the app or from `luma --resume <id>`. An "Agent" option in the editor switches between Code and your named agents.
+
+In LumaBrowser, Settings → LLM → Connect your agent → JetBrains Air registers it for you. By hand, in `~/.jetbrains/acp.json`:
+
+```json
+{ "agent_servers": { "LumaBrowser": { "command": "/absolute/path/to/luma", "args": ["acp"] } } }
+```
+
+Flags: `--agent <name>` answer as a named agent by default, `--yes` never ask before mutating tools, `--no-start`.
 
 ## Global install
 

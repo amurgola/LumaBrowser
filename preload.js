@@ -27,6 +27,7 @@ try {
     setTelemetryOptOut: (optOut) => ipcRenderer.invoke('core.telemetry.setOptOut', optOut),
     getApiPort: () => ipcRenderer.invoke('core.settings.getApiPort'),
     getEffectiveApiPort: () => ipcRenderer.invoke('core.settings.getEffectiveApiPort'),
+    getApiStatus: () => ipcRenderer.invoke('core.settings.getApiStatus'),
     setApiPort: (port) => ipcRenderer.invoke('core.settings.setApiPort', port),
     getApiEnabled: () => ipcRenderer.invoke('core.settings.getApiEnabled'),
     setApiEnabled: (enabled) => ipcRenderer.invoke('core.settings.setApiEnabled', enabled),

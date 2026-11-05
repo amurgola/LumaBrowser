@@ -16,6 +16,7 @@ class PeerView {
       llmCount: manifest.llms ? manifest.llms.length : 0,
       imageGen: !!(image.generate && image.generate.available),
       imageEdit: !!(image.edit && image.edit.available),
+      videoGen: !!(image.video && image.video.available),
       gpuCount: PeerView.hasGpus(peer) ? manifest.gpus.devices.length : 0,
       gpusBusy: !!(manifest.gpus && manifest.gpus.busy),
       gpusAttached: !!peer.gpusAttached,

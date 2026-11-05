@@ -13,6 +13,9 @@ class RestGateway {
     this.port = port;
     this.app = express();
     this.server = null;
+    this.listening = false;
+    this.lastError = null;
+    this.conflict = null;
     this._apiSecurity = options.apiSecurity || null;
     this._rawBodyPrefixes = Array.isArray(options.rawBodyPrefixes) ? options.rawBodyPrefixes.slice() : [];
     this._routes = new ExtensionRouteTable();
@@ -85,20 +88,33 @@ class RestGateway {
 
   start() {
     return new Promise((resolve, reject) => {
-      this.server = this.app.listen(this.port, RestGateway.HOST, () => {
+      const server = this.app.listen(this.port, RestGateway.HOST, () => {
+        if (!server.address()) return;
         console.log(`RestGateway: HTTP server listening on port ${this.port}`);
+        this.listening = true;
+        this.lastError = null;
+        this.conflict = null;
         resolve();
       });
-      this.server.on('upgrade', (req, socket, head) => this._upgrades.dispatch(req, socket, head));
-      this.server.on('error', (err) => {
+      this.server = server;
+      server.on('upgrade', (req, socket, head) => this._upgrades.dispatch(req, socket, head));
+      server.on('error', (err) => {
         console.error('RestGateway: failed to start:', err.message);
+        this.listening = false;
+        this.lastError = err && err.message ? err.message : String(err);
+        if (this.server === server) this.server = null;
         reject(err);
       });
     });
   }
 
+  status() {
+    return { port: this.port, listening: this.listening, error: this.lastError, conflict: this.conflict };
+  }
+
   stop() {
     return new Promise((resolve) => {
+      this.listening = false;
       if (!this.server) {
         resolve();
         return;

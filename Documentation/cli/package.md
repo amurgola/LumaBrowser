@@ -5,7 +5,8 @@
 A standalone, zero-dependency npm package (`lumabrowser`) with two commands:
 
 - `luma` ([bin/luma](bin/luma.md)): drive a LumaBrowser agent from the terminal over the current
-  folder, in a full-screen session or as a plain line stream; also `luma docs`, `luma skill install`
+  folder, in a full-screen session or as a plain line stream; `luma acp` serves the same agents to
+  an editor over the Agent Client Protocol (JetBrains Air, Zed); also `luma docs`, `luma skill install`
   and `luma trace`, which need no app.
 - `lumabrowser` ([bin/lumabrowser](bin/lumabrowser.md)): `npx lumabrowser start|update|version|uninstall|agent`,
   the downloader and launcher for machines without the app.
@@ -29,6 +30,7 @@ and `LICENSE`.
 | Folder | What |
 |---|---|
 | `lib/` | [AgentCli](lib/AgentCli.md), [AgentArgs](lib/AgentArgs.md), [BridgeLink](lib/BridgeLink.md), [FrameWaiters](lib/FrameWaiters.md), [RollbackBuffer](lib/RollbackBuffer.md) |
+| `lib/acp/` | `luma acp`: the Agent Client Protocol agent over stdio ([AcpCommand](lib/acp/AcpCommand.md)) |
 | `lib/connect/` | finding or starting the app and opening the terminal bridge; self-contained, also copied into the VS Code extension |
 | `lib/plain/` | the line-oriented session for print mode, `--json`, pipes and `--plain` |
 | `lib/tui/` | the full-screen session: a zero-dependency differential renderer |
@@ -42,4 +44,5 @@ The CLI talks to [TerminalBridge](../extensions/code-mode/terminal/TerminalBridg
 `ws://127.0.0.1:<port>/api/ext/code-mode/terminal?token=<token>` (also `Authorization: Bearer`),
 with the port and token from the handshake file [CliHandshake](../core/shell/CliHandshake.md) writes.
 Frames are `{ type, payload }` JSON text frames; see [TerminalSession](../extensions/code-mode/terminal/TerminalSession.md)
-for the vocabulary. The CLI sends `hello`, `prompt`, `followup`, `approve`, `abort` and `list-agents`.
+for the vocabulary. The CLI sends `hello`, `prompt`, `followup`, `approve`, `abort`, `list-agents` and
+(the ACP agent, to replay a resumed session) `history`.

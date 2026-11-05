@@ -9,9 +9,10 @@ class IdePluginInstaller extends IdeInstaller {
   static MARKER_FILE = 'luma-plugin.json';
   static SIDECAR_FILE = 'jetbrains.json';
   static INSTALL_FAILED = 'copy failed';
+  static AUTO_INSTALL_KEY = 'core.idePlugin.autoInstall';
 
-  constructor({ sourceDir, version, platform, homeDir, appData, fsOps } = {}) {
-    super();
+  constructor({ sourceDir, version, platform, homeDir, appData, fsOps, settings } = {}) {
+    super({ settings, autoInstallKey: IdePluginInstaller.AUTO_INSTALL_KEY });
     if (!sourceDir) throw new Error('IdePluginInstaller requires sourceDir');
     this.sourceDir = sourceDir;
     this.version = version || null;

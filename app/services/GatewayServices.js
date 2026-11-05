@@ -39,7 +39,7 @@ class GatewayServices {
     const version = this._ctx.app.getVersion();
     this._s.cliHandshake = AppGlobals.publish('__lumaCliHandshake', new CliHandshake({ version }));
     this._s.cliShim = new CliShim({ exePath: this._ctx.env.APPIMAGE || this._ctx.proc.execPath, cliSource: this._resource('cli'), version });
-    this._s.idePlugin = new IdePluginInstaller({ sourceDir: this._ideResource(IdePluginInstaller.PLUGIN_DIR_NAME), version });
+    this._s.idePlugin = new IdePluginInstaller({ sourceDir: this._ideResource(IdePluginInstaller.PLUGIN_DIR_NAME), version, settings: this._db });
     this._s.vscodeExtension = new VscodeExtensionInstaller({ vsixPath: this._ideResource(VscodeExtensionInstaller.VSIX_NAME), version });
     this._s.windhawkMods = new WindhawkModInstaller({ modsDir: this._ctx.path('integrations', 'windhawk') });
   }

@@ -3,6 +3,7 @@ const ImageModelResolver = require('./router/ImageModelResolver');
 const VideoFrameFit = require('./video/VideoFrameFit');
 const VideoRequestPlanner = require('./video/VideoRequestPlanner');
 const VideoRun = require('./video/VideoRun');
+const RemoteVideoRun = require('./video/RemoteVideoRun');
 const VideoSlotLauncher = require('./video/VideoSlotLauncher');
 
 class VideoRouter {
@@ -24,6 +25,8 @@ class VideoRouter {
     if (!request.prompt || typeof request.prompt !== 'string') return { success: false, error: 'prompt is required' };
     const send = typeof request.send === 'function' ? request.send : () => {};
     this.abort();
+    const remote = this._remoteServerFor(request);
+    if (remote) return this._run(new RemoteVideoRun({ send, notify: this._notify, server: remote, request }));
     const startedAt = Date.now();
     const wantId = ImageModelResolver.idFor(request.modelRef, this._svc.getDefaults().videoModelId);
     if (!wantId) return { success: false, error: VideoRouter.NO_MODEL };
@@ -39,6 +42,12 @@ class VideoRouter {
       this._active = null;
     }
     return { success: true };
+  }
+
+  _remoteServerFor(request) {
+    if (request.forceLocal || !this._svc.getActiveServer) return null;
+    const server = this._svc.getActiveServer(VideoRouter.ROLE);
+    return server && server.location === 'remote' ? server : null;
   }
 
   async _generateOn(model, { request, wantId, send, startedAt }) {

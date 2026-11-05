@@ -30,6 +30,8 @@ Every path under `/sharing` except `/info` and `/pair` wants `Authorization: Bea
 | `POST /sharing/llm/v1/chat/completions` | OpenAI-compatible chat, streaming supported. |
 | `POST /sharing/llm/v1/responses` | OpenAI Responses API. |
 | `POST /sharing/image/generate` | NDJSON image generation, when image sharing is on. |
+| `POST /sharing/image/edit` | NDJSON image editing, when image editor sharing is on. |
+| `POST /sharing/video/generate` | NDJSON video generation, when video sharing is on. The clip comes back base64 in the `done` event; the host stores nothing. |
 
 So any OpenAI client works with base URL `https://HOST:3443/sharing/llm/v1` and the token as its API key. Thinking knobs are read exactly as on the Local API (see `luma docs local-api`).
 

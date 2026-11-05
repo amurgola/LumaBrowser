@@ -6,7 +6,7 @@ import SharingPeersList from './SharingPeersList.js';
 export default class NetworkSharingPanel {
   static SHARE_FLAGS = {
     shareLocalLlm: 'gsShareLocalLlm', shareRemoteLlms: 'gsShareRemoteLlms',
-    shareImageGen: 'gsShareImageGen', shareImageEdit: 'gsShareImageEdit',
+    shareImageGen: 'gsShareImageGen', shareImageEdit: 'gsShareImageEdit', shareVideoGen: 'gsShareVideoGen',
     shareGpus: 'gsShareGpus', shareAgents: 'gsShareAgents', shareVoice: 'gsShareVoice',
   };
 

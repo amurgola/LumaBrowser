@@ -10,6 +10,7 @@ The DOM half of extension Setup tabs: one nav button under an "Extensions" group
 - `add(hosts, tab)`: button `data-view="ext:<id>"` (class `pagenav-ext`, label as text, an inline `<svg>` icon or the puzzle piece, title = description or label) and pane `#extPane-<id>` showing "Loading…".
 - `remove(nav, id)`: returns true when the removed button was active; the group label goes with the last tab.
 - `ExtensionTabNav.failedHtml(message)`: the escaped failure callout.
+- `ExtensionTabNav.OFFLINE_HTML`: the warning callout for a page running from its `file://` fallback copy, where no extension bundle can load because the local API server is not listening; it sends the user to Settings > API & MCP (REST API switch and port).
 
 ## Globals
 

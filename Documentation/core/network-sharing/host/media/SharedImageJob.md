@@ -3,7 +3,9 @@
 `core/network-sharing/host/media/SharedImageJob.js`
 
 `POST /sharing/image/generate` and `/edit`: runs one client image request on
-the host's own local image slot and streams its events as NDJSON.
+the host's own local image slot and streams its events as NDJSON. A
+[SharedMediaJob](SharedMediaJob.md); the video twin is
+[SharedVideoJob](SharedVideoJob.md).
 
 ## Methods
 
@@ -22,8 +24,9 @@ the host's own local image slot and streams its events as NDJSON.
    slot, forceLocal: true, send })`; no `model` means the host default.
 4. A thrown run sends an `error` line. Finally the images of `done` events are
    banked as usage and the response ends.
-5. A client disconnect before the end aborts the image router; a still-queued
-   job then resolves `{ success: false, aborted: true }` without running.
+5. A client disconnect before the end aborts the image router once the job has
+   started; a still-queued job only resolves `{ success: false, aborted: true }`
+   without running (and without aborting someone else's render).
 
 ## Why
 

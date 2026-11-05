@@ -17,6 +17,7 @@ export default class PeerProviderCard {
     const bits = [`${n} shared LLM${n === 1 ? '' : 's'}`];
     if (peer && peer.imageGen) bits.push('image generation');
     if (peer && peer.imageEdit) bits.push('image editor');
+    if (peer && peer.videoGen) bits.push('video generation');
     return bits.join(', ');
   }
 

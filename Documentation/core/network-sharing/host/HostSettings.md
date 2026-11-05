@@ -16,8 +16,10 @@ back to safe defaults; setters validate.
   `setInstanceName(name)` (capped at 63 characters, trimmed; empty clears).
 - `getBindMode()` / `setBindMode(mode)`: `'any'` or `'lan'` (anything else).
 - `getShareFlags()`: `{ shareLocalLlm, shareRemoteLlms, shareImageGen,
-  shareImageEdit, shareGpus, shareAgents, shareVoice }`; all default true
-  except `shareGpus`; a stored null or undefined reads as the default.
+  shareImageEdit, shareVideoGen, shareGpus, shareAgents, shareVoice }`; all
+  default true except `shareGpus`; a stored null or undefined reads as the
+  default. `shareVideoGen` (key `core.sharing.shareVideoGen`) gates
+  `/sharing/video/generate` and the manifest's `image.video` slot.
   `setShareFlag(flag, value)` returns false for an unknown (or inherited) name.
 - `getTlsPort()` / `setTlsPort(port)` (default 3443), `getWebPort()` /
   `setWebPort(port)` (default 80): an invalid stored port reads as the default.

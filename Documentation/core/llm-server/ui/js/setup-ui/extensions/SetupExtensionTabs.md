@@ -62,7 +62,25 @@ Helpers: [ExtensionTabNav](ExtensionTabNav.md) (buttons, panes, the
 5. **Removal.** When an extension disappears from the list, its button and pane
    are removed; if it was the active view the Setup surface falls back to the
    LLM view. A bundle already loaded is not unloaded (the browser cannot), and
-   it is not injected again if the tab returns.
+   it is not injected again if the tab returns: its registration is kept with
+   the mount reset, so the returning tab mounts a fresh instance into its new
+   pane (an extension disabled and re-enabled at runtime used to stay on
+   "Loading…" forever, because a module script never runs twice).
+6. **Failure states.** The pane never sits on its spinner for good:
+   - the bundle's `<script>` fires `error` (download refused, or a module
+     import failed): "Failed to load this tab: the extension UI bundle could not
+     be loaded from the local API server", shown again if the tab returns;
+   - no `registerTab` within `REGISTER_TIMEOUT_MS` (20 s) of injection: "... the
+     extension UI loaded but never registered its tab; the developer console may
+     show why";
+   - a descriptor without `url`: "... the extension declares no UI bundle";
+   - the page runs from its `file://` fallback copy (`window.location.protocol`
+     is `file:`, which [InternalTabLoader](../../../../../shell/InternalTabLoader.md)
+     falls back to when the REST gateway never answers, for example because the
+     REST API is off or port 3000 is taken by another program): no bundle is
+     requested at all, since `/llm-ui/ext/...` cannot resolve there, and the
+     pane carries `ExtensionTabNav.OFFLINE_HTML`, which points the user at
+     Settings > API & MCP.
 
 ## Live re-listing
 

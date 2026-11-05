@@ -2,6 +2,7 @@ class PeerImageServers {
   static ROLES = [
     { role: 'image-generate', slot: 'generate', kind: 'generate', label: 'Image Generation' },
     { role: 'image-edit', slot: 'edit', kind: 'edit', label: 'Image Editor' },
+    { role: 'image-video', slot: 'video', kind: 'video', label: 'Video Generation', base: 'video' },
   ];
 
   constructor(imageServerService, peerStore) {
@@ -68,7 +69,7 @@ class PeerImageServers {
       id,
       name: `${peer.name} · ${entry.label} (shared)`,
       kind: entry.kind,
-      endpoint: `${peer.endpoint}/sharing/image`,
+      endpoint: `${peer.endpoint}/sharing/${entry.base || 'image'}`,
       token: peer.token,
       peerId: peer.id,
       peerManaged: true,

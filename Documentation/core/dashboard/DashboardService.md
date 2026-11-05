@@ -26,7 +26,7 @@ kept by [DashboardLayout](DashboardLayout.md); this class exposes it.
 ## Public fields
 
 - `tabViewManager` read by [DashboardActions](DashboardActions.md).
-- `tabHtmlUrl`, `tabHtmlFileUrl`, `tabLoadedOk` the InternalTabLoader host contract.
+- `tabHtmlUrl`, `tabHtmlFileUrl`, `tabLoadedOk`, `tabMarkerId` (`dbRoot`, a DOM id only dashboard.html has) the InternalTabLoader host contract.
 - `tabHtmlPath`, `tabPreloadPath`.
 
 ## Why the gateway

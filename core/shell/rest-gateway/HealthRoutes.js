@@ -11,9 +11,12 @@ class HealthRoutes {
     return router;
   }
 
+  static APP_NAME = 'LumaBrowser';
+
   static _health({ port, mcpEnabled, extensions }) {
     return {
       status: 'ok',
+      app: HealthRoutes.APP_NAME,
       timestamp: new Date().toISOString(),
       port,
       mcpEnabled,

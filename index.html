@@ -406,11 +406,21 @@
                     <h4 class="gs-subsection-title">JetBrains IDEs</h4>
                     <p class="gs-group-desc" id="gsIdePluginHelp">The LumaBrowser plugin adds a Luma tool window to WebStorm, IntelliJ IDEA, PyCharm, Rider, GoLand and the other JetBrains IDEs: the Code agent works on the open project with your local models, and edits land in the editor. Installing copies the plugin into each IDE found on this machine; restart the IDE afterwards.</p>
                     <div class="gs-body">
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Install automatically in every JetBrains IDE</span>
+                                <span class="gs-row-help" id="gsIdePluginAutoInstallHelp">Every IDE found on this machine gets the plugin now, and new IDEs and versions get it each time LumaBrowser starts.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Install automatically in every JetBrains IDE">
+                                <input type="checkbox" id="gsIdePluginAutoInstall">
+                                <span class="luma-switch-track"></span>
+                            </label>
+                        </div>
                         <div id="gsIdePluginList" class="gs-ide-list"></div>
                         <div class="gs-row">
                             <div class="gs-row-text">
                                 <span class="gs-row-label">Install everywhere</span>
-                                <span class="gs-row-help">Adds the plugin to every IDE listed above.</span>
+                                <span class="gs-row-help">Adds the plugin to every IDE found, including older versions, once.</span>
                             </div>
                             <div class="gs-row-control">
                                 <button class="gs-action-btn" id="gsIdePluginRefresh">Rescan</button>
@@ -600,6 +610,7 @@
                         <div class="gs-row">
                             <div class="gs-row-text">
                                 <span class="gs-row-label">Port</span>
+                                <span class="gs-row-help gs-api-status" id="gsApiStatus" hidden></span>
                                 <span class="gs-restart-note" id="gsPortRestartNote">Restart required</span>
                             </div>
                             <input type="number" class="gs-port-input" id="gsApiPort" min="1024" max="65535" value="3000" aria-label="API port">
@@ -856,6 +867,7 @@
                                         <label class="luma-check"><input type="checkbox" id="gsShareRemoteLlms"> Remote-setup LLMs (proxied, keys stay here)</label>
                                         <label class="luma-check"><input type="checkbox" id="gsShareImageGen"> Local AI image generation</label>
                                         <label class="luma-check"><input type="checkbox" id="gsShareImageEdit"> Local AI image editor</label>
+                                        <label class="luma-check" title="Lets a paired LumaBrowser render clips on this computer's video model. The clip streams back to the client and is stored there, never here."><input type="checkbox" id="gsShareVideoGen"> Local AI video generation</label>
                                         <label class="luma-check" title="Lets a paired peer run one model across both machines using llama.cpp RPC. One borrower at a time; local model launches wait while the GPUs are lent."><input type="checkbox" id="gsShareGpus"> GPUs for distributed inference (experimental)</label>
                                         <label class="luma-check" title="Offers your custom agents (Setup > Agents) to web and paired chat clients as Chat with agent. An agent brings its own instructions, tool grants and knowledge base, so turn this off to share the model without them."><input type="checkbox" id="gsShareAgents"> Custom agents (Chat with agent)</label>
                                         <label class="luma-check" title="Lets web and paired chat clients talk to the model and hear replies using this computer's speech engines (whisper.cpp and sherpa-onnx). Audio is transcribed and synthesized here; set voice up in this chat's microphone menu first."><input type="checkbox" id="gsShareVoice"> Voice (speech to text and read aloud)</label>

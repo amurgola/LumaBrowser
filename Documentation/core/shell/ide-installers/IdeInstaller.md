@@ -12,12 +12,20 @@ Implementations: `IdePluginInstaller` (JetBrains), `VscodeExtensionInstaller`
 - `sourceVersion()` (abstract): the bundled plugin's version.
 - `detectIdes()` (abstract): one row per detected IDE, at least
   `{ id, label, installed, installedVersion, current, latest }`.
-- `status()` returns `{ available, sourceVersion, ides, ...details }`.
+- `new IdeInstaller({ settings?, autoInstallKey? })`: a settings store
+  (`get(key, fallback)`, `set(key, value)`) and the boolean key of the
+  "install automatically everywhere" switch; without both the family has no switch.
+- `status()` returns `{ available, sourceVersion, autoInstall, ides, ...details }`
+  (`autoInstall` null without a switch).
+- `autoInstall()`; `setAutoInstall(enabled)` persists the switch and, when turned
+  on, installs everywhere at once: `{ autoInstall: true, installed, failed, ides }`
+  (off: `{ autoInstall: false, ides }`). Throws without a switch.
 - `install(ids?)` resolves `{ installed: id[], failed: [{ id, error }], ides }`;
   rejects with the not-bundled message when `available()` is false.
 - `uninstall(ids?)` resolves `{ removed: id[], failed: [{ id, error }], ides }`.
-- `refreshIfInstalled()` resolves the ids refreshed at boot. Never installs
-  fresh; failures are skipped until the next boot.
+- `refreshIfInstalled()` resolves the ids refreshed at boot: stale installs, or
+  with the switch on every detected IDE without a current copy. Failures are
+  skipped until the next boot.
 
 An empty or missing `ids` means every detected IDE. Failures are reported per
 IDE using the error message, or `INSTALL_FAILED` / `REMOVE_FAILED` when the

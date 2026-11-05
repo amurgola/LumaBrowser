@@ -17,7 +17,10 @@ Thin facade over `rest-gateway/`:
 - `new RestGateway(port = 3000, { apiSecurity?, rawBodyPrefixes? })`.
   `apiSecurity.middleware()` is mounted on `/api` before every route. Paths equal
   to or under a raw-body prefix skip the JSON (50 MB limit) and urlencoded
-  parsers. Public fields: `port`, `app`, `server`.
+  parsers. Public fields: `port`, `app`, `server`, plus the bind state
+  `listening`, `lastError` and `conflict` (the last one is written by
+  [PortConflict](../../app/ready/PortConflict.md) through HeavyServices, not
+  here).
 - `mountCore(prefix, router)`: core routes, no gate.
 - `registerExtension(extensionId, factoryOrConfig, context)`: mounts an
   extension's manual routes. `factoryOrConfig` is a factory
@@ -37,8 +40,16 @@ Thin facade over `rest-gateway/`:
   for `/api/ext/<id><suffix>`; works before or after `start()`.
 - `removeExtensionUpgrades(extensionId)`: deactivation.
 - `start()`: listens on `0.0.0.0:<port>`; resolves when listening, rejects on
-  a server error.
-- `stop()`: closes the server and force-closes open connections.
+  a server error (EADDRINUSE and the like), leaving `listening` false,
+  `lastError` set and `server` null so a later `start()` can retry. Windows
+  fires the listen callback even when another program holds the port
+  exclusively (the socket has no address and the error follows a tick later),
+  so only a socket with an address counts as bound.
+- `status()`: `{ port, listening, error, conflict }`, what the API & MCP
+  settings card and the LLM tab's Setup banner read through
+  [ApiServerSettings](settings/ApiServerSettings.md).
+- `stop()`: closes the server and force-closes open connections; `listening`
+  goes false.
 - `getApp()`: the Express app, for callers that mount directly.
 
 ## Mapping for callers (how controllers plug in)

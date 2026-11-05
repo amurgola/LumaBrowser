@@ -5,6 +5,10 @@ export default class ExtensionTabNav {
 
   static LOADING_HTML = '<div class="luma-empty luma-empty--plain ext-setup-state"><span class="luma-spinner"></span>Loading…</div>';
 
+  static OFFLINE_HTML = '<div class="luma-callout warn ext-setup-state">Extension tabs load from LumaBrowser\'s local API server, '
+    + 'which is not running. Open Settings, then API &amp; MCP: turn the REST API on, or pick another port if its port '
+    + '(3000 by default) is already used by another program, then restart LumaBrowser.</div>';
+
   constructor(doc = document) {
     this._doc = doc;
     this._buttons = new Map();

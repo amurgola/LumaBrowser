@@ -25,7 +25,7 @@ export default class SharingPeersList {
 
   static capabilities(p) {
     const gpus = p.gpuCount ? `, ${p.gpuCount} GPU${p.gpuCount === 1 ? '' : 's'}${p.gpusBusy ? ' (busy)' : ''}` : '';
-    return `${p.llmCount} LLM${p.llmCount === 1 ? '' : 's'}${p.imageGen ? ', image-gen' : ''}${p.imageEdit ? ', image-edit' : ''}${gpus}`;
+    return `${p.llmCount} LLM${p.llmCount === 1 ? '' : 's'}${p.imageGen ? ', image-gen' : ''}${p.imageEdit ? ', image-edit' : ''}${p.videoGen ? ', video-gen' : ''}${gpus}`;
   }
 
   static rowHtml(p) {

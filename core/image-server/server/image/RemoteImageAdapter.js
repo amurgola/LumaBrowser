@@ -27,7 +27,7 @@ class RemoteImageAdapter extends ImageAdapter {
   }
 
   generate(request) {
-    const stream = new RemoteImageStream(request);
+    const stream = new RemoteImageStream(request, { noun: this._streamNoun() });
     const controller = new AbortController();
     this._post(request, controller)
       .then((res) => stream.onResponse(res))
@@ -68,6 +68,10 @@ class RemoteImageAdapter extends ImageAdapter {
       refImages: Array.isArray(refImages) ? refImages.filter(Boolean).map(ImageBytes.toBase64) : null,
       slot: this._slot(),
     };
+  }
+
+  _streamNoun() {
+    return RemoteImageStream.DEFAULT_NOUN;
   }
 
   _headers() {

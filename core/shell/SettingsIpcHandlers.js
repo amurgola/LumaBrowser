@@ -5,6 +5,7 @@ const OnboardingPersona = require('./settings/OnboardingPersona');
 const AppPreferences = require('./settings/AppPreferences');
 const StartupSettings = require('./settings/StartupSettings');
 const McpServerEntry = require('./settings/McpServerEntry');
+const AcpAgentEntry = require('./settings/AcpAgentEntry');
 const AgentHarnessSettings = require('./settings/AgentHarnessSettings');
 const SettingsGuides = require('./settings/SettingsGuides');
 const EndpointSettings = require('./settings/EndpointSettings');
@@ -27,7 +28,7 @@ class SettingsIpcHandlers {
     this._api = new ApiServerSettings({ db, restGateway });
     this._preferences = new AppPreferences(db);
     this._startup = new StartupSettings({ db, app });
-    this._harness = new AgentHarnessSettings({ db, mcpEntry: () => this._mcpEntry() });
+    this._harness = new AgentHarnessSettings({ db, mcpEntry: () => this._mcpEntry(), acpEntry: () => AcpAgentEntry.build({ cliShim }) });
     this._guides = new SettingsGuides(rootDir);
     this._endpoints = new EndpointSettings({ db, restGateway, mcpAggregator });
     this._setup = new SetupCompletion({ db, onSetupFinalized });
@@ -56,6 +57,7 @@ class SettingsIpcHandlers {
     ipcMain.handle('core.settings.idePlugin.status', () => OptionalServiceCall.run(idePlugin, M.idePlugin, (s) => s.status()));
     ipcMain.handle('core.settings.idePlugin.install', (_e, list) => OptionalServiceCall.run(idePlugin, M.idePlugin, (s) => s.install(ids(list))));
     ipcMain.handle('core.settings.idePlugin.uninstall', (_e, list) => OptionalServiceCall.run(idePlugin, M.idePlugin, (s) => s.uninstall(ids(list))));
+    ipcMain.handle('core.settings.idePlugin.setAutoInstall', (_e, enabled) => OptionalServiceCall.run(idePlugin, M.idePlugin, (s) => s.setAutoInstall(!!enabled)));
     ipcMain.handle('core.settings.vscodeExtension.status', () => OptionalServiceCall.run(vscodeExtension, M.vscodeExtension, (s) => s.status()));
     ipcMain.handle('core.settings.vscodeExtension.install', (_e, list) => OptionalServiceCall.run(vscodeExtension, M.vscodeExtension, (s) => s.install(ids(list))));
     ipcMain.handle('core.settings.vscodeExtension.uninstall', (_e, list) => OptionalServiceCall.run(vscodeExtension, M.vscodeExtension, (s) => s.uninstall(ids(list))));
@@ -68,6 +70,7 @@ class SettingsIpcHandlers {
     const api = this._api;
     ipcMain.handle('core.settings.getApiPort', () => api.getApiPort());
     ipcMain.handle('core.settings.getEffectiveApiPort', () => api.getEffectiveApiPort());
+    ipcMain.handle('core.settings.getApiStatus', () => api.getApiStatus());
     ipcMain.handle('core.settings.setApiPort', (_e, port) => api.setApiPort(port));
     ipcMain.handle('core.settings.getApiEnabled', () => api.getApiEnabled());
     ipcMain.handle('core.settings.setApiEnabled', (_e, enabled) => api.setApiEnabled(enabled));

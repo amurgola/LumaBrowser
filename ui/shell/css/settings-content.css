@@ -154,6 +154,9 @@
 .gs-saved.is-err { color: var(--danger); }
 .gs-saved--sticky { position: sticky; bottom: var(--space-2); float: right; }
 
+.gs-api-status.bad { color: var(--danger); }
+.gs-api-status .gs-inline-link { margin-left: 6px; }
+
 .gs-restart-note { display: none; font-size: var(--text-sm); color: var(--warning); }
 .gs-restart-note.visible { display: inline; }
 .gs-row-text > .gs-restart-note.visible { display: block; flex-basis: 100%; }
@@ -187,6 +190,19 @@
 }
 .gs-ide-row:first-child { border-top: 0; }
 .gs-ide-row.old { opacity: 0.6; }
+.gs-ide-more {
+    align-self: flex-start;
+    padding: var(--space-2) 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.gs-ide-more:hover { color: var(--text-primary); }
 .gs-ide-name { min-width: 180px; font-size: var(--text-md); font-weight: var(--weight-medium); color: var(--text-primary); }
 .gs-ide-state { flex: 1; min-width: 0; font-size: var(--text-sm); color: var(--text-secondary); }
 .gs-ide-state.on { color: var(--success); }

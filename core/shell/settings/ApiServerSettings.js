@@ -22,6 +22,19 @@ class ApiServerSettings {
     return live || parseInt(this._env.LUMA_API_PORT, 10) || this.getApiPort();
   }
 
+  getApiStatus() {
+    const gw = this._restGateway;
+    const live = gw && typeof gw.status === 'function' ? gw.status() : null;
+    return {
+      enabled: this.getApiEnabled(),
+      configuredPort: this.getApiPort(),
+      port: this.getEffectiveApiPort(),
+      listening: !!(live && live.listening),
+      error: live && live.error ? live.error : null,
+      conflict: live && live.conflict ? { kind: live.conflict.kind, owner: live.conflict.owner || null } : null,
+    };
+  }
+
   setApiPort(port) {
     const value = parseInt(port, 10);
     if (isNaN(value) || value < ApiServerSettings.MIN_PORT || value > ApiServerSettings.MAX_PORT) {

@@ -7,7 +7,7 @@ Already-paired peers: enable, attach GPUs, refresh, remove; follows `sharing:pee
 ## Methods
 
 - `install()`, `load()`.
-- `capabilities(p)`, `rowHtml(p)` (static).
+- `capabilities(p)` (`'2 LLMs, image-gen, image-edit, video-gen, 1 GPU (busy)'`), `rowHtml(p)` (static).
 
 ## Globals
 

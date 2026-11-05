@@ -2,8 +2,9 @@
 
 `core/shell/harness-connections/HarnessConnections.js`
 
-One-click "connect your agent" for Claude Code, Codex, OpenCode and Cline
-([HarnessConnector](connectors/HarnessConnector.md) and its four implementations).
+One-click "connect your agent" for Claude Code, Codex, OpenCode, Cline and
+JetBrains Air ([HarnessConnector](connectors/HarnessConnector.md) and its five
+implementations).
 The service the Settings panel talks to (through
 [AgentHarnessSettings](../settings/AgentHarnessSettings.md)).
 
@@ -11,18 +12,21 @@ The service the Settings panel talks to (through
 
 - `new HarnessConnections({ getEndpoints, getModel?, paths?, executableDirs?, now? })`;
   throws without `getEndpoints`. `getEndpoints()` ->
-  `{ openaiBaseUrl, anthropicBaseUrl, mcp: { command, args, env } }`; `getModel()` ->
-  the loaded chat model id or null; `now()` -> a Date (tests).
-- `HarnessConnections.paths({ home, env, baseDir })`: `manifest` and `backups`
+  `{ openaiBaseUrl, anthropicBaseUrl, mcp: { command, args, env }, acp: { command, args, env } | null }`;
+  `getModel()` -> the loaded chat model id or null; `now()` -> a Date (tests).
+- `HarnessConnections.paths({ home, env, baseDir, platform })`: `manifest` and `backups`
   (under the app base dir), `claudeSettings` (`CLAUDE_CONFIG_DIR`), `claudeUser`,
   `codexConfig` (`CODEX_HOME`), `opencode` (`OPENCODE_CONFIG`, else the last existing
   of config.json / opencode.json / opencode.jsonc under `XDG_CONFIG_HOME/opencode`),
   `clineProviderSettings` (`CLINE_PROVIDER_SETTINGS_PATH`, `CLINE_DATA_DIR`), `clineModels`,
-  `clineMcp`, and two `skills` files.
-- `connectors()` the four connectors in list order.
+  `clineMcp`, `jetbrainsAcp` (`~/.jetbrains/acp.json`), `jetbrainsMcp`
+  (`~/.jetbrains/mcp/mcp.json`), `jetbrainsIdeConfigs` (the IDE options root per
+  platform), and two `skills` files.
+- `connectors()` the five connectors in list order.
 - `list()` `[{ id, name, executable, installed, configFiles, state, reason, connectedAt, model, needsRepair, drift }]`.
-  State always comes from re-reading the files; `drift` is `[{ file, path, removed }]`
-  for keys the user changed since connect.
+  State always comes from re-reading the files; `installed` is the executable on
+  PATH, a config file present, or the connector's own `detectInstalled`; `drift` is
+  `[{ file, path, removed }]` for keys the user changed since connect.
 - `preview(id, action = 'connect')` what `connect` or `disconnect` would do, with nothing
   written: `{ harness, action, files: [{ file, before, after }], kept }` (`after` null = delete).
 - `connect(id)` `{ success, harness, files, model, changed }`.

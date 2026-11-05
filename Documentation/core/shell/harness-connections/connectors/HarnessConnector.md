@@ -4,15 +4,19 @@
 
 Base class for the "connect your agent" connectors:
 [ClaudeCodeConnector](ClaudeCodeConnector.md), [CodexConnector](CodexConnector.md),
-[OpenCodeConnector](OpenCodeConnector.md), [ClineConnector](ClineConnector.md).
+[OpenCodeConnector](OpenCodeConnector.md), [ClineConnector](ClineConnector.md),
+[JetBrainsAirConnector](JetBrainsAirConnector.md).
 A connector only describes a harness; reading, writing, preview and undo are done
 by the change engine ([ChangeApplier](../changes/ChangeApplier.md),
 [ChangeReverter](../changes/ChangeReverter.md)).
 
 ## Public contract
 
-- `id`, `name`, `executable` (looked up on PATH), `format` (the
-  [ConfigDocument](../documents/ConfigDocument.md) class of the first config file).
+- `id`, `name`, `executable` (looked up on PATH; null for a harness detected
+  another way), `format` (the [ConfigDocument](../documents/ConfigDocument.md)
+  class of the first config file).
+- `detectInstalled(paths)`: whether the harness is on this computer when neither
+  its executable nor its config files are found (default false).
 - `configFiles(paths)` (abstract): every file the connector may change; the first
   is the one `inspect` reads.
 - `plan({ paths, endpoints, model, now })` (abstract): the

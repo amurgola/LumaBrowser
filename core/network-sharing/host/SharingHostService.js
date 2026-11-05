@@ -17,8 +17,9 @@ const PublicUrlProbe = require('./PublicUrlProbe');
 class SharingHostService {
   static DEFAULT_PORT = 3000;
   static IMAGE_QUEUE_KEY = 'image';
+  static VIDEO_QUEUE_KEY = 'video';
 
-  constructor({ db, getPort, getChatRouter, getImageRouter, llmServerService, imageServerService, voiceServices, notifier, mcpAggregator, apiSecurity, discovery, getAgentManager, getAppVersion } = {}) {
+  constructor({ db, getPort, getChatRouter, getImageRouter, getVideoRouter, llmServerService, imageServerService, voiceServices, notifier, mcpAggregator, apiSecurity, discovery, getAgentManager, getAppVersion } = {}) {
     if (!db) throw new Error('SharingHostService requires a SettingsDatabase');
     this._settings = new HostSettings(db);
     this.tokens = new TokenStore(db);
@@ -26,14 +27,15 @@ class SharingHostService {
     this.usage = new UsageStore(db);
     this.enabled = this._settings.readEnabled();
     this.instanceId = this._settings.instanceId();
-    this._wireDependencies({ getPort, getChatRouter, getImageRouter, llmServerService, imageServerService, voiceServices, apiSecurity, getAgentManager, getAppVersion });
+    this._wireDependencies({ getPort, getChatRouter, getImageRouter, getVideoRouter, llmServerService, imageServerService, voiceServices, apiSecurity, getAgentManager, getAppVersion });
     this._wireCollaborators({ notifier, mcpAggregator, discovery });
   }
 
-  _wireDependencies({ getPort, getChatRouter, getImageRouter, llmServerService, imageServerService, voiceServices, apiSecurity, getAgentManager, getAppVersion }) {
+  _wireDependencies({ getPort, getChatRouter, getImageRouter, getVideoRouter, llmServerService, imageServerService, voiceServices, apiSecurity, getAgentManager, getAppVersion }) {
     this._getPort = typeof getPort === 'function' ? getPort : () => SharingHostService.DEFAULT_PORT;
     this._getChatRouter = getChatRouter || (() => global.__lumaChatRouter);
     this._getImageRouter = getImageRouter || (() => global.__lumaImageRouter);
+    this._getVideoRouter = getVideoRouter || (() => global.__lumaVideoRouter);
     this._getAgentManager = getAgentManager || (() => global.__lumaAgentManager || null);
     this._getAppVersion = getAppVersion || SharingHostService._electronAppVersion;
     this._llm = llmServerService || null;
@@ -397,6 +399,10 @@ class SharingHostService {
     return this._getImageRouter();
   }
 
+  getVideoRouter() {
+    return this._getVideoRouter();
+  }
+
   getChatStore() {
     return (this._llm && this._llm.chatStore) || null;
   }
@@ -411,6 +417,10 @@ class SharingHostService {
 
   enqueueImage(fn) {
     return this._imageQueue.run(SharingHostService.IMAGE_QUEUE_KEY, fn);
+  }
+
+  enqueueVideo(fn) {
+    return this._imageQueue.run(SharingHostService.VIDEO_QUEUE_KEY, fn);
   }
 
   async shutdown() {

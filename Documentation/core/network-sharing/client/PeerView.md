@@ -8,7 +8,8 @@ Read-only projections of stored peers. Tokens and certificates never appear in t
 
 - `PeerView.toPublic(peer)` the Settings row: `{ id, name, endpoint, addedAt,
   lastSeenAt, enabled, online, secure, tlsFingerprint, error, llmCount,
-  imageGen, imageEdit, gpuCount, gpusBusy, gpusAttached }`.
+  imageGen, imageEdit, videoGen, gpuCount, gpusBusy, gpusAttached }`
+  (`videoGen` is `manifest.image.video.available`).
 - `PeerView.isSecure(peer)` is true for a pinned peer or an `https:` endpoint.
 - `PeerView.hasGpus(peer)` is true when the manifest advertises at least one GPU.
 - `PeerView.attachedGpuPeers(peers)` peers the next server start should borrow

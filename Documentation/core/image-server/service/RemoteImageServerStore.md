@@ -11,7 +11,8 @@ Extends `JsonCollectionStore` (runs `SettingsValueStoreContract`).
 - `new RemoteImageServerStore(settingsDb)`.
 - `list()` stored entries with `location: 'remote'` and no `managedByCore`.
 - `save(list)` keeps remote entries with an `endpoint` and an id, cleaned to
-  `{ id, name (else endpoint), location: 'remote', kind ('edit' | 'generate'),
+  `{ id, name (else endpoint), location: 'remote', kind ('edit' | 'video' |
+  'generate', see `RemoteImageServerStore.kindOf`),
   endpoint, token, peerId, peerManaged, models ([{ id, label }] or null),
   modelLabel, selectedModel }`; returns what was stored.
 - `upsert(entry)` adds or replaces by id (location forced to remote).

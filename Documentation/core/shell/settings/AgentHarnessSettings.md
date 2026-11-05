@@ -3,13 +3,15 @@
 `core/shell/settings/AgentHarnessSettings.js`
 
 "Connect your agent" for Settings: points Claude Code, Codex, OpenCode and
-Cline at the Local API and the MCP server through
+Cline at the Local API and the MCP server, and registers LumaBrowser as JetBrains
+Air's ACP agent, through
 [HarnessConnections](../harness-connections/HarnessConnections.md).
 
 ## Methods
 
-- `new AgentHarnessSettings({ db, mcpEntry, createConnections?, localApi? })`;
-  `mcpEntry()` returns the [McpServerEntry](McpServerEntry.md); `localApi`
+- `new AgentHarnessSettings({ db, mcpEntry, acpEntry?, createConnections?, localApi? })`;
+  `mcpEntry()` returns the [McpServerEntry](McpServerEntry.md); `acpEntry()` the
+  [AcpAgentEntry](AcpAgentEntry.md) or null (default); `localApi`
   defaults to the [LocalApiServer](../../llm-server/server/LocalApiServer.md)
   class (statics `PORT_KEY`, `DEFAULT_PORT`, `ENABLED_KEY`, `BIND_HOST`), loaded
   on first use.
@@ -22,8 +24,8 @@ Cline at the Local API and the MCP server through
   with nothing written (not yet wired to an IPC channel).
 - `localApiEnabled()` the Local API's enabled flag.
 - `endpoints()` `{ openaiBaseUrl: 'http://<BIND_HOST>:<port>/v1',
-  anthropicBaseUrl: 'http://<BIND_HOST>:<port>', mcp }`; a saved port that is
-  not an integer in 1-65535 falls back to the default.
+  anthropicBaseUrl: 'http://<BIND_HOST>:<port>', mcp, acp }`; a saved port that is
+  not an integer in 1-65535 falls back to the default; `acp` is null without a CLI.
 - `model()` the basename (without extension) of
   `core.llmServer.defaults.modelPath`, or null.
 

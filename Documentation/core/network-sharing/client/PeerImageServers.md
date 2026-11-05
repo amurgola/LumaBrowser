@@ -2,21 +2,24 @@
 
 `core/network-sharing/client/PeerImageServers.js`
 
-Registers a peer's shared image slots as remote image servers on the image
-server service.
+Registers a peer's shared image and video slots as remote image servers on
+the image server service.
 
 ## Methods
 
 - `new PeerImageServers(imageServerService, peerStore)`; both methods are no-ops
   without a service (register also needs `upsertRemoteServer`).
 - `PeerImageServers.serverId(peerId, role)` is `peer:<peerId>:<role>`, role
-  `image-generate` or `image-edit`.
+  `image-generate`, `image-edit` or `image-video`.
 - `register(peer)`:
   1. snapshots existing remote servers and the active server id per role;
   2. `removeServersForPeer(peer.id)`;
-  3. upserts one server per available slot: `{ id, name: '<name> · Image
-     Generation|Image Editor (shared)', kind, endpoint: '<endpoint>/sharing/image',
-     token, peerId, peerManaged: true, models, modelLabel, selectedModel }`.
+  3. upserts one server per available slot (`manifest.image.generate`, `.edit`,
+     `.video`): `{ id, name: '<name> · Image Generation|Image Editor|Video
+     Generation (shared)', kind ('generate' | 'edit' | 'video'), endpoint:
+     '<endpoint>/sharing/image' (image slots) or '<endpoint>/sharing/video'
+     (the video slot), token, peerId, peerManaged: true, models, modelLabel,
+     selectedModel }`.
      `models` is the host's list (`label` defaults to `id`) or `null`;
      `selectedModel` is the previous pick if the host still offers it, else `null` (host default);
   4. restores an active selection that pointed at a slot still offered;

@@ -3,15 +3,18 @@ const ImageSlotRoles = require('./ImageSlotRoles');
 class ImageServerSelection {
   static LOCAL_GENERATE_ID = 'local:generate';
   static LOCAL_EDIT_ID = 'local:edit';
+  static LOCAL_VIDEO_ID = 'local:video';
 
   static ACTIVE_KEYS = {
     [ImageSlotRoles.GENERATE]: 'core.imageServer.activeGenerateServerId',
     [ImageSlotRoles.EDIT]: 'core.imageServer.activeEditServerId',
+    [ImageSlotRoles.VIDEO]: 'core.imageServer.activeVideoServerId',
   };
 
   static LOCAL = {
     [ImageSlotRoles.GENERATE]: { id: ImageServerSelection.LOCAL_GENERATE_ID, name: 'Local · Image Generation', kind: 'generate', field: 'modelId' },
     [ImageSlotRoles.EDIT]: { id: ImageServerSelection.LOCAL_EDIT_ID, name: 'Local · Image Editor', kind: 'edit', field: 'editModelId' },
+    [ImageSlotRoles.VIDEO]: { id: ImageServerSelection.LOCAL_VIDEO_ID, name: 'Local · Video Generation', kind: 'video', field: 'videoModelId' },
   };
 
   constructor({ settingsDb, remoteServers, getDefaults, resolveDisplayName }) {
@@ -33,7 +36,7 @@ class ImageServerSelection {
   }
 
   list() {
-    return [this.localEntry(ImageSlotRoles.GENERATE), this.localEntry(ImageSlotRoles.EDIT), ...this._remote.list()];
+    return [...ImageSlotRoles.ALL.map((role) => this.localEntry(role)), ...this._remote.list()];
   }
 
   getActiveId(role) {
@@ -50,8 +53,8 @@ class ImageServerSelection {
 
   getActive(role) {
     const wantId = this.getActiveId(role);
-    if (wantId === ImageServerSelection.LOCAL_GENERATE_ID) return this.localEntry(ImageSlotRoles.GENERATE);
-    if (wantId === ImageServerSelection.LOCAL_EDIT_ID) return this.localEntry(ImageSlotRoles.EDIT);
+    const local = ImageSlotRoles.ALL.find((slot) => ImageServerSelection.LOCAL[slot].id === wantId);
+    if (local) return this.localEntry(local);
     return this._remote.list().find((s) => s.id === wantId) || this.localEntry(role);
   }
 
@@ -64,7 +67,7 @@ class ImageServerSelection {
 
   removeRemote(id) {
     const kept = this._remote.remove(id);
-    for (const role of [ImageSlotRoles.GENERATE, ImageSlotRoles.EDIT]) {
+    for (const role of ImageSlotRoles.ALL) {
       if (this.getActiveId(role) === id) this.setActiveId(role, null);
     }
     return kept;

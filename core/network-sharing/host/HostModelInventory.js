@@ -33,9 +33,14 @@ class HostModelInventory {
     }
   }
 
+  static kindOf(role) {
+    if (role === 'image-edit') return 'edit';
+    return role === 'image-video' ? 'video' : 'generate';
+  }
+
   async imageModelDenied(role, modelId) {
     if (!modelId) return null;
-    const models = await this.imageModels(role === 'image-edit' ? 'edit' : 'generate');
+    const models = await this.imageModels(HostModelInventory.kindOf(role));
     if (!models) return 'model selection is not supported on this host';
     return models.some((model) => model.id === modelId) ? null : 'model is not available';
   }

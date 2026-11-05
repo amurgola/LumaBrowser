@@ -19,7 +19,9 @@ coalescing); this adapter only marshals params and re-emits the host's events.
   refImages, slot }` (images as base64) and `Accept: application/x-ndjson`, and
   returns `{ abort }`. Events arrive through [RemoteImageStream](RemoteImageStream.md);
   `onMeta` and `onStatus` are extra callbacks beside the base ones. A request
-  error fails with its message unless aborted.
+  error fails with its message unless aborted. `_streamNoun()` names the peer
+  in stream errors (`remote image server`; [RemoteVideoAdapter](RemoteVideoAdapter.md)
+  overrides it).
 - `healthCheck()` resolves true when the host's unauthenticated
   `GET /sharing/info` answers 2xx (3 s timeout), false otherwise. Never throws.
 

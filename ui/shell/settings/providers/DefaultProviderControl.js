@@ -36,6 +36,7 @@ export default class DefaultProviderControl {
     </div>
     ${ImageDefaultRows.html(imageCfg, 'image-generate', 'Default image generation', 'defaultImageGenSelect')}
     ${ImageDefaultRows.html(imageCfg, 'image-edit', 'Default image editor', 'defaultImageEditSelect')}
+    ${ImageDefaultRows.html(imageCfg, 'image-video', 'Default video generation', 'defaultImageVideoSelect')}
   `;
   }
 
@@ -61,12 +62,17 @@ export default class DefaultProviderControl {
       const role = sel.getAttribute('data-image-role');
       try {
         await window.imageServersAPI.setActiveServer(role, sel.value);
-        this._log.add(`Default ${role === 'image-edit' ? 'image editor' : 'image generation'} set to ${DefaultProviderControl._chosen(sel)}`, 'success');
+        this._log.add(`Default ${DefaultProviderControl._roleLabel(role)} set to ${DefaultProviderControl._chosen(sel)}`, 'success');
         await this._rerender();
       } catch (e) {
         this._feedback.toast('Could not set the image server: ' + e.message, 'bad');
       }
     });
+  }
+
+  static _roleLabel(role) {
+    if (role === 'image-edit') return 'image editor';
+    return role === 'image-video' ? 'video generation' : 'image generation';
   }
 
   _wireRemoteModel(sel) {

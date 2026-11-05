@@ -14,8 +14,14 @@ Process configuration that precedes everything else.
   1. `LUMA_DATA_DIR` sets `userData` (the Chromium profile and the instance lock
      live there too); `ctx.dataDir` is it, else `userData`;
   2. the crash journal, before the lock so even that exit is recorded;
-  3. the single-instance lock; `second-instance` restores, shows and focuses the
-     running window; web links on the command line open as tabs through
+  3. the single-instance lock (per `userData`, so per profile); `second-instance`
+     restores, shows and focuses the running window. A second copy on another
+     data dir (a portable build next to an installed one) passes this lock but
+     loses the API port; [HeavyServices](../ready/HeavyServices.md) recognises
+     the running LumaBrowser on that port and quits the newcomer, so one
+     LumaBrowser runs at a time either way. Detached tab windows
+     ([TabWindows](../window/TabWindows.md)) are windows of this one process
+     and never touch the lock. Web links on the command line open as tabs through
      [LaunchUrls](LaunchUrls.md) (`ctx.launchUrls`): this launch's own argv is
      queued for the first load, a second instance's argv is opened when it
      arrives;

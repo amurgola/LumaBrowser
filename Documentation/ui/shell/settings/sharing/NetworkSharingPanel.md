@@ -7,7 +7,7 @@ Network Sharing host settings (enable, name, PIN, bind mode, share flags, web ba
 ## Methods
 
 - `install()`, `loadHost()`, `applyHostConfig(cfg)`.
-- `SHARE_FLAGS`, `summary(cfg)`, `webHint(cfg)` (static).
+- `SHARE_FLAGS` (flag name -> checkbox id, including `shareVideoGen` -> `gsShareVideoGen`), `summary(cfg)`, `webHint(cfg)` (static).
 
 ## Globals
 

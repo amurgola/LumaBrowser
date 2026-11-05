@@ -21,9 +21,24 @@ Both `LLMServerService` and `DashboardService` expose:
 - `tabHtmlUrl`: current target URL (http once the gateway base URL is known)
 - `tabHtmlFileUrl`: the `file://` fallback
 - `tabLoadedOk`: written by the loader, read by `reloadIfStale`
+- `tabMarkerId` (optional): a DOM id only the host's own page has (`setupRoot`
+  for the LLM tab, `dbRoot` for the Dashboard)
 
 When `tabHtmlUrl === tabHtmlFileUrl`, gateway serving is disabled and neither
 method retries or reloads.
+
+## Page identity
+
+Another program on the gateway's port (the port it could not bind, see
+[GatewayBinder](../../app/ready/GatewayBinder.md)) answers the http URL with its
+own page, a 404 or a login screen, which loads cleanly. After each clean http
+`did-finish-load` the loader therefore asks the page for
+`document.getElementById(tabMarkerId)`; a page without it is a failed attempt
+like any other, so the tab still ends on the `file://` copy, where the LLM tab's
+[ApiServerBanner](../llm-server/ui/js/setup-ui/diagnostics/ApiServerBanner.md)
+explains the conflict, and `reloadIfStale` brings it back once the gateway
+binds. The check is skipped on `file://`, without a marker, and when the
+evaluation itself fails.
 
 ## Why
 

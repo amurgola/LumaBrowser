@@ -8,10 +8,12 @@ One connected terminal or IDE client.
 
 Client -> host: `hello { cwd, agent?, conversationId?, approval?: 'ask'|'never', suggest?, origin?: 'terminal'|'ide', client?, resumeOrNew? }`,
 `prompt { text, images?, context? }`, `followup { text }`, `approve { decision }`,
-`abort`, `list-agents`, `open-in-app`, `commit-message { requestId?, diff, files?, hint?, cwd? }`.
+`abort`, `list-agents`, `history`, `open-in-app`, `commit-message { requestId?, diff, files?, hint?, cwd? }`.
 
 Host -> client: every router event verbatim, plus `ready`, `busy`, `queued`,
-`followup-start`, `agents`, `suggest`, `approve-result`, `abort-result`,
+`followup-start`, `agents`, `history { conversationId, messages: [{ role, content }] }`
+(the stored turns, for a client that must replay a resumed session: the ACP
+adapter), `suggest`, `approve-result`, `abort-result`,
 `open-in-app-result`, `commit-message-result` and `bridge-error { message, code }`
 (`not-ready`, `bad-cwd`, `no-agent`, `no-model`, `no-conversation`, `not-code`, `no-session`, `empty`).
 
@@ -28,7 +30,7 @@ Host -> client: every router event verbatim, plus `ready`, `busy`, `queued`,
   another chat turn is active (it would abort the person at the screen); runs
   `router.chat({ ..., agent: true, tools: true, approvalOverride })` with the
   stored history and the IDE context block on the model message only.
-- `followup`, `approve`, `abort`, `openInApp`, `listAgents`, `commitMessage`
+- `followup`, `approve`, `abort`, `openInApp`, `listAgents`, `history`, `commitMessage`
   ([CommitMessageDrafter](CommitMessageDrafter.md)), `onTurnEnd` (runs the next
   queued follow-up, else a [FollowupSuggester](FollowupSuggester.md) suggestion
   when hello asked for one).

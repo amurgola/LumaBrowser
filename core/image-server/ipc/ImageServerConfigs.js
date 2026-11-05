@@ -1,6 +1,7 @@
 class ImageServerConfigs {
   static GENERATE = 'image-generate';
   static EDIT = 'image-edit';
+  static VIDEO = 'image-video';
 
   constructor(imageServerService) {
     this._svc = imageServerService;
@@ -12,6 +13,7 @@ class ImageServerConfigs {
       active: {
         generate: this._svc.getActiveServerId(ImageServerConfigs.GENERATE),
         edit: this._svc.getActiveServerId(ImageServerConfigs.EDIT),
+        video: this._svc.getActiveServerId(ImageServerConfigs.VIDEO),
       },
     };
   }
@@ -21,7 +23,9 @@ class ImageServerConfigs {
   }
 
   static roleOf(role) {
-    return role === ImageServerConfigs.EDIT || role === 'edit' ? ImageServerConfigs.EDIT : ImageServerConfigs.GENERATE;
+    if (role === ImageServerConfigs.EDIT || role === 'edit') return ImageServerConfigs.EDIT;
+    if (role === ImageServerConfigs.VIDEO || role === 'video') return ImageServerConfigs.VIDEO;
+    return ImageServerConfigs.GENERATE;
   }
 }
 

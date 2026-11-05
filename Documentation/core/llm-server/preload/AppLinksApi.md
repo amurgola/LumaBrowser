@@ -13,6 +13,7 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 |---|---|
 | `openAppSettings(tab)` | invoke `core.shell.openSettings` |
 | `apiSecurity.get()` | invoke `core.settings.apiSecurity.get` |
+| `apiServer.status()` | invoke `core.settings.getApiStatus` (whether the gateway serving this page listens; [ApiServerBanner](../ui/js/setup-ui/diagnostics/ApiServerBanner.md)) |
 | `getPersona()` | invoke `core.settings.getPersona` |
 | `debug.getLogs()` | invoke `core.debug.getLogs` |
 | `rpLab.getScenario()` | invoke `core.rpLab.getScenario` |

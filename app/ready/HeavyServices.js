@@ -1,11 +1,19 @@
 const AgentDeps = require('./AgentDeps');
+const GatewayBinder = require('./GatewayBinder');
+const PortConflict = require('./PortConflict');
 
 class HeavyServices {
-  constructor(ctx, { browserService, log = console }) {
+  static PORT_NOTICE_TITLE = 'Local API server could not start';
+  static SETTINGS_TAB = 'apimcp';
+
+  constructor(ctx, { browserService, log = console, inspectConflict = PortConflict.inspect, timers = {} }) {
     this._ctx = ctx;
     this._s = ctx.services;
     this._browserService = browserService;
     this._log = log;
+    this._inspectConflict = inspectConflict;
+    this._timers = timers;
+    this._binder = null;
   }
 
   async run() {
@@ -20,9 +28,75 @@ class HeavyServices {
       this._log.log('REST API server is disabled via settings');
       return null;
     }
-    return this._s.restGateway.start()
-      .then(() => this._onGatewayListening())
-      .catch((error) => this._log.error('Failed to start REST server:', error));
+    this._binder = new GatewayBinder({
+      gateway: this._s.restGateway,
+      onListening: () => this._onGatewayListening(),
+      onFirstFailure: (err) => this._onGatewayBindFailed(err),
+      log: this._log,
+      setTimeoutFn: this._timers.setTimeoutFn,
+      clearTimeoutFn: this._timers.clearTimeoutFn,
+    });
+    return this._binder.start();
+  }
+
+  async _onGatewayBindFailed(err) {
+    const port = this._ctx.apiPort;
+    let conflict;
+    try { conflict = await this._inspectConflict(port); } catch (_) { conflict = { kind: PortConflict.UNKNOWN, owner: null }; }
+    this._s.restGateway.conflict = conflict;
+    if (conflict.kind === PortConflict.LUMABROWSER) {
+      await this._yieldToRunningInstance(port);
+      return;
+    }
+    const holder = conflict.owner ? ` by ${conflict.owner}` : '';
+    this._log.error(`REST API port ${port} is in use${holder} (${err && err.message ? err.message : err}); extension tabs, the Dashboard and the CLI need it. Retrying until it frees up; change the port in Settings > API & MCP otherwise.`);
+    this._notifyPortInUse(port, conflict.owner);
+  }
+
+  async _yieldToRunningInstance(port) {
+    this._log.error(`Another LumaBrowser already serves port ${port}; this copy exits (one LumaBrowser runs at a time).`);
+    if (this._binder) this._binder.stop();
+    const { app, dialog } = this._ctx.electron;
+    if (this._canPrompt() && dialog && typeof dialog.showMessageBox === 'function') {
+      try {
+        await dialog.showMessageBox({
+          type: 'info',
+          title: 'LumaBrowser is already running',
+          message: 'LumaBrowser is already running on this computer.',
+          detail: `Another LumaBrowser is serving the local API on port ${port}. Only one copy can run at a time, so this one will close. Use the running copy, or quit it first.`,
+          buttons: ['Close this copy'],
+          noLink: true,
+        });
+      } catch (_) {}
+    }
+    app.quit();
+  }
+
+  _notifyPortInUse(port, owner) {
+    const notice = this._ctx.desktopNotice;
+    if (!notice || typeof notice.show !== 'function') return;
+    const holder = owner ? ` by ${owner}` : ' by another program';
+    notice.show({
+      title: HeavyServices.PORT_NOTICE_TITLE,
+      body: `Port ${port} is in use${holder}. Extension tabs, the Dashboard and the CLI need it. Open Settings > API & MCP to pick another port.`,
+      onClick: () => this._openApiSettings(),
+    });
+  }
+
+  _canPrompt() {
+    return !this._ctx.env.LUMA_DOCKER && Boolean(this._ctx.liveWindow());
+  }
+
+  _openApiSettings() {
+    const win = this._ctx.liveWindow();
+    if (!win) return false;
+    try {
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+      win.webContents.send('tab-view:accelerator', { action: 'open-settings', settingsTab: HeavyServices.SETTINGS_TAB });
+    } catch (_) { return false; }
+    return true;
   }
 
   _onGatewayListening() {

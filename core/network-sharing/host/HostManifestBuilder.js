@@ -2,6 +2,7 @@ const HostDialPosition = require('./HostDialPosition');
 
 class HostManifestBuilder {
   static PROTO = 1;
+  static VIDEO_ENDPOINT = '/sharing/video/generate';
 
   constructor({ host, inventory, llmServerService, imageServerService }) {
     this._host = host;
@@ -24,7 +25,7 @@ class HostManifestBuilder {
     this._manifest = {
       instance: { name: this._host.getInstanceName(), id: this._host.instanceId, proto: HostManifestBuilder.PROTO, version: this._host.getAppVersion() },
       llms: [],
-      image: { generate: { available: false }, edit: { available: false } },
+      image: { generate: { available: false }, edit: { available: false }, video: { available: false } },
     };
   }
 
@@ -82,18 +83,19 @@ class HostManifestBuilder {
       if (!this._image) return;
       if (this._flags.shareImageGen) this._manifest.image.generate = await this._imageSlot('image-generate', 'generate');
       if (this._flags.shareImageEdit) this._manifest.image.edit = await this._imageSlot('image-edit', 'edit');
+      if (this._flags.shareVideoGen) this._manifest.image.video = await this._imageSlot('image-video', 'video', HostManifestBuilder.VIDEO_ENDPOINT);
     } catch (err) {
       console.warn('[sharing] manifest image build failed:', err && err.message);
     }
   }
 
-  async _imageSlot(role, kind) {
+  async _imageSlot(role, kind, endpoint = `/sharing/image/${kind}`) {
     const entry = this._image.computeLocalServerEntry(role);
     return {
       available: !!(entry && entry.available),
       modelId: (entry && entry.selectedModelId) || null,
       modelLabel: (entry && entry.selectedModelLabel) || null,
-      endpoint: `/sharing/image/${kind}`,
+      endpoint,
       models: (await this._inventory.imageModels(kind)) || [],
     };
   }

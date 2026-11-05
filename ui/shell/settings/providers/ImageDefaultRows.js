@@ -4,8 +4,8 @@ export default class ImageDefaultRows {
   static html(imageCfg, roleKey, label, selectId) {
     if (!imageCfg || !Array.isArray(imageCfg.servers)) return '';
     const esc = HtmlEscaper.escape;
-    const kind = roleKey === 'image-edit' ? 'edit' : 'generate';
-    const active = imageCfg.active ? (kind === 'edit' ? imageCfg.active.edit : imageCfg.active.generate) : null;
+    const kind = ImageDefaultRows.kindOf(roleKey);
+    const active = imageCfg.active ? imageCfg.active[kind] : null;
     const opts = imageCfg.servers
       .filter((s) => s && s.kind === kind)
       .map((s) => `<option value="${esc(s.id)}"${s.id === active ? ' selected' : ''}>${esc(s.name)}${s.location === 'remote' ? ' (shared)' : ''}</option>`)
@@ -20,6 +20,11 @@ export default class ImageDefaultRows {
         </div>
         <select class="form-select gs-input-select" id="${selectId}" data-image-role="${roleKey}">${opts}</select>
       </div>${ImageDefaultRows._modelRow(activeServer, label)}`;
+  }
+
+  static kindOf(roleKey) {
+    if (roleKey === 'image-edit') return 'edit';
+    return roleKey === 'image-video' ? 'video' : 'generate';
   }
 
   static _modelRow(server, label) {

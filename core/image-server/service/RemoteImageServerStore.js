@@ -46,6 +46,10 @@ class RemoteImageServerStore extends JsonCollectionStore {
     return this.list().filter((s) => s.peerId === peerId).map((s) => s.id);
   }
 
+  static kindOf(kind) {
+    return kind === 'edit' || kind === 'video' ? kind : 'generate';
+  }
+
   static _isRemote(entry) {
     return !!entry && !entry.managedByCore && entry.location === 'remote';
   }
@@ -60,7 +64,7 @@ class RemoteImageServerStore extends JsonCollectionStore {
       id: String(s.id || ''),
       name: String(s.name || s.endpoint),
       location: 'remote',
-      kind: s.kind === 'edit' ? 'edit' : 'generate',
+      kind: RemoteImageServerStore.kindOf(s.kind),
       endpoint: String(s.endpoint),
       token: s.token || null,
       peerId: s.peerId || null,

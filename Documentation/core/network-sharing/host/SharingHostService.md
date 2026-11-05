@@ -11,12 +11,13 @@ the collaborators linked below.
 ## Construction
 
 `new SharingHostService({ db, getPort, getChatRouter, getImageRouter,
-llmServerService, imageServerService, voiceServices, notifier, mcpAggregator,
-apiSecurity, discovery, getAgentManager, getAppVersion })`
+getVideoRouter, llmServerService, imageServerService, voiceServices, notifier,
+mcpAggregator, apiSecurity, discovery, getAgentManager, getAppVersion })`
 
 - `db` (required): the SettingsDatabase; throws `SharingHostService requires a SettingsDatabase` without it.
-- `getChatRouter` / `getImageRouter` default to `global.__lumaChatRouter` /
-  `global.__lumaImageRouter`; `getAgentManager` to `global.__lumaAgentManager`.
+- `getChatRouter` / `getImageRouter` / `getVideoRouter` default to
+  `global.__lumaChatRouter` / `global.__lumaImageRouter` /
+  `global.__lumaVideoRouter`; `getAgentManager` to `global.__lumaAgentManager`.
 - `apiSecurity.isValidKey(key)` lets a configured core API key stand in for a
   pairing token. `notifier(info)` is called once per newly paired client.
 - New injection points: `discovery` (NetworkDiscovery shape, for tests),
@@ -69,10 +70,11 @@ Manifest and proxy targets:
   `allowedLlmRefs()`, `imageModelDenied(role, modelId)`
   ([HostModelInventory](HostModelInventory.md)), `hostDialPosition()`
   ([HostDialPosition](HostDialPosition.md)).
-- `getChatRouter()`, `getImageRouter()`, `getChatStore()`,
+- `getChatRouter()`, `getImageRouter()`, `getVideoRouter()`, `getChatStore()`,
   `getVoiceServices()`, `getAgentManager()`.
-- `enqueueImage(fn)`: FIFO over one key of
-  [FileMutationQueue](../../shell/FileMutationQueue.md); a failed job never wedges the queue.
+- `enqueueImage(fn)` / `enqueueVideo(fn)`: FIFO over one key each (`image`,
+  `video`) of [FileMutationQueue](../../shell/FileMutationQueue.md); a failed
+  job never wedges a queue, and a long clip never holds up image requests.
 - `shutdown()`: stops the advert and every listener, swallowing errors.
 
 ## Collaborators

@@ -12,10 +12,11 @@ const FileTransaction = require('./FileTransaction');
 const ClaudeCodeConnector = require('./connectors/ClaudeCodeConnector');
 const ClineConnector = require('./connectors/ClineConnector');
 const CodexConnector = require('./connectors/CodexConnector');
+const JetBrainsAirConnector = require('./connectors/JetBrainsAirConnector');
 const OpenCodeConnector = require('./connectors/OpenCodeConnector');
 
 class HarnessConnections {
-  static CONNECTORS = [new ClaudeCodeConnector(), new CodexConnector(), new OpenCodeConnector(), new ClineConnector()];
+  static CONNECTORS = [new ClaudeCodeConnector(), new CodexConnector(), new OpenCodeConnector(), new ClineConnector(), new JetBrainsAirConnector()];
   static MANIFEST_FILE = 'harness-connections.json';
   static BACKUP_DIR = 'harness-backups';
   static ACTIONS = ['connect', 'disconnect'];
@@ -51,8 +52,9 @@ current folder; \`luma --agents\` lists agents.
     });
   }
 
-  static paths({ home = os.homedir(), env = process.env, baseDir } = {}) {
+  static paths({ home = os.homedir(), env = process.env, baseDir, platform = process.platform } = {}) {
     const claudeDir = env.CLAUDE_CONFIG_DIR || path.join(home, '.claude');
+    const jetbrainsDir = path.join(home, '.jetbrains');
     const clineProviderSettings = env.CLINE_PROVIDER_SETTINGS_PATH || path.join(env.CLINE_DATA_DIR || path.join(home, '.cline', 'data'), 'settings', 'providers.json');
     const appDir = baseDir || home;
     return {
@@ -65,6 +67,9 @@ current folder; \`luma --agents\` lists agents.
       clineProviderSettings,
       clineModels: path.join(path.dirname(clineProviderSettings), 'models.json'),
       clineMcp: path.join(path.dirname(clineProviderSettings), 'cline_mcp_settings.json'),
+      jetbrainsAcp: path.join(jetbrainsDir, 'acp.json'),
+      jetbrainsMcp: path.join(jetbrainsDir, 'mcp', 'mcp.json'),
+      jetbrainsIdeConfigs: HarnessConnections._jetbrainsIdeConfigs(home, env, platform),
       skills: [
         path.join(claudeDir, 'skills', 'luma', 'SKILL.md'),
         path.join(home, '.agents', 'skills', 'luma', 'SKILL.md'),
@@ -125,14 +130,14 @@ current folder; \`luma --agents\` lists agents.
 
   _row(c, endpoints) {
     const entry = this._manifest.entry(c.id);
-    const executable = ExecutableFinder.find(c.executable, this._executableDirs == null ? undefined : this._executableDirs);
+    const executable = c.executable ? ExecutableFinder.find(c.executable, this._executableDirs == null ? undefined : this._executableDirs) : null;
     const files = c.configFiles(this._paths);
     const status = this._inspect(c, endpoints);
     return {
       id: c.id,
       name: c.name,
       executable,
-      installed: !!executable || files.some((f) => fs.existsSync(f)),
+      installed: !!executable || files.some((f) => fs.existsSync(f)) || this._detect(c),
       configFiles: files,
       state: status.state,
       reason: status.reason || null,
@@ -149,6 +154,10 @@ current folder; \`luma --agents\` lists agents.
     } catch (err) {
       return { state: 'unavailable', reason: String((err && err.message) || err) };
     }
+  }
+
+  _detect(c) {
+    try { return !!c.detectInstalled(this._paths); } catch (_) { return false; }
   }
 
   _drift(c, entry) {
@@ -180,6 +189,12 @@ current folder; \`luma --agents\` lists agents.
     const dir = path.join(env.XDG_CONFIG_HOME || path.join(home, '.config'), 'opencode');
     const existing = ['config.json', 'opencode.json', 'opencode.jsonc'].map((f) => path.join(dir, f)).filter((f) => fs.existsSync(f));
     return env.OPENCODE_CONFIG || existing[existing.length - 1] || path.join(dir, 'opencode.json');
+  }
+
+  static _jetbrainsIdeConfigs(home, env, platform) {
+    if (platform === 'win32') return path.join(env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'JetBrains');
+    if (platform === 'darwin') return path.join(home, 'Library', 'Application Support', 'JetBrains');
+    return path.join(env.XDG_CONFIG_HOME || path.join(home, '.config'), 'JetBrains');
   }
 
   static _appBaseDir() {

@@ -8,6 +8,14 @@ export default class SetupExtensionTabs {
 
   static URL_EXT_ID = /^\/llm-ui\/ext\/([^/]+)\//;
 
+  static REGISTER_TIMEOUT_MS = 20000;
+
+  static BUNDLE_FAILED = 'the extension UI bundle could not be loaded from the local API server';
+
+  static BUNDLE_SILENT = 'the extension UI loaded but never registered its tab; the developer console may show why';
+
+  static NO_BUNDLE = 'the extension declares no UI bundle for this tab';
+
   constructor({ api, doc = document, win = window, navigator = null }) {
     this._api = api;
     this._doc = doc;
@@ -18,6 +26,8 @@ export default class SetupExtensionTabs {
     this._defs = new Map();
     this._urlByTab = new Map();
     this._pendingShow = new Set();
+    this._failed = new Map();
+    this._registerTimers = new Map();
     this._syncing = null;
     this._lastSyncAt = 0;
   }
@@ -42,6 +52,7 @@ export default class SetupExtensionTabs {
 
   registerTab(def) {
     if (!def || !def.id) return;
+    this._clearRegisterTimer(def.id);
     this._defs.set(def.id, { mount: def.mount, onShow: def.onShow, mounted: false });
     if (this._pendingShow.has(def.id)) {
       this._pendingShow.delete(def.id);
@@ -88,15 +99,54 @@ export default class SetupExtensionTabs {
   _addTab(hosts, tab) {
     this._tabNav.add(hosts, tab);
     this._urlByTab.set(tab.id, tab.url || '');
-    if (tab.url) this._loader.inject(tab.url, tab.module === true);
+    if (!tab.url) { this._setPane(tab.id, ExtensionTabNav.failedHtml(SetupExtensionTabs.NO_BUNDLE)); return; }
+    if (this._servedFromFile()) { this._setPane(tab.id, ExtensionTabNav.OFFLINE_HTML); return; }
+    this._loader.inject(tab.url, tab.module === true, () => this._bundleFailed(tab.id, SetupExtensionTabs.BUNDLE_FAILED));
+    if (this._defs.has(tab.id)) return;
+    if (this._failed.has(tab.id)) this._setPane(tab.id, ExtensionTabNav.failedHtml(this._failed.get(tab.id)));
+    else this._armRegisterTimer(tab.id);
   }
 
   _removeTab(nav, tabId) {
     const wasActive = this._tabNav.remove(nav, tabId);
-    this._defs.delete(tabId);
+    this._clearRegisterTimer(tabId);
+    const def = this._defs.get(tabId);
+    if (def) def.mounted = false;
     this._urlByTab.delete(tabId);
     this._pendingShow.delete(tabId);
     if (wasActive && this._navigator) { try { this._navigator.go('settings'); } catch (_) {} }
+  }
+
+  _servedFromFile() {
+    const loc = this._win && this._win.location;
+    return !!loc && loc.protocol === 'file:';
+  }
+
+  _bundleFailed(tabId, message) {
+    this._clearRegisterTimer(tabId);
+    this._failed.set(tabId, message);
+    if (!this._defs.has(tabId)) this._setPane(tabId, ExtensionTabNav.failedHtml(message));
+  }
+
+  _armRegisterTimer(tabId) {
+    this._clearRegisterTimer(tabId);
+    const timer = setTimeout(() => {
+      this._registerTimers.delete(tabId);
+      if (!this._defs.has(tabId)) this._bundleFailed(tabId, SetupExtensionTabs.BUNDLE_SILENT);
+    }, SetupExtensionTabs.REGISTER_TIMEOUT_MS);
+    this._registerTimers.set(tabId, timer);
+  }
+
+  _clearRegisterTimer(tabId) {
+    const timer = this._registerTimers.get(tabId);
+    if (timer === undefined) return;
+    clearTimeout(timer);
+    this._registerTimers.delete(tabId);
+  }
+
+  _setPane(tabId, html) {
+    const pane = this._tabNav.pane(tabId);
+    if (pane) pane.innerHTML = html;
   }
 
   _mount(tabId) {

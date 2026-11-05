@@ -4,9 +4,10 @@ class AgentHarnessSettings {
   static DEFAULT_MODEL_KEY = 'core.llmServer.defaults.modelPath';
   static FAILED = 'harness operation failed';
 
-  constructor({ db, mcpEntry, createConnections = null, localApi = null }) {
+  constructor({ db, mcpEntry, acpEntry = () => null, createConnections = null, localApi = null }) {
     this._db = db;
     this._mcpEntry = mcpEntry;
+    this._acpEntry = acpEntry;
     this._createConnections = createConnections || AgentHarnessSettings._defaultConnections;
     this._localApi = localApi;
     this._connections = null;
@@ -49,6 +50,7 @@ class AgentHarnessSettings {
       openaiBaseUrl: `http://${local.BIND_HOST}:${port}/v1`,
       anthropicBaseUrl: `http://${local.BIND_HOST}:${port}`,
       mcp: this._mcpEntry(),
+      acp: this._acpEntry() || null,
     };
   }
 

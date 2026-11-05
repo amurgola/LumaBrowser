@@ -10,9 +10,13 @@ class HarnessConnector {
   constructor({ id, name, executable, format, staleReason }) {
     this.id = id;
     this.name = name;
-    this.executable = executable;
+    this.executable = executable || null;
     this.format = format;
     this._staleReason = staleReason;
+  }
+
+  detectInstalled(paths) {
+    return false;
   }
 
   configFiles(paths) {

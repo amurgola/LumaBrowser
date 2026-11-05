@@ -1,4 +1,5 @@
 import ApiSecurityCard from './ApiSecurityCard.js';
+import ApiServerBanner from './ApiServerBanner.js';
 import DiagnosticsCache from './DiagnosticsCache.js';
 import DiagnosticsPainter from './DiagnosticsPainter.js';
 
@@ -71,6 +72,7 @@ export default class DiagnosticsLoader {
     await cards.models.render();
     await cards.defaults.render();
     ApiSecurityCard.render(this._ctx.doc, this._ctx.api.apiSecurity).catch(() => {});
+    ApiServerBanner.render(this._ctx.doc, this._ctx.api).catch(() => {});
     cards.plan.refresh().catch(() => {});
   }
 }

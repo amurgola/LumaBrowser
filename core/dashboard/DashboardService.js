@@ -7,6 +7,7 @@ class DashboardService {
   static TAB_KIND = 'dashboard';
   static TAB_TITLE = 'Dashboard';
   static GATEWAY_PATH = '/dashboard-ui/dashboard.html';
+  static MARKER_ID = 'dbRoot';
 
   constructor({ settingsDb, rootDir } = {}) {
     if (!settingsDb) throw new Error('DashboardService requires a settingsDb');
@@ -15,6 +16,7 @@ class DashboardService {
     this.tabViewManager = null;
     this._tabId = null;
     this.tabLoadedOk = false;
+    this.tabMarkerId = DashboardService.MARKER_ID;
   }
 
   attachTabViewManager(tabViewManager) {
