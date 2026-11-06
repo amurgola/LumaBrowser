@@ -26,3 +26,12 @@ VS Code extension's [LumaSession](../vscode/src/LumaSession.md).
 ## Build
 
 `npm run build:jetbrains` (needs a JDK: JAVA_HOME or an installed IDE's `jbr`). Output `ide/dist/luma-jetbrains` plus `jetbrains.json`; `build/`, `.gradle/`, `.intellijPlatform/`, `.kotlin/` and `src/main/resources/webview` are build output.
+
+With `LUMA_IDE_HOME` set (the builder picks the first installed IDE when it is unset) Gradle compiles against that IDE
+instead of downloading the 2024.3 SDK. 2026.x IDEs moved two APIs the plugin uses out of the platform jars into
+bundled plugins, so `build.gradle.kts` adds them when their folders exist: `plugins/jcef-plugin`
+(`com.intellij.modules.jcef`, the tool window's browser) and, since 2026.3, `plugins/platform-vcs-plugin`
+(`com.intellij.platform.vcs`, the commit-message action) plus the product module `intellij.platform.vcs.core`
+(`lib/intellij.platform.vcs.core.jar`, where `Change` and `ContentRevision` live; it is not on the core plugin's
+class path). Without those a local 2026.3 build fails with unresolved `Change` / `VcsDataKeys` / `CommitMessageUi`
+in `vcs/`.

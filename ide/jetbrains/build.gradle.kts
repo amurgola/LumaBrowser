@@ -27,6 +27,12 @@ dependencies {
             if (file("$localIde/plugins/jcef-plugin").isDirectory) {
                 bundledPlugin("com.intellij.modules.jcef")
             }
+            if (file("$localIde/plugins/platform-vcs-plugin").isDirectory) {
+                bundledPlugin("com.intellij.platform.vcs")
+            }
+            if (file("$localIde/lib/intellij.platform.vcs.core.jar").isFile) {
+                bundledModule("intellij.platform.vcs.core")
+            }
         } else {
             intellijIdeaCommunity(providers.gradleProperty("platformVersion").get())
         }
