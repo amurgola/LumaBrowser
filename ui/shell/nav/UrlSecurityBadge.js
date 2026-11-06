@@ -1,7 +1,7 @@
 export default class UrlSecurityBadge {
   static TITLES = {
-    secure: 'Connection is secure (HTTPS)',
-    insecure: 'Not secure: this page is loaded over plain HTTP',
+    secure: 'Connection is secure (HTTPS). Click for site settings',
+    insecure: 'Not secure: this page is loaded over plain HTTP. Click for site settings',
   };
 
   static stateFor(url) {

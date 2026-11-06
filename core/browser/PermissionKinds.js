@@ -1,6 +1,8 @@
 class PermissionKinds {
   static MEDIA_KINDS = ['camera', 'microphone'];
   static APP_ORIGIN = 'file://';
+  static NOTIFICATIONS = 'notifications';
+  static EXTENSION_PREFIX = 'chrome-extension://';
 
   static originOf(url) {
     if (!url || typeof url !== 'string') return null;
@@ -15,6 +17,7 @@ class PermissionKinds {
   }
 
   static kindsOf(permission, details) {
+    if (permission === PermissionKinds.NOTIFICATIONS) return [PermissionKinds.NOTIFICATIONS];
     if (permission === 'camera') return ['camera'];
     if (permission === 'microphone') return ['microphone'];
     if (permission !== 'media') return null;
@@ -28,11 +31,16 @@ class PermissionKinds {
   }
 
   static describe(kinds) {
+    if (kinds.includes(PermissionKinds.NOTIFICATIONS)) return 'show notifications';
     const hasCamera = kinds.includes('camera');
     const hasMicrophone = kinds.includes('microphone');
     if (hasCamera && hasMicrophone) return 'use your camera and microphone';
     if (hasCamera) return 'use your camera';
     return 'use your microphone';
+  }
+
+  static isExtensionUrl(url) {
+    return typeof url === 'string' && url.startsWith(PermissionKinds.EXTENSION_PREFIX);
   }
 
   static hostOf(origin) {

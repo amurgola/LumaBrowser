@@ -7,6 +7,24 @@
     -webkit-app-region: drag;
     user-select: none;
 }
+body.browser-fullscreen .app-titlebar,
+body.browser-fullscreen .toolbar,
+body.browser-fullscreen .bookmarks-bar { display: none !important; }
+
+.private-badge {
+    align-self: center;
+    margin: 0 var(--space-2);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    background: #3b2a5c;
+    color: #e4dcff;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    -webkit-app-region: no-drag;
+}
+.private-badge[hidden] { display: none; }
+body.private-window .app-titlebar { background: #120d22; }
+
 .app-titlebar-drag {
     flex: 1;
     -webkit-app-region: drag;

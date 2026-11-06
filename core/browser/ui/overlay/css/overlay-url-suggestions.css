@@ -13,3 +13,7 @@
 .url-suggestion .bd-suggest-url { color: var(--text-muted); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .url-suggestion.bd-active, .url-suggestion:hover { background: var(--bg-elevated); }
 .url-suggestion .bd-suggest-search { color: var(--text-secondary); }
+.url-suggestion .bd-suggest-tag {
+  flex: none; color: var(--text-muted); font-size: var(--text-xs);
+  padding: 2px var(--space-2); border-radius: var(--radius-sm); background: var(--bg-surface-2);
+}

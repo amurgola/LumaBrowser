@@ -22,3 +22,4 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `rpLab.regenerateStep(args)` | invoke `core.rpLab.regenerateStep` |
 | `rpLab.runText(args)` | invoke `core.rpLab.runText` |
 | `rpLab.onEvent(cb)` | subscribe `core.rpLab.event` |
+| `palette.record(place)` | invoke `core.palette.record` (the search palette's recent places: conversations, artifacts and Setup pages opened here) |

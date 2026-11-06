@@ -3,7 +3,7 @@ const TabKinds = require('./TabKinds');
 const TabHosts = require('./TabHosts');
 
 class TabEntry {
-  constructor({ id, view, partition, url, title, kind, silent, pinned, keepAlive, hidden, openerTabId, hostId }) {
+  constructor({ id, view, partition, url, title, kind, silent, pinned, userPinned, keepAlive, hidden, openerTabId, hostId }) {
     this.id = id;
     this.view = view;
     this.webContents = view.webContents;
@@ -11,6 +11,7 @@ class TabEntry {
     this.silent = !!silent;
     this.kind = kind || TabKinds.DEFAULT;
     this.pinned = !!pinned;
+    this.userPinned = !!userPinned;
     this.keepAlive = !!keepAlive;
     this.hidden = !!hidden;
     this.hostId = Number.isInteger(hostId) ? hostId : TabHosts.MAIN_ID;
@@ -29,6 +30,8 @@ class TabEntry {
     this.history = [];
     this.consoleLogs = [];
     this.dialogHandler = null;
+    this.lastUserInputAt = 0;
+    this.blockedPopups = [];
     this._crashedAt = 0;
     this._errorPageFor = null;
     this._renderedSourceUrl = null;
@@ -54,7 +57,11 @@ class TabEntry {
   }
 
   isMovable() {
-    return this.isRegularBrowsing() && this.isInStrip() && !this.pinned;
+    return this.isRegularBrowsing() && this.isInStrip() && !this.pinned && !this.isPrivate();
+  }
+
+  isPrivate() {
+    return TabKinds.isPrivatePartition(this.partition);
   }
 
   isRegularBrowsing() {

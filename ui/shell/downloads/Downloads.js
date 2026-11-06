@@ -52,7 +52,7 @@ export default class Downloads {
     const btn = Downloads._button();
     if (!btn) return;
     const list = [...this._items.values()];
-    btn.hidden = list.length === 0;
+    btn.hidden = !list.some((d) => !d.restored);
     const active = list.filter((d) => d.state === 'progress');
     btn.classList.toggle('is-active', active.length > 0);
     const pct = active.length ? DownloadText.aggregatePercent(active) : 0;
@@ -87,12 +87,20 @@ export default class Downloads {
 
   handleAction(payload) {
     const api = window.tabAPI || {};
+    if (payload && payload.action === 'clear') { this._clearFinished(api); return; }
     const id = payload && payload.id;
     const d = id != null ? this._items.get(String(id)) : null;
     if (!d) return;
     if (payload.action === 'open' && typeof api.openDownload === 'function') { api.openDownload(d.id); this._host.hide(); return; }
     if (payload.action === 'folder' && typeof api.showDownloadInFolder === 'function') { api.showDownloadInFolder(d.id); this._host.hide(); return; }
     if (payload.action === 'cancel' && typeof api.cancelDownload === 'function') api.cancelDownload(d.id);
+  }
+
+  _clearFinished(api) {
+    for (const [id, d] of this._items) if (d.state !== 'progress') this._items.delete(id);
+    if (typeof api.clearDownloads === 'function') api.clearDownloads();
+    this.refreshButton();
+    if (this._items.size) this.showMenu(); else this._host.hide();
   }
 
   static _button() {

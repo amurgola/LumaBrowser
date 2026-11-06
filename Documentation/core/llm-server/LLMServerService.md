@@ -112,6 +112,15 @@ Pinned tab ([PinnedLlmTab](service/PinnedLlmTab.md)):
 - `openSetup({ expand?, page? })` persists setup mode and the expand hint (cleared
   without one), turns the feature on if off, and sends `core.llmServer.showSetup`
   with `{ expand?, page? }` or null.
+- `revealSetting(target)` (the search palette): a Tune target
+  `{ surface: 'tune', field }` opens the chat and sends `core.llmServer.palette`
+  `{ type: 'reveal', target: { tune } }`; a Setup target
+  `{ surface: 'setup', page, subtab?, selector? }` opens Setup on that page and,
+  with a selector, sends `{ type: 'reveal', target: { setup, selector, subtab? } }`.
+  False when the tab cannot open. See [PaletteDeepLinks](ui/js/chat/PaletteDeepLinks.md).
+- `openArtifact({ conversationId, artifactId })` opens the chat and sends
+  `core.llmServer.palette` `{ type: 'artifact', conversationId, artifactId }`;
+  false without both ids or a tab.
 - `setEnabled(enabled)` -> `{ success: true, enabled }`; enabling creates the tab,
   disabling removes it.
 

@@ -15,3 +15,7 @@ The built-in pseudo-tool handlers by name.
   ArtifactData, ScheduleArtifactUpdates, GenerateImage, EditImage, Video, Music.
 
 A built-in name wins over a mode or extension tool of the same name.
+
+## Password manager
+
+`VaultToolsHandler` answers `vault_list` and `vault_fill`.

@@ -24,3 +24,7 @@ ride back on its result.
      admission on `toolCatalogChanged` (`Now callable in this run: ...` plus
      manuals, appended to `message`, `next`, or set as `message`), and the
      auto-activation manual (only on a call that ran).
+
+## Vault key placeholders
+
+`vaultCaller` (from BridgeRun: who the run counts as). `_run` passes the call through `VaultPlaceholders.resolveFor` before dispatch, after approval. The dispatched params get the key values; the params the pipeline was given (trace, history) keep the placeholders. A refusal becomes the tool result.

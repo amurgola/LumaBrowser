@@ -27,6 +27,10 @@ Start here; the parts are:
   (needs `.settings-tabs`; see [SettingsTabs](../settings/SettingsTabs.md)).
 - `switchSettingsTab(tabName)`: `'general'`, `'extensions'`, `'about'` or any
   page tab (`data-tab`), as the shell's `data-gs-goto` links and menu do.
+- `switchSettingsSubtab(parent, subtab)`, `showExtensionSettings(extensionId)`:
+  a sub-tab of Extensions or About, and one extension's page under Extensions
+  (through [SettingsScreens](../settings/SettingsScreens.md)), for the search
+  palette's [SettingsReveal](../../../../ui/shell/settings/SettingsReveal.md).
 - `loadExtensions(extensionList, context)`: subscribes once to the hot-install
   broadcasts, then loads and activates every enabled, loadable renderer.
   `extensionList` is `ipcBridge.getExtensions()` (the main process's

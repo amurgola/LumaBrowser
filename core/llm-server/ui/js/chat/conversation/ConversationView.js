@@ -24,10 +24,16 @@ export default class ConversationView {
     await this._restoreMode(conv, id);
     await ctx.docs.restore(id);
     this.render(conv ? conv.title : 'Conversation');
+    ConversationView._remember(ctx.api, id, conv);
     if (reattach) this._reattachStream();
     this._applyMode();
     ctx.convList.repaintCurrent();
     ctx.codeSurface.report();
+  }
+
+  static _remember(api, id, conv) {
+    if (!api || !api.palette || typeof api.palette.record !== 'function' || (conv && conv.hidden)) return;
+    try { api.palette.record({ kind: 'conversation', ref: id, title: (conv && conv.title) || 'Conversation' }); } catch (_) {}
   }
 
   render(title) {

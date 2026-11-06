@@ -1,5 +1,5 @@
 class WindowControlIpc {
-  static CHANNELS = ['window:minimize', 'window:toggle-maximize', 'window:close', 'window:is-maximized'];
+  static CHANNELS = ['window:minimize', 'window:toggle-maximize', 'window:close', 'window:is-maximized', 'window:toggle-fullscreen'];
 
   constructor(getWindow, { windowForSender = null } = {}) {
     this._getWindow = getWindow;
@@ -11,6 +11,7 @@ class WindowControlIpc {
     ipcMain.handle('window:toggle-maximize', (e) => this.toggleMaximize(WindowControlIpc._sender(e)));
     ipcMain.handle('window:close', (e) => this.close(WindowControlIpc._sender(e)));
     ipcMain.handle('window:is-maximized', (e) => this.isMaximized(WindowControlIpc._sender(e)));
+    ipcMain.handle('window:toggle-fullscreen', (e) => this.toggleFullscreen(WindowControlIpc._sender(e)));
   }
 
   minimize(sender) {
@@ -23,6 +24,13 @@ class WindowControlIpc {
     if (!win) return;
     if (win.isMaximized()) win.unmaximize();
     else win.maximize();
+  }
+
+  toggleFullscreen(sender) {
+    const win = this._window(sender);
+    if (!win) return false;
+    win.setFullScreen(!win.isFullScreen());
+    return win.isFullScreen();
   }
 
   close(sender) {

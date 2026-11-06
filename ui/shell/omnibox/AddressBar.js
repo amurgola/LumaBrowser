@@ -12,8 +12,12 @@ export default class AddressBar {
 
   showUrl(url) {
     if (!this.el) return;
-    this.el.value = url || '';
+    this.el.value = AddressBar.displayUrl(url);
     UrlSecurityBadge.update(url || '');
+  }
+
+  static displayUrl(url) {
+    return /^luma:\/\/newtab(\/|$)/i.test(url || '') ? '' : (url || '');
   }
 
   showUrlUnlessEditing(url) {

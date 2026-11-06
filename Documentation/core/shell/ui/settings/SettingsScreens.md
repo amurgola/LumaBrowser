@@ -15,6 +15,10 @@ Wires the Settings Extensions and About tabs together once Settings exists: tabs
   mounts it hidden under Extensions for Configure. Switching to an extension's
   tab runs its `onActivate`.
 - `unregisterPage(extensionId)`: the page and, when it owned one, the tab.
+- `switchSubtab(parent, subtab)`: `parent` is `'extensions'` or `'about'`.
+- `showExtension(extensionId)`: Settings > Extensions on that extension's page
+  (its registered page, or the default info view); false before `init()`. Both
+  serve the search palette's deep links.
 - `tabOf(extensionId)`: the tab name an extension's page owns, or null.
 - Settings has no footer (everything autosaves). New Extension and Install from
   .zip sit in the [ExtensionAddMenu](ExtensionAddMenu.md) mounted on the

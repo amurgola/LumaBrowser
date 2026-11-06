@@ -53,3 +53,7 @@ The hold is journaled as `tab:load-held` / `tab:load-released { go }`. It does
 not close every window: the LLM tab once stalled on a load released right as
 the extension load resolved, so internal tabs also have
 `InternalTabLoader`'s stall watchdog.
+
+The tab that replaces a closed last tab opens `NewTabPage.resolve(db)`.
+
+A tab's partition is its host's private partition when the host is a private window. Closed private tabs are not remembered.

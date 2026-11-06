@@ -30,6 +30,18 @@ export default class SettingsScreens {
     this._tabs.switchTab(tabName);
   }
 
+  switchSubtab(parent, subtab) {
+    this._tabs.switchSubtab(parent, subtab);
+  }
+
+  showExtension(extensionId) {
+    if (!this._screens) return false;
+    this._tabs.switchTab('extensions');
+    this._tabs.switchSubtab('extensions', 'extensions');
+    this._screens.config.show(extensionId);
+    return true;
+  }
+
   registerPage(extensionId, content, config = {}) {
     if (config.placement === 'tab' && this._tabs.hasStrip()) {
       const tabName = config.tabId || `ext-${extensionId}`;

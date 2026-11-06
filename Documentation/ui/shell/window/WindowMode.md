@@ -15,3 +15,7 @@ app; a window a tab was dragged out into (`?window=detached`, opened by
 
 [ShellApp](../app/ShellApp.md) skips the setup wizard, the slot manager and the
 extension renderers in a detached window.
+
+## Private
+
+`isPrivate(search)` (`private=1`); `apply` also toggles the `private-window` body class and the `#privateBadge` in the title bar.

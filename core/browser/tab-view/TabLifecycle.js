@@ -1,3 +1,4 @@
+const NewTabPage = require('../newtab/NewTabPage');
 const TabEntry = require('./TabEntry');
 const TabKinds = require('./TabKinds');
 const TabHosts = require('./TabHosts');
@@ -119,12 +120,14 @@ class TabLifecycle {
     const kind = options.kind || TabKinds.DEFAULT;
     const silent = !!options.silent;
     const keepAlive = !!options.keepAlive;
-    const partition = options.partition || TabKinds.SHARED_PARTITION;
+    const hostId = this._hostFor(kind, silent, options);
+    const partition = this._hosts.privatePartitionOf(hostId) || options.partition || TabKinds.SHARED_PARTITION;
     const view = this._factory.createView({ partition, preloadPath: options.preloadPath, silent, keepAlive });
     return new TabEntry({
       id: this._registry.allocateId(kind), view, partition, url, kind, silent, keepAlive,
       title: TabLifecycle._initialTitle(options.title), pinned: options.pinned, hidden: options.hidden,
-      openerTabId: options.openerTabId, hostId: this._hostFor(kind, silent, options),
+      userPinned: !!options.userPinned && kind === TabKinds.DEFAULT && !silent,
+      openerTabId: options.openerTabId, hostId,
     });
   }
 
@@ -186,18 +189,13 @@ class TabLifecycle {
   }
 
   _rememberClosed(entry) {
-    if (!entry.isRegularBrowsing() || !entry.url) return;
+    if (!entry.isRegularBrowsing() || !entry.url || entry.isPrivate()) return;
     this.recentlyClosed.push({ url: entry.url, title: entry.title });
     if (this.recentlyClosed.length > TabLifecycle.RECENTLY_CLOSED_LIMIT) this.recentlyClosed.shift();
   }
 
   _startPageUrl() {
-    try {
-      const value = this._db ? this._db.get(TabLifecycle.START_PAGE_KEY, TabLifecycle.DEFAULT_START_PAGE) : TabLifecycle.DEFAULT_START_PAGE;
-      return (typeof value === 'string' && value.trim()) || TabLifecycle.DEFAULT_START_PAGE;
-    } catch (_) {
-      return TabLifecycle.DEFAULT_START_PAGE;
-    }
+    return NewTabPage.resolve(this._db);
   }
 
   _markHidden(entry) {

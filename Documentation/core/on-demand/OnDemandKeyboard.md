@@ -7,7 +7,10 @@ Keyboard routing for the focused On Demand window.
 ## Methods
 
 - `new OnDemandKeyboard({ tabViewManager, lookup, isExpanded, collapse })`.
-- `handle(event, input)` (from `before-input-event`): ignores anything but
+- `handle(event, input)` (from `before-input-event`): first feeds the input to
+  [DoubleShift](../palette/DoubleShift.md) (source `on-demand`); a double Shift
+  sends `open-palette` to the shell for the active tab (the search palette).
+  Otherwise ignores anything but
   `keyDown`. Escape with the panel open prevents default and calls `collapse()`.
   Otherwise a browser shortcut ([Accelerators](../browser/Accelerators.md)`.match`,
   with the tab's `loading` flag) prevents default, is performed in main through

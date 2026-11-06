@@ -2,6 +2,7 @@ const ChromeIdentity = require('../../core/browser/ChromeIdentity');
 const DnsResolver = require('../../core/shell/DnsResolver');
 const PermissionManager = require('../../core/browser/PermissionManager');
 const InternalBearerInjector = require('./InternalBearerInjector');
+const NewTabPage = require('../../core/browser/newtab/NewTabPage');
 
 class SessionSetup {
   static MAIN_PARTITION = 'persist:main';
@@ -25,6 +26,7 @@ class SessionSetup {
     this._ctx.app.on('session-created', (sess) => this._onSessionCreated(sess));
     this._bearer.attach(session.defaultSession);
     this._bearer.attach(session.fromPartition(SessionSetup.MAIN_PARTITION));
+    this._serveNewTab(session.fromPartition(SessionSetup.MAIN_PARTITION));
     this._attachShimBridge(session.defaultSession);
     this._attachShimBridge(session.fromPartition(SessionSetup.MAIN_PARTITION));
   }
@@ -53,12 +55,20 @@ class SessionSetup {
 
   _onSessionCreated(sess) {
     const chromeExtensions = this._s.chromeExtensionService;
-    this._attachShimBridge(sess);
-    if (chromeExtensions.ready) {
+    const persistent = typeof sess.isPersistent !== 'function' || sess.isPersistent();
+    if (persistent) this._attachShimBridge(sess);
+    if (persistent && chromeExtensions.ready) {
       chromeExtensions.loadAllEnabled(sess).catch((err) => this._log.error('[chrome-ext] loadAllEnabled failed', err));
     }
     if (this._s.adblockerService.ready) this._s.adblockerService.applyToSession(sess);
     this._bearer.attach(sess);
+    this._serveNewTab(sess);
+  }
+
+  _serveNewTab(sess) {
+    const net = this._ctx.electron.net;
+    if (!net || typeof net.fetch !== 'function') return;
+    NewTabPage.attach(sess, (fileUrl) => net.fetch(fileUrl));
   }
 }
 

@@ -1,6 +1,11 @@
 const path = require('path');
 const HistoryService = require('../../core/history/HistoryService');
 const BookmarkService = require('../../core/bookmarks/BookmarkService');
+const VaultService = require('../../core/vault/VaultService');
+const NewTabPage = require('../../core/browser/newtab/NewTabPage');
+const VaultRedaction = require('../../core/vault/VaultRedaction');
+const VaultPlaceholders = require('../../core/vault/VaultPlaceholders');
+const VaultCallText = require('../../core/llm-server/chat/approval/VaultCallText');
 const FaviconCache = require('../../core/browser/FaviconCache');
 const OpenAICompatibleProvider = require('../../core/llm-service/providers/OpenAICompatibleProvider');
 const AnthropicProvider = require('../../core/llm-service/providers/AnthropicProvider');
@@ -42,14 +47,17 @@ class FoundationServices {
     this._buildBrowserAddOns();
     this._s.apiSecurity = new ApiSecurity(this._db);
     this._buildActivityLog();
+    this._wireVault();
     return this._s;
   }
 
   _buildBrowserData() {
     this._s.historyService = new HistoryService(this._db);
     this._s.bookmarkService = new BookmarkService(this._db);
+    this._s.vaultService = new VaultService({ db: this._db, getTabViewManager: () => this._ctx.tabViewManager });
     const userData = this._ctx.app.getPath('userData');
     this._s.faviconCache = new FaviconCache({ filePath: path.join(userData, FoundationServices.FAVICON_FILE) });
+    this._s.newTabPage = new NewTabPage({ db: this._db, history: this._s.historyService, favicons: this._s.faviconCache });
   }
 
   _buildLlmRouting() {
@@ -74,6 +82,23 @@ class FoundationServices {
   _buildBrowserAddOns() {
     this._s.chromeExtensionService = new ChromeExtensionService(this._db, this._ctx.dataDir, { bridge: new ShimBridge() });
     this._s.adblockerService = new AdblockerService(this._db, this._ctx.dataDir);
+  }
+
+  _wireVault() {
+    const vault = this._s.vaultService;
+    VaultRedaction.install(vault.redactor);
+    VaultPlaceholders.install((tool, params, caller) => vault.agent.resolveKeys(tool, params, caller));
+    VaultCallText.setResolver((params) => vault.describeCall(params));
+    const activity = this._s.activityLogService;
+    if (!activity || typeof activity.forCaller !== 'function') return;
+    const log = activity.forCaller('core.vault', { label: 'Password manager', description: 'The assistant using saved logins and addresses' });
+    vault.audit.setMirror((row, entry) => log.log({
+      action: `vault_${row.action}`,
+      summary: `${row.ok ? 'Used' : 'Refused'} ${row.item ? row.item.name : 'an item'}${row.site ? ` on ${row.site}` : ''} for the ${row.caller}`,
+      tabId: entry.tabId == null ? null : entry.tabId,
+      result: row.ok ? 'ok' : 'error',
+      details: { reason: row.reason || undefined },
+    }));
   }
 
   _buildActivityLog() {

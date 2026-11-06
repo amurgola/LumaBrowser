@@ -1,6 +1,11 @@
+const fs = require('fs');
+const path = require('path');
+const { pathToFileURL } = require('url');
+
 class LaunchUrls {
   static MAX_PER_LAUNCH = 10;
   static MAX_LENGTH = 8192;
+  static FILE_TYPES = ['.htm', '.html', '.xhtml', '.shtml', '.svg'];
 
   static fromArgv(argv) {
     const out = [];
@@ -64,10 +69,21 @@ class LaunchUrls {
 
   static _webUrl(arg) {
     const text = typeof arg === 'string' ? arg.trim() : '';
-    if (!text || text.length > LaunchUrls.MAX_LENGTH || !/^https?:\/\//i.test(text)) return null;
+    if (!text || text.length > LaunchUrls.MAX_LENGTH) return null;
+    if (!/^https?:\/\//i.test(text)) return LaunchUrls._fileUrl(text);
     try {
       const url = new URL(text);
       return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname ? url.href : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static _fileUrl(text) {
+    if (text.startsWith('-') || !LaunchUrls.FILE_TYPES.includes(path.extname(text).toLowerCase())) return null;
+    try {
+      const full = path.resolve(text);
+      return fs.statSync(full).isFile() ? pathToFileURL(full).href : null;
     } catch (_) {
       return null;
     }

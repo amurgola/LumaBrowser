@@ -1,6 +1,13 @@
 import HtmlEscaper from '../../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 
 export default class SitePermissionsPanel {
+  static KINDS = [
+    { key: 'camera', label: 'Camera', always: true },
+    { key: 'microphone', label: 'Microphone', always: true },
+    { key: 'popups', label: 'Pop-ups' },
+    { key: 'notifications', label: 'Notifications' },
+  ];
+
   install() {
     this._api = window.electronAPI && window.electronAPI.sitePermissions;
     this._list = document.getElementById('gsSitePermList');
@@ -20,12 +27,18 @@ export default class SitePermissionsPanel {
     return 'Ask';
   }
 
+  static statesOf(r) {
+    const mediaSet = !!(r.camera || r.microphone);
+    return SitePermissionsPanel.KINDS
+      .filter((k) => (k.always ? mediaSet : !!r[k.key]))
+      .map((k) => `${k.label}: ${SitePermissionsPanel.answerLabel(r[k.key])}`);
+  }
+
   static rowsHtml(rows) {
     const esc = HtmlEscaper.escape;
     return rows.map((r) => `<div class="gs-ide-row" data-origin="${esc(r.origin)}">`
       + `<span class="gs-ide-cell gs-ide-cell--grow gs-ide-name">${esc(r.origin)}</span>`
-      + `<span class="gs-ide-state">Camera: ${SitePermissionsPanel.answerLabel(r.camera)}</span>`
-      + `<span class="gs-ide-state">Microphone: ${SitePermissionsPanel.answerLabel(r.microphone)}</span>`
+      + SitePermissionsPanel.statesOf(r).map((t) => `<span class="gs-ide-state">${esc(t)}</span>`).join('')
       + '<button class="gs-action-btn" data-act="clear">Clear</button>'
       + '</div>').join('');
   }

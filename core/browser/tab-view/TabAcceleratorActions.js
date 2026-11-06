@@ -23,6 +23,7 @@ class TabAcceleratorActions {
       'zoom-reset': (id) => tabs.setZoom(id, 1),
       devtools: (id) => tabs.toggleDevTools(id),
       print: (id) => tabs.print(id),
+      fullscreen: (id) => tabs.toggleWindowFullscreen(id),
     };
   }
 }

@@ -4,6 +4,7 @@ class AppGlobals {
     '__lumaCliHandshake',
     '__lumaRagService',
     '__lumaDocsKnowledgeBase',
+    '__lumaPalette',
     '__lumaLlmServerService',
     '__lumaImageServerService',
     '__lumaGroundingServer',

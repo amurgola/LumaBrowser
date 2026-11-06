@@ -12,12 +12,13 @@ const TakeoverHandler = require('./handlers/TakeoverHandler');
 const ValidateCodeHandler = require('./handlers/ValidateCodeHandler');
 const VideoHandler = require('./handlers/VideoHandler');
 const WebSearchHandler = require('./handlers/WebSearchHandler');
+const VaultToolsHandler = require('./handlers/VaultToolsHandler');
 
 class ChatToolTable {
   static HANDLER_CLASSES = [
     TakeoverHandler, CreateArtifactHandler, CreateLiveArtifactHandler, EditArtifactHandler, WebSearchHandler,
     SendWebhookHandler, KnowledgeBaseHandler, ValidateCodeHandler, ArtifactDataHandler, ScheduleArtifactUpdatesHandler,
-    GenerateImageHandler, EditImageHandler, VideoHandler, MusicHandler,
+    GenerateImageHandler, EditImageHandler, VideoHandler, MusicHandler, VaultToolsHandler,
   ];
 
   constructor(handlers = ChatToolTable.HANDLER_CLASSES.map((Handler) => new Handler())) {

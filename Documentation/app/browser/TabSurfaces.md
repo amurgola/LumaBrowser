@@ -10,7 +10,8 @@ Builds the window's tab layer and the views stacked over it.
 - `build(win)` sets on the context:
   - `tabViewManager` ([TabViewManager](../../core/browser/TabViewManager.md))
     with `<root>/webview-preload.js`, the network interceptor, Chrome
-    extensions, adblocker, db and favicon cache; `tabManager` over it;
+    extensions, adblocker, db and favicon cache; `tabManager` over it; `vaultService.attachTabs` so the
+    password manager hears each tab's preload;
   - favicon updates relayed to the shell as `tab-view:favicon`;
   - `chromeOverlay` ([ChromeOverlay](../../core/browser/ChromeOverlay.md)), re-raised
     on `tabSwitched` and when the tab preview raises; it accepts popup requests from

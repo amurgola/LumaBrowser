@@ -8,7 +8,12 @@ own file:// UI, and private partitions).
 
 ## Rules
 
-- `notifications`: always granted (notification interception is the product).
+- `notifications`: a remembered per-origin answer, otherwise a prompt with Allow / Block
+  (no Allow once). Persisted (keep-alive) tabs and internal app tabs may always notify unless
+  the origin was blocked, so notification interception keeps working for the tabs that exist
+  for it; the app's file:// UI and `chrome-extension://` pages are always granted. The check
+  handler answers the same way, so a site with no answer reads as not granted (the tab
+  preload's MainWorldScript reports that to the page as `'default'`).
 - `clipboard-sanitized-write`: granted to the app's own file:// UI only.
 - `camera`, `microphone`, and `media` (Chromium's getUserMedia permission): the app
   UI keeps them. Remote pages get a remembered per-origin answer when one exists,
@@ -17,8 +22,9 @@ own file:// UI, and private partitions).
   tab close, or app exit. Always allow and Block persist (see SitePermissionStore).
 - Hidden persisted tabs never prompt: remembered answer or denial.
 - Everything else is denied.
-- The check handler only polices `media` (device labels in enumerateDevices and
-  navigator.permissions state); every other check keeps Electron's default (allowed).
+- The check handler polices `media` (device labels in enumerateDevices and
+  navigator.permissions state) and `notifications`; every other check keeps Electron's
+  default (allowed).
 
 Every Electron callback completes exactly once, including when the tab closes or
 navigates away while its prompt is open (denied). Concurrent requests for the same

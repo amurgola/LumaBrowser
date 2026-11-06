@@ -2,6 +2,8 @@ export default class AcceleratorTable {
   static TABLE = {
     'ctrl+t': 'new-tab',
     'ctrl+n': 'new-tab',
+    'ctrl+shift+n': 'new-private-window',
+    'ctrl+shift+delete': 'clear-data',
     'ctrl+w': 'close-tab',
     'ctrl+f4': 'close-tab',
     'ctrl+shift+t': 'reopen-closed',
@@ -39,6 +41,7 @@ export default class AcceleratorTable {
     'ctrl+0': 'zoom-reset',
     'escape': 'stop',
     'f12': 'devtools',
+    'f11': 'fullscreen',
     'ctrl+shift+i': 'devtools',
   };
 

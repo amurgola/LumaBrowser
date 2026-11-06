@@ -1,3 +1,5 @@
+import ClearBrowsingData from './general/ClearBrowsingData.js';
+
 export default class SettingsMenu {
   static WIDTH = 260;
 
@@ -41,17 +43,18 @@ export default class SettingsMenu {
     const canPrint = webTab && !!(window.tabAPI && typeof window.tabAPI.print === 'function');
     return [
       { action: 'new-tab', label: 'New tab', hint: 'Ctrl+T' },
+      { action: 'new-private-window', label: 'New private window', hint: 'Ctrl+Shift+N' },
       { sep: true },
       { action: 'history', label: 'History', hint: 'Ctrl+H' },
       { action: 'bookmarks', label: 'Bookmarks', hint: 'Ctrl+Shift+O' },
       { action: 'downloads', label: 'Downloads', hint: 'Ctrl+J', disabled: this._downloads.size === 0 },
+      { action: 'passwords', label: 'Passwords' },
       { sep: true },
       { action: 'find', label: 'Find in page', hint: 'Ctrl+F', disabled: !webTab },
       { action: 'print', label: 'Print', hint: 'Ctrl+P', disabled: !canPrint },
       { action: 'zoom-reset', label: `Zoom ${pct}%`, hint: 'Ctrl+0 resets' },
       { sep: true },
-      { action: 'clear-history', label: 'Clear browsing history' },
-      { action: 'clear-cache', label: 'Clear cache' },
+      { action: 'clear-data', label: 'Clear browsing data', hint: 'Ctrl+Shift+Del' },
       { sep: true },
       { action: 'settings', label: 'Settings' },
       { action: 'extensions', label: 'Extensions' },
@@ -65,6 +68,7 @@ export default class SettingsMenu {
     const activeId = () => this._store.activeTabId;
     return {
       'new-tab': () => this._tabs.create(undefined, { focusUrl: true }),
+      'new-private-window': () => { if (window.tabAPI && window.tabAPI.openPrivateWindow) window.tabAPI.openPrivateWindow(); },
       history: () => this._history.open(),
       bookmarks: () => this._bookmarks.open(),
       downloads: () => this._downloads.toggleMenu(),
@@ -74,8 +78,8 @@ export default class SettingsMenu {
       settings: () => this._settings.open('general'),
       extensions: () => this._settings.open('extensions'),
       about: () => this._settings.open('about'),
-      'clear-history': () => this._cleaner.clearHistory(),
-      'clear-cache': () => this._cleaner.clearCache(),
+      passwords: () => this._settings.open('passwords'),
+      'clear-data': () => { this._settings.open('general'); setTimeout(() => ClearBrowsingData.reveal(), 50); },
       exit: () => { if (window.windowAPI && window.windowAPI.close) window.windowAPI.close(); else window.close(); },
     };
   }

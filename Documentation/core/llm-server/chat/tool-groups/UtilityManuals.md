@@ -12,3 +12,9 @@ Data only: the full prose manuals for the lookup and utility tool groups.
 - `UtilityManuals.VALIDATE`: `validate_code` (its `filename` param is
   prose-only: the schema does not list it).
 - `UtilityManuals.PROGRAMMATIC`: `send_webhook`, only to endpoints the user gave.
+
+## VAULT
+
+How to use `vault_list` / `vault_fill`: open the form, list for its tab, fill, then submit; never ask the user to type a password into the chat; a refusal on another site means stop.
+
+The VAULT manual also covers two-factor (`part: "otp"`) and `{{vault:name}}` key placeholders.

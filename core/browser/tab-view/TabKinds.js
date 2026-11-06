@@ -1,4 +1,10 @@
 class TabKinds {
+  static PRIVATE_PREFIX = 'private-';
+
+  static isPrivatePartition(partition) {
+    return typeof partition === 'string' && partition.startsWith(TabKinds.PRIVATE_PREFIX);
+  }
+
   static DEFAULT = 'user';
 
   static AUTOMATION = new Set(['cdp']);

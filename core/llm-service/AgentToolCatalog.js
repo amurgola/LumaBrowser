@@ -57,6 +57,12 @@ class AgentToolCatalog {
       tools: [{ name: 'search_knowledge_base', label: 'Search knowledge base' }],
     },
     {
+      id: 'vault',
+      label: 'Password manager',
+      description: 'Sign in or fill an address with saved items you allowed the assistant to use. It never sees passwords, logins fill only on their own site, and you confirm each use.',
+      tools: [{ name: 'vault_list', label: 'List allowed logins and addresses' }, { name: 'vault_fill', label: 'Fill a login or address' }],
+    },
+    {
       id: 'programmatic',
       label: 'Programmatic',
       description: 'Outbound calls to other systems: webhooks and push notifications. Off by default; enable to let the agent deliver data out.',

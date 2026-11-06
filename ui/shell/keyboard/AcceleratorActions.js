@@ -1,3 +1,5 @@
+import ClearBrowsingData from '../settings/general/ClearBrowsingData.js';
+
 export default class AcceleratorActions {
   constructor(deps) {
     this._d = deps;
@@ -17,6 +19,9 @@ export default class AcceleratorActions {
     switch (action) {
       case 'new-tab': tabActions.create(undefined, { focusUrl: true }); return true;
       case 'reopen-closed': tabActions.reopenClosed(); return true;
+      case 'fullscreen': if (window.windowAPI && window.windowAPI.toggleFullscreen) window.windowAPI.toggleFullscreen(); return true;
+      case 'clear-data': if (this._d && this._d.settings) { this._d.settings.open('general'); setTimeout(() => ClearBrowsingData.reveal(), 50); } return true;
+      case 'new-private-window': if (window.tabAPI && window.tabAPI.openPrivateWindow) window.tabAPI.openPrivateWindow(); return true;
       case 'next-tab':
       case 'prev-tab':
         if (ids.length >= 2) tabActions.switchTo(ids[AcceleratorActions.cycle(ids, id, action === 'next-tab' ? 1 : -1)]);

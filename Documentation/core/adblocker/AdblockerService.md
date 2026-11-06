@@ -37,3 +37,7 @@ disabling mid-build means the finished engine attaches nothing.
 `enableBlockingInSession` registers handlers on the global `ipcMain`, so
 blocking a second session throws "Attempted to register a second handler"
 unless those channels are removed first; `applyToSession` clears them each time.
+
+## Per-site off switch
+
+`allowedSites()`, `isAllowedSite(host)` (a parent domain counts), `setSiteAllowed(host, allowed)` (`core.adblocker.allowedSites`). An allowed site gets two exception filters in the engine, `@@*$domain=<host>` (requests made by its pages) and `@@||<host>^$elemhide` (element hiding), added again after every engine build. `AdblockerService.exceptionsFor(host)`, `normalizeHost(host)`.

@@ -58,6 +58,7 @@ class LlmServerApi extends PreloadSection {
       onShowChat: sub('core.llmServer.showChat', () => undefined),
       onShowSetup: sub('core.llmServer.showSetup'),
       onOpenConversation: sub('core.llmServer.openConversation', (_e, conversationId) => conversationId),
+      onPalette: sub('core.llmServer.palette', (_e, msg) => msg),
     };
   }
 }

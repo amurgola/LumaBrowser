@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:">
+<title>Search</title>
+<link rel="stylesheet" href="../../llm-server/ui/css/tokens.css">
+<link rel="stylesheet" href="css/palette.css">
+</head>
+<body>
+<div class="pal-scrim" id="scrim"></div>
+<div class="pal-card" id="card" role="dialog" aria-label="Search LumaBrowser">
+  <div class="pal-input-row">
+    <svg class="pal-input-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="input" class="pal-input" type="text" spellcheck="false" autocomplete="off"
+           placeholder="Search settings, chats, tabs and commands" aria-label="Search" aria-controls="list" aria-autocomplete="list">
+    <span class="pal-private" id="privateBadge" hidden>Private window</span>
+  </div>
+  <div class="pal-body" id="body">
+    <div class="pal-list" id="list" role="listbox" aria-label="Results"></div>
+    <div class="pal-dig" id="dig" hidden></div>
+  </div>
+  <div class="pal-foot" id="foot">
+    <span data-list-hint><kbd>&uarr;</kbd><kbd>&darr;</kbd> move</span>
+    <span data-list-hint><kbd>Enter</kbd> open</span>
+    <span id="footDig"><kbd>Tab</kbd> dig deeper</span>
+    <span class="pal-foot-end"><kbd>Esc</kbd> <span id="footEsc">close</span></span>
+  </div>
+</div>
+<script type="module" src="js/entry.js"></script>
+</body>
+</html>

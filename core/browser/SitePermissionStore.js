@@ -1,5 +1,6 @@
 class SitePermissionStore {
   static SITES_KEY = 'core.permissions.sites';
+  static KINDS = ['camera', 'microphone', 'popups', 'notifications'];
 
   constructor(db) {
     this._db = db || null;
@@ -21,11 +22,22 @@ class SitePermissionStore {
 
   list() {
     const sites = this._sites();
-    return Object.keys(sites).sort().map((origin) => ({
-      origin,
-      camera: sites[origin].camera || null,
-      microphone: sites[origin].microphone || null,
-    }));
+    return Object.keys(sites).sort().map((origin) => {
+      const row = { origin };
+      for (const kind of SitePermissionStore.KINDS) row[kind] = sites[origin][kind] || null;
+      return row;
+    });
+  }
+
+  forget(origin, kind) {
+    if (!this._db) return false;
+    const sites = { ...this._sites() };
+    if (!sites[origin] || !(kind in sites[origin])) return false;
+    const row = { ...sites[origin] };
+    delete row[kind];
+    if (Object.keys(row).length) sites[origin] = row; else delete sites[origin];
+    this._db.set(SitePermissionStore.SITES_KEY, sites);
+    return true;
   }
 
   clear(origin) {

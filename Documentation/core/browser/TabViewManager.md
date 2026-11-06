@@ -47,7 +47,12 @@ Lifecycle and strip ([TabLifecycle](tab-view/TabLifecycle.md), [TabActivation](t
   the main window's last regular strip tab (a detached window closes with its last
   tab instead); hides persisted tabs instead of destroying them.
 - `closeTabInternal(tabId)`: destroys, bypassing pinned and last-tab rules (LLM tab teardown).
-- `reopenClosedTab(windowId = 0)`, `moveTab(tabId, toIndex)`, `switchToTab(tabId)`,
+- `createTab(url, options)`: options as TabLifecycle's plus `userPinned`; a pinned tab without an index
+  joins the pinned block, any other tab given an index lands after it ([TabPinning](tab-view/TabPinning.md)).
+- `setTabPinned(tabId, pinned)`: the user's Pin tab / Unpin tab.
+- `openBlockedPopup(tabId, index)`, `allowPopups(tabId)`: the address bar's blocked pop-up menu
+  ([PopupGate](tab-view/PopupGate.md)).
+- `reopenClosedTab(windowId = 0)`, `moveTab(tabId, toIndex)` (clamped to the tab's pin block), `switchToTab(tabId)`,
   `showTab(tabId)`, `cycleTab(delta, windowId = 0)`, `selectTabByIndex(n, windowId = 0)`
   (n <= 0 is the last tab), `setBounds(bounds, windowId = 0)`, `destroyAll()`.
 
@@ -58,6 +63,7 @@ Windows ([TabHosts](tab-view/TabHosts.md), [TabTransfer](tab-view/TabTransfer.md
   reopened); `hasWindow(windowId)`, `getWindow(windowId)` (live window or null).
 - `moveTabToWindow(tabId, windowId, { index, activate = true })` -> `{ success, windowId }`
   or `{ success: false, error }`; only movable tabs ([TabEntry](tab-view/TabEntry.md) `isMovable`).
+- `isChromeSender(webContents)`: true only for a window's browser chrome (index.html); the vault answers no one else.
 - `windowOfTab(tabId)`, `windowIdOfTab(tabId)`, `windowIdForSender(webContents)`
   (a window's chrome renderer -> its id, anything else -> 0), `activeTabIdIn(windowId)`,
   `getWindowTabs(windowId)` (serialized strip tabs), `resyncWindow(windowId)` (replays
@@ -71,8 +77,9 @@ Persisted tabs ([PersistedTabs](tab-view/PersistedTabs.md), [KeepAliveSweep](tab
 
 Restore tabs on restart ([SessionTabs](tab-view/SessionTabs.md)):
 
-- `getSavedSession()`: `{ tabs: [{ url, title }], activeIndex }` from the last session, or `null` when the
+- `getSavedSession()`: `{ tabs: [{ url, title, pinned }], activeIndex }` from the last session, or `null` when the
   preference is off or nothing was saved.
+- `getSavedPinnedTabs()`: with the preference off, the last session's pinned tabs (`[]` when it is on).
 - `sealSession()`: snapshots the strip and stops recording; `destroyAll()` calls it first.
 
 Navigation and page tools ([TabLoader](tab-view/TabLoader.md), [TabHistory](tab-view/TabHistory.md), [TabZoom](tab-view/TabZoom.md), [TabPageTools](tab-view/TabPageTools.md)):
@@ -119,3 +126,11 @@ Renderer channels sent: `tab:state`, `tab:switched`, `tab:hidden`, `tab:closed`,
   and [DataFileDownloadHook](tab-view/DataFileDownloadHook.md).
 - [HiddenTabState](tab-view/HiddenTabState.md) mutes and deprioritizes hidden
   persisted tabs; [TabErrorPage](tab-view/TabErrorPage.md) owns the branded error page.
+
+## Private windows
+
+`addWindow(window, { privatePartition })`, `isPrivateWindow(windowId)`. A tab created in a private window always takes its partition. Private tabs cannot move windows, be persisted, be reopened after closing, or enter the session snapshot; a normal tab cannot move into a private window.
+
+## Full screen
+
+`toggleWindowFullscreen(tabId)` (F11 from a page; a page in fullscreen exits instead), `isPageFullscreen(tabId)`, `exitPageFullscreen(tabId)` ([TabFullscreen](tab-view/TabFullscreen.md)).

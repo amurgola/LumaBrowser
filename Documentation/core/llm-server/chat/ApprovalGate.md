@@ -71,3 +71,9 @@ default: a gate that interrupts harmless calls gets turned off. The flag
 `mutating: true` on a definition is the way forward; the list is the fallback
 for core pseudo-tools without a definition and older extensions. A refusal is
 a recoverable result, never an exception.
+
+## Password manager family
+
+`vault_fill` is a mutating tool in the family `family:vault` ("password manager use", carried for the chat). The
+family is marked `insist`: ApprovalCheck asks whenever someone can answer, even when the approval setting says never
+ask. A run nobody can answer is refused by the tool itself unless the user allowed outside callers.

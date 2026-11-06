@@ -158,8 +158,11 @@ try {
     cycle: (delta) => ipcRenderer.invoke('tab-view:cycle', delta),
     selectIndex: (n) => ipcRenderer.invoke('tab-view:select-index', n),
     reopenClosed: () => ipcRenderer.invoke('tab-view:reopen-closed'),
+    setPinned: (tabId, pinned) => ipcRenderer.invoke('tab-view:set-pinned', tabId, pinned),
     print: (tabId) => ipcRenderer.invoke('tab-view:print', tabId),
     toggleDevTools: (tabId) => ipcRenderer.invoke('tab-view:toggle-devtools', tabId),
+    openBlockedPopup: (tabId, index) => ipcRenderer.invoke('tab-view:popup-open', tabId, index),
+    allowPopups: (tabId) => ipcRenderer.invoke('tab-view:popup-allow-site', tabId),
     findInPage: (tabId, text, opts) => ipcRenderer.invoke('tab-view:find', tabId, text, opts || {}),
     stopFindInPage: (tabId, action) => ipcRenderer.invoke('tab-view:stop-find', tabId, action),
     onFoundInPage: (cb) => {
@@ -210,6 +213,7 @@ try {
     dragOut: (tabId) => ipcRenderer.invoke('tab-window:drag-out', tabId),
     dropIn: (tabId, index) => ipcRenderer.invoke('tab-window:drop-in', tabId, index),
     moveToNewWindow: (tabId) => ipcRenderer.invoke('tab-window:open', tabId),
+    openPrivateWindow: () => ipcRenderer.invoke('tab-window:open-private'),
     onTransferred: (cb) => {
       const listener = (_e, payload) => cb(payload);
       ipcRenderer.on('tab:transferred', listener);
@@ -228,6 +232,47 @@ try {
     delete: (id) => ipcRenderer.invoke('history:delete', id),
     deleteUrl: (url) => ipcRenderer.invoke('history:delete-url', url),
     clear: (opts) => ipcRenderer.invoke('history:clear', opts),
+  });
+
+  const vaultEvent = (channel) => (cb) => {
+    const listener = (_e, p) => cb(p);
+    ipcRenderer.on(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  };
+  contextBridge.exposeInMainWorld('vaultAPI', {
+    status: () => ipcRenderer.invoke('core.vault.status'),
+    list: () => ipcRenderer.invoke('core.vault.list'),
+    reveal: (id) => ipcRenderer.invoke('core.vault.reveal', id),
+    save: (fields) => ipcRenderer.invoke('core.vault.save', fields),
+    remove: (id) => ipcRenderer.invoke('core.vault.remove', id),
+    generate: () => ipcRenderer.invoke('core.vault.generate'),
+    setOfferToSave: (on) => ipcRenderer.invoke('core.vault.setOfferToSave', on),
+    neverList: () => ipcRenderer.invoke('core.vault.neverList'),
+    neverRemove: (origin) => ipcRenderer.invoke('core.vault.neverRemove', origin),
+    answerPrompt: (promptId, decision) => ipcRenderer.invoke('core.vault.answerPrompt', promptId, decision),
+    fill: (tabId, itemId) => ipcRenderer.invoke('core.vault.fill', tabId, itemId),
+    fillGenerated: (tabId) => ipcRenderer.invoke('core.vault.fillGenerated', tabId),
+    fillProfile: (tabId, itemId) => ipcRenderer.invoke('core.vault.fillProfile', tabId, itemId),
+    setOfferAddresses: (on) => ipcRenderer.invoke('core.vault.setOfferAddresses', on),
+    unlock: (password) => ipcRenderer.invoke('core.vault.unlock', password),
+    lock: () => ipcRenderer.invoke('core.vault.lock'),
+    setMasterPassword: (current, next) => ipcRenderer.invoke('core.vault.setMasterPassword', current, next),
+    removeMasterPassword: (current) => ipcRenderer.invoke('core.vault.removeMasterPassword', current),
+    setAutoLock: (minutes) => ipcRenderer.invoke('core.vault.setAutoLock', minutes),
+    setAllowExternal: (on) => ipcRenderer.invoke('core.vault.setAllowExternal', on),
+    auditList: () => ipcRenderer.invoke('core.vault.auditList'),
+    auditClear: () => ipcRenderer.invoke('core.vault.auditClear'),
+    totpCode: (id) => ipcRenderer.invoke('core.vault.totpCode', id),
+    fillOtp: (tabId, itemId) => ipcRenderer.invoke('core.vault.fillOtp', tabId, itemId),
+    menuState: (tabId, state) => ipcRenderer.invoke('core.vault.menuState', tabId, state),
+    onFieldKey: vaultEvent('vault:field-key'),
+    loginsForTab: (tabId) => ipcRenderer.invoke('core.vault.loginsForTab', tabId),
+    importFile: () => ipcRenderer.invoke('core.vault.importFile'),
+    exportFile: () => ipcRenderer.invoke('core.vault.exportFile'),
+    onField: vaultEvent('vault:field'),
+    onFieldGone: vaultEvent('vault:field-gone'),
+    onSavePrompt: vaultEvent('vault:save-prompt'),
+    onSavePromptClose: vaultEvent('vault:save-prompt-close'),
   });
 
   contextBridge.exposeInMainWorld('bookmarksAPI', {
@@ -337,6 +382,12 @@ try {
     toggleMaximize: () => ipcRenderer.invoke('window:toggle-maximize'),
     close: () => ipcRenderer.invoke('window:close'),
     isMaximized: () => ipcRenderer.invoke('window:is-maximized'),
+    toggleFullscreen: () => ipcRenderer.invoke('window:toggle-fullscreen'),
+    onPageFullscreen: (cb) => {
+      const listener = (_e, payload) => cb(payload);
+      ipcRenderer.on('tab-view:page-fullscreen', listener);
+      return () => ipcRenderer.removeListener('tab-view:page-fullscreen', listener);
+    },
     onStateChange: (cb) => {
       const listener = (_e, payload) => cb(payload);
       ipcRenderer.on('window:state', listener);

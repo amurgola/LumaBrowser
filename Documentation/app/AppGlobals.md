@@ -9,7 +9,8 @@ sharing host, e2e harnesses).
 ## Methods
 
 - `AppGlobals.NAMES`: every name the app sets: `__LUMA_BOOT_START`,
-  `__lumaCliHandshake`, `__lumaRagService`, `__lumaDocsKnowledgeBase`, `__lumaLlmServerService`,
+  `__lumaCliHandshake`, `__lumaRagService`, `__lumaDocsKnowledgeBase`,
+  `__lumaPalette` ([PaletteService](../core/palette/PaletteService.md)), `__lumaLlmServerService`,
   `__lumaImageServerService`, `__lumaGroundingServer`, `__lumaImageRouter`,
   `__lumaVideoRouter`, `__lumaMusicRouter`, `__lumaRpcLending`,
   `__lumaSharingHostService`, `__lumaSharingClientService`,

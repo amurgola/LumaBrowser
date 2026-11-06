@@ -3,12 +3,13 @@ class Accelerators {
 
   static MAIN_HANDLED = new Set([
     'reload', 'hard-reload', 'back', 'forward', 'stop',
-    'zoom-in', 'zoom-out', 'zoom-reset', 'devtools', 'print',
+    'zoom-in', 'zoom-out', 'zoom-reset', 'devtools', 'print', 'fullscreen',
   ]);
 
   static LETTER_ACTIONS = {
     t: (shift) => (shift ? 'reopen-closed' : 'new-tab'),
     w: () => 'close-tab',
+    n: (shift) => (shift ? 'new-private-window' : 'new-tab'),
     r: (shift) => (shift ? 'hard-reload' : 'reload'),
     l: () => 'focus-url',
     f: () => 'find',
@@ -60,6 +61,8 @@ class Accelerators {
     if (key === 'F6') return 'focus-url';
     if (key === 'F3') return shift ? 'find-prev' : 'find-next';
     if (key === 'F12') return 'devtools';
+    if (key === 'F11') return 'fullscreen';
+    if (key === 'Escape' && ctx.fullscreen) return 'exit-fullscreen';
     if (key === 'Escape' && ctx.loading) return 'stop';
     return null;
   }

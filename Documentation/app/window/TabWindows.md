@@ -44,3 +44,7 @@ views can only leave a live window.
 
 `ipcMain.handle`: `tab-window:drag-out` (tabId), `tab-window:drop-in` (tabId, index),
 `tab-window:open` (tabId). `TabWindows.CHANNELS` lists them.
+
+## Private windows
+
+`openPrivate(sender)` (IPC `tab-window:open-private`, Ctrl+Shift+N, gear menu "New private window") opens a detached window with an in-memory partition `private-<time>-<n>` (`addWindow(win, { privatePartition })`), loads the chrome with `?window=detached&private=1`, opens one tab on what new tabs open, and titles the window "LumaBrowser (Private)". Closing it wipes that session's storage and cache.

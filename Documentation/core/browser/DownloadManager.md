@@ -6,10 +6,15 @@ Observes every Chromium DownloadItem from the tab sessions and mirrors its state
 the chrome can show a downloads shelf. Chromium still shows its own save dialog;
 this class only watches. CSV/TSV never reach it: TabViewManager renders them inline.
 
+Finished records (not in progress) are saved under `core.browser.downloads` in the settings db on every finish
+and on `clearFinished()`, and loaded back at construction flagged `restored: true` (ids continue after the
+highest stored one), so the list survives a restart. A download still running at quit is not saved.
+
 ## Methods
 
+- `new DownloadManager({ db })`; without a db the list is memory only.
 - `track(item)` starts tracking an Electron `DownloadItem` and returns its info record.
-- `list()` copies of all records, newest first.
+- `list()` copies of all records, newest first; a `done` record whose file no longer exists has `missing: true`.
 - `get(id)` a copy of one record, or null (`id` may be a numeric string).
 - `cancel(id)` cancels an in-progress download.
 - `open(id)` opens a finished download with the OS (`shell.openPath`).

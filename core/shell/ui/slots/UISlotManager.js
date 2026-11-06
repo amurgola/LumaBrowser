@@ -48,6 +48,14 @@ export default class UISlotManager {
     this._settings.switchTab(tabName);
   }
 
+  switchSettingsSubtab(parent, subtab) {
+    this._settings.switchSubtab(parent, subtab);
+  }
+
+  showExtensionSettings(extensionId) {
+    return this._settings.showExtension(extensionId);
+  }
+
   refreshTelemetryPanel() {
     return this._settings.loadTelemetry();
   }

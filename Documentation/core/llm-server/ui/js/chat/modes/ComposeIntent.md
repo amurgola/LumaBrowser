@@ -13,7 +13,9 @@ up once its mode list is ready ([ModeLauncher](ModeLauncher.md)`.checkPendingInt
 ## Methods
 
 - `ComposeIntent.is(intent)`: true for `{ compose: {...} }`.
-- `apply({ conversationId?, prompt, attachments, autoSend })`:
+- `apply({ conversationId?, prompt, attachments, autoSend, docs? })`:
+  - `docs` turns the documentation source pill on when the docs index is
+    available (the search palette's "Continue in chat");
   - with `autoSend` and a `conversationId` (created by the launcher so it can
     return the id), refreshes the list, opens that conversation, marks it a
     first turn (so the reply titles it) and sends;

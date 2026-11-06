@@ -33,6 +33,7 @@ class TabStateChannel {
       silent: entry.silent,
       kind: entry.kind || 'user',
       pinned: !!entry.pinned,
+      userPinned: !!entry.userPinned,
       keepAlive: !!entry.keepAlive,
       hidden: !!entry.hidden,
       canGoBack: entry.canGoBack,
@@ -47,6 +48,7 @@ class TabStateChannel {
       favicon: this._faviconFor(entry),
       index: this._registry.indexOf(entry.id),
       errorPage: !!entry._errorPageFor,
+      blockedPopups: (entry.blockedPopups || []).map((b) => b.url),
     };
   }
 

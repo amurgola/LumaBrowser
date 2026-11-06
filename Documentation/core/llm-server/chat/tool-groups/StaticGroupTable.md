@@ -14,3 +14,7 @@ Data only: the built-in lazy tool groups, frozen, in canonical prompt order.
 live module never needs a second activation. `programmatic` is default-off via
 `AgentToolCatalog.seedDefaultOffAgentTools`. Callers read copies through
 [ToolGroups](../ToolGroups.md)`.staticGroups()`.
+
+## Password manager
+
+The `vault` group (Password manager): `vault_list`, `vault_fill`, manual `UtilityManuals.VAULT`.

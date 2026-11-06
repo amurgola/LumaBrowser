@@ -8,7 +8,7 @@ export default class MenuHtml {
     + '.bd-menu-hint { flex: none; margin-left: auto; padding-left: var(--space-4); font-size: var(--text-xs); color: var(--text-muted); }'
     + '.bd-menu-check { margin-left: auto; padding-left: var(--space-4); font-size: var(--text-xs); color: var(--text-muted); }'
     + '.bd-dl-menu { padding: var(--space-2); }'
-    + '.bd-dl-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); padding: 2px 6px var(--space-2); }'
+    + '.bd-dl-title { display: flex; align-items: center; justify-content: space-between; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); padding: 2px 6px var(--space-2); }'
     + '.bd-dl-row { display: flex; align-items: center; gap: var(--space-3); padding: 6px; border-radius: var(--radius-md); }'
     + '.bd-dl-row:hover { background: var(--bg-elevated); }'
     + '.bd-dl-main { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: var(--space-1); }'

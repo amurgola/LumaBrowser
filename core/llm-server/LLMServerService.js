@@ -50,6 +50,7 @@ class LLMServerService {
     showChat: 'core.llmServer.showChat',
     showSetup: 'core.llmServer.showSetup',
     openConversation: 'core.llmServer.openConversation',
+    palette: 'core.llmServer.palette',
     modelEvent: 'core.llmServer.modelEvent',
   });
 
@@ -208,6 +209,25 @@ class LLMServerService {
     if (!this.openChat()) return false;
     if (conversationId) this._tab.openIn(LLMServerService.CHANNELS.openConversation, String(conversationId));
     return true;
+  }
+
+  revealSetting(target) {
+    if (!target || typeof target !== 'object') return false;
+    if (target.surface === 'tune') {
+      if (!this.openChat()) return false;
+      return this._tab.openIn(LLMServerService.CHANNELS.palette, { type: 'reveal', target: { tune: String(target.field || '') } });
+    }
+    const page = String(target.page || 'settings');
+    if (!this.openSetup({ page })) return false;
+    if (!target.selector) return true;
+    const subtab = target.subtab ? { subtab: String(target.subtab) } : {};
+    return this._tab.openIn(LLMServerService.CHANNELS.palette, { type: 'reveal', target: { setup: page, selector: String(target.selector), ...subtab } });
+  }
+
+  openArtifact({ conversationId, artifactId } = {}) {
+    if (!conversationId || !artifactId) return false;
+    if (!this.openChat()) return false;
+    return this._tab.openIn(LLMServerService.CHANNELS.palette, { type: 'artifact', conversationId: String(conversationId), artifactId: String(artifactId) });
   }
 
   openSetup(opts) {

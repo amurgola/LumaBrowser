@@ -6,7 +6,7 @@ Keyboard and wheel wiring: chrome-focused shortcuts (Escape left to the address 
 
 ## Methods
 
-- `new ChromeKeyboard(deps)`.
+- `new ChromeKeyboard(deps)`. `deps.palette` (optional, [ShellPalette](../palette/ShellPalette.md)) gets every forwarded message first; the search palette's `open-palette` (a double Shift), `palette-reveal` and `palette-run` stop there.
 - `installShortcuts()` (registered where the legacy tab wiring was).
 - `installPopupKeys()`.
 

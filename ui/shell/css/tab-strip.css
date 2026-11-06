@@ -159,6 +159,18 @@
     padding: 0 var(--space-3);
 }
 
+.tab-strip .tab.user-pinned {
+    flex: 0 0 40px;
+    min-width: 40px;
+    max-width: 40px;
+    padding: 0;
+    justify-content: center;
+    gap: 2px;
+}
+.tab-strip .tab.user-pinned .tab-title,
+.tab-strip .tab.user-pinned .tab-close,
+.tab-strip .tab.user-pinned .tab-flag-persist { display: none; }
+
 .tab-strip .new-tab-btn,
 .tab-strip .persisted-tabs-btn {
     -webkit-app-region: no-drag;

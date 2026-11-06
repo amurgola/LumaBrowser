@@ -15,10 +15,12 @@ class ApprovalGate {
     'update_scheduled_task',
     'run_scheduled_task',
     'schedule_artifact_updates',
+    'vault_fill',
   ]);
 
   static GRANT_FAMILIES = Object.freeze([
     Object.freeze({ key: 'family:desktop-input', label: 'desktop control', carry: true, test: (n) => n.startsWith('desktop_') && n !== 'desktop_launch' }),
+    Object.freeze({ key: 'family:vault', label: 'password manager use', carry: true, insist: true, test: (n) => n === 'vault_fill' }),
   ]);
 
   static SCOPE_SEPARATOR = '@';

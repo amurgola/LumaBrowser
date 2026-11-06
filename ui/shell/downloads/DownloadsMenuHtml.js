@@ -7,7 +7,9 @@ export default class DownloadsMenuHtml {
     const sorted = [...list].sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0));
     if (!sorted.length) return `${MenuHtml.STYLE}<div class="bd-context-menu"><div class="bd-folder-menu-empty">No downloads yet</div></div>`;
     const rows = sorted.map((d) => DownloadsMenuHtml._row(d)).join('');
-    return `${MenuHtml.STYLE}<div class="bd-context-menu bd-dl-menu"><div class="bd-dl-title">Downloads</div>${rows}</div>`;
+    const clear = sorted.some((d) => d.state !== 'progress')
+      ? '<button data-bd-action="clear" class="bd-dl-act bd-dl-clear" title="Remove finished downloads from the list">Clear</button>' : '';
+    return `${MenuHtml.STYLE}<div class="bd-context-menu bd-dl-menu"><div class="bd-dl-title"><span>Downloads</span>${clear}</div>${rows}</div>`;
   }
 
   static _row(d) {
@@ -27,6 +29,7 @@ export default class DownloadsMenuHtml {
     const id = HtmlEscaper.escape(d.id);
     if (d.state === 'progress') return `<button data-bd-action="cancel" data-bd-id="${id}" class="bd-dl-act" title="Cancel">Cancel</button>`;
     if (d.state !== 'done') return '';
+    if (d.missing) return '';
     return `<button data-bd-action="open" data-bd-id="${id}" class="bd-dl-act" title="Open">Open</button>`
       + `<button data-bd-action="folder" data-bd-id="${id}" class="bd-dl-act" title="Show in folder">Folder</button>`;
   }

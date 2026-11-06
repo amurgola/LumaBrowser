@@ -15,7 +15,7 @@ class SessionTabList extends SettingsValueStore {
   }
 
   write({ tabs, activeIndex }) {
-    this._write({ tabs: tabs.map((tab) => ({ url: tab.url, title: tab.title })), activeIndex });
+    this._write({ tabs: tabs.map((tab) => ({ url: tab.url, title: tab.title, pinned: !!tab.pinned })), activeIndex });
   }
 
   _emptyValue() {

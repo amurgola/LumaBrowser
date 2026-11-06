@@ -34,3 +34,9 @@ injects, as opposed to browser and extension tools).
   `luma.ext(id)` for extension data (the Hub, id `personal-hub`).
 - Known drift kept from legacy and pinned by `ToolDocSurfaces.test.js`:
   `generate_music.seed` is schema-only, `validate_code.filename` is prose-only.
+
+## Password manager
+
+`vault_list { tabId? }` and `vault_fill { ref, tabId? }`.
+
+`vault_fill` also takes `part: 'otp'`; `vault_list` describes keys too.

@@ -10,3 +10,7 @@ extensions exist (null before; readers degrade).
 
 - `AgentDeps.build({ browserService, artifactStore, artifactDataStore, artifactTaskStore, mcpAggregator, ragService, db })`
   returns exactly those.
+
+## Password manager
+
+`vaultService` (optional, null where the app has none) backs `vault_list` and `vault_fill`.

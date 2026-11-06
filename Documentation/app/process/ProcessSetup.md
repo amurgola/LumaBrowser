@@ -37,3 +37,11 @@ Process configuration that precedes everything else.
 `run()` installs [ExtensionLoadWarnings](../../core/chrome-extensions/ExtensionLoadWarnings.md)
 right after the rejection tap, before any session loads an extension, so
 Electron's per-session `ExtensionLoadWarning` is filtered from the first one.
+
+## macOS hand-offs
+
+`open-url` and `open-file` (macOS gives links and files to the running app as the default browser) go through LaunchUrls like a second instance's arguments.
+
+## Schemes
+
+`_registerSchemes()` registers `luma:` as privileged (NewTabPage) before the app is ready.

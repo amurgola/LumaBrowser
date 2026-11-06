@@ -140,6 +140,7 @@ class HeavyServices {
       mcpAggregator: s.mcpAggregator,
       ragService: s.ragService,
       db: s.db,
+      vaultService: s.vaultService,
     });
   }
 

@@ -6,6 +6,11 @@ class TabLayout {
     this._registry = registry;
     this._hosts = hosts;
     this._emitter = emitter;
+    this._fullView = new Set();
+  }
+
+  setFullView(hostId, on) {
+    if (on) this._fullView.add(hostId); else this._fullView.delete(hostId);
   }
 
   get currentBounds() {
@@ -20,7 +25,7 @@ class TabLayout {
   }
 
   applyTo(entry) {
-    const b = this._hosts.boundsOf(entry.hostId);
+    const b = this._fullView.has(entry.hostId) ? this._windowArea(entry.hostId) : this._hosts.boundsOf(entry.hostId);
     try {
       if (!b.width || !b.height) {
         CrashTracer.mark('tab:bounds-hide', { id: entry.id });
@@ -31,6 +36,16 @@ class TabLayout {
       entry.view.setBounds({ x: b.x || 0, y: b.y || 0, width: b.width, height: b.height });
     } catch (err) {
       console.warn('[TabViewManager] setBounds failed:', err.message);
+    }
+  }
+
+  _windowArea(hostId) {
+    const win = this._hosts.liveWindowOf(hostId);
+    try {
+      const c = win.getContentBounds();
+      return { x: 0, y: 0, width: c.width, height: c.height };
+    } catch (_) {
+      return this._hosts.boundsOf(hostId);
     }
   }
 

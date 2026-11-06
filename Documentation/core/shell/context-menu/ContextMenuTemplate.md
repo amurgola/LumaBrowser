@@ -17,9 +17,14 @@ Builds the Electron menu template for one right click, Chrome style.
 
 ## Blocks, in order
 
+- Spelling: a right-click on a misspelled word in an editable field lists up to
+  `MAX_SUGGESTIONS` (5) of Chromium's `dictionarySuggestions` (each calls
+  `replaceMisspelling`), or a disabled "No spelling suggestions", then "Add to
+  dictionary" (`session.addWordToSpellCheckerDictionary`).
 - Navigation (Back, Forward, Reload): non-internal tab pages, only when the
   target is not a link, image, input or selection.
-- Link: Open link in new tab (tab pages), Open link in default browser, Copy link address.
+- Link: Open link in new tab (tab pages), Open link in default browser, Save link as
+  (tab pages, `downloadURL` through the normal download flow), Copy link address.
 - Image: Open image in new tab (tab pages with a src), Copy image (always, a
   bitmap copy at the hit point), Copy image address (src only), Save image as
   (src or recovered src). A recovered multi-megabyte data: URL is fine to

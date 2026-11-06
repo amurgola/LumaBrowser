@@ -24,6 +24,7 @@ const ChatToolTable = require('./tools/ChatToolTable');
 const NativeToolPlan = require('./tools/NativeToolPlan');
 const RunToolSet = require('./tools/RunToolSet');
 const ToolCallPipeline = require('./tools/ToolCallPipeline');
+const VaultToolsHandler = require('./tools/handlers/VaultToolsHandler');
 const ToolDispatch = require('./tools/ToolDispatch');
 const TruncationGuard = require('./tools/TruncationGuard');
 const AgentEventRelay = require('./turn/AgentEventRelay');
@@ -102,7 +103,8 @@ class BridgeRun {
     });
     const loopMonitor = new ToolLoopMonitor();
     this._health.watchToolLoop(loopMonitor);
-    const pipeline = new ToolCallPipeline({ toolSet: this._toolSet, loopMonitor, health: this._health, approval, dispatch });
+    const vaultCaller = VaultToolsHandler.callerOf({ allowTakeover: this._o.allowTakeover, approvalOverride: this._o.approvalOverride });
+    const pipeline = new ToolCallPipeline({ toolSet: this._toolSet, loopMonitor, health: this._health, approval, dispatch, vaultCaller });
     return new TruncationGuard({ pipeline, parser: this._parser, toolSet: this._toolSet, router: this._router });
   }
 
@@ -123,6 +125,7 @@ class BridgeRun {
       webSession: new WebSession(),
       webTabRender: (!o.noBrowser && browserService) ? SilentTab.make(browserService, { isAborted: this.control.isAborted }) : null,
       allowTakeover: !!o.allowTakeover,
+      approvalOverride: o.approvalOverride == null ? null : o.approvalOverride,
       takeoverWait: this._host.takeoverWait,
       takeoverAttention: this._host.takeoverAttention || null,
     };

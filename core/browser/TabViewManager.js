@@ -20,6 +20,10 @@ const TabConsoleLog = require('./tab-view/TabConsoleLog');
 const TabLoadEvents = require('./tab-view/TabLoadEvents');
 const TabPageEvents = require('./tab-view/TabPageEvents');
 const TabPopupHandler = require('./tab-view/TabPopupHandler');
+const TabPinning = require('./tab-view/TabPinning');
+const TabFullscreen = require('./tab-view/TabFullscreen');
+const PopupGate = require('./tab-view/PopupGate');
+const SitePermissionStore = require('./SitePermissionStore');
 const TabPermissionHook = require('./tab-view/TabPermissionHook');
 const DataFileDownloadHook = require('./tab-view/DataFileDownloadHook');
 const TabAcceleratorActions = require('./tab-view/TabAcceleratorActions');
@@ -57,7 +61,11 @@ class TabViewManager extends EventEmitter {
   get reservedPartitions() { return this._persisted.reservedPartitions; }
 
 
-  createTab(url, options = {}) { return this._lifecycle.create(url, options); }
+  createTab(url, options = {}) {
+    if (options.userPinned && !Number.isInteger(options.index)) options = { ...options, index: this._pinning.boundary() };
+    else if (!options.userPinned && Number.isInteger(options.index)) options = { ...options, index: Math.max(options.index, this._pinning.boundary()) };
+    return this._lifecycle.create(url, options);
+  }
 
   closeTab(tabId) { return this._lifecycle.close(tabId); }
 
@@ -65,7 +73,17 @@ class TabViewManager extends EventEmitter {
 
   reopenClosedTab(windowId = TabHosts.MAIN_ID) { return this._lifecycle.reopenClosed(this._hosts.resolve(windowId)); }
 
-  moveTab(tabId, toIndex) { return this._lifecycle.move(tabId, toIndex); }
+  moveTab(tabId, toIndex) {
+    const to = this._pinning.clampMove(tabId, toIndex);
+    const res = this._lifecycle.move(tabId, to);
+    const entry = this._registry.get(tabId);
+    if (res.success && to !== toIndex && entry) {
+      this._channel.sendForTab(entry, 'tab:moved', { id: tabId, index: this._registry.indexOf(tabId), order: res.order });
+    }
+    return res;
+  }
+
+  setTabPinned(tabId, pinned) { return this._pinning.setPinned(tabId, pinned); }
 
   switchToTab(tabId) { return this._activation.switchTo(tabId); }
 
@@ -87,7 +105,9 @@ class TabViewManager extends EventEmitter {
   }
 
 
-  addWindow(window) { return this._hosts.add(window); }
+  addWindow(window, options = {}) { return this._hosts.add(window, options); }
+
+  isPrivateWindow(windowId) { return !!this._hosts.privatePartitionOf(windowId); }
 
   removeWindow(windowId) { return this._transfer.evacuate(windowId); }
 
@@ -106,6 +126,8 @@ class TabViewManager extends EventEmitter {
   }
 
   windowIdForSender(webContents) { return this._hosts.idForSender(webContents); }
+
+  isChromeSender(webContents) { return this._hosts.isChrome(webContents); }
 
   activeTabIdIn(windowId) { return this._registry.activeIn(windowId); }
 
@@ -130,6 +152,8 @@ class TabViewManager extends EventEmitter {
 
 
   getSavedSession() { return this._session.saved(); }
+
+  getSavedPinnedTabs() { return this._session.savedPinned(); }
 
   sealSession() { this._session.seal(); }
 
@@ -164,6 +188,25 @@ class TabViewManager extends EventEmitter {
 
   toggleDevTools(tabId) { return this._pageTools.toggleDevTools(tabId); }
 
+  toggleWindowFullscreen(tabId) {
+    const entry = this._registry.get(tabId);
+    if (!entry) return { success: false };
+    if (this._fullscreen.exitPage(entry)) return { success: true, fullScreen: false };
+    const win = this._hosts.liveWindowOf(entry.hostId);
+    if (!win) return { success: false };
+    win.setFullScreen(!win.isFullScreen());
+    return { success: true, fullScreen: win.isFullScreen() };
+  }
+
+  isPageFullscreen(tabId) { return this._fullscreen.isFullscreen(this._registry.get(tabId)); }
+
+  exitPageFullscreen(tabId) { return this._fullscreen.exitPage(this._registry.get(tabId)); }
+
+
+  openBlockedPopup(tabId, index) { return this._popups.openBlocked(tabId, Number(index)); }
+
+  allowPopups(tabId) { return this._popups.allowSite(tabId); }
+
   clearCache() { return TabSessionCache.clearAll(this._registry.entries()); }
 
 
@@ -184,7 +227,7 @@ class TabViewManager extends EventEmitter {
     const id = this._registry.findIdByWebContents(webContents);
     if (id === null) return null;
     const entry = this._registry.get(id);
-    return { id, hidden: !!entry.hidden, url: entry.url };
+    return { id, hidden: !!entry.hidden, url: entry.url, keepAlive: !!entry.keepAlive, internal: entry.isInternal() };
   }
 
   addConsoleLog(tabId, level, message, source, line) {
@@ -207,7 +250,7 @@ class TabViewManager extends EventEmitter {
     this.adblockerService = deps.adblockerService || null;
     this.db = deps.db || null;
     this.faviconCache = deps.faviconCache || null;
-    this.downloads = new DownloadManager();
+    this.downloads = new DownloadManager({ db: this.db });
   }
 
   _buildTabState() {
@@ -239,6 +282,10 @@ class TabViewManager extends EventEmitter {
       hosts: this._hosts, registry: this._registry, channel: this._channel, factory,
       activation: this._activation, lifecycle: this._lifecycle, emitter: this,
     });
+    this._fullscreen = new TabFullscreen({ registry: this._registry, hosts: this._hosts, layout: this._layout, channel: this._channel });
+    this.on('windowTabSwitched', (hostId) => this._fullscreen.onSwitched(hostId));
+    this.on('tabSwitched', () => this._fullscreen.onSwitched(TabHosts.MAIN_ID));
+    this._pinning = new TabPinning({ registry: this._registry, channel: this._channel, lifecycle: this._lifecycle, emitter: this });
     this._keepAlive = new KeepAliveSweep({ registry: this._registry, revive: (entry) => this._persisted.revive(entry) });
     this._zoom = new TabZoom({ db: this.db, registry: this._registry, channel: this._channel });
     this._loader = new TabLoader({ registry: this._registry, channel: this._channel });
@@ -253,8 +300,11 @@ class TabViewManager extends EventEmitter {
     this._pageEvents = new TabPageEvents({
       registry: this._registry, channel: this._channel, faviconCache: this.faviconCache,
       performAccelerator: (entry, action) => this.performAccelerator(entry, action),
+      isPageFullscreen: (entry) => !!this._fullscreen && this._fullscreen.isFullscreen(entry),
+      exitPageFullscreen: (entry) => !!this._fullscreen && this._fullscreen.exitPage(entry),
     });
-    this._popups = new TabPopupHandler({ registry: this._registry, createTab: (url, options) => this.createTab(url, options) });
+    const gate = new PopupGate({ sites: new SitePermissionStore(this.db), channel: this._channel });
+    this._popups = new TabPopupHandler({ registry: this._registry, createTab: (url, options) => this.createTab(url, options), gate });
     this._dataFiles = new DataFileDownloadHook({ registry: this._registry, downloads: this.downloads, closeTab: (tabId) => this.closeTab(tabId) });
   }
 
@@ -267,6 +317,7 @@ class TabViewManager extends EventEmitter {
     this._pageEvents.wire(entry);
     TabPermissionHook.install(entry);
     this._popups.wire(entry);
+    this._fullscreen.wire(entry);
     this._dataFiles.install(entry.webContents.session);
   }
 }

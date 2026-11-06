@@ -2,7 +2,7 @@
 
 `ui/shell/downloads/Downloads.js`
 
-Session downloads: the toolbar button (appears with the first download, progress ring), the popup list and its Open / Folder / Cancel actions; finishes and failures are logged.
+Downloads: the toolbar button (appears with this session's first download; earlier sessions' `restored` records alone keep it hidden), progress ring, the popup list (earlier sessions included, so Ctrl+J shows them) and its Open / Folder / Cancel actions plus Clear (`{ action: 'clear' }`: drops finished rows and calls `tabAPI.clearDownloads`); finishes and failures are logged.
 
 ## Methods
 

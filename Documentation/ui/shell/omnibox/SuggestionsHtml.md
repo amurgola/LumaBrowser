@@ -2,7 +2,7 @@
 
 `ui/shell/omnibox/SuggestionsHtml.js`
 
-Markup of the suggestion list for the chrome overlay; every title, URL and query is escaped.
+Markup of the suggestion list for the chrome overlay; tab rows carry a "Switch to this tab" tag and bookmark rows a "Bookmark" tag (`TAGS`); every title, URL and query is escaped.
 
 ## Methods
 

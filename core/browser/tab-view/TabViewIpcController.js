@@ -31,6 +31,7 @@ class TabViewIpcController {
     handle('tab-view:stop', (_e, tabId) => m.stop(tabId));
     handle('tab-view:hard-reload', (_e, tabId) => m.reload(tabId, { ignoreCache: true }));
     handle('tab-view:move', (_e, tabId, toIndex) => m.moveTab(tabId, toIndex));
+    handle('tab-view:set-pinned', (_e, tabId, pinned) => m.setTabPinned(tabId, !!pinned));
     handle('tab-view:cycle', (e, delta) => m.cycleTab(Number(delta) || 1, windowOf(e)));
     handle('tab-view:select-index', (e, n) => m.selectTabByIndex(Number(n) || 0, windowOf(e)));
     handle('tab-view:reopen-closed', (e) => m.reopenClosedTab(windowOf(e)));
@@ -38,6 +39,8 @@ class TabViewIpcController {
     handle('tab-view:stop-find', (_e, tabId, action) => m.stopFindInPage(tabId, action));
     handle('tab-view:print', (_e, tabId) => m.print(tabId));
     handle('tab-view:toggle-devtools', (_e, tabId) => m.toggleDevTools(tabId));
+    handle('tab-view:popup-open', (_e, tabId, index) => m.openBlockedPopup(tabId, index));
+    handle('tab-view:popup-allow-site', (_e, tabId) => m.allowPopups(tabId));
   }
 
   static _windowOf(manager, event) {

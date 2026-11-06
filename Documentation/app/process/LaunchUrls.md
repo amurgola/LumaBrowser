@@ -34,3 +34,7 @@ startup tabs.
   (`defer`), after the startup tabs that `StartupTabs` scheduled the same way.
   Calling it again (a renderer reload) is harmless.
 - `pending`: a copy of the queue.
+
+## Local web files
+
+An argument that is an existing `.html`, `.htm`, `.xhtml`, `.shtml` or `.svg` file opens as its `file://` URL. Windows hands those over once LumaBrowser is the default browser. Missing files, other types and switches are ignored.

@@ -8,7 +8,8 @@ Composition root of a browser window: builds every shell part with its collabora
 
 - `new ShellApp({ SetupWizard, UISlotManager, BrowserRenderer })`; any may be omitted and that part is skipped.
 - `start()` runs the whole boot (was `initializeApp`).
-- Public fields after start: `detached`, `store`, `log`, `bounds`, `host`, `popupMenu`, `tabActions`, `settings`, `feedback`, `providers`, `slotManager`, `browserRenderer`, `wizard`, `extensionLoader` and the other parts.
+- Public fields after start: `detached`, `store`, `log`, `bounds`, `host`, `popupMenu`, `tabActions`, `settings`, `feedback`, `providers`, `slotManager`, `browserRenderer`, `wizard`, `extensionLoader`, `palette` and the other parts.
+- The search palette's chrome side, [ShellPalette](../palette/ShellPalette.md) (with a [SettingsReveal](../settings/SettingsReveal.md) over the Settings modal and slot manager), is built and installed just before ChromeKeyboard, which receives it as `palette`.
 
 ## Globals
 

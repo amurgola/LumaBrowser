@@ -12,7 +12,7 @@ export default class DownloadText {
       if (d.total) return `${DownloadText.bytes(d.received)} of ${DownloadText.bytes(d.total)}`;
       return d.received ? `${DownloadText.bytes(d.received)} so far` : 'Starting';
     }
-    if (d.state === 'done') return 'Done';
+    if (d.state === 'done') return d.missing ? 'Deleted' : 'Done';
     if (d.state === 'failed') return 'Failed';
     if (d.state === 'cancelled') return 'Cancelled';
     return '';

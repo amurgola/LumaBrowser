@@ -15,6 +15,7 @@ export default class TabStore {
       canGoForward: !!state.canGoForward,
       silent: !!state.silent,
       pinned: !!state.pinned,
+      userPinned: !!state.userPinned,
       keepAlive: !!state.keepAlive,
       hidden: !!state.hidden,
       kind: state.kind || 'user',

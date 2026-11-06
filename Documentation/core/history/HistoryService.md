@@ -20,3 +20,7 @@ which it creates on the SettingsDatabase handle it is given.
 - `HistoryService.isRecordable(url)` true only for `http://` and `https://`
   urls (trimmed, case-insensitive). Blank pages, `about:`, `chrome:`, `data:`,
   `file:` and the app's own pages are never recorded.
+
+## Top sites
+
+`topSites({ limit = 8, hiddenHosts, now })` the most visited sites of the last 90 days, one per host (`www.` folded), each the host's most visited page: `[{ url, title, host, visits }]`. Backs the new tab page.

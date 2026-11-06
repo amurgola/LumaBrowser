@@ -15,6 +15,7 @@ keeps the content bounds its chrome renderer reports.
 - `windowOf(hostId)`; `liveWindowOf(hostId)` (null once the window is gone).
 - `boundsOf(hostId)`, `setBounds(hostId, bounds)`.
 - `idForSender(webContents)`: the host whose chrome renderer sent an IPC message.
+- `isChrome(webContents)`: true only when the sender is one of the hosts' chrome renderers (no fallback to 0).
   Any other sender (a tab page, an overlay, none) maps to the main window, which is
   what every caller meant before windows could be detached.
 - `TabHosts.isLive(win)`.

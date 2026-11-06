@@ -2,7 +2,7 @@
 
 `ui/shell/permissions/PermissionPrompts.js`
 
-Camera / microphone prompts in the overlay's 'perm' layer, anchored under the address bar, only for the active tab; answers go back through `permissionPromptAPI.respond`.
+Camera / microphone / notification prompts (notifications get Allow / Block, media Allow once / Always allow / Block) in the overlay's 'perm' layer, anchored under the address bar, only for the active tab; answers go back through `permissionPromptAPI.respond`.
 
 ## Methods
 

@@ -15,6 +15,9 @@ class AppLinksApi extends PreloadSection {
         getLogs: () => ipcRenderer.invoke('core.debug.getLogs'),
       },
       rpLab: AppLinksApi._rpLab(ipcRenderer),
+      palette: {
+        record: (place) => ipcRenderer.invoke('core.palette.record', place),
+      },
     };
   }
 

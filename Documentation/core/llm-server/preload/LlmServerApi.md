@@ -41,3 +41,4 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `onShowChat(cb)` | subscribe `core.llmServer.showChat` |
 | `onShowSetup(cb)` | subscribe `core.llmServer.showSetup` |
 | `onOpenConversation(cb)` | subscribe `core.llmServer.openConversation` |
+| `onPalette(cb)` | subscribe `core.llmServer.palette` (the search palette's deep links, see [PaletteDeepLinks](../ui/js/chat/PaletteDeepLinks.md)) |

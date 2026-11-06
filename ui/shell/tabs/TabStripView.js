@@ -44,6 +44,7 @@ export default class TabStripView {
     this._syncTitle(el, entry);
     el.classList.toggle('loading', !!entry.loading);
     el.classList.toggle('persisted', !!entry.keepAlive);
+    el.classList.toggle('user-pinned', !!entry.userPinned);
     el.classList.toggle('audible', !!entry.audible && !entry.muted);
     el.classList.toggle('muted', !!entry.muted);
     this._syncIcon(el.querySelector('.tab-icon'), entry);

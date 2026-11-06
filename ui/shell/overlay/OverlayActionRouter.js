@@ -14,6 +14,7 @@ export default class OverlayActionRouter {
     const d = this._d;
     d.host.cancelBlurHide();
     if (payload.layer === 'perm') { d.prompts.handleAction(payload); return; }
+    if (payload.layer === 'vault') { if (d.vaultPrompt) d.vaultPrompt.handleAction(payload); return; }
     if ((payload.layer || payload.id) === 'notif') {
       if (payload.action === 'close-log') d.log.hide();
       return;

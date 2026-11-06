@@ -37,6 +37,9 @@ export default class TabContextMenu {
     const api = window.tabAPI;
     add('reload', 'Reload', () => api && api.reload(tabId));
     add('duplicate', 'Duplicate', () => { if (tab.url) this._tabs.create(tab.url, { activate: true }); });
+    if (api && typeof api.setPinned === 'function') {
+      add('pin', tab.userPinned ? 'Unpin tab' : 'Pin tab', () => api.setPinned(tabId, !tab.userPinned));
+    }
     if (api && typeof api.moveToNewWindow === 'function' && !tab.pinned && this._strip.visibleIds().length > 1) {
       add('move-window', 'Move tab to new window', () => api.moveToNewWindow(tabId));
     }
@@ -63,7 +66,7 @@ export default class TabContextMenu {
   _addCloseItems(add, items, tabId) {
     const ids = this._strip.visibleIds();
     const idx = ids.indexOf(tabId);
-    const unpinned = (id) => !(this._store.get(id) || {}).pinned;
+    const unpinned = (id) => { const t = this._store.get(id) || {}; return !t.pinned && !t.userPinned; };
     const others = ids.filter((id) => id !== tabId && unpinned(id));
     const toRight = idx >= 0 ? ids.slice(idx + 1).filter(unpinned) : [];
     items.push({ sep: true });

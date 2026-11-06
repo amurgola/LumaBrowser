@@ -42,6 +42,7 @@ export default class ChromeKeyboard {
 
   _onForwarded(p) {
     if (!p || !p.action) return;
+    if (this._d.palette && this._d.palette.handleForwarded(p)) return;
     if (p.action === 'open-settings') {
       this._d.host.hide();
       this._d.settings.open(p.settingsTab || 'general');

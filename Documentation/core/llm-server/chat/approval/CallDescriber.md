@@ -24,3 +24,7 @@ Writes the one sentence an approval card shows for a tool call.
 Written from the user's side: what will change, not which function runs.
 Someone approving a write needs the path and the scale of it, and the model's
 own description of a webhook is not evidence about where it goes.
+
+## Password manager
+
+`vault_fill` cards come from [VaultCallText](VaultCallText.md).

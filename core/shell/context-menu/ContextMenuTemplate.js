@@ -4,6 +4,7 @@ const SearchEngines = require('../../browser/SearchEngines');
 class ContextMenuTemplate {
   static SEPARATOR = Object.freeze({ type: 'separator' });
   static SEARCH_LABEL_MAX = 32;
+  static MAX_SUGGESTIONS = 5;
 
   constructor({ webContents, params, tab, db, extensionItems = null }) {
     this._webContents = webContents;
@@ -16,6 +17,7 @@ class ContextMenuTemplate {
 
   build() {
     this._readTarget();
+    this._addSpelling();
     this._addNavigation();
     this._addLink();
     this._addImage();
@@ -59,6 +61,22 @@ class ContextMenuTemplate {
     this._items.push(...items);
   }
 
+  _addSpelling() {
+    const word = this._params.misspelledWord;
+    if (!this._isEditable || !word) return;
+    const wc = this._webContents;
+    const suggestions = (this._params.dictionarySuggestions || []).slice(0, ContextMenuTemplate.MAX_SUGGESTIONS);
+    if (suggestions.length) {
+      for (const s of suggestions) this._push({ label: s, click: () => ContextMenuTemplate._quietly(() => wc.replaceMisspelling(s)) });
+    } else {
+      this._push({ label: 'No spelling suggestions', enabled: false });
+    }
+    this._push(
+      { label: 'Add to dictionary', click: () => ContextMenuTemplate._quietly(() => wc.session.addWordToSpellCheckerDictionary(word)) },
+      ContextMenuTemplate.SEPARATOR,
+    );
+  }
+
   _addNavigation() {
     if (!this._isBrowsingPage || this._isLink || this._isImage || this._isEditable || this._hasSelection) return;
     const tab = this._tab;
@@ -74,8 +92,9 @@ class ContextMenuTemplate {
     if (!this._isLink) return;
     const url = this._params.linkURL;
     if (this._tab.isTabPage) this._push({ label: 'Open link in new tab', click: () => this._tab.openInNewTab(url, false) });
+    this._push({ label: 'Open link in default browser', click: () => { shell.openExternal(url).catch(() => {}); } });
+    if (this._tab.isTabPage) this._push({ label: 'Save link as', click: () => ContextMenuTemplate._quietly(() => this._webContents.downloadURL(url)) });
     this._push(
-      { label: 'Open link in default browser', click: () => { shell.openExternal(url).catch(() => {}); } },
       { label: 'Copy link address', click: () => clipboard.writeText(url) },
       ContextMenuTemplate.SEPARATOR,
     );

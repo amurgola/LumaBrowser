@@ -1,6 +1,7 @@
 const Accelerators = require('../Accelerators');
 const TabErrorPage = require('./TabErrorPage');
 const TabConsoleLog = require('./TabConsoleLog');
+const DoubleShift = require('../../palette/DoubleShift');
 
 class TabPageEvents {
   static NEUTRALIZE_APP_REGION_CSS = '* { -webkit-app-region: no-drag !important; }';
@@ -8,7 +9,9 @@ class TabPageEvents {
   static CRASH_RELOAD_DELAY_MS = 250;
   static USABLE_FAVICON = /^(https?:\/\/|data:image\/)/i;
 
-  constructor({ registry, channel, faviconCache = null, performAccelerator }) {
+  constructor({ registry, channel, faviconCache = null, performAccelerator, isPageFullscreen = null, exitPageFullscreen = null }) {
+    this._isPageFullscreen = isPageFullscreen;
+    this._exitPageFullscreen = exitPageFullscreen;
     this._registry = registry;
     this._channel = channel;
     this._faviconCache = faviconCache;
@@ -20,6 +23,7 @@ class TabPageEvents {
     wc.on('dom-ready', () => TabPageEvents._neutralizeDragRegions(wc));
     wc.on('render-process-gone', (_event, details) => this._onRendererGone(entry, details));
     if (!entry.silent) wc.on('before-input-event', (event, input) => this._onInput(entry, event, input));
+    if (!entry.silent && typeof wc.once === 'function') wc.once('destroyed', () => DoubleShift.shared.forget(`tab:${entry.id}`));
     wc.on('found-in-page', (_event, result) => this._onFound(entry, result));
     wc.on('page-favicon-updated', (_event, favicons) => this._onFavicon(entry, favicons));
     wc.on('console-message', (details) => TabPageEvents._onConsole(entry, details));
@@ -46,8 +50,18 @@ class TabPageEvents {
   }
 
   _onInput(entry, event, input) {
-    const action = Accelerators.match(input, { loading: entry.loading });
+    if (DoubleShift.shared.feed(`tab:${entry.id}`, input)) {
+      this._channel.sendForTab(entry, 'tab-view:accelerator', { action: 'open-palette', tabId: entry.id });
+      return;
+    }
+    const fullscreen = !!(this._isPageFullscreen && this._isPageFullscreen(entry));
+    const action = Accelerators.match(input, { loading: entry.loading, fullscreen });
     if (!action) return;
+    if (action === 'exit-fullscreen') {
+      event.preventDefault();
+      if (this._exitPageFullscreen) this._exitPageFullscreen(entry);
+      return;
+    }
     event.preventDefault();
     if (Accelerators.MAIN_HANDLED.has(action)) this._performAccelerator(entry, action);
     this._channel.sendForTab(entry, 'tab-view:accelerator', { action, tabId: entry.id });

@@ -24,7 +24,55 @@
     color: var(--text-muted);
 }
 .url-bar-security[hidden] { display: none; }
+.url-bar-security { cursor: pointer; padding: 3px; margin: -3px; border-radius: var(--radius-sm); }
+.url-bar-security:hover, .url-bar-security:focus-visible { background: var(--surface-hover); outline: none; }
 .url-bar-security .icon { width: 14px; height: 14px; }
 .url-bar-security[data-state="secure"] { color: var(--text-secondary); }
 .url-bar-security[data-state="insecure"] { color: var(--warning); }
 .url-bar-wrap:has(.url-bar-security[hidden]) .url-bar { padding-left: var(--space-3); }
+
+.url-bar-popups {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--warning);
+    cursor: pointer;
+}
+.url-bar-popups:hover { background: var(--surface-hover); }
+.url-bar-popups[hidden] { display: none; }
+.url-bar-popups .icon { width: 15px; height: 15px; }
+.url-bar-wrap:has(.url-bar-popups:not([hidden])) .url-bar { padding-right: 32px; }
+
+.url-bar-key {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+.url-bar-key:hover { background: var(--surface-hover); color: var(--text-primary); }
+.url-bar-key[hidden] { display: none; }
+.url-bar-key .icon { width: 15px; height: 15px; }
+.url-bar-wrap:has(.url-bar-popups:not([hidden])) .url-bar-key { right: 30px; }
+.url-bar-wrap:has(.url-bar-key:not([hidden])) .url-bar { padding-right: 32px; }
+.url-bar-wrap:has(.url-bar-key:not([hidden])):has(.url-bar-popups:not([hidden])) .url-bar { padding-right: 56px; }

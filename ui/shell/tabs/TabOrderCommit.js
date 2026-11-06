@@ -21,7 +21,8 @@ export default class TabOrderCommit {
 
   static async _fullOrder(api) {
     try {
-      const all = typeof api.getAll === 'function' ? await api.getAll() : null;
+      const read = typeof api.getOrder === 'function' ? api.getOrder : api.getAll;
+      const all = typeof read === 'function' ? await read() : null;
       return Array.isArray(all) ? all.map((t) => t.id) : [];
     } catch (_) { return []; }
   }

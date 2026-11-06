@@ -1,3 +1,5 @@
+import PaletteDeepLinks from './PaletteDeepLinks.js';
+
 export default class ChatSubscriptions {
   constructor(ctx) {
     this._ctx = ctx;
@@ -14,6 +16,7 @@ export default class ChatSubscriptions {
         if (conversationId) this._ctx.conversation.open(conversationId).catch(() => {});
       });
     }
+    new PaletteDeepLinks(this._ctx).install();
     window.addEventListener('luma-open-conversation', (e) => {
       const id = e && e.detail && e.detail.conversationId;
       if (id) this._ctx.conversation.open(id).catch(() => {});

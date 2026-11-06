@@ -181,6 +181,24 @@ class PseudoToolSchemaTable {
       required: ['artifactId'],
     },
     {
+      name: 'vault_list',
+      description: "List the saved logins, addresses and API keys the user allowed you to use: names, sites, masked usernames and key placeholders, never secrets. Pass tabId to see only the logins for that tab's site.",
+      properties: {
+        tabId: { type: 'number', description: 'Optional: only logins that fit this tab (from get_tabs)' },
+      },
+      required: [],
+    },
+    {
+      name: 'vault_fill',
+      description: "Fill a saved login or address (ref from vault_list) into the form on a tab. LumaBrowser types it in; you never see the password. A login fills only on its own site. The user confirms each use.",
+      properties: {
+        ref: { type: 'string', description: 'The item ref from vault_list' },
+        tabId: { type: 'number', description: "The tab with the sign-in or address form (default: the user's active tab)" },
+        part: { type: 'string', enum: ['otp'], description: "Optional: 'otp' fills the login's current two-factor code into the page's code field" },
+      },
+      required: ['ref'],
+    },
+    {
       name: 'send_webhook',
       description: 'Deliver data to an automation endpoint the user gave you: POST/PUT/PATCH a JSON payload to an http(s) webhook URL. Returns the HTTP status and the start of the response body.',
       properties: {

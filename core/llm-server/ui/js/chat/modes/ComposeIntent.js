@@ -21,6 +21,7 @@ export default class ComposeIntent {
       ctx.conversation.newChat();
     }
     if (attachments.length) ctx.attachments.add(attachments);
+    if (compose.docs && ctx.docs && ctx.docs.available()) ctx.docs.enable();
     if (canSend && state.modelRef) {
       await ctx.sender.submit(prompt);
       return;

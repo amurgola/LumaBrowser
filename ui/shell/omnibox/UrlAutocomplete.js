@@ -1,6 +1,8 @@
 import OmniboxResolver from './OmniboxResolver.js';
+import OmniboxMatches from './OmniboxMatches.js';
 import SuggestionsHtml from './SuggestionsHtml.js';
 import UrlSecurityBadge from '../nav/UrlSecurityBadge.js';
+import AddressBar from './AddressBar.js';
 
 export default class UrlAutocomplete {
   static DEBOUNCE_MS = 120;
@@ -9,7 +11,8 @@ export default class UrlAutocomplete {
 
   static BLUR_HIDE_MS = 150;
 
-  constructor({ addressBar, store, host, engine, favicons, tabActions }) {
+  constructor({ addressBar, store, host, engine, favicons, tabActions, bookmarks = () => [] }) {
+    this._bookmarks = bookmarks;
     this._bar = addressBar;
     this._store = store;
     this._host = host;
@@ -61,7 +64,7 @@ export default class UrlAutocomplete {
     this.items = this._itemsFor(q, matches);
     this.active = -1;
     this._show(q);
-    this._favicons.prefetch(matches.map((m) => m.url)).then((changed) => {
+    this._favicons.prefetch(this.items.filter((i) => i.url && i.kind !== 'navigate').map((i) => i.url)).then((changed) => {
       if (changed && this.isOpen() && this._bar.isFocused()) this._show(q);
     });
   }
@@ -71,6 +74,7 @@ export default class UrlAutocomplete {
     this.hide();
     if (!item) { this.navigateTo(this._bar.el.value); return; }
     if (item.kind === 'search') this.navigateTo(item.query);
+    else if (item.kind === 'tab') this._tabActions.switchTo(item.tabId);
     else this._tabActions.navigate(item.url);
     this._bar.el.blur();
   }
@@ -81,12 +85,25 @@ export default class UrlAutocomplete {
   }
 
   _itemsFor(q, matches) {
-    const items = matches.map((m) => ({ kind: 'history', url: m.url, title: m.title }));
+    const tabs = OmniboxMatches.openTabs(this._store.values(), this._store.activeTabId, q)
+      .map((t) => ({ kind: 'tab', tabId: t.id, url: t.url, title: t.title }));
+    const marks = OmniboxMatches.bookmarks(this._safeBookmarks(), q)
+      .map((b) => ({ kind: 'bookmark', url: b.url, title: b.title }));
+    const seen = new Set([...tabs, ...marks].map((i) => i.url));
+    const marksNotOpen = marks.filter((b) => !tabs.some((t) => t.url === b.url));
+    const history = matches.filter((m) => !seen.has(m.url))
+      .slice(0, Math.max(0, UrlAutocomplete.LIMIT - tabs.length - marksNotOpen.length))
+      .map((m) => ({ kind: 'history', url: m.url, title: m.title }));
+    const items = [...tabs, ...marksNotOpen, ...history];
     if (OmniboxResolver.looksLikeUrl(q)) {
       items.unshift({ kind: 'navigate', url: OmniboxResolver.resolve(q, (s) => this._engine.searchUrl(s)) });
     }
     items.push({ kind: 'search', query: q });
     return items;
+  }
+
+  _safeBookmarks() {
+    try { return this._bookmarks() || []; } catch (_) { return []; }
   }
 
   static async _historyMatches(q) {
@@ -140,7 +157,7 @@ export default class UrlAutocomplete {
   }
 
   _escape(open) {
-    const tabUrl = (this._store.active() || {}).url || '';
+    const tabUrl = AddressBar.displayUrl((this._store.active() || {}).url);
     const alreadyReverted = !open && this._bar.el.value === tabUrl;
     if (open) this.hide();
     this._bar.revert();
@@ -169,7 +186,7 @@ export default class UrlAutocomplete {
   _onBlur() {
     setTimeout(() => this.hide(), UrlAutocomplete.BLUR_HIDE_MS);
     const tab = this._store.active();
-    if (tab && this._bar.el.value !== (tab.url || '')) this._bar.revert();
+    if (tab && this._bar.el.value !== AddressBar.displayUrl(tab.url)) this._bar.revert();
   }
 
   static _highlight(index) {

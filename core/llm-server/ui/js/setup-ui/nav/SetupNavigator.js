@@ -51,6 +51,16 @@ export default class SetupNavigator {
     this.updateHeader(name);
     this._showPanes(name);
     this._lazyOpen(name);
+    this._remember(name);
+  }
+
+  _remember(name) {
+    const view = this._doc.defaultView;
+    const api = view && view.llmDiagAPI;
+    if (!api || !api.palette || typeof api.palette.record !== 'function') return;
+    const btn = this._button(name);
+    const title = (SetupNavigator.HEADERS[name] && SetupNavigator.HEADERS[name].title) || (btn && btn.textContent.trim()) || name;
+    try { api.palette.record({ kind: 'setup', ref: name, title }); } catch (_) {}
   }
 
   updateHeader(name) {

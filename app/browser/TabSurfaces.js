@@ -35,6 +35,7 @@ class TabSurfaces {
       faviconCache: s.faviconCache,
     });
     this._ctx.tabManager = new TabManager(this._ctx.tabViewManager);
+    if (s.vaultService) s.vaultService.attachTabs(this._ctx.tabViewManager);
   }
 
   _relayFavicons(win) {

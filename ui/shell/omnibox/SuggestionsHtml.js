@@ -5,6 +5,8 @@ export default class SuggestionsHtml {
 
   static GLOBE_ICON = '<span class="bd-suggest-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></span>';
 
+  static TAGS = { tab: 'Switch to this tab', bookmark: 'Bookmark' };
+
   static render({ items, active, query, engineName, favicons }) {
     const rows = items.map((item, i) => {
       const cls = i === active ? ' bd-active' : '';
@@ -28,9 +30,11 @@ export default class SuggestionsHtml {
         main: `<span class="bd-suggest-main"><span class="bd-suggest-title">${esc(item.url)}</span><span class="bd-suggest-url">Go to address</span></span>`,
       };
     }
+    const tag = SuggestionsHtml.TAGS[item.kind];
     return {
       icon: `<span class="bd-suggest-icon">${favicons.html(item.url, item.title)}</span>`,
-      main: `<span class="bd-suggest-main"><span class="bd-suggest-title">${esc(item.title || item.url)}</span><span class="bd-suggest-url">${esc(item.url)}</span></span>`,
+      main: `<span class="bd-suggest-main"><span class="bd-suggest-title">${esc(item.title || item.url)}</span><span class="bd-suggest-url">${esc(item.url)}</span></span>`
+        + (tag ? `<span class="bd-suggest-tag">${esc(tag)}</span>` : ''),
     };
   }
 }

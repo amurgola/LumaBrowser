@@ -27,11 +27,24 @@ class MainWorldScript {
     try { window.postMessage({ ${MainWorldScript.NOTIFY_KEY}: true, payload: payload }, '*'); } catch (_) {}
   }
 
+  // Electron only knows granted or denied, so a site nobody answered for reads as denied and would never ask.
+  // Pages see 'default' instead until a request from this document comes back denied (the user blocked it, or
+  // the site was blocked already).
   var originalNotification = window.Notification;
+  var notificationsDenied = false;
+  function notificationPermission() {
+    if (originalNotification.permission === 'granted') return 'granted';
+    return notificationsDenied ? 'denied' : 'default';
+  }
+  function canNotify() {
+    return !!originalNotification && originalNotification.permission === 'granted';
+  }
   if (originalNotification) {
+    var originalRequest = originalNotification.requestPermission.bind(originalNotification);
     window.Notification = class CustomNotification extends originalNotification {
       constructor(title, options = {}) {
         super(title, options);
+        if (!canNotify()) return;
         report({
           title: title,
           body: options.body || '',
@@ -47,19 +60,39 @@ class MainWorldScript {
       }
 
       static get permission() {
-        return originalNotification.permission;
+        return notificationPermission();
       }
 
       static requestPermission(callback) {
-        return originalNotification.requestPermission(callback);
+        return originalRequest().then(function(result) {
+          notificationsDenied = result !== 'granted';
+          var answer = notificationPermission();
+          if (typeof callback === 'function') { try { callback(answer); } catch (_) {} }
+          return answer;
+        });
       }
     };
 
     Object.defineProperty(window.Notification, 'permission', {
       get: function() {
-        return originalNotification.permission;
+        return notificationPermission();
       }
     });
+
+    // navigator.permissions.query({ name: 'notifications' }) tells the same story as Notification.permission.
+    try {
+      var perms = navigator.permissions;
+      if (perms && typeof perms.query === 'function') {
+        var originalQuery = perms.query.bind(perms);
+        perms.query = function(descriptor) {
+          return originalQuery(descriptor).then(function(status) {
+            if (!descriptor || descriptor.name !== 'notifications' || status.state === 'granted' || notificationsDenied) return status;
+            try { Object.defineProperty(status, 'state', { get: function() { return 'prompt'; } }); } catch (_) {}
+            return status;
+          });
+        };
+      }
+    } catch (_) {}
   }
 
   // Gmail, Outlook and Teams raise their notifications through a service worker
@@ -71,7 +104,7 @@ class MainWorldScript {
       var originalShow = swProto.showNotification;
       swProto.showNotification = function(title, options) {
         var o = options || {};
-        report({
+        if (canNotify()) report({
           title: title,
           body: o.body || '',
           icon: o.icon || '',

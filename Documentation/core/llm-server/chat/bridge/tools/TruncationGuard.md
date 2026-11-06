@@ -20,3 +20,8 @@ The outermost check on a tool call.
 A repaired write would overwrite the target with a fragment (a severed
 write_file reported success at 598 bytes); a repaired read is only a wasted
 lookup. The idle hold covers tools that outlast the unload window.
+
+## Vault redaction
+
+Every tool result passes through `VaultRedaction.apply` before it returns, so a saved password a page or command
+printed reaches the model as `[vault:<name>]`.

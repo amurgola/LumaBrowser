@@ -12,7 +12,11 @@ Handles a tab page's non-navigation events.
   - `render-process-gone`: reloads once after 250 ms; a second crash within 10 s
     shows the crash page. Clean exits, internal, silent and keep-alive tabs are
     left to their owners (the keep-alive sweep, the internal tab loader).
-  - `before-input-event` (not for silent tabs): [Accelerators](../Accelerators.md)
+  - `before-input-event` (not for silent tabs): first
+    [DoubleShift](../../palette/DoubleShift.md) (source `tab:<id>`, forgotten when the tab's contents are
+    destroyed); a double Shift
+    sends `{ action: 'open-palette', tabId }` to `tab-view:accelerator` in the
+    tab's window (the search palette) and stops there. Otherwise [Accelerators](../Accelerators.md)
     `.match`; on a hit the default is prevented, main-handled actions run through
     `performAccelerator`, and `{ action, tabId }` goes to `tab-view:accelerator` in the
     tab's window.

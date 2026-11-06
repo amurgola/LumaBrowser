@@ -1,4 +1,4 @@
-const BrowserDataPreferences = require('../../core/browser-data/BrowserDataPreferences');
+const NewTabPage = require('../../core/browser/newtab/NewTabPage');
 
 class StartupTabs {
   static LLM_TAB_DELAY_MS = 1500;
@@ -18,7 +18,7 @@ class StartupTabs {
     const tvm = this._tvm();
     if (!tvm || tvm.tabs.size !== 0) return false;
     const llmAsDefault = this._llm.isEnabled() && this._llm.getOpenTabOnLoad();
-    const startPageUrl = this._db.get('startPageUrl', BrowserDataPreferences.DEFAULT_START_PAGE);
+    const startPageUrl = NewTabPage.resolve(this._db);
     const session = this._savedSession(tvm);
     if (llmAsDefault) this._setImmediate(() => this._spawnLlmFirst(startPageUrl, session));
     else this._setImmediate(() => this._spawnHomeFirst(startPageUrl, session));
@@ -34,6 +34,7 @@ class StartupTabs {
       this._openSession(tvm, session, { focus: false });
       return;
     }
+    this._openPinned(tvm);
     tvm.createTab(startPageUrl, { activate: false });
     this._openStartupBookmarks(tvm);
   }
@@ -44,6 +45,7 @@ class StartupTabs {
     if (session) {
       this._openSession(tvm, session, { focus: true });
     } else {
+      this._openPinned(tvm);
       tvm.createTab(startPageUrl);
       this._openStartupBookmarks(tvm);
     }
@@ -61,11 +63,20 @@ class StartupTabs {
   }
 
   _openSession(tvm, session, { focus }) {
-    const created = session.tabs.map((tab) => tvm.createTab(tab.url, { activate: false, title: tab.title }));
+    const created = session.tabs.map((tab) => tvm.createTab(tab.url, { activate: false, title: tab.title, userPinned: !!tab.pinned }));
     this._log.log(`Restored ${created.length} tab(s) from the last session`);
     if (!focus) return;
     const target = created[session.activeIndex] || created[0];
     if (target) tvm.switchToTab(target.id);
+  }
+
+  _openPinned(tvm) {
+    try {
+      const pinned = typeof tvm.getSavedPinnedTabs === 'function' ? tvm.getSavedPinnedTabs() : [];
+      for (const tab of pinned) tvm.createTab(tab.url, { activate: false, title: tab.title, userPinned: true });
+    } catch (err) {
+      this._log.warn('Failed to reopen pinned tabs:', err.message);
+    }
   }
 
   _openStartupBookmarks(tvm) {

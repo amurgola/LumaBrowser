@@ -28,16 +28,37 @@ export default class BrowserDataSettings {
     if (!input || !api) return;
     try {
       input.value = await api.getStartPage();
-      if (input.value) this._tabActions.startPageUrl = input.value;
     } catch (_) {}
     const save = () => {
       api.setStartPage(input.value.trim()).then((saved) => {
         input.value = saved;
-        if (saved) this._tabActions.startPageUrl = saved;
+        this._syncNewTabUrl();
       }).catch(() => {});
     };
     input.addEventListener('change', save);
     input.addEventListener('blur', save);
+    await this._loadNewTabMode();
+  }
+
+  async _loadNewTabMode() {
+    const select = document.getElementById('gsNewTabMode');
+    const bridge = window.ipcBridge;
+    if (!bridge) return;
+    if (select) {
+      try { select.value = (await bridge.invoke('core.newtab.getMode')) || 'newtab'; } catch (_) {}
+      select.addEventListener('change', async () => {
+        try { await bridge.invoke('core.newtab.setMode', select.value); } catch (_) {}
+        this._syncNewTabUrl();
+      });
+    }
+    await this._syncNewTabUrl();
+  }
+
+  async _syncNewTabUrl() {
+    try {
+      const url = window.ipcBridge && await window.ipcBridge.invoke('core.newtab.url');
+      if (url) this._tabActions.startPageUrl = url;
+    } catch (_) {}
   }
 
   async _loadSearchEngine() {

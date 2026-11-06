@@ -8,10 +8,15 @@ class TabHosts {
     this._hosts.set(TabHosts.MAIN_ID, TabHosts._host(TabHosts.MAIN_ID, mainWindow));
   }
 
-  add(window) {
+  add(window, options = {}) {
     const id = this._nextId++;
-    this._hosts.set(id, TabHosts._host(id, window));
+    this._hosts.set(id, { ...TabHosts._host(id, window), privatePartition: options.privatePartition || null });
     return id;
+  }
+
+  privatePartitionOf(hostId) {
+    const host = this._hosts.get(hostId);
+    return (host && host.privatePartition) || null;
   }
 
   remove(hostId) {
@@ -57,6 +62,14 @@ class TabHosts {
       if (TabHosts.isLive(host.window) && host.window.webContents === webContents) return host.id;
     }
     return TabHosts.MAIN_ID;
+  }
+
+  isChrome(webContents) {
+    if (!webContents) return false;
+    for (const host of this._hosts.values()) {
+      if (TabHosts.isLive(host.window) && host.window.webContents === webContents) return true;
+    }
+    return false;
   }
 
   static isLive(win) {

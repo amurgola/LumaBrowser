@@ -1,6 +1,7 @@
 const CardText = require('./CardText');
 const CommandCallAssessor = require('./CommandCallAssessor');
 const DesktopCallText = require('./DesktopCallText');
+const VaultCallText = require('./VaultCallText');
 
 class CallDescriber {
   static describe(toolName, params, assessment) {
@@ -57,6 +58,7 @@ class CallDescriber {
     run_scheduled_task: () => 'Run the scheduled task defined in this conversation now',
     schedule_artifact_updates: (p) => CallDescriber._scheduleArtifactUpdates(p),
     ...DesktopCallText.DESCRIBERS,
+    ...VaultCallText.DESCRIBERS,
   });
 }
 

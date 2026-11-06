@@ -10,6 +10,13 @@ const LocalApiIpcHandlers = require('../../core/llm-server/LocalApiIpcHandlers')
 const DashboardIpcHandlers = require('../../core/dashboard/DashboardIpcHandlers');
 const RagIpcHandlers = require('../../core/rag/RagIpcHandlers');
 const BrowserDataIpcHandlers = require('../../core/browser-data/BrowserDataIpcHandlers');
+const VaultIpcHandlers = require('../../core/vault/VaultIpcHandlers');
+const DefaultBrowserIpcHandlers = require('../../core/shell/default-browser/DefaultBrowserIpcHandlers');
+const NewTabIpcHandlers = require('../../core/browser/newtab/NewTabIpcHandlers');
+const SiteInfo = require('../../core/browser/site-info/SiteInfo');
+const SiteInfoIpcHandlers = require('../../core/browser/site-info/SiteInfoIpcHandlers');
+const BrowsingDataClearer = require('../../core/browser-data/BrowsingDataClearer');
+const BrowsingDataClearIpc = require('../../core/browser-data/BrowsingDataClearIpc');
 const ImageIpcHandlers = require('../../core/image-server/ImageIpcHandlers');
 const VideoIpcHandlers = require('../../core/image-server/VideoIpcHandlers');
 const MusicIpcHandlers = require('../../core/music-server/MusicIpcHandlers');
@@ -19,6 +26,8 @@ const GroundingIpcHandlers = require('../../core/grounding-server/GroundingIpcHa
 const SharingIpcHandlers = require('../../core/network-sharing/SharingIpcHandlers');
 const PlacementIpcHandlers = require('../../core/placement/PlacementIpcHandlers');
 const LabIpcHandlers = require('../../core/roleplay-lab/LabIpcHandlers');
+const PaletteService = require('../../core/palette/PaletteService');
+const PaletteIpcHandlers = require('../../core/palette/PaletteIpcHandlers');
 const AppGlobals = require('../AppGlobals');
 const ChatTaskServices = require('../services/ChatTaskServices');
 const WindowControlIpc = require('./WindowControlIpc');
@@ -42,6 +51,7 @@ class CoreIpcRegistrar {
     new WindowControlIpc(() => this._ctx.mainWindow, { windowForSender: (wc) => CoreIpcRegistrar._windowForSender(this._ctx, wc) }).register(this._ipcMain);
     this._registerLlmSettings();
     this._registerShell();
+    this._registerPalette();
     if (this._debugIpc) this._debugIpc.register(this._ipcMain);
     return { chat, ...media };
   }
@@ -114,6 +124,16 @@ class CoreIpcRegistrar {
     }).register();
     new RagIpcHandlers(s.ragService, { getMainWindow }).register();
     new BrowserDataIpcHandlers({ historyService: s.historyService, bookmarkService: s.bookmarkService, db: s.db, getMainWindow, faviconCache: s.faviconCache }).register();
+    new VaultIpcHandlers({ vault: s.vaultService, getTabViewManager: () => this._ctx.tabViewManager }).register();
+    new DefaultBrowserIpcHandlers({ getTabViewManager: () => this._ctx.tabViewManager }).register();
+    new NewTabIpcHandlers({ page: s.newTabPage, getTabViewManager: () => this._ctx.tabViewManager }).register();
+    const siteInfo = new SiteInfo({ db: s.db, getTabViewManager: () => this._ctx.tabViewManager, adblocker: s.adblockerService });
+    new SiteInfoIpcHandlers({ siteInfo, getTabViewManager: () => this._ctx.tabViewManager }).register();
+    const clearer = new BrowsingDataClearer({
+      history: s.historyService, getTabViewManager: () => this._ctx.tabViewManager,
+      sessionFor: (partition) => this._ctx.electron.session.fromPartition(partition),
+    });
+    new BrowsingDataClearIpc({ clearer, getTabViewManager: () => this._ctx.tabViewManager }).register();
   }
 
   _registerMediaServers() {
@@ -151,6 +171,24 @@ class CoreIpcRegistrar {
       identity: s.machineIdentity,
       waitForExtensions: () => (s.db.get('core.setupComplete', false) ? this._ctx.deferredServices.start() : undefined),
     }).register();
+  }
+
+  _registerPalette() {
+    const s = this._s;
+    const ctx = this._ctx;
+    const palette = AppGlobals.publish('__lumaPalette', new PaletteService({
+      settingsDb: s.db,
+      electron: ctx.electron,
+      getTabViewManager: () => ctx.tabViewManager,
+      getLlm: () => s.llmServerService || null,
+      getChatStore: () => (s.llmServerService && s.llmServerService.chatStore) || ChatTaskServices.chatStore(),
+      getArtifactStore: () => s.artifactStore || null,
+      listExtensions: () => (s.extensionManager ? s.extensionManager.getRendererExtensionList() : []),
+      docs: s.docsKnowledgeBase || null,
+      getRouter: () => global.__lumaChatRouter || null,
+    }));
+    palette.start();
+    new PaletteIpcHandlers({ palette, getTabViewManager: () => ctx.tabViewManager }).register();
   }
 
   static applyConsent(consent, pulseService) {

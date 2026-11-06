@@ -19,7 +19,9 @@ Opens the first tabs once the shell has painted.
     last session's tabs open in order in place of the start page and the startup
     bookmarks; the one that was active is focused (else the first), unless the LLM
     tab is the default, which keeps focus. A read failure is a warning and falls
-    back to the start page;
+    back to the start page. Tabs saved as pinned reopen pinned (`userPinned`);
+  - without a saved session, the last session's pinned tabs (`getSavedPinnedTabs()`)
+    open first, ahead of the start page;
   - after 3 s: `restorePersistedTabs()` (logged `Restored <n> persisted tab(s) in the background`)
     and `startKeepAliveSweep()`, which starts even when the restore failed.
   Bookmark and restore failures are warnings.

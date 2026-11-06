@@ -68,6 +68,13 @@ class StaticGroupTable {
       doc: UtilityManuals.VALIDATE,
     },
     {
+      key: 'vault',
+      label: 'Password manager',
+      tools: ['vault_list', 'vault_fill'],
+      stub: 'Sign in or fill an address with an item the user saved and allowed you to use; you never see passwords (vault_list, vault_fill).',
+      doc: UtilityManuals.VAULT,
+    },
+    {
       key: 'programmatic',
       label: 'Programmatic',
       tools: ['send_webhook'],

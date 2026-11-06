@@ -1,3 +1,5 @@
+const DoubleShift = require('../../core/palette/DoubleShift');
+
 class WindowKeys {
   static ZOOM_KEYS = ['=', '+', '-', '0'];
 
@@ -6,6 +8,10 @@ class WindowKeys {
   }
 
   static handle(win, event, input) {
+    if (input && DoubleShift.shared.feed(`shell:${win.id}`, input)) {
+      win.webContents.send('tab-view:accelerator', { action: 'open-palette' });
+      return 'palette';
+    }
     if (!input || input.type !== 'keyDown') return null;
     if (input.key === 'F12') {
       WindowKeys._toggleDevTools(win.webContents);

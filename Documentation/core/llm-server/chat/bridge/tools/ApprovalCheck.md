@@ -52,3 +52,8 @@ The approval gate at dispatch, the last check before a tool runs.
 Last, after the ledger and required args, so nobody is asked about a call that
 would not run. Silence denies. Grants die with the run, except a carried
 family's, which the conversation keeps.
+
+## Insisting families
+
+A tool whose family is marked `insist` (the password manager) needs a question whenever the run is interactive,
+whatever the policy. Grants still work: "Allow for this chat" covers later fills.

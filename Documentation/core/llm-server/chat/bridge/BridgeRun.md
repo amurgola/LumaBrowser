@@ -78,3 +78,10 @@ the user painted in earlier turns, for `edit_image`), `kbScope`, `webSession`,
   [AgentChatBridge](../AgentChatBridge.md)) for `ask_user_takeover`.
 - The event relay gets the host's [RunProgress](turn/RunProgress.md); the run
   reports its end to it before any terminal hook (`_endProgress`).
+
+## Tool context
+
+The tool context also carries `approvalOverride` (set for terminal sessions and triggers), which VaultToolsHandler uses
+to treat those runs as outside callers.
+
+The ToolCallPipeline also gets `vaultCaller` (`VaultToolsHandler.callerOf` of the run) for key placeholders.

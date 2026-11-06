@@ -41,17 +41,37 @@ export default class ArtifactPanel {
     const { els, root } = this._ctx;
     this._resizer = new PanelResizer({ panel: this._el(), stage: els.stage || this._el().parentNode, root, onResize: () => this._relayout() });
     this._resizer.install();
+    this._trackWidth();
     document.addEventListener('keydown', (e) => this._onKey(e));
+  }
+
+  _trackWidth() {
+    if (typeof ResizeObserver !== 'function') return;
+    const publish = () => {
+      const w = Math.round(this._el().getBoundingClientRect().width);
+      if (w > 0) document.body.style.setProperty('--cm-panel-w', w + 'px');
+    };
+    new ResizeObserver(publish).observe(this._el());
   }
 
   open(a) {
     if (!a) return undefined;
+    this._remember(a);
     const type = a.type || 'html';
     if (ArtifactPanel.VIEWER_TYPES.has(type)) return this._openViewer(a, type);
     if (ArtifactPanel.MEDIA[type]) return this._openMedia(a, type);
     if (type === 'code') return this._openCode(a);
     if (type === 'html') return this._openHtml(a);
     return this._openServed(a, type);
+  }
+
+  _remember(a) {
+    const api = this._ctx.api;
+    if (!api || !api.palette || typeof api.palette.record !== 'function' || !a.id) return;
+    const conv = (this._ctx.state.conversations || []).find((c) => c.id === a.conversationId);
+    try {
+      api.palette.record({ kind: 'artifact', ref: a.rootId || a.id, title: a.title || 'Artifact', subtitle: (conv && conv.title) || a.conversationTitle || '' });
+    } catch (_) {}
   }
 
   stream(p) {

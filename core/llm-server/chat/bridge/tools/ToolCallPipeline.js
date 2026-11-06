@@ -3,9 +3,11 @@ const ActivateToolsCall = require('../groups/ActivateToolsCall');
 const AutoActivation = require('../groups/AutoActivation');
 const CallMarkers = require('../parsing/CallMarkers');
 const CallRefusalText = require('./CallRefusalText');
+const VaultPlaceholders = require('../../../../vault/VaultPlaceholders');
 
 class ToolCallPipeline {
-  constructor({ toolSet, loopMonitor, health, approval, dispatch }) {
+  constructor({ toolSet, loopMonitor, health, approval, dispatch, vaultCaller = { external: true } }) {
+    this._vaultCaller = vaultCaller;
     this._toolSet = toolSet;
     this._loopMonitor = loopMonitor;
     this._health = health;
@@ -40,7 +42,9 @@ class ToolCallPipeline {
   }
 
   async _run(name, params, browserService) {
-    const raw = await this._dispatch.dispatch(name, params, browserService);
+    const resolved = VaultPlaceholders.resolveFor(name, params, this._vaultCaller);
+    if (resolved.error) return { success: false, error: resolved.error };
+    const raw = await this._dispatch.dispatch(name, resolved.params, browserService);
     const result = this._toolSet.requiredArgs.withSoftMissingNote(raw, name, params);
     this._admitNewTools(result);
     return result;

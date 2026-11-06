@@ -4,6 +4,7 @@ const ChromeIdentity = require('../../core/browser/ChromeIdentity');
 const UnhandledRejectionTap = require('./UnhandledRejectionTap');
 const ExtensionLoadWarnings = require('../../core/chrome-extensions/ExtensionLoadWarnings');
 const LaunchUrls = require('./LaunchUrls');
+const NewTabPage = require('../../core/browser/newtab/NewTabPage');
 
 class ProcessSetup {
   static SWITCHES = [['enable-features', 'UseSkiaRenderer'], ['force-color-profile', 'srgb'], ['disable-features', 'CalculateNativeWinOcclusion']];
@@ -24,6 +25,7 @@ class ProcessSetup {
     UnhandledRejectionTap.install(this._ctx.proc, this._log);
     ExtensionLoadWarnings.install(this._ctx.proc);
     this._ctx.app.userAgentFallback = ChromeIdentity.USER_AGENT;
+    this._registerSchemes();
     this._appendSwitches();
     return true;
   }
@@ -47,7 +49,21 @@ class ProcessSetup {
       this._focusExistingWindow();
       launchUrls.open(LaunchUrls.fromArgv(argv));
     });
+    app.on('open-url', (event, url) => {
+      event.preventDefault();
+      launchUrls.open(LaunchUrls.fromArgv([url]));
+    });
+    app.on('open-file', (event, file) => {
+      event.preventDefault();
+      launchUrls.open(LaunchUrls.fromArgv([file]));
+    });
     return true;
+  }
+
+  _registerSchemes() {
+    const protocol = this._ctx.electron && this._ctx.electron.protocol;
+    if (!protocol || typeof protocol.registerSchemesAsPrivileged !== 'function') return;
+    try { protocol.registerSchemesAsPrivileged([NewTabPage.privilegedScheme()]); } catch (err) { this._log.warn('[newtab] scheme registration failed:', err.message); }
   }
 
   _focusExistingWindow() {

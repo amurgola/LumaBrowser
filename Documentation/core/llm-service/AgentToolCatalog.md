@@ -37,3 +37,7 @@ Network Sharing allow-list, so they never drift.
   `artifacts` with labels and `surfaceWhenDisabled: true`.
 - Tools from `ext.user-tools` get the stable `user_created_tools` group, all
   `surfaceWhenDisabled`, so a disabled one stays visible unchecked.
+
+## Password manager
+
+The `vault` group (`vault_list`, `vault_fill`) ships on: it does nothing until the user allows an item, and every fill asks.

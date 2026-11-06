@@ -75,6 +75,30 @@ class UtilityManuals {
     '  validate_code for code you are NOT putting in an artifact.',
   ].join('\n');
 
+  static VAULT = [
+    'PASSWORD MANAGER TOOLS:',
+    '- vault_list: the saved logins and addresses the user allowed you to use.',
+    '  { "tool": "vault_list", "params": { "tabId": 3 } } (tabId optional: only',
+    "  logins for that tab's site). Returns refs, names, sites, masked usernames.",
+    '- vault_fill: fill one into the form on a tab.',
+    '  { "tool": "vault_fill", "params": { "ref": "<ref from vault_list>", "tabId": 3 } }',
+    '',
+    '  • Open the sign-in or address form first, then vault_list with its tabId,',
+    '    then vault_fill. Then submit the form yourself (click the sign-in button).',
+    '  • You never see passwords and must never ask the user to type one into the',
+    '    chat. If no allowed login fits, tell the user to sign in themselves or to',
+    '    allow a saved login in Settings > Passwords & autofill.',
+    '  • A login only fills on its own site. If the fill is refused for another',
+    '    site, the page is not the site the login belongs to: stop and tell the user.',
+    '  • The user confirms each fill. A locked vault means the user must unlock it',
+    '    in Settings first.',
+    '  • Two-factor: when the site asks for a code and the login lists',
+    '    hasTwoFactor, call vault_fill with "part": "otp" on the code page.',
+    '  • API keys: a key item gives a placeholder like {{vault:openai}}. Put it',
+    '    where the secret goes (a send_webhook header, a run_command environment',
+    '    or argument); it is swapped in as the tool runs. Never echo it back.',
+  ].join('\n');
+
   static PROGRAMMATIC = [
     'PROGRAMMATIC TOOL:',
     '- send_webhook: Deliver data to an automation endpoint by HTTP: the way to',

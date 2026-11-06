@@ -44,7 +44,9 @@ class ApprovalCheck {
   }
 
   _needsQuestion(name, assessment, mustAsk) {
-    if (!(this._policy === 'ask' || (mustAsk && this._interactive))) return false;
+    const family = ApprovalGate.familyOf(name);
+    const insist = !!(family && family.insist);
+    if (!(this._policy === 'ask' || ((mustAsk || insist) && this._interactive))) return false;
     if (!ApprovalGate.requiresApproval(name, this._toolSet.mutatingDeclared, assessment)) return false;
     return !this._toolSet.injected.sandboxed.has(name);
   }

@@ -1,4 +1,5 @@
 const Accelerators = require('../browser/Accelerators');
+const DoubleShift = require('../palette/DoubleShift');
 
 class OnDemandKeyboard {
   constructor({ tabViewManager, lookup, isExpanded, collapse }) {
@@ -9,6 +10,10 @@ class OnDemandKeyboard {
   }
 
   handle(event, input) {
+    if (input && DoubleShift.shared.feed('on-demand', input)) {
+      this._notifyShell(this._lookup.activeEntry() || { id: null }, 'open-palette');
+      return;
+    }
     if (!input || input.type !== 'keyDown') return;
     if (this._foldOnEscape(event, input)) return;
     this._forwardAccelerator(event, input);

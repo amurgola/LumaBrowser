@@ -1,5 +1,5 @@
 class AgentDeps {
-  static build({ browserService, artifactStore, artifactDataStore, artifactTaskStore, mcpAggregator, ragService, db }) {
+  static build({ browserService, artifactStore, artifactDataStore, artifactTaskStore, mcpAggregator, ragService, db, vaultService = null }) {
     return {
       browserService,
       artifactStore,
@@ -8,6 +8,7 @@ class AgentDeps {
       mcpAggregator,
       ragService,
       db,
+      vaultService,
     };
   }
 }

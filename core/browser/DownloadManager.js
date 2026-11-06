@@ -1,13 +1,17 @@
 const EventEmitter = require('events');
+const fs = require('fs');
 
 class DownloadManager extends EventEmitter {
   static HISTORY_LIMIT = 50;
   static DONE_STATES = { completed: 'done', cancelled: 'cancelled' };
+  static STORAGE_KEY = 'core.browser.downloads';
 
-  constructor() {
+  constructor({ db = null } = {}) {
     super();
+    this._db = db;
     this.nextId = 1;
     this.downloads = new Map();
+    this._load();
   }
 
   track(item) {
@@ -21,7 +25,7 @@ class DownloadManager extends EventEmitter {
   }
 
   list() {
-    return [...this.downloads.values()].map((r) => ({ ...r.info })).reverse();
+    return [...this.downloads.values()].map((r) => DownloadManager._withPresence(r.info)).reverse();
   }
 
   get(id) {
@@ -58,10 +62,13 @@ class DownloadManager extends EventEmitter {
     }
   }
 
-  clearFinished() {
+  clearFinished(sinceMs = null) {
     for (const [id, rec] of this.downloads) {
-      if (rec.info.state !== 'progress') this.downloads.delete(id);
+      if (rec.info.state === 'progress') continue;
+      if (sinceMs != null && (rec.info.startedAt || 0) < sinceMs) continue;
+      this.downloads.delete(id);
     }
+    this._save();
     return { success: true };
   }
 
@@ -94,6 +101,7 @@ class DownloadManager extends EventEmitter {
     info.finishedAt = Date.now();
     info.state = DownloadManager.DONE_STATES[state] || 'failed';
     this._releaseItem(info.id);
+    this._save();
     this._emit(info);
   }
 
@@ -119,6 +127,35 @@ class DownloadManager extends EventEmitter {
       if (rec.info.state !== 'progress') return id;
     }
     return null;
+  }
+
+  _load() {
+    if (!this._db) return;
+    let stored = [];
+    try { stored = this._db.get(DownloadManager.STORAGE_KEY, []) || []; } catch (_) { stored = []; }
+    if (!Array.isArray(stored)) return;
+    for (const raw of stored.slice(-DownloadManager.HISTORY_LIMIT)) {
+      if (!raw || !Number.isInteger(raw.id) || raw.state === 'progress') continue;
+      this.downloads.set(raw.id, { info: { ...raw, restored: true }, item: null });
+      this.nextId = Math.max(this.nextId, raw.id + 1);
+    }
+  }
+
+  _save() {
+    if (!this._db) return;
+    const finished = [...this.downloads.values()].map((r) => r.info).filter((info) => info.state !== 'progress')
+      .map((info) => { const { restored, missing, ...rest } = info; return rest; });
+    try { this._db.set(DownloadManager.STORAGE_KEY, finished); } catch (_) {}
+  }
+
+  static _withPresence(info) {
+    const out = { ...info };
+    if (out.state === 'done' && out.savePath) out.missing = !DownloadManager._exists(out.savePath);
+    return out;
+  }
+
+  static _exists(path) {
+    try { return fs.existsSync(path); } catch (_) { return true; }
   }
 
   static _refreshProgress(info, item) {

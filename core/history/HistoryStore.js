@@ -53,6 +53,11 @@ class HistoryStore {
     return scored.slice(0, HistoryStore._clampInt(limit, 1, HistoryStore.MAX_SUGGEST));
   }
 
+  topUrls({ since, scan = 300 } = {}) {
+    return this._topUrls.all({ since: since || '1970-01-01T00:00:00.000Z', scan: HistoryStore._clampInt(scan, 1, 1000) })
+      .map((row) => ({ url: row.url, title: row.title || null, visitCount: row.visit_count, lastVisitedAt: row.last_visited_at }));
+  }
+
   deleteById(id) {
     return this._deleteById.run(id).changes > 0;
   }
@@ -89,6 +94,20 @@ class HistoryStore {
       WHERE url LIKE ? OR title LIKE ?
       ORDER BY visited_at DESC, rowid DESC
       LIMIT ? OFFSET ?
+    `);
+    this._topUrls = this._db.prepare(`
+      SELECT
+        url,
+        COUNT(*)            AS visit_count,
+        MAX(visited_at)     AS last_visited_at,
+        (SELECT title FROM browser_history h2
+           WHERE h2.url = h1.url AND h2.title IS NOT NULL AND h2.title != ''
+           ORDER BY h2.visited_at DESC LIMIT 1) AS title
+      FROM browser_history h1
+      WHERE visited_at >= @since
+      GROUP BY url
+      ORDER BY visit_count DESC, last_visited_at DESC
+      LIMIT @scan
     `);
     this._suggest = this._db.prepare(`
       SELECT

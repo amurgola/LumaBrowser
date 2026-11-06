@@ -3,7 +3,7 @@ const SessionTabList = require('./SessionTabList');
 class SessionTabs {
   static ENABLED_KEY = 'core.app.restoreTabs';
   static SAVE_DELAY_MS = 500;
-  static EVENTS = ['tabCreated', 'tabClosed', 'tabHidden', 'tabMoved', 'tabSwitched', 'tabNavigated', 'tabTitleUpdated'];
+  static EVENTS = ['tabCreated', 'tabClosed', 'tabHidden', 'tabMoved', 'tabSwitched', 'tabNavigated', 'tabTitleUpdated', 'tabPinned'];
 
   constructor({ db, registry, emitter, setTimeoutFn = setTimeout, clearTimeoutFn = clearTimeout }) {
     this._db = db;
@@ -27,8 +27,13 @@ class SessionTabs {
     return session.tabs.length > 0 ? session : null;
   }
 
+  savedPinned() {
+    if (!this._list || this.isEnabled()) return [];
+    return this._list.read().tabs.filter((tab) => tab.pinned);
+  }
+
   schedule() {
-    if (this._sealed || this._timer || !this.isEnabled()) return;
+    if (this._sealed || this._timer || !this._db) return;
     this._timer = this._setTimeout(() => {
       this._timer = null;
       this.save();
@@ -38,7 +43,7 @@ class SessionTabs {
   save() {
     if (this._sealed || !this._list) return;
     try {
-      this._list.write(this.isEnabled() ? this._snapshot() : { tabs: [], activeIndex: -1 });
+      this._list.write(this._snapshot(this.isEnabled()));
     } catch (err) {
       console.warn('[TabViewManager] failed to save session tabs:', err && err.message);
     }
@@ -52,11 +57,12 @@ class SessionTabs {
     this._sealed = true;
   }
 
-  _snapshot() {
-    const entries = this._registry.inStrip().filter((entry) => entry.isRegularBrowsing() && !entry.keepAlive && entry.url);
+  _snapshot(everything) {
+    const entries = this._registry.inStrip()
+      .filter((entry) => entry.isRegularBrowsing() && !entry.keepAlive && !entry.isPrivate() && entry.url && (everything || entry.userPinned));
     return {
-      tabs: entries.map((entry) => ({ url: entry.url, title: entry.title })),
-      activeIndex: entries.findIndex((entry) => this._registry.isActive(entry.id)),
+      tabs: entries.map((entry) => ({ url: entry.url, title: entry.title, pinned: !!entry.userPinned })),
+      activeIndex: everything ? entries.findIndex((entry) => this._registry.isActive(entry.id)) : -1,
     };
   }
 }

@@ -31,6 +31,7 @@ class HistoryRecorder {
 
   _isUserBrowsing(entry) {
     if (!entry || entry.silent || entry.hidden) return false;
+    if (typeof entry.isPrivate === 'function' && entry.isPrivate()) return false;
     return !this._excludedKinds.some((kinds) => kinds.has(entry.kind));
   }
 }

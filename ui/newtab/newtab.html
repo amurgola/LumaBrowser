@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data: https: http:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New Tab</title>
+<link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+<main class="nt">
+  <form class="nt-search" id="ntSearch" role="search">
+    <svg class="nt-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="ntQuery" type="search" autocomplete="off" spellcheck="false" placeholder="Search the web" aria-label="Search the web">
+  </form>
+  <section class="nt-sites" id="ntSites" aria-label="Most visited sites"></section>
+</main>
+<script src="newtab.js"></script>
+</body>
+</html>

@@ -17,6 +17,7 @@ class TabTransfer {
     if (!entry) return TabRegistry.notFound(tabId);
     if (!this._hosts.liveWindowOf(toHostId)) return { success: false, error: `Window ${toHostId} not found` };
     if (!entry.isMovable()) return { success: false, error: 'This tab cannot move to another window' };
+    if (this._hosts.privatePartitionOf(toHostId)) return { success: false, error: 'A normal tab cannot move into a private window' };
     if (entry.hostId === toHostId) return this._reorderOnly(entry, index, activate);
     const from = entry.hostId;
     this._leave(entry);

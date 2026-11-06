@@ -1,6 +1,7 @@
 const ApprovalGate = require('../../ApprovalGate');
 const CallMarkers = require('../parsing/CallMarkers');
 const CallRefusalText = require('./CallRefusalText');
+const VaultRedaction = require('../../../../vault/VaultRedaction');
 
 class TruncationGuard {
   constructor({ pipeline, parser, toolSet, router }) {
@@ -21,7 +22,7 @@ class TruncationGuard {
     }
     const release = this._holdIdle();
     try {
-      const res = await this._pipeline.execute(name, params, browserService);
+      const res = VaultRedaction.apply(await this._pipeline.execute(name, params, browserService));
       return repaired ? CallRefusalText.withTruncationWarning(res) : res;
     } finally {
       release();

@@ -24,7 +24,9 @@ Escape (before the chat's own Escape) steps back. Closing leaves theater.
   its stored language (else the title's extension); HTML as the split view (the
   served URL previews, the source becomes editable once loaded); svg and
   markdown from the served URL with a cache-busting query. Late answers for an
-  artifact no longer shown are dropped.
+  artifact no longer shown are dropped. Each open is recorded among the search
+  palette's recent places (`api.palette.record`, keyed by the chain's root id,
+  with the conversation title as subtitle; best effort).
 - `stream(partial)`: code into the editor, HTML into editor and preview (read
   only while streaming), anything else into the frame (svg rendered, others as
   escaped text).

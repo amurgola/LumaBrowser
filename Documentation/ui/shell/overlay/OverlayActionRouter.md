@@ -2,7 +2,7 @@
 
 `ui/shell/overlay/OverlayActionRouter.js`
 
-Routes overlay clicks and hovers to the permission prompt, the notification log or the open popup (suggestions, folder, context/gear menu, downloads list).
+Routes overlay clicks and hovers to the permission prompt, the save-password bubble (`layer: 'vault'`), the notification log or the open popup (suggestions, folder, context/gear menu, downloads list).
 
 ## Methods
 

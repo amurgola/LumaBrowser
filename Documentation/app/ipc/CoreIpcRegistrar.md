@@ -18,7 +18,7 @@ Registers every core IPC controller once, at boot. Wiring only.
      stores, runners and emitters, getHookBaseUrls, image, music, dashboard,
      liveApi) plus `docsKnowledgeBase` (the shipped documentation index); its
      router is `global.__lumaChatRouter`;
-  4. DashboardIpcHandlers (with `getExtensionManager` for extension widgets), RagIpcHandlers, BrowserDataIpcHandlers;
+  4. DashboardIpcHandlers (with `getExtensionManager` for extension widgets), RagIpcHandlers, BrowserDataIpcHandlers, [VaultIpcHandlers](../../core/vault/VaultIpcHandlers.md);
   5. `ImageIpcHandlers.register`, `VideoIpcHandlers.register`,
      `MusicIpcHandlers.register` (routers published `__lumaImageRouter`,
      `__lumaVideoRouter`, `__lumaMusicRouter`), WhisperIpcHandlers,
@@ -32,5 +32,10 @@ Registers every core IPC controller once, at boot. Wiring only.
   9. [ShellIpcHandlers](../../core/shell/ShellIpcHandlers.md) with
      `identity: machineIdentity` and `waitForExtensions` (starts the deferred
      services when setup is complete);
-  10. [DebugIpc](../debug/DebugIpc.md) when given.
+  10. the search palette: a [PaletteService](../../core/palette/PaletteService.md)
+     (settings db, tab view manager, LLM service, chat and artifact stores,
+     extension list, documentation index, `global.__lumaChatRouter`) published as
+     `__lumaPalette` and started, then
+     [PaletteIpcHandlers](../../core/palette/PaletteIpcHandlers.md);
+  11. [DebugIpc](../debug/DebugIpc.md) when given.
 - `CoreIpcRegistrar.applyConsent(consent, pulseService)`.

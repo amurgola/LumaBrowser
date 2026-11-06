@@ -34,6 +34,7 @@ class PersistedTabs {
     const entry = this._registry.get(tabId);
     if (!entry) return TabRegistry.notFound(tabId);
     if (!entry.isRegularBrowsing()) return { success: false, error: 'Only regular browsing tabs can be persisted' };
+    if (entry.isPrivate() && persist) return { success: false, error: 'A private tab cannot be persisted' };
     this._applyPersistence(entry, !!persist);
     if (!entry.keepAlive && entry.hidden) return this._destroyTab(tabId);
     this._channel.broadcast(entry);

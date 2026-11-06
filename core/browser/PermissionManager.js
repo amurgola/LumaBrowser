@@ -59,6 +59,7 @@ class PermissionManager {
   }
 
   check(wc, permission, requestingOrigin, details) {
+    if (permission === PermissionKinds.NOTIFICATIONS) return this._checkNotifications(wc, requestingOrigin, details);
     if (permission !== 'media') return true;
     const origin = PermissionKinds.originOf(requestingOrigin) || PermissionKinds.originOf(this._urlOf(wc, details));
     if (origin === PermissionKinds.APP_ORIGIN) return true;
@@ -66,6 +67,15 @@ class PermissionManager {
     const kinds = PermissionKinds.kindsOfCheck(details && details.mediaType);
     const tab = this._tabOf(wc);
     return kinds.every((k) => this._isAllowed(tab, origin, k) === true);
+  }
+
+  _checkNotifications(wc, requestingOrigin, details) {
+    const url = this._urlOf(wc, details);
+    if (PermissionKinds.isExtensionUrl(requestingOrigin) || PermissionKinds.isExtensionUrl(url)) return true;
+    const origin = PermissionKinds.originOf(requestingOrigin) || PermissionKinds.originOf(url);
+    if (origin === PermissionKinds.APP_ORIGIN) return true;
+    if (!origin) return false;
+    return this._isAllowed(this._tabOf(wc), origin, PermissionKinds.NOTIFICATIONS) === true;
   }
 
   decideMedia(wc, origin, kinds) {
@@ -123,16 +133,19 @@ class PermissionManager {
   }
 
   _readRequest(wc, permission, details) {
+    const url = this._urlOf(wc, details);
     return {
       permission,
-      origin: PermissionKinds.originOf(this._urlOf(wc, details)),
+      extension: PermissionKinds.isExtensionUrl(url),
+      origin: PermissionKinds.originOf(url),
       kinds: PermissionKinds.kindsOf(permission, details),
     };
   }
 
-  static _immediateVerdict({ permission, origin, kinds }) {
-    if (permission === 'notifications') return { granted: true };
+  static _immediateVerdict({ permission, origin, kinds, extension }) {
+    if (permission === PermissionKinds.NOTIFICATIONS && extension) return { granted: true, why: 'extension' };
     if (permission === 'clipboard-sanitized-write') return { granted: origin === PermissionKinds.APP_ORIGIN };
+    if (permission === 'fullscreen') return { granted: true, why: 'fullscreen' };
     if (!kinds) return { granted: false, why: 'unsupported' };
     if (origin === PermissionKinds.APP_ORIGIN) return { granted: true, why: 'app ui' };
     if (!origin) return { granted: false, why: 'no origin' };
@@ -157,6 +170,7 @@ class PermissionManager {
     if (remembered === 'allow') return true;
     if (remembered === 'block') return false;
     if (tab && this._hasOnceGrant(tab.id, origin, kind)) return true;
+    if (kind === PermissionKinds.NOTIFICATIONS && tab && (tab.keepAlive || tab.internal)) return true;
     return null;
   }
 

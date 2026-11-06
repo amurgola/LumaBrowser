@@ -42,6 +42,7 @@ export default class TabEventSync {
     d.strip.setActive(id);
     d.store.activeTabId = id;
     d.prompts.render();
+    if (d.vaultPrompt) d.vaultPrompt.render();
     const entry = d.store.get(id);
     if (entry) this._showSwitchedTab(entry, id);
     d.autocomplete.hide();
@@ -94,9 +95,18 @@ export default class TabEventSync {
     if (!state.silent && !state.hidden) strip.ensureElement(entry, state);
     store.set(state.id, entry);
     strip.updateDensity();
+    this._syncOrderIfPlaced(state);
     this._emit('tabCreated', state.id);
     persistedMenu.refreshButton();
     return entry;
+  }
+
+  _syncOrderIfPlaced(state) {
+    const api = window.tabAPI;
+    if (state.silent || state.hidden || !Number.isInteger(state.index) || !api || typeof api.getOrder !== 'function') return;
+    Promise.resolve(api.getOrder()).then((tabs) => {
+      if (Array.isArray(tabs) && tabs.length && tabs[tabs.length - 1].id !== state.id) this.onMoved({ order: tabs.map((t) => t.id) });
+    }).catch(() => {});
   }
 
   _applyActiveState(state, entry) {
@@ -107,6 +117,11 @@ export default class TabEventSync {
     d.nav.updateReloadButton();
     d.chromeKind.apply(state.kind || (entry && entry.kind) || 'user');
     d.star.refresh(state.url);
+    if (d.popupBadge) d.popupBadge.update(entry || state);
+    if (d.vaultKey && (!entry || entry._vaultUrl !== state.url)) {
+      if (entry) entry._vaultUrl = state.url;
+      d.vaultKey.update(entry || state);
+    }
     this._emit('tabNavigated', state.id, state.url);
     this._emit('urlChanged', state.id, state.url);
   }
@@ -118,6 +133,8 @@ export default class TabEventSync {
     d.nav.updateReloadButton();
     d.chromeKind.apply(entry.kind || 'user');
     d.star.refresh(entry.url);
+    if (d.popupBadge) d.popupBadge.update(entry);
+    if (d.vaultKey) { entry._vaultUrl = entry.url; d.vaultKey.update(entry); }
     if (entry.tabElement && typeof entry.tabElement.scrollIntoView === 'function') {
       entry.tabElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     }

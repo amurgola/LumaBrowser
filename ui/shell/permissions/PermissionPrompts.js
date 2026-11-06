@@ -49,11 +49,15 @@ export default class PermissionPrompts {
     return `${PermissionPrompts.STYLE}<div class="bd-context-menu bd-perm">`
       + `<div class="bd-perm-title">${esc(p.host || p.origin)} wants to</div>`
       + `<div class="bd-perm-what">${esc(p.what || 'use your camera and microphone')}</div>`
-      + '<div class="bd-perm-actions">'
-      + `<button class="bd-perm-primary" data-bd-action="perm-once" data-bd-id="${id}">Allow once</button>`
-      + `<button data-bd-action="perm-always" data-bd-id="${id}">Always allow</button>`
-      + `<button data-bd-action="perm-block" data-bd-id="${id}">Block</button>`
-      + '</div></div>';
+      + `<div class="bd-perm-actions">${PermissionPrompts._buttons(p, id)}</div></div>`;
+  }
+
+  static _buttons(p, id) {
+    const button = (action, label, primary) => `<button${primary ? ' class="bd-perm-primary"' : ''} data-bd-action="${action}" data-bd-id="${id}">${label}</button>`;
+    if (Array.isArray(p.kinds) && p.kinds.includes('notifications')) {
+      return button('perm-always', 'Allow', true) + button('perm-block', 'Block');
+    }
+    return button('perm-once', 'Allow once', true) + button('perm-always', 'Always allow') + button('perm-block', 'Block');
   }
 
   handleAction(payload) {

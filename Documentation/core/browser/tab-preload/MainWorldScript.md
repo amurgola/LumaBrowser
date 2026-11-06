@@ -12,10 +12,18 @@ Builds the page script the tab preload runs in the page's MAIN world: the window
   (`window.__lumaMainWorldPatched`), wraps `window.Notification` in a subclass
   whose constructor reports `{ title, body, icon, badge, tag,
   requireInteraction, silent, data, source: location.hostname, url:
-  location.href }`, keeps `permission` and `requestPermission` native, wraps
+  location.href }` only while the native permission is granted, wraps
   `ServiceWorkerRegistration.prototype.showNotification` (when the page has
-  it) to report the same payload before calling the native method, and
-  reports service-worker `{ type: 'notification' }` messages the same way.
+  it) to report the same payload (also only when granted) before calling the
+  native method, and reports service-worker `{ type: 'notification' }`
+  messages the same way.
+- Permission state: Electron only knows granted or denied, so a site with no
+  answer would read as denied and never ask. `Notification.permission`
+  returns `'granted'`, else `'default'` until a `requestPermission()` from
+  this document comes back denied (then `'denied'`). `requestPermission`
+  goes to the native one (which reaches PermissionManager's prompt) and also
+  calls the legacy callback. `navigator.permissions.query({ name:
+  'notifications' })` reports `'prompt'` in the same `'default'` case.
 - `MainWorldScript.NOTIFY_KEY` = `'__lumaNotificationIntercept'`, the message marker.
 
 ## Why the main world

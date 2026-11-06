@@ -23,6 +23,18 @@ import NavButtons from '../nav/NavButtons.js';
 import SessionHistoryMenu from '../nav/SessionHistoryMenu.js';
 import ChromeKind from '../nav/ChromeKind.js';
 import UrlSecurityBadge from '../nav/UrlSecurityBadge.js';
+import PopupBlockedBadge from '../nav/PopupBlockedBadge.js';
+import SiteInfoMenu from '../nav/SiteInfoMenu.js';
+import FullscreenMode from '../window/FullscreenMode.js';
+import VaultSavePrompt from '../vault/VaultSavePrompt.js';
+import VaultFieldMenu from '../vault/VaultFieldMenu.js';
+import VaultKeyBadge from '../vault/VaultKeyBadge.js';
+import PasswordsPanel from '../settings/passwords/PasswordsPanel.js';
+import AddressesPanel from '../settings/passwords/AddressesPanel.js';
+import VaultSecurityPanel from '../settings/passwords/VaultSecurityPanel.js';
+import KeysPanel from '../settings/passwords/KeysPanel.js';
+import DefaultBrowserRow from '../settings/general/DefaultBrowserRow.js';
+import ClearBrowsingData from '../settings/general/ClearBrowsingData.js';
 import ChromeExtensionButtons from '../nav/ChromeExtensionButtons.js';
 import AddressBar from '../omnibox/AddressBar.js';
 import SearchEngineChoice from '../omnibox/SearchEngineChoice.js';
@@ -48,6 +60,8 @@ import FindBar from '../find/FindBar.js';
 import Downloads from '../downloads/Downloads.js';
 import SettingsFeedback from '../settings/SettingsFeedback.js';
 import SettingsModal from '../settings/SettingsModal.js';
+import SettingsReveal from '../settings/SettingsReveal.js';
+import ShellPalette from '../palette/ShellPalette.js';
 import SettingsMenu from '../settings/SettingsMenu.js';
 import BrowsingDataCleaner from '../settings/BrowsingDataCleaner.js';
 import BrowserDataSettings from '../settings/BrowserDataSettings.js';
@@ -114,8 +128,17 @@ export default class ShellApp {
     this.nav = new NavButtons({ store, historyMenu: this.historyMenu });
     this.tabMenu = new TabContextMenu({ store, strip: this.strip, tabActions, contributors: this.contributors, popupMenu, host });
     this.persistedMenu = new PersistedTabsMenu({ store, popupMenu });
-    this.autocomplete = new UrlAutocomplete({ addressBar: this.addressBar, store, host, engine: this.engine, favicons: this.favicons, tabActions });
+    this.autocomplete = new UrlAutocomplete({
+      addressBar: this.addressBar, store, host, engine: this.engine, favicons: this.favicons, tabActions,
+      bookmarks: () => (this.tree ? this.tree.nodes : []),
+    });
     this.prompts = new PermissionPrompts({ store, addressBar: this.addressBar });
+    this.popupBadge = new PopupBlockedBadge({ store, popupMenu });
+    this.siteInfo = new SiteInfoMenu({ store, popupMenu, openSettings: () => this.settings.open('security') });
+    const openPasswords = () => this.settings.open('passwords');
+    this.vaultKey = new VaultKeyBadge({ store, popupMenu, openPasswords });
+    this.vaultPrompt = new VaultSavePrompt({ store, addressBar: this.addressBar, onAnswered: () => this.vaultKey.update(store.active()) });
+    this.vaultFields = new VaultFieldMenu({ store, popupMenu, host, bounds: this.bounds, openPasswords });
     this.downloads = new Downloads({ host, log: this.log });
   }
 
@@ -195,19 +218,22 @@ export default class ShellApp {
     const actions = new AcceleratorActions({
       store: this.store, strip: this.strip, tabActions: this.tabActions, findBar: this.findBar, host: this.host,
       addressBar: this.addressBar, star: this.star, historyModal: this.historyModal, bookmarkManager: this.bookmarkManager,
-      downloads: this.downloads, debugTools: this.debugTools,
+      downloads: this.downloads, debugTools: this.debugTools, settings: this.settings,
     });
+    const reveal = new SettingsReveal({ settings: this.settings, getSlotManager: () => this.slotManager });
+    this.palette = new ShellPalette({ host: this.host, reveal, actions, store: this.store, feedback: this.feedback });
+    this.palette.install();
     return new ChromeKeyboard({
       actions, store: this.store, tabActions: this.tabActions, addressBar: this.addressBar, host: this.host, settings: this.settings,
       popupMenu: this.popupMenu, debugTools: this.debugTools, historyModal: this.historyModal,
-      bookmarkManager: this.bookmarkManager, editBar: this.editBar,
+      bookmarkManager: this.bookmarkManager, editBar: this.editBar, palette: this.palette,
     });
   }
 
   _tabEvents() {
     return new TabEventSync({
       store: this.store, strip: this.strip, addressBar: this.addressBar, nav: this.nav, chromeKind: this.chromeKind,
-      star: this.star, favicons: this.favicons, closedTabs: this.closedTabs, persistedMenu: this.persistedMenu,
+      star: this.star, popupBadge: this.popupBadge, vaultKey: this.vaultKey, vaultPrompt: this.vaultPrompt, favicons: this.favicons, closedTabs: this.closedTabs, persistedMenu: this.persistedMenu,
       prompts: this.prompts, autocomplete: this.autocomplete, findBar: this.findBar, editBar: this.editBar,
       host: this.host, bounds: this.bounds, browserRenderer: this.browserRenderer,
     });
@@ -222,6 +248,13 @@ export default class ShellApp {
     if (!general.install()) return;
     new ApiSecurityPanel({ feedback }).install();
     new SitePermissionsPanel().install();
+    const vaultSecurity = new VaultSecurityPanel({ feedback });
+    vaultSecurity.install();
+    new PasswordsPanel({ feedback, security: vaultSecurity }).install();
+    new AddressesPanel({ security: vaultSecurity }).install();
+    new KeysPanel({ feedback, security: vaultSecurity }).install();
+    new DefaultBrowserRow({ feedback }).install();
+    new ClearBrowsingData({ feedback, historyModal: this.historyModal }).install();
     new NetworkSharingPanel({ feedback, renderProviders: () => this.providers.render() }).install();
     new LocalApiPanel({ feedback }).install();
     new HarnessConnectionsPanel({ feedback }).install();
@@ -229,6 +262,12 @@ export default class ShellApp {
 
   _installBrowserData() {
     this.star.install();
+    this.popupBadge.install();
+    this.siteInfo.install();
+    new FullscreenMode({ host: this.host }).install();
+    this.vaultKey.install();
+    this.vaultPrompt.install();
+    this.vaultFields.install();
     this.chromeExtButtons.install();
     this.autocomplete.install();
     UrlSecurityBadge.update('');
@@ -271,7 +310,7 @@ export default class ShellApp {
 
   _installOverlay() {
     const router = new OverlayActionRouter({
-      host: this.host, popupMenu: this.popupMenu, prompts: this.prompts, log: this.log,
+      host: this.host, popupMenu: this.popupMenu, prompts: this.prompts, vaultPrompt: this.vaultPrompt, log: this.log,
       autocomplete: this.autocomplete, folderMenu: this.folderMenu, downloads: this.downloads,
     });
     this.popupMenu.bindChooser((payload) => router.handleAction(payload));
@@ -280,6 +319,7 @@ export default class ShellApp {
       onResize: () => {
         if (this.log.visible) this.log.render();
         if (this.prompts.size) this.prompts.render();
+        if (this.vaultPrompt.size) this.vaultPrompt.render();
       },
     });
   }

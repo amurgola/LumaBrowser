@@ -33,3 +33,9 @@ and `persist:main` sessions, and `_onSessionCreated` attaches it to every later
 session before extensions load into it. The preload has to be registered well
 ahead of the first `loadExtension`: registered just before it, the worker that
 load starts misses it.
+
+## New tab page
+
+`luma://newtab` is served on persist:main and every session created later (`NewTabPage.attach` with `net.fetch`).
+
+In-memory sessions (private windows, `isPersistent()` false) get no Chrome extensions or extension worker bridge.

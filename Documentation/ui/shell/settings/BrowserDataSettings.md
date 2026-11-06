@@ -12,3 +12,7 @@ Start page, search engine, Luma On Demand, bookmarks-bar visibility (migrating t
 ## Globals
 
 Reads `window.browserSettingsAPI`, `window.ipcBridge`, `localStorage`.
+
+## New tabs open
+
+The `gsNewTabMode` select (`core.newtab.getMode` / `setMode`). The URL new tabs open (`core.newtab.url`) feeds `tabActions.startPageUrl` and is re-read after the start page or the mode changes.

@@ -9,7 +9,9 @@ Switches the Setup surface's sub-views (LLM, Image, Music, Advanced and extensio
 - `new SetupNavigator({ doc?, openers?, extensionTabs? })`: `openers` maps a view (`image`, `music`, `advanced`) to its lazy init; `extensionTabs.show(id)` runs for `ext:<id>`.
 - `start()`: delegated `#pageNav` click handling, and the header follows the initially active button.
 - `go(view)`: a bare id that is not a built-in view becomes `ext:<id>`; returns false and parks the view when its button is missing. `flushPending()` replays it; `current()` is the active view.
-- `switchTo(name)`, `updateHeader(name)`. The `.grid` holds the LLM, Image and Music cards; its `data-view-pane` follows the view so CSS hides other card groups. Extension views title themselves with their nav label under the "Extension" eyebrow.
+- `switchTo(name)`, `updateHeader(name)`. `switchTo` also records the page among
+  the search palette's recent places (`llmDiagAPI.palette.record`, titled from
+  the header or the nav button; best effort). The `.grid` holds the LLM, Image and Music cards; its `data-view-pane` follows the view so CSS hides other card groups. Extension views title themselves with their nav label under the "Extension" eyebrow.
 
 ## Globals
 

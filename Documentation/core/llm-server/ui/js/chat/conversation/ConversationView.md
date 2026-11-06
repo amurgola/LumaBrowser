@@ -13,6 +13,8 @@ hooks. Also New chat.
 
 ## Methods
 
-- `open(id)`, `render(title)`.
+- `open(id)`, `render(title)`. `open` also records the conversation among the
+  search palette's recent places (`api.palette.record`, best effort; hidden
+  sub-conversations are skipped).
 - `newChat()`: ignored while streaming; tells the outgoing mode it is left,
   resets to a plain agentic chat, unfolds the New-chat mode tray, shows the landing.

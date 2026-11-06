@@ -3,6 +3,8 @@ const HistoryStore = require('./HistoryStore');
 class HistoryService {
   static DEFAULT_DEDUPE_WINDOW_MS = 30000;
 
+  static TOP_SITES_DAYS = 90;
+
   constructor(settingsDb, { dedupeWindowMs = HistoryService.DEFAULT_DEDUPE_WINDOW_MS } = {}) {
     this._store = new HistoryStore(settingsDb);
     this._dedupeWindowMs = dedupeWindowMs;
@@ -26,6 +28,25 @@ class HistoryService {
 
   suggest(query, opts = {}) {
     return this._store.suggest(query, opts);
+  }
+
+  topSites({ limit = 8, hiddenHosts = [], now = Date.now() } = {}) {
+    const since = new Date(now - HistoryService.TOP_SITES_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const hidden = new Set(hiddenHosts);
+    const byHost = new Map();
+    for (const row of this._store.topUrls({ since })) {
+      let host;
+      try { host = new URL(row.url).hostname.replace(/^www\./, ''); } catch (_) { continue; }
+      if (!host || hidden.has(host)) continue;
+      const site = byHost.get(host);
+      if (!site) byHost.set(host, { url: row.url, title: row.title, host, visits: row.visitCount, best: row.visitCount });
+      else {
+        site.visits += row.visitCount;
+        if (row.visitCount > site.best) Object.assign(site, { url: row.url, title: row.title || site.title, best: row.visitCount });
+      }
+    }
+    return [...byHost.values()].sort((a, b) => b.visits - a.visits).slice(0, limit)
+      .map(({ url, title, host, visits }) => ({ url, title, host, visits }));
   }
 
   deleteEntry(id) {

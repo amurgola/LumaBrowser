@@ -3,11 +3,15 @@ const WindowKeys = require('./WindowKeys');
 const WindowStateRelay = require('./WindowStateRelay');
 const ChromeOverlay = require('../../core/browser/ChromeOverlay');
 const TabHosts = require('../../core/browser/tab-view/TabHosts');
+const TabKinds = require('../../core/browser/tab-view/TabKinds');
+const NewTabPage = require('../../core/browser/newtab/NewTabPage');
 
 class TabWindows {
   static SHELL_FILE = 'index.html';
   static DETACHED_QUERY = { window: 'detached' };
-  static CHANNELS = ['tab-window:drag-out', 'tab-window:drop-in', 'tab-window:open'];
+  static CHANNELS = ['tab-window:drag-out', 'tab-window:drop-in', 'tab-window:open', 'tab-window:open-private'];
+  static PRIVATE_QUERY = { window: 'detached', private: '1' };
+  static PRIVATE_SIZE = { width: 1200, height: 800 };
   static GRAB_OFFSET = { x: 120, y: 18 };
   static CASCADE = 32;
   static TEAR_OFF_DISTANCE = 40;
@@ -17,6 +21,7 @@ class TabWindows {
     this._log = log;
     this._windows = new Map();
     this._onEmptied = (windowId) => this._closeEmptied(windowId);
+    this._privateSeq = 0;
   }
 
   install(mainWindow, ipcMain = this._ctx.electron.ipcMain) {
@@ -75,6 +80,33 @@ class TabWindows {
     return true;
   }
 
+  openPrivate(sender) {
+    const tvm = this._tvm();
+    const fromWin = tvm.getWindow(tvm.windowIdForSender(sender)) || tvm.getWindow(TabHosts.MAIN_ID);
+    const at = fromWin ? fromWin.getBounds() : { x: 80, y: 80 };
+    const size = fromWin ? TabWindows._sizeOf(fromWin) : TabWindows.PRIVATE_SIZE;
+    const partition = `${TabKinds.PRIVATE_PREFIX}${Date.now()}-${++this._privateSeq}`;
+    const bounds = { ...size, x: at.x + TabWindows.CASCADE, y: at.y + TabWindows.CASCADE };
+    const { win, windowId } = this._create(bounds, { privatePartition: partition });
+    win.on('page-title-updated', (e) => { e.preventDefault(); win.setTitle('LumaBrowser (Private)'); });
+    win.on('closed', () => this._forgetPrivate(partition));
+    win.webContents.once('did-finish-load', () => {
+      tvm.createTab(NewTabPage.resolve(this._ctx.services && this._ctx.services.db), { windowId, activate: true });
+      win.show();
+      win.focus();
+    });
+    win.webContents.on('did-finish-load', () => tvm.resyncWindow(windowId));
+    return { windowId, partition };
+  }
+
+  _forgetPrivate(partition) {
+    try {
+      const sess = this._ctx.electron.session.fromPartition(partition);
+      sess.clearStorageData().catch(() => {});
+      sess.clearCache().catch(() => {});
+    } catch (_) {}
+  }
+
   closeAll() {
     for (const { win } of [...this._windows.values()]) TabWindows._close(win);
   }
@@ -103,19 +135,20 @@ class TabWindows {
     handle('tab-window:drag-out', (e, tabId) => this.dragOut(e.sender, Number(tabId)));
     handle('tab-window:drop-in', (e, tabId, index) => this.dropIn(e.sender, Number(tabId), index));
     handle('tab-window:open', (e, tabId) => this.openFromMenu(e.sender, Number(tabId)));
+    handle('tab-window:open-private', (e) => this.openPrivate(e.sender));
   }
 
-  _create(bounds) {
+  _create(bounds, hostOptions = {}) {
     const { BrowserWindow } = this._ctx.electron;
     const options = MainWindowOptions.build({
       platform: this._ctx.proc.platform, iconPath: this._ctx.iconPath(), preloadPath: this._ctx.path('preload.js'),
     });
     const win = new BrowserWindow({ ...options, ...bounds, show: false });
-    const windowId = this._tvm().addWindow(win);
+    const windowId = this._tvm().addWindow(win, hostOptions);
     const overlay = new ChromeOverlay(win);
     this._windows.set(windowId, { win, overlay });
     this._wire(win, windowId, overlay);
-    win.loadFile(TabWindows.SHELL_FILE, { query: TabWindows.DETACHED_QUERY });
+    win.loadFile(TabWindows.SHELL_FILE, { query: hostOptions.privatePartition ? TabWindows.PRIVATE_QUERY : TabWindows.DETACHED_QUERY });
     return { win, windowId };
   }
 
