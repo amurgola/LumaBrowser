@@ -16,7 +16,8 @@ header cannot tell us. Read through [ModelFamilies](ModelFamilies.md).
   - `architectures` (lowercased `general.architecture` values), `namePattern`
   - `samplerDefaults` (body-key form, every key must be in `SAMPLER_CLI`)
   - `flags` (valueless CLI flags)
-  - optional `speculative { specType, draftNMax, label }`, `penaltyHostile`,
+  - optional `speculative { specType, draftNMax, label }` (where to download the
+    drafter is [DrafterCatalog](../models/DrafterCatalog.md)'s business), `penaltyHostile`,
     `mtpDraftNMax`, `nativeToolCalls`, `nativeToolCallsCapable`,
     `nativeToolExclude`, `kvQuantUnsafe`, `ngramSpec`
 
@@ -124,3 +125,13 @@ runtime from luma-b7 (patch 0011), where the GGUF conversion also lives.
   jinja path renders it faithfully and tools go through the text fence.
 - Not set: sampler defaults (none published), `--reasoning-preserve` (the
   template has no reasoning channel), KV quantisation, speculation.
+
+## Qwen3.8 DFlash2 drafter (2026-11-08)
+
+`qwen38` carries `speculative { specType: draft-dflash, draftNMax: 7, label: DFlash2 }`;
+the drafter catalog names `z-lab/Qwen3.8-27B-DFlash2-GGUF` as its source. Measured on an RTX 5090 with the unsloth
+UD-Q6_K_M weights at temperature 0: 140 tok/s aggregate with the DFlash2 Q8_0 drafter,
+110 with the grafted MTP head (the previous default), 58 plain; at 128k context with
+q8_0 KV the drafter still led or matched MTP at every depth. The Tencent DSpine
+drafter (block 16) was measured too and lost to DFlash2 on this card, so it is not
+listed. The draft length follows the drafter header block size when the file carries one.

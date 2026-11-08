@@ -18,7 +18,7 @@ class FullOffloadCost {
     return kvOnHost ? 0 : KvCacheSizer.total(gguf, contextSize, cacheTypeK, cacheTypeV, swaFull);
   }
 
-  static _draftBranch({ modelBytes, gguf, contextSize, cacheTypeK, cacheTypeV, mtpEnabled, mtpHeadBytes = 0, drafterBytes = 0, draftCacheType = null }) {
+  static _draftBranch({ modelBytes, gguf, contextSize, cacheTypeK, cacheTypeV, mtpEnabled, mtpHeadBytes = 0, drafterBytes = 0, draftN = 0, draftCacheType = null }) {
     if (!(mtpEnabled || drafterBytes > 0)) return 0;
     const kvPerLayer = KvCacheSizer.perLayer(gguf, contextSize, cacheTypeK, cacheTypeV);
     const draftKvPerLayer = draftCacheType
@@ -26,7 +26,15 @@ class FullOffloadCost {
       : undefined;
     return DraftBranchCost.bytes({
       modelBytes, kvPerLayer, draftKvPerLayer, drafterBytes, mtp: mtpEnabled, mtpHeadBytes,
+      draftN, recurrentLayers: FullOffloadCost.recurrentLayers(gguf),
     });
+  }
+
+  static recurrentLayers(gguf) {
+    const blocks = Number(gguf && gguf.blockCount) || 0;
+    const attn = gguf && gguf.attnKvLayerCount !== null && gguf.attnKvLayerCount !== undefined ? Number(gguf.attnKvLayerCount) : NaN;
+    if (!blocks || !Number.isFinite(attn) || attn >= blocks) return 0;
+    return blocks - attn;
   }
 }
 

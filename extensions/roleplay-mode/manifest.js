@@ -16,7 +16,7 @@ module.exports = {
     },
   },
 
-  chatUi: { file: './chat-ui.js', assets: ['./roleplay.css', './rp-lab.js', './shared.js'] },
+  chatUi: { file: './chat-ui.js', assets: ['./roleplay.css', './rp-lab.js', './shared.js', './timeline.js'] },
 
   settings: { label: 'Roleplay', tabId: 'roleplay-mode', htmlFile: './settings.html' },
 

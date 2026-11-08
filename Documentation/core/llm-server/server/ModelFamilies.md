@@ -14,8 +14,13 @@ the launch planner and the chat path.
 - `ModelFamilies.launchArgs(family, unsupported = new Set())` returns
   `{ args, skipped, profile }`: sampler flags plus plain flags, with anything in
   `unsupported` moved to `skipped`.
-- `ModelFamilies.speculativeArgs(family, { drafterPath, flagsSupported, gpuOffload, dialect = 'mainline' })`
+- `ModelFamilies.nameHaystack(model)` the text name detection runs on (stem, gguf
+  name, weight file names); public so the drafter catalog matches a target against it.
+- `ModelFamilies.speculativeArgs(family, { drafterPath, flagsSupported, gpuOffload, dialect = 'mainline', drafterBlockSize = null })`
   returns `{ args, specType, draftNMax, label }` for a family drafter, or `null`.
+  `draftNMax` is `draftNMaxFor(spec, drafterBlockSize)`: the drafter header
+  block size minus one when the scanner read one (DFlash2 8 gives 7, DSpine 16
+  gives 15), else the family default.
 - `ModelFamilies.mtpDraftNMax(family)` returns the family's grafted-MTP
   `--spec-draft-n-max`, or `null` for the planner default.
 - `ModelFamilies.penaltyHostile(family)`, `nativeToolCalls(family)`,

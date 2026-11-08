@@ -28,10 +28,14 @@ class SpeculationPlan {
 
   static _resolveFamilyDrafter(plan, files, flags, overrides) {
     plan.specDrafterOff = !!overrides.noSpecDrafter;
-    plan.dflashEnabled = !!files.drafterPath && flags.specDrafterFlags && !plan.specDrafterOff
-      && !!(ModelFamilies.speculativeArgs(files.family, {
+    const drafter = files.drafterPath && flags.specDrafterFlags && !plan.specDrafterOff
+      ? ModelFamilies.speculativeArgs(files.family, {
         drafterPath: files.drafterPath, flagsSupported: true, gpuOffload: false, dialect: flags.specDialect,
-      }));
+        drafterBlockSize: files.drafterBlockSize,
+      })
+      : null;
+    plan.dflashEnabled = !!drafter;
+    plan.specDraftN = drafter ? drafter.draftNMax : 0;
   }
 
   static _resolveMtp(plan, files, flags) {

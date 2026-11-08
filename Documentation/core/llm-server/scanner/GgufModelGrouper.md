@@ -49,3 +49,11 @@ at inference with no hint why, so now neither gets it and both record it. A
 detached MTP head (unsloth/Qwen3.8-27B-GGUF) pairs like a projector; a head is
 never loadable alone, unlike a drafter, so it never falls back to weights.
 Companions never pair across directories.
+
+## Drafter file references
+
+An attached drafter reference carries `architecture` and `blockSize` from its
+header (`_companionRef`), so `ModelFiles.drafterBlockSize` can size the draft
+without re-reading the file. Since 2026-11-08 a header-declared drafter (role
+`draft`, architecture `dflash`) pairs with a target of another architecture; the
+size ratio still applies.

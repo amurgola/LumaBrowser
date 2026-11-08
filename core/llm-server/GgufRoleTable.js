@@ -20,6 +20,8 @@ class GgufRoleTable {
     'modern-bert', 'neo-bert', 'distilbert', 'gte', 'bge', 'bge-m3', 'e5', 'eurobert', 'arctic-embed', 't5encoder',
   ]);
 
+  static DRAFTER_ARCHES = new Set(['dflash']);
+
   static GENERAL_TYPE_ROLES = Object.freeze({
     mmproj: 'mmproj', projector: 'mmproj', 'clip-vision': 'mmproj',
     embedding: 'embedding', embeddings: 'embedding',
@@ -41,6 +43,7 @@ class GgufRoleTable {
       || GgufRoleTable._typed(type)
       || GgufRoleTable._pooled(pooling, arch)
       || GgufRoleTable._encoder(arch)
+      || GgufRoleTable._drafter(arch)
       || GgufRoleTable._diffusion(arch)
       || GgufRoleTable._detachedMtp(facts.tensorScan);
     if (decided) return decided;
@@ -84,6 +87,12 @@ class GgufRoleTable {
     if (pooling === null || !Number.isFinite(pooling)) return null;
     const role = GgufRoleTable.POOLING_ROLES[pooling];
     return role ? { role, reason: `${arch || 'model'} pooling_type ${pooling}` } : null;
+  }
+
+  static _drafter(arch) {
+    return GgufRoleTable.DRAFTER_ARCHES.has(arch)
+      ? { role: GgufRoleTable.ROLES.DRAFT, reason: `architecture ${arch} is a speculative drafter` }
+      : null;
   }
 
   static _encoder(arch) {

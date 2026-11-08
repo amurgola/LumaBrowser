@@ -17,3 +17,8 @@ The published sampler and template flags cannot be read from a GGUF header. They
 are emitted after the hardware flags so they never change placement, and before
 the runtime's extras so a runtime override wins. `-ngld 99` needs `ngl`, which is
 why the drafter arguments are resolved after the offload decision.
+
+## Drafter block size
+
+`resolve` passes `files.drafterBlockSize` to `speculativeArgs`, so the emitted
+`--spec-draft-n-max` follows the drafter file (block minus one) over the family default.

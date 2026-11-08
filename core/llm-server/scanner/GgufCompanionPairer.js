@@ -47,7 +47,7 @@ class GgufCompanionPairer {
   static isDraftOf(small, big, hinted = false) {
     if (small === big) return false;
     if (!small.architecture || !big.architecture) return false;
-    if (String(small.architecture).toLowerCase() !== String(big.architecture).toLowerCase()) return false;
+    if (!hinted && String(small.architecture).toLowerCase() !== String(big.architecture).toLowerCase()) return false;
     const ratio = GgufCompanionPairer.sizeRatio(small, big);
     if (ratio === null) return false;
     return ratio <= (hinted ? GgufCompanionPairer.DRAFT_HINTED_MAX_RATIO : GgufCompanionPairer.DRAFT_MAX_RATIO);

@@ -23,3 +23,9 @@ Callers read the plan, not argv: the router compares `requestedContextSize`
 `mmprojPath` / `mmprojAvailable`; the queue gate mirrors `maxConcurrent`; the
 placement UI reads `layerSplit`, `moeSplit` and `perGpu`; the fit tester compares
 `headerEstimatedBytes` with `measuredVramBytes`. The API key itself is never in the plan.
+
+## Drafter choice
+
+The speculation part also carries `drafterChoiceKey` (from [ModelFiles](ModelFiles.md);
+the chat router restarts the server when the saved choice differs) and `specDraftNMax`
+(the drafter's tokens per step, null without a drafter).

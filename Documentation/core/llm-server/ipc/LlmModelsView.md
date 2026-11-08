@@ -11,8 +11,15 @@ The LLM Setup models view.
 - `view()` resolves `{ config, scan, descriptors }` for the configured folder.
 - `setModelsDir(dir)` saves the folder (blank resets it) and returns the same view.
 - `scan(dir)` a decorated scan of `dir`.
-- `decorate(scan)` sets `nameKey` and `displayName` (the service's resolver) on
-  every model; an unavailable scan is returned as is.
+- `decorate(scan)` sets `nameKey`, `displayName` (the service's resolver) and
+  `drafterOffer` ([DrafterCatalog.offerFor](../models/DrafterCatalog.md), null when
+  no drafter is published for the model) on every model; an unavailable scan is
+  returned as is.
+- `setDrafter({ key, choice })`: saves one model's drafter choice (`'auto'`, `'off'`,
+  `'mtp'` (refused on a model without an MTP head) or `{ path }`) and resolves `{ success: true, config, scan, descriptors }`. Refused
+  (`{ success: false, error }`) unless the key names a plain GGUF model of a fresh scan
+  and a path is a drafter of that same scan, so a renderer can only point a model at a
+  drafter file inside the models folder.
 - `storageInfo()` resolves `{ config, freeBytes, totalBytes }`.
 - `LlmModelsView.nameKeyOf(model)` the weights file stem (`ModelName.key`), or the
   scan name for a weights-less entry.

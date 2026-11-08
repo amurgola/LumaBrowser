@@ -30,9 +30,12 @@ are only the fallback and live elsewhere.
      means `diffusion`: an image or video GGUF the LLM list must never offer;
   6. a tensor scan holding only nextn blocks (`GgufTensorLayout.isDetachedMtpHead`)
      means a detached MTP head;
-  7. any other architecture is a `main` decoder.
+  7. architecture in `DRAFTER_ARCHES` (`dflash`, which DFlash, DFlash2 and
+     DSpine drafters all write) means `draft`: a speculative drafter is never
+     a chat model, whatever `general.type` says;
+  8. any other architecture is a `main` decoder.
 - `GgufRoleTable.isKnownRole(role)`, `GgufRoleTable.isDiffusionArch(arch)`.
-- `ROLES`, `PROJECTOR_ARCHES`, `ENCODER_ARCHES`, `DIFFUSION_ARCHES`,
+- `ROLES`, `PROJECTOR_ARCHES`, `ENCODER_ARCHES`, `DIFFUSION_ARCHES`, `DRAFTER_ARCHES`,
   `GENERAL_TYPE_ROLES`, `POOLING`, `POOLING_ROLES`, `CLIP_KEY`.
 
 ## Why one table

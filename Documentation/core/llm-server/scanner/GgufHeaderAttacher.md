@@ -16,7 +16,8 @@ Reads a GGUF model's header into `model.gguf` for the launch planner.
   guesses. On failure `model.gguf = { parsed: false, error }` (`unknown parse
   error` when there is none).
 - `GgufHeaderAttacher.factsOf(result)` `{ parsed: true, ...FIELDS }`.
-- `FIELDS` the copied header fields: identity (architecture, name, baseName,
+- `FIELDS` the copied header fields (`blockSize` included, so a lone drafter keeps its
+  draft block): identity (architecture, name, baseName,
   generalType), role (`role`, `roleSource`, `roleReason`, `poolingType`,
   `projectorType`), `parameterCount` / `parameterCountSource`, `hasChatTemplate` /
   `chatTemplateLength` / `chatTemplateTruncated` (the template text itself stays

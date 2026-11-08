@@ -32,6 +32,7 @@ class LlmHostApi extends PreloadSection {
       pickDirectory: (opts) => ipcRenderer.invoke('core.llmServer.pickDirectory', opts),
       getModelDisplayNames: () => ipcRenderer.invoke('core.llmServer.getModelDisplayNames'),
       setModelDisplayName: (key, name) => ipcRenderer.invoke('core.llmServer.setModelDisplayName', key, name),
+      setModelDrafter: (args) => ipcRenderer.invoke('core.llmServer.setModelDrafter', args || {}),
     };
   }
 

@@ -69,3 +69,10 @@ flat header summary the planner reads.
 - `attnScanError` is the walk's failure reason, else the coverage error from
   `GgufTensorLayout.derive`, else null, so a degraded scan is diagnosable from
   the header cache.
+
+## Drafter block size
+
+Since 2026-11-08 the summary keeps `blockSize` from `<arch>.block_size`: the draft
+block a DFlash-style drafter was trained at (DFlash2 8, DSpine 16), null on a chat
+model. The scanner copies it onto the paired drafter file reference and the launch
+planner sizes `--spec-draft-n-max` from it (block minus one anchor).

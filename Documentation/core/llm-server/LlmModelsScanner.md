@@ -12,11 +12,17 @@ and annotated with the parsed GGUF header. Parts live in `core/llm-server/scanne
 - `new LlmModelsScanner({ headerCache = defaultHeaderCache(), registry })`;
   `registry` is the [RuntimeCatalogRegistry](runtimes/RuntimeCatalogRegistry.md)
   for classification (default the shared one).
-- `scan(rootDir)` resolves `{ available: true, dir, models, truncated, skipped }`,
+- `useDrafterChoices(provider)`: `provider()` returns the user's drafter choices
+  ([LlmDrafterChoices](service/LlmDrafterChoices.md).all), read on every scan (a
+  throwing provider reads as none). [LLMServerService](LLMServerService.md) wires it
+  on `shared`.
+- `scan(rootDir)` resolves `{ available: true, dir, models, drafters, truncated, skipped }`,
   or `{ available: false, reason, models: [], dir }` for no directory ("No
   directory configured", `dir: null`), a missing one ("Directory does not
   exist: ...", `missing: true`), a file ("Not a directory: ...") or a stat
   error (its message). Models sort by `relativeDirectory`, then `name`.
+  `drafters` is the drafter library and the models carry the applied choice
+  ([DrafterChoiceApplier](scanner/DrafterChoiceApplier.md)).
   `truncated` is true when the walk hit 4000 entries. `skipped` is
   `{ diffusion: [paths], excludedDirs: [dirs] }`: image and video GGUFs whose
   header role is `diffusion` are dropped before grouping together with their

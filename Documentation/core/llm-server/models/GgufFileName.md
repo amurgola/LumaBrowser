@@ -21,7 +21,7 @@ model weights.
 - `GgufFileName.bitWidth(quant)` returns the first number in a quant, or `null`.
 - `GgufFileName.isGguf(path)`, `GgufFileName.basename(repoPath)`.
 - `GgufFileName.roleHint(repoPath)` returns what the name alone suggests:
-  `mmproj`, `mtp`, `draft` (`draft`, `dflash`, `eagle`, `medusa` tokens),
+  `mmproj`, `mtp`, `draft` (`draft`, `dflash`, `dflash2`, `dspine`, `eagle`, `medusa` tokens),
   `reranker`, `embedding` (`embed`, `bge`, `gte`, `e5`, `minilm`, ... tokens)
   or `null`. The scanner uses it only as the fallback when the GGUF header is
   unavailable or undecided, and as a secondary signal for drafts

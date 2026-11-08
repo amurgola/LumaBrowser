@@ -2,6 +2,7 @@ export default class StatusText {
   static PHASES = {
     'switching-model': 'Loading the selected model...',
     'starting-server': 'Starting the local model...',
+    'switching-drafter': 'Reloading the model with the new drafter...',
     'rendering-image': 'Generating the image...',
     'rendering-video': 'Rendering the video...',
     'loading-vision': 'Loading vision (image support)...',

@@ -368,6 +368,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/models/GgufFileName.md](core/llm-server/models/GgufFileName.md): reads quant, shard and companion type from GGUF file names; has `quantOf`, `split`, `shardIndex`, `isMtpHead`, `isMmproj`.
 - [core/llm-server/models/GgufVariantGrouper.md](core/llm-server/models/GgufVariantGrouper.md): turns a repo tree into one variant per quant; has `group`.
 - [core/llm-server/models/GgufCompanionPicker.md](core/llm-server/models/GgufCompanionPicker.md): picks the vision projector and MTP head to download; has `bestMmproj`, `bestMtp`.
+- [core/llm-server/models/DrafterCatalog.md](core/llm-server/models/DrafterCatalog.md): the recommended speculative drafter per model family (repo, quant, engines, measurements); has `entryFor`, `entryForDownload`, `pickFile`, `offerFor`, `forFamily`.
 - [core/llm-server/models/ModelCatalogRegistry.md](core/llm-server/models/ModelCatalogRegistry.md): add-on models contributed to LLM Setup by extensions; has `shared` plus registry methods.
 - [core/llm-server/models/MoeEstimator.md](core/llm-server/models/MoeEstimator.md): splits MoE weight bytes into expert, GPU-resident and host parts; has `estimateSplit`.
 - [core/llm-server/router/RouterPrompt.md](core/llm-server/router/RouterPrompt.md): prompt, grammar and parser for the tool-group router; has `buildRouterPrompt`, `parseRouterAnswer`.
@@ -680,6 +681,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/scanner/ShardScanMerger.md](core/llm-server/scanner/ShardScanMerger.md): merges split-model shard scans into one layout; has `merge`.
 - [core/llm-server/scanner/ModelDirWalker.md](core/llm-server/scanner/ModelDirWalker.md): capped folder walk collecting model candidates; has `walk`.
 - [core/llm-server/scanner/GgufModelGrouper.md](core/llm-server/scanner/GgufModelGrouper.md): groups GGUF files into models with shards, projectors and drafters, roles from the resolver; has `group`, `roleOf`.
+- [core/llm-server/scanner/DrafterChoiceApplier.md](core/llm-server/scanner/DrafterChoiceApplier.md): the last scan pass: lists the drafter library and applies each model's drafter choice over the folder pairing; has `apply`, `library`.
 - [core/llm-server/scanner/GgufRoleResolver.md](core/llm-server/scanner/GgufRoleResolver.md): per-file role before grouping, header first and file name as fallback; has `resolve`, `resolveOne`, `fromFilename`.
 - [core/llm-server/scanner/GgufCompanionPairer.md](core/llm-server/scanner/GgufCompanionPairer.md): pairs a projector, drafter or MTP head with one model family or none, with the draft size ratio; has `pair`, `families`, `isDraftOf`, `keysOf`.
 - [core/llm-server/scanner/MlxModelBuilder.md](core/llm-server/scanner/MlxModelBuilder.md): builds MLX model entries; has `build`, `readConfigFacts`.
@@ -843,6 +845,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/service/SettingsMapStore.md](core/llm-server/service/SettingsMapStore.md): base for one object map under one settings key; has `all`.
 - [core/llm-server/service/ModelTextOverrides.md](core/llm-server/service/ModelTextOverrides.md): base for per-model text overrides; has `get`, `set`.
 - [core/llm-server/service/LlmModelDisplayNames.md](core/llm-server/service/LlmModelDisplayNames.md): display-name overrides for local models; has `all`, `set`, `resolve`.
+- [core/llm-server/service/LlmDrafterChoices.md](core/llm-server/service/LlmDrafterChoices.md): the per-model speculative drafter choice (automatic, off, or a chosen file); has `all`, `get`, `set`, `normalize`.
 - [core/llm-server/service/ModelLaunchFlags.md](core/llm-server/service/ModelLaunchFlags.md): extra llama-server flags per model; has `resolve`, `setForModel`.
 - [core/llm-server/service/ModelOverrideStore.md](core/llm-server/service/ModelOverrideStore.md): sparse per-model setting overrides keyed by chat model ref; has `get`, `set`.
 - [core/llm-server/service/ModelProfileStore.md](core/llm-server/service/ModelProfileStore.md): named model profiles (a base model plus request overrides); has `listFor`, `create`, `update`.
@@ -1174,6 +1177,9 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/setup-ui/models/AddonModels.md](core/llm-server/ui/js/setup-ui/models/AddonModels.md): the "Add-on models" fold: extension-contributed models bound to their own runtime, each with one "Download & set up" that runs the whole chain main-side, repainted from the streamed add-on events.
 - [core/llm-server/ui/js/setup-ui/models/AddonProgress.md](core/llm-server/ui/js/setup-ui/models/AddonProgress.md): folds one streamed add-on setup event into the in-flight setup's progress state.
 - [core/llm-server/ui/js/setup-ui/models/AddonRow.md](core/llm-server/ui/js/setup-ui/models/AddonRow.md): the shared model-list row view for one add-on model, and its setup progress block.
+- [core/llm-server/ui/js/setup-ui/models/DrafterDownloads.md](core/llm-server/ui/js/setup-ui/models/DrafterDownloads.md): the "Download drafter" row action: fetches the catalog drafter beside the weights, paints progress from the model events, refreshes the library when it lands; has `onAction`, `start`, `progressHtml`.
+- [core/llm-server/ui/js/setup-ui/models/DrafterModal.md](core/llm-server/ui/js/setup-ui/models/DrafterModal.md): the row's Drafter dialog (twin of the image LoRA dialog): swap, switch off or download the drafter; has `open`, `choiceOf`.
+- [core/llm-server/ui/js/setup-ui/models/DrafterModalMarkup.md](core/llm-server/ui/js/setup-ui/models/DrafterModalMarkup.md): markup for the Drafter dialog in the LoRA dialog's classes; has `html`, `curatedHtml`, `options`, `fileText`.
 - [core/llm-server/ui/js/setup-ui/models/CtxFitMatrix.md](core/llm-server/ui/js/setup-ui/models/CtxFitMatrix.md): the "GPU fit by context" block on a model row: pills per KV mode coloured by the launch planner, a measured or predicted speed chip, and the MTP overhead note.
 - [core/llm-server/ui/js/setup-ui/models/CtxFitStore.md](core/llm-server/ui/js/setup-ui/models/CtxFitStore.md): the planner-backed context-fit ladders per weights path, the one answer both the fit matrix and the Defaults dropdown read (no renderer KV maths, bug H6).
 - [core/llm-server/ui/js/setup-ui/models/CtxLadder.md](core/llm-server/ui/js/setup-ui/models/CtxLadder.md): the context-length rungs Setup offers.
@@ -2673,6 +2679,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/router/LocalRequest.md](core/llm-server/chat/router/LocalRequest.md): sends one chat request to the ready local server through its runtime's chat adapter, counted in the service's shared in-flight tally.
 - [core/llm-server/chat/router/LocalRestartDecision.md](core/llm-server/chat/router/LocalRestartDecision.md): decides whether the managed local server must be (re)started before a chat request, and why.
 - [core/llm-server/chat/router/LocalServerPrep.md](core/llm-server/chat/router/LocalServerPrep.md): gets the managed local server running the model a chat request asked for.
+- [core/llm-server/chat/router/LocalSpeculationInfo.md](core/llm-server/chat/router/LocalSpeculationInfo.md): what the running local server drafts with (drafter file, MTP head, n-gram, none), for the chat speed pill; has `forRef`, `describe`.
 - [core/llm-server/chat/router/LocalSlotReclaimer.md](core/llm-server/chat/router/LocalSlotReclaimer.md): after a cancelled local turn, makes sure a possibly wedged llama-server slot cannot linger.
 - [core/llm-server/chat/router/LocalStream.md](core/llm-server/chat/router/LocalStream.md): streams one chat request through the managed local server, guarded against a concurrent vision restart.
 - [core/llm-server/chat/router/MessageImages.md](core/llm-server/chat/router/MessageImages.md): puts a turn's attached images in front of the model: OpenAI `image_url` parts on the newest user turn, or a blunt note that the loaded model cannot see.
@@ -2733,7 +2740,8 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ipc/LlmServerBroadcast.md](core/llm-server/ipc/LlmServerBroadcast.md): pushes LLM server events to every live renderer.
 - [core/llm-server/ipc/LocalModelOptions.md](core/llm-server/ipc/LocalModelOptions.md): the chat model picker's list of local models with per-context options.
 - [core/llm-server/ipc/MlxRepoInstall.md](core/llm-server/ipc/MlxRepoInstall.md): downloads an MLX model (a whole repo snapshot) into a managed `owner__repo` folder.
-- [core/llm-server/ipc/ModelCompanions.md](core/llm-server/ipc/ModelCompanions.md): the companion GGUFs a repo ships beside the weights.
+- [core/llm-server/ipc/ModelCompanions.md](core/llm-server/ipc/ModelCompanions.md): the companion GGUFs a repo ships beside the weights, plus the catalog drafter from its own repo.
+- [core/llm-server/ipc/DrafterInstaller.md](core/llm-server/ipc/DrafterInstaller.md): downloads a catalog drafter beside the weights it drafts for, pinned, verified, free-space guarded, through the shared slot; has `download`.
 - [core/llm-server/ipc/ModelDownloadRequest.md](core/llm-server/ipc/ModelDownloadRequest.md): normalises a `downloadModel` request into the files to fetch; refuses unsafe file names.
 - [core/llm-server/ipc/ModelFileDownloader.md](core/llm-server/ipc/ModelFileDownloader.md): the wizard's and Setup's model download, pinned to one Hub commit with expected sizes and digests, free-space guarded.
 - [core/llm-server/ipc/ModelTransfer.md](core/llm-server/ipc/ModelTransfer.md): one model download run across several files with one stable cancel and pause handle.
@@ -3387,6 +3395,23 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [extensions/roleplay-mode/mode/RoleplayDebug.md](extensions/roleplay-mode/mode/RoleplayDebug.md): test-harness entry points running single production stages on a data snapshot.
 - [extensions/roleplay-mode/mode/RoleplayIpcHandlers.md](extensions/roleplay-mode/mode/RoleplayIpcHandlers.md): routes the extension's IPC (`ext.roleplay-mode.*`).
 - [extensions/roleplay-mode/mode/RoleplayModeDescriptor.md](extensions/roleplay-mode/mode/RoleplayModeDescriptor.md): the `roleplay` chat mode descriptor.
+- [extensions/roleplay-mode/grounding/BodyGrounding.md](extensions/roleplay-mode/grounding/BodyGrounding.md): body-variation cards in the knowledge base (scope `roleplay:body`), retrieved per on-stage character as narrator body notes.
+- [extensions/roleplay-mode/grounding/GroundingCards.md](extensions/roleplay-mode/grounding/GroundingCards.md): parses a grounding pack of markdown cards (Tags, Group, body).
+- [extensions/roleplay-mode/grounding/BodySignals.md](extensions/roleplay-mode/grounding/BodySignals.md): age and height bands from the numbers in a character description.
+- [extensions/roleplay-mode/grounding/SurfaceGrounding.md](extensions/roleplay-mode/grounding/SurfaceGrounding.md): up-close cards (feet, legs, hands, skin, smell) for the characters the player's line names when something comes off, from the knowledge base scope `roleplay:surface`.
+- [extensions/roleplay-mode/grounding/GroundingScope.md](extensions/roleplay-mode/grounding/GroundingScope.md): one grounding pack kept in its own RAG scope: sync, search, phrase hits.
+- [extensions/roleplay-mode/world/CharacterMarks.md](extensions/roleplay-mode/world/CharacterMarks.md): lasting physical details established in play (the stage call's `noticed`), shown on the narrator card as `noticed since`.
+- [extensions/roleplay-mode/prompts/BodyNotes.md](extensions/roleplay-mode/prompts/BodyNotes.md): renders body notes into the narrator context and the scene-notes labels.
+- [extensions/roleplay-mode/lab/LabBodyScenario.md](extensions/roleplay-mode/lab/LabBodyScenario.md): the Lab's body-variation text playthrough (a flood, a physically mixed household).
+- [extensions/roleplay-mode/lab/LabTextScenarios.md](extensions/roleplay-mode/lab/LabTextScenarios.md): the Lab's scripted text playthroughs by name.
+- [extensions/roleplay-mode/lab/PhysicalityJudge.md](extensions/roleplay-mode/lab/PhysicalityJudge.md): the body-realism judge pass with concrete slips.
+- [extensions/roleplay-mode/lab/LabRevealScenario.md](extensions/roleplay-mode/lab/LabRevealScenario.md): the Lab's reveal playthrough: boots off, new physical detail, recalled after it left the history.
+- [extensions/roleplay-mode/lab/LabWoundScenario.md](extensions/roleplay-mode/lab/LabWoundScenario.md): the Lab's wound playthrough: a knight's arm taken at a ford, bleeding, shock, searing, death, infection.
+- [extensions/roleplay-mode/lab/LabJungleScenario.md](extensions/roleplay-mode/lab/LabJungleScenario.md): the Lab's jungle playthrough: five days lost and sick, washing, vomiting, fever, closeness.
+- [extensions/roleplay-mode/lab/LabControlScenario.md](extensions/roleplay-mode/lab/LabControlScenario.md): the Lab's negative control: an ordinary morning full of near-miss words where no grounding card should fire.
+- [extensions/roleplay-mode/lab/ContextAudit.md](extensions/roleplay-mode/lab/ContextAudit.md): per-turn narrator context by layer, history, leaked reasoning and repeated phrases.
+- [extensions/roleplay-mode/lab/BodyDetailScore.md](extensions/roleplay-mode/lab/BodyDetailScore.md): body-detail words per hundred words of narration, for grounding on/off comparisons.
+- [extensions/roleplay-mode/lab/RevealJudge.md](extensions/roleplay-mode/lab/RevealJudge.md): lists reveals and recalls, scores fit and continuity, and the retention check.
 - [extensions/roleplay-mode/pipeline/AssetLedger.md](extensions/roleplay-mode/pipeline/AssetLedger.md): the persisted per-asset retry ledger (`data.assetRetry`).
 - [extensions/roleplay-mode/pipeline/AssetOutcomes.md](extensions/roleplay-mode/pipeline/AssetOutcomes.md): records one turn's render outcomes in the ledger and whether it changed.
 - [extensions/roleplay-mode/pipeline/AssetSweepPlanner.md](extensions/roleplay-mode/pipeline/AssetSweepPlanner.md): plans a turn's image work from world state so failed renders are rescheduled.
@@ -3399,11 +3424,15 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [extensions/roleplay-mode/pipeline/MomentFigureRenderer.md](extensions/roleplay-mode/pipeline/MomentFigureRenderer.md): ensures the cached posed and emotive moment figure for a reaction.
 - [extensions/roleplay-mode/pipeline/OutfitRenderer.md](extensions/roleplay-mode/pipeline/OutfitRenderer.md): renders one pending outfit body by editing the character's prior look.
 - [extensions/roleplay-mode/pipeline/OutfitWardrobe.md](extensions/roleplay-mode/pipeline/OutfitWardrobe.md): points a character at the outfit record for what they wear now.
+- [extensions/roleplay-mode/pipeline/ReactionRegistry.md](extensions/roleplay-mode/pipeline/ReactionRegistry.md): the post-turn reactions running per conversation: stops the ones a new turn replaces, waits for the world phase it continues from.
+- [extensions/roleplay-mode/pipeline/ReactionScope.md](extensions/roleplay-mode/pipeline/ReactionScope.md): one running reaction: its reply, whether it is still wanted, its abort signal, carried on the async context.
 - [extensions/roleplay-mode/pipeline/ReactionImageRenderer.md](extensions/roleplay-mode/pipeline/ReactionImageRenderer.md): renders the reaction image inside an open exclusive image window.
 - [extensions/roleplay-mode/pipeline/RenderSignature.md](extensions/roleplay-mode/pipeline/RenderSignature.md): the state-diff signature of what a reaction image would look like.
 - [extensions/roleplay-mode/pipeline/RoleplayPostProcessor.md](extensions/roleplay-mode/pipeline/RoleplayPostProcessor.md): the mode's server-side reaction after each assistant turn.
 - [extensions/roleplay-mode/pipeline/SceneArtRenderer.md](extensions/roleplay-mode/pipeline/SceneArtRenderer.md): paints a scene's establishing background.
-- [extensions/roleplay-mode/pipeline/TurnChannel.md](extensions/roleplay-mode/pipeline/TurnChannel.md): one assistant turn's outlets: emit, save, progress and the world announcement.
+- [extensions/roleplay-mode/pipeline/ScopedChat.md](extensions/roleplay-mode/pipeline/ScopedChat.md): context.chat for the reaction pipeline: side completions carry the reaction's abort signal, calls refuse once it is stopped.
+- [extensions/roleplay-mode/pipeline/TurnActivity.md](extensions/roleplay-mode/pipeline/TurnActivity.md): the reply's world-update activity for the page (`mode:activity`): status, steps and changes.
+- [extensions/roleplay-mode/pipeline/TurnChannel.md](extensions/roleplay-mode/pipeline/TurnChannel.md): one assistant turn's outlets: emit, merge-aware save, progress, activity, its timeline point and the world announcement.
 - [extensions/roleplay-mode/pipeline/TurnData.md](extensions/roleplay-mode/pipeline/TurnData.md): the per-turn working copy of a conversation's roleplay data.
 - [extensions/roleplay-mode/pipeline/reaction/CompositePlate.md](extensions/roleplay-mode/pipeline/reaction/CompositePlate.md): the static-beat plate: moment figures keyed onto the saved scene.
 - [extensions/roleplay-mode/pipeline/reaction/HarmonizePass.md](extensions/roleplay-mode/pipeline/reaction/HarmonizePass.md): the "matching the light" pass over a composite (Qwen edit or Anima img2img).
@@ -3435,6 +3464,7 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [extensions/roleplay-mode/world/CastResolver.md](extensions/roleplay-mode/world/CastResolver.md): resolves which characters are in a moment: the tracked present cast, names in the passage as a fallback, lookups by name, and the director's focus order.
 - [extensions/roleplay-mode/world/CharacterArt.md](extensions/roleplay-mode/world/CharacterArt.md): picks a character's stored reference images.
 - [extensions/roleplay-mode/world/CharacterLooks.md](extensions/roleplay-mode/world/CharacterLooks.md): reads facts out of a character's free-text looks.
+- [extensions/roleplay-mode/world/ConversationPath.md](extensions/roleplay-mode/world/ConversationPath.md): reads the conversation's message tree from the chat store for the story timeline.
 - [extensions/roleplay-mode/world/CurrentState.md](extensions/roleplay-mode/world/CurrentState.md): the per-moment state (`data.currentState`: scene id and present cast).
 - [extensions/roleplay-mode/world/DataMigration.md](extensions/roleplay-mode/world/DataMigration.md): upgrades a conversation's persisted roleplay data to the current shape in place; idempotent.
 - [extensions/roleplay-mode/world/OutfitText.md](extensions/roleplay-mode/world/OutfitText.md): outfit description text: normalised comparison, slot-by-slot layer comparison, the short display name and render-safe wording.
@@ -3445,6 +3475,7 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [extensions/roleplay-mode/renderer.md](extensions/roleplay-mode/renderer.md): roleplay Mode's settings-page renderer.
 - [extensions/roleplay-mode/rp-lab.md](extensions/roleplay-mode/rp-lab.md): the Roleplay Lab (dev): a Setup tab that runs the real roleplay image pipeline for a seeded scenario and lets you tune and regenerate single steps.
 - [extensions/roleplay-mode/shared.md](extensions/roleplay-mode/shared.md): the chat page's copy of the shared roleplay logic, published as `window.RP_SHARED` for [chat-ui](extensions/roleplay-mode/chat-ui.md) and served from `/llm-ui/ext/roleplay-mode/shared.js` (declared in `chatUi.assets`).
+- [extensions/roleplay-mode/timeline.md](extensions/roleplay-mode/timeline.md): the story as a time series over the message tree: one point per reply, the head materialized for the shown branch, global image assets; `window.RP_TIMELINE` on the page and required by the main process.
 
 ## extensions/game-mode
 

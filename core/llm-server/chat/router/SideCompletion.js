@@ -14,7 +14,7 @@ class SideCompletion {
     this._collected = new CollectedCompletion(dispatch);
   }
 
-  async complete({ messages, temperature = 0.2, modelRef, timeoutMs = 30000, noThink = false, images = [], trace = null } = {}) {
+  async complete({ messages, temperature = 0.2, modelRef, timeoutMs = 30000, noThink = false, images = [], trace = null, signal = null } = {}) {
     if (!Array.isArray(messages) || messages.length === 0) return { error: 'messages is required' };
     const ref = this._models.resolveRef(modelRef);
     if (!ref) return { error: 'No model configured.' };
@@ -28,6 +28,7 @@ class SideCompletion {
       extra: off ? { ...(off.extra || {}), trace: tag } : { trace: tag },
       timeoutMs,
       timeoutMessage: 'complete timeout',
+      signal,
     });
   }
 
@@ -43,9 +44,11 @@ class SideCompletion {
     let lastErr = null;
     for (let attempt = 0; attempt < SideCompletion.ATTEMPTS; attempt += 1) {
       if (attempt > 0) await new Promise((r) => setTimeout(r, SideCompletion.RETRY_DELAY_MS));
+      if (request.signal && request.signal.aborted) return { error: 'complete aborted', aborted: true };
       try {
         return { text: await this._collected.run(request) };
       } catch (err) {
+        if (err && err.name === 'AbortError') return { error: err.message, aborted: true };
         lastErr = err;
         if (!TransientLlmError.matches(err)) break;
       }

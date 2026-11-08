@@ -22,6 +22,7 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `setEnabled(v)` | invoke `core.llmServer.setEnabled` |
 | `setOpenTabOnLoad(v)` | invoke `core.llmServer.setOpenTabOnLoad` |
 | `downloadModel(args)` | invoke `core.llmServer.downloadModel` |
+| `downloadDrafter({ id, modelPath })` | invoke `core.llmServer.downloadDrafter` (a catalog drafter beside the model; events on `onModelEvent`) |
 | `cancelModelDownload()` | invoke `core.llmServer.cancelModelDownload` |
 | `pauseModelDownload()` | invoke `core.llmServer.pauseModelDownload` |
 | `onModelEvent(cb)` | subscribe `core.llmServer.modelEvent` |

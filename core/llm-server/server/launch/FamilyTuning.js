@@ -7,6 +7,7 @@ class FamilyTuning {
       drafterSpec: spec.dflashEnabled
         ? ModelFamilies.speculativeArgs(files.family, {
           drafterPath: files.drafterPath, flagsSupported: true, gpuOffload: offload.ngl > 0, dialect: flags.specDialect,
+          drafterBlockSize: files.drafterBlockSize,
         })
         : null,
     };

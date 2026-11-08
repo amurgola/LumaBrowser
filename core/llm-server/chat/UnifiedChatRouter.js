@@ -5,6 +5,7 @@ const ChatAdapterRegistry = require('../server/chat/ChatAdapterRegistry');
 const ServerLauncher = require('../server/ServerLauncher');
 const LlmRuntimeCatalog = require('../runtimes/LlmRuntimeCatalog');
 const LlmModelsScanner = require('../LlmModelsScanner');
+const LocalSpeculationInfo = require('./router/LocalSpeculationInfo');
 const ModelContextWindow = require('./router/ModelContextWindow');
 const ModelCapabilities = require('./router/ModelCapabilities');
 const AgentToolPolicy = require('./router/AgentToolPolicy');
@@ -200,6 +201,7 @@ class UnifiedChatRouter {
       modes: new ChatModeTurn({ chatStore, modeRegistry: seams.modeRegistry || ChatModeRegistry.shared }),
       reaction: new ModeReaction({ chatStore }),
       contextWindow: this._window,
+      speculation: new LocalSpeculationInfo({ llmServerService: this.llmServerService }),
       compaction: this._compaction,
       thinking: new ThinkingDial({ llmServerService: this.llmServerService, chatStore }),
       agentDispatch: new AgentTurnDispatch({

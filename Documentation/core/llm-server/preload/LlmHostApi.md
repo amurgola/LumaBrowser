@@ -27,6 +27,7 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `pickDirectory(opts)` | invoke `core.llmServer.pickDirectory` |
 | `getModelDisplayNames()` | invoke `core.llmServer.getModelDisplayNames` |
 | `setModelDisplayName(key, name)` | invoke `core.llmServer.setModelDisplayName` |
+| `setModelDrafter(args)` | invoke `core.llmServer.setModelDrafter` (`{ key, choice }`) |
 | `getPreflight()` | invoke `core.llmServer.getPreflight` |
 | `getVramPressure()` | invoke `core.llmServer.getVramPressure` |
 | `dismissVramPressure(card)` | invoke `core.llmServer.dismissVramPressure` |

@@ -12,6 +12,7 @@ class TurnData {
     data.assetRetry = Object.assign({}, base.assetRetry || {});
     data.story = TurnData._deep(base.story);
     data.protagonist = base.protagonist ? Object.assign({}, base.protagonist) : base.protagonist;
+    data.timeline = TurnData._timeline(base.timeline);
     return data;
   }
 
@@ -26,6 +27,15 @@ class TurnData {
     if (c && c.chronicle) out.chronicle = TurnData._deep(c.chronicle);
     if (c && c.state) out.state = TurnData._deep(c.state);
     return out;
+  }
+
+  static _timeline(t) {
+    if (!t || typeof t !== 'object') return t;
+    const vault = t.vault && typeof t.vault === 'object' ? t.vault : {};
+    return Object.assign({}, t, {
+      entries: Object.assign({}, t.entries || {}),
+      vault: { characters: Object.assign({}, vault.characters || {}), scenes: Object.assign({}, vault.scenes || {}) },
+    });
   }
 
   static _deep(v) {

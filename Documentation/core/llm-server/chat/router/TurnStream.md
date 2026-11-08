@@ -21,3 +21,10 @@ One IPC message per token was a structured clone and a renderer wake-up for ever
 small model reaches on a fast card, and with a sharing host serving several clients, that is the main process's
 busiest loop. Sixteen milliseconds is one display frame: nothing the eye can see, and several tokens folded into one
 message. Tearing down first let an adapter's own onDone win the latch and present a cut-off answer as finished (seen live 2026-08-10). Some adapters fire onDone twice; a second reaction aborted the first one's image generation.
+
+## Speculation
+
+The constructor takes `speculation`, a getter for
+[LocalSpeculationInfo](LocalSpeculationInfo.md)'s shape. It is read once at the end of
+the turn (the server may have restarted for it) and rides the `done` payload as
+`speculation`, only beside llama.cpp `timings`; a throwing getter only drops it.

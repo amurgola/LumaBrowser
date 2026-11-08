@@ -161,7 +161,7 @@ export default class ChatEventRouter {
 
   _done(p) {
     this._recordUsage(p && p.usage, p);
-    this._recordTimings(p && p.timings);
+    this._recordTimings(p && p.timings, p && p.speculation);
     this._ctx.finisher.done(p && p.aborted);
   }
 
@@ -180,10 +180,10 @@ export default class ChatEventRouter {
     if (state.streamOnScreen()) this._ctx.usage.render();
   }
 
-  _recordTimings(t) {
+  _recordTimings(t, speculation) {
     const { state } = this._ctx;
     if (!t || !state.streamMsg) return;
-    const norm = TurnTimings.normalize(t);
+    const norm = TurnTimings.normalize(t, speculation);
     state.streamMsg.timings = norm;
     if (norm && state.streamMsg.id) state.timingsByMsgId.set(state.streamMsg.id, norm);
   }

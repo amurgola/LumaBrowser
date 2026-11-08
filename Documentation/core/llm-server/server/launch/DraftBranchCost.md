@@ -6,12 +6,14 @@ Prices the VRAM a speculative draft branch adds to a launch.
 
 ## Methods
 
-- `DraftBranchCost.bytes({ modelBytes, kvPerLayer, draftKvPerLayer?, drafterBytes = 0, mtp = false, mtpHeadBytes = 0 })`:
+- `DraftBranchCost.bytes({ modelBytes, kvPerLayer, draftKvPerLayer?, drafterBytes = 0, mtp = false, mtpHeadBytes = 0, draftN = 0, recurrentLayers = 0 })`:
   - `mtp`: `mtpHeadBytes + MTP_BRANCH_FIXED` (head bytes are 0 when grafted, since
     they are already in the weights);
   - otherwise draft weights (`drafterBytes`, or `max(WEIGHT_FLOOR, 6% of modelBytes)`)
     + one block of draft KV (`draftKvPerLayer` when given, else `kvPerLayer`) +
-    `SCRATCH` (256 MiB).
+    `SCRATCH` (256 MiB) + `recurrentCheckpoints(draftN, recurrentLayers)`:
+    `draftN * recurrentLayers * RECURRENT_STATE_PER_LAYER_TOKEN` (2.8 MiB), the
+    recurrent-state copies a hybrid target keeps while it verifies a block.
 - `MTP_BRANCH_FIXED` (2.2 GiB), `WEIGHT_FRACTION` (0.06), `WEIGHT_FLOOR` (1.5 GiB),
   `SCRATCH`, `GIB`.
 

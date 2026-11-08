@@ -20,6 +20,9 @@ the Lab service for the core `core.rpLab.*` IPC controller.
   `getDefaults()` and the chat router's `chatStore` ([HostGlobals](HostGlobals.md)),
   plus `context.chat.complete` for the Lab's text run.
   Resolves `{}`.
+- `activate` also starts a background sync of the body and surface grounding
+  cards into the knowledge base ([BodyGrounding](grounding/BodyGrounding.md),
+  [SurfaceGrounding](grounding/SurfaceGrounding.md)).
 - `deactivate()` clears `global.__lumaRpLabService` if it is still ours. The
   chat mode is unregistered by the extension manager.
 - `RoleplayExtension.LAB_SERVICE_GLOBAL` (`__lumaRpLabService`).

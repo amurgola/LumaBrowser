@@ -1,4 +1,5 @@
 const LlmModelsScanner = require('../LlmModelsScanner');
+const DrafterCatalog = require('../models/DrafterCatalog');
 const ModelName = require('../models/ModelName');
 const ModelDescriptor = require('../../shared/ModelDescriptor');
 const ModelsDirStorage = require('./ModelsDirStorage');
@@ -27,8 +28,34 @@ class LlmModelsView {
     for (const model of scan.models) {
       model.nameKey = LlmModelsView.nameKeyOf(model);
       model.displayName = this._svc.resolveModelDisplayName(model.nameKey);
+      model.drafterOffer = DrafterCatalog.offerFor(model);
     }
     return scan;
+  }
+
+  async setDrafter(args) {
+    const { key, choice } = args || {};
+    const config = this._svc.getModelsDirConfig();
+    const scan = await this._scanner.scan(config.effectivePath);
+    const models = (scan && scan.models) || [];
+    const model = models.find((m) => m.kind === 'weights' && m.role === 'main' && LlmModelsView.nameKeyOf(m) === key);
+    if (!key || !model) return { success: false, error: 'That model is not in the models folder.' };
+    const clean = LlmModelsView._drafterChoice(choice);
+    if (clean === undefined) return { success: false, error: 'Unknown drafter choice.' };
+    if (clean && clean.mode === 'mtp' && !model.mtpCapable) return { success: false, error: 'This model has no MTP head.' };
+    if (clean && clean.mode === 'file' && !((scan.drafters || []).some((d) => d.path === clean.path))) {
+      return { success: false, error: 'That drafter file is not in the models folder.' };
+    }
+    this._svc.setModelDrafterChoice(key, clean);
+    return { success: true, ...(await this._viewOf(config)) };
+  }
+
+  static _drafterChoice(choice) {
+    if (choice == null || choice === 'auto') return null;
+    if (choice === 'off') return { mode: 'off' };
+    if (choice === 'mtp') return { mode: 'mtp' };
+    if (typeof choice === 'object' && typeof choice.path === 'string' && choice.path) return { mode: 'file', path: choice.path };
+    return undefined;
   }
 
   async storageInfo() {

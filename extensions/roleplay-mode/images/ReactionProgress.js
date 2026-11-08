@@ -1,9 +1,11 @@
 const RpDebug = require('./RpDebug');
 
 class ReactionProgress {
-  constructor(emit, messageId) {
+  constructor(emit, messageId, { phase = null, onSay = null } = {}) {
     this._emit = emit;
     this._messageId = messageId;
+    this._phase = phase;
+    this._onSay = onSay;
   }
 
   get messageId() {
@@ -11,7 +13,9 @@ class ReactionProgress {
   }
 
   say(label) {
-    this._send('mode:progress', { messageId: this._messageId, label });
+    const phase = typeof this._phase === 'function' ? this._phase() : null;
+    this._send('mode:progress', phase ? { messageId: this._messageId, label, phase } : { messageId: this._messageId, label });
+    if (typeof this._onSay === 'function') { try { this._onSay(label); } catch (_) {} }
     RpDebug.log('progress', { messageId: this._messageId, label });
   }
 

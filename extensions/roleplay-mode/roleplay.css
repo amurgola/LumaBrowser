@@ -192,3 +192,20 @@
 .rp-gallery-cap { font-size: var(--text-xs); color: var(--text-secondary); padding: 6px var(--space-2) 2px; }
 .rp-gallery-acts { display: flex; gap: 6px; padding: var(--space-1) var(--space-2) var(--space-2); }
 .rp-gallery-acts .rp-img-btn { flex: 1; text-align: center; padding: var(--space-1) 6px; }
+
+.rp-activity {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin: var(--space-2) 0 2px;
+  font-size: var(--text-sm); color: var(--text-muted);
+}
+.rp-activity-spin { flex: none; transform: scale(0.75); }
+.rp-activity.is-stopped, .rp-activity.is-failed { font-style: italic; }
+.rp-activity.is-failed { color: var(--danger); }
+.rp-activity details { min-width: 0; }
+.rp-activity summary { cursor: pointer; user-select: none; }
+.rp-activity summary:hover { color: var(--text-secondary); }
+.rp-activity-list {
+  margin: var(--space-1) 0 0; padding-left: var(--space-4);
+  color: var(--text-secondary);
+}
+.rp-activity-list li { margin: 2px 0; }

@@ -4,7 +4,7 @@ const FileProbe = require('./FileProbe');
 class GgufTreeWalker {
   static SHARD = /-(\d{5})-of-(\d{5})\.gguf$/i;
 
-  static COMPANION = /^(?:mmproj|dflash|mtp[-_])/i;
+  static COMPANION = /^(?:mmproj|dflash|dspine|mtp[-_])/i;
 
   static walk(root, maxDepth, minBytes) {
     const found = [];

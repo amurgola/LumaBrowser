@@ -21,7 +21,7 @@ class GgufFileName {
 
   static PRECISION_ONLY = /^(bf16|fp16|f16|fp32|f32|q8)$/i;
 
-  static DRAFT_HINT = /(?:^|[-_.])(draft|dflash|eagle|medusa)(?:[-_.]|$)/i;
+  static DRAFT_HINT = /(?:^|[-_.])(draft|dflash2?|dspine|eagle|medusa)(?:[-_.]|$)/i;
 
   static EMBEDDING_HINT = /(?:^|[-_.])(embed|embedding|embeddings|bge|gte|e5|nomic-embed|minilm|arctic-embed)(?:[-_.]|$)/i;
 

@@ -1,7 +1,7 @@
 import HtmlEscaper from '../../format/HtmlEscaper.js';
 
 export default class TurnTimings {
-  static normalize(t) {
+  static normalize(t, speculation = null) {
     if (!t || typeof t !== 'object') return null;
     const promptPerSec = TurnTimings._rate(t.prompt_per_second, t.prompt_n, t.prompt_ms);
     const genPerSec = TurnTimings._rate(t.predicted_per_second, t.predicted_n, t.predicted_ms);
@@ -13,7 +13,31 @@ export default class TurnTimings {
       predictedMs: Number(t.predicted_ms) || null,
       promptN: Number(t.prompt_n) || null,
       predictedN: Number(t.predicted_n) || null,
+      draftN: Number.isFinite(t.draft_n) ? t.draft_n : null,
+      draftAccepted: Number.isFinite(t.draft_n_accepted) ? t.draft_n_accepted : null,
+      speculation: TurnTimings._speculation(speculation),
     };
+  }
+
+  static _speculation(s) {
+    if (!s || typeof s !== 'object' || typeof s.kind !== 'string') return null;
+    return { kind: s.kind, label: String(s.label || s.kind), specType: s.specType || null, draftNMax: Number(s.draftNMax) || null };
+  }
+
+  static speculationLines(t) {
+    const lines = [];
+    const s = t.speculation;
+    if (s) {
+      const bits = [s.specType, s.draftNMax ? `up to ${s.draftNMax} tokens per step` : null].filter(Boolean);
+      lines.push('Speculative decoding: ' + s.label + (bits.length ? ' (' + bits.join(', ') + ')' : ''));
+    }
+    if (t.draftN > 0) {
+      const accepted = t.draftAccepted != null ? t.draftAccepted : 0;
+      lines.push('Drafted ' + t.draftN + ' tok, ' + accepted + ' accepted (' + Math.round((accepted / t.draftN) * 100) + '%)');
+    } else if (s && s.kind !== 'none') {
+      lines.push('No drafted tokens reported for this turn');
+    }
+    return lines;
   }
 
   static pillHtml(t) {
@@ -29,6 +53,7 @@ export default class TurnTimings {
       titleBits.push('Generation: ' + t.genPerSec + ' tok/s' + TurnTimings._countText(t.predictedN, t.predictedMs));
     }
     if (!parts.length) return '';
+    titleBits.push(...TurnTimings.speculationLines(t));
     return '<span class="cm-act-speed" title="' + HtmlEscaper.escape(titleBits.join('\n')) + '">'
       + HtmlEscaper.escape(parts.join(' · ')) + '</span>';
   }

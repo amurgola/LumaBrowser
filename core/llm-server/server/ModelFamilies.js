@@ -15,15 +15,21 @@ class ModelFamilies {
     return out;
   }
 
-  static speculativeArgs(family, { drafterPath, flagsSupported, gpuOffload, dialect = 'mainline' } = {}) {
+  static speculativeArgs(family, { drafterPath, flagsSupported, gpuOffload, dialect = 'mainline', drafterBlockSize = null } = {}) {
     const profile = ModelFamilies._profileOf(family);
-    const spec = profile && profile.speculative;
-    if (!spec || !drafterPath || !flagsSupported) return null;
+    const profileSpec = profile && profile.speculative;
+    if (!profileSpec || !drafterPath || !flagsSupported) return null;
+    const spec = { ...profileSpec, draftNMax: ModelFamilies.draftNMaxFor(profileSpec, drafterBlockSize) };
     const args = dialect === 'ik'
       ? ModelFamilies._ikSpecArgs(spec, drafterPath)
       : ModelFamilies._mainlineSpecArgs(spec, drafterPath);
     if (gpuOffload) args.push('-ngld', '99');
     return { args, specType: spec.specType, draftNMax: spec.draftNMax, label: spec.label };
+  }
+
+  static draftNMaxFor(spec, drafterBlockSize) {
+    const block = Number(drafterBlockSize);
+    return Number.isFinite(block) && block >= 2 ? Math.floor(block) - 1 : spec.draftNMax;
   }
 
   static mtpDraftNMax(family) {
@@ -65,12 +71,12 @@ class ModelFamilies {
   }
 
   static _detectByName(model) {
-    const haystack = ModelFamilies._nameHaystack(model);
+    const haystack = ModelFamilies.nameHaystack(model);
     if (!haystack.trim()) return null;
     return ModelFamilies._findFamily((f) => !!f.namePattern && f.namePattern.test(haystack));
   }
 
-  static _nameHaystack(model) {
+  static nameHaystack(model) {
     const gguf = model.gguf || null;
     const weights = Array.isArray(model.weights) ? model.weights.map((w) => (w && w.name) || '') : [];
     return [model.name || '', (gguf && gguf.name) || '', ...weights].join(' ');

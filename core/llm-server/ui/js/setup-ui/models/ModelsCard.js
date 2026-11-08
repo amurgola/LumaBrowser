@@ -1,5 +1,7 @@
 import StatusLine from '../StatusLine.js';
 import AddonModels from './AddonModels.js';
+import DrafterDownloads from './DrafterDownloads.js';
+import DrafterModal from './DrafterModal.js';
 import LlmModelRow from './LlmModelRow.js';
 import ModelsCardHtml from './ModelsCardHtml.js';
 import RuntimeRecommender from './RuntimeRecommender.js';
@@ -16,6 +18,8 @@ export default class ModelsCard {
     this._scaffolded = false;
     this._fitPathByKey = new Map();
     this.addons = new AddonModels(ctx);
+    this.drafters = new DrafterDownloads(ctx);
+    this.drafterModal = new DrafterModal(ctx, this.drafters);
     this._rows = new LlmModelRow({
       recommender: new RuntimeRecommender(ctx.runtimes, ctx.hostCaps),
       ctxFit: ctx.ctxFit,
@@ -78,13 +82,25 @@ export default class ModelsCard {
     if (!this._modelList || typeof this._modelList.mount !== 'function') return false;
     body.className = '';
     body.innerHTML = ModelsCardHtml.scaffold();
-    this._llmCtl = this._modelList.mount(body.querySelector('[data-ml-mount="llm"]'), ModelsCard.LLM_NAMESPACE, {});
+    this._llmCtl = this._modelList.mount(body.querySelector('[data-ml-mount="llm"]'), ModelsCard.LLM_NAMESPACE, {
+      onAction: (row, act, e, btn) => this._onRowAction(row, act, btn),
+    });
+    this.drafters.attach(this._llmCtl);
     const addonCtl = this._modelList.mount(body.querySelector('[data-ml-mount="llm-addon"]'), ModelsCard.ADDON_NAMESPACE, {
       onAction: (row, act, e, btn) => this.addons.onAction(row, act, e, btn),
     });
     this.addons.attach(addonCtl);
     this._scaffolded = true;
     return true;
+  }
+
+  _onRowAction(row, act, btn) {
+    if (act === 'drafter') {
+      const key = row && row.mlKey != null ? row.mlKey : (btn && btn.dataset && btn.dataset.key);
+      this.drafterModal.open(key);
+      return true;
+    }
+    return this.drafters.onAction(row, act, btn);
   }
 
   _setRows(models) {

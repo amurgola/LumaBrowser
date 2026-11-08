@@ -29,6 +29,7 @@ const ModelOverrideStore = require('./service/ModelOverrideStore');
 const ModelProfileStore = require('./service/ModelProfileStore');
 const ModelSettings = require('./service/ModelSettings');
 const LlmModelDisplayNames = require('./service/LlmModelDisplayNames');
+const LlmDrafterChoices = require('./service/LlmDrafterChoices');
 const FitResultStore = require('./service/FitResultStore');
 const GambitResultStore = require('./service/GambitResultStore');
 const NvidiaSmiPathSettings = require('./service/NvidiaSmiPathSettings');
@@ -191,6 +192,8 @@ class LLMServerService {
   getModelDisplayNames() { return this._displayNames.all(); }
   setModelDisplayName(key, name) { return this._displayNames.set(key, name); }
   resolveModelDisplayName(stem) { return this._displayNames.resolve(stem); }
+  getModelDrafterChoices() { return this._drafterChoices.all(); }
+  setModelDrafterChoice(key, choice) { return this._drafterChoices.set(key, choice); }
   getModelLaunchFlags() { return this._launchFlags.all(); }
   setModelLaunchFlags(key, text) { return this._launchFlags.set(key, text); }
   resolveModelLaunchFlags(modelPathOrStem) { return this._launchFlags.resolve(modelPathOrStem); }
@@ -311,6 +314,8 @@ class LLMServerService {
       lastModelRef: { get: () => this.getLastModelRef(), set: (ref) => this.setLastModelRef(ref) },
     });
     this._displayNames = new LlmModelDisplayNames(this.settingsDb);
+    this._drafterChoices = new LlmDrafterChoices(this.settingsDb);
+    LlmModelsScanner.shared.useDrafterChoices(() => this._drafterChoices.all());
     this._fitResults = new FitResultStore(this.settingsDb);
     this._gambitResults = new GambitResultStore(this.settingsDb);
     this._smiPath = new NvidiaSmiPathSettings(this.settingsDb);

@@ -66,7 +66,13 @@ class ModelFileDownloader {
     const stopped = await this._fetchWeights(transfer, parts, baseDir, request.totalBytes, send)
       || await ModelFileDownloader._fetchCompanions(transfer, companions.downloads, baseDir, send);
     if (stopped) return stopped;
-    const result = { destPath, file: request.file, mmproj: companions.mmproj ? companions.mmproj.file : null, mtp: companions.mtp ? companions.mtp.file : null };
+    const result = {
+      destPath,
+      file: request.file,
+      mmproj: companions.mmproj ? companions.mmproj.file : null,
+      mtp: companions.mtp ? companions.mtp.file : null,
+      drafter: companions.drafter ? companions.drafter.file : null,
+    };
     send('done', result);
     return { success: true, ...result };
   }

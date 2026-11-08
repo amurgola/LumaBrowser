@@ -10,7 +10,7 @@ class GgufHeaderAttacher {
     'valueLengthSwa', 'slidingWindow', 'slidingWindowPattern', 'slidingWindowPerLayer', 'attnKvPerLayer',
     'attnKvLayerCount', 'mtpGrafted', 'attnScanError', 'tensorLayout', 'ropeFreqBase', 'expertCount',
     'expertUsedCount', 'expertFeedForwardLength', 'expertSharedCount', 'vocabSize', 'fileType',
-    'fileTypeName', 'fileTypeSource', 'dominantTensorType', 'quantizationVersion',
+    'fileTypeName', 'fileTypeSource', 'dominantTensorType', 'quantizationVersion', 'blockSize',
   ];
 
   static isTarget(model) {

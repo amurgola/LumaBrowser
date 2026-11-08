@@ -4,13 +4,14 @@ const LaunchErrorHints = require('./LaunchErrorHints');
 class TurnStream {
   static NUMERIC_DIAGNOSTICS = ['offFormatCalls', 'lengthCutCompletions', 'missingArgCalls', 'overflowRecoveries'];
 
-  constructor({ chatStore, send, conversationId, assistantMessageId, contextWindow, onSettled, react, coalescer = null }) {
+  constructor({ chatStore, send, conversationId, assistantMessageId, contextWindow, onSettled, react, coalescer = null, speculation = null }) {
     this._store = chatStore;
     this._send = send;
     this._text = coalescer || new DeltaCoalescer((type, text) => this._send(type, { text }));
     this._convId = conversationId;
     this._asstId = assistantMessageId;
     this._ctxWindow = contextWindow;
+    this._speculation = typeof speculation === 'function' ? speculation : () => null;
     this._onSettled = onSettled;
     this._react = react;
     this._content = '';
@@ -93,12 +94,17 @@ class TurnStream {
     if (!alreadyFinished) this._react(this._content, false);
   }
 
+  _readSpeculation() {
+    try { return this._speculation(); } catch (_) { return null; }
+  }
+
   _donePayload(summary) {
     const s = summary || {};
     const payload = {
       finishReason: s.finishReason || 'stop',
       usage: this._usage || undefined,
       timings: s.timings || undefined,
+      speculation: s.timings ? (this._readSpeculation() || undefined) : undefined,
       contextWindow: this._ctxWindow || undefined,
       conversationId: this._convId,
       assistantMessageId: this._asstId,

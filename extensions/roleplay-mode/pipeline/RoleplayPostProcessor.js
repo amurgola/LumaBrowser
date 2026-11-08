@@ -22,11 +22,20 @@ const ProfileCall = require('./ProfileCall');
 const PressureCall = require('./PressureCall');
 const ConsolidateCall = require('./ConsolidateCall');
 const ProsePolishCall = require('./ProsePolishCall');
+const ReactionScope = require('./ReactionScope');
+const ReactionRegistry = require('./ReactionRegistry');
+const ScopedChat = require('./ScopedChat');
+const ConversationPath = require('../world/ConversationPath');
+const Timeline = require('../timeline');
 
 class RoleplayPostProcessor {
-  constructor(chat, logger = null) {
+  constructor(chat, logger = null, { paths = new ConversationPath(), reactions = new ReactionRegistry() } = {}) {
+    this._rawChat = chat;
+    chat = ScopedChat.wrap(chat);
     this._chat = chat;
     this._logger = logger;
+    this._paths = paths;
+    this._reactions = reactions;
     this._auditor = new ArtAuditor(chat);
     this._stage = new StageCall(chat, logger);
     this._profiles = new ProfileCall(chat, logger);
@@ -36,26 +45,79 @@ class RoleplayPostProcessor {
     this._images = new ImagePhase(chat);
   }
 
-  async process({ content, assistantMessageId, meta, emit, setMeta, replaceContent = null, aborted = false }) {
-    const turn = new TurnChannel({ emit, setMeta, messageId: assistantMessageId });
+  async process(args) {
+    const a = args || {};
+    const scope = this._reactions.start(a.conversationId || null, a.assistantMessageId || null, () => this._abortImages());
+    try {
+      await ReactionScope.run(scope, () => this._process(a, scope));
+    } finally {
+      scope.markReconciled();
+      this._reactions.end(scope);
+    }
+  }
+
+  async _process({ content, conversationId = null, assistantMessageId, meta, emit, setMeta, replaceContent = null, aborted = false }, scope) {
+    const paths = this._paths && this._paths.tracks(conversationId, assistantMessageId) ? this._paths : null;
+    const turn = new TurnChannel({ emit, setMeta, messageId: assistantMessageId, conversationId, scope, paths });
     try {
       if (aborted || !String(content || '').trim()) { turn.progress.done(); return; }
-      const data = TurnData.from(meta);
+      turn.beginWorld();
       turn.progress.say('Reading the scene…');
+      await this._reactions.waitForEarlier(scope);
+      const data = RoleplayPostProcessor._workingData(meta, paths, conversationId, assistantMessageId);
+      const worldEmpty = !data.characters.length && !data.scenes.length;
+      const before = Timeline.snapshot(data);
       content = await this._polishProse(data, content, replaceContent, turn);
-      const { delta, directorShot } = await this._reconcile(data, content, TurnData.wasEmpty(meta), turn);
-      if (delta.changed) {
-        await turn.save(data);
-        turn.announceWorld(data, delta.announcement());
-      }
+      const { delta, directorShot } = await this._reconcile(data, content, worldEmpty, turn);
+      turn.commit(data, before);
+      await turn.save(data);
+      turn.announceWorld(data, delta.announcement());
+      scope.markReconciled();
+      turn.beginImages();
       await this._draw(data, content, delta, directorShot, turn);
     } catch (err) {
-      if (err && err.code === ImageCancellation.CODE) {
-        turn.emit('mode:image-fail', { messageId: assistantMessageId, canceled: true });
-        turn.progress.done();
-      }
-      if (this._logger && this._logger.warn) this._logger.warn('roleplay postProcess failed', { error: err && err.message });
+      this._failed(err, turn);
     }
+  }
+
+  static _workingData(meta, paths, conversationId, messageId) {
+    const data = TurnData.from(paths ? { data: paths.data(conversationId) } : meta);
+    Timeline.ensure(data);
+    if (paths) Timeline.materialize(data, paths.ancestors(conversationId, messageId));
+    return data;
+  }
+
+  _failed(err, turn) {
+    if (ReactionScope.isStop(err)) {
+      turn.activity.stopped(err.message);
+      turn.emit('mode:image-fail', { messageId: turn.messageId, canceled: true });
+      turn.progress.done();
+      return;
+    }
+    if (err && err.code === ImageCancellation.CODE) {
+      turn.emit('mode:image-fail', { messageId: turn.messageId, canceled: true });
+      turn.progress.done();
+    } else {
+      turn.activity.failed();
+    }
+    if (this._logger && this._logger.warn) this._logger.warn('roleplay postProcess failed', { error: err && err.message });
+  }
+
+  _abortImages() {
+    try { if (this._rawChat && typeof this._rawChat.abortImage === 'function') this._rawChat.abortImage(); } catch (_) {}
+  }
+
+  async prepareTurn({ conversationId = null, meta = null } = {}) {
+    if (!conversationId || !this._paths || !this._paths.available()) return meta;
+    const path = this._paths.activeMessages(conversationId);
+    if (!path.length) return meta;
+    const ids = Timeline.continuationIds(path);
+    this._reactions.supersedeOffPath(conversationId, ids, 'replaced');
+    await this._reactions.settled(conversationId, ids);
+    const data = TurnData.from({ data: this._paths.data(conversationId) });
+    Timeline.ensure(data);
+    Timeline.materialize(data, ids);
+    return Object.assign({}, meta || {}, { data });
   }
 
   async _polishProse(data, content, replaceContent, turn) {

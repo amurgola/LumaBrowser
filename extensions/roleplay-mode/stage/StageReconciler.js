@@ -4,11 +4,14 @@ const CurrentState = require('../world/CurrentState');
 const RoleplayIds = require('../world/RoleplayIds');
 const CharacterState = require('../world/CharacterState');
 const CharacterChronicle = require('../world/CharacterChronicle');
+const CharacterMarks = require('../world/CharacterMarks');
 const CharacterProfile = require('../world/CharacterProfile');
 const StoryLedger = require('../world/StoryLedger');
 const OutfitWardrobe = require('../pipeline/OutfitWardrobe');
 
 class StageReconciler {
+  static UNLISTED_GRACE = 4;
+
   static apply(data, ex, delta, turn = {}) {
     StageReconciler._characters(data, ex.characters, delta);
     if (ex.location) StageReconciler._location(data, ex.location, delta);
@@ -65,7 +68,11 @@ class StageReconciler {
       const entry = StageReconciler._presentEntry(data, sc, delta, sceneId, turn);
       if (entry) { entries.push(entry); presentIds.add(entry.charId); }
     }
-    StageReconciler._departures(data, state, presentIds, sceneId, delta, turn);
+    const prior = new Map(CastResolver.currentEntries(data).map((e) => [e.char.id, e.state]));
+    for (const char of StageReconciler._departures(data, state, presentIds, sceneId, delta, turn)) {
+      const was = prior.get(char.id);
+      entries.push(Object.assign({ charId: char.id, name: char.name, present: true }, was || {}));
+    }
     if (CurrentState.replace(data, { sceneId, characters: entries })) delta.changed = true;
   }
 
@@ -85,7 +92,9 @@ class StageReconciler {
     let char = CastResolver.byName(data, sc.name);
     if (!char && sc.present !== false) char = delta.addCharacter(data, { name: sc.name });
     if (!char) return null;
+    if (char.state && char.state.unlisted) { delete char.state.unlisted; delta.changed = true; }
     if (sc.beat && CharacterChronicle.addBeat(char, { turn: turn.turn, messageId: turn.messageId, text: sc.beat })) delta.changed = true;
+    if (Array.isArray(sc.noticed) && sc.noticed.length && CharacterMarks.add(char, sc.noticed, turn.turn)) delta.changed = true;
     if (sc.bondChange && sc.bondUser && CharacterProfile.setBond(char, CharacterProfile.BOND_USER, sc.bondUser)) delta.changed = true;
     if (sc.present === false) {
       if (CharacterState.depart(char, { turn: turn.turn, sceneId, note: sc.leftTo })) delta.changed = true;
@@ -111,11 +120,22 @@ class StageReconciler {
   static _departures(data, state, presentIds, sceneId, delta, turn) {
     const before = CastResolver.currentEntries(data).map((e) => e.char);
     const named = new Set((state.characters || []).map((c) => String(c.name || '').toLowerCase()));
+    const prevScene = data.currentState && data.currentState.sceneId;
+    const moved = !!(prevScene && sceneId && prevScene !== sceneId);
+    const kept = [];
     for (const char of before) {
       if (presentIds.has(char.id) || named.has(String(char.name || '').toLowerCase())) continue;
-      const prevScene = data.currentState && data.currentState.sceneId;
+      const missed = (Number(char.state && char.state.unlisted) || 0) + 1;
+      if (!moved && missed < StageReconciler.UNLISTED_GRACE) {
+        char.state = Object.assign({}, char.state, { unlisted: missed });
+        kept.push(char);
+        delta.changed = true;
+        continue;
+      }
+      if (char.state && char.state.unlisted) { delete char.state.unlisted; delta.changed = true; }
       if (CharacterState.depart(char, { turn: turn.turn, sceneId: prevScene || sceneId, note: '' })) delta.changed = true;
     }
+    return kept;
   }
 
   static _wardrobe(char, sc, delta) {

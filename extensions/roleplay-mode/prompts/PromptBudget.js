@@ -6,9 +6,11 @@ class PromptBudget {
   static MAX_SCALE = 3;
   static HISTORY_SHARE = 0.5;
   static LAYER_TOKENS = Object.freeze({
-    brief: 500, premise: 300, story: 450, card: 300, offstage: 40, offstageTotal: 320, setting: 120, anchor: 200,
+    brief: 500, premise: 300, story: 450, card: 300, offstage: 40, offstageTotal: 320, setting: 120, anchor: 200, body: 520, bodyTotal: 2400, surface: 700,
   });
   static MIN_HISTORY_MESSAGES = 4;
+  static REPLY_RESERVE = 1024;
+  static HISTORY_FLOOR = 512;
 
   static window(data, contextWindow = null) {
     const fromRouter = Number(contextWindow);
@@ -32,6 +34,12 @@ class PromptBudget {
     const base = PromptBudget.LAYER_TOKENS[layer] || 0;
     const scale = Math.min(PromptBudget.MAX_SCALE, Math.max(PromptBudget.MIN_SCALE, (window || PromptBudget.DEFAULT_WINDOW) / PromptBudget.REFERENCE_WINDOW));
     return Math.round(base * scale);
+  }
+
+  static historyFor(window, systemPrompt = '', postHistoryPrompt = '') {
+    const w = window || PromptBudget.DEFAULT_WINDOW;
+    const left = w - PromptBudget.estimate(systemPrompt) - PromptBudget.estimate(postHistoryPrompt) - PromptBudget.REPLY_RESERVE;
+    return Math.max(PromptBudget.HISTORY_FLOOR, Math.min(PromptBudget.historyTokens(w), left));
   }
 
   static historyTokens(window) {

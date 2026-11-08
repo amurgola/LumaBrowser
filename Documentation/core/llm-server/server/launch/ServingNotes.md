@@ -34,3 +34,12 @@ The plan notes for the optional serving features of a launch.
 These features are opt-in or conditional, so the user needs to know whether each
 one actually happened. A request that a gate refused always produces a note
 naming the gate.
+
+## Drafter repo hint
+
+When a family publishes a drafter (`profile.speculative`) and none sits beside the
+weights, the OFF note points at the Setup row's download when
+[DrafterCatalog](../../models/DrafterCatalog.md)`.forFamily` has an entry
+(Qwen3.8: `z-lab/Qwen3.8-27B-DFlash2-GGUF`). The ON note no longer promises the
+same output: the main model still picks every token, but batch-size dependent
+kernels mean a greedy run can diverge from a plain decode after a few hundred tokens.

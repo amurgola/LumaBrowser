@@ -97,7 +97,9 @@ Per-model stores: `getAllFitResults`, `getFitResults`, `saveFitResults`
 ([FitResultStore](service/FitResultStore.md)); `getAllGambitResults`,
 `getGambitResults`, `saveGambitResults` ([GambitResultStore](service/GambitResultStore.md));
 `getModelDisplayNames`, `setModelDisplayName`, `resolveModelDisplayName`
-([LlmModelDisplayNames](service/LlmModelDisplayNames.md)); `getModelLaunchFlags`,
+([LlmModelDisplayNames](service/LlmModelDisplayNames.md)); `getModelDrafterChoices`,
+`setModelDrafterChoice` ([LlmDrafterChoices](service/LlmDrafterChoices.md), applied to
+every scan through `LlmModelsScanner.shared.useDrafterChoices`); `getModelLaunchFlags`,
 `setModelLaunchFlags`, `resolveModelLaunchFlags` ([ModelLaunchFlags](service/ModelLaunchFlags.md));
 `listInstalledChatModels()` ([InstalledChatModels](service/InstalledChatModels.md)); the public
 `modelSettings` field ([ModelSettings](service/ModelSettings.md) over

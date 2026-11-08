@@ -10,6 +10,7 @@ const GgufHeaderCache = require('./scanner/GgufHeaderCache');
 const GgufRoleResolver = require('./scanner/GgufRoleResolver');
 const GgufParseWorkerClient = require('./scanner/GgufParseWorkerClient');
 const ModelSidecars = require('./scanner/ModelSidecars');
+const DrafterChoiceApplier = require('./scanner/DrafterChoiceApplier');
 const BoundedParallel = require('./scanner/BoundedParallel');
 const GgufFileName = require('./models/GgufFileName');
 const GgufRoleTable = require('./GgufRoleTable');
@@ -27,6 +28,11 @@ class LlmModelsScanner {
   constructor({ headerCache = LlmModelsScanner.defaultHeaderCache(), registry } = {}) {
     this._headerCache = headerCache;
     this._registry = registry;
+    this._drafterChoices = () => ({});
+  }
+
+  useDrafterChoices(provider) {
+    this._drafterChoices = typeof provider === 'function' ? provider : () => ({});
   }
 
   static spawnParseWorker() {
@@ -51,11 +57,13 @@ class LlmModelsScanner {
     const models = this._buildModels({ ...walk, ggufs }, rootDir, roles);
     await this._readHeaders(models);
     await ModelSidecars.attach(models);
+    const drafters = DrafterChoiceApplier.apply(models, this._readDrafterChoices());
     LlmModelsScanner._sort(models);
     return {
       available: true,
       dir: rootDir,
       models,
+      drafters,
       truncated: walk.visited >= ModelDirWalker.MAX_ENTRIES,
       skipped: { diffusion, excludedDirs: walk.excluded || [] },
     };
@@ -85,6 +93,10 @@ class LlmModelsScanner {
     ];
     for (const model of models) Object.assign(model, ModelClassifier.classify(model, this._registry));
     return models;
+  }
+
+  _readDrafterChoices() {
+    try { return this._drafterChoices() || {}; } catch (_) { return {}; }
   }
 
   async _readHeaders(models) {

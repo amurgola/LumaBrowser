@@ -38,6 +38,11 @@ class ModelFamilyTable {
       nativeToolCalls: false,
       nativeToolCallsCapable: true,
       nativeToolExclude: ['edit_artifact'],
+      speculative: {
+        specType: 'draft-dflash',
+        draftNMax: 7,
+        label: 'DFlash2',
+      },
       note:
         'Alibaba publishes temperature 1.0 / top_p 0.95 / top_k 20 / min_p 0.0 with both penalties '
         + 'off for Qwen3.8; its tool-call template needs the jinja path in llama.cpp, and llama-server '

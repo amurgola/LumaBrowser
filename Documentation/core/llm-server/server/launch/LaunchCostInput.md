@@ -19,3 +19,8 @@ The legacy planner priced a full offload four times (whole file for the MoE
 decision, the resident share for the expert fill, and with and without
 `--swa-full`), each time spelling out the same thirteen fields. One builder keeps
 the four prices over the same terms.
+
+## Draft length
+
+`build` also forwards `draftN: spec.specDraftN` so the full-offload price includes
+the recurrent checkpoints of the drafted block on a hybrid target.

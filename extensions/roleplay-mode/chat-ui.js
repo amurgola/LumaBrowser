@@ -17,6 +17,118 @@
   }
   function shared() { return window.RP_SHARED || null; }
 
+  if (!document.getElementById('rp-timeline') && !window.RP_TIMELINE) {
+    const t = document.createElement('script');
+    t.id = 'rp-timeline';
+    t.src = '/llm-ui/ext/roleplay-mode/timeline.js';
+    document.head.appendChild(t);
+  }
+  function timeline() { return window.RP_TIMELINE || null; }
+
+  const rpActivity = new Map();
+
+  async function saveWorld(ctx, data, how, prev) {
+    const T = timeline();
+    if (T && data) {
+      try {
+        T.ensure(data);
+        if (how === 'reset') T.reset(data);
+        else if (how === 'definitions') { T.syncDefinitions(data, prev || {}); T.commit(data, data.headId || null); }
+        else if (how === 'head') T.commit(data, data.headId || null);
+      } catch (_) {}
+    }
+    await ctx.setMeta({ data });
+  }
+
+  async function syncHeadWithThread(ctx) {
+    const T = timeline();
+    const data = ctx && ctx.meta && ctx.meta.data;
+    const conv = ctx && ctx.api && ctx.api.conv;
+    if (!T || !data || !ctx.conversationId || !conv || typeof conv.messages !== 'function') return;
+    let msgs = [];
+    try {
+      const r = await conv.messages(ctx.conversationId);
+      msgs = (r && Array.isArray(r.messages)) ? r.messages : [];
+    } catch (_) { return; }
+    if (!msgs.length) return;
+    const idsBefore = (data.characters || []).map((c) => c && c.id).join('|');
+    const added = T.ensure(data);
+    const moved = T.materialize(data, msgs.map((m) => m.id));
+    if (!added && !moved) return;
+    try { await ctx.setMeta({ data }); } catch (_) {}
+    renderRoster(ctx);
+    ensureSceneButton(ctx);
+    applySceneBackground(ctx);
+    if (idsBefore !== (data.characters || []).map((c) => c && c.id).join('|') && ctx.refresh) ctx.refresh();
+  }
+
+  function applySceneBackground(ctx) {
+    const data = (ctx.meta && ctx.meta.data) || {};
+    const sceneId = (data.currentState && data.currentState.sceneId) || data.activeSceneId;
+    const sc = (data.scenes || []).find((s) => s.id === sceneId);
+    if (data.options && data.options.sceneBackground && sc && sc.bg && sc.bg.b64) ctx.applyBackground(sc.bg.b64, sc.bg.mime);
+    else if (typeof ctx.clearBackground === 'function') ctx.clearBackground();
+  }
+
+  function activityFor(ctx, messageId) {
+    if (!messageId) return null;
+    if (rpActivity.has(messageId)) return rpActivity.get(messageId);
+    const T = timeline();
+    const data = ctx && ctx.meta && ctx.meta.data;
+    const point = T && data ? T.entry(data, messageId) : null;
+    return (point && point.activity) || null;
+  }
+
+  function renderActivity(asst, act) {
+    if (!asst) return;
+    let box = asst.querySelector('.rp-activity');
+    const empty = !act || !act.status || (act.status === 'done' && !(act.changes && act.changes.length));
+    if (empty) { if (box) box.remove(); return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'rp-activity';
+      const bar = asst.querySelector('.rp-img-actions');
+      if (bar) asst.insertBefore(box, bar); else asst.appendChild(box);
+    }
+    box.className = 'rp-activity is-' + act.status;
+    box.textContent = '';
+    if (act.status === 'working') {
+      const spin = document.createElement('span');
+      spin.className = 'luma-spinner rp-activity-spin';
+      const t = document.createElement('span');
+      t.className = 'rp-activity-t';
+      t.textContent = 'Updating the world: ' + (act.label || 'working…');
+      box.title = 'The story memory, cast and scene are being updated from this reply. A new reply waits for this to finish.';
+      box.appendChild(spin);
+      box.appendChild(t);
+      return;
+    }
+    if (act.status === 'stopped' || act.status === 'failed') {
+      const t = document.createElement('span');
+      t.className = 'rp-activity-t';
+      t.textContent = act.label || (act.status === 'failed' ? 'The world could not be updated for this reply.' : 'Stopped.');
+      box.removeAttribute('title');
+      box.appendChild(t);
+      return;
+    }
+    const det = document.createElement('details');
+    const sum = document.createElement('summary');
+    const n = act.changes.length;
+    sum.textContent = 'World updated: ' + n + (n === 1 ? ' change' : ' changes');
+    det.appendChild(sum);
+    const ul = document.createElement('ul');
+    ul.className = 'rp-activity-list';
+    for (const ch of act.changes) {
+      const li = document.createElement('li');
+      li.dataset.kind = ch.kind || 'event';
+      li.textContent = ch.text;
+      ul.appendChild(li);
+    }
+    det.appendChild(ul);
+    box.removeAttribute('title');
+    box.appendChild(det);
+  }
+
   const rpProgressState = new Map();
 
   let lastAsstMsg = null;
@@ -906,7 +1018,7 @@
         gen: { prompt, modelRef: data.baseModel || null, slot: null, painted: true, sceneId, width, height },
       });
       data.lastShot = { b64: img.b64, mime: img.mime || 'image/png', sceneId, messageId: msg.id };
-      try { await ctx.setMeta({ data }); } catch (_) {}
+      try { await saveWorld(ctx, data, 'assets'); } catch (_) {}
     } catch (_) {
       if (asst) clearSceneLoading(asst);
     }
@@ -938,7 +1050,7 @@
         data.images = data.images || {};
         data.images[msg.id] = Object.assign({}, data.images[msg.id], { b64: r.b64, mime: r.mime || 'image/png' });
         data.lastShot = { b64: r.b64, mime: r.mime || 'image/png', sceneId: recipe.sceneId || data.activeSceneId || null, messageId: msg.id };
-        try { await ctx.setMeta({ data }); } catch (_) {}
+        try { await saveWorld(ctx, data, 'assets'); } catch (_) {}
       } else {
         clearSceneLoading(asst);
       }
@@ -955,6 +1067,8 @@
       if (data) {
         if (data.images && data.images[msg.id]) delete data.images[msg.id];
         if (data.lastShot && data.lastShot.messageId === msg.id) data.lastShot = null;
+        rpActivity.delete(msg.id);
+        if (timeline()) { try { timeline().forget(data, msg.id); } catch (_) {} }
         if (shared() && shared().forgetTurn) { try { shared().forgetTurn(data, msg.id); } catch (_) {} }
         try { await ctx.setMeta({ data }); } catch (_) {}
       }
@@ -1012,7 +1126,7 @@
     data.lastShot = null;
     data.assetRetry = {};
     resetMemory(data);
-    try { await ctx.setMeta({ data }); } catch (_) {}
+    try { await saveWorld(ctx, data, 'reset'); } catch (_) {}
     if (ctx.refresh) ctx.refresh();
   }
 
@@ -1031,7 +1145,9 @@
       it.addEventListener('click', async () => {
         menu.remove();
         const nextState = Object.assign({}, data.currentState || {}, { sceneId: s.id });
-        await ctx.setMeta({ data: { activeSceneId: s.id, currentState: nextState } });
+        data.activeSceneId = s.id;
+        data.currentState = nextState;
+        await saveWorld(ctx, data, 'head');
         if (data.options && data.options.sceneBackground && s.bg && s.bg.b64) {
           ctx.applyBackground(s.bg.b64, s.bg.mime);
         }
@@ -1155,6 +1271,8 @@
     data.currentState.characters = Array.isArray(data.currentState.characters) ? data.currentState.characters : [];
     data.images = data.images || prev.images || {};
     data.story = data.story || prev.story;
+    if (!data.timeline && prev.timeline) data.timeline = prev.timeline;
+    if (data.headId === undefined && prev.headId !== undefined) data.headId = prev.headId;
     const prevChars = Array.isArray(prev.characters) ? prev.characters : [];
     for (const c of data.characters) {
       const was = prevChars.find((p) => p && p.id === c.id);
@@ -1206,7 +1324,7 @@
     if (!edited) return;
     await applyLlmChoice(api, edited, llm.locals);
     const next = normalizeRoleplayData(edited, cur);
-    await ctx.setMeta({ data: next });
+    await saveWorld(ctx, next, 'definitions', cur);
     if (ctx.refresh) ctx.refresh();
   }
 
@@ -1317,7 +1435,7 @@
       profile: Object.assign({}, edited.profile || {}, { bonds: (ch.profile && ch.profile.bonds) || {} }),
     }));
     const nextChars = chars.map((c) => (c.id === charId ? merged : c));
-    await ctx.setMeta({ data: { characters: nextChars } });
+    await saveWorld(ctx, Object.assign({}, data, { characters: nextChars }), 'definitions', data);
     renderRoster(ctx);
     if (ctx.refresh) ctx.refresh();
   }
@@ -1524,14 +1642,14 @@
                   stateChar.outfitId = it.outfitId;
                   stateChar.outfitDesc = c.currentOutfitDesc;
                 }
-                await ctx.setMeta({ data: d });
+                await saveWorld(ctx, d, 'head');
                 draw();
               }
             });
             acts.appendChild(setb);
           }
           const delb = document.createElement('button'); delb.className = 'luma-btn luma-btn--sm rp-img-btn rp-img-btn-del'; delb.textContent = 'Remove';
-          delb.addEventListener('click', async () => { removeArtifact(d, it); await ctx.setMeta({ data: d }); draw(); if (ctx.refresh) ctx.refresh(); });
+          delb.addEventListener('click', async () => { removeArtifact(d, it); await saveWorld(ctx, d, 'head'); draw(); if (ctx.refresh) ctx.refresh(); });
           acts.appendChild(delb);
           cell.appendChild(acts);
           grid.appendChild(cell);
@@ -1556,7 +1674,9 @@
         : await window.LumaChatExt.openSchemaModal(schema, { api });
       if (!data) return null;
       await applyLlmChoice(api, data, llm.locals);
-      return normalizeRoleplayData(data, {});
+      const world = normalizeRoleplayData(data, {});
+      if (timeline()) { try { timeline().ensure(world); } catch (_) {} }
+      return world;
     },
 
     async startConversation(api, ctx) {
@@ -1580,7 +1700,12 @@
         c.currentSlots = null;
       }
       resetMemory(data);
-      try { await ctx.setMeta({ data }); } catch (_) {}
+      rpActivity.clear();
+      try { await saveWorld(ctx, data, 'reset'); } catch (_) {}
+    },
+
+    onOpenConversation(meta, ctx) {
+      syncHeadWithThread(ctx);
     },
 
     applyTheme(rootEl, meta, ctx) {
@@ -1652,6 +1777,7 @@
         showSceneLoading(asst, st.label);
         if (st.stageB64) showSceneStage(asst, st.stageB64, st.stageMime);
       }
+      renderActivity(asst, activityFor(ctx, msg.id));
       addTurnControls(turnEl, msg, ctx);
     },
 
@@ -1667,6 +1793,15 @@
         if (asst) showSceneLoading(asst, st.label);
         return;
       }
+      if (evt.type === 'mode:activity') {
+        if (!p.messageId) return;
+        rpActivity.set(p.messageId, { status: p.status, label: p.label || '', steps: p.steps || [], changes: p.changes || [] });
+        const turnEl = ctx.turnElForMessage(p.messageId);
+        if (turnEl && turnEl.dataset && turnEl.dataset.msgId && turnEl.dataset.msgId !== p.messageId) return;
+        renderActivity(turnEl && turnEl.querySelector('.cm-asst'), rpActivity.get(p.messageId));
+        return;
+      }
+      if (evt.type === 'mode:progress' && p.phase === 'world' && !p.done) return;
       if (evt.type === 'mode:progress') {
         const turnEl = ctx.turnElForMessage(p.messageId);
         const asst = turnEl && turnEl.querySelector('.cm-asst');
@@ -1726,10 +1861,15 @@
         if (!ctx.meta) return;
         ctx.meta.data = ctx.meta.data || {};
         const data = ctx.meta.data;
-        if (Array.isArray(p.characters)) data.characters = p.characters;
-        if (Array.isArray(p.scenes)) data.scenes = p.scenes;
-        if (p.activeSceneId !== undefined) data.activeSceneId = p.activeSceneId;
-        if (p.currentState !== undefined) data.currentState = p.currentState;
+        if (timeline()) {
+          try { timeline().adoptHead(data, p); } catch (_) {}
+        } else {
+          if (Array.isArray(p.characters)) data.characters = p.characters;
+          if (Array.isArray(p.scenes)) data.scenes = p.scenes;
+          if (p.activeSceneId !== undefined) data.activeSceneId = p.activeSceneId;
+          if (p.currentState !== undefined) data.currentState = p.currentState;
+          if (p.story !== undefined) data.story = p.story;
+        }
         renderRoster(ctx);
         ensureSceneButton(ctx);
         if (p.sceneChanged && data.options && data.options.sceneBackground) {

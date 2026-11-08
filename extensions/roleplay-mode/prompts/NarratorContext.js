@@ -7,14 +7,18 @@ const StoryLedger = require('../world/StoryLedger');
 const NarratorBrief = require('./NarratorBrief');
 const PromptBudget = require('./PromptBudget');
 const HistoryTrimmer = require('./HistoryTrimmer');
+const BodyNotes = require('./BodyNotes');
+const CharacterMarks = require('../world/CharacterMarks');
 
 class NarratorContext {
   static PRESENT_MAX = 6;
   static OFFSTAGE_MAX = 8;
   static RECENT_EVENTS = 8;
   static THREADS_MAX = 5;
+  static ANCHOR_THREADS = 3;
+  static ANCHOR_PER_CHARACTER = 40;
 
-  static build(data, { messages = [], contextWindow = null } = {}) {
+  static build(data, { messages = [], contextWindow = null, grounding = null, surface = null } = {}) {
     const d = data || {};
     const window = PromptBudget.window(d, contextWindow);
     const cast = NarratorContext.cast(d);
@@ -23,18 +27,23 @@ class NarratorContext {
     const systemPrompt = [
       ...NarratorContext._brief(d, emptyWorld, window),
       ...NarratorContext._premise(d, window),
+      ...BodyNotes.lines(grounding, cast.present, window),
       ...NarratorContext._story(d, window),
-      ...NarratorContext._present(d, cast.present, window),
+      ...NarratorContext._present(d, cast.present, window, surface),
+      ...BodyNotes.surfaceLines(surface, cast.present, window),
       ...NarratorContext._offstage(d, cast.offstage, window),
       ...NarratorContext._setting(scene, cast.present, window),
     ].join('\n');
-    const trimmed = HistoryTrimmer.trim(messages, PromptBudget.historyTokens(window));
+    const postHistoryPrompt = NarratorContext._anchor(d, cast.present, window, grounding);
+    const clean = HistoryTrimmer.withoutReasoning(messages);
+    const trimmed = HistoryTrimmer.trim(clean.messages, PromptBudget.historyFor(window, systemPrompt, postHistoryPrompt));
     return {
       systemPrompt,
-      postHistoryPrompt: NarratorContext._anchor(d, cast.present, window),
+      postHistoryPrompt,
       messages: trimmed.messages,
       window,
       dropped: trimmed.dropped,
+      cleaned: clean.cleaned,
     };
   }
 
@@ -88,22 +97,24 @@ class NarratorContext {
       lines.push('Recent events:');
       for (const r of recent) lines.push('- ' + r.text);
     }
-    const threads = StoryLedger.openThreads(d).slice(0, NarratorContext.THREADS_MAX);
-    if (threads.length) lines.push('Open threads: ' + threads.join('; ') + '.');
-    if (story.pressure) lines.push('Pressing: ' + PromptBudget.clip(story.pressure, 120));
+    const threads = StoryLedger.openThreads(d).slice(NarratorContext.ANCHOR_THREADS, NarratorContext.THREADS_MAX);
+    if (threads.length) lines.push('Other open threads: ' + threads.join('; ') + '.');
     return lines;
   }
 
-  static _present(d, present, window) {
+  static _present(d, present, window, surface = null) {
     if (!present.length) return [];
     const cap = PromptBudget.layerTokens('card', window);
     const lines = ['', '## In the scene now'];
-    for (const c of present) lines.push(PromptBudget.clip(NarratorContext.card(c), cap));
+    for (const c of present) {
+      const upClose = !!(surface && Array.isArray(surface[c.id]) && surface[c.id].length);
+      lines.push(PromptBudget.clip(NarratorContext.card(c, { marks: !upClose }), cap));
+    }
     lines.push('Keep each of them consistent with their card, voice and tells; wardrobe and looks as noted.');
     return lines;
   }
 
-  static card(c) {
+  static card(c, { marks: withMarks = true } = {}) {
     const p = CharacterProfile.of(c);
     const st = CharacterState.of(c);
     const ch = CharacterChronicle.of(c);
@@ -112,6 +123,8 @@ class NarratorContext {
     const lines = [head.join(': ')];
     if (p.history) lines.push('  past: ' + p.history);
     if (p.appearance) lines.push('  looks: ' + p.appearance);
+    const marks = withMarks ? CharacterMarks.line(c) : '';
+    if (marks) lines.push('  noticed since: ' + marks);
     const outfit = (c.currentOutfitDesc || '').trim();
     if (outfit) lines.push('  wearing: ' + outfit);
     if (p.voice) lines.push('  voice: ' + p.voice);
@@ -167,21 +180,25 @@ class NarratorContext {
     return lines;
   }
 
-  static _anchor(d, present, window) {
-    const cap = PromptBudget.layerTokens('anchor', window);
+  static _anchor(d, present, window, grounding = null) {
+    const labels = present.map((c) => BodyNotes.label(grounding, c)).join(' ');
+    const cap = PromptBudget.layerTokens('anchor', window) + (labels.trim() ? PromptBudget.estimate(labels) + 4 : 0)
+      + present.length * NarratorContext.ANCHOR_PER_CHARACTER;
     const mode = NarratorBrief.LENGTH_MODES[NarratorBrief.lengthMode(d)];
     const lines = ['[Scene notes for this reply]'];
     for (const c of present) {
-      const bits = [CharacterState.line(c), (c.currentOutfitDesc || '').trim() ? 'wearing ' + c.currentOutfitDesc.trim() : ''].filter(Boolean);
+      const bits = [CharacterState.line(c), (c.currentOutfitDesc || '').trim() ? 'wearing ' + c.currentOutfitDesc.trim() : '', BodyNotes.label(grounding, c)].filter(Boolean);
       lines.push('- ' + c.name + (bits.length ? ': ' + bits.join('; ') : ''));
     }
-    const threads = StoryLedger.openThreads(d).slice(0, 3);
+    const threads = StoryLedger.openThreads(d).slice(0, NarratorContext.ANCHOR_THREADS);
     if (threads.length) lines.push('Open: ' + threads.join('; ') + '.');
     const pressure = StoryLedger.of(d).pressure;
     if (pressure) lines.push('Pressure: ' + pressure);
-    lines.push(mode.words + ', one beat, end on a handoff. The player\'s choices stay theirs; everyone else acts on '
-      + 'their own wants, and the pressure above comes closer unless the player turns it.');
-    return PromptBudget.clip(lines.join('\n'), cap);
+    const rules = mode.words + ', one beat, end on a handoff. Not everyone present needs a line; only those this '
+      + 'moment involves act or speak. The player\'s choices stay theirs; everyone else acts on their own wants, and '
+      + 'the pressure above comes closer unless the player turns it.';
+    const room = Math.max(40, cap - PromptBudget.estimate(rules) - 2);
+    return PromptBudget.clip(lines.join('\n'), room) + '\n' + rules;
   }
 
   static _lastTurn(c) {

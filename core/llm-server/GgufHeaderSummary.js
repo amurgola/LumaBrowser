@@ -8,7 +8,7 @@ class GgufHeaderSummary {
     'general.alignment', 'general.parameter_count', 'tokenizer.chat_template',
   ]);
 
-  static WANTED_SUFFIX = /\.(block_count|context_length|embedding_length|feed_forward_length|attention\.head_count|attention\.head_count_kv|attention\.key_length|attention\.value_length|attention\.key_length_swa|attention\.value_length_swa|attention\.sliding_window|attention\.sliding_window_pattern|rope\.freq_base|rope\.dimension_count|expert_count|expert_used_count|expert_feed_forward_length|expert_shared_count|vocab_size|pooling_type)$/;
+  static WANTED_SUFFIX = /\.(block_count|context_length|embedding_length|feed_forward_length|attention\.head_count|attention\.head_count_kv|attention\.key_length|attention\.value_length|attention\.key_length_swa|attention\.value_length_swa|attention\.sliding_window|attention\.sliding_window_pattern|rope\.freq_base|rope\.dimension_count|expert_count|expert_used_count|expert_feed_forward_length|expert_shared_count|vocab_size|pooling_type|block_size)$/;
 
   static CLIP_KEY = /^clip\./;
 
@@ -164,6 +164,7 @@ class GgufHeaderSummary {
       expertFeedForwardLength: num(pick('expert_feed_forward_length')),
       expertSharedCount: num(pick('expert_shared_count')),
       vocabSize: num(pick('vocab_size')),
+      blockSize: num(pick('block_size')),
     };
   }
 

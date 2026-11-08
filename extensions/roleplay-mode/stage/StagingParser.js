@@ -8,6 +8,7 @@ class StagingParser {
   static EVENTS_MAX = 6;
   static THREADS_MAX = 4;
   static WHO_MAX = 4;
+  static NOTICED_MAX = 4;
   static CLOCK_ADVANCES = ['none', 'minutes', 'hours', 'next-morning', 'days'];
 
   static parse(text) {
@@ -104,6 +105,7 @@ class StagingParser {
       beat: String(c.beat || '').trim(),
       leftTo: String(c.leftTo || '').trim(),
       revealed: StagingParser._true(c.revealed),
+      noticed: StagingParser._strings(c.noticed, StagingParser.NOTICED_MAX),
       outfit: String(c.outfit || c.clothing || c.clothes || '').trim(),
       slots: StagingParser.normalizeSlots(c.slots),
       head: String(c.head || c.headwear || '').trim(),

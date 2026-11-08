@@ -12,3 +12,10 @@ Gets the managed local server running the model a chat request asked for.
 ## Why
 
 The image servers may hold the cards the LLM needs (a 27B load crashed right after setup art loaded both); they reload on demand. `ensureStopped` force-kills any prior child so the launcher's VRAM reserve sizes against real free space.
+
+## Drafter choice
+
+`prepare` reads the configured model's saved drafter choice
+(`getModelDrafterChoices()[stem]`, as `LlmDrafterChoices.keyOf`) and passes it to
+[LocalRestartDecision](LocalRestartDecision.md) as `drafterKey`, so a swap made in Setup
+reloads the server on the next chat turn. A service without the method passes nothing.

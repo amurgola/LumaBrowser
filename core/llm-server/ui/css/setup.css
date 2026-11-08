@@ -522,6 +522,10 @@
             font-family: var(--mono);
             color: var(--text-dim);
         }
+        .model-drafter-offer .model-drafter-head { color: var(--text-dim); }
+        .model-drafter-offer .luma-btn { margin-left: var(--space-2); vertical-align: middle; }
+        .model-drafter-gate { color: var(--text-muted); font-style: italic; }
+        .model-drafter-actions { margin-top: var(--space-1); }
 
         .model-path {
             display: flex;

@@ -18,7 +18,8 @@ The wizard's and Setup's model download.
   - a Hub resolve URL is pinned once ([HfPinnedRepo](../models/HfPinnedRepo.md)
     at the URL's revision): every part is re-pointed at `resolve/<sha>/` and
     carries its listed size and sha256, and the companions
-    ([ModelCompanions](ModelCompanions.md)) are looked up at the same sha. A
+    ([ModelCompanions](ModelCompanions.md), including the catalog drafter from
+    its own repo) are looked up at the same sha. A
     gated or private repo ends here with the `HF_ACCESS_DENIED` error, before
     any transfer; a Hub that cannot be asked for another reason leaves the URLs
     as given (`revision.pinned: false` with `fallbackReason`); a URL off the
@@ -33,7 +34,7 @@ The wizard's and Setup's model download.
     (`companion-start { kind, label, file, approxBytes }`; a failure, including
     an unsafe name, is `companion-error { kind, message }` and not fatal), then `done`;
   - a cancel or pause between or during files ends with [ModelTransfer](ModelTransfer.md)'s outcome.
-  Resolves `{ success: true, destPath, file, mmproj, mtp }`; any throw sends
+  Resolves `{ success: true, destPath, file, mmproj, mtp, drafter }` (file names, null when absent); any throw sends
   `error { message }` and resolves `{ success: false, error }`. The slot is always released.
 
 ## Why

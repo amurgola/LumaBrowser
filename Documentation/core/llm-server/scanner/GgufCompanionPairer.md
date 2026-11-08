@@ -22,9 +22,12 @@ family; a companion pairs with a family only when the pairing is unambiguous.
 - `GgufCompanionPairer.families(groups)` clusters groups whose keys are linked.
 - `GgufCompanionPairer.namesLinked(keysA, keysB)` equal keys, or one containing
   the other when the shorter is at least `MIN_LINK_KEY_LENGTH` (4) characters.
-- `GgufCompanionPairer.isDraftOf(small, big, hinted = false)` same architecture
-  (both known) and `sizeRatio` at most `DRAFT_MAX_RATIO` (0.2), or
-  `DRAFT_HINTED_MAX_RATIO` (0.5) when the name or `general.type` says draft.
+- `GgufCompanionPairer.isDraftOf(small, big, hinted = false)`: both
+  architectures known and `sizeRatio` at most `DRAFT_MAX_RATIO` (0.2) for a
+  same-architecture sibling; when hinted (the header role is draft, or the name
+  says draft) the ratio widens to `DRAFT_HINTED_MAX_RATIO` (0.5) and the
+  architecture rule is dropped, since a DFlash-style drafter (architecture
+  `dflash`) drafts for a `qwen35` target.
 - `GgufCompanionPairer.sizeRatio(small, big)` by parameter count when both are
   known, else by bytes, else null.
 - `GgufCompanionPairer.keysOf({ fileName, headerName, headerBaseName })` the

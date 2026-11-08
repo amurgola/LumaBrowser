@@ -32,11 +32,18 @@ and `<script id="rp-shared">` for `/llm-ui/ext/roleplay-mode/shared.js` (see
   (auto relights only on Quality), `artRevision` bumped when render settings
   change, active scene and `currentState` repaired, the memory (story record,
   chronicles, states, bonds learned in play) carried over from the previous
-  save on an edit, then `RP_SHARED.migrateData`.
+  save on an edit (the story timeline and `headId` too), then
+  `RP_SHARED.migrateData`. A new world starts its timeline
+  (`RP_TIMELINE.ensure`).
 - `startConversation`: sends `(Begin the scene: set the stage and introduce the characters.)`.
 - `onRestart`: wipes images, scene art, character art, wardrobe and the memory
   (story record, each character's chronicle and state, scene memories); keeps
-  the definitions and profiles. "Clear story state" resets the memory the same way.
+  the definitions and profiles. "Clear story state" resets the memory the same
+  way. Both start the story timeline over.
+- `onOpenConversation`: every open of the thread (load, variant switch, removed
+  turn) moves the head to the shown branch's newest point
+  (`RP_TIMELINE.materialize` over `api.conv.messages`), stores it, and re-renders
+  the roster, scene button and background (the thread once when the cast changed).
 - `applyTheme`: the current scene's art as the chat background when
   `options.sceneBackground`, else clears it.
 - `decorateComposer`: Scene (switcher plus two-click "Clear story state"),
@@ -47,14 +54,25 @@ and `<script id="rp-shared">` for `/llm-ui/ext/roleplay-mode/shared.js` (see
   paragraphs, `**Name:**` lines as avatar plus attributed text (quoted speech
   vs muted action, emotion avatar), mid-paragraph speaker split, stray tags
   unbolded, `<<<WORLD>>>` and ```` ```choices ```` blocks stripped; stored image;
-  progress placeholder re-asserted after a shell re-render; image and remove
-  controls. User turns get a Remove control.
+  progress placeholder re-asserted after a shell re-render; the reply's
+  world-update line (`.rp-activity`: the running step, then a collapsed list of
+  what the reply changed, or that it was stopped; live from `mode:activity`, else
+  from the reply's timeline point); image and remove controls. User turns get a
+  Remove control.
 - `onChatEvent`: the server contract from
   [RoleplayExtension](RoleplayExtension.md): `mode:image-start`,
   `mode:progress`, `mode:image-stage`, `mode:image-fail`, `mode:image`,
-  `mode:world`, `mode:scene-art`, and `mode:content` (a polished reply:
-  the body re-renders from the new text). Removing a turn also calls
-  `RP_SHARED.forgetTurn` so the memory drops that turn's beats and events.
+  `mode:world` (adopted through `RP_TIMELINE.adoptHead`: head rows, story,
+  `headId`, the reply's point), `mode:scene-art`, `mode:content` (a polished reply:
+  the body re-renders from the new text) and `mode:activity`. World-phase
+  `mode:progress` labels (`phase: 'world'`) go to the activity line, not the image
+  placeholder. Removing a turn drops its timeline point (and calls
+  `RP_SHARED.forgetTurn`); the refresh re-materializes the head.
+- Page edits store through `saveWorld(ctx, data, how)`: `head` (scene switch,
+  Wear an outfit, gallery removal) records the head into its point, `definitions`
+  (Edit, character card) also syncs definitions to every point, `reset` (Restart,
+  Clear story state) starts over, `assets` (image regeneration, Create image)
+  only stores.
 
 Model text reaches `innerHTML` only through `escHtml` (text positions) and the
 small inline-markdown pass.
@@ -62,6 +80,6 @@ small inline-markdown pass.
 ## Globals
 
 Reads `window.LumaChatExt` (`registerMode`, `openSchemaModal`,
-`openSchemaInline`, `generateImage`), `window.RP_SHARED`,
+`openSchemaInline`, `generateImage`), `window.RP_SHARED`, `window.RP_TIMELINE`,
 `window.llmDiagAPI.image.generateAbort`, `window.CSS`, `window.performance`.
 Writes none (it registers through LumaChatExt).

@@ -162,7 +162,14 @@ class GgufModelGrouper {
   }
 
   static _attach(model, companion) {
-    model[companion.kind].push(GgufModelGrouper._fileRef(companion.file));
+    model[companion.kind].push(GgufModelGrouper._companionRef(companion));
+  }
+
+  static _companionRef(companion) {
+    const ref = GgufModelGrouper._fileRef(companion.file);
+    const header = companion.info && companion.info.header;
+    if (companion.kind !== 'drafter' || !header) return ref;
+    return { ...ref, architecture: header.architecture || null, blockSize: header.blockSize || null };
   }
 
   static _recordUnpaired(models, pairing, companion) {

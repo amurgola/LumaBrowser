@@ -1,5 +1,6 @@
 const path = require('path');
 const ByteLadder = require('../ByteLadder');
+const DrafterCatalog = require('../../models/DrafterCatalog');
 const SlotPlan = require('./SlotPlan');
 const PromptCacheRam = require('./PromptCacheRam');
 
@@ -127,7 +128,7 @@ class ServingNotes {
         `${drafter.label} speculative decoding: ON (--spec-type ${drafter.specType}, `
         + `--spec-draft-n-max ${drafter.draftNMax}, -md ${path.basename(files.drafterPath)}`
         + `${offload.ngl > 0 ? ', -ngld 99' : ''}). The drafter proposes a whole block per step and the main model `
-        + 'verifies it in parallel: same output, large decode speedup. '
+        + 'verifies it in parallel, so the main model still picks every token and decode runs well above its own speed. '
         + `${ByteLadder.format(files.drafterBytes)} of drafter weights plus its draft KV are reserved in the VRAM budget.`,
       );
     } else if (files.drafterPath && spec.specDrafterOff) {
@@ -135,9 +136,11 @@ class ServingNotes {
     } else if (files.drafterPath && !flags.specDrafterFlags) {
       this._notes.push(`Speculative decoding: a drafter (${path.basename(files.drafterPath)}) is present but ${this._runtime} doesn't accept the --spec-type / -md flags in this build.`);
     } else if (files.family && profile && profile.speculative && !files.drafterPath) {
+      const catalog = DrafterCatalog.forFamily(files.family);
       this._notes.push(
         `Speculative decoding: OFF: ${profile.label} ships a ${profile.speculative.label} drafter `
-        + 'as a separate GGUF, and none was found next to the weights. Download it into the same folder to enable it.',
+        + 'as a separate GGUF, and none was found next to the weights. Download it into the same folder to enable it.'
+        + (catalog ? ` Setup > Installed models offers the ${catalog.label} drafter from ${catalog.repo} on the model's row.` : ''),
       );
     }
   }

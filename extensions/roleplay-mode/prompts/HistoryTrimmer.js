@@ -17,6 +17,18 @@ class HistoryTrimmer {
     return { messages: list.slice(cut), dropped: cut };
   }
 
+  static withoutReasoning(messages) {
+    const list = Array.isArray(messages) ? messages : [];
+    const THINK = /<think>[\s\S]*?<\/think>\s*/gi;
+    let cleaned = 0;
+    const out = list.map((m) => {
+      if (!m || m.role !== 'assistant' || typeof m.content !== 'string' || !/<think>/i.test(m.content)) return m;
+      cleaned += 1;
+      return Object.assign({}, m, { content: m.content.replace(THINK, '').trim() });
+    });
+    return cleaned ? { messages: out, cleaned } : { messages: list, cleaned: 0 };
+  }
+
   static _indexKeeping(list, tokenBudget) {
     let used = 0;
     for (let i = list.length - 1; i >= 0; i -= 1) {

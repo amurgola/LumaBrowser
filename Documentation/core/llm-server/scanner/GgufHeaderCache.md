@@ -17,7 +17,7 @@ file, so a rescan or a warm boot resolves unchanged models with zero disk reads.
   `path|size|modifiedAt`, or `path|size` when no stamp was given.
 - `flush()` writes the successful (`ok`) entries when anything new parsed; a
   write error is ignored and retried on the next dirty flush.
-- `SCHEMA_VERSION` (10), `MAX_ENTRIES` (256, oldest evicted first).
+- `SCHEMA_VERSION` (11: added the drafter `blockSize` and the `dflash` draft role), `MAX_ENTRIES` (256, oldest evicted first).
 
 ## Why
 

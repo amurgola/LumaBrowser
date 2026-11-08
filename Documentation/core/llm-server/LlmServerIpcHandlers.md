@@ -44,7 +44,7 @@ a check: `getModelCaps` `{ caps: null }`, `getPeerGpus` `{ peers: [], active: fa
 | `getDiagnostics`, `resetNvidiaSmiPathHint` | [LlmDiagnosticsView](ipc/LlmDiagnosticsView.md) |
 | `getVramPressure`, `dismissVramPressure`, `getUnloadOnVramPressure`, `setUnloadOnVramPressure`, `getGpuHeadroom`, `setGpuHeadroom`, `dismissNvidiaSmiPathHint` | the service (`{ state }`, `{ dismissed }`, `{ enabled }`, `{ bytes }`) |
 | `addNvidiaSmiToPath`, `recoverDisplayDevice`, `setPcieAspmOff` | [SystemDiagnostics](SystemDiagnostics.md) |
-| `getModelsView`, `setModelsDir`, `getStorageInfo` | [LlmModelsView](ipc/LlmModelsView.md) |
+| `getModelsView`, `setModelsDir`, `getStorageInfo`, `setModelDrafter` | [LlmModelsView](ipc/LlmModelsView.md) (`setModelDrafter` is `setDrafter({ key, choice })`) |
 | `getModelDisplayNames`, `setModelDisplayName` | `{ names }` from the service |
 | `getPreflight` | `Preflight.collectIssues` (image server from deps or the global) |
 | `checkSystemLibraries` | [SystemLibrariesCheck](ipc/SystemLibrariesCheck.md) |
@@ -93,6 +93,7 @@ a check: `getModelCaps` `{ caps: null }`, `getPeerGpus` `{ peers: [], active: fa
 | `openChat`, `openSetup`, `consumePendingSetupExpand` | the service |
 | `cancelModelDownload`, `pauseModelDownload` | [LlmDownloadSlot](ipc/LlmDownloadSlot.md) |
 | `downloadModel` | [ModelFileDownloader](ipc/ModelFileDownloader.md); events on `core.llmServer.modelEvent` `{ type, payload }` |
+| `downloadDrafter` | [DrafterInstaller](ipc/DrafterInstaller.md); events on `core.llmServer.modelEvent` with `kind: 'drafter'` |
 | `addonModelCatalog`, `setupAddonModel`, `cancelAddonSetup` | [AddonModelInstaller](ipc/AddonModelInstaller.md); events on `core.llmServer.addonEvent` `{ id, type, payload }` |
 | `getUiMode`, `setUiMode`, `getSidebarCollapsed`, `setSidebarCollapsed`, `getLastModelRef`, `setLastModelRef` | the service (raw) |
 

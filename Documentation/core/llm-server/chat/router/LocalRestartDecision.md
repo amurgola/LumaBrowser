@@ -14,3 +14,12 @@ All static.
 ## Why
 
 Comparing the clamped plan size against the unclamped request restarted the server on every turn. Vision is load-only: unloading would thrash an agent run whose image rides iteration 1 only; the projector drops for free at the next restart.
+
+## Drafter choice
+
+`decide` also takes `drafterKey`, the model's saved Drafter dialog choice as
+[LlmDrafterChoices.keyOf](../../service/LlmDrafterChoices.md) (`auto`, `off`, `mtp`,
+`file:<path>`). A ready server whose plan recorded another `drafterChoiceKey` restarts
+with reason `switching-drafter` (after a model or context switch, before vision). A plan
+without the field (MLX, or launched before it existed) or an unknown key never restarts
+on it.

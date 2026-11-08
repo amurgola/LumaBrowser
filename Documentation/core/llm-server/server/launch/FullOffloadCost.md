@@ -20,3 +20,10 @@ The fit decision used to be a 1.2x weight heuristic that double-counted at short
 contexts and under-counted at long ones; with a header the planner sums the real
 components. The no-header fallback prices the model's own projector whether or
 not the launch loads it (legacy behaviour, kept).
+
+## Hybrid targets
+
+`bytes` also takes `draftN` (tokens drafted per step). `recurrentLayers(gguf)` is
+`blockCount - attnKvLayerCount` when the tensor scan counted fewer KV layers than
+blocks (Qwen3.8-27B: 48 of 65), else 0; the draft branch prices one recurrent-state
+checkpoint per drafted token per such layer (2.8 MiB each, measured 2026-11-08).

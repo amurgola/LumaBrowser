@@ -1,6 +1,7 @@
 const path = require('path');
 const LocalRestartDecision = require('./LocalRestartDecision');
 const LaunchErrorHints = require('./LaunchErrorHints');
+const LlmDrafterChoices = require('../../service/LlmDrafterChoices');
 
 class LocalServerPrep {
   static NOT_CONFIGURED = 'No local model configured. Pick a runtime + model in Setup.';
@@ -18,10 +19,20 @@ class LocalServerPrep {
     const server = this._service.runtimeServer;
     const status = server.getStatus();
     const dirty = !!server.dirty;
-    const decision = LocalRestartDecision.decide({ switched, defaults, status, dirty, imageCount });
+    const drafterKey = this._drafterKey(defaults.modelPath);
+    const decision = LocalRestartDecision.decide({ switched, defaults, status, dirty, imageCount, drafterKey });
     if (decision.reason) await this._restart(decision, status, dirty, hooks, log);
     else LocalServerPrep._logReady(status, decision, log);
     server.markActive();
+  }
+
+  _drafterKey(modelPath) {
+    if (typeof this._service.getModelDrafterChoices !== 'function') return undefined;
+    try {
+      return LlmDrafterChoices.keyOf(this._service.getModelDrafterChoices()[LocalServerPrep._stem(modelPath)]);
+    } catch (_) {
+      return undefined;
+    }
   }
 
   _configuredDefaults() {

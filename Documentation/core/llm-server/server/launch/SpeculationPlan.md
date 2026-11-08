@@ -34,3 +34,12 @@ VRAM budget.
 - The family drafter wins over MTP because its authors published and measured
   it; the kill switch exists because a day-0 drafter that mis-verifies changes
   output and loads before the main model.
+
+## Draft length
+
+`specDraftN` is the tokens the family drafter proposes per step (its header block
+size minus one, else the family default), 0 without a drafter. [LaunchCostInput](LaunchCostInput.md)
+passes it as `draftN` so [DraftBranchCost](DraftBranchCost.md) can price the
+recurrent-state checkpoints a hybrid target keeps per drafted token. Qwen3.8 drafts
+with the z-lab DFlash2 GGUF when one sits beside the weights (measured 2026-11-08 on
+an RTX 5090: 140 tok/s against 110 with the grafted MTP head and 58 plain).

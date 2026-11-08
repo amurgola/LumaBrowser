@@ -1,4 +1,5 @@
 const CastResolver = require('../world/CastResolver');
+const CharacterMarks = require('../world/CharacterMarks');
 const CharacterProfile = require('../world/CharacterProfile');
 const CharacterState = require('../world/CharacterState');
 const StoryLedger = require('../world/StoryLedger');
@@ -10,39 +11,49 @@ class StagingPrompt {
 
   static messages(data, content) {
     const d = data || {};
-    const system = StagingPrompt._instructions() + StagingPrompt._context(d);
+    const system = StagingPrompt._instructions(StagingPrompt.draws(d)) + StagingPrompt._context(d);
     const user = 'Passage:\n"""\n' + String(content || '').slice(0, StagingPrompt.PASSAGE_MAX) + '\n"""\n\nJSON:';
     return [{ role: 'system', content: system }, { role: 'user', content: user }];
   }
 
-  static _instructions() {
-    return '/no_think\n'
-      + 'You are the STAGE MANAGER for an interactive roleplay: continuity '
-      + 'tracker, wardrobe supervisor, chronicler and shot director in one. Read the passage '
-      + 'and report the world-state AFTER it, what happened in it, plus the single best shot for this '
-      + 'moment\'s illustration. Respond with ONLY a single minified JSON object '
-      + 'and nothing else: no prose, no code fences, no explanation.\n'
-      + StagingPrompt._schema()
-      + 'Rules:\n'
-      + StagingPrompt._castRules()
-      + StagingPrompt._wardrobeRules()
-      + StagingPrompt._chronicleRules()
-      + StagingPrompt._shotRules();
+  static draws(data) {
+    const o = data && data.options;
+    if (!o || typeof o !== 'object') return { shot: true, slots: true };
+    return { shot: !!o.autoImage, slots: !!(o.autoImage || o.autoAvatarArt) };
   }
 
-  static _schema() {
+  static _instructions(draws = { shot: true, slots: true }) {
+    const role = draws.shot ? 'continuity tracker, wardrobe supervisor, chronicler and shot director in one'
+      : 'continuity tracker, wardrobe supervisor and chronicler in one';
+    const ask = draws.shot ? 'report the world-state AFTER it, what happened in it, plus the single best shot for this '
+      + 'moment\'s illustration' : 'report the world-state AFTER it and what happened in it';
+    return '/no_think\n'
+      + 'You are the STAGE MANAGER for an interactive roleplay: ' + role + '. Read the passage and ' + ask + '. '
+      + 'Respond with ONLY a single minified JSON object '
+      + 'and nothing else: no prose, no code fences, no explanation.\n'
+      + StagingPrompt._schema(draws)
+      + 'Rules:\n'
+      + StagingPrompt._castRules()
+      + StagingPrompt._wardrobeRules(draws)
+      + StagingPrompt._chronicleRules()
+      + (draws.shot ? StagingPrompt._shotRules() : '');
+  }
+
+  static _schema(draws = { shot: true, slots: true }) {
     return 'Schema: {"newCharacters":[{"name":string,"looks":string,"personality":string}],'
       + '"location":{"name":string,"desc":string,"isNew":boolean},'
       + '"present":[{"name":string,"present":boolean,"emotion":string,"intent":string,"condition":string,'
-      + '"bondUser":string,"bondChange":string,"beat":string,"leftTo":string,"revealed":boolean,'
-      + '"outfit":string,"slots":{"outer":string,"top":string,"bottom":string,"feet":string},'
-      + '"head":string,"face":string,"outfitChanged":boolean}],'
+      + '"bondUser":string,"bondChange":string,"beat":string,"leftTo":string,"revealed":boolean,"noticed":[string],'
+      + '"outfit":string,'
+      + (draws.slots ? '"slots":{"outer":string,"top":string,"bottom":string,"feet":string},"head":string,"face":string,' : '')
+      + '"outfitChanged":boolean}],'
       + '"events":[{"kind":"event"|"reveal"|"promise"|"death"|"move"|"injury","text":string,"who":[names]}],'
       + '"clock":{"advance":"none"|"minutes"|"hours"|"next-morning"|"days","timeOfDay":string,"weather":string},'
-      + '"threads":{"opened":[string],"advanced":[string],"closed":[string]},'
-      + '"shot":{"pose":one of [' + StagingPrompt.POSES.join(', ') + '],"facing":"camera"|"away",'
-      + '"framing":"full"|"close","focus":[names],"group":boolean,"contact":boolean,'
-      + '"action":string,"props":[strings]}}\n';
+      + '"threads":{"opened":[string],"advanced":[string],"closed":[string]}'
+      + (draws.shot ? ',"shot":{"pose":one of [' + StagingPrompt.POSES.join(', ') + '],"facing":"camera"|"away",'
+        + '"framing":"full"|"close","focus":[names],"group":boolean,"contact":boolean,'
+        + '"action":string,"props":[strings]}' : '')
+      + '}\n';
   }
 
   static _castRules() {
@@ -68,17 +79,31 @@ class StagingPrompt {
       + 'present; anyone left behind at the previous location must be marked '
       + 'present=false, even if they were present a moment ago. '
       + '"emotion" = a brief current mood. "intent" = what they want right now, one short phrase, '
-      + 'or "" if unchanged from before. "condition" = injuries, drunk, exhausted, soaked and the like, '
-      + 'or "" if fine; carry a standing condition forward until the passage heals it. '
+      + 'or "" if unchanged from before. "condition" = the state of their body in plain words: injuries and '
+      + 'where (e.g. "sword arm severed below the elbow, bleeding heavily"), illness (feverish, vomiting, '
+      + 'dysentery), hygiene (unwashed for days, freshly bathed), drunk, exhausted, soaked and the like, '
+      + 'or "" if fine. Carry a standing condition forward, but write it as it is NOW, at most about 20 '
+      + 'words: rewrite it rather than appending, and drop what no longer holds (once washed they are '
+      + '"freshly washed", not "unwashed ... hair wet from washing"; a bound wound is "bandaged", not still '
+      + '"bleeding heavily"). '
       + '"bondUser" = their standing attitude to the player in one or two words (wary, warming, trusts, '
       + 'fond, hostile, indebted); copy the known one unless this passage changed it, and when it did '
       + 'also set "bondChange" to why (else ""). "beat" = ONE past-tense sentence of what this character '
       + 'did, learned or decided in this passage, naming the player as "the player"; "" if they only stood by. '
       + '"revealed" = true ONLY when what this character hides (their "hides" in the roster) came into the open '
-      + 'in THIS passage: they said it, showed it, or the player learned it; else false.\n';
+      + 'in THIS passage: they said it, showed it, or the player learned it; else false. '
+      + '"noticed" = LASTING physical details of this character\'s body that the passage shows for the FIRST time '
+      + '(calluses, a black toenail, bunions, wasted calves, a scar, a tattoo, freckles, a smell they carry), each a '
+      + 'short phrase in the passage\'s own words. A detail belongs here only if it would still be true after a hot '
+      + 'bath and a night\'s sleep; passing states (wet, cold, pruned, red, bluish, swollen tonight) go in "condition". '
+      + 'Not clothing, not anything already in their looks or noticed list; [] if none.\n';
   }
 
-  static _wardrobeRules() {
+  static _wardrobeRules(draws = { shot: true, slots: true }) {
+    return StagingPrompt._outfitRules() + (draws.slots ? StagingPrompt._slotRules() : '');
+  }
+
+  static _outfitRules() {
     return '- outfit: the FULL outfit that character is realistically wearing RIGHT '
       + 'NOW, as a SHORT comma-separated description (e.g. "navy school blazer, '
       + 'white shirt, plaid skirt, loafers" or "just a towel"), always the '
@@ -97,8 +122,11 @@ class StagingPrompt {
       + 'reword, abbreviate, or drop adjectives, and set "outfitChanged": false. '
       + '"outfitChanged" is true only when they put on, took off, loosened, '
       + 'removed, swapped or changed clothing in THIS passage, or the new setting '
-      + 'forces a different outfit.\n'
-      + '- slots: the SAME outfit split into layers. "outer" = a coat/jacket/cloak '
+      + 'forces a different outfit.\n';
+  }
+
+  static _slotRules() {
+    return '- slots: the SAME outfit split into layers. "outer" = a coat/jacket/cloak '
       + 'worn OVER the top ("" if none). "top" = the shirt/blouse/dress/upper '
       + 'garment. "bottom" = the skirt/trousers/shorts ("" when a dress already '
       + 'covers it). "feet" = shoes/boots/sandals ("" if barefoot). Each slot is a '
@@ -179,6 +207,7 @@ class StagingPrompt {
           + (known.length ? ' | known wardrobe: ' + known.join('; ') : '')
           + (bond ? ' | toward the player: ' + bond : '')
           + (state.condition ? ' | condition: ' + state.condition : '')
+          + (CharacterMarks.line(c) ? ' | noticed: ' + CharacterMarks.line(c) : '')
           + (state.intent ? ' | wants: ' + state.intent : '')
           + (profile.hides ? ' | hides: ' + profile.hides : '');
       });

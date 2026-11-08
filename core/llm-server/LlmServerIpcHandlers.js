@@ -34,6 +34,7 @@ const LlmAvailability = require('./ipc/LlmAvailability');
 const LlmDefaultsUpdater = require('./ipc/LlmDefaultsUpdater');
 const LlmDiagnosticsView = require('./ipc/LlmDiagnosticsView');
 const LlmDownloadSlot = require('./ipc/LlmDownloadSlot');
+const DrafterInstaller = require('./ipc/DrafterInstaller');
 const LlmIpcDeps = require('./ipc/LlmIpcDeps');
 const LlmModelsView = require('./ipc/LlmModelsView');
 const LlmRuntimeSetup = require('./ipc/LlmRuntimeSetup');
@@ -132,6 +133,7 @@ class LlmServerIpcHandlers {
       browser: new HfRepoBrowser({ wizard }),
       autoSetup: new AutoSetupPlan({ llmServerService: svc, deps, wizard }),
       downloader: new ModelFileDownloader({ llmServerService: svc, slot, mlxInstall: new MlxRepoInstall({ slot }) }),
+      drafters: new DrafterInstaller({ llmServerService: svc, slot }),
       addons: new AddonModelInstaller({ llmServerService: svc, slot }),
       preflightOptions: () => ({ llmServerService: svc, imageServerService: deps.imageServerService(), musicServerService: deps.get('musicServerService') }),
     };
@@ -168,6 +170,7 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('getModelsView', () => modelsView.view());
     LlmServerIpcHandlers._handle('getModelDisplayNames', () => ({ names: svc.getModelDisplayNames() }));
     LlmServerIpcHandlers._handle('setModelDisplayName', (_e, key, name) => ({ names: svc.setModelDisplayName(key, name) }));
+    LlmServerIpcHandlers._handle('setModelDrafter', (_e, args) => modelsView.setDrafter(args));
     LlmServerIpcHandlers._handle('setModelsDir', (_e, dir) => modelsView.setModelsDir(dir));
     LlmServerIpcHandlers._handle('getPreflight', () => Preflight.collectIssues(preflightOptions()));
     LlmServerIpcHandlers._handle('checkSystemLibraries', () => sysLibs.check());
@@ -377,9 +380,10 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._raw('consumePendingSetupExpand', () => svc.consumePendingSetupExpand());
   }
 
-  static _registerDownloads({ slot, downloader, addons }) {
+  static _registerDownloads({ slot, downloader, drafters, addons }) {
     const modelEvents = (event) => SenderStream.create(event, LlmServerIpcHandlers.MODEL_EVENT_CHANNEL);
     LlmServerIpcHandlers._handle('cancelModelDownload', () => { slot.cancel(); });
+    LlmServerIpcHandlers._handle('downloadDrafter', (event, args) => drafters.download(args, modelEvents(event)));
     LlmServerIpcHandlers._handle('addonModelCatalog', () => addons.catalog());
     LlmServerIpcHandlers._handle('cancelAddonSetup', () => { addons.cancel(); });
     LlmServerIpcHandlers._handle('setupAddonModel', (event, id) =>

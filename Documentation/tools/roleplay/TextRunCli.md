@@ -13,6 +13,16 @@ Runs the Roleplay Lab's scripted text playthrough against a real model from the 
   `--ctx` (16384), `--gpu-layers` (99), `--jinja -fa on` and any `--server-arg`
   (repeatable); the server log lands beside the reports.
 - `--turns <n>`, `--judge`, `--mock-side-calls` (the Lab's text-run options).
+- `--scenario <name>` picks the playthrough: `harbour` (default), `body` (the
+  body-variation run, which adds the physicality judge under `--judge`) or
+  `reveal` (reveal then recall of new physical detail in a small window, with
+  the reveal judge and retention check), `wound` or `jungle` (bleeding,
+  shock, death and infection; hygiene, illness and closeness; both with the
+  physicality judge) or `control` (an ordinary morning where no grounding card
+  should fire; the summary says whether any did).
+- `--no-grounding` turns the body and surface notes off, so grounding on and off compare
+  on the same code. With grounding on and no host knowledge base, the run
+  gets an in-memory `RagService` that the pack syncs into on the first turn.
 - `--think` leaves the model's reasoning on (off by default).
 - `--label <name>` suffixes the report folder; `--out <dir>` changes the root.
 - `--repo <dir>` loads the roleplay mode, its post-processor and the Lab from

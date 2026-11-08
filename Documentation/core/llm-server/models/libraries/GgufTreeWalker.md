@@ -13,7 +13,7 @@ Collects adoptable chat-model GGUF files under a directory tree.
   followed (a linked root is).
 - `GgufTreeWalker.isAdoptableName(fileName)`: a `.gguf` name (any case) that is
   not a later shard (`-0000N-of-0000M` with N other than 1) and not a companion
-  (`mmproj*`, `dflash*`, `mtp-*` / `mtp_*`).
+  (`mmproj*`, `dflash*`, `dspine*`, `mtp-*` / `mtp_*`).
 
 ## Why
 

@@ -6,6 +6,8 @@ const RoleplayDebug = require('./mode/RoleplayDebug');
 const LabFlag = require('./mode/LabFlag');
 const RoleplayPostProcessor = require('./pipeline/RoleplayPostProcessor');
 const LabService = require('./lab/LabService');
+const BodyGrounding = require('./grounding/BodyGrounding');
+const SurfaceGrounding = require('./grounding/SurfaceGrounding');
 
 class RoleplayExtension {
   static LAB_SERVICE_GLOBAL = '__lumaRpLabService';
@@ -23,6 +25,8 @@ class RoleplayExtension {
     new RoleplayIpcHandlers(context.ipc, new RoleplayDebug(chat), labFlag).register();
     labFlag.apply(labFlag.enabled());
     this._publishLab(mode, chat);
+    BodyGrounding.shared().sync();
+    SurfaceGrounding.shared().sync();
     return {};
   }
 

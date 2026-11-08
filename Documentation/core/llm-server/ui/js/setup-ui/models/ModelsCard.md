@@ -9,7 +9,7 @@ The LLM Setup "Models Directory" card: directory controls, installed models thro
 - `new ModelsCard(ctx, modelList)`: `modelList` is the collaborator described in [SetupMain](../SetupMain.md) (namespaces `mlLlmRows`, `mlLlmAddon`).
 - `render()`: models view plus the context-fit ladders, then `renderView`. `renderView(config, scan)`: the one-time scaffold, controls, empty note, rows, add-ons, then fit-test and gambit rehydration.
 - `updateInstalledSummary()`, `applyDirChange(dir)` (null reverts to default; re-fetches ladders, repaints Models and Defaults), `refreshFitSections(htmlFor)`.
-- Field `addons` ([AddonModels](AddonModels.md)).
+- Fields `addons` ([AddonModels](AddonModels.md)) and `drafters` ([DrafterDownloads](DrafterDownloads.md)): the LLM list is mounted with an `onAction` that opens `drafterModal` ([DrafterModal](DrafterModal.md)) for the `drafter` action and routes every other row action to `drafters`, whose controller is attached once the list exists.
 
 ## Globals
 

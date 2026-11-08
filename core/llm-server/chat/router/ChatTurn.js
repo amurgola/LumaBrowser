@@ -172,6 +172,7 @@ class ChatTurn {
       conversationId: this._convId,
       assistantMessageId: asst.id,
       contextWindow: this._d.contextWindow.forRef(this._modelRef),
+      speculation: () => (this._d.speculation ? this._d.speculation.forRef(this._modelRef) : null),
       onSettled: () => { if (!this._args.nested) this._d.inFlight.clear(); },
       react: (content, aborted) => this._d.reaction.run(descriptor, {
         content, conversationId: this._convId, assistantMessageId: asst.id, send, aborted,

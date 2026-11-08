@@ -10,6 +10,7 @@ class LaunchCostInput {
       mtpEnabled: spec.mtpEnabled,
       mtpHeadBytes: spec.mtpBranchHeadBytes,
       drafterBytes: spec.specDrafterBytes,
+      draftN: spec.specDraftN || 0,
       flashAttnSupported: flags.flashAttn,
       kvOnHost: kv.kvOnHost,
       swaFull,

@@ -27,6 +27,7 @@ class ModelSetupApi extends PreloadSection {
   static _downloads(ipcRenderer) {
     return {
       downloadModel: (args) => ipcRenderer.invoke('core.llmServer.downloadModel', args),
+      downloadDrafter: (args) => ipcRenderer.invoke('core.llmServer.downloadDrafter', args),
       cancelModelDownload: () => ipcRenderer.invoke('core.llmServer.cancelModelDownload'),
       pauseModelDownload: () => ipcRenderer.invoke('core.llmServer.pauseModelDownload'),
       onModelEvent: PreloadSection.subscribe(ipcRenderer, 'core.llmServer.modelEvent'),

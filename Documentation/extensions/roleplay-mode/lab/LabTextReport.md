@@ -10,4 +10,10 @@ count, slop hits and context size).
 ## Methods
 
 - `LabTextReport.write(outDir, result)` the directory, or null (never throws).
-- `LabTextReport.markdown(result)`.
+- `LabTextReport.markdown(result)`; the title names the scenario, and a
+  physicality result adds its scores, notes and one `slip:` line each; a reveal
+  result adds its scores, the retention per recall turn and a Reveals section
+  (each reveal, whether it was still in context at the end, each recall's
+  match or drift). Every report adds the body-detail rate, the grounding line
+  (cards per turn, and for the control whether anything fired) and, under each
+  turn, the cards that turn handed the narrator.

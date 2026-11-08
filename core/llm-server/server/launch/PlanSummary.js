@@ -32,6 +32,8 @@ class PlanSummary {
     const drafter = family.drafterSpec;
     return {
       drafterPath: drafter ? files.drafterPath : null,
+      drafterChoiceKey: files.drafterChoiceKey,
+      specDraftNMax: drafter ? (spec.specDraftN || null) : null,
       specType: drafter ? drafter.specType : (spec.mtpEnabled ? 'draft-mtp' : null),
       mtpDraftNMax: spec.mtpEnabled ? spec.mtpDraftNMax : null,
       draftCacheType: spec.draftCacheType,

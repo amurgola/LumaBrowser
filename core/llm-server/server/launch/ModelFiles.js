@@ -9,8 +9,10 @@ class ModelFiles {
     this.mmprojBytes = Number(model.mmprojTotalBytes) || 0;
     this.drafterPath = ModelFiles._firstPath(model.drafter);
     this.drafterBytes = Number(model.drafterTotalBytes) || 0;
+    this.drafterBlockSize = ModelFiles._drafterBlockSize(model.drafter);
     this._readMtpHead(model);
-    this.mtpCapable = !!model.mtpCapable;
+    this.mtpCapable = !!model.mtpCapable && !model.mtpOff;
+    this.drafterChoiceKey = model.drafterChoiceKey || 'auto';
     this.gguf = ModelFiles._parsedHeader(model);
     this.rawGguf = model.gguf || null;
     this.family = ModelFamilies.detect(model);
@@ -25,6 +27,11 @@ class ModelFiles {
 
   static _parsedHeader(model) {
     return model.gguf && model.gguf.parsed && model.gguf.blockCount > 0 ? model.gguf : null;
+  }
+
+  static _drafterBlockSize(files) {
+    const n = files && files.length > 0 ? Number(files[0].blockSize) : NaN;
+    return Number.isFinite(n) && n >= 2 ? Math.floor(n) : null;
   }
 
   static _firstPath(files) {

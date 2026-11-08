@@ -10,6 +10,15 @@ export default class CtxFitMatrix {
 
   static MTP_NOTE = ' <span class="model-ctxfit-mtp" title="MTP draft branch: extra weights, a draft KV cache, and ~256 MB scratch. The matrix includes this cost because the launcher engages MTP automatically for MTP-grafted GGUFs.">+ MTP overhead</span>';
 
+  static DRAFTER_NOTE = ' <span class="model-ctxfit-mtp" data-spec-note="drafter" title="Speculative drafter: its weights and draft KV cache. The matrix includes this cost because the launcher loads the drafter chosen under Drafter.">+ drafter overhead</span>';
+
+  static specNote(model) {
+    const hasDrafter = Array.isArray(model.drafter) && model.drafter.length > 0;
+    const spec = model.speculation || (hasDrafter ? 'drafter' : (model.mtpCapable ? 'mtp' : 'none'));
+    if (spec === 'drafter') return CtxFitMatrix.DRAFTER_NOTE;
+    return spec === 'mtp' ? CtxFitMatrix.MTP_NOTE : '';
+  }
+
   static html(model, opts) {
     if (model.kind !== 'weights') return '';
     const g = model.gguf;
@@ -23,7 +32,7 @@ export default class CtxFitMatrix {
                         <span class="model-ctxfit-title">GPU fit by context</span>
                         <span class="model-ctxfit-sub" title="${HtmlEscaper.escape(CtxFitMatrix.SUB_TIP)}">planner · hover for detail</span>
                         ${CtxFitMatrix.speedChip(opts.speed)}
-                        ${model.mtpCapable ? CtxFitMatrix.MTP_NOTE : ''}
+                        ${CtxFitMatrix.specNote(model)}
                     </div>
                     <div class="model-ctxfit-grid">
                         ${modes.map((m) => CtxFitMatrix._row(kvOptions[m.id] || [], m)).join('')}

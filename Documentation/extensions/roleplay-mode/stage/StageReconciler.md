@@ -23,7 +23,8 @@ Applies the stage call's decisions to the working data.
   `hides` on their card. After the events, a present entry flagged `revealed`
   clears that character's `hides` too and, when the ledger has no reveal row
   for them this turn, records one ("<name>'s secret came out: ...") so the
-  fact survives the card.
+  fact survives the card. A present entry's `noticed` details are added to the
+  character's [CharacterMarks](../world/CharacterMarks.md).
 - `StageReconciler.tellsSecret(hides, text)`.
 
 ## Why the reveal path
@@ -31,3 +32,20 @@ Applies the stage call's decisions to the working data.
 Before it, a secret only left the card at the next fold (more than twelve
 beats later), so for many turns the narrator was told to keep guarding
 something the story summary said was already out.
+
+## Presence grace
+
+The stage call lists the characters a passage happens to mention, not
+everyone in the room. A character present before but missing from the list,
+in the same scene, therefore stays in the moment for up to three turns
+(`UNLISTED_GRACE` 4; the count is kept as `state.unlisted` and cleared when
+they are listed again).
+
+They depart, with the prior scene remembered, in three cases: an explicit
+`present: false`, a change of scene (presence resets on a move), or a fourth
+turn unlisted.
+
+Before this, any unlisted character departed at once. In a five-person reveal
+run that sent the cast on and off stage turn by turn, and Joss was off stage
+(so he lost his card, his body notes and his up-close notes) on the turn his
+legs were examined.

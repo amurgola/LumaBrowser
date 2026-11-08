@@ -36,7 +36,7 @@ export default class LlmModelRow {
       renameHtml: LlmModelRow._renameHtml(nameKey, dispName),
       tagsHtml: LlmModelRow._headerTags(m),
       sizeText: ByteFormatter.bytes(m.totalBytes),
-      actionsHtml: '',
+      actionsHtml: LlmModelRow.actionsHtml(m),
       metaHtml: LlmModelRow._pathHtml(m, dispName, nameKey) + LlmModelRow.factsHtml(m) + LlmModelRow.notesHtml(m) + this._footerHtml(m),
       ctxFitHtml: CtxFitMatrix.html(m, this._ctxFit.forModel(m)),
       fitHtml: this._fitHtml(m),
@@ -75,6 +75,8 @@ export default class LlmModelRow {
       sharded ? `<span class="sidecar-tag ${complete ? '' : 'common'}">${m.weightsCount}/${m.weightsExpectedShards} shards${complete ? '' : ' · incomplete'}</span>` : '',
       (m.mmproj && m.mmproj.length > 0) ? `<span class="sidecar-tag">mmproj · ${fmt(m.mmprojTotalBytes)}</span>` : '',
       (m.mtp && m.mtp.length > 0) ? `<span class="sidecar-tag">MTP head · ${fmt(m.mtpTotalBytes)}</span>` : '',
+      (m.drafter && m.drafter.length > 0) ? `<span class="sidecar-tag" title="${esc(LlmModelRow._drafterTitle(m))}">${m.drafterChoice === 'file' ? 'drafter (chosen)' : 'drafter'} · ${fmt(m.drafterTotalBytes)}</span>` : '',
+      m.drafterChoice === 'off' ? '<span class="sidecar-tag common" title="Switched off in the Drafter dialog; the file stays on disk">drafter off</span>' : '',
       (m.kind === 'mmproj-only' || m.kind === 'mtp-only') ? `<span class="sidecar-tag common">${esc(m.kind)}${m.pairing ? '' : ' (no main weights in this dir)'}</span>` : '',
       (m.sidecars || []).map((s) => `<span class="${s.kind === 'common-config' ? 'sidecar-tag common' : 'sidecar-tag'}">${esc(s.name)}</span>`).join(''),
     ].filter(Boolean).join('');
@@ -82,6 +84,11 @@ export default class LlmModelRow {
 
   static _isSharded(m) {
     return m.weightsCount > 1 || (m.weightsExpectedShards && m.weightsExpectedShards > 1);
+  }
+
+  static _drafterTitle(m) {
+    return m.drafter.map((d) => `${d.name}${d.blockSize ? ` (block ${d.blockSize})` : ''}`).join(', ')
+      + '. Speculative decoding: the drafter proposes a block of tokens per step and the main model verifies it.';
   }
 
   static _renameHtml(nameKey, dispName) {
@@ -93,8 +100,23 @@ export default class LlmModelRow {
 
   static _headerTags(m) {
     const arch = (m.gguf && m.gguf.parsed && m.gguf.architecture) ? `<span class="model-arch">${HtmlEscaper.escape(m.gguf.architecture)}</span>` : '';
-    const mtp = m.mtpCapable ? '<span class="luma-badge accent" title="Multi-Token Prediction draft branch: see the GPU-fit matrix">MTP</span>' : '';
-    return [arch, LlmModelRow.roleBadge(m), mtp].filter(Boolean).join(' ');
+    return [arch, LlmModelRow.roleBadge(m), LlmModelRow.mtpBadge(m)].filter(Boolean).join(' ');
+  }
+
+  static speculationOf(m) {
+    if (m.speculation) return m.speculation;
+    if (m.drafter && m.drafter.length > 0) return 'drafter';
+    return m.mtpCapable ? 'mtp' : 'none';
+  }
+
+  static mtpBadge(m) {
+    if (!m.mtpCapable) return '';
+    const spec = LlmModelRow.speculationOf(m);
+    if (spec === 'mtp') return '<span class="luma-badge accent" data-mtp="active" title="Multi-Token Prediction draft branch: see the GPU-fit matrix">MTP</span>';
+    const why = spec === 'drafter'
+      ? 'The weights carry an MTP head, but the drafter file runs instead (a drafter always wins). Pick Built-in MTP head under Drafter to use MTP.'
+      : 'The weights carry an MTP head, but speculative decoding is switched off under Drafter.';
+    return `<span class="luma-badge muted" data-mtp="unused" title="${HtmlEscaper.escape(why)}">MTP unused</span>`;
   }
 
   static roleBadge(m) {
@@ -110,7 +132,33 @@ export default class LlmModelRow {
   }
 
   static notesHtml(m) {
-    return LlmModelRow.unpairedHtml(m) + LlmModelRow.pairingHtml(m);
+    return LlmModelRow.unpairedHtml(m) + LlmModelRow.pairingHtml(m) + LlmModelRow.drafterOfferHtml(m) + LlmModelRow.drafterMissingHtml(m);
+  }
+
+  static actionsHtml(m) {
+    if (!m || m.kind !== 'weights' || m.role !== 'main' || !Array.isArray(m.drafter)) return '';
+    return `<button class="luma-btn luma-btn--sm" type="button" data-ml-act="drafter" data-key="${HtmlEscaper.escape(LlmModelRow.nameKey(m))}">Drafter</button>`;
+  }
+
+  static drafterMissingHtml(m) {
+    if (!m || !m.drafterChoiceMissing) return '';
+    const name = String(m.drafterChoiceMissing).replace(/\\/g, '/').split('/').pop();
+    return `<div class="model-note" data-drafter-missing>The chosen drafter <code>${HtmlEscaper.escape(name)}</code> is no longer in the models folder; using the automatic pairing. Pick another under Drafter.</div>`;
+  }
+
+  static drafterOfferHtml(m) {
+    const offer = m.drafterOffer;
+    if (!offer || offer.installed || (m.drafter && m.drafter.length > 0)) return '';
+    const esc = HtmlEscaper.escape;
+    const size = offer.approxBytes ? `, ${ByteFormatter.bytes(offer.approxBytes)}` : '';
+    const action = offer.engineSupported
+      ? `<button class="luma-btn luma-btn--sm" type="button" data-ml-act="drafter-download" data-key="${esc(LlmModelRow.nameKey(m))}"`
+        + ` data-drafter-id="${esc(offer.id)}" data-model-path="${esc(LlmModelRow.weightsPath(m) || '')}"`
+        + ` title="${esc(offer.licenseNote || '')}">Download drafter</button>`
+      : '<span class="model-drafter-gate">Needs a llama.cpp runtime.</span>';
+    return `<div class="model-note model-drafter-offer" data-drafter-offer="${esc(offer.id)}">`
+      + `<span class="model-drafter-head">Speculative drafter available: ${esc(offer.label)} for ${esc(offer.target)}</span>`
+      + ` (<code>${esc(offer.repo)}</code>${size}). ${esc(offer.blurb || '')} ${action}</div>`;
   }
 
   static unpairedHtml(m) {

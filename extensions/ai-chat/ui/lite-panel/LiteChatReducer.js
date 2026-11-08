@@ -4,6 +4,7 @@ export default class LiteChatReducer {
   static STATUS_LABELS = {
     'switching-model': 'Switching model…',
     'starting-server': 'Starting local server…',
+    'switching-drafter': 'Reloading with the new drafter…',
     'loading-vision': 'Loading vision…',
     'unloading-vision': 'Unloading vision…',
     'waiting-for-slot': 'Waiting for a free slot…',
