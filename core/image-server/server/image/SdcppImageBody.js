@@ -62,9 +62,9 @@ class SdcppImageBody {
     if (mask) body.mask_image = RefImageClamp.clamp(ImageBytes.toBase64(mask));
   }
 
-  static _addRefImages(body, { refImages, width, height }) {
+  static _addRefImages(body, { refImages, width, height, refMaxPixels }) {
     if (!Array.isArray(refImages) || !refImages.length) return;
-    const bound = RefImageClamp.boundFor(width, height);
+    const bound = Number(refMaxPixels) > 0 ? Number(refMaxPixels) : RefImageClamp.boundFor(width, height);
     body.ref_images = refImages.filter(Boolean).map((ref) => RefImageClamp.clamp(ImageBytes.toBase64(ref), bound));
   }
 }

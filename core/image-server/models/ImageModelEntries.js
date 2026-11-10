@@ -79,6 +79,28 @@ class ImageModelEntries {
     + 'editing, describe the CHANGE as an instruction ("change the sign to say '
     + '…", "make it night") and refer to the reference as the subject.';
 
+  static H3_QWEN3_VL_32B_LLM = {
+    role: 'llm',
+    repo: 'leejet/MiniMax-H3-GGUF',
+    file: 'qwen3vl_32b_minimax_h3-Q4_K_M.gguf',
+    url: `${HF}/leejet/MiniMax-H3-GGUF/resolve/main/qwen3vl_32b_minimax_h3-Q4_K_M.gguf?download=true`,
+    approxBytes: 18.22 * GB,
+  };
+
+  static H3_IMAGE_SIGMAS = [1.0, 0.9675236940383911, 0.8875485062599182, 0.75, 0.5327739119529724, 0.23200887441635132];
+
+  static H3_IMAGE_PROMPT_GUIDE =
+    'This is MiniMax-H3-Image (LLM-conditioned via Qwen3-VL-32B). It wants a '
+    + 'LONG, DETAILED English description of the whole picture: the kind of '
+    + 'image (photograph, illustration, 3D render), every subject with its '
+    + 'look, clothing and pose, where each thing sits in the frame, the '
+    + 'setting, the lighting and the mood, in full sentences. A one-line '
+    + 'prompt comes out plain, so expand a short request into a paragraph '
+    + 'before sending it. It renders text well: put the exact words in quotes '
+    + 'and say where they appear. Steps and cfg are fixed (6 steps, cfg 1), '
+    + 'so negative prompts have no effect. When editing, refer to the inputs '
+    + 'as <Picture 1>, <Picture 2> and say what changes and what stays.';
+
   static WAN_VIDEO_DEFAULTS = {
     width: 832,
     height: 480,
@@ -688,6 +710,60 @@ class ImageModelEntries {
       compatibleRuntimes: [...SD_CPP_RUNTIMES],
     },
     {
+      id: 'minimax-h3-image',
+      label: 'MiniMax-H3-Image',
+      blurb:
+        'MiniMax\'s H3 image model (Nov 2026): one 20B checkpoint that both '
+        + 'generates and edits, distilled to 6 steps. Very strong prompt '
+        + 'following, realism and text rendering, and edits from several '
+        + 'reference pictures through its Qwen3-VL-32B encoder. Can be set as '
+        + 'BOTH the generation and the edit default without loading twice. '
+        + 'Heavy: ~41 GB on disk at int8 across the diffusion model, the '
+        + 'encoder (shared with MiniMax-H3 video, so it downloads once) and the '
+        + 'VAE, and it runs with CPU weight-offload on anything short of a '
+        + '48 GB card. It expects a long, detailed English prompt. Needs a '
+        + 'stable-diffusion.cpp build from 2026-11-10 or newer: update the '
+        + 'runtime in Setup if it fails to load.',
+      family: 'minimax-h3-image',
+      kind: 'generate',
+      supportsEdit: true,
+      licenseNote: 'MiniMax-H3-Image Community License: its territory excludes the US, EU, UK and South Korea, and commercial use above 1M USD revenue or as a hosted service needs written permission from MiniMax. Read it before use.',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'Comfy-Org/MiniMax-H3-Image',
+          file: 'minimax_h3_image_pruned_int8_convrot.safetensors',
+          url: `${HF}/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors?download=true`,
+          approxBytes: 19.54 * GB,
+          loaderFlag: '--diffusion-model',
+        },
+        vae: {
+          role: 'vae',
+          repo: 'Comfy-Org/MiniMax-H3-Image',
+          file: 'minimax_h3_image_vae_fp16.safetensors',
+          url: `${HF}/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors?download=true`,
+          approxBytes: 1.09 * GB,
+        },
+        llm: { ...ImageModelEntries.H3_QWEN3_VL_32B_LLM },
+      },
+      minVramBytes: 40 * GB,
+      defaults: {
+        width: 2048,
+        height: 2048,
+        steps: 6,
+        cfgScale: 1.0,
+        sampler: 'euler',
+        fixedSigmas: [...ImageModelEntries.H3_IMAGE_SIGMAS],
+        promptGuide: ImageModelEntries.H3_IMAGE_PROMPT_GUIDE,
+      },
+      constraints: { dimensionMultiple: 32 },
+      launchArgs: ['--rng', 'cpu'],
+      vaeTiling: false,
+      preferredRuntimes: ['sd-cpp-luma'],
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
       id: 'wan-2-2-t2v-a14b',
       label: 'Wan 2.2 T2V A14B',
       blurb:
@@ -892,13 +968,7 @@ class ImageModelEntries {
             { id: 'Q4_K_M', label: 'Full Q4_K_M - higher quality, pairs with the Turbo speed LoRA', file: 'minimax_h3_fl2va-Q4_K_M.gguf', url: `${HF}/leejet/MiniMax-H3-GGUF/resolve/main/minimax_h3_fl2va-Q4_K_M.gguf?download=true`, approxBytes: 18.78 * GB, recVramBytes: 24 * GB },
           ],
         },
-        llm: {
-          role: 'llm',
-          repo: 'leejet/MiniMax-H3-GGUF',
-          file: 'qwen3vl_32b_minimax_h3-Q4_K_M.gguf',
-          url: `${HF}/leejet/MiniMax-H3-GGUF/resolve/main/qwen3vl_32b_minimax_h3-Q4_K_M.gguf?download=true`,
-          approxBytes: 18.22 * GB,
-        },
+        llm: { ...ImageModelEntries.H3_QWEN3_VL_32B_LLM },
         vae: {
           role: 'vae',
           repo: 'Comfy-Org/MiniMax-H3',

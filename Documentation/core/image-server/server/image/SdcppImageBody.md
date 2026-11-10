@@ -19,7 +19,8 @@ Builds the `POST /sdcpp/v1/img_gen` request body from an image request.
   - `initImage` -> `init_image` (base64) with a top-level `strength` in [0, 1],
     default 0.75; `mask` -> `mask_image` (clamped), only with an init image.
   - `refImages` -> `ref_images`, falsy entries dropped, each clamped by
-    [RefImageClamp](RefImageClamp.md) to `boundFor(width, height)`.
+    [RefImageClamp](RefImageClamp.md) to `refMaxPixels` when the planner set
+    one, else to `boundFor(width, height)`.
 - Statics: `DEFAULT_SIZE`, `DEFAULT_STEPS`, `DEFAULT_SAMPLER`, `DEFAULT_CFG`, `DEFAULT_STRENGTH`.
 
 ## Why

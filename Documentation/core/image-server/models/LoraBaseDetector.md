@@ -20,7 +20,7 @@ catalog's `family` strings.
 `sd-1-5`, `sdxl`, `sd-unet` (ambiguous 1.5 or SDXL), `flux`, `flux-line`
 (FLUX.1, Chroma or FLUX.2), `flux2`, `chroma`, `qwen-image` (the 20B line, edit
 family), `qwen-image-2-1`, `z-image`, `krea2` (a family contributed by an
-extension), `wan-video`, `minimax-h3`.
+extension), `wan-video`, `minimax-h3`, `minimax-h3-image`.
 
 ## Why
 
@@ -30,4 +30,7 @@ extension), `wan-video`, `minimax-h3`.
   must run before the generic `qwen` rule.
 - The OpenCLIP-G text encoder (`lora_te2_`) only exists on SDXL; a UNet LoRA
   without it stays ambiguous across SDXL and SD 1.5.
+- MiniMax-H3-Image is a finetune of the H3 video transformer with its own
+  per-step output heads, so its LoRAs are a separate base; its metadata rule
+  must run before the generic `minimax` rule.
 - Krea 2 (ai-toolkit LoKrs) is recognised by its `txtfusion` text-refiner branch.

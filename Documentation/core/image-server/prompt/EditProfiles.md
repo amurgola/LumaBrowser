@@ -8,10 +8,12 @@ to every reference-image request whoever sent it.
 ## Methods
 
 - `EditProfiles.editProfileFor(family)` returns
-  `{ refTag, maxReferences, keepClause, presizeRefs, refArea, family }`
+  `{ refTag, maxReferences, keepClause, presizeRefs, refArea, refMaxPixels,
+  renderScale, renderMaxPixels, family }`
   (completed from `GENERIC_PROFILE`), or `null` for a family without a profile.
 - `EditProfiles.tagFor(style)` returns the naming function for `'word'`
-  (`image N`) or `'angle'` (`<imageN>`); unknown styles are `'word'`.
+  (`image N`), `'angle'` (`<imageN>`) or `'picture'` (`<Picture N>`); unknown
+  styles are `'word'`.
 - `EditProfiles.normalizeRefTags(prompt, { style = 'word', count = 0 })`
   rewrites every mention of input image 1..count (any of "image 2", "Picture 2",
   "photo #2", "<image_2>", "< Image 2 >") into the family's form. Double-quoted
@@ -25,7 +27,7 @@ to every reference-image request whoever sent it.
   normalises the mentions and appends the keep clause when the profile asks for
   one and the prompt states none. No profile or no references passes through.
 - Constants: `DEFAULT_MAX_REFERENCES` (3), `REF_TAGS`, `GENERIC_PROFILE`,
-  `PROFILES` (`qwen-image-2`, `qwen-image-edit`, `flux-kontext`), `REF_MENTION`,
+  `PROFILES` (`qwen-image-2`, `minimax-h3-image`, `qwen-image-edit`, `flux-kontext`), `REF_MENTION`,
   `QUOTED`, `HAS_KEEP`.
 
 ## Why
@@ -47,3 +49,18 @@ took 160 s at a 28.7 GB peak. For `qwen-image-2` the router presizes each
 supporting reference to half a megapixel (`refArea`): likeness and garment
 detail matched the full canvas area at three quarters of the time, a quarter
 megapixel started losing the garment.
+
+MiniMax-H3-Image names its inputs `<Picture 1>`, `<Picture 2>` (its model card
+and its own prompt rewriter use that form). Its references are not presized:
+sd-server resizes each one itself, to a 1024 px short edge for the text encoder
+and to a 1024 to 2048 px short edge for the VAE. That VAE encodes in 256 px
+tiles: one 1 MP reference took 23 s through sd-cli and about 9 s on a warm
+sd-server (RTX 5090, 2026-11-10), and a 4 MP one four times that, so the
+profile's `refMaxPixels` caps what is sent at 1 MP whatever the canvas. A
+full-size reference did not look better in a same-seed edit of a 2048x2048
+picture.
+
+The same family sets `renderScale` 1.5 and `renderMaxPixels` 16 MP: an edit
+rendered at its source's own pixel size comes back over-sharpened, so the
+router renders it larger and scales the result back (measurements in
+[EditRenderScale](../router/EditRenderScale.md)).

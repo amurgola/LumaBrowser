@@ -10,7 +10,10 @@ with its curated catalog row. Used by [ImageModelsScanner](ImageModelsScanner.md
 - `ImageModelRecord.build({ id, dir, manifest, files, catalogEntry, catalogList })`
   returns `{ id, name, label, dir, family, kind, supportsI2V, supportsEdit,
   files, minVramBytes, defaults, constraints, protocol, compatibleRuntimes,
-  launchArgs, preferredRuntimes, sageAttention, licenseNote, fileUpdates, civitai, manifest }`:
+  launchArgs, preferredRuntimes, sageAttention, vaeTiling, licenseNote, fileUpdates, civitai, manifest }`:
+  - `vaeTiling` is `false` when the catalog row or the manifest says exactly
+    `false` (a VAE that tiles itself), else `undefined`; read by
+    [VaeTilingPolicy](service/VaeTilingPolicy.md).
   - `civitai` the manifest's CivitAI origin block (model, version and file ids,
     hashes, trigger words, page URL) or `null`, so the setup card can link back
     and a re-sync or update check knows what to ask for.

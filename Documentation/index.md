@@ -1681,6 +1681,7 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/server/image/ImageAdapterRegistry.md](core/image-server/server/image/ImageAdapterRegistry.md): protocol id to image adapter class; has `createAdapterFor`, `listProtocols`.
 - [core/image-server/ImageRouter.md](core/image-server/ImageRouter.md): single entry point for image generation and editing; has `generate`, `abort`, `getModelNativeSize`, `getFrameSizes`, `getEditPromptInfo`, `getActivePromptInfo`.
 - [core/image-server/router/ImageFamilyScaffold.md](core/image-server/router/ImageFamilyScaffold.md): per-family prompt and sampling scaffold; has `merge`, `buildPrompt`, `fromProfile`.
+- [core/image-server/router/EditRenderScale.md](core/image-server/router/EditRenderScale.md): the larger render canvas of an edit for a family that over-sharpens at source size; has `plan`.
 - [core/image-server/router/ImageCanvas.md](core/image-server/router/ImageCanvas.md): native-resolution snap and grid alignment; has `snapToQwenNative`, `alignToGrid`.
 - [core/image-server/router/ImageLoraSpecs.md](core/image-server/router/ImageLoraSpecs.md): declared LoRAs to sd-server LoRA entries; has `resolve`.
 - [core/image-server/router/ImageSlotPicker.md](core/image-server/router/ImageSlotPicker.md): which image slot serves a request; has `explicitRole`, `remoteRole`, `requestRole`, `residentSlot`.

@@ -9,9 +9,12 @@ the adapter receives.
 
 - `new ImageRequestPlanner({ lorasDir?, presize? })`; `presize` defaults to
   [RefImagePresizer](../RefImagePresizer.md)`.presize`.
-- `plan({ request, model, send? })` returns `{ params, refCount, refSizes }`.
+- `plan({ request, model, send? })` returns `{ params, refCount, refSizes, outputSize }`.
+  `outputSize` is `null` unless the render canvas was enlarged (see the edit
+  render step below); it is then the canvas that was asked for, which
+  [LocalImageRun](LocalImageRun.md) scales the finished image back to.
   `params` holds `prompt, negativePrompt, width, height, steps, cfgScale,
-  sampler, scheduler, seed, loras, customSigmas, refImageArgs, cacheMode,
+  sampler, scheduler, seed, loras, customSigmas, refImageArgs, refMaxPixels, cacheMode,
   cacheOption, initImage, strength, refImages, mask`. In order:
   1. Defaults: caller value, then the model's defaults over its
      [family scaffold](ImageFamilyScaffold.md), then 512x512, 20 steps, cfg 7,
@@ -28,12 +31,25 @@ the adapter receives.
      unshifted under the same step-count rule, so a speed LoRA's nodes win.
   6. Families with `presizeRefs` presize the references (refArea: caller, model,
      profile; grid: the model's, else 32); a fully sized result sends
-     `refImageArgs: 'resize_before_vae=false'`.
+     `refImageArgs: 'resize_before_vae=false'`. A family whose edit profile sets
+     `refMaxPixels` (MiniMax-H3-Image: 1 MP) sends that as `refMaxPixels` on a
+     request with references, else `null`.
   7. LoRAs via [ImageLoraSpecs](ImageLoraSpecs.md) (a caller array, even `[]`,
      replaces the model's), cache mode and option, and `strength` (only with an
      init image; default 0.75, clamped to [0, 1]).
 - `ImageRequestPlanner.metaFields(plan)` returns the resolved values the `meta`
-  event reports (`sigmas`, `loras` as `path@multiplier`, `refSizes` as `WxH`).
+  event reports (`sigmas`, `loras` as `path@multiplier`, `refSizes` and
+  `outputSize` as `WxH`).
+- Edit render step (after grid alignment): for a request with references and
+  no init image or mask, on a family whose edit profile sets `renderScale`
+  (MiniMax-H3-Image: 1.5, capped at 16 MP), [EditRenderScale](EditRenderScale.md)
+  sizes the render from the first reference's own pixel size (the picture
+  being edited) and the canvas is enlarged with an `edit-render-enlarged`
+  status. img2img and masked edits keep their canvas, because the init image
+  and the mask are sized to it.
+- `ImageRequestPlanner.measureRef(ref)` reads `{ width, height }` from a
+  reference's PNG or JPEG header (Buffer, base64 or data URL), else `null`.
+  The constructor's `measure` option replaces it in tests.
 
 ## Why
 

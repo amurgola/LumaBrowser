@@ -9,11 +9,12 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 
 - `ImageModelEntries.ENTRIES`: Z-Image Turbo, Qwen-Image-Edit 2509, Qwen-Image-Edit 2511,
   Qwen-Image 2.1, Qwen-Image 2.1 Turbo, SD 1.5, SDXL base, Sprite Shaper XL, FLUX.1 Schnell,
-  Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B, MOSS-Image (images), then Wan 2.2 T2V, Wan 2.2
+  Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B, MOSS-Image, MiniMax-H3-Image (images), then Wan 2.2 T2V, Wan 2.2
   I2V, AniSora V3.2, LTX-Video 2B and MiniMax-H3 (video).
 - Shared companions `FLUX_VAE`, `T5XXL_Q8`, `WAN_VAE`, `UMT5_Q8`,
   `QWEN_21_VAE`, `QWEN3_VL_8B_LLM`, `QWEN3_VL_8B_VISION`, the shared
-  `QWEN_21_PROMPT_GUIDE`, plus
+  `QWEN_21_PROMPT_GUIDE`, `H3_QWEN3_VL_32B_LLM` (one encoder file for MiniMax-H3
+  video and MiniMax-H3-Image), `H3_IMAGE_SIGMAS`, `H3_IMAGE_PROMPT_GUIDE`, plus
   `WAN_VIDEO_DEFAULTS` and `WAN_CONSTRAINTS`. Rows copy the file and default
   objects (spread), so one row cannot mutate another; `WAN_CONSTRAINTS` is
   shared, as in legacy. `WAN_VIDEO_DEFAULTS` is 832x480, 20 steps, cfg 3.5,
@@ -96,6 +97,24 @@ comfortable GPU-resident size with the encoders on the CPU.
   skin or hair; Vulkan runs the same row at about half that speed. Below 20
   steps dpm++2m over-sharpens lettering. Real CFG, so the short negative applies.
   Canvases are /16. Needs an sd.cpp build from 2026-10-17 (master-973) or newer.
+- MiniMax-H3-Image (2026-11-10): the H3 transformer without its audio branch,
+  a 20B generate + edit checkpoint distilled to six steps with one output head
+  per step, so the row pins 6 steps, cfg 1 and the checkpoint's own sigmas
+  (`fixedSigmas`). Files: Comfy-Org's int8 single-file repack loaded with
+  `--diffusion-model`, its own 2D image VAE, and the H3 video row's
+  Qwen3-VL-32B encoder file, which carries the vision tower, so no projector
+  file. Not usable: the community GGUFs (ComfyUI's flattened tensor layout)
+  and Comfy-Org's w4a8 file (sd.cpp fails to identify it). Needs sd.cpp with
+  upstream PR 2324; measured on that PR's head plus the LumaByte tensor patch.
+  Default canvas 2048x2048: the official pipeline never renders below 4 MP, and
+  on an RTX 5090 the six steps took 12 s through sd-cli at 1024x1024 and
+  2048x2048 alike. Through the app (sd-server, warm) a 2048x2048 picture took
+  8 s, an edit with one reference 24 s and with two 36 s; the first request
+  after launch took 27 s. `vaeTiling: false` because the VAE tiles itself at
+  256 px (see [VaeTilingPolicy](../service/VaeTilingPolicy.md)). An edit
+  rendered at its source's own pixel size comes back over-sharpened, so edits
+  render at 1.5x the source side and are scaled back (see
+  [EditRenderScale](../router/EditRenderScale.md)).
 - Video rows: `supportsI2V` is always explicit because a T2V checkpoint silently
   discards `init_image` in sd.cpp. Wan rows share the 4n+1 frame grid capped at
   81 (the 5 s @ 16 fps training ceiling); LTX uses 8n+1 up to 257 at /32;

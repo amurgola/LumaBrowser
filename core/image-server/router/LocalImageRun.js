@@ -1,7 +1,8 @@
 const ImageRun = require('./ImageRun');
+const RefImagePresizer = require('../RefImagePresizer');
 
 class LocalImageRun extends ImageRun {
-  constructor({ role, send, notify, adapter, server, plan, wantId, cold = false, startedAt = Date.now() }) {
+  constructor({ role, send, notify, adapter, server, plan, wantId, cold = false, startedAt = Date.now(), resize = RefImagePresizer.nativeResize }) {
     super({ role, send, notify });
     this._role = role;
     this._adapter = adapter;
@@ -10,6 +11,7 @@ class LocalImageRun extends ImageRun {
     this._wantId = wantId;
     this._cold = cold;
     this._startedAt = startedAt;
+    this._resize = resize;
     this._releaseIdleHold = () => {};
   }
 
@@ -40,9 +42,25 @@ class LocalImageRun extends ImageRun {
     const ms = Date.now() - this._startedAt;
     this._log(ms);
     this._notify(`${this.doneLabel} in ${(ms / 1000).toFixed(1)}s`, 'success');
-    const images = (result && result.images) || [];
+    const images = this._fitOutput((result && result.images) || []);
     this._send('done', { images: images.map(LocalImageRun._toWire), modelId: this._wantId });
     this._finish({ success: true, images, modelId: this._wantId, settings: LocalImageRun._settings(this._plan.params) });
+  }
+
+  _fitOutput(images) {
+    const size = this._plan.outputSize;
+    if (!size || !(size.width > 0 && size.height > 0)) return images;
+    return images.map((img) => this._fitOne(img, size));
+  }
+
+  _fitOne(img, size) {
+    if (!img || !Buffer.isBuffer(img.bytes)) return img;
+    try {
+      const bytes = this._resize(img.bytes, size.width, size.height);
+      return bytes ? { ...img, bytes, mime: 'image/png', width: size.width, height: size.height } : img;
+    } catch (_) {
+      return img;
+    }
   }
 
   static _settings(p) {

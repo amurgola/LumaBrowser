@@ -6,7 +6,7 @@
 
 ## Methods
 
-- `new LocalImageRun({ role, send, notify, adapter, server, plan, wantId, cold?, startedAt? })`:
+- `new LocalImageRun({ role, send, notify, adapter, server, plan, wantId, cold?, startedAt?, resize? })`:
   `adapter` is an [ImageAdapter](../server/image/ImageAdapter.md), `server` the
   slot's runtime server, `plan` the [ImageRequestPlanner](ImageRequestPlanner.md)
   output, `startedAt` when the request arrived.
@@ -18,6 +18,11 @@
     and resolves `{ success: true, images, modelId, settings }` with the
     adapter's raw images, the model id and the sampler settings
     (`{ steps, cfgScale, sampler, scheduler }`) for the chat viewer.
+  - When `plan.outputSize` is set (an edit rendered on an enlarged canvas),
+    each image is first scaled back to that size as a PNG through
+    `resize(buf, width, height)` (default
+    [RefImagePresizer](../RefImagePresizer.md)`.nativeResize`); an image that
+    cannot be resized is delivered as rendered.
   - The idle hold is released once on every outcome.
 
 ## Why

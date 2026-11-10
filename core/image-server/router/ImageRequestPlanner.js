@@ -2,6 +2,8 @@ const EditProfiles = require('../prompt/EditProfiles');
 const FlowSchedule = require('../FlowSchedule');
 const RefImagePresizer = require('../RefImagePresizer');
 const RefSizePlanner = require('../RefSizePlanner');
+const ImageDimensions = require('../../shared/content/ImageDimensions');
+const EditRenderScale = require('./EditRenderScale');
 const ImageCanvas = require('./ImageCanvas');
 const ImageFamilyScaffold = require('./ImageFamilyScaffold');
 const ImageLoraSpecs = require('./ImageLoraSpecs');
@@ -14,9 +16,19 @@ class ImageRequestPlanner {
 
   static PRESIZED_REF_ARGS = 'resize_before_vae=false';
 
-  constructor({ lorasDir = null, presize = RefImagePresizer.presize } = {}) {
+  constructor({ lorasDir = null, presize = RefImagePresizer.presize, measure = ImageRequestPlanner.measureRef } = {}) {
     this._lorasDir = lorasDir;
     this._presize = presize;
+    this._measure = measure;
+  }
+
+  static measureRef(ref) {
+    try {
+      const buf = RefImagePresizer.toBuffer(ref);
+      return buf ? ImageDimensions.read(buf) : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   plan({ request, model, send = () => {} }) {
@@ -24,6 +36,7 @@ class ImageRequestPlanner {
     this._resolveDefaults();
     this._snapToNative();
     this._alignToGrid();
+    this._enlargeEditRender();
     this._applyEditProfile();
     this._resolveSigmas();
     this._presizeRefs();
@@ -44,6 +57,7 @@ class ImageRequestPlanner {
       sigmas: p.customSigmas || undefined,
       loras: p.loras ? p.loras.map((l) => `${l.path}@${l.multiplier}`) : undefined,
       refSizes: plan.refSizes ? plan.refSizes.map((r) => `${r.width}x${r.height}`) : undefined,
+      outputSize: plan.outputSize ? `${plan.outputSize.width}x${plan.outputSize.height}` : undefined,
     };
   }
 
@@ -54,6 +68,7 @@ class ImageRequestPlanner {
     this._md = ImageFamilyScaffold.merge(model);
     this._refCount = Array.isArray(request.refImages) ? request.refImages.filter(Boolean).length : 0;
     this._customSigmas = null;
+    this._outputSize = null;
     this._refs = { refImages: request.refImages || null, refImageArgs: null, refSizes: null };
   }
 
@@ -81,6 +96,23 @@ class ImageRequestPlanner {
 
   _alignToGrid() {
     this._resize('grid-aligned', ImageCanvas.alignToGrid(this._effective.width, this._effective.height, this._model.constraints));
+  }
+
+  _enlargeEditRender() {
+    const profile = this._refCount ? EditProfiles.editProfileFor(this._model.family) : null;
+    if (!profile || !(profile.renderScale > 1) || this._request.initImage || this._request.mask) return;
+    const e = this._effective;
+    const asked = { width: e.width, height: e.height };
+    const size = EditRenderScale.plan({
+      canvas: asked,
+      source: this._measure((this._request.refImages || []).filter(Boolean)[0]),
+      scale: profile.renderScale,
+      maxPixels: profile.renderMaxPixels,
+      grid: ImageModelInfo.gridOf(this._model, RefSizePlanner.DEFAULT_GRID),
+    });
+    if (!size) return;
+    this._resize('edit-render-enlarged', size);
+    this._outputSize = asked;
   }
 
   _resize(phase, size) {
@@ -134,6 +166,7 @@ class ImageRequestPlanner {
         loras: ImageLoraSpecs.resolve(Array.isArray(r.loras) ? { loras: r.loras } : md, this._lorasDir),
         customSigmas: this._customSigmas,
         refImageArgs: this._refs.refImageArgs,
+        refMaxPixels: this._refMaxPixels(),
         cacheMode: r.cacheMode || md.cacheMode || null,
         cacheOption: r.cacheOption || md.cacheOption || null,
         initImage: r.initImage || null,
@@ -143,7 +176,13 @@ class ImageRequestPlanner {
       },
       refCount: this._refCount,
       refSizes: this._refs.refSizes,
+      outputSize: this._outputSize,
     };
+  }
+
+  _refMaxPixels() {
+    const profile = this._refCount ? EditProfiles.editProfileFor(this._model.family) : null;
+    return (profile && ImageRequestPlanner._positive(profile.refMaxPixels)) || null;
   }
 
   static _strength(initImage, strength) {

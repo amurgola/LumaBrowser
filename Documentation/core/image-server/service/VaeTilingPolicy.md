@@ -9,7 +9,11 @@ Decides whether an image launch decodes with `--vae-tiling`.
 - `VaeTilingPolicy.decide({ model, profile, offloadToCpu, cudaDevice, diagnostics, env? })`
   returns a boolean. `profile` is [ImageSlotRoles](ImageSlotRoles.md)`.profile(role, model)`.
   1. Wanted for edit-class launches, unified generate+edit models
-     (`supportsEdit`) and Wan video.
+     (`supportsEdit`) and Wan video. Never wanted for a model with
+     `vaeTiling: false`: MiniMax-H3-Image's VAE cuts its own 256 px tiles, the
+     only size its ViT decoder works at (a 512 or 1024 px tile decodes into a
+     16 px block grid, measured 2026-11-10), and `--vae-tiling` only adds
+     overlap that doubled a 1 MP reference encode from 23 s to 45 s.
   2. Dropped when resident (`!offloadToCpu`) on a single named card whose total
      VRAM is at least `ROOMY_CARD_BYTES` (40 GB).
   3. `SD_EDIT_VAE_TILING` (image slots) or `SD_VIDEO_VAE_TILING` (video-class)

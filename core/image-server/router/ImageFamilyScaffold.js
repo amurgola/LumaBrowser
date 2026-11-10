@@ -46,6 +46,12 @@ class ImageFamilyScaffold {
         + 'text to render inside quotes. cfg is 1.0, so negative prompts have no '
         + 'effect. When editing, describe the change as an instruction.',
     },
+    'minimax-h3-image': {
+      steps: 6,
+      cfgScale: 1.0,
+      sampler: 'euler',
+      fixedSigmas: [1.0, 0.9675236940383911, 0.8875485062599182, 0.75, 0.5327739119529724, 0.23200887441635132],
+    },
     anima: {
       promptPrefix: 'masterpiece, best quality, score_7, highres, ',
       negativePrompt: 'worst quality, low quality, score_1, score_2, score_3, artist name, jpeg artifacts',

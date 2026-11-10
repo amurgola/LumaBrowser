@@ -27,7 +27,8 @@ defaults, plus the quality-tag wrapper applied to the prompt.
 - `ImageFamilyScaffold.fromProfile(id)` projects an
   [ImagePromptProfiles](../prompt/ImagePromptProfiles.md) profile into
   `{ promptPrefix, negativePrompt, promptGuide }` (empty values omitted).
-- `ImageFamilyScaffold.FAMILIES`: `qwen-image-edit`, `qwen-image-2`, `anima`,
+- `ImageFamilyScaffold.FAMILIES`: `qwen-image-edit`, `qwen-image-2`,
+  `minimax-h3-image` (6 steps, cfg 1, euler and the checkpoint's six sigmas), `anima`,
   `sdxl`, `sd-1-5` (the last two from the family fallback profiles).
 
 ## Why

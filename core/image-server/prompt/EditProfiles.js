@@ -4,10 +4,12 @@ class EditProfiles {
   static REF_TAGS = {
     word: (n) => `image ${n}`,
     angle: (n) => `<image${n}>`,
+    picture: (n) => `<Picture ${n}>`,
   };
 
   static GENERIC_PROFILE = {
     refTag: 'word', maxReferences: EditProfiles.DEFAULT_MAX_REFERENCES, keepClause: false, presizeRefs: false, refArea: 0,
+    refMaxPixels: 0, renderScale: 0, renderMaxPixels: 0,
   };
 
   static PROFILES = {
@@ -17,6 +19,15 @@ class EditProfiles {
       keepClause: true,
       presizeRefs: true,
       refArea: 512 * 1024,
+    },
+    'minimax-h3-image': {
+      refTag: 'picture',
+      maxReferences: EditProfiles.DEFAULT_MAX_REFERENCES,
+      keepClause: true,
+      presizeRefs: false,
+      refMaxPixels: 1024 * 1024,
+      renderScale: 1.5,
+      renderMaxPixels: 4096 * 4096,
     },
     'qwen-image-edit': { refTag: 'word', maxReferences: EditProfiles.DEFAULT_MAX_REFERENCES, keepClause: false },
     'flux-kontext': { refTag: 'word', maxReferences: EditProfiles.DEFAULT_MAX_REFERENCES, keepClause: false },

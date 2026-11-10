@@ -13,6 +13,7 @@ class LoraBaseDetector {
     krea2: { label: 'Krea 2', families: ['krea2'] },
     'wan-video': { label: 'Wan video', families: ['wan-video'] },
     'minimax-h3': { label: 'MiniMax-H3', families: ['minimax-h3'] },
+    'minimax-h3-image': { label: 'MiniMax-H3-Image', families: ['minimax-h3-image'] },
   };
 
   static METADATA_RULES = [
@@ -24,6 +25,7 @@ class LoraBaseDetector {
     ['flux2', (v) => /flux[-_.]?2|flux\.2/.test(v)],
     ['flux', (v) => v.includes('flux') || v.includes('flex')],
     ['wan-video', (v) => v.includes('wan')],
+    ['minimax-h3-image', (v) => v.includes('minimax') && /h3[-_ .]?image/.test(v)],
     ['minimax-h3', (v) => v.includes('minimax')],
     ['sdxl', (v) => v.includes('sdxl') || v.includes('stable-diffusion-xl')],
     ['sd-1-5', (v) => /sd_?v?1[-._]?5|stable-diffusion-v1/.test(v)],

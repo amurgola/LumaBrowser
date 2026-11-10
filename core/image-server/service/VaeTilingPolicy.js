@@ -14,6 +14,7 @@ class VaeTilingPolicy {
   }
 
   static _wanted(model, profile) {
+    if (model && model.vaeTiling === false) return false;
     return profile.isEdit || !!(model && model.supportsEdit) || profile.isWanVideo;
   }
 

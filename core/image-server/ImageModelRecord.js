@@ -39,6 +39,7 @@ class ImageModelRecord {
       launchArgs: ImageModelRecord._pick(sources, 'launchArgs') || [],
       preferredRuntimes: ImageModelRecord._pick(sources, 'preferredRuntimes') || [],
       sageAttention: ImageModelRecord._pick(sources, 'sageAttention') === true,
+      vaeTiling: ImageModelRecord._optsOutOfVaeTiling(sources) ? false : undefined,
       licenseNote: ImageModelRecord._pick(sources, 'licenseNote'),
       fileUpdates: ImageModelRecord._fileUpdates({ id, family, files }, catalogList),
       civitai: (manifest && manifest.civitai) || null,
@@ -70,6 +71,10 @@ class ImageModelRecord {
     if (catalogEntry && typeof catalogEntry.supportsEdit === 'boolean') return catalogEntry.supportsEdit;
     if (manifest && typeof manifest.supportsEdit === 'boolean') return manifest.supportsEdit;
     return false;
+  }
+
+  static _optsOutOfVaeTiling({ catalogEntry, manifest }) {
+    return (catalogEntry && catalogEntry.vaeTiling === false) || (manifest && manifest.vaeTiling === false) || false;
   }
 
   static withRuntimeAliases(ids) {
