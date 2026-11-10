@@ -20,6 +20,7 @@ module.exports = {
   setupTab: {
     id: 'chatterbox-voice',
     label: 'Voice cloning',
+    group: 'engines',
     file: './setup-ui.js',
     assets: ['./setup-ui.css'],
   },

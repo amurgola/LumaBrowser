@@ -17,3 +17,7 @@ Starts the work that must not compete with the first window paint.
 The pins stream whole models off disk. The image pin follows the LLM pin so the
 two do not fight over disk bandwidth and so the LLM pin's RAM claim is in place
 before the image pin's fit gate reads free memory.
+
+## Changes (2026-11-09, helper model)
+
+A service with `helperModel` also gets `helperModel.apply()` scheduled at `HELPER_MODEL_MS` (10 s), a second after the router.

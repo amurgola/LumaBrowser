@@ -45,6 +45,21 @@ export default class Sidebar {
     try { api.setSidebarCollapsed(false); } catch (_) {}
   }
 
+  openSearch() {
+    const palette = this._ctx.api && this._ctx.api.palette;
+    if (palette && typeof palette.toggle === 'function') {
+      Promise.resolve(palette.toggle()).catch(() => {});
+      return true;
+    }
+    this.toggleSearch();
+    return false;
+  }
+
+  hasPalette() {
+    const palette = this._ctx.api && this._ctx.api.palette;
+    return !!(palette && typeof palette.toggle === 'function');
+  }
+
   toggleSearch() {
     const { els, state } = this._ctx;
     this.expand();
@@ -90,7 +105,7 @@ export default class Sidebar {
   _markup() {
     const ib = Sidebar.iconButton;
     return '<div class="cm-side-head">'
-      +   ib(ChatIcons.search, 'search', 'Search chats (Ctrl+K)')
+      +   ib(ChatIcons.search, 'search', this.hasPalette() ? 'Search chats, settings and more (Shift Shift, Ctrl+K or Ctrl+F)' : 'Search chats (Ctrl+K)')
       +   ib(ChatIcons.panel, 'collapse', 'Collapse sidebar')
       + '</div>'
       + '<div class="cm-side-top">'
@@ -150,7 +165,7 @@ export default class Sidebar {
     const ctx = this._ctx;
     return {
       new: () => ctx.conversation.newChat(),
-      search: () => this.toggleSearch(),
+      search: () => this.openSearch(),
       collapse: () => this.toggle(),
       newModes: () => { ctx.state.newModesOpen = !ctx.state.newModesOpen; ctx.sideModes.applyActive(); },
       settingsMenu: () => this._toggleSettingsMenu(),
@@ -171,10 +186,20 @@ export default class Sidebar {
     if (this._searchKeyBound) return;
     this._searchKeyBound = true;
     document.addEventListener('keydown', (e) => {
-      if (!(e.ctrlKey || e.metaKey) || e.altKey || (e.key !== 'k' && e.key !== 'K')) return;
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const key = String(e.key).toLowerCase();
+      if (key !== 'k' && key !== 'f') return;
       const { els, state } = this._ctx;
       if (!els.sidebar || els.sidebar.offsetParent === null) return;
+      if (key === 'f') {
+        if (e.shiftKey || e.defaultPrevented || !this.hasPalette()) return;
+        if (e.target && e.target.closest && e.target.closest('.monaco-editor')) return;
+        e.preventDefault();
+        this.openSearch();
+        return;
+      }
       e.preventDefault();
+      if (this.hasPalette()) { this.openSearch(); return; }
       if (!state.searchOn) this.toggleSearch();
       else els.searchBox.querySelector('input').focus();
     });

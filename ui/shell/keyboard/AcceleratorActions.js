@@ -20,7 +20,7 @@ export default class AcceleratorActions {
       case 'new-tab': tabActions.create(undefined, { focusUrl: true }); return true;
       case 'reopen-closed': tabActions.reopenClosed(); return true;
       case 'fullscreen': if (window.windowAPI && window.windowAPI.toggleFullscreen) window.windowAPI.toggleFullscreen(); return true;
-      case 'clear-data': if (this._d && this._d.settings) { this._d.settings.open('general'); setTimeout(() => ClearBrowsingData.reveal(), 50); } return true;
+      case 'clear-data': if (this._d && this._d.settings) { this._d.settings.open(ClearBrowsingData.TAB); setTimeout(() => ClearBrowsingData.reveal(), 50); } return true;
       case 'new-private-window': if (window.tabAPI && window.tabAPI.openPrivateWindow) window.tabAPI.openPrivateWindow(); return true;
       case 'next-tab':
       case 'prev-tab':

@@ -1,6 +1,8 @@
 export default class ClearBrowsingData {
   static ANCHOR = 'gsClearData';
 
+  static TAB = 'privacy';
+
   constructor({ feedback, historyModal = null }) {
     this._feedback = feedback;
     this._history = historyModal;
@@ -53,6 +55,7 @@ export default class ClearBrowsingData {
 
   static reveal() {
     const el = document.getElementById(ClearBrowsingData.ANCHOR);
+    if (el && el.tagName === 'DETAILS') el.open = true;
     if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'center' });
   }
 }

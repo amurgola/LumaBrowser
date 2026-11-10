@@ -35,7 +35,7 @@ class NarratorContext {
       ...NarratorContext._setting(scene, cast.present, window),
     ].join('\n');
     const postHistoryPrompt = NarratorContext._anchor(d, cast.present, window, grounding);
-    const clean = HistoryTrimmer.withoutReasoning(messages);
+    const clean = HistoryTrimmer.withoutDebris(messages);
     const trimmed = HistoryTrimmer.trim(clean.messages, PromptBudget.historyFor(window, systemPrompt, postHistoryPrompt));
     return {
       systemPrompt,

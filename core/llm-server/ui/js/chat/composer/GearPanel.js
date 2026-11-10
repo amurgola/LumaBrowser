@@ -112,6 +112,7 @@ export default class GearPanel {
   _appendChoices(pop) {
     const { api, state } = this._ctx;
     if (!(api.conv && api.conv.setChoices)) return;
+    if (state.activeModeDef && state.activeModeDef.choices === false) return;
     pop.appendChild(Dom.el('div', 'cm-gear-sec', 'Replies <span class="cm-gear-sub">for this chat</span>'));
     const row = GearPanel._checkboxRow('cm-gear-tool cm-gear-choices',
       'After each answer, offer three tappable reply choices. You can always type your own instead.',

@@ -18,7 +18,14 @@ wired by `data-act`.
   is on screen, so the Setup view keeps its keystrokes).
 - `applyExpanded()`, `toggle()` (persists through `api.setSidebarCollapsed`),
   `expand()` (search, artifact views and the Settings tray need room).
-- `toggleSearch()`: leaving either artifacts view first; closing clears the term
+- `openSearch()`: the search icon and Ctrl+K open the app-wide search palette
+  (Shift Shift, `api.palette.toggle`), which finds conversations by meaning plus
+  settings, artifacts, tabs and commands; without a palette (the web shim) they
+  fall back to `toggleSearch()`. Ctrl+F also opens the palette (the browser's
+  find bar only serves web tabs), except inside the code editor, which keeps its
+  own find, and does nothing without a palette. `hasPalette()`; the icon's title
+  names the shortcuts it offers.
+- `toggleSearch()` (the sidebar's own chat filter): leaving either artifacts view first; closing clears the term
   and restores the full list.
 - `applySettingsMenu(open)`.
 - `Sidebar.iconButton(icon, act, label, cls?, hint?)`: the labelled icon button

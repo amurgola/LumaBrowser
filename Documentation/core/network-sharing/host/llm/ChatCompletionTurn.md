@@ -39,3 +39,7 @@ Endings ([ChatCompletionStream](ChatCompletionStream.md)): done writes the
 usage chunk, the finish chunk (`summary.finishReason` or `stop`) and `[DONE]`,
 or the `chat.completion` JSON; cancel and mid-stream error finish with `stop`
 and `[DONE]`; a cancelled non-stream turn answers the partial content.
+
+## Changes (2026-11-09, response_format)
+
+A client's `response_format` object rides the proxy extra as `responseFormat` (`_withResponseFormat`), so a shared clerk decodes a mode's schema under the grammar as a local side call does.

@@ -15,8 +15,8 @@ meant for; a refused call answers `{ success: false, error }`.
 | `core.palette.dig` | a palette view | starts Dig deeper; events stream on `core.palette.digEvent` |
 | `core.palette.digAbort` | a palette view | stops it |
 | `core.palette.continueInChat` | a palette view | closes, then hands the query to the chat |
-| `core.palette.toggle` | a window's browser chrome | opens or closes that window's palette |
-| `core.palette.getDoubleShift` | browser chrome | `{ success, enabled }` |
+| `core.palette.toggle` | browser chrome or an internal tab | opens or closes the sender's window's palette (the LLM tab's "Jump to a setting" button uses it); never a website |
+| `core.palette.getDoubleShift` | browser chrome or an internal tab | `{ success, enabled }` |
 | `core.palette.setDoubleShift` | browser chrome | saves the switch |
 | `core.palette.record` | browser chrome or an internal tab | remembers a place; never a website |
 

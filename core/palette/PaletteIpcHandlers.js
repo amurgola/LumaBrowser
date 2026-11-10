@@ -18,8 +18,8 @@ class PaletteIpcHandlers {
     this._fromPalette('core.palette.dig', (_win, e, q) => this._dig(e.sender, q));
     this._fromPalette('core.palette.digAbort', (_win, e) => { p.digDeeper.abort(e.sender); return { success: true }; });
     this._fromPalette('core.palette.continueInChat', (win, _e, q) => { p.close(win, { restoreFocus: false }); return p.continueInChat(q); });
-    this._fromChrome('core.palette.toggle', (e) => p.toggle(this._windowFor(e.sender)));
-    this._fromChrome('core.palette.getDoubleShift', () => ({ success: true, enabled: p.isDoubleShiftEnabled() }));
+    this._fromAppPage('core.palette.toggle', (e) => p.toggle(this._windowFor(e.sender)));
+    this._fromAppPage('core.palette.getDoubleShift', () => ({ success: true, enabled: p.isDoubleShiftEnabled() }));
     this._fromChrome('core.palette.setDoubleShift', (_e, enabled) => p.setDoubleShiftEnabled(enabled));
     this._ipc.handle('core.palette.record', (e, place) => (this._mayRecord(e && e.sender) ? { success: p.record(place) } : { success: false }));
   }
@@ -45,6 +45,13 @@ class PaletteIpcHandlers {
       const win = this._palette.windowForSender(e && e.sender);
       if (!win) return { success: false, error: 'not a palette' };
       return fn(win, e, ...args);
+    });
+  }
+
+  _fromAppPage(channel, fn) {
+    this._ipc.handle(channel, (e, ...args) => {
+      if (!this._mayRecord(e && e.sender)) return { success: false, error: 'not the browser chrome or an app tab' };
+      return fn(e, ...args);
     });
   }
 

@@ -26,10 +26,11 @@ class LlmDefaults extends KeyedSettings {
   static DEFAULT_PARALLEL = 1;
   static MAX_PARALLEL = 64;
 
-  constructor({ settingsDb, launchFlags, groupRouter }) {
+  constructor({ settingsDb, launchFlags, groupRouter, helperModel = null }) {
     super(settingsDb);
     this._launchFlags = launchFlags;
     this._groupRouter = groupRouter;
+    this._helper = helperModel;
   }
 
   get() {
@@ -45,6 +46,7 @@ class LlmDefaults extends KeyedSettings {
       reasoningEffort: ReasoningEffort.normalizeEffort(this._db.get(LlmDefaults.KEYS.reasoningEffort, null)),
       groupRouter: !!this._groupRouter.isEnabled(),
       groupRouterPinRam: !!this._groupRouter.isPinEnabled(),
+      ...(this._helper ? { helperModel: this._helper.snapshot() } : {}),
       launchFlags: this._launchFlags.resolve(modelPath),
     };
   }
@@ -55,6 +57,7 @@ class LlmDefaults extends KeyedSettings {
     this._writeFlags(patch);
     this._writeReasoningEffort(patch.reasoningEffort);
     this._writeGroupRouter(patch);
+    if (this._helper && patch.helperModel && typeof patch.helperModel === 'object') this._helper.apply(patch.helperModel);
     this._writeLaunchFlags(patch.launchFlags);
     return this.get();
   }

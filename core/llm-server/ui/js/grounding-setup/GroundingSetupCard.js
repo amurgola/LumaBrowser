@@ -1,5 +1,6 @@
 import Dom from '../dom/Dom.js';
 import GroundingMarkup from './GroundingMarkup.js';
+import SystemStatus from '../setup-ui/system/SystemStatus.js';
 
 export default class GroundingSetupCard {
   static POLL_MS = 5000;
@@ -19,7 +20,7 @@ export default class GroundingSetupCard {
 
   start() {
     this._api = this._getRoot() && this._getRoot().grounding;
-    if (!this._api) return false;
+    if (!this._api) { SystemStatus.emit(document, 'grounding', SystemStatus.grounding(null)); return false; }
     document.addEventListener('change', this._onChange);
     document.addEventListener('click', this._onClick);
     this._api.onEvent((event) => this._onEvent(event));
@@ -45,6 +46,7 @@ export default class GroundingSetupCard {
     const body = Dom.byId('groundingBody');
     if (!body || !this._view) return;
     this._paintPill();
+    SystemStatus.emit(document, 'grounding', SystemStatus.grounding(this._view, GroundingMarkup.STATE_LABEL, this._error));
     body.className = '';
     body.innerHTML = GroundingMarkup.html({ view: this._view, desktop: this._desktop, dl: this._dl, busy: this._busy, error: this._error });
   }

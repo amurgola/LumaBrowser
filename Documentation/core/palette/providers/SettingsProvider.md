@@ -10,7 +10,12 @@ search time.
 
 ## Methods
 
-- `new SettingsProvider({ catalogs, listExtensions })`.
+- `new SettingsProvider({ catalogs, listExtensions, valueOf? })`: `valueOf(entry)`
+  returns the current value's display text or null
+  ([SettingValueReader](../SettingValueReader.md)).
+- `itemFor(entry, score?, marks?)`: `item` plus `value` ("64k", "On") when the
+  entry has one; a failing reader leaves the row without it. Search results and
+  recent places use it, and Dig deeper passes the value to the model.
 - `entries()`: the static entries plus the extension ones (none while extensions
   are still loading).
 - `byId(id)`, `search(query, { limit = 8 })`.

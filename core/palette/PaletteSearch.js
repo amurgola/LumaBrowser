@@ -83,7 +83,7 @@ class PaletteSearch {
 
   _recentSetting(place) {
     const entry = this._p.settings && this._p.settings.byId(place.ref);
-    return entry ? SettingsProvider.item(entry) : null;
+    return entry ? (this._p.settings.itemFor ? this._p.settings.itemFor(entry) : SettingsProvider.item(entry)) : null;
   }
 }
 

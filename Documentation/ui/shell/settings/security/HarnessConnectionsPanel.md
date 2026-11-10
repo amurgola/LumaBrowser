@@ -9,7 +9,7 @@ main thread, which is work the first paint should not pay for).
 ## Methods
 
 - `install()`, `load()`.
-- `describe(h)`, `rowHtml(h)`, `skillText(skills)`, `disconnectMessage(r)` (static).
+- `describe(h)`, `rowHtml(h)`, `skillText(skills)`, `skillButton(skills)` (Install until every skill is in place, then a quiet Reinstall), `disconnectMessage(r)` (static).
   `disconnectMessage` names the settings the user changed after connecting, which
   disconnect left in place.
 

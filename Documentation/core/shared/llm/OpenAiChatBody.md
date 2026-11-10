@@ -81,3 +81,7 @@ llama-server honours `chat_template_kwargs` and `reasoning_budget` per request.
 A top-level `enable_thinking` is not read, which is why naive attempts to
 disable thinking silently keep the model thinking. Other servers ignore the
 unknown fields.
+
+## Changes (2026-11-09, helper model)
+
+`responseFormat`: an OpenAI `response_format` object sent as given (`_applyResponseFormat`); nothing for a missing or empty one.

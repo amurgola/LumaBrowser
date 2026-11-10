@@ -148,3 +148,7 @@ The service is the single owner of the pinned tab's identity and of the one
 chat-model supervisor, so every subsystem reaches both through it. The
 `ServerLauncher` reads its defaults, caches, API key, launch flags, fit results
 and RAM pin through this facade, which is why those stay public methods here.
+
+## Changes (2026-11-09, helper model)
+
+`helperModel` (a [HelperModelService](helper/HelperModelService.md)) is a fourth companion built in `_createCompanions` (seam `deps.helperModel`); `LlmDefaults` gets its settings; `releaseRuntime` also releases it and resolves `{ server, router, helper }`; `resumeRuntime` applies it back; `shutdown` stops it.

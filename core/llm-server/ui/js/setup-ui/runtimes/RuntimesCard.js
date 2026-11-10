@@ -4,6 +4,7 @@ import HostRuntimeAdvice from './HostRuntimeAdvice.js';
 import RuntimeRowHtml from './RuntimeRowHtml.js';
 import RuntimeUpdateBadge from './RuntimeUpdateBadge.js';
 import RuntimeRowProgress from './RuntimeRowProgress.js';
+import SystemStatus from '../system/SystemStatus.js';
 
 export default class RuntimesCard {
   constructor(ctx) {
@@ -31,6 +32,7 @@ export default class RuntimesCard {
     body.className = '';
     body.innerHTML = RuntimesCard.bodyHtml(view, HostRuntimeAdvice.forRows(view.runtimes, this._ctx.hostCaps));
     for (const r of view.runtimes) this._applyUpdate(r.id);
+    this.publishStatus();
   }
 
   async refreshUpdates() {
@@ -43,6 +45,13 @@ export default class RuntimesCard {
       this._ctx.runtimes.setUpdate(id, info);
       this._applyUpdate(id);
     }
+    this.publishStatus();
+  }
+
+  publishStatus() {
+    if (!this._ctx.runtimes.all().length) return;
+    const chosen = this._ctx.lastDefaults && this._ctx.lastDefaults.runtimeId;
+    SystemStatus.emit(this._ctx.doc, 'runtimes', SystemStatus.runtimes(this._ctx.runtimes, chosen));
   }
 
   static pillText(view) {
@@ -116,5 +125,6 @@ export default class RuntimesCard {
     const body = this._ctx.doc.getElementById('runtimesBody');
     body.className = 'luma-error';
     body.textContent = text;
+    SystemStatus.emit(this._ctx.doc, 'runtimes', SystemStatus.error(text));
   }
 }

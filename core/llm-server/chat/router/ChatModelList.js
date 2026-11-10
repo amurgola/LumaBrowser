@@ -9,7 +9,7 @@ class ChatModelList {
   }
 
   list() {
-    const models = this._withProfiles([...this._localModels(), ...this._remoteModels()]);
+    const models = this._withProfiles([...this._localModels(), ...this._helperModels(), ...this._remoteModels()]);
     return { models, defaultRef: this._defaultRef(models) };
   }
 
@@ -32,6 +32,27 @@ class ChatModelList {
       runtimeId: entry.managedRuntimeId || null,
       ready: status.state === 'ready',
       serverState: status.state,
+    }];
+  }
+
+  _helperModels() {
+    const helper = this._service && this._service.helperModel;
+    if (!helper || typeof helper.readyRef !== 'function') return [];
+    let ref = null;
+    try { ref = helper.readyRef(); } catch (_) { return []; }
+    if (!ref) return [];
+    const stem = ChatModelRef.helperName(ref);
+    return [{
+      ref,
+      label: `Helper · ${stem}`,
+      displayName: stem,
+      providerId: 'helper',
+      providerType: 'openai',
+      isLocal: false,
+      isHelper: true,
+      role: 'helper',
+      ready: true,
+      serverState: 'ready',
     }];
   }
 

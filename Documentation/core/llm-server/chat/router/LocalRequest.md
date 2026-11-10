@@ -12,3 +12,7 @@ Sends one chat request to the ready local server through its runtime's chat adap
 ## Why
 
 Chat, sharing proxies and extension slots all dispatch at the same decode slots; a request into a saturated server would otherwise sit silently in llama-server's FIFO. The bearer is the running child's snapshot, so a key rotation mid-run is safe.
+
+## Changes (2026-11-09, helper model)
+
+`extra.responseFormat` reaches the adapter as `responseFormat` (the roleplay stage manager's schema).

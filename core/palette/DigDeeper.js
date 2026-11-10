@@ -75,7 +75,7 @@ class DigDeeper {
     settings.forEach((item, i) => {
       const tag = `S${i + 1}`;
       chips.push({ tag, item });
-      lines.push(`[${tag}] ${item.title} (${item.subtitle}): ${item.detail || ''}`.trim());
+      lines.push(`[${tag}] ${item.title} (${item.subtitle})${item.value ? ` [currently: ${item.value}]` : ''}: ${item.detail || ''}`.trim());
     });
     const convs = this._safe(() => this._conversations.search(query, { limit: DigDeeper.CONVERSATIONS_K }))
       .filter((c) => (c.score || 0) >= DigDeeper.MIN_CONVERSATION_SCORE);

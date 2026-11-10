@@ -34,7 +34,8 @@ export default class SettingsTabs {
     this._tabButtons.querySelectorAll('.settings-tab').forEach((btn) => {
       btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
     });
-    this._addTabButton('extensions', 'Extensions');
+    this._addTabButton('extensions', 'Manage extensions');
+    this._addGap();
     this._addTabButton('about', 'About');
     const panes = this._buildExtensionsSection();
     this._fillAboutSubtabs();
@@ -117,6 +118,13 @@ export default class SettingsTabs {
     btn.textContent = label;
     btn.addEventListener('click', () => this.switchTab(tab));
     this._tabButtons.appendChild(btn);
+  }
+
+  _addGap() {
+    const gap = document.createElement('div');
+    gap.className = 'settings-nav-gap';
+    gap.setAttribute('aria-hidden', 'true');
+    this._tabButtons.appendChild(gap);
   }
 
   _buildExtensionsSection() {

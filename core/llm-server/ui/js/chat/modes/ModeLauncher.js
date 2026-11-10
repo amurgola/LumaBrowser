@@ -125,6 +125,7 @@ export default class ModeLauncher {
     state.messages = [];
     state.lastUsage = null;
     state.resetChatOptions(def.agent === true);
+    if (def.choices === false) state.choicesEnabled = false;
     if (!state.modelRef) state.modelRef = state.defaultRef;
     await ctx.convList.refresh();
     ctx.conversation.render(conv.title || def.label || 'Conversation');

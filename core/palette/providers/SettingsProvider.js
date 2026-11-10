@@ -6,9 +6,18 @@ class SettingsProvider {
   static WEIGHTS = { label: 1, keywords: 0.85, path: 0.6, description: 0.5 };
   static GROUP_PENALTY = 0.9;
 
-  constructor({ catalogs = [], listExtensions = () => [] } = {}) {
+  constructor({ catalogs = [], listExtensions = () => [], valueOf = () => null } = {}) {
     this._static = catalogs.flat();
     this._listExtensions = listExtensions;
+    this._valueOf = valueOf;
+  }
+
+  itemFor(entry, score = 0, marks = []) {
+    const item = SettingsProvider.item(entry, score, marks);
+    let value = null;
+    try { value = this._valueOf(entry); } catch (_) { value = null; }
+    if (value) item.value = value;
+    return item;
   }
 
   entries() {
@@ -30,7 +39,7 @@ class SettingsProvider {
       hits.push({ entry, score, marks: m.marks });
     }
     hits.sort((a, b) => b.score - a.score);
-    return hits.slice(0, limit).map((h) => SettingsProvider.item(h.entry, h.score, h.marks));
+    return hits.slice(0, limit).map((h) => this.itemFor(h.entry, h.score, h.marks));
   }
 
   static _fields(entry) {

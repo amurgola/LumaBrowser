@@ -21,9 +21,12 @@ postProcess.
   a fresh seed unless the override pins one.
 - `runText({ options })` -> `{ success, outDir, transcript, data, probe, cast,
   prose, judge, error }`: the scripted text playthrough through [LabTextRun](LabTextRun.md),
-  written by [LabTextReport](LabTextReport.md) under `<outRoot>/<stamp>-text`.
-  `options.turns`, `options.mockSideCalls`, `options.judge`.
-- `LabService.NOT_REGISTERED`.
+  every turn a real chat turn through `router()`, written by
+  [LabTextReport](LabTextReport.md) under `<outRoot>/<stamp>-text`.
+  `options.turns`, `options.mockSideCalls`, `options.judge`, `options.scenario`,
+  `options.grounding`, `options.modelRef`, `options.keep`. Without a router:
+  `{ success: false, error: NO_ROUTER }`.
+- `router()` the chat router, or null; `LabService.NOT_REGISTERED`, `LabService.NO_ROUTER`.
 
 ## Wiring
 

@@ -64,6 +64,11 @@ export default class HarnessConnectionsPanel {
     return n > 0 ? 'Partly installed' : 'Teaches agents to read luma docs';
   }
 
+  static skillButton(skills) {
+    const all = skills.length > 0 && skills.every((s) => s.installed);
+    return all ? { label: 'Reinstall', quiet: true } : { label: 'Install luma skill', quiet: false };
+  }
+
   _render(data) {
     this._rows.innerHTML = ((data && data.harnesses) || []).map((h) => HarnessConnectionsPanel.rowHtml(h)).join('');
     if (this._apiHint) {
@@ -71,7 +76,14 @@ export default class HarnessConnectionsPanel {
         ? 'Turn on "Serve on 127.0.0.1" above first; connected agents talk to that port.'
         : '';
     }
-    if (this._skillStatus) this._skillStatus.textContent = HarnessConnectionsPanel.skillText((data && data.skills) || []);
+    const skills = (data && data.skills) || [];
+    if (this._skillStatus) this._skillStatus.textContent = HarnessConnectionsPanel.skillText(skills);
+    const btn = document.getElementById('gsHarnessSkillBtn');
+    if (btn) {
+      const state = HarnessConnectionsPanel.skillButton(skills);
+      btn.textContent = state.label;
+      btn.className = state.quiet ? 'gs-action-btn gs-quiet-btn' : 'btn btn-secondary';
+    }
   }
 
   async _onRowClick(ev) {

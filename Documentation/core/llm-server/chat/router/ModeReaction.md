@@ -7,7 +7,7 @@ Runs a chat mode's optional postProcess reaction after a turn ends.
 ## Methods
 
 - `new ModeReaction({ chatStore })` (`getMeta`, `setMeta`, `updateMessage`).
-- `run(descriptor, { content, conversationId, assistantMessageId, send, aborted = false })`: on a later microtask calls `postProcess({ content, conversationId, assistantMessageId, aborted, meta: getMeta(conversationId), emit(type, payload), setMeta(patch), replaceContent(text) })`. No descriptor or hook is a no-op; failures are logged.
+- `run(descriptor, { content, conversationId, assistantMessageId, send, aborted = false })`: on a later microtask calls `postProcess({ content, conversationId, assistantMessageId, aborted, meta: getMeta(conversationId), emit(type, payload), setMeta(patch), replaceContent(text) })`. No descriptor or hook is a no-op; failures are logged. Once the reaction settles, `send('mode:reaction', { messageId, status: 'done' | 'failed', error? })` tells the renderer (and the Roleplay Lab, which waits on it) that the world update is over.
 - `replaceContent(text)` stores the rewritten reply (`updateMessage(assistantMessageId, { content })`) and sends `mode:content { messageId, content }` so the renderer re-renders it; false for blank text, a missing id or a store without `updateMessage`. A mode's optional prose polish uses it.
 
 ## Why

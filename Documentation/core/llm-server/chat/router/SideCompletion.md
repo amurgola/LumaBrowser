@@ -13,3 +13,7 @@ One-shot side completions for extension chat modes and AI-fill fields (`context.
 ## Why
 
 Bug M14: noThink must send both levers, because some Qwen templates ignore the body knobs. Never persisted and never touching the in-flight turn, so a mode's post-turn reaction cannot disturb the chat.
+
+## Changes (2026-11-09, helper model)
+
+`complete` takes `responseFormat` (an OpenAI `response_format` object, a JSON schema): it rides the extra beside the reasoning-off knobs, and llama-server decodes under its grammar so a bookkeeping call's JSON parses whatever model answers.

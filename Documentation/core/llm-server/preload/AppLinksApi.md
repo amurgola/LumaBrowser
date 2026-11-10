@@ -23,3 +23,5 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `rpLab.runText(args)` | invoke `core.rpLab.runText` |
 | `rpLab.onEvent(cb)` | subscribe `core.rpLab.event` |
 | `palette.record(place)` | invoke `core.palette.record` (the search palette's recent places: conversations, artifacts and Setup pages opened here) |
+| `palette.toggle()` | invoke `core.palette.toggle` (opens the search palette over this window) |
+| `palette.doubleShift()` | invoke `core.palette.getDoubleShift` (whether the double-Shift shortcut is on) |

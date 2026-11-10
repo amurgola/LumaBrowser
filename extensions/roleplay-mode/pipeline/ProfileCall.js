@@ -2,6 +2,7 @@ const CharacterProfile = require('../world/CharacterProfile');
 const ProfilePrompt = require('../prompts/ProfilePrompt');
 const RpDebug = require('../images/RpDebug');
 
+const SideModel = require('../mode/SideModel');
 class ProfileCall {
   static TIMEOUT_MS = 60000;
   static TEMPERATURE = 0.4;
@@ -26,7 +27,7 @@ class ProfileCall {
   static request(data, char, content) {
     return {
       messages: ProfilePrompt.messages(data, char, content), temperature: ProfileCall.TEMPERATURE,
-      timeoutMs: ProfileCall.TIMEOUT_MS, noThink: true, modelRef: data.llmModel || undefined,
+      timeoutMs: ProfileCall.TIMEOUT_MS, noThink: true, modelRef: SideModel.ref(data),
     };
   }
 

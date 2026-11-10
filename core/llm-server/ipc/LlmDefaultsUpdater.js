@@ -15,7 +15,13 @@ class LlmDefaultsUpdater {
     const serverStopped = this._launchShapeChanged(changed, patch, before, defaults) ? await this._stopServer() : false;
     this._reconcileRamPin(changed, defaults);
     this._reconcileRouter(changed);
+    this._reconcileHelper(patch, before, defaults);
     return { defaults, serverStopped };
+  }
+
+  _reconcileHelper(patch, before, defaults) {
+    if (!patch.helperModel || !this._svc.helperModel || typeof this._svc.helperModel.apply !== 'function') return;
+    if (JSON.stringify(before.helperModel || null) !== JSON.stringify(defaults.helperModel || null)) this._svc.helperModel.apply();
   }
 
   _launchShapeChanged(changed, patch, before, defaults) {

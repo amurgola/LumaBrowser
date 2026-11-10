@@ -1,4 +1,5 @@
 import HtmlEscaper from '../../../../core/llm-server/ui/js/format/HtmlEscaper.js';
+import FoldGroups from '../general/FoldGroups.js';
 
 export default class SharingTokensList {
   constructor({ sharingApi, reload }) {
@@ -15,8 +16,17 @@ export default class SharingTokensList {
     });
   }
 
+  static countText(tokens) {
+    const list = tokens || [];
+    const revoked = list.filter((t) => t.revoked).length;
+    const active = list.length - revoked;
+    if (!list.length) return 'None yet';
+    return revoked ? `${active} paired, ${revoked} revoked` : `${active} paired`;
+  }
+
   render(tokens) {
     if (!this._wrap) return;
+    FoldGroups.summarize('share-clients', SharingTokensList.countText(tokens));
     if (!tokens.length) {
       this._wrap.innerHTML = '<div class="gs-list-empty">No clients paired yet.</div>';
       return;

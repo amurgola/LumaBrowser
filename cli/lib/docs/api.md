@@ -4,7 +4,7 @@ The LumaBrowser REST API provides HTTP endpoints for browser automation, extensi
 
 ## Base URL
 
-By default the API listens on `http://localhost:3000`. You can change the port in **Settings > General > API & MCP**.
+By default the API listens on `http://localhost:3000`. You can change the port in **Settings > API & MCP**.
 
 ## Health & Info
 

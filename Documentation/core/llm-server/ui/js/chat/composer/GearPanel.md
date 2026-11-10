@@ -16,3 +16,9 @@ Watch the browser tab live (a global preference), and the per-chat tool list.
   planner's dash, never inside "llama.cpp"); hidden unless ready or starting.
 
 Clicks inside the panel or its nested model popover keep it open.
+
+## Reply choices (2026-11-09)
+
+The "Suggest reply choices" row is left out when the active mode's listing
+says `choices: false`: there is nothing to toggle, the router never adds the
+document to that mode.

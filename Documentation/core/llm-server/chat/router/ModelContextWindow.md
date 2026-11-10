@@ -13,3 +13,7 @@ The context window ONE request gets from the model behind a chat model ref, in t
 ## Why
 
 Bug M4: the meter, the compaction trigger and the agent's tool budgets each divided the persisted request, ignoring the planner's clamp and its slot downgrade. A paired peer's model runs in the HOST's server, so this machine's local settings say nothing about it; the host advertises `luma_context` instead.
+
+## Changes (2026-11-09, helper model)
+
+A `helper::` ref reads `service.helperModel.contextSize()` (`_helperWindow`), null without a helper.

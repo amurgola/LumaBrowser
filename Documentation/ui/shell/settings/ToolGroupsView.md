@@ -7,6 +7,7 @@ The shared tool allow-list (group checkbox with indeterminate state, on/total co
 ## Methods
 
 - `ToolGroupsView.render(container, groups, onSet, opts)`.
+- `ToolGroupsView.countText(groups, onSet)`: the words for a list's fold summary ("All 12 on", "9 of 12 on", "All off", "None available").
 
 ## Globals
 

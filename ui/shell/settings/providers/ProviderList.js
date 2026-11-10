@@ -9,6 +9,7 @@ export default class ProviderList {
 
   constructor({ log, feedback }) {
     this.configs = [];
+    this._open = new Set();
     this._ctx = { list: this, log, feedback, pingChat: ProviderList.pingChatPanel };
     this._defaults = new DefaultProviderControl({ log, feedback, rerender: () => this.render(), pingChat: ProviderList.pingChatPanel });
     this._addForm = new AddProviderForm(this._ctx);
@@ -45,7 +46,20 @@ export default class ProviderList {
     listEl.innerHTML = '';
     this._defaults.render(listEl, { configs: this.configs, activeKey: state.activeKey, imageCfg: state.imageCfg });
     if (this.configs.length === 0) listEl.insertAdjacentHTML('beforeend', ProviderList.EMPTY);
-    for (const config of this.configs) listEl.appendChild(this._card(config, state.peersById));
+    for (const config of this.configs) listEl.appendChild(this._folding(config, this._card(config, state.peersById)));
+  }
+
+  static needsSetup(config) {
+    return !config.managedByCore && !config.peerManaged && !EditableProviderCard.isConfigured(config);
+  }
+
+  _folding(config, card) {
+    const key = config.id || config.name;
+    card.open = this._open.has(key) || ProviderList.needsSetup(config);
+    card.addEventListener('toggle', () => {
+      if (card.open) this._open.add(key); else this._open.delete(key);
+    });
+    return card;
   }
 
   _card(config, peersById) {

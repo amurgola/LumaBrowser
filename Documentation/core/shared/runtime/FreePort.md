@@ -39,3 +39,7 @@ callers cannot mutate the table.
 The `exclude` list is best effort against the ephemeral fallback; collision
 odds in the random ephemeral range are negligible. It exists for callers that
 need a pair of ports (the image server's public and private proxy).
+
+## Changes (2026-11-09, helper model)
+
+`helper` window: 8220 to 8239 (the helper model's llama-server).

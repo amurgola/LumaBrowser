@@ -1,4 +1,10 @@
 export default class SettingsModal {
+  static TAB_ALIASES = { security: 'sharing' };
+
+  static resolveTab(tab) {
+    return SettingsModal.TAB_ALIASES[tab] || tab;
+  }
+
   constructor({ bounds, feedback, getSlotManager }) {
     this._bounds = bounds;
     this._feedback = feedback;
@@ -20,6 +26,7 @@ export default class SettingsModal {
   }
 
   open(tab = 'general') {
+    tab = SettingsModal.resolveTab(tab);
     this.el.classList.add('active');
     if (tab) this.switchTab(tab);
     document.dispatchEvent(new CustomEvent('settings:open', { detail: { tab } }));
@@ -47,6 +54,6 @@ export default class SettingsModal {
     if (!link) return;
     e.preventDefault();
     const tab = link.getAttribute('data-gs-goto');
-    if (tab) this.switchTab(tab);
+    if (tab) this.switchTab(SettingsModal.resolveTab(tab));
   }
 }

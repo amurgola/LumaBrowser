@@ -73,3 +73,11 @@ delete, which is why the hook is not awaited and its errors are dropped.
 
 Sidebar launchers are reserved for always-there utilities (Chat with agent,
 Scheduled Task) so the sidebar does not fill up as mode extensions are installed.
+
+## Reply choices (2026-11-09)
+
+A descriptor may say `choices: false`: the listing carries `choices` (true
+unless so) and `ChatModeRegistry.allowsChoices(descriptor)` is what
+[ChatTurn](router/ChatTurn.md) asks before folding the "Suggest replies"
+document into that mode's turns. The roleplay narrator declines: the fence
+rode every reply into the history and the stage call's passage.

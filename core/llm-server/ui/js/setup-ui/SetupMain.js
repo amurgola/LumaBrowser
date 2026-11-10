@@ -16,6 +16,8 @@ import RuntimesCard from './runtimes/RuntimesCard.js';
 import LibraryRefresher from './LibraryRefresher.js';
 import SetupClickRouter from './SetupClickRouter.js';
 import SetupContext from './SetupContext.js';
+import SystemStatusStrip from './system/SystemStatusStrip.js';
+import SetupJumpButton from './nav/SetupJumpButton.js';
 
 export default class SetupMain {
   constructor({ api, doc = document, win = window, modelList = null, modelSearch = null, openers = {} }) {
@@ -28,6 +30,9 @@ export default class SetupMain {
   }
 
   start() {
+    this.systemStrip.start();
+    this.imageSystemStrip.start();
+    this.jumpButton.start();
     this.navigator.start();
     this.advanced.init();
     this.extensionTabs.start();
@@ -63,6 +68,11 @@ export default class SetupMain {
   _buildSurfaces() {
     const ctx = this.ctx;
     this.advanced = new AdvancedView({ api: ctx.api, doc: ctx.doc });
+    this.systemStrip = new SystemStatusStrip({ doc: ctx.doc, win: ctx.win });
+    this.imageSystemStrip = new SystemStatusStrip({
+      doc: ctx.doc, win: ctx.win, rootId: 'imageSystemStrip', items: SystemStatusStrip.IMAGE_ITEMS, storeKey: SystemStatusStrip.IMAGE_STORE_KEY,
+    });
+    this.jumpButton = new SetupJumpButton({ api: ctx.api, doc: ctx.doc });
     this.extensionTabs = new SetupExtensionTabs({ api: ctx.api, doc: ctx.doc, win: ctx.win });
     this.navigator = new SetupNavigator({
       doc: ctx.doc,

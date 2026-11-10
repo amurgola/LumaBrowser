@@ -1,23 +1,25 @@
+import ImageRuntimeRow from './ImageRuntimeRow.js';
+
 export default class RuntimeUpdateBadge {
   static apply(body, id, info) {
     if (!info || !body) return;
     const row = body.querySelector(`[data-runtime-id="${CSS.escape(id)}"]`);
     if (!row) return;
-    RuntimeUpdateBadge._button(row, info);
+    RuntimeUpdateBadge._state(row, id, info);
     RuntimeUpdateBadge._pill(row, info);
   }
 
-  static _button(row, info) {
-    const btn = row.querySelector('button[data-act="install"]');
-    if (!btn) return;
-    btn.textContent = 'Update';
+  static _state(row, id, info) {
+    const slot = row.querySelector('[data-runtime-state]');
+    if (!slot) return;
     if (info.updateAvailable) {
-      btn.dataset.updateAvailable = '1';
-      btn.title = info.latest ? `Update ${info.current} → ${info.latest}` : 'Newer release available upstream';
-    } else {
-      delete btn.dataset.updateAvailable;
-      btn.title = '';
+      slot.innerHTML = ImageRuntimeRow.installButton(id, 'Update', info.latest ? `Update ${info.current} → ${info.latest}` : 'Newer release available upstream');
+      slot.classList.remove('is-current');
+      return;
     }
+    slot.textContent = 'Up to date';
+    slot.classList.add('is-current');
+    slot.title = info.current ? `Installed ${info.current} is the latest release` : '';
   }
 
   static _pill(row, info) {

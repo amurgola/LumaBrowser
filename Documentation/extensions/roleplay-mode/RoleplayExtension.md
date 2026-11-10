@@ -44,3 +44,8 @@ the Lab service for the core `core.rpLab.*` IPC controller.
 ## Renderer contract (for the renderer porter)
 
 Chat events emitted by postProcess, unchanged names and payloads: `mode:world { messageId, characters, scenes, activeSceneId, currentState, newCharIds, newSceneId, sceneChanged }`, `mode:progress { messageId, label }` or `{ messageId, done: true }`, `mode:image-start { messageId }`, `mode:image-stage { messageId, stage, b64, mime }`, `mode:image { messageId, b64, mime }`, `mode:image-fail { messageId, canceled? }`, `mode:scene-art { sceneId, b64, mime }`, and from core's ModeReaction when the polish pass rewrote a reply, `mode:content { messageId, content }`. The Lab adds `lab:step` (LabHarness), `lab:text` (the text run) and `lab:comparison { composite, integrated }` on `core.rpLab.event`. IPC: `ext.roleplay-mode.getLabFlag` / `setLabFlag(on)` -> `{ enabled }`, and the four debug channels (see RoleplayIpcHandlers). The setup tab is `{ id: 'roleplay-lab', label: 'Roleplay Lab', file: './rp-lab.js' }`.
+
+## Changes (2026-11-09)
+
+The Lab service also gets `router: () => HostGlobals.chatRouter()`: the Lab
+tab's text run plays its turns through the app's own chat router.

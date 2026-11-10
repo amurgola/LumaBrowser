@@ -16,8 +16,9 @@ export default class SitePermissionsPanel {
     if (!this._api || !this._list) return;
     this._list.addEventListener('click', (e) => this._onRowClick(e));
     if (this._clearAll) this._clearAll.addEventListener('click', () => this._run(() => this._api.clearAll()));
-    const secTab = document.querySelector('.settings-tab[data-tab="security"]');
-    if (secTab) secTab.addEventListener('click', () => { this.refresh(); });
+    const tab = document.querySelector('.settings-tab[data-tab="privacy"]');
+    if (tab) tab.addEventListener('click', () => { this.refresh(); });
+    document.addEventListener('settings:open', () => { this.refresh(); });
     this.refresh();
   }
 

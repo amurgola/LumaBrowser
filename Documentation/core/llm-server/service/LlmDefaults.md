@@ -39,3 +39,7 @@ Every field is intent only: the launch planner gates tensor split, cache reuse
 and CPU MoE per model and runtime, the chat router applies noThink and the
 effort, RamPinService gates the pin. The slot count is clamped on read so a bad
 persisted value cannot ask for thousands of slots.
+
+## Changes (2026-11-09, helper model)
+
+`helperModel` (a `HelperModelSettings`, optional): `get()` adds `helperModel: { enabled, modelPath, cudaDevice, contextSize }` (absent without one) and `set({ helperModel })` applies the patch to it.

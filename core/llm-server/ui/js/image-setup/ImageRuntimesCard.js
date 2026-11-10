@@ -5,6 +5,7 @@ import RuntimeInstallModal from '../setup/RuntimeInstallModal.js';
 import ImageRuntimeRow from './ImageRuntimeRow.js';
 import RuntimeProgressMarkup from './RuntimeProgressMarkup.js';
 import RuntimeUpdateBadge from './RuntimeUpdateBadge.js';
+import SystemStatus from '../setup-ui/system/SystemStatus.js';
 
 export default class ImageRuntimesCard {
   constructor(panel) {
@@ -21,6 +22,7 @@ export default class ImageRuntimesCard {
       pill.textContent = 'n/a';
       pill.className = 'luma-badge muted';
       body.textContent = 'No runtimes registered.';
+      this.publishStatus();
       return;
     }
     const installedCount = runtimes.filter((r) => r.installed).length;
@@ -29,6 +31,14 @@ export default class ImageRuntimesCard {
     body.innerHTML = this._html(runtimes);
     for (const id of this._panel.store.runtimeUpdateInfo.keys()) this._applyBadge(id);
     this._wire(body);
+    this.publishStatus();
+  }
+
+  publishStatus() {
+    const store = this._panel.store;
+    const chosen = store.defaults && store.defaults.runtimeId;
+    SystemStatus.emit(document, 'image-runtimes',
+      SystemStatus.imageRuntimes(store.runtimeList(), store.runtimeUpdateInfo, chosen, store.runtimeInstallProgress));
   }
 
   onRuntimeEvent(evt) {
@@ -70,8 +80,9 @@ export default class ImageRuntimesCard {
     const inProgress = this._panel.store.runtimeInstallProgress[id];
     const strip = row.querySelector('[data-runtime-progress]');
     if (strip) strip.outerHTML = RuntimeProgressMarkup.html(inProgress);
-    const primary = row.querySelector('.runtime-actions button[data-act="install"]');
+    const primary = row.querySelector('.runtime-actions button[data-act="install"], .runtime-actions [data-runtime-state]');
     if (primary) primary.hidden = !!(inProgress && inProgress.phase !== 'failed');
+    this.publishStatus();
   }
 
   async refreshUpdateInfo() {
@@ -84,6 +95,7 @@ export default class ImageRuntimesCard {
       this._panel.store.runtimeUpdateInfo.set(id, info);
       this._applyBadge(id);
     }
+    this.publishStatus();
   }
 
   _applyBadge(id) {
@@ -108,11 +120,19 @@ export default class ImageRuntimesCard {
   }
 
   _wire(body) {
-    const each = (act, fn) => body.querySelectorAll(`[data-act="${act}"]`).forEach((btn) => btn.addEventListener('click', () => fn(btn)));
-    each('install', (btn) => this._install(btn));
-    each('uninstall', (btn) => this._uninstall(btn));
-    each('clear', (btn) => this._clear(btn));
-    each('relocate', (btn) => this.locate(btn.dataset.id));
+    if (body.dataset.imgRtWired) return;
+    body.dataset.imgRtWired = '1';
+    const acts = {
+      install: (btn) => this._install(btn),
+      uninstall: (btn) => this._uninstall(btn),
+      clear: (btn) => this._clear(btn),
+      relocate: (btn) => this.locate(btn.dataset.id),
+    };
+    body.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-act]');
+      if (!btn || !body.contains(btn) || btn.disabled || !acts[btn.dataset.act]) return;
+      acts[btn.dataset.act](btn);
+    });
   }
 
   async _install(btn) {

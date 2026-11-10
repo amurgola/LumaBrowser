@@ -83,3 +83,7 @@ Reads `window.LumaChatExt` (`registerMode`, `openSchemaModal`,
 `openSchemaInline`, `generateImage`), `window.RP_SHARED`, `window.RP_TIMELINE`,
 `window.llmDiagAPI.image.generateAbort`, `window.CSS`, `window.performance`.
 Writes none (it registers through LumaChatExt).
+
+## Changes (2026-11-09, helper model)
+
+The setup's More section gains a `sideModel` select ("Bookkeeping model"): same as the story model, the app's helper model (Setup), or any listed model (`sideModelOptions`); helper rows never appear among the language models.

@@ -6,6 +6,8 @@ const SurfaceGrounding = require('../grounding/SurfaceGrounding');
 class RoleplayModeDescriptor {
   static ID = 'roleplay';
   static TEMPERATURE = 0.9;
+  static GROUNDING_MEMORY = 32;
+  static _grounding = new Map();
 
   static build(chat, postProcessor) {
     return {
@@ -13,6 +15,7 @@ class RoleplayModeDescriptor {
       label: 'Roleplay',
       description: 'Scene-and-character roleplay with living characters, optional avatars and generated images.',
       requirements: ['llm'],
+      choices: false,
       chatUiUrl: chat.uiUrl('chat-ui.js'),
       buildTurn: (args) => RoleplayModeDescriptor._prepared(postProcessor, args || {}),
       postProcess: (args) => postProcessor.process(args),
@@ -26,7 +29,21 @@ class RoleplayModeDescriptor {
     }
     const grounding = await RoleplayModeDescriptor.grounding(meta);
     const surface = await RoleplayModeDescriptor.surface(meta, args.messages);
-    return RoleplayModeDescriptor.buildTurn(meta, Object.assign({}, args, { grounding, surface }));
+    const turn = RoleplayModeDescriptor.buildTurn(meta, Object.assign({}, args, { grounding, surface }));
+    RoleplayModeDescriptor.rememberGrounding(args.conversationId, turn.groundingNotes || null);
+    return turn;
+  }
+
+  static rememberGrounding(conversationId, notes) {
+    if (!conversationId) return;
+    const map = RoleplayModeDescriptor._grounding;
+    map.delete(conversationId);
+    map.set(conversationId, notes);
+    while (map.size > RoleplayModeDescriptor.GROUNDING_MEMORY) map.delete(map.keys().next().value);
+  }
+
+  static lastGrounding(conversationId) {
+    return RoleplayModeDescriptor._grounding.get(conversationId) || null;
   }
 
   static async grounding(meta, bodyGrounding = BodyGrounding.shared()) {

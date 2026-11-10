@@ -44,3 +44,7 @@ strict server.
 - [OpenAiChatRequest](OpenAiChatRequest.md) posts and retries.
 - [OpenAiChatStream](OpenAiChatStream.md) handles every SSE frame.
 - [ChatErrorBody](ChatErrorBody.md) and [TimingsUsage](TimingsUsage.md).
+
+## Changes (2026-11-09, helper model)
+
+`chat()` options take `responseFormat`, passed to `OpenAiChatBody.build`.

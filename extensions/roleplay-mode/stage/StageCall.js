@@ -2,6 +2,7 @@ const StagingPrompt = require('./StagingPrompt');
 const StagingParser = require('./StagingParser');
 const RpDebug = require('../images/RpDebug');
 
+const SideModel = require('../mode/SideModel');
 class StageCall {
   static TIMEOUT_MS = 90000;
   static TEMPERATURE = 0.2;
@@ -14,7 +15,8 @@ class StageCall {
   static request(data, content) {
     return {
       messages: StagingPrompt.messages(data, content), temperature: StageCall.TEMPERATURE,
-      timeoutMs: StageCall.TIMEOUT_MS, noThink: true, modelRef: data.llmModel || undefined,
+      timeoutMs: StageCall.TIMEOUT_MS, noThink: true, modelRef: SideModel.ref(data),
+      responseFormat: StagingPrompt.responseFormat(StagingPrompt.draws(data)),
     };
   }
 

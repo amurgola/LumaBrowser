@@ -8,8 +8,8 @@ publishes the `window.LumaSetupExt` registry the bundles call to hand back their
 `mount()`. The list is re-read when Setup comes back into view, so enabling or
 disabling an extension needs no reload.
 
-Helpers: [ExtensionTabNav](ExtensionTabNav.md) (buttons, panes, the
-"Extensions" group label), [ExtensionScriptLoader](ExtensionScriptLoader.md)
+Helpers: [ExtensionTabNav](ExtensionTabNav.md) (buttons placed by group:
+engines, Integrations, Developer; panes), [ExtensionScriptLoader](ExtensionScriptLoader.md)
 (bundle injection).
 
 ## Methods

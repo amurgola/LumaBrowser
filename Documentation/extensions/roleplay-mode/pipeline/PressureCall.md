@@ -22,3 +22,7 @@ premise's central thread. Best effort: a failure leaves the story untouched.
 after casting and consolidation, so the first pressure line reads the opening
 passage and later ones read the summary they follow. The Lab mocks it by the
 `story editor` marker ([LabCompletionKind](../../../core/roleplay-lab/LabCompletionKind.md)).
+
+## Changes (2026-11-09, helper model)
+
+The request routes on [SideModel](../mode/SideModel.md).ref(data).

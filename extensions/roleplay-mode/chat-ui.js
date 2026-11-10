@@ -403,8 +403,13 @@
     } catch (_) {}
     const options = [{ value: '', label: 'Use current chat model' }]
       .concat(locals.map((m) => ({ value: m.ref, label: 'Local · ' + (m.displayName || m.name || m.ref) })))
-      .concat(remote.map((m) => ({ value: m.ref, label: m.label || m.ref })));
+      .concat(remote.filter((m) => m.role !== 'helper').map((m) => ({ value: m.ref, label: m.label || m.ref })));
     return { options, locals };
+  }
+
+  function sideModelOptions(llm) {
+    const rest = ((llm && llm.options) || []).filter((o) => o.value);
+    return [{ value: '', label: 'Same as the story model' }, { value: 'helper', label: 'Helper model (Setup)' }].concat(rest);
   }
 
   async function applyLlmChoice(api, data, locals) {
@@ -513,6 +518,11 @@
               key: 'llmCtx', type: 'select', label: 'Context length', half: true,
               hint: 'how much story the model keeps in memory (local models only)',
               options: CTX_OPTIONS,
+            },
+            {
+              key: 'sideModel', type: 'select', label: 'Bookkeeping model', half: true,
+              hint: 'answers the stage, casting and summary calls; the helper model needs Setup to have one loaded, else the story model answers',
+              options: sideModelOptions(llm),
             },
             {
               key: 'baseModel', type: 'select', label: 'Base image model', half: true,

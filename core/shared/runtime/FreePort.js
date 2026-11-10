@@ -11,6 +11,7 @@ class FreePort {
     music: Object.freeze({ start: 8160, end: 8179 }),
     router: Object.freeze({ start: 8180, end: 8199 }),
     grounding: Object.freeze({ start: 8200, end: 8219 }),
+    helper: Object.freeze({ start: 8220, end: 8239 }),
     rpcLend: Object.freeze({ start: 50052, end: 50059 }),
   });
 

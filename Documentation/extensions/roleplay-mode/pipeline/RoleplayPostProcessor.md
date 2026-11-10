@@ -33,3 +33,9 @@ The mode's server-side reaction after each assistant turn.
   reactions of replies the turn does not continue from, waits (bounded) for the
   world phase of the ones it does, and returns meta with the head at the end of
   that path. Without a chat store, the given meta.
+
+## Changes (2026-11-09)
+
+The reply is run through `HistoryTrimmer.stripDebris` first: a conversation
+opened before the mode declined reply choices may still end its replies on
+the chat's ```choices fence, and the stage and the records read prose only.

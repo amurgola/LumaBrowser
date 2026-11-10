@@ -1,4 +1,5 @@
 const ChatModelRef = require('./ChatModelRef');
+const ChatModeRegistry = require('../ChatModeRegistry');
 const ChatStyleDocs = require('./ChatStyleDocs');
 const DocsSourceGrant = require('./DocsSourceGrant');
 const MessageImages = require('./MessageImages');
@@ -27,9 +28,10 @@ class ChatTurn {
     if (!args.nested) this._supersedePrevious();
     const opened = this._openConversation();
     if (opened.error) return { success: false, error: opened.error };
-    const { choicesOn, userRow, userArtifacts, userRegions, images } = this._persistUserSide();
+    const { choicesOn: wanted, userRow, userArtifacts, userRegions, images } = this._persistUserSide();
     this._userMessageId = userRow ? userRow.id : null;
     let runMessages = await this._applyMode();
+    const choicesOn = wanted && ChatModeRegistry.allowsChoices(this._mode.descriptor);
     const asst = this._addPlaceholder();
     if (!asst) return { success: false, error: 'Message to regenerate was not found.' };
     this._announce(asst, userRow, userArtifacts, userRegions);

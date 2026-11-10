@@ -1,12 +1,11 @@
 import HtmlEscaper from '../../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 import Dialogs from '../../../../core/llm-server/ui/js/dialogs/Dialogs.js';
 import DefaultProviderOptions from './DefaultProviderOptions.js';
+import ProviderCardShell from './ProviderCardShell.js';
 
 export default class EditableProviderCard {
   static build(config, ctx) {
-    const card = document.createElement('div');
-    card.className = 'provider-card';
-    card.innerHTML = EditableProviderCard.html(config);
+    const card = ProviderCardShell.build(EditableProviderCard.parts(config));
     card.querySelector('.provider-fetch-btn').addEventListener('click', () => EditableProviderCard._fetchModels(card, config, ctx));
     card.querySelector('.provider-save-btn').addEventListener('click', () => EditableProviderCard._save(card, config, ctx));
     card.querySelector('.provider-delete-btn').addEventListener('click', () => EditableProviderCard._remove(config, ctx));
@@ -25,14 +24,21 @@ export default class EditableProviderCard {
   }
 
   static html(config) {
+    return ProviderCardShell.html(EditableProviderCard.parts(config));
+  }
+
+  static isConfigured(config) {
+    return !!(config.endpoint && config.selectedModel);
+  }
+
+  static parts(config) {
     const esc = HtmlEscaper.escape;
-    const configured = !!(config.endpoint && config.selectedModel);
-    return `
-      <div class="provider-card-header">
-        <span class="provider-card-name">${esc(config.name || DefaultProviderOptions.TYPE_LABELS[config.type] || config.type)}</span>
-        <span class="provider-card-status ${configured ? 'configured' : ''}">${EditableProviderCard.statusText(config)}</span>
-      </div>
-      <div class="provider-card-body">
+    return {
+      name: config.name || DefaultProviderOptions.TYPE_LABELS[config.type] || config.type,
+      meta: config.selectedModel || config.endpoint || '',
+      status: EditableProviderCard.statusText(config),
+      ok: EditableProviderCard.isConfigured(config),
+      bodyHtml: `
         <div class="form-group">
           <label class="form-label">Endpoint</label>
           <div class="gs-inline-controls">
@@ -54,8 +60,8 @@ export default class EditableProviderCard {
           <button class="btn btn-primary provider-save-btn">Save</button>
           <button class="btn btn-danger provider-delete-btn">Remove</button>
         </div>
-      </div>
-    `;
+      `,
+    };
   }
 
   static _field(card, name) {

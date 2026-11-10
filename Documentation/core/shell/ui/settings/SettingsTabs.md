@@ -2,7 +2,7 @@
 
 `core/shell/ui/settings/SettingsTabs.js` (ES module)
 
-The Settings modal's tab strip: Extensions and About after the page's General tab, the Extensions section with its four subtabs and the host for the "+" add menu, the About subtabs, the top-level tabs extensions ask for, and switching.
+The Settings modal's grouped sidebar nav: Manage extensions (the `extensions` tab, closing the page's static Extensions group) and About (after a `.settings-nav-gap`, apart from the groups) after the page's static tabs, the Extensions section with its four subtabs and the host for the "+" add menu, the About subtabs, the top-level tabs extensions ask for, and switching.
 
 ## Methods
 

@@ -8,9 +8,13 @@ class ConsistencyProbe {
     for (const f of facts || []) {
       checks.push(ConsistencyProbe._retained(f, context));
       if (f.askTurn) checks.push(ConsistencyProbe._recalled(f, transcript));
-      if (f.deathTurn && f.character) checks.push(ConsistencyProbe._staysDead(f, transcript));
+      if (f.deathTurn && f.character) {
+        checks.push(ConsistencyProbe._staysDead(f, transcript));
+        checks.push(ConsistencyProbe._staysOffStage(f, data));
+      }
     }
     checks.push(ConsistencyProbe._playerNotSpokenFor(data, transcript));
+    checks.push(ConsistencyProbe._playerNotInCast(data));
     checks.push(ConsistencyProbe._turnCount(data, transcript));
     const passed = checks.filter((c) => c.ok).length;
     return { checks, passed, total: checks.length, score: checks.length ? Math.round((passed / checks.length) * 100) / 100 : 0 };
@@ -33,6 +37,22 @@ class ConsistencyProbe {
     const after = (transcript || []).filter((x) => x.turn > f.deathTurn);
     const spoke = after.find((x) => SpeakerNames.parse(x.assistant).some((n) => n.toLowerCase() === String(f.character).toLowerCase()));
     return { id: f.id + ':dead', label: f.character + ' never speaks after turn ' + f.deathTurn, ok: !spoke, detail: spoke ? 'spoke on turn ' + spoke.turn : 'silent' };
+  }
+
+  static _staysOffStage(f, data) {
+    const name = String(f.character).toLowerCase();
+    const chars = (data && Array.isArray(data.characters) ? data.characters : []).filter((c) => c && c.name && c.name.toLowerCase() === name);
+    const onStage = chars.some((c) => c.state && c.state.present === true);
+    const inMoment = (data && data.currentState && Array.isArray(data.currentState.characters) ? data.currentState.characters : [])
+      .some((e) => e && String(e.name || '').toLowerCase() === name && e.present !== false);
+    const ok = chars.length > 0 && !onStage && !inMoment;
+    return { id: f.id + ':offstage', label: 'The records keep ' + f.character + ' off stage after death', ok, detail: !chars.length ? 'not in the roster' : (ok ? 'off stage' : 'still listed as present') };
+  }
+
+  static _playerNotInCast(data) {
+    const name = data && data.protagonist && data.protagonist.name ? String(data.protagonist.name).toLowerCase() : '';
+    const found = name ? (Array.isArray(data.characters) ? data.characters : []).find((c) => c && c.name && c.name.toLowerCase() === name) : null;
+    return { id: 'player:cast', label: 'The player never joins the cast', ok: !found, detail: found ? 'the roster has a character named ' + found.name : (name ? 'ok' : 'no player name set') };
   }
 
   static _playerNotSpokenFor(data, transcript) {

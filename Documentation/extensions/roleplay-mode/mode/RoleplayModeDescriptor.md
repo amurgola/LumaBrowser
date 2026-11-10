@@ -32,3 +32,15 @@ The `roleplay` chat mode descriptor.
   only when something was cut or earlier replies were stripped of inline
   reasoning. `compact: false` keeps core compaction off a
   history the mode summarises itself.
+
+## Changes (2026-11-09)
+
+- The descriptor says `choices: false`: the router never folds the
+  "Suggest replies" document into a roleplay turn (every live reply used to
+  end on a ```choices fence that went back into the history and into the
+  stage call's passage, which the Lab never saw).
+- `rememberGrounding(conversationId, notes)` / `lastGrounding(conversationId)`:
+  each prepared turn records the cards it handed the narrator (the
+  `groundingLog` shape, or null), bounded to `GROUNDING_MEMORY` conversations,
+  newest kept. The router drops the turn's `groundingNotes` field, so the
+  Roleplay Lab reads it here after each turn.

@@ -25,6 +25,12 @@
     <div class="page-head">
         <span class="page-eyebrow" id="pageEyebrow">LLM Server</span>
         <h1 class="page-title" id="pageTitle">LLM setup</h1>
+        <button type="button" class="luma-btn ghost luma-btn--sm setup-jump" id="setupJumpBtn" hidden
+                title="Search settings, models, chats and commands">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+            <span>Jump to a setting</span>
+            <span class="setup-jump-keys" data-jump-keys><kbd>Shift</kbd><kbd>Shift</kbd></span>
+        </button>
     </div>
     <div id="apiServerBanner" class="luma-callout bad" role="alert" hidden></div>
     <p class="page-sub">
@@ -55,6 +61,8 @@
             </div>
             <div id="planExplainerBody" class="luma-muted">Loading…</div>
         </section>
+
+        <div class="sys-strip" id="systemStrip" data-card-group="settings" role="group" aria-label="System"></div>
 
         <section class="card" id="cardRuntimes" data-card-group="settings">
             <div class="card-head">
@@ -91,6 +99,8 @@
             </div>
             <div id="imageDefaultsBody" class="luma-muted">Loading…</div>
         </section>
+
+        <div class="sys-strip" id="imageSystemStrip" data-card-group="image" role="group" aria-label="Image system"></div>
 
         <section class="card" id="cardImageRuntimes" data-card-group="image">
             <div class="card-head">

@@ -3,7 +3,7 @@
 `ui/shell/settings/SettingsReveal.js`
 
 Takes the user to one setting in the Settings modal and shows it: opens the tab
-(and sub-tab, or the extension's page), expands any collapsed section or
+(and sub-tab, or the extension's page), opens any folded group ([FoldGroups](general/FoldGroups.md)), provider row or other
 `<details>` around the row, scrolls it to the middle and plays a short accent
 highlight on it (`.gs-reveal` in settings-content.css). Used by the search palette
 through [ShellPalette](../palette/ShellPalette.md).

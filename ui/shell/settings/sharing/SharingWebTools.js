@@ -1,4 +1,5 @@
 import ToolGroupsView from '../ToolGroupsView.js';
+import FoldGroups from '../general/FoldGroups.js';
 
 export default class SharingWebTools {
   constructor({ sharingApi, feedback }) {
@@ -34,7 +35,9 @@ export default class SharingWebTools {
 
   draw() {
     if (!this._wrap) return;
-    ToolGroupsView.render(this._wrap, SharingWebTools.visibleGroups(this._groups, this._globallyDisabled), this._allowed, {
+    const visible = SharingWebTools.visibleGroups(this._groups, this._globallyDisabled);
+    FoldGroups.summarize('share-tools', ToolGroupsView.countText(visible, this._allowed));
+    ToolGroupsView.render(this._wrap, visible, this._allowed, {
       expanded: this._expanded,
       emptyText: 'No tools are available to web clients. Enable some under API & MCP first.',
       onChange: () => this._persist(),
@@ -57,6 +60,7 @@ export default class SharingWebTools {
   }
 
   _persist() {
+    FoldGroups.summarize('share-tools', ToolGroupsView.countText(SharingWebTools.visibleGroups(this._groups, this._globallyDisabled), this._allowed));
     this._api.setWebAllowedTools(SharingWebTools.payload(this._allNames(), this._allowed))
       .then(() => this._feedback.markSaved(this._wrap, true))
       .catch((e) => this._feedback.markSaved(this._wrap, false, e.message));

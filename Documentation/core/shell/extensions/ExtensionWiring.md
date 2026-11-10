@@ -13,7 +13,8 @@ surface can reach the activated service.
      `(context) => either`; each is registered through `context.chat.registerMode`,
      stamped with the `manifest.chatUi` bundle url unless it has its own.
      Failure is recorded as phase `chatModes`.
-  2. `manifest.setupTab`: registers `{ id (default extension id), label (default id), url }`.
+  2. `manifest.setupTab`: registers `{ id (default extension id), label (default id), url, module, group }`
+     (`group` places the tab in the Setup nav, see [SetupTabRegistry](../../llm-server/chat/SetupTabRegistry.md)).
      Failure is recorded as phase `setupTab`.
   3. `manifest.routes`: `restGateway.registerExtension(id, { factory, prefix }, routeContext)`
      where routeContext is the context plus `extensionApi` and `gateway:

@@ -11,11 +11,17 @@ Keeps the newest raw turns that fit the history budget.
   returns the same array when nothing was cut. The story summary stands in for
   what was dropped.
 
-## Reasoning
+## Debris
 
-`HistoryTrimmer.withoutReasoning(messages)` -> `{ messages, cleaned }`
-strips inline `<think>...</think>` from earlier assistant replies before they
-are sent back; the same array is returned when none had any. The chat store
+`HistoryTrimmer.withoutDebris(messages)` -> `{ messages, cleaned }` strips
+inline `<think>...</think>` and the chat's reply-choice fence
+(```` ```choices ... ``` ````, also one cut off by a token limit) from earlier
+assistant replies before they are sent back; the same array is returned when
+none had either. `HistoryTrimmer.stripDebris(text)` does it for one reply
+(the post-processor runs it on the reply before the stage call reads it).
+The fence rode into conversations opened before the mode declined reply
+choices (2026-11-09); the tags come from a model writing its reasoning into
+the visible reply. The chat store
 keeps streamed reasoning in its own field and never resends it, but a model
 that writes the tags into its visible reply would otherwise send that
 reasoning back on every later turn. [NarratorContext](NarratorContext.md)

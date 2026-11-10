@@ -9,6 +9,10 @@ export default class ExtensionTabNav {
     + 'which is not running. Open Settings, then API &amp; MCP: turn the REST API on, or pick another port if its port '
     + '(3000 by default) is already used by another program, then restart LumaBrowser.</div>';
 
+  static GROUP_LABELS = { integrations: 'Integrations', developer: 'Developer' };
+
+  static GROUP_ORDER = ['integrations', 'developer'];
+
   constructor(doc = document) {
     this._doc = doc;
     this._buttons = new Map();
@@ -35,9 +39,8 @@ export default class ExtensionTabNav {
 
   add(hosts, tab) {
     const view = 'ext:' + tab.id;
-    this._ensureGroup(hosts.nav);
     const btn = this._button(view, tab);
-    hosts.nav.appendChild(btn);
+    this._place(hosts.nav, btn, ExtensionTabNav.groupOf(tab));
     this._buttons.set(tab.id, btn);
     const pane = this._pane(view, tab.id);
     hosts.root.appendChild(pane);
@@ -52,7 +55,7 @@ export default class ExtensionTabNav {
     if (pane) pane.remove();
     this._buttons.delete(tabId);
     this._panes.delete(tabId);
-    this._dropGroupIfEmpty(nav);
+    this._dropEmptyGroups(nav);
     return wasActive;
   }
 
@@ -65,6 +68,7 @@ export default class ExtensionTabNav {
     const btn = this._doc.createElement('button');
     btn.dataset.view = view;
     btn.className = 'pagenav-ext';
+    btn.dataset.group = ExtensionTabNav.groupOf(tab);
     btn.title = tab.description || tab.label || tab.id;
     btn.innerHTML = '<span class="pagenav-ico" aria-hidden="true">' + ExtensionTabNav._icon(tab) + '</span><span class="pagenav-label"></span>';
     btn.querySelector('.pagenav-label').textContent = tab.label || tab.id;
@@ -85,20 +89,49 @@ export default class ExtensionTabNav {
     return pane;
   }
 
-  _ensureGroup(nav) {
-    if (nav.querySelector('.pagenav-group')) return;
+  static groupOf(tab) {
+    const g = tab && tab.group;
+    return g === 'engines' || g === 'developer' ? g : 'integrations';
+  }
+
+  _place(nav, btn, group) {
+    if (group === 'engines') {
+      const advanced = nav.querySelector('#navAdvanced');
+      nav.insertBefore(btn, advanced && advanced.parentNode === nav ? advanced : null);
+      return;
+    }
+    this._ensureGroup(nav, group);
+    nav.insertBefore(btn, this._groupEnd(nav, group));
+  }
+
+  _groupEnd(nav, group) {
+    const later = ExtensionTabNav.GROUP_ORDER.slice(ExtensionTabNav.GROUP_ORDER.indexOf(group) + 1);
+    for (const g of later) {
+      const sep = nav.querySelector(`.pagenav-sep[data-group="${g}"]`);
+      if (sep) return sep;
+    }
+    return null;
+  }
+
+  _ensureGroup(nav, group) {
+    if (nav.querySelector(`.pagenav-group[data-group="${group}"]`)) return;
     const sep = this._doc.createElement('span');
     sep.className = 'pagenav-sep';
+    sep.dataset.group = group;
     sep.setAttribute('aria-hidden', 'true');
     const label = this._doc.createElement('span');
     label.className = 'pagenav-group';
-    label.textContent = 'Extensions';
-    nav.appendChild(sep);
-    nav.appendChild(label);
+    label.dataset.group = group;
+    label.textContent = ExtensionTabNav.GROUP_LABELS[group];
+    const before = this._groupEnd(nav, group);
+    nav.insertBefore(sep, before);
+    nav.insertBefore(label, before);
   }
 
-  _dropGroupIfEmpty(nav) {
-    if (this._buttons.size) return;
-    nav.querySelectorAll('.pagenav-sep, .pagenav-group').forEach((n) => n.remove());
+  _dropEmptyGroups(nav) {
+    for (const group of ExtensionTabNav.GROUP_ORDER) {
+      if (nav.querySelector(`button.pagenav-ext[data-group="${group}"]`)) continue;
+      nav.querySelectorAll(`.pagenav-sep[data-group="${group}"], .pagenav-group[data-group="${group}"]`).forEach((n) => n.remove());
+    }
   }
 }

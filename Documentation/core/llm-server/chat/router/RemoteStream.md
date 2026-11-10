@@ -13,3 +13,7 @@ Streams one chat request to a remote provider config through an ephemeral provid
 ## Why
 
 The provider singletons persist endpoint and key on every setter, so a turn must not use them. A remote ref counts as a native-tool model ([ModelCapabilities](ModelCapabilities.md)), so the schemas have to reach the provider and its calls have to come back in the summary, or the model would be left with neither the array nor the fence guidance. The bridge's reply cap is sized from the LOCAL window and would cripple a remote model; a cap the user set on the model or profile is deliberate, so it is sent. A peer host behind a keep-alive agent or proxy may never see our socket close, so Stop also names the turn.
+
+## Changes (2026-11-09, helper model)
+
+`extra.responseFormat` rides as `response_format` in the provider options (forwarded into the body); servers that do not know the field reject or ignore it.

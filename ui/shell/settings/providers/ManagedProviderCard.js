@@ -1,11 +1,10 @@
 import HtmlEscaper from '../../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 import CopyButton from '../CopyButton.js';
+import ProviderCardShell from './ProviderCardShell.js';
 
 export default class ManagedProviderCard {
   static build(config) {
-    const card = document.createElement('div');
-    card.className = 'provider-card';
-    card.innerHTML = ManagedProviderCard.html(config);
+    const card = ProviderCardShell.build(ManagedProviderCard.parts(config));
     card.querySelectorAll('.provider-copy-btn').forEach((btn) => {
       btn.addEventListener('click', () => ManagedProviderCard._copy(btn));
     });
@@ -13,21 +12,25 @@ export default class ManagedProviderCard {
   }
 
   static html(config) {
+    return ProviderCardShell.html(ManagedProviderCard.parts(config));
+  }
+
+  static parts(config) {
     const esc = HtmlEscaper.escape;
-    return `
-        <div class="provider-card-header">
-          <span class="provider-card-name">${esc(config.name || 'Local LLM Server')}</span>
-          <span class="provider-card-status configured">Auto-managed</span>
-        </div>
-        <div class="provider-card-body">
+    return {
+      name: config.name || 'Local LLM Server',
+      meta: config.selectedModel || 'No model selected',
+      status: 'Auto-managed',
+      ok: true,
+      bodyHtml: `
           <div class="form-help">
             Your local model server. It always uses the runtime and model chosen in the LLM tab, so change them there.
           </div>
           ${ManagedProviderCard._valueGroup('Endpoint', config.endpoint, 'Copy endpoint')}
           ${ManagedProviderCard._valueGroup('Model', config.selectedModel, 'Copy model')}
           ${config.managedRuntimeId ? `<div class="form-help provider-runtime-id">Runtime: <code>${esc(config.managedRuntimeId)}</code></div>` : ''}
-        </div>
-      `;
+        `,
+    };
   }
 
   static _valueGroup(label, value, copyTitle) {

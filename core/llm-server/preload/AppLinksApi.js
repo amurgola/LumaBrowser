@@ -17,6 +17,8 @@ class AppLinksApi extends PreloadSection {
       rpLab: AppLinksApi._rpLab(ipcRenderer),
       palette: {
         record: (place) => ipcRenderer.invoke('core.palette.record', place),
+        toggle: () => ipcRenderer.invoke('core.palette.toggle'),
+        doubleShift: () => ipcRenderer.invoke('core.palette.getDoubleShift'),
       },
     };
   }

@@ -25,3 +25,7 @@ A running llama-server is bound to the argv it started with (`-m`, `--parallel`,
 and the environment it started with (`GGML_OPENVINO_DEVICE`),
 so a save must never leave a silently stale server; the renderer reports the
 stop. The RAM pin lives in its own worker, so it is reconciled instead.
+
+## Changes (2026-11-09, helper model)
+
+`_reconcileHelper`: a `helperModel` patch that changed the stored block (compared as JSON) calls `helperModel.apply()`; the main server is never stopped for it.

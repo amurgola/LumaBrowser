@@ -18,3 +18,9 @@ Modes with `agent: true` start with tools on.
   [ComposeIntent](ComposeIntent.md) instead of a mode.
 - `leaveActive()`: clears editor chips and calls the outgoing mode's
   `onLeaveConversation` (before the mode is reassigned).
+
+## Reply choices (2026-11-09)
+
+A mode listed with `choices: false` starts with `state.choicesEnabled` off
+(the router refuses the document for it anyway; the flag keeps the gear panel
+honest).

@@ -8,6 +8,7 @@ import InstalledModelRow from './InstalledModelRow.js';
 import ModelsDirControls from './ModelsDirControls.js';
 import ProgressPercent from './ProgressPercent.js';
 import QuantPicker from './QuantPicker.js';
+import SystemStatus from '../setup-ui/system/SystemStatus.js';
 
 export default class ImageModelsCard {
   static SCAN_TEXT = {
@@ -41,6 +42,8 @@ export default class ImageModelsCard {
     this._paintCatalogChrome(body);
     body.querySelector('[data-ml-chrome="bottom"]').innerHTML = ImageModelsCard.IMPORT_HINT;
     this._setRows(installed);
+    SystemStatus.emit(document, 'image-models',
+      SystemStatus.imageModels(installed, store.models && store.models.config, store.downloadError, store.activeDl));
   }
 
   onModelEvent(evt) {

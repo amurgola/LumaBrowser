@@ -13,3 +13,10 @@ member reads through live).
   throws the scope's stop before the call and after it returns;
   `generateImage(opts)` throws it before starting. Outside a scope both pass
   straight through; a chat without the method keeps it undefined.
+
+## Trace tag (2026-11-09)
+
+Inside a reaction every side completion also carries
+`trace: { conversationId, turnId: messageId, callType: 'side' }` unless the
+caller set one, so the LLM trace and the Roleplay Lab can tell which turn a
+stage or casting call served.

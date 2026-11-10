@@ -21,6 +21,7 @@ const LegacyChatMigration = require('./LegacyChatMigration');
 const EffectiveContext = require('./context/EffectiveContext');
 const LlmPinTarget = require('./rampin/LlmPinTarget');
 const GroupRouterService = require('./router/GroupRouterService');
+const HelperModelService = require('./helper/HelperModelService');
 const LlmServerSettings = require('./service/LlmServerSettings');
 const LlmUiState = require('./service/LlmUiState');
 const LlmDefaults = require('./service/LlmDefaults');
@@ -255,11 +256,13 @@ class LLMServerService {
     const server = !!(runtimeId && status.state !== 'idle' && status.plan && status.plan.runtimeId === runtimeId);
     if (server) await this.runtimeServer.stop();
     const router = !!(await this.groupRouter.releaseRuntime(runtimeId));
-    return { server, router };
+    const helper = !!(await this.helperModel.releaseRuntime(runtimeId));
+    return { server, router, helper };
   }
 
   resumeRuntime(released) {
     if (released && released.router) this.groupRouter.apply();
+    if (released && released.helper) this.helperModel.apply();
   }
 
   async shutdown() {
@@ -270,6 +273,7 @@ class LLMServerService {
     }
     try { await this.ramPin.stop(); } catch (_) {}
     try { await this.groupRouter.stop(); } catch (_) {}
+    try { await this.helperModel.stop(); } catch (_) {}
     try { this._deps.nvidiaSmiStream.stop(); } catch (_) {}
   }
 
@@ -392,7 +396,8 @@ class LLMServerService {
 
   _createCompanions() {
     this.groupRouter = this._deps.groupRouter || new GroupRouterService({ settingsDb: this.settingsDb, llmServerService: this });
-    this._defaults = new LlmDefaults({ settingsDb: this.settingsDb, launchFlags: this._launchFlags, groupRouter: this.groupRouter });
+    this.helperModel = this._deps.helperModel || new HelperModelService({ settingsDb: this.settingsDb, llmServerService: this });
+    this._defaults = new LlmDefaults({ settingsDb: this.settingsDb, launchFlags: this._launchFlags, groupRouter: this.groupRouter, helperModel: this.helperModel.settings });
     this.ramPin = this._deps.ramPin || this._createRamPin();
     this.chatStore = this._deps.chatStore || new ChatStore(this.settingsDb);
   }

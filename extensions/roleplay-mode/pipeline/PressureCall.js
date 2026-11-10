@@ -2,6 +2,7 @@ const StoryLedger = require('../world/StoryLedger');
 const PressurePrompt = require('../prompts/PressurePrompt');
 const RpDebug = require('../images/RpDebug');
 
+const SideModel = require('../mode/SideModel');
 class PressureCall {
   static TIMEOUT_MS = 60000;
   static TEMPERATURE = 0.3;
@@ -19,7 +20,7 @@ class PressureCall {
   static request(data, content) {
     return {
       messages: PressurePrompt.messages(data, content), temperature: PressureCall.TEMPERATURE,
-      timeoutMs: PressureCall.TIMEOUT_MS, noThink: true, modelRef: data.llmModel || undefined,
+      timeoutMs: PressureCall.TIMEOUT_MS, noThink: true, modelRef: SideModel.ref(data),
     };
   }
 

@@ -7,7 +7,7 @@ import LlmServerSettings from './LlmServerSettings.js';
 import ApiPortSetting from './ApiPortSetting.js';
 import EndpointToolsPanel from './EndpointToolsPanel.js';
 import GuideViewer from './GuideViewer.js';
-import CollapsibleSections from './CollapsibleSections.js';
+import FoldGroups from './FoldGroups.js';
 
 export default class GeneralSettings {
   static API_DOCS_URL = 'https://lumabyte.com/apis';
@@ -29,7 +29,7 @@ export default class GeneralSettings {
     for (const part of [this._port, this._telemetry, this._cliShim, this._jetbrains, this._vscode, this._windhawk, this._llm, this._endpoints]) part.install();
     this._wireSwitches();
     this._wireButtons();
-    new CollapsibleSections().install();
+    new FoldGroups().install();
     return true;
   }
 

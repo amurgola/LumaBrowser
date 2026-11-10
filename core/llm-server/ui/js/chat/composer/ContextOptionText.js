@@ -12,6 +12,17 @@ export default class ContextOptionText {
     return { cls, text: opt.label + mark + ContextOptionText._speed(opt), tip };
   }
 
+  static compact(opt, selected) {
+    const cls = ['cm-ctx-chip', opt.state, opt.source === 'fit' ? 'fit' : 'est'];
+    if (selected) cls.push('sel');
+    const { tip } = ContextOptionText._markAndTip(opt);
+    const tps = opt.tokensPerSec ? Math.round(opt.tokensPerSec) : 0;
+    const speed = tps ? (opt.tokensPerSecSource === 'predicted' ? '~' : '') + tps + ' t/s' : '';
+    const word = opt.state === 'partial' ? 'partial' : (opt.state === 'no' ? 'CPU' : (opt.state === 'ok' ? '' : '?'));
+    const note = [word, opt.state === 'no' ? '' : speed].filter(Boolean).join(' · ');
+    return { cls, label: opt.label, note, tip };
+  }
+
   static _markAndTip(opt) {
     const predicted = opt.tokensPerSecSource === 'predicted' && opt.tokensPerSec
       ? ` · predicted ~${Math.round(opt.tokensPerSec)} tok/s without speculative decoding` : '';

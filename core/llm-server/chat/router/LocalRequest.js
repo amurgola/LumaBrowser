@@ -75,6 +75,7 @@ class LocalRequest {
       parallelToolCalls: !!(extra && extra.parallelToolCalls),
       chatTemplateKwargs: extra && extra.chatTemplateKwargs,
       reasoningBudget: extra && extra.reasoningBudget,
+      responseFormat: extra && extra.responseFormat,
       maxTokens: RequestSettings.maxTokens(extra),
       moeCacheBatch: RequestComplexity.moeCacheBatch(extra, tools),
       onDelta: (t) => {

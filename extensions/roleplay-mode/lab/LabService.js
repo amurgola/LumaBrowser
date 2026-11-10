@@ -10,11 +10,14 @@ const LabTextReport = require('./LabTextReport');
 
 class LabService {
   static NOT_REGISTERED = 'Roleplay mode is not registered (is the roleplay extension enabled?).';
+  static NO_ROUTER = 'The chat router is not available, so the text run cannot play real turns.';
 
-  constructor({ mode = null, generateImage = async () => null, complete = async () => ({ error: 'no model' }), Harness = null, imageDefaults, chatStore, broadcast, outRoot } = {}) {
+  constructor({ mode = null, generateImage = async () => null, complete = async () => ({ error: 'no model' }), router = null, Harness = null, imageDefaults, chatStore, broadcast, outRoot, contextWindow = null } = {}) {
     this._mode = mode;
     this._generateImage = generateImage;
     this._complete = complete;
+    this._router = router;
+    this._contextWindow = contextWindow;
     this._Harness = Harness;
     this._scenario = new LabScenario({ imageDefaults, chatStore });
     this.broadcast = typeof broadcast === 'function' ? broadcast : () => {};
@@ -26,6 +29,10 @@ class LabService {
 
   getScenario() {
     return this._scenario.current();
+  }
+
+  router() {
+    try { return typeof this._router === 'function' ? this._router() : this._router; } catch (_) { return null; }
   }
 
   getImageProfiles() {
@@ -40,8 +47,14 @@ class LabService {
     if (!this._mode || typeof this._mode.buildTurn !== 'function' || typeof this._mode.postProcess !== 'function') {
       return { success: false, error: LabService.NOT_REGISTERED };
     }
-    const run = new LabTextRun({ mode: this._mode, complete: this._complete, Harness: this._Harness, emit: (t, p) => this._send(t, p) });
-    const result = await run.run(options || {});
+    const router = this.router();
+    if (!router || typeof router.chat !== 'function') return { success: false, error: LabService.NO_ROUTER };
+    const o = options || {};
+    const run = new LabTextRun({
+      router, mode: this._mode, complete: this._complete, Harness: this._Harness, emit: (t, p) => this._send(t, p),
+      modelRef: o.modelRef || null, contextWindow: this._contextWindow,
+    });
+    const result = await run.run(o);
     const outDir = path.join(this._outRoot, LabRunReport.stamp() + '-text');
     LabTextReport.write(outDir, result);
     return Object.assign({ success: !result.error, outDir }, result);

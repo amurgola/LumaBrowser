@@ -4,6 +4,7 @@ import DefaultsOptions from './DefaultsOptions.js';
 import DefaultsPrefs from './DefaultsPrefs.js';
 import DefaultsRows from './DefaultsRows.js';
 import GroupRouterHint from './GroupRouterHint.js';
+import HelperModelHint from './HelperModelHint.js';
 import ModelLibrary from '../models/ModelLibrary.js';
 import PeerGpusHint from './PeerGpusHint.js';
 import RamPinHint from './RamPinHint.js';
@@ -13,7 +14,8 @@ export default class DefaultsCard {
 
   static SHARED_CONTROLS = ['defaultRuntimeSelect', 'defaultModelSelect', 'defaultContextSelect', 'defaultKvSelect',
     'defaultParallelSelect', 'defaultTensorSplit', 'defaultCacheReuse', 'defaultReasoningEffort', 'defaultUsePeerGpus',
-    'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin', 'defaultOpenVinoDevice', 'defaultMoeGpuCache'];
+    'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin', 'defaultOpenVinoDevice', 'defaultMoeGpuCache',
+    'defaultHelperModel', 'defaultHelperModelSelect', 'defaultHelperContext'];
 
   constructor(ctx) {
     this._ctx = ctx;
@@ -21,6 +23,7 @@ export default class DefaultsCard {
     this.prefs = new DefaultsPrefs();
     this._ramPinHint = new RamPinHint(ctx, this.prefs);
     this._routerHint = new GroupRouterHint(ctx);
+    this._helperHint = new HelperModelHint(ctx);
     this._autoPinInFlight = null;
     this._saveNoteTimer = null;
   }
@@ -44,6 +47,8 @@ export default class DefaultsCard {
     this._wire();
     this._ctx.cards.fitTest.refresh();
     this._ctx.cards.models.updateInstalledSummary();
+    const runtimes = this._ctx.cards.runtimes;
+    if (runtimes && typeof runtimes.publishStatus === 'function') runtimes.publishStatus();
   }
 
   async onChange() {
@@ -90,6 +95,11 @@ export default class DefaultsCard {
       hasModel,
       ready,
       routerAvailable: !!ctx.api.getGroupRouterStatus,
+      helperAvailable: !!ctx.api.getHelperModelStatus,
+      helperModelOptions: DefaultsOptions.modelOptionsHtml(
+        { models: ctx.library.choices(), bound: false, locked: false },
+        (defaults.helperModel && defaults.helperModel.modelPath) || '', (path) => ctx.ctxFit.summary(path),
+      ),
       gambitSummary: ctx.cards.gambit.summaryHtml(),
       gambitBlock: ctx.cards.gambit.blockHtml(),
     };
@@ -125,6 +135,7 @@ export default class DefaultsCard {
     }
     this._ramPinHint.refresh();
     this._routerHint.refresh();
+    this._helperHint.refresh();
     PeerGpusHint.fill(this._ctx.api, doc);
     this._wireOwnSaves();
   }

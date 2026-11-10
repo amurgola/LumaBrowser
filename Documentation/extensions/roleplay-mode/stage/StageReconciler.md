@@ -33,19 +33,23 @@ Before it, a secret only left the card at the next fold (more than twelve
 beats later), so for many turns the narrator was told to keep guarding
 something the story summary said was already out.
 
-## Presence grace
+## Presence is a fact until the stage says otherwise
 
 The stage call lists the characters a passage happens to mention, not
 everyone in the room. A character present before but missing from the list,
-in the same scene, therefore stays in the moment for up to three turns
-(`UNLISTED_GRACE` 4; the count is kept as `state.unlisted` and cleared when
-they are listed again).
+in the same scene, therefore stays in the moment, however many turns pass.
+They depart, with the prior scene remembered, in three cases only: an explicit
+`present: false` (with `leftTo`), a change of scene (presence resets on a
+move), or a `death` event. An old `state.unlisted` counter is cleared when seen.
 
-They depart, with the prior scene remembered, in three cases: an explicit
-`present: false`, a change of scene (presence resets on a move), or a fourth
-turn unlisted.
+History: at first any unlisted character departed at once, which sent a
+five-person cast on and off stage turn by turn. A grace of three turns
+(`UNLISTED_GRACE` 4, 2026-11-08) fixed the flicker but still departed a quiet
+character on the fourth turn; a live run on Qwen 3.8 had to reset the scene
+every few messages to get them back. Since 2026-11-09 nothing times out; the
+[StagingPrompt](StagingPrompt.md) also asks for every present character,
+quiet ones included.
 
-Before this, any unlisted character departed at once. In a five-person reveal
-run that sent the cast on and off stage turn by turn, and Joss was off stage
-(so he lost his card, his body notes and his up-close notes) on the turn his
-legs were examined.
+## Changes (2026-11-09, the dead stay dead)
+
+`isDead(char)` is true once a death event parked the character (a `dead:` note on `lastSeen`). `_presentEntry` ignores such a character however a later passage lists the body, and `_dropDead` removes them from the moment on the death turn itself. Taken at its word, the stage call put the corpse back on stage a turn or two after the death in one 27B run and one helper run of the Lab bench; the records now enforce the ledger.

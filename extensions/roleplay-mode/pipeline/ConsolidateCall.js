@@ -4,6 +4,7 @@ const StoryLedger = require('../world/StoryLedger');
 const ConsolidatePrompt = require('../prompts/ConsolidatePrompt');
 const RpDebug = require('../images/RpDebug');
 
+const SideModel = require('../mode/SideModel');
 class ConsolidateCall {
   static TIMEOUT_MS = 90000;
   static TEMPERATURE = 0.2;
@@ -16,14 +17,14 @@ class ConsolidateCall {
   static foldRequest(data, char, beats) {
     return {
       messages: ConsolidatePrompt.foldMessages(data, char, beats), temperature: ConsolidateCall.TEMPERATURE,
-      timeoutMs: ConsolidateCall.TIMEOUT_MS, noThink: true, modelRef: data.llmModel || undefined,
+      timeoutMs: ConsolidateCall.TIMEOUT_MS, noThink: true, modelRef: SideModel.ref(data),
     };
   }
 
   static summaryRequest(data, rows) {
     return {
       messages: ConsolidatePrompt.summaryMessages(data, rows), temperature: ConsolidateCall.TEMPERATURE,
-      timeoutMs: ConsolidateCall.TIMEOUT_MS, noThink: true, modelRef: data.llmModel || undefined,
+      timeoutMs: ConsolidateCall.TIMEOUT_MS, noThink: true, modelRef: SideModel.ref(data),
     };
   }
 

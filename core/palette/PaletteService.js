@@ -12,6 +12,7 @@ const TabProvider = require('./providers/TabProvider');
 const ActionProvider = require('./providers/ActionProvider');
 const ShellSettingsCatalog = require('./catalog/ShellSettingsCatalog');
 const LlmSettingsCatalog = require('./catalog/LlmSettingsCatalog');
+const SettingValueReader = require('./SettingValueReader');
 
 class PaletteService {
   static DOUBLE_SHIFT_KEY = 'core.palette.doubleShift';
@@ -22,7 +23,12 @@ class PaletteService {
     this._views = new Map();
     this.recent = new RecentPlaces(deps.settingsDb);
     this.index = new ConversationIndex(deps.settingsDb);
-    const settings = new SettingsProvider({ catalogs: [ShellSettingsCatalog, LlmSettingsCatalog], listExtensions: deps.listExtensions || (() => []) });
+    const values = new SettingValueReader({ settingsDb: deps.settingsDb });
+    const settings = new SettingsProvider({
+      catalogs: [ShellSettingsCatalog, LlmSettingsCatalog],
+      listExtensions: deps.listExtensions || (() => []),
+      valueOf: (entry) => values.valueOf(entry),
+    });
     const conversations = new ConversationProvider({ getChatStore: deps.getChatStore, index: this.index });
     const actions = new ActionProvider();
     this.providers = {

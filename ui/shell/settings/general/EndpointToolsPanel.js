@@ -1,6 +1,7 @@
 import ToolGroupsView from '../ToolGroupsView.js';
 import SettingsFeedback from '../SettingsFeedback.js';
 import ApiMcpGroups from './ApiMcpGroups.js';
+import FoldGroups from './FoldGroups.js';
 
 export default class EndpointToolsPanel {
   constructor({ feedback, settings }) {
@@ -26,6 +27,7 @@ export default class EndpointToolsPanel {
       const { activeExtIds, extNames } = await EndpointToolsPanel._extensions();
       this._renderApiMcp(data, activeExtIds, extNames);
       this._renderAgent(data.agentTools, data.disabledAgentTools, activeExtIds);
+      this._summarize();
     } catch (e) {
       console.error('Failed to load endpoints:', e);
     }
@@ -34,6 +36,7 @@ export default class EndpointToolsPanel {
   async save() {
     const { disabledApiGroups, disabledMcpTools } = ApiMcpGroups.disabled(this._apiMcpGroups, this._apiMcpOn);
     const disabledAgentTools = [];
+    this._summarize();
     for (const g of this._agentGroups) for (const t of (g.tools || [])) {
       if (!this._agentOn.has(t.name)) disabledAgentTools.push(t.name);
     }
@@ -44,6 +47,11 @@ export default class EndpointToolsPanel {
     } catch (e) {
       this._feedback.toast(`Could not save endpoint settings: ${e.message}`, 'bad');
     }
+  }
+
+  _summarize() {
+    FoldGroups.summarize('api-tools', ToolGroupsView.countText(this._apiMcpGroups, this._apiMcpOn));
+    FoldGroups.summarize('agent-tools', ToolGroupsView.countText(this._agentGroups, this._agentOn));
   }
 
   static visibleAgentGroups(groups, activeExtIds) {

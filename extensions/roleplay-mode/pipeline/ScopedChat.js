@@ -17,7 +17,8 @@ class ScopedChat {
     const scope = ReactionScope.current();
     if (!scope) return chat.complete(opts);
     scope.throwIfStopped();
-    const result = await chat.complete(Object.assign({}, opts, { signal: scope.signal }));
+    const trace = (opts && opts.trace) || { conversationId: scope.conversationId || null, turnId: scope.messageId || null, callType: 'side' };
+    const result = await chat.complete(Object.assign({}, opts, { signal: scope.signal, trace }));
     scope.throwIfStopped();
     return result;
   }

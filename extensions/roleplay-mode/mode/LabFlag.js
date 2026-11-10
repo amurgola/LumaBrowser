@@ -1,6 +1,6 @@
 class LabFlag {
   static KEY = 'ext.roleplay-mode.labEnabled';
-  static TAB = { id: 'roleplay-lab', label: 'Roleplay Lab', file: './rp-lab.js' };
+  static TAB = { id: 'roleplay-lab', label: 'Roleplay Lab', file: './rp-lab.js', group: 'developer' };
 
   constructor(rawDb, setupTab) {
     this._db = rawDb;

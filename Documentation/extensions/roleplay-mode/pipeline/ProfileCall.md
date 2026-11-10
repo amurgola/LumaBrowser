@@ -15,3 +15,7 @@ writes the result onto the character. Best effort and bounded.
 - `run(data, chars, content)` true when any card changed; a failure is logged
   and leaves the card as it was. The reply's bonds are parsed against the other
   characters' names, so only cast members get a bond line.
+
+## Changes (2026-11-09, helper model)
+
+The request routes on [SideModel](../mode/SideModel.md).ref(data): the helper model when the story asked for it and it is ready, else the story model.

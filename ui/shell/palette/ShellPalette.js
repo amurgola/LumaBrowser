@@ -1,3 +1,5 @@
+import SettingsJumpButton from '../settings/SettingsJumpButton.js';
+
 export default class ShellPalette {
   constructor({ host, reveal, actions, store, feedback = null, settingsEl = null }) {
     this._feedback = feedback;
@@ -10,6 +12,7 @@ export default class ShellPalette {
 
   install() {
     this._wireSwitch();
+    new SettingsJumpButton({ openPalette: () => this.toggle(), isShortcutOn: () => this._doubleShiftOn() }).install();
     document.addEventListener('settings:open', (e) => this._rememberTab(e && e.detail && e.detail.tab));
     const el = this._settingsEl || document.getElementById('settingsModal');
     if (el) {
@@ -29,6 +32,11 @@ export default class ShellPalette {
       const res = await ShellPalette._invoke('core.palette.setDoubleShift', toggle.checked);
       if (this._feedback) this._feedback.markSaved(toggle, !!(res && res.success), res && res.error);
     });
+  }
+
+  async _doubleShiftOn() {
+    const r = await ShellPalette._invoke('core.palette.getDoubleShift');
+    return !(r && r.enabled === false);
   }
 
   handleForwarded(p) {

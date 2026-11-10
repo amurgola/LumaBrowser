@@ -3,6 +3,7 @@ class BackgroundStarts {
   static LLM_PIN_MS = 3000;
   static IMAGE_PIN_MS = 6000;
   static GROUP_ROUTER_MS = 9000;
+  static HELPER_MODEL_MS = 10000;
 
   constructor({ updateCheck, llmServerService, imageServerService, env, setTimeoutFn = setTimeout }) {
     this._updateCheck = updateCheck;
@@ -17,6 +18,7 @@ class BackgroundStarts {
     this._setTimeout(() => this._llm.ramPin.apply(), BackgroundStarts.LLM_PIN_MS);
     this._setTimeout(() => this._image.ramPin.apply(), BackgroundStarts.IMAGE_PIN_MS);
     this._setTimeout(() => this._llm.groupRouter.apply(), BackgroundStarts.GROUP_ROUTER_MS);
+    if (this._llm.helperModel) this._setTimeout(() => this._llm.helperModel.apply(), BackgroundStarts.HELPER_MODEL_MS);
   }
 }
 

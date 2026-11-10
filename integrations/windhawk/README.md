@@ -26,7 +26,7 @@ or another tool could do too. The API contract lives in
 
 Windhawk mods are single source files that Windhawk compiles itself.
 
-1. **From Luma (one click)**: Settings > General > Windhawk lists every mod
+1. **From Luma (one click)**: Settings > Editors & agents > Windhawk lists every mod
    here with Install, Update and Remove. Luma compiles the mod with
    Windhawk's own compiler and registers it as the local mod
    `local@<id>` (Windows asks for administrator approval once per click);

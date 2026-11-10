@@ -20,6 +20,7 @@ class OpenAiChatBody {
     parallelToolCalls = null,
     chatTemplateKwargs = null,
     reasoningBudget = null,
+    responseFormat = null,
     promptCacheKey = null,
     promptCacheRetention = '24h',
     moeCacheBatch = null,
@@ -30,6 +31,7 @@ class OpenAiChatBody {
     });
     OpenAiChatBody._applyStreamUsage(body);
     OpenAiChatBody._applyThinkingControls(body, chatTemplateKwargs, reasoningBudget);
+    OpenAiChatBody._applyResponseFormat(body, responseFormat);
     OpenAiChatBody._applyTools(body, tools, toolChoice, parallelToolCalls);
     OpenAiChatBody._applyPromptCache(body, promptCacheKey, promptCacheRetention);
     OpenAiChatBody._applyMoeCacheBatch(body, local, moeCacheBatch);
@@ -66,6 +68,10 @@ class OpenAiChatBody {
   static _applyThinkingControls(body, chatTemplateKwargs, reasoningBudget) {
     if (OpenAiChatBody._isNonEmptyObject(chatTemplateKwargs)) body.chat_template_kwargs = chatTemplateKwargs;
     if (typeof reasoningBudget === 'number') body.reasoning_budget = reasoningBudget;
+  }
+
+  static _applyResponseFormat(body, responseFormat) {
+    if (OpenAiChatBody._isNonEmptyObject(responseFormat)) body.response_format = responseFormat;
   }
 
   static _applyTools(body, tools, toolChoice, parallelToolCalls) {

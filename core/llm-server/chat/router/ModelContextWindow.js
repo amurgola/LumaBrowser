@@ -10,6 +10,7 @@ class ModelContextWindow {
     const modelRef = this._base(rawRef);
     if (typeof modelRef !== 'string') return null;
     if (ChatModelRef.isLocal(modelRef)) return this.localPerSlot();
+    if (ChatModelRef.isHelper(modelRef)) return this._helperWindow();
     try {
       return this._advertised(modelRef);
     } catch (_) {
@@ -24,6 +25,11 @@ class ModelContextWindow {
     } catch (_) {
       return null;
     }
+  }
+
+  _helperWindow() {
+    const helper = this._service && this._service.helperModel;
+    try { return helper && typeof helper.contextSize === 'function' ? ModelContextWindow._positive(Number(helper.contextSize())) : null; } catch (_) { return null; }
   }
 
   _advertised(modelRef) {

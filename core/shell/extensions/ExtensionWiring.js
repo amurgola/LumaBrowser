@@ -48,6 +48,7 @@ class ExtensionWiring {
         label: ManifestFields.option(definition, 'label') || id,
         url: uiFile ? ExtensionUrls.uiAsset(id, uiFile) : null,
         module: uiFile ? ExtensionWiring.isModuleBundle(manifest) : false,
+        group: ManifestFields.option(definition, 'group') || undefined,
       }, id);
     } catch (err) {
       console.error(`ExtensionManager: failed to register setupTab for "${id}":`, err.message);

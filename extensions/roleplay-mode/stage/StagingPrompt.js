@@ -56,6 +56,45 @@ class StagingPrompt {
       + '}\n';
   }
 
+  static schema(draws = { shot: true, slots: true }) {
+    const str = { type: 'string' };
+    const strings = { type: 'array', items: str };
+    const presentProps = {
+      name: str, present: { type: 'boolean' }, emotion: str, intent: str, condition: str, bondUser: str, bondChange: str,
+      beat: str, leftTo: str, revealed: { type: 'boolean' }, noticed: strings, outfit: str,
+    };
+    if (draws.slots) {
+      presentProps.slots = { type: 'object', properties: { outer: str, top: str, bottom: str, feet: str }, required: ['outer', 'top', 'bottom', 'feet'] };
+      presentProps.head = str;
+      presentProps.face = str;
+    }
+    presentProps.outfitChanged = { type: 'boolean' };
+    const properties = {
+      newCharacters: { type: 'array', items: { type: 'object', properties: { name: str, looks: str, personality: str }, required: ['name', 'looks', 'personality'] } },
+      location: { type: 'object', properties: { name: str, desc: str, isNew: { type: 'boolean' } }, required: ['name', 'desc', 'isNew'] },
+      present: { type: 'array', items: { type: 'object', properties: presentProps, required: ['name', 'present', 'emotion', 'intent', 'condition', 'bondUser', 'bondChange', 'beat', 'leftTo', 'revealed', 'noticed', 'outfit', 'outfitChanged'] } },
+      events: { type: 'array', items: { type: 'object', properties: { kind: { type: 'string', enum: ['event', 'reveal', 'promise', 'death', 'move', 'injury'] }, text: str, who: strings }, required: ['kind', 'text', 'who'] } },
+      clock: { type: 'object', properties: { advance: { type: 'string', enum: ['none', 'minutes', 'hours', 'next-morning', 'days'] }, timeOfDay: str, weather: str }, required: ['advance', 'timeOfDay', 'weather'] },
+      threads: { type: 'object', properties: { opened: strings, advanced: strings, closed: strings }, required: ['opened', 'advanced', 'closed'] },
+    };
+    if (draws.shot) {
+      properties.shot = {
+        type: 'object',
+        properties: {
+          pose: { type: 'string', enum: StagingPrompt.POSES.slice() }, facing: { type: 'string', enum: ['camera', 'away'] },
+          framing: { type: 'string', enum: ['full', 'close'] }, focus: strings, group: { type: 'boolean' }, contact: { type: 'boolean' },
+          action: str, props: strings,
+        },
+        required: ['pose', 'facing', 'framing', 'focus', 'group', 'contact', 'action', 'props'],
+      };
+    }
+    return { type: 'object', properties, required: ['newCharacters', 'present', 'events', 'clock', 'threads'] };
+  }
+
+  static responseFormat(draws) {
+    return { type: 'json_schema', json_schema: { name: 'stage', schema: StagingPrompt.schema(draws) } };
+  }
+
   static _castRules() {
     return '- newCharacters: characters newly introduced in this passage, or whose '
       + 'physical appearance is revealed for the first time. "looks" = a short '
@@ -70,8 +109,10 @@ class StagingPrompt {
       + 'locations list, REUSE that exact known name and set "isNew": false. '
       + '"isNew" is true only for a genuinely new place. Omit the whole "location" '
       + 'key if the passage does not clearly establish a place.\n'
-      + '- present: the non-player characters physically present with the '
-      + 'protagonist AFTER this passage, one entry each, exact names. Mark '
+      + '- present: EVERY non-player character physically present with the '
+      + 'protagonist AFTER this passage, one entry each, exact names. Start from the '
+      + 'prior present characters: keep each of them unless they clearly left (a character who '
+      + 'only stood by or stayed silent is still present; give them "" for "beat"), then add arrivals. Mark '
       + 'present=false only when a known character clearly just left, and then set '
       + '"leftTo" to a short phrase saying where or why (e.g. "went to fetch the doctor"); '
       + 'otherwise omit absent characters. When the protagonist MOVES to a different place, '

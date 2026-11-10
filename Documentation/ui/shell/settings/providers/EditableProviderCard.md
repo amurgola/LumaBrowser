@@ -6,7 +6,7 @@ Card of a user-added provider: endpoint, key, model with Fetch models, Save, Rem
 
 ## Methods
 
-- `EditableProviderCard.build(config, ctx)`, `html(config)`, `statusText(config)`, `modelOptions(models, selected)`.
+- `EditableProviderCard.build(config, ctx)`, `html(config)`, `parts(config)` (for [ProviderCardShell](ProviderCardShell.md)), `isConfigured(config)`, `statusText(config)`, `modelOptions(models, selected)`.
 
 ## Globals
 

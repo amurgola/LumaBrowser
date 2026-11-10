@@ -16,3 +16,7 @@ The chat's model picker list (each model followed by its model profiles) and def
 The computed local entry is skipped so the local model is listed once. The local row is always first, so without the "Default LLM" fallback a user who set a remote provider (Ollama through OpenAI-Compatible, say) as the default still got the local model in the chat and in the page chat (Luma On Demand reads this default).
 
 Only the current local model has a row, but picking a profile of another installed local model switches the server just as picking that model in the picker does, so it stays selectable (and choosable for an agent).
+
+## Changes (2026-11-09, helper model)
+
+`_helperModels()` lists the resident helper right after the local row while `service.helperModel.readyRef()` answers: `{ ref: 'helper::<stem>', label: 'Helper · <stem>', providerId: 'helper', isHelper: true, role: 'helper', ready: true }`. Pickers keep `role: 'helper'` rows out of the chat choices; the sharing host can expose it like any listed model.

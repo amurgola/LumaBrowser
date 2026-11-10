@@ -51,9 +51,10 @@ export default class PaletteHtml {
   }
 
   static row(item, index) {
+    const value = item.value ? `<span class="pal-value" title="Current value">${PaletteHtml.esc(item.value)}</span>` : '';
     const right = item.hint
       ? `<span class="pal-hint">${PaletteHtml.keys(item.hint)}</span>`
-      : (item.tag ? `<span class="pal-tag">${PaletteHtml.esc(item.tag)}</span>` : '');
+      : (value || (item.tag ? `<span class="pal-tag">${PaletteHtml.esc(item.tag)}</span>` : ''));
     const sub = item.subtitle ? `<div class="pal-sub">${PaletteHtml.marked(item.subtitle, item.subtitleMarks)}</div>` : '';
     return `<div class="pal-row" role="option" id="pal-row-${index}" data-index="${index}">${PaletteHtml.icon(item)}`
       + `<div class="pal-text"><div class="pal-title">${PaletteHtml.marked(item.title, item.marks)}</div>${sub}</div>${right}</div>`;

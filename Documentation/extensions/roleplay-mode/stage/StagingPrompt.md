@@ -43,3 +43,15 @@ so turning images on mid-story is safe.
 The `condition` rule asks for the body's state as it is now, in about 20
 words at most, rewritten rather than appended. A jungle run had the stage keep
 "unwashed for five days" and add "hair wet from washing" after a wash.
+
+## Changes (2026-11-09)
+
+The `present` rule asks for EVERY non-player character present after the
+passage: start from the prior present characters, keep each unless they
+clearly left (a silent one is still present, with "" for `beat`), then add
+arrivals. The reconciler no longer times a quiet character out, so the list
+is the only way a character leaves without a move.
+
+## Changes (2026-11-09, helper model)
+
+`schema(draws)` the reply's JSON schema (the shape `_schema` spells out in prose; `location` and `shot` optional, the rest required; slots, head and face only when the story draws), `responseFormat(draws)` the OpenAI `response_format` carrying it.

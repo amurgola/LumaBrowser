@@ -9,12 +9,18 @@ one invoke handler per extension. Extends
 ## Methods
 
 - `SetupTabRegistry.shared` is the process-wide instance.
-- `register({ id, label?, url? }, extensionId)` stores `{ id, label, url }`
-  (`label` defaults to the id, `url` to `null`).
+- `register({ id, label?, url?, module?, group? }, extensionId)` stores
+  `{ id, label, url, module, group }` (`label` defaults to the id, `url` to
+  `null`, `group` to `integrations`).
+- `group` places the tab in the Setup nav: `engines` (a local engine such as
+  Voice cloning, beside LLM, Image and Music), `integrations` (Agents, MCP
+  Servers, My Tools) or `developer` (flag-gated developer tools such as the
+  Roleplay Lab). `SetupTabRegistry.group(value)` maps anything else to the
+  default; `GROUPS` lists the values.
 - `unregister(id)`, `get(id)`, `has(id)` as in the base.
 - `unregisterByExtension(extensionId)` removes the extension's tabs and its
   invoke handler.
-- `list()` returns `[{ id, label, url }]`.
+- `list()` returns `[{ id, label, url, module, group }]`.
 - `setInvokeHandler(extensionId, handler)` registers
   `handler(action, payload)`; ignored without an extension id or a function.
 - `invoke(extensionId, action, payload)` is async and calls the handler, or

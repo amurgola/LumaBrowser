@@ -23,6 +23,13 @@ controls such as the Default LLM picker and the extension subtabs).
 }
 ```
 
+`key` is set for every setting stored as one plain settings-database key (42 entries, traced to the module that
+reads and writes it). The search palette shows those settings' current values through
+[SettingValueSpecs](SettingValueSpecs.md), which needs a spec for each keyed entry (a drift test enforces it).
+Left without a key on purpose: run on startup (an OS login item), the clear-data boxes (not saved), the CLI shim
+(computed), telemetry and LLM trace (build mode or a launch flag can override the stored value), network mode and
+the API key requirement (fields of one JSON object), and the sharing PIN (a secret).
+
 `target.tab` is a `data-tab` value (general, aiproviders, apimcp, passwords,
 security, extensions, about). `target.subtab` is set inside the Extensions or
 About subtabs and is a key of `SettingsTabs.PANE_IDS`. `target.selector` is the

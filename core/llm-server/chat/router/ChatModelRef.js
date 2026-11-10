@@ -2,9 +2,18 @@ class ChatModelRef {
   static LOCAL_PREFIX = 'local::';
   static SEPARATOR = '::';
   static PROFILE_PREFIX = 'profile::';
+  static HELPER_PREFIX = 'helper::';
 
   static isLocal(modelRef) {
     return typeof modelRef === 'string' && modelRef.startsWith(ChatModelRef.LOCAL_PREFIX);
+  }
+
+  static isHelper(modelRef) {
+    return typeof modelRef === 'string' && modelRef.startsWith(ChatModelRef.HELPER_PREFIX);
+  }
+
+  static helperName(modelRef) {
+    return ChatModelRef.isHelper(modelRef) ? modelRef.slice(ChatModelRef.HELPER_PREFIX.length) : '';
   }
 
   static isProfile(modelRef) {
@@ -33,6 +42,7 @@ class ChatModelRef {
   static providerTag(modelRef) {
     if (!modelRef || ChatModelRef.isProfile(modelRef)) return null;
     if (ChatModelRef.isLocal(modelRef)) return 'local';
+    if (ChatModelRef.isHelper(modelRef)) return 'helper';
     const parts = ChatModelRef.split(modelRef);
     return parts && parts.providerId ? parts.providerId : null;
   }

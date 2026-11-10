@@ -2,7 +2,9 @@
 
 `core/llm-server/ui/js/setup-ui/runtimes/RuntimeRowHtml.js`
 
-One collapsible runtime row: status badges, the Install/Update button (a compact secondary `.luma-btn`, since every row has one) that stays visible collapsed, and the details panel with version, path, provenance and the secondary actions.
+One collapsible runtime row: status badges, the primary action that stays visible collapsed, and the details panel with version, path, provenance and the secondary actions. A missing runtime gets an Install button. An installed one gets an empty `[data-runtime-state]` slot that [RuntimeUpdateBadge](RuntimeUpdateBadge.md) fills with an Update button or a quiet "Up to date" once the upstream check answers, so the row only offers a button when there is work to do (the ExtCard rule in [DesignSystem](../../../../../../ui/DesignSystem.md)). Reinstall (the same install chooser) leads the secondary actions of an installed row.
+
+`RuntimeRowHtml.installButton(id, label, title?)` builds that install-action button for both places.
 
 ## Methods
 

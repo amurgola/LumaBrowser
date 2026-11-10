@@ -1,5 +1,5 @@
-const CoreRequire = require('../CoreRequire');
 const LabTextScenarios = require('./LabTextScenarios');
+const LabTurnDriver = require('./LabTurnDriver');
 const ConsistencyProbe = require('./ConsistencyProbe');
 const CastProbe = require('./CastProbe');
 const ProseScore = require('./ProseScore');
@@ -8,34 +8,40 @@ const PhysicalityJudge = require('./PhysicalityJudge');
 const RevealJudge = require('./RevealJudge');
 const BodyDetailScore = require('./BodyDetailScore');
 const ContextAudit = require('./ContextAudit');
+const RoleplayModeDescriptor = require('../mode/RoleplayModeDescriptor');
 
 class LabTextRun {
-  static TURN_TIMEOUT_MS = 300000;
-  static CONTEXT_WINDOW = 16384;
   static GROUNDING_HEADINGS = ['How their bodies work', 'Up close this turn'];
 
-  constructor({ mode, complete, Harness = null, emit = () => {}, ModeTurnMessages = null } = {}) {
+  constructor({ router, mode, complete, Harness = null, emit = () => {}, modelRef = null, contextWindow = null, Driver = LabTurnDriver } = {}) {
+    this._router = router;
     this._mode = mode;
     this._complete = complete;
     this._Harness = Harness;
     this._emit = emit;
-    this._shape = ModeTurnMessages || LabTextRun._coreShaper();
+    this._modelRef = modelRef;
+    this._contextWindow = typeof contextWindow === 'function' ? contextWindow : null;
+    this._Driver = Driver;
     this._active = null;
   }
 
   async run(options = {}) {
     const scenario = LabTextScenarios.resolve(options.scenario);
-    const meta = { mode: 'roleplay', data: JSON.parse(JSON.stringify(scenario.data)) };
-    if (options.grounding === false) meta.data.options = Object.assign({}, meta.data.options, { bodyGrounding: false, surfaceGrounding: false });
+    const data = JSON.parse(JSON.stringify(scenario.data));
+    if (options.grounding === false) data.options = Object.assign({}, data.options, { bodyGrounding: false, surfaceGrounding: false });
+    if (typeof options.sideModel === 'string') data.sideModel = options.sideModel;
+    if (this._contextWindow && scenario.contextWindow) this._contextWindow(scenario.contextWindow);
     const turns = scenario.turns.slice(0, options.turns > 0 ? options.turns : scenario.turns.length);
+    const driver = new this._Driver({ router: this._router, descriptor: this._mode, modelRef: this._modelRef });
     this._active = this._harness(options, scenario);
     const harness = this._active;
     const transcript = [];
     let error = null;
+    let world = data;
     try {
-      const history = [];
+      driver.open(data);
       for (let i = 0; i < turns.length; i += 1) {
-        const entry = await this._turn(meta, history, turns[i], i + 1, scenario);
+        const entry = await this._turn(driver, turns[i], i + 1, scenario);
         transcript.push(entry);
         this._emit('lab:text', { phase: 'turn', turn: i + 1, of: turns.length, user: entry.user, assistant: entry.assistant });
       }
@@ -44,44 +50,43 @@ class LabTextRun {
     } finally {
       if (harness) this._Harness.uninstall();
       this._active = null;
+      if (driver.conversationId) world = driver.data();
+      driver.close({ keep: !!options.keep });
     }
-    const probe = ConsistencyProbe.run({ data: meta.data, transcript, facts: scenario.facts });
-    const cast = CastProbe.run({ data: meta.data, transcript });
-    const prose = ProseScore.run({ data: meta.data, transcript });
+    const probe = ConsistencyProbe.run({ data: world, transcript, facts: scenario.facts });
+    const cast = CastProbe.run({ data: world, transcript });
+    const prose = ProseScore.run({ data: world, transcript });
     const bodyDetail = BodyDetailScore.run({ transcript });
     const grounding = LabTextRun._groundingSummary(transcript, scenario);
     const context = ContextAudit.summary(transcript.map((t) => t.audit));
-    const judge = options.judge && transcript.length ? await this._judge(ProseJudge, meta.data, transcript) : null;
+    const calls = LabTextRun._callsSummary(transcript);
+    const judge = options.judge && transcript.length ? await this._judge(ProseJudge, world, transcript) : null;
     const wantsBody = options.judge && transcript.length && (scenario.judges || []).includes('physicality');
-    const physicality = wantsBody ? await this._judge(PhysicalityJudge, meta.data, transcript) : null;
+    const physicality = wantsBody ? await this._judge(PhysicalityJudge, world, transcript) : null;
     const wantsReveal = options.judge && transcript.length && (scenario.judges || []).includes('reveal');
-    const reveal = wantsReveal ? await this._revealJudge(meta.data, transcript, scenario) : null;
+    const reveal = wantsReveal ? await this._revealJudge(world, transcript, scenario) : null;
     this._emit('lab:text', { phase: 'done', probe, cast, prose, judge, physicality, reveal, error });
     for (const t of transcript) delete t.context;
-    return { scenario: scenario.name || null, transcript, data: meta.data, probe, cast, prose, bodyDetail, grounding, context, judge, physicality, reveal, error };
+    return { scenario: scenario.name || null, transcript, data: world, probe, cast, prose, bodyDetail, grounding, context, calls, judge, physicality, reveal, error };
   }
 
-  async _turn(meta, history, userText, turnNo, scenario = {}) {
-    history.push({ role: 'user', content: userText });
-    const contextWindow = scenario.contextWindow || LabTextRun.CONTEXT_WINDOW;
-    const turn = await this._mode.buildTurn({ meta, messages: history.slice(), conversationId: 'rp-lab-text', modelRef: meta.data.llmModel, contextWindow });
-    const messages = this._shape.apply(turn, history.slice());
+  async _turn(driver, userText, turnNo, scenario = {}) {
+    let played;
+    try {
+      played = await driver.play(userText);
+    } catch (e) {
+      throw new Error('turn ' + turnNo + ': ' + ((e && e.message) || String(e)));
+    }
+    if (!played.assistant) throw new Error('turn ' + turnNo + ': the story model returned nothing');
+    const messages = played.request ? played.request.messages : [];
     const context = (scenario.recallTurns || []).includes(turnNo) ? LabTextRun._recallContext(messages) : null;
-    const r = await this._narrate({
-      messages, temperature: turn.temperature, modelRef: turn.modelRef || meta.data.llmModel || undefined,
-      samplers: turn.samplers || undefined,
-      timeoutMs: LabTextRun.TURN_TIMEOUT_MS, trace: { conversationId: 'rp-lab-text', callType: 'rp-lab-text' },
-    });
-    if (!r || !r.text) throw new Error('turn ' + turnNo + ': the story model returned nothing' + (r && r.error ? ' (' + r.error + ')' : ''));
-    const assistant = String(r.text).trim();
-    history.push({ role: 'assistant', content: assistant });
-    const messageId = 'rp-lab-text-' + turnNo;
-    await this._mode.postProcess({
-      content: assistant, conversationId: 'rp-lab-text', assistantMessageId: messageId, meta,
-      emit: () => {}, setMeta: async (patch) => { if (patch && patch.data) meta.data = patch.data; },
-    });
-    const entry = { turn: turnNo, user: userText, assistant, messageId, contextTokens: LabTextRun._estimate(messages) };
-    if (turn.groundingNotes) entry.grounding = turn.groundingNotes;
+    const entry = {
+      turn: turnNo, user: userText, assistant: played.assistant, messageId: played.messageId,
+      contextTokens: LabTextRun._estimate(messages), ms: played.ms,
+      calls: played.calls.map((c) => c.kind),
+    };
+    const grounding = RoleplayModeDescriptor.lastGrounding(driver.conversationId);
+    if (grounding) entry.grounding = grounding;
     entry.audit = ContextAudit.of(messages);
     if (context != null) entry.context = context;
     return entry;
@@ -102,6 +107,20 @@ class LabTextRun {
     return { turnsWithCards, cards, expectNone, ok: expectNone ? turnsWithCards === 0 : true };
   }
 
+  static _callsSummary(transcript) {
+    const out = {};
+    let narratorMs = 0;
+    for (const t of transcript || []) {
+      for (const kind of t.calls || []) {
+        out[kind] = out[kind] || { n: 0 };
+        out[kind].n += 1;
+      }
+      narratorMs += Number(t.ms) || 0;
+    }
+    if (out.narrator && out.narrator.n) out.narrator.ms = narratorMs;
+    return out;
+  }
+
   static _recallContext(messages) {
     const list = Array.isArray(messages) ? messages : [];
     const text = (m) => String((m && m.content) || '');
@@ -111,12 +130,6 @@ class LabTextRun {
     const anchor = last.includes('[Scene notes') ? last.slice(last.indexOf('[Scene notes')) : '';
     const replies = list.filter((m) => m && m.role === 'assistant').map(text);
     return { memory: memory + '\n' + anchor, replies };
-  }
-
-  async _narrate(request) {
-    const harness = this._active;
-    if (harness) harness.active = false;
-    try { return await this._complete(request); } finally { if (harness) harness.active = true; }
   }
 
   _harness(options, scenario) {
@@ -155,22 +168,6 @@ class LabTextRun {
 
   static _estimate(messages) {
     return Math.ceil(messages.reduce((n, m) => n + String((m && m.content) || '').length, 0) / 3.6);
-  }
-
-  static _coreShaper() {
-    try { return CoreRequire.require('llm-server/chat/router/ModeTurnMessages'); } catch (_) { return LabTextRun._fallbackShaper(); }
-  }
-
-  static _fallbackShaper() {
-    return {
-      apply(turn, messages) {
-        const out = (turn && Array.isArray(turn.messages) && turn.messages.length) ? turn.messages.slice() : messages.slice();
-        if (turn && turn.postHistoryPrompt && out.length && out[out.length - 1].role === 'user') {
-          out[out.length - 1] = { ...out[out.length - 1], content: out[out.length - 1].content + '\n\n' + turn.postHistoryPrompt };
-        }
-        return turn && turn.systemPrompt ? [{ role: 'system', content: turn.systemPrompt }, ...out] : out;
-      },
-    };
   }
 }
 

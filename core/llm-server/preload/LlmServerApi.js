@@ -30,6 +30,7 @@ class LlmServerApi extends PreloadSection {
       getPeerGpus: () => ipcRenderer.invoke('core.llmServer.getPeerGpus'),
       getRamPinStatus: () => ipcRenderer.invoke('core.llmServer.getRamPinStatus'),
       getGroupRouterStatus: () => ipcRenderer.invoke('core.llmServer.getGroupRouterStatus'),
+      getHelperModelStatus: () => ipcRenderer.invoke('core.llmServer.getHelperModelStatus'),
       startServer: () => ipcRenderer.invoke('core.llmServer.startServer'),
       stopServer: () => ipcRenderer.invoke('core.llmServer.stopServer'),
       chatAbort: () => ipcRenderer.invoke('core.llmServer.chatAbort'),

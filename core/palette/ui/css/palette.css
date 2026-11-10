@@ -137,6 +137,15 @@ body.is-open .pal-card { opacity: 1; transform: translate(-50%, 0); }
     background: var(--bg-surface-2);
 }
 .pal-hint { flex: none; }
+.pal-value {
+    flex: none;
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
 
 kbd {
     display: inline-block;

@@ -14,18 +14,20 @@ class SideCompletion {
     this._collected = new CollectedCompletion(dispatch);
   }
 
-  async complete({ messages, temperature = 0.2, modelRef, timeoutMs = 30000, noThink = false, images = [], trace = null, signal = null } = {}) {
+  async complete({ messages, temperature = 0.2, modelRef, timeoutMs = 30000, noThink = false, images = [], trace = null, signal = null, responseFormat = null } = {}) {
     if (!Array.isArray(messages) || messages.length === 0) return { error: 'messages is required' };
     const ref = this._models.resolveRef(modelRef);
     if (!ref) return { error: 'No model configured.' };
     const off = noThink ? ThinkingOff.resolve(ref, messages) : null;
     const tag = trace || SideCompletion.DEFAULT_TRACE;
+    const extra = off ? { ...(off.extra || {}), trace: tag } : { trace: tag };
+    if (responseFormat && typeof responseFormat === 'object') extra.responseFormat = responseFormat;
     return this._withRetries({
       modelRef: ref,
       messages: off ? off.messages : messages,
       temperature,
       images: MessageImages.imagesOf(images),
-      extra: off ? { ...(off.extra || {}), trace: tag } : { trace: tag },
+      extra,
       timeoutMs,
       timeoutMessage: 'complete timeout',
       signal,

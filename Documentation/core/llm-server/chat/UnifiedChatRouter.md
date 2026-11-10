@@ -114,3 +114,13 @@ clobber the user's global provider config. Remote turns get an ephemeral
 provider over a non-persisting settings view instead. One in-flight turn is the
 legacy contract: a new turn supersedes the old, and schedulers, triggers and
 the terminal bridge defer while `active` is set.
+
+## observeDispatch (2026-11-09)
+
+`observeDispatch(fn)` -> `remove()` forwards to the dispatcher's `observe`
+([ModelDispatcher](router/ModelDispatcher.md)); a dispatcher seam without
+one gets a no-op remover. The Roleplay Lab reads each turn's request there.
+
+## Changes (2026-11-09, helper model)
+
+`_helperStream(seams)` builds a [HelperStream](router/HelperStream.md) when `llmServerService.helperModel` exists; `helperModelRef()` answers the helper's ref while it is on and ready, else null (a mode asks here before preferring it; never throws).

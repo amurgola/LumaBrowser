@@ -6,7 +6,7 @@ Card of a paired peer: model choice persists; Refresh and Remove go through the 
 
 ## Methods
 
-- `PeerProviderCard.build(config, peer, ctx)`, `html(config, peer)`, `summary(config, peer)` (lists image generation, image editor and video generation when the peer shares them).
+- `PeerProviderCard.build(config, peer, ctx)`, `html(config, peer)`, `parts(config, peer)` (for [ProviderCardShell](ProviderCardShell.md); the summary is the folded row's line), `summary(config, peer)` (lists image generation, image editor and video generation when the peer shares them).
 
 ## Globals
 

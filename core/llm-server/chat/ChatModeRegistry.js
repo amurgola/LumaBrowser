@@ -18,6 +18,10 @@ class ChatModeRegistry extends ContributionRegistry {
     if (id === ChatModeRegistry.RESERVED_ID) throw new Error('registerMode: "chat" is reserved for the built-in mode');
   }
 
+  static allowsChoices(descriptor) {
+    return !(descriptor && descriptor.choices === false);
+  }
+
   _toListed(mode) {
     return {
       id: mode.id,
@@ -28,6 +32,7 @@ class ChatModeRegistry extends ContributionRegistry {
       setupSchema: mode.setupSchema || null,
       hasBuildTurn: typeof mode.buildTurn === 'function',
       agent: mode.agent === true,
+      choices: mode.choices !== false,
       launcher: mode.launcher === 'sidebar' ? 'sidebar' : 'landing',
       hidden: mode.hidden === true,
       chatUiUrl: mode.chatUiUrl || null,

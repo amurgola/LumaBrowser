@@ -1,6 +1,7 @@
 const DataMigration = require('../world/DataMigration');
 const StoryLedger = require('../world/StoryLedger');
 const SpeakerNames = require('../prompts/SpeakerNames');
+const HistoryTrimmer = require('../prompts/HistoryTrimmer');
 const RoleplayEnv = require('../images/RoleplayEnv');
 const RpDebug = require('../images/RpDebug');
 const BeatKind = require('../images/BeatKind');
@@ -60,6 +61,7 @@ class RoleplayPostProcessor {
     const paths = this._paths && this._paths.tracks(conversationId, assistantMessageId) ? this._paths : null;
     const turn = new TurnChannel({ emit, setMeta, messageId: assistantMessageId, conversationId, scope, paths });
     try {
+      content = HistoryTrimmer.stripDebris(content);
       if (aborted || !String(content || '').trim()) { turn.progress.done(); return; }
       turn.beginWorld();
       turn.progress.say('Reading the scene…');

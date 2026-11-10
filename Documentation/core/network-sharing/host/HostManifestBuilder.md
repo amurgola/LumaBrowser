@@ -38,3 +38,7 @@ Sharing is not transitive: a model that came from another peer is never
 re-shared, which avoids leaking a third machine's resources and chained proxy
 hops. Whether the thinking dial works is probed from the running chat
 template, which a client cannot work out for itself.
+
+## Changes (2026-11-09, helper model)
+
+A `helper::` row from the router (the resident helper model, `isHelper` / `role: helper`) goes out with the local slot as `kind: helper` with its own window (`_helperWindow`, from `chatRouter.contextWindowFor`), never under the remote toggle: it runs on the host card, and a client may pick it as a story's bookkeeping model while its narrator runs elsewhere.

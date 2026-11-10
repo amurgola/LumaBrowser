@@ -17,3 +17,7 @@ steady cost instead of re-summarising its whole history every turn.
   through `CharacterProfile.apply(…, { growthOnly })`),
   then rewrites the summary when [StoryLedger](../world/StoryLedger.md)`.needsSummary`.
   Returns true when anything changed; failures leave the records untouched.
+
+## Changes (2026-11-09, helper model)
+
+Both requests route on [SideModel](../mode/SideModel.md).ref(data).

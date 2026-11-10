@@ -78,6 +78,7 @@ export default class RuntimeRowHtml {
   static secondaryActions(r) {
     const id = HtmlEscaper.escape(r.id);
     const out = [];
+    if (r.installed) out.push(`<button class="luma-btn luma-btn--sm" data-runtime-action="install" data-runtime-id="${id}">Reinstall…</button>`);
     if (r.installed && r.source === 'managed') out.push(`<button class="luma-btn luma-btn--sm" data-runtime-action="uninstall" data-runtime-id="${id}">Uninstall</button>`);
     if (r.installed && r.source === 'manual') out.push(`<button class="luma-btn luma-btn--sm" data-runtime-action="clear-binary" data-runtime-id="${id}">Clear registration</button>`);
     if (r.installed) out.push(`<button class="luma-btn luma-btn--sm" data-runtime-action="relocate" data-runtime-id="${id}">Relocate…</button>`);
@@ -102,7 +103,13 @@ export default class RuntimeRowHtml {
   }
 
   static _primaryAction(r) {
-    return `<button class="luma-btn luma-btn--sm" data-runtime-action="install" data-runtime-id="${HtmlEscaper.escape(r.id)}">${r.installed ? 'Update' : 'Install'}</button>`;
+    if (r.installed) return '<span class="runtime-state" data-runtime-state></span>';
+    return RuntimeRowHtml.installButton(r.id, 'Install');
+  }
+
+  static installButton(id, label, title = '') {
+    const esc = HtmlEscaper.escape;
+    return `<button class="luma-btn luma-btn--sm" data-runtime-action="install" data-runtime-id="${esc(id)}"${title ? ` title="${esc(title)}"` : ''}>${esc(label)}</button>`;
   }
 
   static _detailRows(r) {

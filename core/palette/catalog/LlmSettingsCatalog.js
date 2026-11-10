@@ -659,7 +659,7 @@ const ENTRIES = [
   {
     id: 'advanced.api-security',
     label: 'API security',
-    description: 'Read-only status of the API key gate shared by the local LLM and image servers. Keys are managed in Settings, Security & Sharing.',
+    description: 'Read-only status of the API key gate shared by the local LLM and image servers. Keys are managed in Settings, API & MCP.',
     keywords: ['api security', 'api key status', 'bearer'],
     path: ['Advanced', 'Server info', 'API security'],
     kind: 'section',

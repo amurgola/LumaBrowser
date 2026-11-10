@@ -35,5 +35,17 @@ export default class DefaultsForm {
     if (routerPin) payload.groupRouterPinRam = !!routerPin.checked;
     const openvino = doc.getElementById('defaultOpenVinoDevice');
     if (openvino) payload.openvinoDevice = openvino.value || null;
+    DefaultsForm._helper(doc, payload);
+  }
+
+  static _helper(doc, payload) {
+    const toggle = doc.getElementById('defaultHelperModel');
+    if (!toggle) return;
+    const helper = { enabled: !!toggle.checked };
+    const file = doc.getElementById('defaultHelperModelSelect');
+    if (file) helper.modelPath = file.value || '';
+    const ctx = doc.getElementById('defaultHelperContext');
+    if (ctx) helper.contextSize = ctx.value ? Number(ctx.value) : null;
+    payload.helperModel = helper;
   }
 }

@@ -11,3 +11,7 @@ Reads the Defaults card's controls into the setDefaults payload; optional rows a
 ## Globals
 
 None.
+
+## Changes (2026-11-09, helper model)
+
+`_helper(doc, payload)`: `payload.helperModel = { enabled, modelPath?, contextSize? }` only when the toggle rendered, the file and window only when their rows did.

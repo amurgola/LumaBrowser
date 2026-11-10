@@ -53,10 +53,6 @@ export default class SettingsReveal {
   expandAround(el) {
     for (let node = el; node && node !== this._doc.body; node = node.parentElement) {
       if (node.tagName === 'DETAILS' && !node.open) node.open = true;
-      if (node.classList && node.classList.contains('gs-collapsible-body') && !node.classList.contains('visible')) {
-        const header = this._doc.querySelector(`.gs-collapsible-header[data-gs-section="${node.dataset.gsBody}"]`);
-        if (header) header.click();
-      }
     }
   }
 

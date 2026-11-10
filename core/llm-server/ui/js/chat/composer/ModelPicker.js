@@ -1,5 +1,6 @@
 import ComposerView from './ComposerView.js';
 import ContextOptionText from './ContextOptionText.js';
+import LocalModelRows from './LocalModelRows.js';
 import ModelTunePanel from './ModelTunePanel.js';
 import ChatIcons from '../ChatIcons.js';
 import PopoverFit from '../common/PopoverFit.js';
@@ -49,14 +50,34 @@ export default class ModelPicker {
     const { state, root } = this._ctx;
     const lm = this._selectedLocal();
     const known = !!(lm || state.modelRef);
+    const name = lm ? (lm.displayName || lm.name) : label;
+    const kind = lm ? 'local' : 'remote';
     root.querySelectorAll('[data-cm-landing-context]').forEach((el) => {
+      const existing = el.querySelector('.cm-landing-model');
+      if (known && existing && existing.dataset.kind === kind) {
+        existing.querySelector('b').textContent = name;
+        return;
+      }
       el.textContent = '';
       if (!known) return;
-      const b = document.createElement('b');
-      b.textContent = lm ? (lm.displayName || lm.name) : label;
-      if (lm) el.append(b, ' runs on this machine. Nothing you type leaves it.');
-      else el.append('Chatting with ', b, '.');
+      const btn = this._landingButton(name, kind);
+      if (lm) el.append(btn, ' runs on this machine. Nothing you type leaves it.');
+      else el.append('Chatting with ', btn, '.');
     });
+  }
+
+  _landingButton(name, kind) {
+    const btn = Dom.el('button', 'cm-landing-model', '<b></b><span class="cm-caret">' + ChatIcons.chevron + '</span>');
+    btn.type = 'button';
+    btn.dataset.kind = kind;
+    btn.title = 'Change the model or its context length';
+    btn.querySelector('b').textContent = name;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (btn.querySelector('.cm-model-pop')) { this._ctx.popovers.closeAll(); return; }
+      this.openPicker(btn, true, { down: true });
+    });
+    return btn;
   }
 
   currentLabel() {
@@ -128,15 +149,17 @@ export default class ModelPicker {
     this._ctx.popovers.closeAll();
   }
 
-  openPicker(anchor, refresh) {
+  openPicker(anchor, refresh, opts = {}) {
     this._ctx.popovers.closeAll();
-    const pop = Dom.el('div', 'cm-model-pop');
+    const pop = Dom.el('div', 'cm-model-pop' + (opts.down ? ' cm-model-pop--down' : ''));
     pop.addEventListener('click', (e) => e.stopPropagation());
-    this._appendLocal(pop);
+    new LocalModelRows(this, this._ctx).render(pop);
     this._appendGroups(pop);
     if (!pop.querySelector('.cm-model-opt')) return;
     anchor.appendChild(pop);
-    PopoverFit.fitScrolling(pop, this._ctx.root, ModelPicker.MIN_POP);
+    if (!opts.down) PopoverFit.fitScrolling(pop, this._ctx.root, ModelPicker.MIN_POP);
+    const sel = LocalModelRows.selectedRow(pop);
+    if (sel && pop.scrollHeight > pop.clientHeight) pop.scrollTop = Math.max(0, sel.offsetTop - pop.clientHeight / 3);
     if (refresh) this.loadLocal();
     this._ctx.popovers.arm();
   }
@@ -165,32 +188,11 @@ export default class ModelPicker {
     return row && row.isProfile ? row : null;
   }
 
-  _profilesOf(baseRef) {
+  profilesOf(baseRef) {
     return this._ctx.state.models.filter((m) => m.isProfile && m.baseRef === baseRef);
   }
 
-  _appendLocal(pop) {
-    const { state } = this._ctx;
-    if (!state.localModels.length) return;
-    const esc = HtmlEscaper.escape;
-    pop.appendChild(Dom.el('div', 'cm-model-group', 'Local'));
-    for (const m of state.localModels) {
-      const head = Dom.el('div', 'cm-model-opt cm-local-head' + (m.ref === state.modelRef ? ' sel' : ''),
-        '<div class="cm-local-name">' + esc(m.displayName || m.name) + '</div>'
-        + '<div class="cm-model-sub">' + esc(m.summary)
-        + (m.hasFit ? '' : ' · <span class="cm-est-tag">estimated</span>') + '</div>');
-      head.addEventListener('click', () => this.selectLocal(m, this.chosenCtx(m)));
-      this._addTuneButton(head, m.ref, m.displayName || m.name);
-      pop.appendChild(head);
-      const profiles = this._profilesOf(m.ref);
-      const row = Dom.el('div', 'cm-ctx-row' + (profiles.length ? ' cm-ctx-row-more' : ''));
-      for (const opt of (m.contextOptions || [])) row.appendChild(this._ctxChip(m, opt));
-      pop.appendChild(row);
-      if (profiles.length) pop.appendChild(this._profileList(profiles));
-    }
-  }
-
-  _profileList(profiles) {
+  profileList(profiles) {
     const list = Dom.el('div', 'cm-profile-list');
     for (const p of profiles) list.appendChild(this._profileOption(p));
     return list;
@@ -201,11 +203,11 @@ export default class ModelPicker {
       '<span class="cm-profile-name">' + HtmlEscaper.escape(p.profileName) + '</span><span class="cm-profile-tag">profile</span>');
     o.title = p.label;
     o.addEventListener('click', () => this.selectProfile(p));
-    this._addTuneButton(o, p.ref, p.label);
+    this.addTuneButton(o, p.ref, p.label);
     return o;
   }
 
-  _addTuneButton(row, ref, label) {
+  addTuneButton(row, ref, label) {
     if (!ModelTunePanel.available(this._ctx.api)) return;
     const btn = Dom.el('button', 'cm-tune-btn', ChatIcons.sliders);
     btn.type = 'button';
@@ -223,7 +225,7 @@ export default class ModelPicker {
     const { state } = this._ctx;
     const groups = {};
     for (const m of state.models) {
-      if (m.isLocal || m.isProfile) continue;
+      if (m.isLocal || m.isProfile || m.role === 'helper') continue;
       const g = m.providerType === 'anthropic' ? 'Anthropic' : 'Providers';
       (groups[g] = groups[g] || []).push(m);
     }
@@ -236,8 +238,8 @@ export default class ModelPicker {
       pop.appendChild(Dom.el('div', 'cm-model-group', HtmlEscaper.escape(g)));
       for (const m of groups[g]) {
         pop.appendChild(this._remoteOption(m));
-        const profiles = this._profilesOf(m.ref);
-        if (profiles.length && !m.isLocal) pop.appendChild(this._profileList(profiles));
+        const profiles = this.profilesOf(m.ref);
+        if (profiles.length && !m.isLocal) pop.appendChild(this.profileList(profiles));
       }
     }
   }
@@ -246,22 +248,14 @@ export default class ModelPicker {
     const o = Dom.el('div', 'cm-model-opt' + (m.ref === this._ctx.state.modelRef ? ' sel' : ''),
       '<span class="cm-dot' + (m.ready ? ' ready' : '') + '"></span><span class="cm-model-label">' + HtmlEscaper.escape(m.label) + '</span>');
     o.addEventListener('click', () => this.selectRemote(m));
-    if (!m.isLocal) this._addTuneButton(o, m.ref, m.label);
+    if (!m.isLocal) this.addTuneButton(o, m.ref, m.label);
     return o;
   }
 
-  _pickContext(model, tokens) {
+  pickContext(model, tokens) {
     const profile = this._selectedProfile();
     if (!(profile && profile.baseRef === model.ref)) { this.selectLocal(model, tokens); return; }
     this._ctx.state.ctxByRef[model.ref] = tokens;
     this.selectProfile(profile);
-  }
-
-  _ctxChip(model, opt) {
-    const spec = ContextOptionText.chip(opt, this.chosenCtx(model) === opt.tokens);
-    const chip = Dom.el('button', spec.cls.join(' '), HtmlEscaper.escape(spec.text));
-    chip.title = spec.tip;
-    chip.addEventListener('click', (e) => { e.stopPropagation(); this._pickContext(model, opt.tokens); });
-    return chip;
   }
 }

@@ -10,7 +10,6 @@ const StoryLedger = require('../world/StoryLedger');
 const OutfitWardrobe = require('../pipeline/OutfitWardrobe');
 
 class StageReconciler {
-  static UNLISTED_GRACE = 4;
 
   static apply(data, ex, delta, turn = {}) {
     StageReconciler._characters(data, ex.characters, delta);
@@ -22,6 +21,17 @@ class StageReconciler {
     }
     if (ex.chronicle) StageReconciler._chronicle(data, ex.chronicle, delta, turn);
     if (ex.currentState) StageReconciler._reveals(data, ex.currentState, delta, turn);
+    StageReconciler._dropDead(data, delta);
+  }
+
+  static _dropDead(data, delta) {
+    const moment = data.currentState && Array.isArray(data.currentState.characters) ? data.currentState.characters : null;
+    if (!moment) return;
+    const kept = moment.filter((e) => {
+      const char = e && (CastResolver.byName(data, e.name) || (data.characters || []).find((c) => c && c.id === e.charId));
+      return !(char && StageReconciler.isDead(char));
+    });
+    if (kept.length !== moment.length) { data.currentState.characters = kept; delta.changed = true; }
   }
 
   static _reveals(data, state, delta, turn) {
@@ -92,6 +102,7 @@ class StageReconciler {
     let char = CastResolver.byName(data, sc.name);
     if (!char && sc.present !== false) char = delta.addCharacter(data, { name: sc.name });
     if (!char) return null;
+    if (StageReconciler.isDead(char)) return null;
     if (char.state && char.state.unlisted) { delete char.state.unlisted; delta.changed = true; }
     if (sc.beat && CharacterChronicle.addBeat(char, { turn: turn.turn, messageId: turn.messageId, text: sc.beat })) delta.changed = true;
     if (Array.isArray(sc.noticed) && sc.noticed.length && CharacterMarks.add(char, sc.noticed, turn.turn)) delta.changed = true;
@@ -117,6 +128,11 @@ class StageReconciler {
     return entry;
   }
 
+  static isDead(char) {
+    const seen = CharacterState.of(char).lastSeen;
+    return !!(seen && /^dead:/i.test(String(seen.note || '')));
+  }
+
   static _departures(data, state, presentIds, sceneId, delta, turn) {
     const before = CastResolver.currentEntries(data).map((e) => e.char);
     const named = new Set((state.characters || []).map((c) => String(c.name || '').toLowerCase()));
@@ -125,14 +141,8 @@ class StageReconciler {
     const kept = [];
     for (const char of before) {
       if (presentIds.has(char.id) || named.has(String(char.name || '').toLowerCase())) continue;
-      const missed = (Number(char.state && char.state.unlisted) || 0) + 1;
-      if (!moved && missed < StageReconciler.UNLISTED_GRACE) {
-        char.state = Object.assign({}, char.state, { unlisted: missed });
-        kept.push(char);
-        delta.changed = true;
-        continue;
-      }
-      if (char.state && char.state.unlisted) { delete char.state.unlisted; delta.changed = true; }
+      if (char.state && char.state.unlisted !== undefined) { delete char.state.unlisted; delta.changed = true; }
+      if (!moved) { kept.push(char); continue; }
       if (CharacterState.depart(char, { turn: turn.turn, sceneId: prevScene || sceneId, note: '' })) delta.changed = true;
     }
     return kept;

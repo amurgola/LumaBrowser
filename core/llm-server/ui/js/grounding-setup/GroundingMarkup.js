@@ -1,3 +1,4 @@
+import FoldMemory from '../setup/FoldMemory.js';
 import ByteFormatter from '../format/ByteFormatter.js';
 import HtmlEscaper from '../format/HtmlEscaper.js';
 
@@ -19,8 +20,11 @@ export default class GroundingMarkup {
     if (view.configured) rows.push(GroundingMarkup._status(view));
     const lastError = s.error || view.lastError;
     if (lastError) rows.push(`<div class="plan-error"><div class="plan-error-title">Problem</div><div class="plan-error-advice">${HtmlEscaper.escape(lastError)}</div></div>`);
-    rows.push(`<div style="margin:8px 0">${(view.recommended || []).map((r) => GroundingMarkup._recommended(r, s)).join('')}</div>`);
-    rows.push(`<div class="plan-action-row">${GroundingMarkup._buttons(view, running, s).join(' ')}</div>`);
+    if (view.configured) rows.push(GroundingMarkup._changeFold(view, running, s));
+    else {
+      rows.push(GroundingMarkup._recommendedList(view, s, true));
+      rows.push(`<div class="plan-action-row">${GroundingMarkup._buttons(view, running, s).join(' ')}</div>`);
+    }
     rows.push('<p class="luma-muted">Loads when first needed and unloads after 10 idle minutes.</p>');
     if (s.desktop && s.desktop.supported) rows.push(GroundingMarkup._desktop(s.desktop.enabled));
     return rows.join('');
@@ -32,7 +36,21 @@ export default class GroundingMarkup {
       + `<div class="kv-row"><span class="kv-key">Server</span><span class="kv-val">${esc(GroundingMarkup.STATE_LABEL[view.state] || view.state)}${view.port ? ` <span class="luma-muted">:${view.port}</span>` : ''}</span></div>`;
   }
 
-  static _recommended(r, s) {
+  static _changeFold(view, running, s) {
+    const open = s.dl ? 'open' : FoldMemory.attr('grounding.change', false);
+    const picker = `<button class="luma-btn luma-btn--sm" data-g-pick ${s.busy || s.dl ? 'disabled' : ''}>Choose a GGUF…</button>`;
+    return `<div class="plan-action-row">${GroundingMarkup._buttons(view, running, s).filter((b) => !b.includes('data-g-pick')).join(' ')}</div>`
+      + `<details class="setup-fold" data-fold-key="grounding.change" ${open}>`
+      + '<summary><span class="setup-fold-title">Change vision model</span></summary>'
+      + `<div class="setup-fold-body">${GroundingMarkup._recommendedList(view, s, false)}<div class="plan-action-row">${picker}</div></div>`
+      + '</details>';
+  }
+
+  static _recommendedList(view, s, primary) {
+    return `<div style="margin:8px 0">${(view.recommended || []).map((r) => GroundingMarkup._recommended(r, s, primary)).join('')}</div>`;
+  }
+
+  static _recommended(r, s, primary = true) {
     const esc = HtmlEscaper.escape;
     const blocked = s.busy || s.dl ? 'disabled' : '';
     let action;
@@ -45,7 +63,7 @@ export default class GroundingMarkup {
     } else if (r.installed) {
       action = `<button class="luma-btn luma-btn--sm" data-g-use="${esc(r.id)}" ${blocked}>Use</button>`;
     } else {
-      action = `<button class="luma-btn primary luma-btn--sm" data-g-dl="${esc(r.id)}" ${blocked}>Download (~${r.approxGb} GB)</button>`;
+      action = `<button class="luma-btn${primary ? ' primary' : ''} luma-btn--sm" data-g-dl="${esc(r.id)}" ${blocked}>Download (~${r.approxGb} GB)</button>`;
     }
     return `<div class="defaults-row"><span>${esc(r.label)}</span><span>${action}</span></div>`;
   }

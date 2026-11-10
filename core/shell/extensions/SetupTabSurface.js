@@ -27,6 +27,7 @@ class SetupTabSurface extends ContextSurface {
       id: descriptor.id || extensionId,
       label: descriptor.label,
       url: descriptor.url || (descriptor.file ? uiUrl(descriptor.file) : null),
+      group: descriptor.group,
     };
   }
 }

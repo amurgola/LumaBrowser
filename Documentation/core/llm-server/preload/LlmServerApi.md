@@ -42,3 +42,7 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `onShowSetup(cb)` | subscribe `core.llmServer.showSetup` |
 | `onOpenConversation(cb)` | subscribe `core.llmServer.openConversation` |
 | `onPalette(cb)` | subscribe `core.llmServer.palette` (the search palette's deep links, see [PaletteDeepLinks](../ui/js/chat/PaletteDeepLinks.md)) |
+
+## Changes (2026-11-09, helper model)
+
+`getHelperModelStatus()` invokes `core.llmServer.getHelperModelStatus`.

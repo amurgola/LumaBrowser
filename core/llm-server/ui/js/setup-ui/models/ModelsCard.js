@@ -1,4 +1,5 @@
 import StatusLine from '../StatusLine.js';
+import SystemStatus from '../system/SystemStatus.js';
 import AddonModels from './AddonModels.js';
 import DrafterDownloads from './DrafterDownloads.js';
 import DrafterModal from './DrafterModal.js';
@@ -40,6 +41,7 @@ export default class ModelsCard {
     const body = this._body();
     if (!this._ensureScaffold(body)) return;
     this._paintPill(scan);
+    SystemStatus.emit(this._ctx.doc, 'models', SystemStatus.models(config, scan));
     body.querySelector('[data-ml-chrome="top"]').innerHTML = ModelsCardHtml.controls(config) + ModelsCardHtml.listNote(scan);
     body.querySelector('[data-ml-chrome="list-note"]').innerHTML = '';
     body.querySelector('[data-ml-chrome="bottom"]').innerHTML = ModelsCardHtml.bottom(scan);
@@ -126,5 +128,6 @@ export default class ModelsCard {
     const body = this._body();
     body.className = 'luma-error';
     body.textContent = text;
+    SystemStatus.emit(this._ctx.doc, 'models', SystemStatus.error(text));
   }
 }

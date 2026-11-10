@@ -100,3 +100,7 @@ a check: `getModelCaps` `{ caps: null }`, `getPeerGpus` `{ peers: [], active: fa
 Chat events (`chat`, `chat2`, `chat.completeStream`) go to the calling renderer
 on `core.llmServer.chatEvent` `{ requestId, type, payload }`. Every progress
 stream uses `SenderStream`, which skips a destroyed renderer.
+
+## Changes (2026-11-09, helper model)
+
+`getHelperModelStatus` -> `{ status: svc.helperModel.getStatus() }` (185 channels).

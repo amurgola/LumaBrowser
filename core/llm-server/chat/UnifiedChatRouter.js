@@ -15,6 +15,7 @@ const RemoteStream = require('./router/RemoteStream');
 const LocalServerPrep = require('./router/LocalServerPrep');
 const LocalRequest = require('./router/LocalRequest');
 const LocalStream = require('./router/LocalStream');
+const HelperStream = require('./router/HelperStream');
 const ModelDispatcher = require('./router/ModelDispatcher');
 const AgentCompletion = require('./router/AgentCompletion');
 const SideCompletion = require('./router/SideCompletion');
@@ -79,6 +80,12 @@ class UnifiedChatRouter {
   }
 
   generateTitle(conversationId) { return this._titles.generate(conversationId); }
+
+  observeDispatch(observer) {
+    const d = this._dispatcher;
+    return d && typeof d.observe === 'function' ? d.observe(observer) : () => {};
+  }
+
   complete(opts) { return this._side.complete(opts); }
   completeStream(opts, ext) { return this._side.completeStream(opts, ext); }
 
@@ -154,6 +161,7 @@ class UnifiedChatRouter {
       db: this.db,
       localStream: new LocalStream({ llmServerService: service, prep, request }),
       remoteStream: new RemoteStream({ db: this.db }),
+      helperStream: this._helperStream(seams),
       modelSettings: this._modelSettings(),
     });
     this._dispatch = (...args) => this._dispatcher.dispatch(...args);
@@ -212,6 +220,21 @@ class UnifiedChatRouter {
       inFlight: this._inFlight,
       reclaimer: this._reclaimer,
     };
+  }
+
+  _helperStream(seams) {
+    const helper = this.llmServerService && this.llmServerService.helperModel;
+    if (!helper || typeof helper.readyRef !== 'function') return null;
+    return new HelperStream({
+      helper,
+      runtimeCatalog: seams.runtimeCatalog || LlmRuntimeCatalog.shared,
+      adapterRegistry: seams.adapterRegistry || ChatAdapterRegistry,
+    });
+  }
+
+  helperModelRef() {
+    const helper = this.llmServerService && this.llmServerService.helperModel;
+    try { return helper && typeof helper.readyRef === 'function' ? helper.readyRef() : null; } catch (_) { return null; }
   }
 
   _modelSettings() {

@@ -1,21 +1,24 @@
+import RuntimeRowHtml from './RuntimeRowHtml.js';
+
 export default class RuntimeUpdateBadge {
   static apply(row, info, doc = document) {
     if (!row || !info) return;
-    RuntimeUpdateBadge._button(row.querySelector('button[data-runtime-action="install"]'), info);
+    RuntimeUpdateBadge._state(row, info);
     RuntimeUpdateBadge._pill(row, info, doc);
   }
 
-  static _button(btn, info) {
-    if (!btn) return;
+  static _state(row, info) {
+    const slot = row.querySelector('[data-runtime-state]');
+    if (!slot) return;
+    const id = row.dataset.runtimeRow || '';
     if (info.updateAvailable) {
-      btn.textContent = 'Update';
-      btn.dataset.updateAvailable = '1';
-      btn.title = info.latest ? `Update ${info.current} → ${info.latest}` : 'Newer release available upstream';
-    } else if (btn.dataset.updateAvailable === '1') {
-      btn.textContent = 'Update';
-      delete btn.dataset.updateAvailable;
-      btn.title = '';
+      slot.innerHTML = RuntimeRowHtml.installButton(id, 'Update', info.latest ? `Update ${info.current} → ${info.latest}` : 'Newer release available upstream');
+      slot.classList.remove('is-current');
+      return;
     }
+    slot.textContent = 'Up to date';
+    slot.classList.add('is-current');
+    slot.title = info.current ? `Installed ${info.current} is the latest release` : '';
   }
 
   static _pill(row, info, doc) {

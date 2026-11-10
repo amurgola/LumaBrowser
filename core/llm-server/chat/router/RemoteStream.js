@@ -45,6 +45,7 @@ class RemoteStream {
       model: modelId,
       chatTemplateKwargs: (extra && extra.chatTemplateKwargs) || undefined,
       reasoningBudget: (extra && typeof extra.reasoningBudget === 'number') ? extra.reasoningBudget : undefined,
+      response_format: (extra && extra.responseFormat && typeof extra.responseFormat === 'object') ? extra.responseFormat : undefined,
       sessionId: peerTurnId || undefined,
       max_tokens: (extra && typeof extra.maxReplyTokens === 'number') ? extra.maxReplyTokens : undefined,
     };

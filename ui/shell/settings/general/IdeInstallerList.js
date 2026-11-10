@@ -1,12 +1,14 @@
 import SettingToggle from './SettingToggle.js';
+import FoldGroups from './FoldGroups.js';
 
 export default class IdeInstallerList {
   static JETBRAINS = {
     ns: 'idePlugin',
     prefix: 'gsIdePlugin',
+    fold: 'jetbrains',
     autoInstall: true,
     copy: {
-      noun: 'Plugin', one: 'IDE', many: 'IDEs',
+      noun: 'Plugin', one: 'IDE', many: 'IDEs', noneShort: 'No JetBrains IDE found',
       notBundled: 'The JetBrains plugin is not bundled in this build.',
       noneFound: 'No JetBrains IDE found for this user yet. Run the IDE once, then rescan.',
       restartHint: 'Restart the IDE if it is open.',
@@ -18,8 +20,9 @@ export default class IdeInstallerList {
   static VSCODE = {
     ns: 'vscodeExtension',
     prefix: 'gsVscodeExt',
+    fold: 'vscode',
     copy: {
-      noun: 'Extension', one: 'editor', many: 'editors',
+      noun: 'Extension', one: 'editor', many: 'editors', noneShort: 'No editor found',
       notBundled: 'The VS Code extension is not bundled in this build.',
       noneFound: 'No VS Code, VS Code Insiders, VSCodium, Cursor or Windsurf installation was found on this machine.',
       restartHint: 'Reload the editor window if it is open.',
@@ -31,8 +34,9 @@ export default class IdeInstallerList {
   static WINDHAWK = {
     ns: 'windhawkMods',
     prefix: 'gsWindhawk',
+    fold: 'windhawk',
     copy: {
-      noun: 'Mod', one: 'mod', many: 'mods',
+      noun: 'Mod', one: 'mod', many: 'mods', noneShort: 'Windhawk not found',
       notBundled: 'The Windhawk mods are not bundled in this build.',
       noneFound: 'Windhawk was not found on this machine.',
       restartHint: 'Manage it in Windhawk.',
@@ -47,6 +51,8 @@ export default class IdeInstallerList {
   constructor({ feedback, config }) {
     this._feedback = feedback;
     this._ns = config.ns;
+    this._fold = config.fold || null;
+    this._foldAction = null;
     this._copy = config.copy;
     this._list = document.getElementById(`${config.prefix}List`);
     this._help = document.getElementById(`${config.prefix}Help`);
@@ -62,6 +68,7 @@ export default class IdeInstallerList {
     if (this._installAll) this._installAll.addEventListener('click', () => this.run('install', []));
     if (this._refresh) this._refresh.addEventListener('click', () => this.load());
     SettingToggle.wire(this._auto, (v) => this._writeAutoInstall(v), this._feedback, () => this.load());
+    if (this._fold) FoldGroups.onAction(this._fold, () => { if (this._foldAction) this.run(this._foldAction.op, this._foldAction.ids); });
   }
 
   async load() {
@@ -69,6 +76,7 @@ export default class IdeInstallerList {
     let s = null;
     try { s = await window.ipcBridge.invoke(`core.settings.${this._ns}.status`); } catch (_) { s = null; }
     this._list.innerHTML = '';
+    this._summarize(s);
     if (!s || s.success === false || !s.available) {
       if (this._help) this._help.textContent = (s && s.error) || this._copy.notBundled;
       if (this._installAll) this._installAll.disabled = true;
@@ -112,6 +120,24 @@ export default class IdeInstallerList {
     return [n ? removed : `Nothing was removed${why}.`, failed.length ? 'error' : undefined];
   }
 
+  static summary(s, copy) {
+    if (!s || s.success === false || !s.available) return { text: 'Not available', attention: false, action: null };
+    const { newest } = IdeInstallerList.split(s.ides);
+    if (!newest.length) return { text: copy.noneShort || 'None found', attention: false, action: null };
+    const installed = newest.filter((ide) => ide.installed);
+    const stale = installed.filter((ide) => !ide.current);
+    const count = (n) => `${n} ${n === 1 ? copy.one : copy.many}`;
+    if (stale.length && copy.updateInPlace) {
+      return { text: `Update available for ${count(stale.length)}`, attention: true, action: { label: 'Update', op: 'install', ids: stale.map((ide) => ide.id) } };
+    }
+    if (!installed.length) return { text: 'Not installed', attention: false, action: { label: 'Install', op: 'install', ids: [] } };
+    const all = installed.length === newest.length;
+    const base = copy.installedVerb
+      ? (all ? `${count(installed.length)} installed` : `${installed.length} of ${count(newest.length)} installed`)
+      : (all ? `Installed in ${count(installed.length)}` : `Installed in ${installed.length} of ${count(newest.length)}`);
+    return { text: stale.length ? `${base}, updates on next start` : base, attention: false, action: null };
+  }
+
   static split(ides) {
     const list = Array.isArray(ides) ? ides : [];
     return { newest: list.filter((ide) => ide.latest !== false), older: list.filter((ide) => ide.latest === false) };
@@ -139,8 +165,17 @@ export default class IdeInstallerList {
     }
   }
 
+  _summarize(s) {
+    if (!this._fold) return;
+    const sum = IdeInstallerList.summary(s, this._copy);
+    this._foldAction = sum.action;
+    FoldGroups.summarize(this._fold, sum.text, { attention: sum.attention });
+    FoldGroups.setAction(this._fold, sum.action ? { label: this._busy ? 'Working…' : sum.action.label, disabled: this._busy } : null);
+  }
+
   _setBusy(on) {
     this._busy = on;
+    if (this._fold && this._foldAction) FoldGroups.setAction(this._fold, { label: on ? 'Working…' : this._foldAction.label, disabled: on });
     if (this._installAll) this._installAll.disabled = on;
     if (this._auto) this._auto.disabled = on;
     this._list.querySelectorAll('button.gs-action-btn').forEach((b) => { b.disabled = on; b.textContent = 'Working…'; });
@@ -164,7 +199,7 @@ export default class IdeInstallerList {
 
   static stateText(ide, sourceVersion, copy) {
     if (!ide.installed) return 'Not installed';
-    if (ide.current) return `Installed${ide.installedVersion ? ` (v${ide.installedVersion})` : ''}. ${copy.restartHint}`;
+    if (ide.current) return `Installed${ide.installedVersion ? ` (v${ide.installedVersion})` : ''}`;
     if (copy.staleText) return copy.staleText(ide, sourceVersion);
     return `Installed v${ide.installedVersion || '?'}, will update to v${sourceVersion} on next start.`;
   }
@@ -176,12 +211,13 @@ export default class IdeInstallerList {
     name.className = 'gs-ide-name';
     name.textContent = ide.label;
     const state = document.createElement('span');
-    state.className = 'gs-ide-state' + (ide.installed ? ' on' : '');
+    state.className = 'gs-ide-state' + (ide.installed && !ide.current ? ' stale' : '');
     state.textContent = IdeInstallerList.stateText(ide, sourceVersion, this._copy);
+    if (ide.installed && ide.current) state.title = this._copy.restartHint;
     if (ide.description) name.title = ide.description;
     const buttons = [];
     if (this._copy.updateInPlace && ide.installed && !ide.current) buttons.push(this._button('Update', 'install', ide.id));
-    buttons.push(this._button(ide.installed ? 'Remove' : 'Install', ide.installed ? 'uninstall' : 'install', ide.id));
+    buttons.push(ide.installed ? this._button('Remove', 'uninstall', ide.id, true) : this._button('Install', 'install', ide.id));
     row.append(name, state, ...buttons);
     return row;
   }
@@ -195,9 +231,9 @@ export default class IdeInstallerList {
     return btn;
   }
 
-  _button(label, op, id) {
+  _button(label, op, id, quiet = false) {
     const btn = document.createElement('button');
-    btn.className = 'gs-action-btn';
+    btn.className = quiet ? 'gs-action-btn gs-quiet-btn' : 'gs-action-btn';
     btn.textContent = this._busy ? 'Working…' : label;
     btn.disabled = this._busy;
     btn.addEventListener('click', () => this.run(op, [id]));

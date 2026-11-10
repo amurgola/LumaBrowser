@@ -1,11 +1,10 @@
 import HtmlEscaper from '../../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 import Dialogs from '../../../../core/llm-server/ui/js/dialogs/Dialogs.js';
+import ProviderCardShell from './ProviderCardShell.js';
 
 export default class PeerProviderCard {
   static build(config, peer, ctx) {
-    const card = document.createElement('div');
-    card.className = 'provider-card';
-    card.innerHTML = PeerProviderCard.html(config, peer);
+    const card = ProviderCardShell.build(PeerProviderCard.parts(config, peer));
     card.querySelector('[data-field="selectedModel"]').addEventListener('change', (e) => PeerProviderCard._pickModel(config, e.target.value, ctx));
     card.querySelector('.provider-peer-refresh-btn').addEventListener('click', (e) => PeerProviderCard._refresh(config, e.target, ctx));
     card.querySelector('.provider-peer-remove-btn').addEventListener('click', () => PeerProviderCard._remove(config, ctx));
@@ -22,15 +21,19 @@ export default class PeerProviderCard {
   }
 
   static html(config, peer) {
+    return ProviderCardShell.html(PeerProviderCard.parts(config, peer));
+  }
+
+  static parts(config, peer) {
     const esc = HtmlEscaper.escape;
     const online = !peer || peer.online !== false;
     const secure = !!(peer && peer.secure);
-    return `
-        <div class="provider-card-header">
-          <span class="provider-card-name">${esc(config.name || 'Shared peer')}</span>
-          <span class="provider-card-status ${online ? 'configured' : ''}">${online ? 'Connected' : 'Offline'}</span>
-        </div>
-        <div class="provider-card-body">
+    return {
+      name: config.name || 'Shared peer',
+      meta: PeerProviderCard.summary(config, peer),
+      status: online ? 'Connected' : 'Offline',
+      ok: online,
+      bodyHtml: `
           <div class="form-help">
             Another LumaBrowser shared over your network. ${esc(PeerProviderCard.summary(config, peer))}.
             <span class="${secure ? 'gs-status-ok' : 'gs-status-warn'}" title="${secure ? 'Traffic is encrypted with a certificate pinned at pair time' : 'This host does not offer an encrypted listener'}">${secure ? 'Encrypted' : 'Unencrypted'}</span>
@@ -51,10 +54,10 @@ export default class PeerProviderCard {
             <button class="btn btn-danger provider-peer-remove-btn">Remove</button>
           </div>
           <div class="form-help">
-            Enable/disable or inspect this connection in Settings, Network Sharing.
+            Enable, disable or inspect this connection under <button type="button" class="luma-btn link gs-inline-link" data-gs-goto="sharing">Network Sharing</button>.
           </div>
-        </div>
-      `;
+        `,
+    };
   }
 
   static async _pickModel(config, model, ctx) {

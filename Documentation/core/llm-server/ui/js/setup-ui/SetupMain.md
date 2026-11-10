@@ -3,7 +3,9 @@
 `core/llm-server/ui/js/setup-ui/SetupMain.js`
 
 Builds and starts the LLM tab's Setup main panel: the Defaults, launch plan,
-Runtimes and Models cards, the Server Info diagnostics, the
+Runtimes and Models cards, the [system status line](system/SystemStatusStrip.md)
+that folds the healthy system cards, the
+[Jump to a setting button](nav/SetupJumpButton.md), the Server Info diagnostics, the
 [Advanced view](advanced/AdvancedView.md), [extension Setup tabs](extensions/SetupExtensionTabs.md)
 and [sub-view navigation](nav/SetupNavigator.md), with their live event wiring.
 The page entry constructs it with the preload API and the collaborators other
@@ -20,7 +22,8 @@ modules own.
 - Cards built: runtimes, runtimeActions, fitTest, gambit, models, defaults,
   plan and `drivers` (the [DriverInstallPanel](diagnostics/DriverInstallPanel.md),
   whose reload is a forced `load`).
-- Public fields for the page entry: `navigator` ([SetupNavigator](nav/SetupNavigator.md)),
+- Public fields for the page entry: `systemStrip` ([SystemStatusStrip](system/SystemStatusStrip.md)),
+  `jumpButton` ([SetupJumpButton](nav/SetupJumpButton.md)), `navigator` ([SetupNavigator](nav/SetupNavigator.md)),
   `advanced` ([AdvancedView](advanced/AdvancedView.md)), `extensionTabs`
   ([SetupExtensionTabs](extensions/SetupExtensionTabs.md)), `ctx` ([SetupContext](SetupContext.md)).
 

@@ -20,6 +20,7 @@ export default class ImageDefaultsCard {
     this._wire(body);
     this._ramPinHint.refresh();
     this._panel.modelsCard.paintInstalledMeta();
+    if (this._panel.runtimesCard && typeof this._panel.runtimesCard.publishStatus === 'function') this._panel.runtimesCard.publishStatus();
   }
 
   _view() {

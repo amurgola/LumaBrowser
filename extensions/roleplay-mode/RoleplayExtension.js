@@ -42,6 +42,7 @@ class RoleplayExtension {
       mode,
       generateImage: (opts) => chat.generateImage(opts),
       complete: (opts) => chat.complete(opts),
+      router: () => HostGlobals.chatRouter(),
       Harness: this._requireCore('roleplay-lab/LabHarness'),
       imageDefaults: () => RoleplayExtension._imageDefaults(),
       chatStore: () => RoleplayExtension._chatStore(),

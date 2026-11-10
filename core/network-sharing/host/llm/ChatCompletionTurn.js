@@ -30,7 +30,13 @@ class ChatCompletionTurn extends SharedLlmTurn {
     this._wantAgent = ChatTurnInputs.wantsAgent(body, agentTurn);
     this._images = ChatTurnInputs.images(body.attachments);
     this._priorArtifacts = Array.isArray(body.priorArtifacts) ? body.priorArtifacts : [];
-    this._extra = ThinkingKnobs.extra(body, this._service.hostDialPosition());
+    this._extra = ChatCompletionTurn._withResponseFormat(ThinkingKnobs.extra(body, this._service.hostDialPosition()), body);
+  }
+
+  static _withResponseFormat(extra, body) {
+    const format = body && body.response_format;
+    if (!format || typeof format !== 'object') return extra;
+    return { ...(extra || {}), responseFormat: format };
   }
 
   _requestRefusal() {

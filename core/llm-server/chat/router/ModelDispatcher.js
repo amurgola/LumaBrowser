@@ -6,19 +6,35 @@ const RequestSettings = require('./RequestSettings');
 class ModelDispatcher {
   static UNTAGGED = { conversationId: null, turnId: null, callType: 'side' };
 
-  constructor({ db, localStream, remoteStream, modelSettings = null }) {
+  constructor({ db, localStream, remoteStream, helperStream = null, modelSettings = null }) {
     this._db = db;
     this._local = localStream;
     this._remote = remoteStream;
+    this._helper = helperStream;
     this._settings = modelSettings;
+    this._observers = new Set();
+  }
+
+  observe(observer) {
+    if (typeof observer !== 'function') return () => {};
+    this._observers.add(observer);
+    return () => { this._observers.delete(observer); };
   }
 
   async dispatch(modelRef, messages, temperature, hooks, images = [], tools = null, extra = null) {
     const { tag, rest } = ModelDispatcher._splitTrace(extra);
     const target = this._target(modelRef, rest);
     const applied = RequestSettings.apply({ settings: target.settings, temperature, extra: target.extra, callType: tag && tag.callType });
-    const runHooks = this._traced(hooks, tag, modelRef, { messages, temperature: applied.temperature, tools, extra: applied.extra, images });
+    const request = { modelRef: target.ref, messages, temperature: applied.temperature, tools, extra: applied.extra, images, trace: tag || null };
+    this._notify(request);
+    const runHooks = this._traced(hooks, tag, modelRef, request);
     return this._route(target.ref, messages, applied.temperature, runHooks, images, tools, applied.extra);
+  }
+
+  _notify(request) {
+    for (const observer of this._observers) {
+      try { observer(request); } catch (_) {}
+    }
   }
 
   _target(modelRef, extra) {
@@ -59,6 +75,10 @@ class ModelDispatcher {
   _route(modelRef, messages, temperature, hooks, images, tools, extra) {
     if (ChatModelRef.isLocal(modelRef)) {
       return this._local.stream(ChatModelRef.localName(modelRef), messages, temperature, hooks, images, tools, extra);
+    }
+    if (ChatModelRef.isHelper(modelRef)) {
+      if (!this._helper) throw new Error('No helper model is available on this build.');
+      return this._helper.stream(ChatModelRef.helperName(modelRef), messages, temperature, hooks, images, tools, extra);
     }
     const config = this._remoteConfig(modelRef);
     const sendMessages = images.length ? MessageImages.inject(messages, images) : messages;

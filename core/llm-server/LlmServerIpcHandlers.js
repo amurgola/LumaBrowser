@@ -207,6 +207,7 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('setDefaults', (_e, payload) => defaults.update(payload));
     LlmServerIpcHandlers._handle('getRamPinStatus', () => ({ status: svc.ramPin.getStatus() }));
     LlmServerIpcHandlers._handle('getGroupRouterStatus', () => ({ status: svc.groupRouter.getStatus() }));
+    LlmServerIpcHandlers._handle('getHelperModelStatus', () => ({ status: svc.helperModel.getStatus() }));
   }
 
   static _registerServer(svc, router, { availability, localModels }) {

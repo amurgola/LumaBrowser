@@ -4,7 +4,7 @@ import RuntimeProgressMarkup from './RuntimeProgressMarkup.js';
 export default class ImageRuntimeRow {
   static html(r, progress) {
     const esc = HtmlEscaper.escape;
-    const secondary = ImageRuntimeRow._secondary(r);
+    const secondary = ImageRuntimeRow._secondary(r, progress);
     return `
       <div class="runtime-row collapsed" data-runtime-id="${esc(r.id)}">
         <div class="runtime-head">
@@ -44,12 +44,20 @@ export default class ImageRuntimeRow {
 
   static _primary(r, progress) {
     if (progress && progress.phase !== 'failed') return '';
-    return `<button class="luma-btn luma-btn--sm" data-act="install" data-id="${HtmlEscaper.escape(r.id)}">${r.installed ? 'Update' : 'Install'}</button>`;
+    if (r.installed && !(progress && progress.phase === 'failed')) return '<span class="runtime-state" data-runtime-state></span>';
+    return ImageRuntimeRow.installButton(r.id, r.installed ? 'Retry' : 'Install');
   }
 
-  static _secondary(r) {
+  static installButton(id, label, title = '') {
+    const esc = HtmlEscaper.escape;
+    return `<button class="luma-btn luma-btn--sm" data-act="install" data-id="${esc(id)}"${title ? ` title="${esc(title)}"` : ''}>${esc(label)}</button>`;
+  }
+
+  static _secondary(r, progress) {
     const id = HtmlEscaper.escape(r.id);
     const actions = [];
+    const installing = !!(progress && progress.phase !== 'failed');
+    if (r.installed && !installing) actions.push(`<button class="luma-btn luma-btn--sm" data-act="install" data-id="${id}">Reinstall…</button>`);
     if (r.installed && r.source === 'managed') actions.push(`<button class="luma-btn luma-btn--sm" data-act="uninstall" data-id="${id}">Uninstall</button>`);
     if (r.installed && r.source === 'manual') actions.push(`<button class="luma-btn luma-btn--sm" data-act="clear" data-id="${id}">Clear registration</button>`);
     if (r.installed) actions.push(`<button class="luma-btn luma-btn--sm" data-act="relocate" data-id="${id}">Relocate…</button>`);

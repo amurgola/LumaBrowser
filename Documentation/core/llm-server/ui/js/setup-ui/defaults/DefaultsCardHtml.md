@@ -13,3 +13,7 @@ The Defaults card body and all its help copy.
 ## Globals
 
 None (FoldMemory reads `localStorage`).
+
+## Changes (2026-11-09, helper model)
+
+`_helperRows(rows, v)` under More settings when `v.helperAvailable` and the defaults carry `helperModel`: the `defaultHelperModel` toggle with the `helperModelHint` caption, and while it is on the `defaultHelperModelSelect` file row (`v.helperModelOptions`, the whole library) and the `defaultHelperContext` window row. Help texts `helperModel`, `helperModelFile`, `helperContext`.

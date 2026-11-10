@@ -79,7 +79,7 @@ export default class SettingsMenu {
       extensions: () => this._settings.open('extensions'),
       about: () => this._settings.open('about'),
       passwords: () => this._settings.open('passwords'),
-      'clear-data': () => { this._settings.open('general'); setTimeout(() => ClearBrowsingData.reveal(), 50); },
+      'clear-data': () => { this._settings.open(ClearBrowsingData.TAB); setTimeout(() => ClearBrowsingData.reveal(), 50); },
       exit: () => { if (window.windowAPI && window.windowAPI.close) window.windowAPI.close(); else window.close(); },
     };
   }

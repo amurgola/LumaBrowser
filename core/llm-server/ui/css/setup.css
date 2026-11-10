@@ -3,8 +3,27 @@
             align-items: baseline;
             gap: var(--space-3);
             margin-bottom: var(--space-1);
+            padding-right: 170px;
         }
         .page-eyebrow { display: none; }
+        .setup-jump {
+            margin-left: auto;
+            align-self: center;
+            gap: var(--space-2);
+            color: var(--text-secondary);
+        }
+        .setup-jump[hidden] { display: none; }
+        .setup-jump-keys { display: inline-flex; gap: 2px; }
+        .setup-jump-keys[hidden] { display: none; }
+        .setup-jump kbd {
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            padding: 0 4px;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-sm);
+            background: var(--bg-surface-2);
+            color: var(--text-secondary);
+        }
         .page-title {
             margin: 0;
             font-size: var(--text-xl);
@@ -845,6 +864,11 @@
             gap: 6px;
             align-items: flex-end;
         }
+        .runtime-state.is-current {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
         .runtime-progress {
             grid-column: 1 / 3;
             display: none;
@@ -987,6 +1011,57 @@
         .grid[data-view-pane="settings"] #cardModels {
             grid-column: span 1;
         }
+        .grid[data-view-pane="settings"] .sys-strip { grid-column: 1 / -1; }
+        .grid[data-view-pane="settings"] #cardRuntimes[data-sys-fold],
+        .grid[data-view-pane="settings"] #cardModels[data-sys-fold],
+        .grid[data-view-pane="settings"] #cardGrounding[data-sys-fold] { grid-column: 1 / -1; }
+        .grid[data-view-pane="settings"] #cardRuntimes:not(.sys-folded) + #cardModels:not(.sys-folded),
+        .grid[data-view-pane="settings"] #cardRuntimes:not(.sys-folded):has(+ #cardModels:not(.sys-folded)) {
+            grid-column: span 1;
+        }
+        [data-sys-fold].sys-folded { display: none; }
+        .sys-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-1);
+            padding: var(--space-1);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-xl);
+        }
+        .sys-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: var(--space-2);
+            min-width: 0;
+            max-width: 100%;
+            padding: 6px var(--space-3);
+            border: 0;
+            border-radius: var(--radius-lg);
+            background: transparent;
+            color: var(--text-primary);
+            font: inherit;
+            font-size: var(--text-md);
+            cursor: pointer;
+            transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+        }
+        .sys-item:hover { background: var(--bg-surface-2); }
+        .sys-item.is-open { background: var(--bg-surface-2); }
+        .sys-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .sys-label {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            flex: 0 0 auto;
+        }
+        .sys-value {
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .sys-item[data-tone="pending"] .sys-value,
+        .sys-item[data-tone="off"] .sys-value { color: var(--text-secondary); font-weight: 400; }
+        .sys-item[data-tone="attention"] .sys-value { color: var(--warning); }
 
         .grid[data-view-pane="image"] {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -996,6 +1071,13 @@
         }
         .grid[data-view-pane="image"] #cardImageRuntimes,
         .grid[data-view-pane="image"] #cardImageModels {
+            grid-column: span 1;
+        }
+        .grid[data-view-pane="image"] .sys-strip { grid-column: 1 / -1; }
+        .grid[data-view-pane="image"] #cardImageRuntimes[data-sys-fold],
+        .grid[data-view-pane="image"] #cardImageModels[data-sys-fold] { grid-column: 1 / -1; }
+        .grid[data-view-pane="image"] #cardImageRuntimes:not(.sys-folded):has(+ #cardImageModels:not(.sys-folded)),
+        .grid[data-view-pane="image"] #cardImageRuntimes:not(.sys-folded) + #cardImageModels:not(.sys-folded) {
             grid-column: span 1;
         }
 

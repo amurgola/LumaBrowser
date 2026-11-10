@@ -1,7 +1,7 @@
 module.exports = {
   id: 'roleplay-mode',
   name: 'Roleplay Mode',
-  version: '1.1.0',
+  version: '1.2.0',
   description:
     'Adds an interactive scene-and-character roleplay mode to the LLM chat: '
     + 'scenarios, characters with generated/uploaded avatars, navigable scene '

@@ -62,9 +62,24 @@ class HostManifestBuilder {
       this._manifest.llms.push({ ref: model.ref, label: model.label, kind: 'local', current: true, readOnly: true, contextWindow });
       return;
     }
+    if (model.isHelper || model.role === 'helper') {
+      if (!this._flags.shareLocalLlm) return;
+      this._manifest.llms.push({ ref: model.ref, label: model.label, kind: 'helper', contextWindow: this._helperWindow(model.ref) });
+      return;
+    }
     if (!this._flags.shareRemoteLlms) return;
     if (typeof model.ref === 'string' && model.ref.startsWith('peer:')) return;
     this._manifest.llms.push({ ref: model.ref, label: model.label, kind: 'remote', providerType: model.providerType });
+  }
+
+  _helperWindow(ref) {
+    try {
+      const router = this._host.getChatRouter();
+      const n = router && typeof router.contextWindowFor === 'function' ? Number(router.contextWindowFor(ref)) : NaN;
+      return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   async _resolveGpus() {

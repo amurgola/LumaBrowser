@@ -17,17 +17,27 @@ class HistoryTrimmer {
     return { messages: list.slice(cut), dropped: cut };
   }
 
-  static withoutReasoning(messages) {
+  static withoutDebris(messages) {
     const list = Array.isArray(messages) ? messages : [];
-    const THINK = /<think>[\s\S]*?<\/think>\s*/gi;
     let cleaned = 0;
     const out = list.map((m) => {
-      if (!m || m.role !== 'assistant' || typeof m.content !== 'string' || !/<think>/i.test(m.content)) return m;
+      if (!m || m.role !== 'assistant' || typeof m.content !== 'string') return m;
+      const content = HistoryTrimmer.stripDebris(m.content);
+      if (content === m.content) return m;
       cleaned += 1;
-      return Object.assign({}, m, { content: m.content.replace(THINK, '').trim() });
+      return Object.assign({}, m, { content });
     });
     return cleaned ? { messages: out, cleaned } : { messages: list, cleaned: 0 };
   }
+
+  static stripDebris(text) {
+    const s = String(text || '');
+    if (!/<think>|```choices/i.test(s)) return s;
+    return s.replace(HistoryTrimmer.THINK, '').replace(HistoryTrimmer.CHOICES, '').trim();
+  }
+
+  static THINK = /<think>[\s\S]*?<\/think>\s*/gi;
+  static CHOICES = /```choices[^\S\n]*\n?[\s\S]*?(?:```|$)/gi;
 
   static _indexKeeping(list, tokenBudget) {
     let used = 0;

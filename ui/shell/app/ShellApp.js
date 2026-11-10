@@ -134,7 +134,7 @@ export default class ShellApp {
     });
     this.prompts = new PermissionPrompts({ store, addressBar: this.addressBar });
     this.popupBadge = new PopupBlockedBadge({ store, popupMenu });
-    this.siteInfo = new SiteInfoMenu({ store, popupMenu, openSettings: () => this.settings.open('security') });
+    this.siteInfo = new SiteInfoMenu({ store, popupMenu, openSettings: () => this.settings.open('privacy') });
     const openPasswords = () => this.settings.open('passwords');
     this.vaultKey = new VaultKeyBadge({ store, popupMenu, openPasswords });
     this.vaultPrompt = new VaultSavePrompt({ store, addressBar: this.addressBar, onAnswered: () => this.vaultKey.update(store.active()) });

@@ -20,3 +20,7 @@ All static.
 ## Why
 
 Every router class parses refs; one reader keeps the rules (first separator, empty provider id) in one place.
+
+## Changes (2026-11-09, helper model)
+
+`helper::<modelStem>` names the resident helper model ([HelperModelService](../../helper/HelperModelService.md)): `HELPER_PREFIX`, `isHelper(ref)`, `helperName(ref)`; `providerTag` answers `helper`.

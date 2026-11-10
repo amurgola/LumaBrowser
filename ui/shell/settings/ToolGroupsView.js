@@ -12,6 +12,19 @@ export default class ToolGroupsView {
     draw();
   }
 
+  static countText(groups, onSet) {
+    let total = 0;
+    let active = 0;
+    for (const g of (groups || [])) for (const t of (g.tools || [])) {
+      total += 1;
+      if (onSet.has(t.name)) active += 1;
+    }
+    if (!total) return 'None available';
+    if (active === total) return `All ${total} on`;
+    if (!active) return 'All off';
+    return `${active} of ${total} on`;
+  }
+
   static _draw(container, list, onSet, expanded, esc, emptyText) {
     if (!list.length) {
       container.innerHTML = `<div class="luma-empty luma-empty--plain">${esc(emptyText || 'No tools available')}</div>`;

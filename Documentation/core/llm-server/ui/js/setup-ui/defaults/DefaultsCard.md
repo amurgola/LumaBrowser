@@ -16,3 +16,7 @@ The LLM Setup "Defaults" card: the runtime, model and launch settings Start uses
 ## Globals
 
 Reads `document` by id.
+
+## Changes (2026-11-09, helper model)
+
+The helper block's three controls are shared controls; the view carries `helperAvailable` (`api.getHelperModelStatus` exists) and `helperModelOptions` (the library's models with the helper's file selected); a [HelperModelHint](HelperModelHint.md) refreshes with the others.

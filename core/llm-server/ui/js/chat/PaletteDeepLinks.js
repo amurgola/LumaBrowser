@@ -1,4 +1,5 @@
 import SettingLink from './turns/SettingLink.js';
+import SystemStatus from '../setup-ui/system/SystemStatus.js';
 
 export default class PaletteDeepLinks {
   constructor(ctx) {
@@ -64,6 +65,7 @@ export default class PaletteDeepLinks {
   }
 
   static openFolds(el) {
+    SystemStatus.unfoldAround(el);
     for (let node = el.parentElement; node; node = node.parentElement) {
       if (node.tagName === 'DETAILS' && !node.open) node.open = true;
     }

@@ -4,6 +4,14 @@ class SetupTabRegistry extends ContributionRegistry {
   static ERROR_PREFIX = 'registerSetupTab';
   static ENTRY_NOUN = 'descriptor';
 
+  static GROUPS = ['engines', 'integrations', 'developer'];
+
+  static DEFAULT_GROUP = 'integrations';
+
+  static group(value) {
+    return SetupTabRegistry.GROUPS.includes(value) ? value : SetupTabRegistry.DEFAULT_GROUP;
+  }
+
   constructor() {
     super();
     this._handlers = new Map();
@@ -20,11 +28,11 @@ class SetupTabRegistry extends ContributionRegistry {
   }
 
   _toStored(descriptor, id) {
-    return { label: descriptor.label || id, url: descriptor.url || null, module: descriptor.module === true };
+    return { label: descriptor.label || id, url: descriptor.url || null, module: descriptor.module === true, group: SetupTabRegistry.group(descriptor.group) };
   }
 
   _toListed(tab) {
-    return { id: tab.id, label: tab.label, url: tab.url, module: tab.module };
+    return { id: tab.id, label: tab.label, url: tab.url, module: tab.module, group: tab.group };
   }
 
   _onExtensionRemoved(extensionId) {

@@ -40,7 +40,7 @@ export default class TelemetryPanel {
               <span class="gs-row-label">Anonymous check-in</span>
               <span class="gs-row-help">${esc(TelemetryPanel.checkInText(status))}</span>
             </div>
-            <button type="button" class="luma-btn ghost" data-gs-goto="general">Change in General</button>
+            <button type="button" class="luma-btn ghost" data-gs-goto="privacy">Change in Privacy &amp; permissions</button>
           </div>
           <div class="gs-row">
             <div class="gs-row-text">
