@@ -149,3 +149,4 @@ ide/jetbrains/.kotlin/
 ide/jetbrains/src/main/resources/webview/
 ide/vscode/media/
 ide/vscode/lib/
+/.idea/

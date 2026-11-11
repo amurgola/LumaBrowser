@@ -26,7 +26,10 @@ The `roleplay` chat mode descriptor.
   `groundingNotes` (the Lab logs it; the chat router reads only the fields it
   knows).
 - `RoleplayModeDescriptor.buildTurn(meta, { messages, contextWindow, grounding, surface })`
-  `{ systemPrompt, postHistoryPrompt, messages?, temperature: 0.9, modelRef?,
+  (also `stateInHead`: the registered `buildTurn` sets it unless the core passed
+  `capabilities.turnPrompt`, so an app older than the add-on, which would drop
+  the turn prompt, keeps the story state in the system prompt)
+  `{ systemPrompt, turnPrompt?, postHistoryPrompt, messages?, temperature: 0.9, modelRef?,
   compact: false, samplers? }` from [NarratorContext](../prompts/NarratorContext.md)
   and [RoleplaySamplers](RoleplaySamplers.md); `messages` (the trimmed history)
   only when something was cut or earlier replies were stripped of inline

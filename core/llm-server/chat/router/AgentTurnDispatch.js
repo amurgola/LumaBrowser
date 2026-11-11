@@ -25,6 +25,7 @@ class AgentTurnDispatch {
       conversationId: t.convId,
       assistantMessageId: t.asstId,
       userMessageId: t.userMessageId || null,
+      userText: t.userText || null,
       deps,
       hooks: t.hooks,
       priorMessages: this._priorMessages(t.convId, t.asstId),

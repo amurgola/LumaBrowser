@@ -6,8 +6,7 @@ class HistoryTrimmer {
     if (list.length <= PromptBudget.MIN_HISTORY_MESSAGES || PromptBudget.estimateMessages(list) <= tokenBudget) {
       return { messages: list, dropped: 0 };
     }
-    let cut = HistoryTrimmer._indexKeeping(list, tokenBudget);
-    while (cut > 0 && !HistoryTrimmer._isUserTurn(list[cut])) cut -= 1;
+    let cut = HistoryTrimmer._steppedCut(list, tokenBudget);
     const maxCut = Math.max(0, list.length - PromptBudget.MIN_HISTORY_MESSAGES);
     if (cut > maxCut) {
       cut = maxCut;
@@ -38,6 +37,23 @@ class HistoryTrimmer {
 
   static THINK = /<think>[\s\S]*?<\/think>\s*/gi;
   static CHOICES = /```choices[^\S\n]*\n?[\s\S]*?(?:```|$)/gi;
+
+  static STEP_SHARE = 0.25;
+
+  static _steppedCut(list, tokenBudget) {
+    const sizes = list.map((m) => PromptBudget.estimate(PromptBudget._text(m)) + 4);
+    const total = sizes.reduce((a, b) => a + b, 0);
+    const step = Math.max(1, Math.floor(tokenBudget * HistoryTrimmer.STEP_SHARE));
+    const drop = Math.ceil((total - tokenBudget) / step) * step;
+    let gone = 0;
+    let cut = 0;
+    while (cut < list.length && gone < drop) { gone += sizes[cut]; cut += 1; }
+    while (cut < list.length && !HistoryTrimmer._isUserTurn(list[cut])) cut += 1;
+    if (cut < list.length) return cut;
+    cut = HistoryTrimmer._indexKeeping(list, tokenBudget);
+    while (cut > 0 && !HistoryTrimmer._isUserTurn(list[cut])) cut -= 1;
+    return cut;
+  }
 
   static _indexKeeping(list, tokenBudget) {
     let used = 0;

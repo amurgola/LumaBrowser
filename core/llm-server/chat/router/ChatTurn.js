@@ -2,6 +2,7 @@ const ChatModelRef = require('./ChatModelRef');
 const ChatModeRegistry = require('../ChatModeRegistry');
 const ChatStyleDocs = require('./ChatStyleDocs');
 const DocsSourceGrant = require('./DocsSourceGrant');
+const EmptyReplyRetry = require('./EmptyReplyRetry');
 const MessageImages = require('./MessageImages');
 const ModeTurnMessages = require('./ModeTurnMessages');
 const TurnStream = require('./TurnStream');
@@ -228,6 +229,7 @@ class ChatTurn {
       convId: this._convId,
       asstId: asst.id,
       userMessageId: this._userMessageId,
+      userText: typeof a.userMessage === 'string' ? a.userMessage : null,
       hooks: this._stream.hooks,
       modeTurn: this._mode.turn,
       images,
@@ -253,8 +255,13 @@ class ChatTurn {
 
   _dispatchPlain(asst, dial, images) {
     const trace = { conversationId: this._convId, turnId: asst.id, callType: 'chat' };
-    return this._d.dispatcher.dispatch(this._modelRef, dial.messages, this._temperature, this._stream.hooks, images, null,
-      { ...(this._withSettingsRef(this._withModeSamplers(dial.plainExtra)) || {}), trace });
+    const extra = { ...(this._withSettingsRef(this._withModeSamplers(dial.plainExtra)) || {}), trace };
+    const stream = this._stream;
+    return new EmptyReplyRetry({
+      send: (hooks) => this._d.dispatcher.dispatch(this._modelRef, dial.messages, this._temperature, hooks, images, null, extra),
+      hooks: stream.hooks,
+      isFinished: () => stream.finished,
+    }).start();
   }
 
   _withSettingsRef(extra) {

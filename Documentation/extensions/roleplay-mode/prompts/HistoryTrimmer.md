@@ -11,6 +11,20 @@ Keeps the newest raw turns that fit the history budget.
   returns the same array when nothing was cut. The story summary stands in for
   what was dropped.
 
+## The cut moves in steps
+
+The tokens that must go (the total over the budget) are rounded up to a whole
+number of steps of `STEP_SHARE` (0.25) of the budget, counted from the oldest
+message, and the cut lands on the next user turn after that point. Counted
+from the start, the same old messages give the same sums on every turn, so
+the cut stays where it is while the thread grows and then jumps a step. The
+kept history is between about three quarters of the budget and all of it.
+
+Every move of the cut changes the first message the server sees, and it then
+re-reads the whole history. A cut that kept exactly the newest turns that fit
+moved by one exchange on every turn once the budget was reached, which made
+every turn a full re-read (see [NarratorContext](NarratorContext.md)).
+
 ## Debris
 
 `HistoryTrimmer.withoutDebris(messages)` -> `{ messages, cleaned }` strips

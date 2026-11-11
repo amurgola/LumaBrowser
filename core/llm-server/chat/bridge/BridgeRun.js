@@ -47,7 +47,7 @@ class BridgeRun {
     extraTools: null, llmExtra: null, noBrowser: false, ctxPerSlot: null, kbScope: null, allowTakeover: false,
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
     approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null,
-    approvedTools: null, onRunApproval: null, onRunApprovalUsed: null, userMessageId: null,
+    approvedTools: null, onRunApproval: null, onRunApprovalUsed: null, userMessageId: null, userText: null,
   };
 
   constructor(host, options) {
@@ -164,9 +164,13 @@ class BridgeRun {
   _prepareTurn() {
     const o = this._o;
     this._turn = TurnPrompt.from(o.messages, { nativeHistory: o.nativeHistory, sentForms: o.priorMessages });
-    this._toolSet.groups.activate(GroupIntent.infer(this._turn.prompt, this._toolSet.groups.availableKeys));
+    this._toolSet.groups.activate(GroupIntent.infer(this._intentText(), this._toolSet.groups.availableKeys));
     this._catalog = ArtifactCatalog.collect(o.priorMessages);
     this._visionHint = VisionHint.forTurn(this._images.count, this._toolSet.visionActive);
+  }
+
+  _intentText() {
+    return typeof this._o.userText === 'string' && this._o.userText.trim() ? this._o.userText : this._turn.prompt;
   }
 
   async _execute() {
@@ -186,7 +190,7 @@ class BridgeRun {
   async _runAgent(preview) {
     const o = this._o;
     const groups = this._toolSet.groups;
-    await new GroupRouting(this._router).route(this._turn.prompt, (keys) => groups.activate(keys));
+    await new GroupRouting(this._router).route(this._intentText(), (keys) => groups.activate(keys));
     groups.freezePromptKeys();
     const nativeTools = this._nativePlan.enabled;
     this._pendingManuals = groups.pendingManualKeys(ManualDelivery.carriedKeys(groups, this._turn.priorTurns, { nativeTools }));

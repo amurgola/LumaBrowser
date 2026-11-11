@@ -15,4 +15,6 @@ One chat turn, built fresh for every `chat()` call.
 
 A nested turn must not supersede: the turn it would abort is the parent waiting on it.
 
+The plain path dispatches through [EmptyReplyRetry](EmptyReplyRetry.md): a reply that comes back with no visible text (a model that answered inside its reasoning and stopped) is asked for again, up to twice, as the agentic path already does. The agentic dispatch also gets `userText`, the user's own words, so the bridge's tool-group heuristics do not read what a mode wrote around them.
+
 The supersede keeps the warm server and its KV cache: a healthy llama-server frees its slot on disconnect, and a wedged slot is the explicit Stop's job. Per-turn state lives on a per-turn object, since a second turn can start while the first awaits compaction.

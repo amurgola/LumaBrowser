@@ -15,7 +15,8 @@ normalises its output onto the chat router's hooks.
 - `start()` returns `{ abort, done }`. Setup is synchronous (and throws for a
   missing `deps`); `done` runs the turn and resolves after the terminal hook.
 - `BridgeRun.DEFAULTS` (now also `userMessageId`, the stored user row this
-  turn's task came from), `IMAGES_GROUP`.
+  turn's task came from, and `userText`, what the user typed without what a
+  mode wrote around it), `IMAGES_GROUP`.
 
 ## Flow
 
@@ -36,7 +37,11 @@ normalises its output onto the chat router's hooks.
    deps.db)`.
 4. Turn: [TurnPrompt](prompt/TurnPrompt.md) (with `priorMessages` as the sent
    forms, so a prior user turn keeps the manuals it delivered), groups
-   pre-activated by [GroupIntent](groups/GroupIntent.md), the
+   pre-activated by [GroupIntent](groups/GroupIntent.md) from `userText`
+   when the caller passed it, else from the task (the router's group routing
+   reads the same text: a roleplay's story state and scene notes ride in the
+   task, and a phrase such as "recent events" there loaded the web group and
+   its manual for nothing), the
    [ArtifactCatalog](prompt/ArtifactCatalog.md), the [VisionHint](prompt/VisionHint.md).
 5. `done`: [GroupRouting](groups/GroupRouting.md), then the group state's
    `freezePromptKeys` (the conversation's first turn fixes the groups the

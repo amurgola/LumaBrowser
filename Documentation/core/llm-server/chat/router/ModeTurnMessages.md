@@ -10,6 +10,10 @@ Shapes one turn's messages from what a chat mode's `buildTurn` returned.
   messages to run. In order: the mode's `turn.messages` replace the page's thread
   when they are a non-empty list of role-bearing messages, no longer than the
   thread, ending on the same newest message (same role and content); then
+  `turn.turnPrompt` (trimmed, capped at `MAX_TURN_PROMPT_CHARS` 64000) is
+  written after the newest user message's own text (`\n\n` plus the text, or
+  an appended text part on a multimodal message), and left out when the
+  thread does not end on a user turn; then
   `turn.postHistoryPrompt` (trimmed, capped at `MAX_POST_HISTORY_CHARS` 4000) is
   folded into the newest user message (`\n\n` plus the text, or an appended text
   part on a multimodal message), or trails as a `system` message when the thread

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.1.6
+
+### Changes
+- **Roleplay turns re-read far less with a local model.** The story so far, the cast cards, the up-close notes, who is off stage and the setting now go in the newest message, after the player's own text, rather than in the system prompt. The system prompt keeps only what holds from turn to turn: the brief, the premise and the cast's body notes. llama-server reuses a request only up to the first changed character, so a system prompt that changed every turn made it read the whole history again. A 32-turn run at an 8k window re-read 138,641 of 140,265 narrator prompt tokens; now only the new tail is read. A change of cast still re-reads the history once.
+  - The story state opens with its own line, so the model reads it as the narrator's notes and not as something the player said. The player's text comes first: with the state ahead of it, Qwen3.8-27B's reasoning grew from 1,900 to 4,400 characters on average and one reply in twelve came back empty. With the state after the text it reasons about 2,450 characters and no replies came back empty.
+  - **The history trim moves in steps.** It used to drop one exchange per turn once the budget was reached, which changed the first message, and so caused a full re-read, on every turn. It now holds the cut in place and moves it by a quarter of the budget at a time. The kept history is between about three quarters of the budget and all of it.
+  - Chat modes can return a `turnPrompt`, written after the newest message's own text (capped at 64,000 characters), for context that changes every turn. `buildTurn` receives `capabilities` so a mode can tell whether the app places it. On an older app, the roleplay add-on keeps its story state in the system prompt as before.
+- **Empty replies are asked for again on the plain chat path.** A reasoning model that wrote its whole answer inside its reasoning and stopped used to leave a blank bubble. The request is now re-sent (up to twice, unchanged, so nothing is re-read), as the Tools-on path already did. Stop, a newer turn and native tool calls are never retried.
+- **Tool groups are picked from what the user typed.** The Tools-on path used to read the whole task, including a roleplay's story state and scene notes. A phrase such as "recent events" there loaded the web tools and their manual for nothing.
+- **Roleplay Lab:** the context audit reports the story state separately from the system head.
+
 ## 2.1.5
 
 ### New features

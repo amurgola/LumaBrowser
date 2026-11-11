@@ -35,8 +35,12 @@ scene notes, which is deliberate.
 
 ## Methods
 
-- `ContextAudit.of(messages)` -> `{ total, system, layers, history,
+- `ContextAudit.of(messages)` -> `{ total, system, state, layers, history,
   historyMessages, think, anchor, user, duplicates: [{ a, b, words, sample }],
-  duplicateWords }`.
-- `sections(systemPrompt)`, `duplicates(parts)`, `shingles(text)`.
+  duplicateWords }`. `system` is the stable head; `state` is the story state
+  the mode writes after the player's text in the newest message
+  ([NarratorContext](../prompts/NarratorContext.md)); `layers` covers both.
+- `splitState(text)` -> `{ state, user }` for the newest message without its
+  scene notes; `sections(prompt, lead = 'brief')`, `duplicates(parts)`,
+  `shingles(text)`.
 - `summary(audits)` -> averages over the run plus `peak`, or null.

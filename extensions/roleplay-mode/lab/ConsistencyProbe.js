@@ -4,7 +4,7 @@ const SpeakerNames = require('../prompts/SpeakerNames');
 class ConsistencyProbe {
   static run({ data, transcript, facts }) {
     const checks = [];
-    const context = NarratorContext.build(data || {}).systemPrompt;
+    const context = NarratorContext.build(data || {}).contextText;
     for (const f of facts || []) {
       checks.push(ConsistencyProbe._retained(f, context));
       if (f.askTurn) checks.push(ConsistencyProbe._recalled(f, transcript));

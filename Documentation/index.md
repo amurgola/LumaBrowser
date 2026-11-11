@@ -2678,6 +2678,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/delegation/SubConversationRun.md](core/llm-server/chat/delegation/SubConversationRun.md): one nested sub-conversation turn relayed to the parent as an agent card, approvals on the parent turn; has `run`.
 - [core/llm-server/chat/router/ArtifactAccess.md](core/llm-server/chat/router/ArtifactAccess.md): read and data access to stored artifacts for the sharing host, share links and the web client.
 - [core/llm-server/chat/router/AttachmentArtifacts.md](core/llm-server/chat/router/AttachmentArtifacts.md): promotes a turn's attached images to persisted artifacts linked to the user message.
+- [core/llm-server/chat/router/EmptyReplyRetry.md](core/llm-server/chat/router/EmptyReplyRetry.md): sends a plain chat request again when its reply came back with no visible text; has `start`, `abort`.
 - [core/llm-server/chat/router/EditRegionRecorder.md](core/llm-server/chat/router/EditRegionRecorder.md): records the regions a user painted on images onto the user row's toolCalls beside its artifacts; has `record`, `collect`, `fromStaged`, `publicRow`.
 - [core/llm-server/chat/router/ChatModeTurn.md](core/llm-server/chat/router/ChatModeTurn.md): resolves a conversation's extension chat mode for one turn.
 - [core/llm-server/chat/router/ChatModelList.md](core/llm-server/chat/router/ChatModelList.md): the chat's model picker list and default selection.

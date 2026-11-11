@@ -18,28 +18,37 @@ class NarratorContext {
   static ANCHOR_THREADS = 3;
   static ANCHOR_PER_CHARACTER = 40;
 
-  static build(data, { messages = [], contextWindow = null, grounding = null, surface = null } = {}) {
+  static STATE_OPEN = '[Story state for this reply. Your notes as narrator, not part of the player\'s message.]';
+
+  static build(data, { messages = [], contextWindow = null, grounding = null, surface = null, stateInHead = false } = {}) {
     const d = data || {};
     const window = PromptBudget.window(d, contextWindow);
     const cast = NarratorContext.cast(d);
     const scene = SceneLocator.active(d);
     const emptyWorld = !cast.present.length && !cast.offstage.length && !scene;
-    const systemPrompt = [
+    const head = [
       ...NarratorContext._brief(d, emptyWorld, window),
       ...NarratorContext._premise(d, window),
       ...BodyNotes.lines(grounding, cast.present, window),
+    ].join('\n');
+    const state = [
       ...NarratorContext._story(d, window),
       ...NarratorContext._present(d, cast.present, window, surface),
       ...BodyNotes.surfaceLines(surface, cast.present, window),
       ...NarratorContext._offstage(d, cast.offstage, window),
       ...NarratorContext._setting(scene, cast.present, window),
-    ].join('\n');
+    ].join('\n').trim();
+    const contextText = state ? head + '\n\n' + state : head;
+    const systemPrompt = stateInHead ? contextText : head;
+    const turnPrompt = state && !stateInHead ? NarratorContext.STATE_OPEN + '\n' + state : '';
     const postHistoryPrompt = NarratorContext._anchor(d, cast.present, window, grounding);
     const clean = HistoryTrimmer.withoutDebris(messages);
-    const trimmed = HistoryTrimmer.trim(clean.messages, PromptBudget.historyFor(window, systemPrompt, postHistoryPrompt));
+    const trimmed = HistoryTrimmer.trim(clean.messages, PromptBudget.historyFor(window, systemPrompt, turnPrompt + postHistoryPrompt));
     return {
       systemPrompt,
+      turnPrompt,
       postHistoryPrompt,
+      contextText,
       messages: trimmed.messages,
       window,
       dropped: trimmed.dropped,

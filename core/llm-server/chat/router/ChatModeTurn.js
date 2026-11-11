@@ -1,5 +1,6 @@
 class ChatModeTurn {
   static PLAIN = Object.freeze({ descriptor: null, turn: null });
+  static CAPABILITIES = Object.freeze({ turnPrompt: true });
 
   constructor({ chatStore, modeRegistry }) {
     this._store = chatStore;
@@ -12,7 +13,7 @@ class ChatModeTurn {
       if (!meta || !meta.mode || meta.mode === 'chat') return ChatModeTurn.PLAIN;
       const descriptor = this._registry.get(meta.mode);
       if (!descriptor || typeof descriptor.buildTurn !== 'function') return { descriptor: descriptor || null, turn: null };
-      const turn = await descriptor.buildTurn({ meta, messages, conversationId, modelRef, contextWindow });
+      const turn = await descriptor.buildTurn({ meta, messages, conversationId, modelRef, contextWindow, capabilities: ChatModeTurn.CAPABILITIES });
       return { descriptor, turn: turn || null };
     } catch (err) {
       console.error('[llm-chat] mode buildTurn failed; falling back to plain chat:', err && err.message);

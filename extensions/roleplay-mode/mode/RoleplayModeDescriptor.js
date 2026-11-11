@@ -29,7 +29,8 @@ class RoleplayModeDescriptor {
     }
     const grounding = await RoleplayModeDescriptor.grounding(meta);
     const surface = await RoleplayModeDescriptor.surface(meta, args.messages);
-    const turn = RoleplayModeDescriptor.buildTurn(meta, Object.assign({}, args, { grounding, surface }));
+    const stateInHead = !(args.capabilities && args.capabilities.turnPrompt === true);
+    const turn = RoleplayModeDescriptor.buildTurn(meta, Object.assign({}, args, { grounding, surface, stateInHead }));
     RoleplayModeDescriptor.rememberGrounding(args.conversationId, turn.groundingNotes || null);
     return turn;
   }
@@ -71,15 +72,16 @@ class RoleplayModeDescriptor {
     }
   }
 
-  static buildTurn(meta, { messages = [], contextWindow = null, grounding = null, surface = null } = {}) {
+  static buildTurn(meta, { messages = [], contextWindow = null, grounding = null, surface = null, stateInHead = false } = {}) {
     const data = (meta && meta.data) || {};
-    const ctx = NarratorContext.build(data, { messages, contextWindow, grounding, surface });
+    const ctx = NarratorContext.build(data, { messages, contextWindow, grounding, surface, stateInHead });
     const turn = {
       systemPrompt: ctx.systemPrompt,
       postHistoryPrompt: ctx.postHistoryPrompt,
       temperature: RoleplayModeDescriptor.TEMPERATURE,
       compact: false,
     };
+    if (ctx.turnPrompt) turn.turnPrompt = ctx.turnPrompt;
     if (ctx.dropped > 0 || ctx.cleaned > 0) turn.messages = ctx.messages;
     if (data.llmModel && typeof data.llmModel === 'string') turn.modelRef = data.llmModel;
     const samplers = RoleplaySamplers.forTurn(data);

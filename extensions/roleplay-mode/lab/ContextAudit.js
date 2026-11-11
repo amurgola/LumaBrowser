@@ -3,6 +3,7 @@ const PromptBudget = require('../prompts/PromptBudget');
 class ContextAudit {
   static SHINGLE = 6;
   static ANCHOR_MARK = '[Scene notes';
+  static STATE_OPEN = '[Story state for this reply';
   static DUPES_MAX = 8;
 
   static of(messages) {
@@ -14,8 +15,9 @@ class ContextAudit {
     const history = rest.slice(0, -1);
     const anchorAt = last.indexOf(ContextAudit.ANCHOR_MARK);
     const anchor = anchorAt >= 0 ? last.slice(anchorAt) : '';
-    const user = anchorAt >= 0 ? last.slice(0, anchorAt) : last;
-    const sections = ContextAudit.sections(sys);
+    const beforeAnchor = anchorAt >= 0 ? last.slice(0, anchorAt) : last;
+    const { state, user } = ContextAudit.splitState(beforeAnchor);
+    const sections = ContextAudit.sections(sys).concat(ContextAudit.sections(state, 'story state'));
     const layers = {};
     for (const s of sections) layers[s.name] = (layers[s.name] || 0) + PromptBudget.estimate(s.text);
     const historyText = history.map(text).join('\n');
@@ -25,6 +27,7 @@ class ContextAudit {
     return {
       total: PromptBudget.estimate(list.map(text).join('\n')),
       system: PromptBudget.estimate(sys),
+      state: PromptBudget.estimate(state),
       layers,
       history: PromptBudget.estimate(historyText),
       historyMessages: history.length,
@@ -36,12 +39,20 @@ class ContextAudit {
     };
   }
 
-  static sections(sys) {
+  static splitState(text) {
+    const s = String(text || '');
+    const open = s.lastIndexOf(ContextAudit.STATE_OPEN);
+    if (open < 0) return { state: '', user: s };
+    const bodyAt = s.indexOf('\n', open);
+    return { state: bodyAt >= 0 ? s.slice(bodyAt + 1) : '', user: s.slice(0, open) };
+  }
+
+  static sections(sys, lead = 'brief') {
     const out = [];
     const chunks = String(sys || '').split(/\n(?=## )/);
     chunks.forEach((chunk, i) => {
       const m = chunk.match(/^## ([^\n]+)/);
-      const name = m ? m[1].trim().toLowerCase() : (i === 0 ? 'brief' : 'other');
+      const name = m ? m[1].trim().toLowerCase() : (i === 0 ? lead : 'other');
       if (chunk.trim()) out.push({ name, text: chunk });
     });
     return out;
@@ -74,7 +85,7 @@ class ContextAudit {
     const names = [...new Set(list.flatMap((a) => Object.keys(a.layers)))];
     const layers = Object.fromEntries(names.map((n) => [n, avg((a) => a.layers[n])]));
     return {
-      turns: list.length, total: avg((a) => a.total), system: avg((a) => a.system), history: avg((a) => a.history),
+      turns: list.length, total: avg((a) => a.total), system: avg((a) => a.system), state: avg((a) => a.state), history: avg((a) => a.history),
       anchor: avg((a) => a.anchor), think: avg((a) => a.think), duplicateWords: avg((a) => a.duplicateWords), layers,
       peak: Math.max(...list.map((a) => a.total)),
     };
