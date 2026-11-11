@@ -1,3 +1,6 @@
+const SentForm = require('./SentForm');
+const ToolCallReplay = require('./ToolCallReplay');
+
 class TurnPrompt {
   static from(messages, { nativeHistory = false, sentForms = null } = {}) {
     const list = Array.isArray(messages) ? messages : [];
@@ -5,7 +8,8 @@ class TurnPrompt {
     const prompt = lastUser ? String(lastUser.content || '') : '';
     const prior = list.slice(0, lastUser ? list.lastIndexOf(lastUser) : 0)
       .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && m.content);
-    return new TurnPrompt(prompt, nativeHistory ? TurnPrompt.withSentForms(prior, sentForms) : prior, nativeHistory);
+    if (!nativeHistory) return new TurnPrompt(prompt, prior, false);
+    return new TurnPrompt(prompt, ToolCallReplay.expand(TurnPrompt.withSentForms(prior, sentForms), sentForms), true);
   }
 
   static withSentForms(prior, rows) {
@@ -17,8 +21,8 @@ class TurnPrompt {
       const at = users.findIndex((r, i) => i >= cursor && r.content === m.content);
       if (at === -1) return m;
       cursor = at + 1;
-      const sent = users[at].sentContent;
-      return typeof sent === 'string' && sent ? { ...m, content: sent } : m;
+      const durable = SentForm.durable(users[at]);
+      return durable === m.content ? m : { ...m, content: durable };
     });
   }
 

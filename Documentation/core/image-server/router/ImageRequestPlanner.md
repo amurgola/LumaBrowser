@@ -40,13 +40,27 @@ the adapter receives.
 - `ImageRequestPlanner.metaFields(plan)` returns the resolved values the `meta`
   event reports (`sigmas`, `loras` as `path@multiplier`, `refSizes` and
   `outputSize` as `WxH`).
-- Edit render step (after grid alignment): for a request with references and
+- Render floor step (after grid alignment): for a request with no init image
+  or mask, on a model whose `constraints.minRenderPixels` is above the canvas
+  area (MiniMax-H3-Image: 4 MP), [ImageCanvas](ImageCanvas.md)
+  `raiseToMinArea` enlarges the canvas with a `render-floor` status and
+  `outputSize` holds the size asked for. It covers generations and reference
+  edits alike.
+- Edit render step (after the render floor): for a request with references and
   no init image or mask, on a family whose edit profile sets `renderScale`
-  (MiniMax-H3-Image: 1.5, capped at 16 MP), [EditRenderScale](EditRenderScale.md)
+  (MiniMax-H3-Image: 1.5, at least 2304x2304, capped at 16 MP), [EditRenderScale](EditRenderScale.md)
   sizes the render from the first reference's own pixel size (the picture
   being edited) and the canvas is enlarged with an `edit-render-enlarged`
-  status. img2img and masked edits keep their canvas, because the init image
+  status. `outputSize` stays the size first asked for when the floor already
+  raised the canvas. img2img and masked edits keep their canvas, because the init image
   and the mask are sized to it.
+- Harsh canvas step (after the edit render step): for a request with
+  references and an init image, on a family whose edit profile sets
+  `harshSides` (MiniMax-H3-Image: sides strictly between 1792 and 2304), the
+  init image and the mask are resized to the profile's `renderMinPixels`
+  canvas with an `edit-canvas-moved` status and `outputSize` holds the size
+  asked for. Left as asked when either picture cannot be resized. The
+  constructor's `resize` option replaces the scaler in tests.
 - `ImageRequestPlanner.measureRef(ref)` reads `{ width, height }` from a
   reference's PNG or JPEG header (Buffer, base64 or data URL), else `null`.
   The constructor's `measure` option replaces it in tests.

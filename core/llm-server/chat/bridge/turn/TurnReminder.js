@@ -44,23 +44,33 @@ class TurnReminder {
     return [TurnReminder.clockLine(now), turnReminder, format].filter(Boolean).join('\n\n') || null;
   }
 
-  static BASE = Symbol('lumaReminderBase');
+  static TAIL = Symbol('lumaReminderTail');
 
   static appendKeeping(msgs, reminder) {
     if (!reminder || !Array.isArray(msgs) || !msgs.length) return msgs;
     const last = msgs[msgs.length - 1];
-    if (last && Object.prototype.hasOwnProperty.call(last, TurnReminder.BASE)) {
-      const base = last[TurnReminder.BASE];
-      last.content = base ? `${base}\n\n${reminder}` : reminder;
-      return msgs;
-    }
     if (!last || typeof last.content !== 'string') {
-      msgs.push({ role: 'user', content: reminder, [TurnReminder.BASE]: '' });
+      msgs.push({ role: 'user', content: reminder, [TurnReminder.TAIL]: reminder });
       return msgs;
     }
-    last[TurnReminder.BASE] = last.content;
-    last.content = `${last.content}\n\n${reminder}`;
+    const base = TurnReminder._withoutTail(last);
+    last.content = base ? `${base}\n\n${reminder}` : reminder;
+    last[TurnReminder.TAIL] = reminder;
     return msgs;
+  }
+
+  static isReminderOnly(message) {
+    return !!message && Object.prototype.hasOwnProperty.call(message, TurnReminder.TAIL)
+      && message.content === message[TurnReminder.TAIL];
+  }
+
+  static _withoutTail(message) {
+    const content = message.content;
+    if (!Object.prototype.hasOwnProperty.call(message, TurnReminder.TAIL)) return content;
+    const tail = message[TurnReminder.TAIL];
+    if (content === tail) return '';
+    const suffix = `\n\n${tail}`;
+    return content.endsWith(suffix) ? content.slice(0, -suffix.length) : content;
   }
 
   static append(msgs, reminder) {

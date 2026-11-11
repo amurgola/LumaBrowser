@@ -17,6 +17,7 @@ export default class AddonRow {
       ctxFitHtml: '',
       fitHtml: '',
       quantHtml: '',
+      groupHtml: '',
       dlHtml: busy ? AddonRow.progressHtml(active) : '',
       blurbHtml: AddonRow._blurb(m),
       shardsHtml: '',

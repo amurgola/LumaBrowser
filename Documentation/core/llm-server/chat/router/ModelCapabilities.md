@@ -15,3 +15,12 @@ What the model behind a chat model ref can do this turn, read from the LIVE laun
 ## Why
 
 A family only claims native tool calls beside the `--jinja` its launch adds, so the claim comes from the plan the server was started with whenever there is one; reading the model name while a server runs would let them drift and every call would come back as raw text. Before the first launch there is no plan, and the name goes through the same detector the planner will use, so the launch that follows carries the flags the claim assumed. Without that fallback a conversation's first turn ran on the fence with one system prompt and its second turn natively with another (DeepSeek-V4.1-Flash, 2026-11-04), which re-read the whole conversation. Harmony drops calls unless tools are registered, so it is native regardless of the setting. A remote ref is native because [RemoteStream](RemoteStream.md) sends the schemas and returns the calls; a provider that could not would leave the model with neither the array nor the fence guidance.
+
+With no plan for the model (a cold start, or the server still holding another
+model) the family is the one a plan last gave that model, remembered by
+lower-cased stem in `FAMILY_SETTING` (`core.llmServer.chat.plannedFamilies`);
+only a model never launched falls back to its name. The name is not the
+planner's answer: the planner reads the file's header first, so a renamed or
+repacked model got one family, and with it one tool-call protocol, from its
+name on the turn that started the server and another from its plan on every
+turn after, and flipped back whenever the server was stopped.

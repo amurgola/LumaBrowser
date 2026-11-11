@@ -35,12 +35,13 @@ normalises its output onto the chat router's hooks.
 3. Agent: `new AgentRunner({ browserTools, sendCompletion }, { browserService },
    deps.db)`.
 4. Turn: [TurnPrompt](prompt/TurnPrompt.md) (with `priorMessages` as the sent
-   forms, so prior user turns are re-sent as the model saw them), groups
+   forms, so a prior user turn keeps the manuals it delivered), groups
    pre-activated by [GroupIntent](groups/GroupIntent.md), the
    [ArtifactCatalog](prompt/ArtifactCatalog.md), the [VisionHint](prompt/VisionHint.md).
 5. `done`: [GroupRouting](groups/GroupRouting.md), then the group state's
    `freezePromptKeys` (the conversation's first turn fixes the groups the
-   system prompt carries) and `pendingManualKeys`, the
+   system prompt carries) and `pendingManualKeys` (minus the manuals the
+   prior turns already carry, `ManualDelivery.carriedKeys`), the
    [ImagePromptHint](prompt/ImagePromptHint.md) when the images group is
    active, [SystemPromptAppend](prompt/SystemPromptAppend.md) (with the frozen
    `promptKeys` as its active groups), `RunToolSet#runToolList`, then `agent.run` with the
@@ -49,17 +50,22 @@ normalises its output onto the chat router's hooks.
    writer, `tabId`/`lazyTab` (a pinned tab is used as is), `autoCloseTab:
    false`, the budget, `tools`, `systemPromptAppend`, `systemPromptOverride`,
    `promptExperiments`, `nativeTools`, `nativeToolsTokens`,
-   `onToolResultEvicted` (mode tools' eviction hooks), `noBrowser`,
+   `onToolResultEvicted` (mode tools' eviction hooks), `compactionCarry`
+   (`ManualDelivery.carryOver` for the active groups the system prompt does
+   not carry), `compactionCheckpoint`
+   ([ConversationCheckpoint](ConversationCheckpoint.md), native history
+   only), `noBrowser`,
    `ctxPerSlot`, `screenshotVision`, `onEvent`, `onWorkTab` (the
    [TabPreviewSession](TabPreviewSession.md), none for a pinned tab) and
    `shouldAbort`.
 6. The preview ends BEFORE any terminal hook, then [TurnFinisher](turn/TurnFinisher.md);
    a lazily created work tab is closed after, off the critical path.
-7. On the run's first request (the driver's `onFirstSend`): the pending manuals
-   are marked delivered and the task text as sent is written to the user row
+7. On the run's first request (the driver's `onFirstSend`): the task text as
+   sent is written to the user row
    (`chatStore.updateMessage(userMessageId, { sentContent })`), so later turns
-   re-send it byte for byte and the server's KV cache keeps everything after
-   it. A turn without `userMessageId` (the sharing proxy) records nothing.
+   replay the manuals it delivered with that turn ([SentForm](prompt/SentForm.md)).
+   A turn without `userMessageId` (a regeneration, the sharing proxy) records
+   nothing; the next turn finds the manual missing and delivers it again.
 
 ## Tool context
 

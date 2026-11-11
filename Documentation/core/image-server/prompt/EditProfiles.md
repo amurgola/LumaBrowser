@@ -9,7 +9,7 @@ to every reference-image request whoever sent it.
 
 - `EditProfiles.editProfileFor(family)` returns
   `{ refTag, maxReferences, keepClause, presizeRefs, refArea, refMaxPixels,
-  renderScale, renderMaxPixels, family }`
+  renderScale, renderMinPixels, renderMaxPixels, harshSides, family }`
   (completed from `GENERIC_PROFILE`), or `null` for a family without a profile.
 - `EditProfiles.tagFor(style)` returns the naming function for `'word'`
   (`image N`), `'angle'` (`<imageN>`) or `'picture'` (`<Picture N>`); unknown
@@ -63,4 +63,11 @@ picture.
 The same family sets `renderScale` 1.5 and `renderMaxPixels` 16 MP: an edit
 rendered at its source's own pixel size comes back over-sharpened, so the
 router renders it larger and scales the result back (measurements in
-[EditRenderScale](../router/EditRenderScale.md)).
+[EditRenderScale](../router/EditRenderScale.md)). It also sets
+`renderMinPixels` 2304x2304: an edit rendered on the 2048x2048 canvas comes
+back harsh whatever its source or reference size, while 1792, 2304, 2560 and
+3072 are clean (same-seed sweep of a 1024 px source, 2026-11-10), so no edit
+renders below 2304x2304. `harshSides` (`above` 1792, `below` 2304) marks
+the same band for masked and img2img edits, which keep their own size
+everywhere else: a masked edit of a 2048x2048 picture was harsh at 2048 and
+clean with its init image and mask resized to 1792 or 2304.

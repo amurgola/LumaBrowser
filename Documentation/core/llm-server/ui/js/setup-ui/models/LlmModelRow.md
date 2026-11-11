@@ -6,7 +6,11 @@ Builds the shared model-list row view (the mlRow contract) for one LLM scan mode
 
 ## Methods
 
-- `new LlmModelRow({ recommender, ctxFit, fitBlock })`; `view(m)`; statics `weightsPath(m)`, `nameKey(m)`, `factsHtml(m)`, `sidecarTags(m)`, `roleBadge(m)`, `notesHtml(m)`, `unpairedHtml(m)`, `pairingHtml(m)`, `drafterOfferHtml(m)`, `actionsHtml(m)`, `drafterMissingHtml(m)`. Every interpolated value is escaped (a stored display name with quotes cannot break out of `data-cur`, bug C1; a hostile companion file name cannot inject markup into a note).
+- `new LlmModelRow({ recommender, ctxFit, fitBlock })`; `views(models)` (the whole scan in the shared [ModelTree](../../models/ModelTree.md) order, what [ModelsCard](ModelsCard.md) sets); `view(m, pos = null)`, where `pos` is the row's `ModelTree.flatten` place; statics `groupHeadHtml(pos)`, `quantChip(m)`, `weightsPath(m)`, `nameKey(m)`, `factsHtml(m)`, `sidecarTags(m)`, `roleBadge(m)`, `notesHtml(m)`, `unpairedHtml(m)`, `pairingHtml(m)`, `drafterOfferHtml(m)`, `actionsHtml(m)`, `drafterMissingHtml(m)`. Every interpolated value is escaped (a stored display name with quotes cannot break out of `data-cur`, bug C1; a hostile companion file name cannot inject markup into a note).
+
+## Family grouping
+
+The Installed models list renders the shared [ModelTree](../../models/ModelTree.md), the same tree the Defaults dropdown and the chat picker use: a size line's first row carries one heading for the family and line (`.model-group-family`: the family in caps, a `.model-size-badge` "27B" and the line's "N models"), the twin of the chat picker's; a new family's heading is `.is-family-start` and gets the stronger rule. Each row is named by what sets it apart from its siblings (`ModelTree.rowName`: the variant, else the quant), variants largest quant first. The `.model-quant` chip shows only where the name is not already the quant, and the rename pencil always carries the full display name.
 
 ## What the scanner's classification looks like on a row
 

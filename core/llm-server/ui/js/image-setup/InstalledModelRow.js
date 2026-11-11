@@ -27,7 +27,7 @@ export default class InstalledModelRow {
       sizeText: InstalledModelRow._sizeText(m),
       actionsHtml: InstalledModelRow._actions(m, flags, downloading),
       metaHtml: InstalledModelRow._meta(m),
-      ctxFitHtml: '', fitHtml: '', quantHtml: '', dlHtml: '', blurbHtml: '', shardsHtml: '',
+      groupHtml: '', ctxFitHtml: '', fitHtml: '', quantHtml: '', dlHtml: '', blurbHtml: '', shardsHtml: '',
     };
   }
 

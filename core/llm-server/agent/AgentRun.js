@@ -5,6 +5,7 @@ const AgentLoopText = require('./AgentLoopText');
 const AgentSystemPromptBuilder = require('./AgentSystemPromptBuilder');
 const AgentToolExecutor = require('./AgentToolExecutor');
 const CarriedReasoning = require('./CarriedReasoning');
+const CompactionCheckpoint = require('./CompactionCheckpoint');
 const CompletionSender = require('./CompletionSender');
 const CompletionVerifier = require('./CompletionVerifier');
 const FinalAnswerGate = require('./FinalAnswerGate');
@@ -72,7 +73,10 @@ class AgentRun {
       steps: this._steps,
       emit: (event) => this._emit(event),
       shouldAbort: this._o.shouldAbort,
+      carry: this._o.compactionCarry,
+      onCompacted: (result) => this._checkpoint.record(result),
     });
+    this._checkpoint = new CompactionCheckpoint(this._compactor.enabled ? this._o.compactionCheckpoint : null, { window: this._o.ctxPerSlot });
     this._recovery = new OverflowRecovery({ history: this._history, compactor: this._compactor, sender: this._sender, steps: this._steps });
   }
 
@@ -115,6 +119,14 @@ class AgentRun {
     this._history.push('system', this._systemPrompt);
     this._pushPriorTurns();
     this._history.push('user', this._o.prompt);
+    this._resumeCheckpoint();
+  }
+
+  _resumeCheckpoint() {
+    this._checkpoint.begin(this._history.messages);
+    if (!this._checkpoint.enabled) return;
+    const replaced = this._checkpoint.apply(this._history.messages, { needed: this._compactor.overTrigger() });
+    if (replaced > 0) this._steps.push({ iteration: 0, compaction: { reason: 'checkpoint', compacted: true, removed: replaced } });
   }
 
   async _tabInfo() {
@@ -158,7 +170,7 @@ class AgentRun {
   async _prepareRequest(i, noticeRun) {
     this._history.expireScreenshotNote();
     if (this._inLastSteps(i)) this._history.push('user', AgentLoopText.lastSteps(this._o.maxIterations - i));
-    if (i > 0) await this._compactor.compactIfOverTrigger(i);
+    await this._compactor.compactIfOverTrigger(i);
     this._relayNotices(i, noticeRun);
   }
 

@@ -1,6 +1,7 @@
 import ByteFormatter from '../../format/ByteFormatter.js';
 import HtmlEscaper from '../../format/HtmlEscaper.js';
 import CtxLadder from '../models/CtxLadder.js';
+import ModelTree from '../../models/ModelTree.js';
 
 export default class DefaultsOptions {
   static EFFORT = [
@@ -89,10 +90,15 @@ export default class DefaultsOptions {
     if (scoped.models.length === 0) {
       return `<option value="">${scoped.bound ? 'No model installed for this runtime yet' : 'No models discovered yet'}</option>`;
     }
-    return (scoped.locked ? '' : '<option value="">Pick a model</option>')
-      + scoped.models.map((m) => {
-        const fit = fitSummary(m.path);
-        return `<option value="${esc(m.path)}" ${m.path === selectedPath ? 'selected' : ''}>${esc(m.displayName || m.name)} · ${ByteFormatter.bytes(m.totalBytes)} · ${esc(m.relativeDirectory)}${fit ? ' · ' + fit : ''}</option>`;
-      }).join('');
+    const option = (m, name) => {
+      const fit = fitSummary(m.path);
+      return `<option value="${esc(m.path)}" ${m.path === selectedPath ? 'selected' : ''} title="${esc(ModelTree.label(m))}">${esc(name)} · ${ByteFormatter.bytes(m.totalBytes)} · ${esc(m.relativeDirectory)}${fit ? ' · ' + fit : ''}</option>`;
+    };
+    if (scoped.locked) return scoped.models.map((m) => option(m, ModelTree.label(m))).join('');
+    const rowName = (m) => ModelTree.rowName(m) + (ModelTree.showsQuant(m) ? ` · ${ModelTree.groupingOf(m).quant}` : '');
+    const tree = ModelTree.build(scoped.models, { bytesOf: (m) => m.weightsTotalBytes || m.totalBytes || 0 });
+    return '<option value="">Pick a model</option>'
+      + tree.flatMap((f) => f.lines.map((l) => `<optgroup label="${esc(ModelTree.heading(f.family, l.line))}">`
+        + l.items.map((m) => option(m, rowName(m))).join('') + '</optgroup>')).join('');
   }
 }

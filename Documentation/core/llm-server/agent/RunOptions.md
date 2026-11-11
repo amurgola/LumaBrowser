@@ -24,6 +24,8 @@ The options of one `AgentRunner.run` call with defaults applied.
 | `maxParallelToolCalls` | 1 | read-only pool size; 1 disables batching |
 | `timeout` | 300000 | model wall clock in ms; 0 or Infinity for none |
 | `onToolResultEvicted` | null | told `{tool, params}` when a result is dropped |
+| `compactionCarry` | null | `(head, recent) => text` a compaction carries out of the messages it summarizes |
+| `compactionCheckpoint` | null | `{ load, save }` for the conversation's [CompactionCheckpoint](CompactionCheckpoint.md) |
 | `nativeTools`, `nativeToolsTokens` | false, 0 | schema cost taken out of the budgets |
 | `tools` | | allow-list of tool names |
 | `systemPromptAppend`, `systemPromptOverride` | | see AgentSystemPromptBuilder |

@@ -24,7 +24,9 @@ usage meter divides by.
   its context can change from the start screen without visiting Setup; a second
   click closes it. A repaint while that picker is open only renames the button,
   since rebuilding it would drop the popover inside.
-- `currentLabel()`, `chosenCtx(model)`, `activeCtxWindow()`.
+- `currentLabel()`, `chosenCtx(model)`, `activeCtxWindow()`. A local model is
+  named by its unique [ModelTree](../../models/ModelTree.md) `label` ("Qwen 3.8 27B ·
+  UD-Q6_K_M") in the pill and the landing line.
 - `selectLocal(model, tokens)`: persists `setDefaults({ modelPath, contextSize })`
   and `setLastModelRef`. `selectRemote(model)`.
 - `selectProfile(row)`: selects the `profile::` ref; a local profile also loads

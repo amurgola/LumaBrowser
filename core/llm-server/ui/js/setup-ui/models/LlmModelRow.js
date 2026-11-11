@@ -1,6 +1,7 @@
 import ByteFormatter from '../../format/ByteFormatter.js';
 import HtmlEscaper from '../../format/HtmlEscaper.js';
 import CtxFitMatrix from './CtxFitMatrix.js';
+import ModelTree from '../../models/ModelTree.js';
 
 export default class LlmModelRow {
   static ROLE_LABELS = Object.freeze({
@@ -25,16 +26,22 @@ export default class LlmModelRow {
     return m.nameKey || m.name || '';
   }
 
-  view(m) {
+  views(models) {
+    return ModelTree.flatten(ModelTree.build(models, { bytesOf: (m) => m.weightsTotalBytes || m.totalBytes || 0 }))
+      .map((pos) => this.view(pos.item, pos));
+  }
+
+  view(m, pos = null) {
     const dispName = m.displayName || m.name;
     const nameKey = LlmModelRow.nameKey(m);
     return {
       mlKey: nameKey,
       expanded: false,
       caretEmpty: false,
-      name: dispName,
+      groupHtml: pos ? LlmModelRow.groupHeadHtml(pos) : '',
+      name: pos ? ModelTree.rowName(m) : dispName,
       renameHtml: LlmModelRow._renameHtml(nameKey, dispName),
-      tagsHtml: LlmModelRow._headerTags(m),
+      tagsHtml: LlmModelRow._headerTags(m, !pos || ModelTree.showsQuant(m)),
       sizeText: ByteFormatter.bytes(m.totalBytes),
       actionsHtml: LlmModelRow.actionsHtml(m),
       metaHtml: LlmModelRow._pathHtml(m, dispName, nameKey) + LlmModelRow.factsHtml(m) + LlmModelRow.notesHtml(m) + this._footerHtml(m),
@@ -45,6 +52,20 @@ export default class LlmModelRow {
       blurbHtml: '',
       shardsHtml: LlmModelRow._shardsHtml(m),
     };
+  }
+
+  static groupHeadHtml(pos) {
+    if (!pos.firstOfLine) return '';
+    const esc = HtmlEscaper.escape;
+    return `<div class="model-group-family${pos.firstOfFamily ? ' is-family-start' : ''}">`
+      + `<span class="model-group-name">${esc(pos.family)}</span>`
+      + (pos.line ? `<span class="model-size-badge">${esc(pos.line)}</span>` : '')
+      + `<span class="model-group-count">${pos.lineCount} ${pos.lineCount === 1 ? 'model' : 'models'}</span></div>`;
+  }
+
+  static quantChip(m) {
+    const quant = ModelTree.groupingOf(m).quant;
+    return quant ? `<span class="model-quant" title="Quantization">${HtmlEscaper.escape(quant)}</span>` : '';
   }
 
   static factsHtml(m) {
@@ -98,9 +119,9 @@ export default class LlmModelRow {
       + ' title="Rename for display" aria-label="Rename">&#9998;</button>';
   }
 
-  static _headerTags(m) {
+  static _headerTags(m, withQuant = true) {
     const arch = (m.gguf && m.gguf.parsed && m.gguf.architecture) ? `<span class="model-arch">${HtmlEscaper.escape(m.gguf.architecture)}</span>` : '';
-    return [arch, LlmModelRow.roleBadge(m), LlmModelRow.mtpBadge(m)].filter(Boolean).join(' ');
+    return [withQuant ? LlmModelRow.quantChip(m) : '', arch, LlmModelRow.roleBadge(m), LlmModelRow.mtpBadge(m)].filter(Boolean).join(' ');
   }
 
   static speculationOf(m) {

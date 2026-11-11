@@ -10,6 +10,8 @@ class RunOptions {
     maxParallelToolCalls: ToolConcurrency.DEFAULT_MAX_PARALLEL_TOOL_CALLS,
     timeout: 300000,
     onToolResultEvicted: null,
+    compactionCarry: null,
+    compactionCheckpoint: null,
     nativeTools: false,
     nativeToolsTokens: 0,
     tools: undefined,

@@ -15,7 +15,6 @@ class ToolGroupState {
     this._promptFrozen = prompt !== null;
     this.promptKeys = new Set(prompt || []);
     for (const name of this._forced) this.promptKeys.add(name);
-    this._delivered = new Set(this._persistedList('deliveredToolGroups') || []);
   }
 
   freezePromptKeys() {
@@ -26,20 +25,9 @@ class ToolGroupState {
     return true;
   }
 
-  pendingManualKeys() {
-    return [...this.active].filter((key) => !this.promptKeys.has(key) && !this._delivered.has(key));
-  }
-
-  markDelivered(keys) {
-    let changed = false;
-    for (const key of keys || []) {
-      if (!this._delivered.has(key)) {
-        this._delivered.add(key);
-        changed = true;
-      }
-    }
-    if (changed) this._persist();
-    return changed;
+  pendingManualKeys(carried = null) {
+    const has = carried instanceof Set ? carried : new Set(carried || []);
+    return [...this.active].filter((key) => !this.promptKeys.has(key) && !has.has(key));
   }
 
   activate(keys) {
@@ -99,7 +87,6 @@ class ToolGroupState {
       const notForced = (set) => [...set].filter((key) => !this._forced.has(key));
       const data = { ...(meta.data || {}), activeToolGroups: notForced(this.active) };
       if (this._promptFrozen) data.promptToolGroups = notForced(this.promptKeys);
-      if (this._delivered.size) data.deliveredToolGroups = [...this._delivered];
       store.setMeta(this._conversationId, { data });
     } catch (_) {}
   }

@@ -7,6 +7,8 @@ class ContextBudget {
     singleToolResult: 0.25,
     compactionKeep: 0.5,
     compactionReserve: 0.15,
+    compactionRoom: 0.25,
+    compactionSummary: 0.05,
   });
 
   static FIXED = Object.freeze({

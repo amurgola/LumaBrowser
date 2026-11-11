@@ -11,7 +11,10 @@ shares from here.
 
 - `ContextBudget.SHARES` (frozen): `carriedReasoningTotal` 0.4 and `toolHistory` 0.35 (AgentRunner, concurrent
   claims across a run), `singleToolResult` 0.25 (ToolOutputTruncator, a bound on one item inside the tool history,
-  not an addition), `compactionKeep` 0.5 and `compactionReserve` 0.15 (Compaction).
+  not an addition), `compactionKeep` 0.5 and `compactionReserve` 0.15 (Compaction), plus
+  `compactionRoom` 0.25 (what a compaction leaves free below its trigger) and
+  `compactionSummary` 0.05 (its allowance for the summary), which only bite
+  when fixed costs take a large part of a small window.
 - `ContextBudget.FIXED` (frozen): `nativeToolSchemasTokens` 4100, `systemPromptTokens` 1500, `minGenerationTokens` 4096.
 - `ContextBudget.resolveBudget({ ctxPerSlot, nativeTools = false, fixedTokens = null })` returns
   `{ ctxPerSlot, fixedTokens, usableTokens, carriedReasoningChars, toolHistoryChars, singleToolResultChars,

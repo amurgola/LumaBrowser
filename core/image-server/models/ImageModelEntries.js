@@ -756,7 +756,7 @@ class ImageModelEntries {
         fixedSigmas: [...ImageModelEntries.H3_IMAGE_SIGMAS],
         promptGuide: ImageModelEntries.H3_IMAGE_PROMPT_GUIDE,
       },
-      constraints: { dimensionMultiple: 32 },
+      constraints: { dimensionMultiple: 32, minRenderPixels: 2048 * 2048 },
       launchArgs: ['--rng', 'cpu'],
       vaeTiling: false,
       preferredRuntimes: ['sd-cpp-luma'],

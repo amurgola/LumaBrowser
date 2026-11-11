@@ -12,6 +12,8 @@ Builds the picker entry for one local model (shape in
   models without `weights[0].path`.
 - `build({ model, runtime, diagnostics, fitEntry, displayNameFor })`:
   - reads the GGUF header only when `gguf.parsed`;
+  - the `quant` (and the summary's first fact) is [ModelGrouping](../models/ModelGrouping.md)'s: the file name's
+    quant (`UD-Q6_K_M`) before the header's coarser file type (`Q6_K`), as every model list shows it;
   - one strict ladder per `KvCacheModes.OFFERED_MODES` entry over
     `ContextLadder.rungsFor(contextLength)`;
   - `contextOptions` and `recommendedTokens` from [AutoContextPick](AutoContextPick.md);

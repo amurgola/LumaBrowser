@@ -21,6 +21,7 @@ export default class CatalogModelRow {
       metaHtml: '',
       ctxFitHtml: '', fitHtml: '',
       quantHtml,
+      groupHtml: '',
       dlHtml: isDownloading ? DownloadDetail.html(dl) : '',
       blurbHtml: CatalogModelRow._blurb(m),
       shardsHtml: '',

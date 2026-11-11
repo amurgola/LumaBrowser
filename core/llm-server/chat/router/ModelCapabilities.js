@@ -5,10 +5,12 @@ const ModelFamilies = require('../../server/ModelFamilies');
 
 class ModelCapabilities {
   static NATIVE_TOOLS_SETTING = 'core.llmServer.chat.nativeToolCalls';
+  static FAMILY_SETTING = 'core.llmServer.chat.plannedFamilies';
 
   constructor({ llmServerService, db }) {
     this._service = llmServerService;
     this._db = db;
+    this._families = null;
   }
 
   visionActive(rawRef) {
@@ -50,9 +52,34 @@ class ModelCapabilities {
   _family(modelRef) {
     const stem = this._modelStem(modelRef);
     const plan = this._livePlan();
-    if (plan && ModelCapabilities._planIsFor(plan, stem)) return plan.modelFamily || null;
+    if (plan && ModelCapabilities._planIsFor(plan, stem)) return this._remember(stem, plan.modelFamily || null);
+    const known = this._remembered(stem);
+    if (known !== undefined) return known;
     if (stem) return ModelFamilies.detect({ name: stem, weights: [] });
     return plan ? plan.modelFamily || null : null;
+  }
+
+  _remember(stem, family) {
+    const key = String(stem || '').toLowerCase();
+    if (!key || this._known()[key] === family) return family;
+    this._families = { ...this._known(), [key]: family };
+    try { if (this._db && typeof this._db.set === 'function') this._db.set(ModelCapabilities.FAMILY_SETTING, this._families); } catch (_) {}
+    return family;
+  }
+
+  _remembered(stem) {
+    const key = String(stem || '').toLowerCase();
+    const known = this._known();
+    return key && Object.prototype.hasOwnProperty.call(known, key) ? known[key] : undefined;
+  }
+
+  _known() {
+    if (!this._families) {
+      let stored = null;
+      try { stored = this._db ? this._db.get(ModelCapabilities.FAMILY_SETTING, null) : null; } catch (_) { stored = null; }
+      this._families = stored && typeof stored === 'object' && !Array.isArray(stored) ? { ...stored } : {};
+    }
+    return this._families;
   }
 
   static _planIsFor(plan, stem) {

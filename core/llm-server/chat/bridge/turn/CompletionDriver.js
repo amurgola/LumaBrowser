@@ -45,7 +45,7 @@ class CompletionDriver {
     if (this._firstSent || typeof o.onFirstSend !== 'function') return;
     this._firstSent = true;
     const last = sendMsgs[sendMsgs.length - 1];
-    if (!last || last.role !== 'user' || typeof last.content !== 'string' || last[TurnReminder.BASE] === '') return;
+    if (!last || last.role !== 'user' || typeof last.content !== 'string' || TurnReminder.isReminderOnly(last)) return;
     try { o.onFirstSend(last.content); } catch (_) {}
   }
 

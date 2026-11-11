@@ -16,6 +16,8 @@ class MidTurnCompactor {
   }
 
   constructor(options) {
+    this._carry = typeof options.carry === 'function' ? options.carry : null;
+    this._onCompacted = typeof options.onCompacted === 'function' ? options.onCompacted : null;
     this._compaction = options.enabled ? new Compaction() : null;
     this._ctxPerSlot = options.ctxPerSlot;
     this._nativeToolsTokens = Number(options.nativeToolsTokens) || 0;
@@ -43,10 +45,14 @@ class MidTurnCompactor {
   }
 
   async compactIfOverTrigger(iteration) {
-    if (!this._compaction) return 0;
-    const trigger = ContextBudget.resolveBudget({ ctxPerSlot: this._ctxPerSlot, fixedTokens: this._history.fixedTokens() }).compactionTriggerTokens;
-    if (this._estimateRequestTokens() <= trigger) return 0;
+    if (!this.overTrigger()) return 0;
     return this.compact(iteration, 'proactive', false);
+  }
+
+  overTrigger() {
+    if (!this._compaction) return false;
+    const trigger = ContextBudget.resolveBudget({ ctxPerSlot: this._ctxPerSlot, fixedTokens: this._history.fixedTokens() }).compactionTriggerTokens;
+    return this._estimateRequestTokens() > trigger;
   }
 
   async compact(iteration, reason, force) {
@@ -70,6 +76,8 @@ class MidTurnCompactor {
     try {
       return await this._compaction.compact(this._history.messages, {
         contextWindow: this._ctxPerSlot,
+        extraTokens: this._nativeToolsTokens,
+        carry: this._carry,
         boundary: 'step',
         force: !!force,
         summarize: (promptMessages) => this._sender.summarize(promptMessages),
@@ -80,6 +88,9 @@ class MidTurnCompactor {
   }
 
   _apply(iteration, reason, result, before) {
+    if (this._onCompacted) {
+      try { this._onCompacted(result); } catch (_) {}
+    }
     this._history.applyCompaction(result);
     this._count += 1;
     const freed = before - this._history.chars();

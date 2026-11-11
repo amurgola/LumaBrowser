@@ -1,3 +1,5 @@
+const ContextOverflow = require('./ContextOverflow');
+
 class CompletionSender {
   static SLOT_ID = 'ai-chat.navigator';
   static TEMPERATURE = 0.2;
@@ -40,6 +42,7 @@ class CompletionSender {
   }
 
   static _looksNotReady(error) {
+    if (ContextOverflow.isExceeded(error)) return false;
     const text = String(error || '').toLowerCase();
     return CompletionSender.NOT_READY_MARKERS.some((marker) => text.includes(marker));
   }

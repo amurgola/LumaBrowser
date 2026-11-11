@@ -6,6 +6,7 @@ import ChatIcons from '../ChatIcons.js';
 import PopoverFit from '../common/PopoverFit.js';
 import Dom from '../../dom/Dom.js';
 import HtmlEscaper from '../../format/HtmlEscaper.js';
+import ModelTree from '../../models/ModelTree.js';
 
 export default class ModelPicker {
   static MIN_POP = 220;
@@ -50,7 +51,7 @@ export default class ModelPicker {
     const { state, root } = this._ctx;
     const lm = this._selectedLocal();
     const known = !!(lm || state.modelRef);
-    const name = lm ? (lm.displayName || lm.name) : label;
+    const name = lm ? ModelTree.label(lm) : label;
     const kind = lm ? 'local' : 'remote';
     root.querySelectorAll('[data-cm-landing-context]').forEach((el) => {
       const existing = el.querySelector('.cm-landing-model');
@@ -86,7 +87,7 @@ export default class ModelPicker {
     if (lm) {
       const t = this.chosenCtx(lm);
       const profile = this._selectedProfile();
-      return 'Local · ' + (lm.displayName || lm.name) + (profile ? ' · ' + profile.profileName : '')
+      return 'Local · ' + ModelTree.label(lm) + (profile ? ' · ' + profile.profileName : '')
         + (t ? ' · ' + ContextOptionText.ctxLabel(t) : '');
     }
     const m = state.models.find((x) => x.ref === state.modelRef);

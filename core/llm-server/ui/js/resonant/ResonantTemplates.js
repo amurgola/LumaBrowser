@@ -1,5 +1,6 @@
 export default class ResonantTemplates {
   static ML_ROW = '<div class="model-row">'
+    + '<div class="model-group-head" res-prop="groupHtml" res-html></div>'
     + '<div class="model-row-head" res-onclick="res.mltoggle">'
     + '<span class="model-caret" aria-hidden="true" '
     + 'res-style="(caretEmpty ? \'is-empty \' : \'\') + (expanded ? \'is-open\' : \'\')"></span>'

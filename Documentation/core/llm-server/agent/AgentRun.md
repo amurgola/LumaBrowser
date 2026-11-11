@@ -20,9 +20,17 @@ messages (system prompt, prior turns, task), registers with
 [AgentNotices](../../shared/AgentNotices.md), loops, and builds the result. The
 registration is ended in a `finally`.
 
+Seeding ends with `_resumeCheckpoint`: when the conversation has a stored
+[CompactionCheckpoint](CompactionCheckpoint.md) (`compactionCheckpoint`
+option) whose messages still lead the history, and it was written for this
+window (or the seeded request is past the compaction trigger anyway), the
+stored summary takes their place (a `{ compaction: { reason: 'checkpoint' } }`
+step); every compaction of the run is offered back to the checkpoint.
+
 Per iteration: `_shouldStop` (wall clock, then cancel), `_prepareRequest`
-(expire the screenshot note, last-steps warning, proactive compaction, notice
-relay), `_complete` (first completion gets the warm-up retry, then overflow
+(expire the screenshot note, last-steps warning, proactive compaction on every
+iteration including the first, since a long conversation's prior turns can
+already fill the window, notice relay), `_complete` (first completion gets the warm-up retry, then overflow
 recovery), then `_handleReply`: calibrate from `usage.prompt_tokens`, split the reply's
 calls into the batch and (at a pool of one) the dropped rest, push the
 assistant message, and either review a no-tool reply with the

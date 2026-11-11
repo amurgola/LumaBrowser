@@ -1,5 +1,6 @@
 const LlmModelsScanner = require('../LlmModelsScanner');
 const DrafterCatalog = require('../models/DrafterCatalog');
+const ModelGrouping = require('../models/ModelGrouping');
 const ModelName = require('../models/ModelName');
 const ModelDescriptor = require('../../shared/ModelDescriptor');
 const ModelsDirStorage = require('./ModelsDirStorage');
@@ -30,7 +31,12 @@ class LlmModelsView {
       model.displayName = this._svc.resolveModelDisplayName(model.nameKey);
       model.drafterOffer = DrafterCatalog.offerFor(model);
     }
+    ModelGrouping.attach(scan.models, LlmModelsView._overrides(this._svc));
     return scan;
+  }
+
+  static _overrides(svc) {
+    try { return (svc && typeof svc.getModelDisplayNames === 'function' && svc.getModelDisplayNames()) || {}; } catch (_) { return {}; }
   }
 
   async setDrafter(args) {

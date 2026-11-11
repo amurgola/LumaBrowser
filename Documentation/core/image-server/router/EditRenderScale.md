@@ -7,13 +7,14 @@ over-sharpens a picture edited at its own pixel size. Pure: no I/O.
 
 ## Methods
 
-- `EditRenderScale.plan({ canvas, source?, scale, maxPixels?, grid? })` returns
+- `EditRenderScale.plan({ canvas, source?, scale, minPixels?, maxPixels?, grid? })` returns
   the render canvas `{ width, height }`, or `null` when nothing changes.
   - `canvas` is the size that was asked for; `source` is the edited picture's
     own size, or `null` when it cannot be read (the canvas then stands in,
     since an edit normally matches its source).
-  - The render area is `scale * scale` times the source area, capped at
-    `maxPixels`, at the canvas's aspect, each side floored to `grid`.
+  - The render area is `scale * scale` times the source area, or `minPixels`
+    when that is larger, capped at `maxPixels`, at the canvas's aspect, each
+    side floored to `grid`.
   - `null` when `scale` is not above 1, when the canvas already has that area
     (within `SLACK`, 2%), or when the cap leaves no room to grow.
 - `SLACK` (0.98).

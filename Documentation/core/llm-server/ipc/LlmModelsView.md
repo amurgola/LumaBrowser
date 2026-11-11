@@ -13,8 +13,9 @@ The LLM Setup models view.
 - `scan(dir)` a decorated scan of `dir`.
 - `decorate(scan)` sets `nameKey`, `displayName` (the service's resolver) and
   `drafterOffer` ([DrafterCatalog.offerFor](../models/DrafterCatalog.md), null when
-  no drafter is published for the model) on every model; an unavailable scan is
-  returned as is.
+  no drafter is published for the model) on every model, and `grouping`
+  ([ModelGrouping.attach](../models/ModelGrouping.md), stored renames from
+  `getModelDisplayNames` as variants); an unavailable scan is returned as is.
 - `setDrafter({ key, choice })`: saves one model's drafter choice (`'auto'`, `'off'`,
   `'mtp'` (refused on a model without an MTP head) or `{ path }`) and resolves `{ success: true, config, scan, descriptors }`. Refused
   (`{ success: false, error }`) unless the key names a plain GGUF model of a fresh scan

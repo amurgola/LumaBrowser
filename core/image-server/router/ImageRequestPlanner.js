@@ -16,10 +16,13 @@ class ImageRequestPlanner {
 
   static PRESIZED_REF_ARGS = 'resize_before_vae=false';
 
-  constructor({ lorasDir = null, presize = RefImagePresizer.presize, measure = ImageRequestPlanner.measureRef } = {}) {
+  constructor({
+    lorasDir = null, presize = RefImagePresizer.presize, measure = ImageRequestPlanner.measureRef, resize = RefImagePresizer.nativeResize,
+  } = {}) {
     this._lorasDir = lorasDir;
     this._presize = presize;
     this._measure = measure;
+    this._scaleImage = resize;
   }
 
   static measureRef(ref) {
@@ -36,7 +39,9 @@ class ImageRequestPlanner {
     this._resolveDefaults();
     this._snapToNative();
     this._alignToGrid();
+    this._raiseToRenderFloor();
     this._enlargeEditRender();
+    this._moveOffHarshCanvas();
     this._applyEditProfile();
     this._resolveSigmas();
     this._presizeRefs();
@@ -69,6 +74,7 @@ class ImageRequestPlanner {
     this._refCount = Array.isArray(request.refImages) ? request.refImages.filter(Boolean).length : 0;
     this._customSigmas = null;
     this._outputSize = null;
+    this._init = { initImage: request.initImage || null, mask: request.mask || null };
     this._refs = { refImages: request.refImages || null, refImageArgs: null, refSizes: null };
   }
 
@@ -98,21 +104,62 @@ class ImageRequestPlanner {
     this._resize('grid-aligned', ImageCanvas.alignToGrid(this._effective.width, this._effective.height, this._model.constraints));
   }
 
+  _raiseToRenderFloor() {
+    if (this._request.initImage || this._request.mask) return;
+    const e = this._effective;
+    const asked = { width: e.width, height: e.height };
+    const size = ImageCanvas.raiseToMinArea(e.width, e.height, this._model.constraints);
+    if (!size) return;
+    this._resize('render-floor', size);
+    this._outputSize = asked;
+  }
+
   _enlargeEditRender() {
     const profile = this._refCount ? EditProfiles.editProfileFor(this._model.family) : null;
     if (!profile || !(profile.renderScale > 1) || this._request.initImage || this._request.mask) return;
     const e = this._effective;
-    const asked = { width: e.width, height: e.height };
+    const canvas = { width: e.width, height: e.height };
     const size = EditRenderScale.plan({
-      canvas: asked,
+      canvas,
       source: this._measure((this._request.refImages || []).filter(Boolean)[0]),
       scale: profile.renderScale,
+      minPixels: profile.renderMinPixels,
       maxPixels: profile.renderMaxPixels,
       grid: ImageModelInfo.gridOf(this._model, RefSizePlanner.DEFAULT_GRID),
     });
     if (!size) return;
     this._resize('edit-render-enlarged', size);
+    this._outputSize = this._outputSize || canvas;
+  }
+
+  _moveOffHarshCanvas() {
+    const profile = this._refCount && this._init.initImage ? EditProfiles.editProfileFor(this._model.family) : null;
+    const band = profile && profile.harshSides;
+    const e = this._effective;
+    const inBand = (side) => band && side > band.above && side < band.below;
+    if (!inBand(e.width) || !inBand(e.height)) return;
+    const asked = { width: e.width, height: e.height };
+    const grid = ImageModelInfo.gridOf(this._model, RefSizePlanner.DEFAULT_GRID);
+    const size = ImageCanvas.raiseToMinArea(e.width, e.height, { minRenderPixels: profile.renderMinPixels, dimensionMultiple: grid });
+    const moved = size && this._resizeInit(size);
+    if (!moved) return;
+    this._init = moved;
+    this._resize('edit-canvas-moved', size);
     this._outputSize = asked;
+  }
+
+  _resizeInit(size) {
+    try {
+      const scale = (value) => {
+        const buf = value ? RefImagePresizer.toBuffer(value) : null;
+        return buf ? this._scaleImage(buf, size.width, size.height) : null;
+      };
+      const initImage = scale(this._init.initImage);
+      const mask = this._init.mask ? scale(this._init.mask) : null;
+      return initImage && (mask || !this._init.mask) ? { initImage, mask } : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   _resize(phase, size) {
@@ -169,10 +216,10 @@ class ImageRequestPlanner {
         refMaxPixels: this._refMaxPixels(),
         cacheMode: r.cacheMode || md.cacheMode || null,
         cacheOption: r.cacheOption || md.cacheOption || null,
-        initImage: r.initImage || null,
+        initImage: this._init.initImage,
         strength: ImageRequestPlanner._strength(r.initImage, r.strength),
         refImages: this._refs.refImages,
-        mask: r.mask || null,
+        mask: this._init.mask,
       },
       refCount: this._refCount,
       refSizes: this._refs.refSizes,

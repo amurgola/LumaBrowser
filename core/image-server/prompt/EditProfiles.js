@@ -9,7 +9,7 @@ class EditProfiles {
 
   static GENERIC_PROFILE = {
     refTag: 'word', maxReferences: EditProfiles.DEFAULT_MAX_REFERENCES, keepClause: false, presizeRefs: false, refArea: 0,
-    refMaxPixels: 0, renderScale: 0, renderMaxPixels: 0,
+    refMaxPixels: 0, renderScale: 0, renderMinPixels: 0, renderMaxPixels: 0, harshSides: null,
   };
 
   static PROFILES = {
@@ -27,6 +27,8 @@ class EditProfiles {
       presizeRefs: false,
       refMaxPixels: 1024 * 1024,
       renderScale: 1.5,
+      renderMinPixels: 2304 * 2304,
+      harshSides: { above: 1792, below: 2304 },
       renderMaxPixels: 4096 * 4096,
     },
     'qwen-image-edit': { refTag: 'word', maxReferences: EditProfiles.DEFAULT_MAX_REFERENCES, keepClause: false },

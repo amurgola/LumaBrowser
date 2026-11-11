@@ -1,7 +1,9 @@
 import ContextOptionText from './ContextOptionText.js';
 import ChatIcons from '../ChatIcons.js';
 import Dom from '../../dom/Dom.js';
+import ByteFormatter from '../../format/ByteFormatter.js';
 import HtmlEscaper from '../../format/HtmlEscaper.js';
+import ModelTree from '../../models/ModelTree.js';
 
 export default class LocalModelRows {
   constructor(picker, ctx) {
@@ -13,7 +15,9 @@ export default class LocalModelRows {
     const { state } = this._ctx;
     if (!state.localModels.length) return;
     pop.appendChild(Dom.el('div', 'cm-model-group', 'Local'));
-    for (const m of state.localModels) {
+    for (const pos of ModelTree.flatten(ModelTree.build(state.localModels))) {
+      const m = pos.item;
+      if (pos.firstOfLine) pop.appendChild(LocalModelRows.headingEl(pos));
       const block = Dom.el('div', 'cm-local-block');
       block.appendChild(this._row(m));
       const profiles = this._picker.profilesOf(m.ref);
@@ -26,14 +30,34 @@ export default class LocalModelRows {
     return pop.querySelector('.cm-local-row.sel, .cm-profile-opt.sel');
   }
 
-  _row(m) {
+  static headingEl(pos) {
     const esc = HtmlEscaper.escape;
+    const el = Dom.el('div', 'cm-model-head' + (pos.firstOfFamily ? ' is-family-start' : ''),
+      '<span class="cm-model-family">' + esc(pos.family) + '</span>'
+      + (pos.line ? '<span class="cm-size-badge">' + esc(pos.line) + '</span>' : ''));
+    return el;
+  }
+
+  static lineHtml(m) {
+    const esc = HtmlEscaper.escape;
+    const g = ModelTree.groupingOf(m);
+    const name = g.variant || (g.quant ? '' : ModelTree.label(m));
+    return '<div class="cm-local-text">'
+      + (g.quant ? '<span class="cm-quant-badge">' + esc(g.quant) + '</span>' : '')
+      + (name ? '<span class="cm-local-name">' + esc(name) + '</span>' : '')
+      + (m.totalBytes ? '<span class="cm-local-meta">' + esc(ByteFormatter.gb(m.totalBytes)) + '</span>' : '')
+      + (m.hasFit ? '' : '<span class="cm-local-meta cm-est-tag">estimated</span>')
+      + '</div>';
+  }
+
+  static tooltip(m, sel) {
+    return (sel ? 'In use: ' : 'Use ') + ModelTree.label(m) + (m.summary ? '\n' + m.summary : '');
+  }
+
+  _row(m) {
     const sel = m.ref === this._ctx.state.modelRef;
-    const row = Dom.el('div', 'cm-model-opt cm-local-row' + (sel ? ' sel' : ''),
-      '<div class="cm-local-text"><div class="cm-local-name">' + esc(m.displayName || m.name) + '</div>'
-      + '<div class="cm-model-sub">' + esc(m.summary)
-      + (m.hasFit ? '' : ' · <span class="cm-est-tag">estimated</span>') + '</div></div>');
-    row.title = sel ? 'In use' : 'Use ' + (m.displayName || m.name);
+    const row = Dom.el('div', 'cm-model-opt cm-local-row' + (sel ? ' sel' : ''), LocalModelRows.lineHtml(m));
+    row.title = LocalModelRows.tooltip(m, sel);
     row.addEventListener('click', () => this._picker.selectLocal(m, this._picker.chosenCtx(m)));
     if (sel) row.appendChild(Dom.el('span', 'cm-inuse', 'In use'));
     if ((m.contextOptions || []).length) row.appendChild(this._ctxToggle(m, row));

@@ -11,10 +11,13 @@ class Compaction {
   static ROLE_OVERHEAD_CHARS = 8;
   static MIN_CHARS_PER_TOKEN = 1.5;
   static MAX_CHARS_PER_TOKEN = 8;
+  static MIN_KEEP_OF_SHARE = 0.25;
 
   constructor(opts = {}) {
     this.reserveFraction = Compaction._fractionOr(opts.reserveFraction, ContextBudget.SHARES.compactionReserve);
     this.keepFraction = Compaction._fractionOr(opts.keepFraction, ContextBudget.SHARES.compactionKeep);
+    this.roomFraction = ContextBudget.SHARES.compactionRoom;
+    this.summaryFraction = ContextBudget.SHARES.compactionSummary;
     this.charsPerToken = TokenEstimator.CHARS_PER_TOKEN;
     this.calibrate(opts.charsPerToken);
   }
@@ -33,9 +36,13 @@ class Compaction {
     return Math.ceil(chars / this.charsPerToken);
   }
 
-  shouldCompact(messages, contextWindow) {
+  shouldCompact(messages, contextWindow, extraTokens = 0) {
     if (!Compaction._hasEnoughHistory(messages, contextWindow)) return false;
-    return this.estimateTokens(messages) > contextWindow * (1 - this.reserveFraction);
+    return this.estimateTokens(messages) + Compaction._tokensOr(extraTokens) > contextWindow * (1 - this.reserveFraction);
+  }
+
+  usableTokens(leading, contextWindow, extraTokens = 0) {
+    return Math.max(0, contextWindow - this.estimateTokens(leading) - Compaction._tokensOr(extraTokens));
   }
 
   findCutIndex(messages, contextWindow, boundary = 'turn', keepTokensOverride = null) {
@@ -49,13 +56,24 @@ class Compaction {
   async compact(messages, opts = {}) {
     const unchanged = { compacted: false, messages };
     if (!this._mayCompact(messages, opts)) return unchanged;
-    const plan = this._planCut(messages, opts);
+    const plan = this._planWithCarry(messages, opts);
     if (!plan) return unchanged;
     const summary = await this._summarize(plan, opts.summarize);
     if (!summary) return unchanged;
-    const framed = { role: 'user', content: SummaryDirective.wrap(summary) };
+    const carried = Compaction._carried(plan, opts.carry);
+    const framed = { role: 'user', content: SummaryDirective.wrap(summary) + (carried ? `\n\n${carried}` : '') };
     if (!this._shrinks(framed, plan.head)) return unchanged;
     return Compaction._compactedResult(plan, framed, summary);
+  }
+
+  static _carried(plan, carry) {
+    if (typeof carry !== 'function') return '';
+    try {
+      const text = carry(plan.head, plan.recent);
+      return typeof text === 'string' ? text.trim() : '';
+    } catch (_) {
+      return '';
+    }
   }
 
   buildSummaryPrompt(head, opts = {}) {
@@ -70,15 +88,24 @@ class Compaction {
   _mayCompact(messages, opts) {
     if (typeof opts.summarize !== 'function') return false;
     if (opts.force) return Compaction._hasEnoughHistory(messages, opts.contextWindow);
-    return this.shouldCompact(messages, opts.contextWindow);
+    return this.shouldCompact(messages, opts.contextWindow, opts.extraTokens);
   }
 
-  _planCut(messages, opts) {
+  _planWithCarry(messages, opts) {
+    const plan = this._planCut(messages, opts);
+    if (!plan) return null;
+    const carried = Compaction._carried(plan, opts.carry);
+    if (!carried) return plan;
+    return this._planCut(messages, opts, this.estimateTokens([{ role: 'user', content: carried }])) || plan;
+  }
+
+  _planCut(messages, opts, carriedTokens = 0) {
     const boundary = opts.boundary === 'step' ? 'step' : 'turn';
     const lead = Compaction._leadingSystemCount(messages);
     const leading = messages.slice(0, lead);
     const rest = messages.slice(lead);
-    const cut = this.findCutIndex(rest, opts.contextWindow, boundary, this._forcedKeepTokens(rest, opts));
+    const usable = this.usableTokens(leading, opts.contextWindow, opts.extraTokens);
+    const cut = this.findCutIndex(rest, opts.contextWindow, boundary, this._keepTokens(rest, usable, opts, carriedTokens));
     if (cut <= 0) return null;
     const headAll = rest.slice(0, cut);
     const head = headAll.filter((m) => !m || m.role !== 'system');
@@ -86,9 +113,14 @@ class Compaction {
     return { leading, lead, cut, headAll, head, headSystem: headAll.filter((m) => m && m.role === 'system'), recent: rest.slice(cut) };
   }
 
-  _forcedKeepTokens(rest, opts) {
-    if (!opts.force) return null;
-    return Math.min(opts.contextWindow * this.keepFraction, this.estimateTokens(rest) * this.keepFraction);
+  _keepTokens(rest, usable, opts, carriedTokens = 0) {
+    const window = opts.contextWindow;
+    const share = Math.max(0, usable - carriedTokens) * this.keepFraction;
+    const fixed = window - usable;
+    const ceiling = window * (1 - this.reserveFraction - this.roomFraction - this.summaryFraction) - fixed - carriedTokens;
+    const keep = ceiling < share ? Math.max(ceiling, share * Compaction.MIN_KEEP_OF_SHARE) : share;
+    if (!opts.force) return keep > 0 ? keep : null;
+    return Math.min(keep > 0 ? keep : window * this.keepFraction, this.estimateTokens(rest) * this.keepFraction);
   }
 
   async _summarize(plan, summarize) {
@@ -136,6 +168,11 @@ class Compaction {
     let lead = 0;
     while (lead < messages.length && messages[lead] && messages[lead].role === 'system') lead++;
     return lead;
+  }
+
+  static _tokensOr(value) {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? n : 0;
   }
 
   static _fractionOr(value, fallback) {

@@ -18,8 +18,9 @@ sections.
 
 The row view object each model-list adapter builds: `mlKey` (identity, not
 Resonant's own `.key`), `expanded` (reactive collapse on the caret and details),
-`caretEmpty`, `name`, `sizeText` (text), and the HTML blocks `renameHtml`,
-`tagsHtml`, `metaHtml`, `ctxFitHtml`, `fitHtml`, `quantHtml`, `dlHtml`,
+`caretEmpty`, `name`, `sizeText` (text), and the HTML blocks `groupHtml` (the
+family heading above the row head, empty on every row but a family's first),
+`renameHtml`, `tagsHtml`, `metaHtml`, `ctxFitHtml`, `fitHtml`, `quantHtml`, `dlHtml`,
 `blurbHtml`, `shardsHtml`, `actionsHtml` (bound with `res-html`, so the adapter
 must escape what it interpolates; an empty block collapses through CSS). The
 head click calls the injected handler `res.mltoggle`. `res-style` sits on the

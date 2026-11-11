@@ -430,6 +430,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/models/ModelDownload.md](core/llm-server/models/ModelDownload.md): resumable single-file model download with pause and cancel; has `start`.
 - [core/llm-server/models/MlxRepoDownload.md](core/llm-server/models/MlxRepoDownload.md): downloads an MLX repo snapshot at its pinned commit with aggregate progress, safe paths and a free-space guard; has `start`.
 - [core/llm-server/models/HwBudget.md](core/llm-server/models/HwBudget.md): turns diagnostics into the flat hardware budget the pickers read; has `build`.
+- [core/llm-server/models/ModelGrouping.md](core/llm-server/models/ModelGrouping.md): places a local LLM file in the model tree every list renders: family, size line, variant, quant and quant rank.
 - [core/llm-server/models/ModelName.md](core/llm-server/models/ModelName.md): stable model keys and display names; has `key`, `prettify`, `resolveDisplayName`.
 - [core/llm-server/models/ModelNameToken.md](core/llm-server/models/ModelNameToken.md): noise and styling rules for one model-name token; has `isNoise`, `isQuantOrFormat`, `style`.
 - [core/llm-server/models/libraries/ExistingLibraryScanner.md](core/llm-server/models/libraries/ExistingLibraryScanner.md): finds GGUFs in LM Studio, the HF cache and Ollama; has `scan`.
@@ -712,12 +713,13 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/agent/AgentToolExecutor.md](core/llm-server/agent/AgentToolExecutor.md): executes one tool call on the working tab; has `execute`.
 - [core/llm-server/agent/CarriedNotesLedger.md](core/llm-server/agent/CarriedNotesLedger.md): eviction order for carried reasoning notes; has `track`, `remap`.
 - [core/llm-server/agent/CarriedReasoning.md](core/llm-server/agent/CarriedReasoning.md): carried-reasoning budgets; has `resolveBudget`, `tail`.
+- [core/llm-server/agent/CompactionCheckpoint.md](core/llm-server/agent/CompactionCheckpoint.md): keeps a compaction across turns: the summary stands in for the same leading messages on later turns with no model call; has `begin`, `apply`, `record`, `digest`.
 - [core/llm-server/agent/CompletionSender.md](core/llm-server/agent/CompletionSender.md): agent completions with warm-up retry; has `send`, `sendFirst`, `summarize`.
 - [core/llm-server/agent/CompletionVerifier.md](core/llm-server/agent/CompletionVerifier.md): tracks page actions that had no effect; has `next`, `observe`, `takeNudge`.
 - [core/llm-server/agent/ContextOverflow.md](core/llm-server/agent/ContextOverflow.md): recognises context-overflow errors; has `isExceeded`, `parseCounts`.
 - [core/llm-server/agent/FinalAnswerGate.md](core/llm-server/agent/FinalAnswerGate.md): retry, stall and verify nudges before a final answer; has `review`.
 - [core/llm-server/agent/LargeStringShrinker.md](core/llm-server/agent/LargeStringShrinker.md): cuts the largest strings of an over-budget result; has `shrink`.
-- [core/llm-server/agent/MidTurnCompactor.md](core/llm-server/agent/MidTurnCompactor.md): proactive and reactive in-turn compaction; has `compactIfOverTrigger`, `compact`.
+- [core/llm-server/agent/MidTurnCompactor.md](core/llm-server/agent/MidTurnCompactor.md): proactive and reactive in-turn compaction; has `overTrigger`, `compactIfOverTrigger`, `compact`.
 - [core/llm-server/agent/OverflowRecovery.md](core/llm-server/agent/OverflowRecovery.md): evict, shrink, compact and retry after an overflow; has `recover`.
 - [core/llm-server/agent/RunClock.md](core/llm-server/agent/RunClock.md): agent run wall clock; has `expired`, `remainingMs`, `extend`.
 - [core/llm-server/agent/RunOptions.md](core/llm-server/agent/RunOptions.md): agent run options with defaults; has `normalize`.
@@ -1015,6 +1017,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/models/LibraryScanMarkup.md](core/llm-server/ui/js/models/LibraryScanMarkup.md): markup for LibraryScan: `head(text, withPicker)`, `results(view, skipped, text)` and `failure(error)`.
 - [core/llm-server/ui/js/models/ModelList.md](core/llm-server/ui/js/models/ModelList.md): the one renderer for the LLM "Models Directory" and the Image "Image Models" lists.
 - [core/llm-server/ui/js/models/ModelListController.md](core/llm-server/ui/js/models/ModelListController.md): the handle a section gets back from `ModelList.mount`.
+- [core/llm-server/ui/js/models/ModelTree.md](core/llm-server/ui/js/models/ModelTree.md): the one grouping and ordering (family, size line, variants largest quant first) the Setup list, Defaults dropdown and chat picker render from.
 - [core/llm-server/ui/js/models/ModelSearch.md](core/llm-server/ui/js/models/ModelSearch.md): the "Search models" modal of the LLM Setup area: a two-pane Hugging Face GGUF (or, on a Mac, MLX) browser, trending first with a "Fits this PC" toggle, fit dots per row and hover prefetch of the card.
 - [core/llm-server/ui/js/models/ModelSearchRow.md](core/llm-server/ui/js/models/ModelSearchRow.md): pure HTML for one Hugging Face search result (id, gated mark, fit dot, params, context, architecture, counts) and the status line with the hidden count; has `html`, `facts`, `params`, `statusHtml`.
 - [core/llm-server/ui/js/models/ModelSearchDetail.md](core/llm-server/ui/js/models/ModelSearchDetail.md): the right pane of [ModelSearch](core/llm-server/ui/js/models/ModelSearch.md): repo facts (params, context, architecture), a quant `<select>` with fit notes, the fit badge, the download bar of the selected quant, and the model card through [ReadmeRenderer](core/llm-server/ui/js/models/ReadmeRenderer.md).
@@ -1682,7 +1685,7 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/ImageRouter.md](core/image-server/ImageRouter.md): single entry point for image generation and editing; has `generate`, `abort`, `getModelNativeSize`, `getFrameSizes`, `getEditPromptInfo`, `getActivePromptInfo`.
 - [core/image-server/router/ImageFamilyScaffold.md](core/image-server/router/ImageFamilyScaffold.md): per-family prompt and sampling scaffold; has `merge`, `buildPrompt`, `fromProfile`.
 - [core/image-server/router/EditRenderScale.md](core/image-server/router/EditRenderScale.md): the larger render canvas of an edit for a family that over-sharpens at source size; has `plan`.
-- [core/image-server/router/ImageCanvas.md](core/image-server/router/ImageCanvas.md): native-resolution snap and grid alignment; has `snapToQwenNative`, `alignToGrid`.
+- [core/image-server/router/ImageCanvas.md](core/image-server/router/ImageCanvas.md): native-resolution snap, grid alignment and render floor; has `snapToQwenNative`, `alignToGrid`, `raiseToMinArea`.
 - [core/image-server/router/ImageLoraSpecs.md](core/image-server/router/ImageLoraSpecs.md): declared LoRAs to sd-server LoRA entries; has `resolve`.
 - [core/image-server/router/ImageSlotPicker.md](core/image-server/router/ImageSlotPicker.md): which image slot serves a request; has `explicitRole`, `remoteRole`, `requestRole`, `residentSlot`.
 - [core/image-server/router/ImageModelResolver.md](core/image-server/router/ImageModelResolver.md): installed image model lookup; has `resolve`, `lorasDir`.
@@ -2517,6 +2520,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/bridge/AgentBudget.md](core/llm-server/chat/bridge/AgentBudget.md): resolves a chat mode's requested agent-run budget against the defaults and ceilings.
 - [core/llm-server/chat/bridge/BridgeGlobals.md](core/llm-server/chat/bridge/BridgeGlobals.md): the app singletons main.js parks on `global` that the bridge reaches for, read lazily on every call because they may arrive after the bridge.
 - [core/llm-server/chat/bridge/BridgeRun.md](core/llm-server/chat/bridge/BridgeRun.md): one Tools-on chat turn: wires the run's tool set, parser, dispatch pipeline and streaming into an AgentRunner driven by the user's model, runs it, and normalises its output onto the chat router's hooks.
+- [core/llm-server/chat/bridge/ConversationCheckpoint.md](core/llm-server/chat/bridge/ConversationCheckpoint.md): keeps a conversation's compaction checkpoint in its meta data; has `storeFor`.
 - [core/llm-server/chat/bridge/RunResultSpill.md](core/llm-server/chat/bridge/RunResultSpill.md): builds the spill writer for one agent run: over-budget tool results go to disk and the model sees a path and a shape sketch.
 - [core/llm-server/chat/bridge/TabPreviewSession.md](core/llm-server/chat/bridge/TabPreviewSession.md): one turn's live tab preview: the agent's work tab parked inside its tool card, frozen to a still frame when the tab goes away.
 - [core/llm-server/chat/bridge/eval/EvalEventCapture.md](core/llm-server/chat/bridge/eval/EvalEventCapture.md): the capturing `send` sink an eval turn hands the chat router; accumulates the stream the way the renderer does.
@@ -2541,7 +2545,9 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/bridge/prompt/ArtifactCatalog.md](core/llm-server/chat/bridge/prompt/ArtifactCatalog.md): the cross-turn artifact catalog prepended to the task, so "now edit it" can name the right id, with the regions the user painted on each image.
 - [core/llm-server/chat/bridge/prompt/EditRegionIndex.md](core/llm-server/chat/bridge/prompt/EditRegionIndex.md): the edit regions earlier turns recorded, by id and image, the newest user message's marked current; has `collect`, `get`, `list`, `forArtifact`, `currentFor`.
 - [core/llm-server/chat/bridge/prompt/ImagePromptHint.md](core/llm-server/chat/bridge/prompt/ImagePromptHint.md): the per-model image prompting block that rides with the images manual.
-- [core/llm-server/chat/bridge/prompt/ManualDelivery.md](core/llm-server/chat/bridge/prompt/ManualDelivery.md): the manuals of groups activated after the conversation's system prompt froze, rendered once at the head of a turn's task; has `render`.
+- [core/llm-server/chat/bridge/prompt/ManualDelivery.md](core/llm-server/chat/bridge/prompt/ManualDelivery.md): the manuals of groups activated after the conversation's system prompt froze, rendered once at the head of a turn's task; has `render`, `carriedKeys`, `carryOver`.
+- [core/llm-server/chat/bridge/prompt/SentForm.md](core/llm-server/chat/bridge/prompt/SentForm.md): what a stored user turn is replayed as on later turns: its own text plus the tool manuals it delivered, never the per-reply blocks it was sent with; has `durable`, `manualsOf`.
+- [core/llm-server/chat/bridge/prompt/ToolCallReplay.md](core/llm-server/chat/bridge/prompt/ToolCallReplay.md): puts an earlier turn's tool calls (fence and short result line) back into the history ahead of its stored answer; has `expand`, `messagesFor`, `fence`, `result`.
 - [core/llm-server/chat/bridge/prompt/PreviewSystemPrompt.md](core/llm-server/chat/bridge/prompt/PreviewSystemPrompt.md): the exact system prompt a fresh Tools-on turn would send, for the Advanced tab's preview.
 - [core/llm-server/chat/bridge/prompt/SystemPromptAppend.md](core/llm-server/chat/bridge/prompt/SystemPromptAppend.md): assembles everything a Tools-on turn appends to AgentRunner's base prompt.
 - [core/llm-server/chat/bridge/prompt/TurnPrompt.md](core/llm-server/chat/bridge/prompt/TurnPrompt.md): splits a turn's wire messages into the task and the history before it.

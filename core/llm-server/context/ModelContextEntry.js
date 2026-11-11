@@ -1,4 +1,5 @@
 const KvCacheModes = require('../../shared/llm/KvCacheModes');
+const ModelGrouping = require('../models/ModelGrouping');
 const ModelName = require('../models/ModelName');
 const ByteLadder = require('../server/ByteLadder');
 const ContextLadder = require('./ContextLadder');
@@ -44,7 +45,7 @@ class ModelContextEntry {
     const path = model.weights[0].path;
     const nameKey = ModelName.key(path);
     const nativeCtx = gguf && gguf.contextLength ? gguf.contextLength : null;
-    const quant = gguf && gguf.fileTypeName ? gguf.fileTypeName : null;
+    const quant = ModelGrouping.of(model).quant;
     return {
       ref: `local::${nameKey}`,
       name: model.name,

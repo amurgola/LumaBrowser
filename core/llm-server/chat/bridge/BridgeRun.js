@@ -5,6 +5,7 @@ const SilentTab = require('../web-tools/SilentTab');
 const WebSession = require('../web-tools/WebSession');
 const AgentBudget = require('./AgentBudget');
 const BridgeGlobals = require('./BridgeGlobals');
+const ConversationCheckpoint = require('./ConversationCheckpoint');
 const RunResultSpill = require('./RunResultSpill');
 const TabPreviewSession = require('./TabPreviewSession');
 const GroupIntent = require('./groups/GroupIntent');
@@ -187,12 +188,13 @@ class BridgeRun {
     const groups = this._toolSet.groups;
     await new GroupRouting(this._router).route(this._turn.prompt, (keys) => groups.activate(keys));
     groups.freezePromptKeys();
-    this._pendingManuals = groups.pendingManualKeys();
+    const nativeTools = this._nativePlan.enabled;
+    this._pendingManuals = groups.pendingManualKeys(ManualDelivery.carriedKeys(groups, this._turn.priorTurns, { nativeTools }));
     const systemPromptAppend = await this._systemPromptAppend();
     const tools = this._toolSet.runToolList({ allowTakeover: o.allowTakeover });
     return this._agent.run({
       prompt: ArtifactCatalog.render(this._catalog)
-        + ManualDelivery.render(groups, this._pendingManuals, { nativeTools: this._nativePlan.enabled })
+        + ManualDelivery.render(groups, this._pendingManuals, { nativeTools })
         + this._turn.body(),
       priorTurns: this._turn.priorTurns,
       resultSpill: RunResultSpill.create(this._router, o.conversationId, o.assistantMessageId),
@@ -208,6 +210,10 @@ class BridgeRun {
       nativeTools: this._nativePlan.enabled,
       nativeToolsTokens: this._nativePlan.estimateTokens(this._toolSet),
       onToolResultEvicted: (evicted) => this._onToolResultEvicted(evicted),
+      compactionCarry: (head, recent) => ManualDelivery.carryOver(
+        groups, [...groups.active].filter((key) => !groups.promptKeys.has(key)), head, recent, { nativeTools },
+      ),
+      compactionCheckpoint: o.nativeHistory ? ConversationCheckpoint.storeFor(this._router && this._router.chatStore, o.conversationId) : null,
       noBrowser: o.noBrowser,
       ctxPerSlot: o.ctxPerSlot,
       screenshotVision: this._toolSet.visionActive,
@@ -243,7 +249,6 @@ class BridgeRun {
 
   _onFirstSend(text) {
     const o = this._o;
-    this._toolSet.groups.markDelivered(this._pendingManuals || []);
     const store = this._router && this._router.chatStore;
     if (!store || !o.userMessageId || typeof store.updateMessage !== 'function') return;
     try { store.updateMessage(o.userMessageId, { sentContent: text }); } catch (_) {}

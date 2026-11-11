@@ -60,8 +60,8 @@ Messages:
   `tokensIn`, `tokensOut`, `error`, `toolCalls`, `sentContent`; `false` for an
   unknown id. `sentContent` (hydrated from `sent_content`, null by default) is
   the exact text a user turn was sent to the model as, recorded by the chat
-  bridge so later turns re-send it byte for byte and the server's KV cache
-  keeps everything after it.
+  bridge so later turns can replay the tool manuals it delivered
+  (`SentForm`); the rest of it was for that one reply.
 - `getMessage(id)`, `listMessages(conversationId)` (every variant, oldest first).
 - `listActiveMessages(conversationId)` the active branch
   ([MessageTree](chat/MessageTree.md)`.activePath`), with `variantCount` (0

@@ -19,6 +19,7 @@ export default class ModelLibrary {
         totalBytes: m.totalBytes,
         kind: m.kind,
         gguf: m.gguf,
+        grouping: m.grouping || null,
         weightsTotalBytes: m.weightsTotalBytes,
         mmprojTotalBytes: m.mmprojTotalBytes,
         compatibleRuntimes: Array.isArray(m.compatibleRuntimes) ? m.compatibleRuntimes.slice() : [],

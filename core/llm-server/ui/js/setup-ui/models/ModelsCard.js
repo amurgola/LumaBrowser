@@ -111,7 +111,7 @@ export default class ModelsCard {
       const path = LlmModelRow.weightsPath(m);
       if (path) this._fitPathByKey.set(LlmModelRow.nameKey(m), path);
     }
-    if (this._llmCtl) this._llmCtl.set(models.map((m) => this._rows.view(m)));
+    if (this._llmCtl) this._llmCtl.set(this._rows.views(models));
   }
 
   _paintPill(scan) {

@@ -13,10 +13,14 @@ The per-iteration restatement of the tool-call protocol.
 - `clockLine(now)`: `Current time (the user's local clock): 01:52 PM EST.` in
   `TIME_FORMAT`; null for anything but a valid Date.
 - `appendKeeping(msgs, reminder)`: writes the reminder into the last message
-  itself (the agent loop's path): the pre-reminder text is kept under the
-  `BASE` symbol so a later reminder on the same message replaces the first;
-  non-text content gets its own user message, reused the same way. Returns the
-  same array.
+  itself (the agent loop's path): the reminder written is remembered under the
+  `TAIL` symbol so a later reminder on the same message replaces the first.
+  Only that tail is replaced; the text before it is whatever the history holds
+  now, so a tool result shrunk between two sends (overflow recovery) stays
+  shrunk. Non-text content gets its own user message, reused the same way.
+  Returns the same array.
+- `isReminderOnly(message)`: whether a message is that stand-in, with no text
+  of the turn's own.
 - `append(msgs, reminder)`: merged into the last message's text (a new user
   message when it is not a string); non-mutating copy, for callers that must
   not touch the history.

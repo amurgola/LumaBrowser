@@ -22,6 +22,18 @@ class ImageCanvas {
     return { width: alignedWidth, height: alignedHeight };
   }
 
+  static raiseToMinArea(width, height, constraints) {
+    const floor = Number(constraints && constraints.minRenderPixels) || 0;
+    if (!(floor > 0) || !(width > 0 && height > 0) || width * height >= floor) return null;
+    const grid = Math.max(1, Number(constraints.dimensionMultiple) || 1);
+    const grow = Math.sqrt(floor / (width * height));
+    return { width: ImageCanvas._alignUp(width * grow, grid), height: ImageCanvas._alignUp(height * grow, grid) };
+  }
+
+  static _alignUp(n, grid) {
+    return Math.ceil(Math.round(n * 1000) / 1000 / grid) * grid;
+  }
+
   static _nearestAspect(aspect) {
     let best = null;
     let bestDistance = Infinity;
