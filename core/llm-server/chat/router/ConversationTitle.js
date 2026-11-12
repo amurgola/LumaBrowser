@@ -14,10 +14,13 @@ class ConversationTitle {
   }
 
   static clean(generated) {
-    return String(generated)
-      .replace(/^["'`\s]+|["'`\s]+$/g, '')
+    const line = String(generated).split(/\r?\n/).map((l) => l.trim()).find((l) => /[\p{L}\p{N}]/u.test(l)) || '';
+    return line
+      .replace(/^[#>\-*\s]+/, '')
+      .replace(/^title\s*:\s*/i, '')
+      .replace(/[*`]+|(?<![\p{L}\p{N}])_+|_+(?![\p{L}\p{N}])/gu, '')
+      .replace(/^["'\s]+|["'\s.]+$/g, '')
       .replace(/\s+/g, ' ')
-      .split('\n')[0]
       .slice(0, ConversationTitle.MAX_CHARS)
       .trim();
   }

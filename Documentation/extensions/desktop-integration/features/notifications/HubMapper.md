@@ -3,7 +3,7 @@
 `extensions/desktop-integration/features/notifications/HubMapper.js`
 
 Maps a normalized OS notification ([OsNotification](OsNotification.md)) to a
-Personal Hub queue item for `HubService.pushQueueItem`
+Personal Hub activity feed item for `HubService.pushQueueItem`
 ([InboxService.pushItem](../../../personal-hub/inbox/InboxService.md)).
 
 - `KNOWN`: desktop apps the Hub also sees on the web, each with its Hub app key,

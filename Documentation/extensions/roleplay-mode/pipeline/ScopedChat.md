@@ -20,3 +20,9 @@ Inside a reaction every side completion also carries
 `trace: { conversationId, turnId: messageId, callType: 'side' }` unless the
 caller set one, so the LLM trace and the Roleplay Lab can tell which turn a
 stage or casting call served.
+
+## Turn journal (2026-11-12)
+
+Every side completion made inside a reaction is also handed to
+`TurnJournal.shared.side` with its request, its answer and the time it took.
+A story without the verbose turn log option records nothing.

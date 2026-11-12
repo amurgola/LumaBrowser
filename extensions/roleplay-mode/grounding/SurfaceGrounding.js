@@ -91,9 +91,9 @@ class SurfaceGrounding {
   static attribute(characters, text) {
     const out = new Map();
     const parts = String(text || '').split(/(?<=[.!?;])\s+|\s+(?:and then|then)\s+/i).filter((s) => s.trim());
-    let last = [];
+    let last = characters.length === 1 ? characters.slice() : [];
     for (const part of parts) {
-      const padded = GroundingScope.padded(part);
+      const padded = GroundingScope.padded(part).replace(/ (?:my|mine|our) [a-z']+/g, ' ');
       const named = characters.filter((c) => SurfaceGrounding.named(c, padded));
       const owners = named.length ? named : last;
       if (named.length) last = named;

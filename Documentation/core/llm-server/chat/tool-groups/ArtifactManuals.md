@@ -12,7 +12,8 @@ model once the group is active.
 - `ArtifactManuals.LIVE_ARTIFACT`: `create_live_artifact`: the run contract
   (`root`, `R`, `Chart`, `store`, `luma`), house style, charts, persistent and
   live web data, extension APIs through `luma.ext(extensionId)` (the Hub's
-  task board, agenda and conversation queue as the worked example), and how to
+  task board, agenda and activity feed as the worked example, with
+  `listThreads({since?})` and `threadToTask(id, {})` among its methods), and how to
   edit a live module.
 - `ArtifactManuals.ARTIFACT_DATA`: `get_artifact_data`,
   `update_artifact_data`, `schedule_artifact_updates` (bound from

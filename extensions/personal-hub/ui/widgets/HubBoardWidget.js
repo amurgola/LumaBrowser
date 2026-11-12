@@ -7,6 +7,7 @@ import WidgetDom from './WidgetDom.js';
 export default class HubBoardWidget extends HubWidgetBase {
   static ATTENTION_AREA = 'tasks';
   static REFRESH_EVENTS = ['task.changed', 'board.changed'];
+  static TICK_MS = 60000;
   static ALL_SOURCES = '*';
   static LOCAL_TARGET = '';
   static TARGET_SEPARATOR = '::';
@@ -22,6 +23,7 @@ export default class HubBoardWidget extends HubWidgetBase {
     this._filter = HubBoardWidget.ALL_SOURCES;
     this._showHidden = false;
     this._dragging = null;
+    this._paintPending = false;
     this._targets = [];
     this._addTarget = HubBoardWidget._storedTarget();
     this._picker = new StatusPicker(root);
@@ -53,6 +55,11 @@ export default class HubBoardWidget extends HubWidgetBase {
   }
 
   _paint() {
+    if (this._dragging) {
+      this._paintPending = true;
+      return;
+    }
+    this._paintPending = false;
     const { columns, tasks } = this._data;
     const colors = TaskChrome.sourceColors(tasks);
     this._paintSources(tasks, colors);
@@ -63,14 +70,34 @@ export default class HubBoardWidget extends HubWidgetBase {
     const visible = inSource.filter((t) => this._showHidden || !t.hidden);
     const focus = this._captureQuickAdd();
     const lanes = this.root.querySelector('.hub-lanes');
+    const scroll = HubBoardWidget._captureScroll(lanes);
     lanes.innerHTML = '';
     if (!columns.length) {
       lanes.appendChild(this._empty('No board columns. Add some in Settings > Hub.'));
       return;
     }
-    for (const group of HubBoardWidget._pseudoGroups(visible)) lanes.appendChild(this._pseudoLane(group, columns, colors));
     for (const column of columns) lanes.appendChild(this._lane(column, visible.filter((t) => t.columnKey === column.key), colors));
+    for (const group of HubBoardWidget._pseudoGroups(visible)) lanes.appendChild(this._pseudoLane(group, columns, colors));
+    HubBoardWidget._restoreScroll(lanes, scroll);
     this._restoreQuickAdd(focus);
+  }
+
+  static _captureScroll(lanes) {
+    const tops = {};
+    for (const lane of lanes.querySelectorAll('.hub-lane')) {
+      const body = lane.querySelector('.hub-lane-body');
+      if (body && body.scrollTop) tops[lane.dataset.column] = body.scrollTop;
+    }
+    return { left: lanes.scrollLeft || 0, tops };
+  }
+
+  static _restoreScroll(lanes, scroll) {
+    for (const lane of lanes.querySelectorAll('.hub-lane')) {
+      const top = scroll.tops[lane.dataset.column];
+      const body = top ? lane.querySelector('.hub-lane-body') : null;
+      if (body) body.scrollTop = top;
+    }
+    if (scroll.left) lanes.scrollLeft = scroll.left;
   }
 
 
@@ -181,7 +208,7 @@ export default class HubBoardWidget extends HubWidgetBase {
 
 
   _lane(column, tasks, colors) {
-    const cards = tasks.map((t) => this._card(t, colors));
+    const cards = tasks.map((t) => this._card(t, colors, { done: !!column.isDone }));
     const body = WidgetDom.el('div', { class: 'hub-lane-body' }, cards.length ? cards : [WidgetDom.el('div', { class: 'hub-lane-empty', text: 'Nothing here' })]);
     const lane = WidgetDom.el('div', { class: `hub-lane${column.isDone ? ' is-done' : ''}`, data: { column: column.key } }, [
       WidgetDom.el('div', { class: 'hub-lane-head' }, [
@@ -208,8 +235,8 @@ export default class HubBoardWidget extends HubWidgetBase {
     });
   }
 
-  _card(task, colors) {
-    const overdue = task.dueAt && new Date(task.dueAt).getTime() < Date.now() && !task.hidden;
+  _card(task, colors, { done = false } = {}) {
+    const overdue = !done && !task.hidden && task.dueAt && new Date(task.dueAt).getTime() < Date.now();
     const where = [task.sourceId ? task.sourceLabel : '', task.listName].filter(Boolean).join(' / ');
     const card = WidgetDom.el('div', {
       class: `hub-card${task.hidden ? ' is-hidden' : ''}`,
@@ -230,7 +257,7 @@ export default class HubBoardWidget extends HubWidgetBase {
     ]);
     card.addEventListener('click', () => this._detail.open(task.id));
     card.addEventListener('dragstart', (e) => this._onDragStart(e, card, task.id));
-    card.addEventListener('dragend', () => { card.classList.remove('is-dragging'); this._dragging = null; });
+    card.addEventListener('dragend', () => { card.classList.remove('is-dragging'); this._endDrag(); });
     return card;
   }
 
@@ -404,29 +431,90 @@ export default class HubBoardWidget extends HubWidgetBase {
       if (!this._dragging) return;
       e.preventDefault();
       lane.classList.add('is-over');
+      this._markDrop(lane, HubBoardWidget._cardAfter(lane, e.clientY));
     });
-    lane.addEventListener('dragleave', () => lane.classList.remove('is-over'));
+    lane.addEventListener('dragleave', (e) => {
+      if (e.relatedTarget && lane.contains(e.relatedTarget)) return;
+      lane.classList.remove('is-over');
+      this._clearDropMarks();
+    });
     lane.addEventListener('drop', (e) => {
       e.preventDefault();
       lane.classList.remove('is-over');
+      const before = HubBoardWidget._cardAfter(lane, e.clientY);
       const taskId = this._dragging;
       this._dragging = null;
-      if (taskId) this._moveTask(taskId, columnKey);
+      this._clearDropMarks();
+      if (taskId) this._moveTask(taskId, columnKey, before ? before.dataset.task : null);
     });
   }
 
-  _moveTask(taskId, columnKey) {
-    const task = (this._data && this._data.tasks || []).find((t) => t.id === taskId);
-    if (task && task.columnKey === columnKey) return;
-    this.act(async () => {
-      let result = await this.host.call('moveTask', taskId, columnKey, {});
+  static _cardAfter(lane, y) {
+    const cards = [...lane.querySelectorAll('.hub-card:not(.is-dragging)')];
+    return cards.find((card) => {
+      const box = card.getBoundingClientRect();
+      return y < box.top + box.height / 2;
+    }) || null;
+  }
+
+  _markDrop(lane, card) {
+    this._clearDropMarks();
+    if (card) card.classList.add('is-drop-before');
+    else lane.querySelector('.hub-lane-body').classList.add('is-drop-end');
+  }
+
+  _clearDropMarks() {
+    for (const el of this.root.querySelectorAll('.is-drop-before, .is-drop-end')) el.classList.remove('is-drop-before', 'is-drop-end');
+  }
+
+  _endDrag() {
+    this._dragging = null;
+    this._clearDropMarks();
+    if (this._paintPending && this._data) this._paint();
+  }
+
+  async _moveTask(taskId, columnKey, beforeId = null) {
+    const task = ((this._data && this._data.tasks) || []).find((t) => t.id === taskId);
+    if (beforeId === taskId) return;
+    if (task && task.columnKey === columnKey && this._nextCardId(taskId) === beforeId) return;
+    if (task) {
+      this._placeLocally(task, columnKey, beforeId);
+      this._paint();
+    }
+    let failure = null;
+    try {
+      let result = await this.host.call('moveTask', taskId, columnKey, { beforeId });
       if (result && result.needsStatus) {
         const status = await this._askStatus(task, result);
-        if (!status) return;
-        result = await this.host.call('moveTask', taskId, columnKey, { status });
+        result = status ? await this.host.call('moveTask', taskId, columnKey, { beforeId, status }) : null;
       }
-      if (result && result.pushError) throw new Error(`Moved locally; tracker update failed: ${result.pushError}`);
-    });
+      if (result && result.pushError) failure = `Moved locally; tracker update failed: ${result.pushError}`;
+    } catch (err) {
+      failure = err;
+    }
+    await this.refresh();
+    if (failure) this._showError(failure);
+  }
+
+  _nextCardId(taskId) {
+    const cards = [...this.root.querySelectorAll('.hub-card')];
+    const card = cards.find((c) => c.dataset.task === taskId);
+    const next = card ? card.nextElementSibling : null;
+    return next && next.classList.contains('hub-card') ? next.dataset.task : null;
+  }
+
+  _placeLocally(task, columnKey, beforeId) {
+    const tasks = this._data.tasks;
+    tasks.splice(tasks.indexOf(task), 1);
+    const moved = { ...task, columnKey };
+    let at = beforeId ? tasks.findIndex((t) => t.id === beforeId) : -1;
+    if (at < 0) {
+      at = tasks.length;
+      for (let i = tasks.length - 1; i >= 0; i--) {
+        if (tasks[i].columnKey === columnKey) { at = i + 1; break; }
+      }
+    }
+    tasks.splice(at, 0, moved);
   }
 
   _askStatus(task, reply) {

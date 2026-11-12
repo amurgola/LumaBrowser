@@ -1,6 +1,8 @@
 const JsonColumn = require('../../../core/database/JsonColumn');
 
 class NotificationRepository {
+  static CHUNK = 400;
+
   constructor(db) {
     this._db = db;
   }
@@ -30,6 +32,20 @@ class NotificationRepository {
   listForThread(threadId, { limit = 50 } = {}) {
     return this._db.query('SELECT * FROM hub_notifications WHERE thread_id = ? ORDER BY received_at DESC LIMIT ?', threadId, limit)
       .map(NotificationRepository.hydrate);
+  }
+
+  latestForThreads(threadIds) {
+    const ids = [...new Set((Array.isArray(threadIds) ? threadIds : []).filter(Boolean).map(String))];
+    const latest = {};
+    for (let i = 0; i < ids.length; i += NotificationRepository.CHUNK) {
+      const chunk = ids.slice(i, i + NotificationRepository.CHUNK);
+      const rows = this._db.query(
+        `SELECT *, MAX(received_at) AS latest_at FROM hub_notifications WHERE thread_id IN (${chunk.map(() => '?').join(', ')}) GROUP BY thread_id`,
+        ...chunk,
+      );
+      for (const row of rows) latest[row.thread_id] = NotificationRepository.hydrate(row);
+    }
+    return latest;
   }
 
   listRecent({ limit = 100, offset = 0, app = null, since = null } = {}) {

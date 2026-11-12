@@ -5,7 +5,8 @@
 The first section of the Hub settings tab: every persisted tab the Hub reads
 through (from `listConnections`), with a status dot (`ok`; `warn` for a
 missing tab or a non-Microsoft error; `bad` when it needs attention), the
-account(s) it is signed in as, Queue and calendar-count badges, and an Open
+account(s) it is signed in as, Activity (the row feeds the activity feed) and
+calendar-count badges, and an Open
 tab button. Under a Google or Microsoft row, each account's calendars (from
 `listAccountCalendars`) are ticks; ticking calls `setAccountCalendar`.
 "Add an account" opens Google Calendar or Teams in a new persisted tab

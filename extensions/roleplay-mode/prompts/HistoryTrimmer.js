@@ -1,4 +1,5 @@
 const PromptBudget = require('./PromptBudget');
+const ProseCleanup = require('./ProseCleanup');
 
 class HistoryTrimmer {
   static trim(messages, tokenBudget) {
@@ -30,9 +31,9 @@ class HistoryTrimmer {
   }
 
   static stripDebris(text) {
-    const s = String(text || '');
-    if (!/<think>|```choices/i.test(s)) return s;
-    return s.replace(HistoryTrimmer.THINK, '').replace(HistoryTrimmer.CHOICES, '').trim();
+    let s = String(text || '');
+    if (/<think>|```choices/i.test(s)) s = s.replace(HistoryTrimmer.THINK, '').replace(HistoryTrimmer.CHOICES, '').trim();
+    return /^\s{0,3}#{1,6}\s/m.test(s) ? ProseCleanup.clean(s) : s;
   }
 
   static THINK = /<think>[\s\S]*?<\/think>\s*/gi;

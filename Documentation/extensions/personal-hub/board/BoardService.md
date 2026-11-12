@@ -75,8 +75,14 @@ Tokens live under the secret id `BoardService.tokenId(sourceId)` =
 - `async updateTask(id, { title?, description?, priority?, dueAt?, tags? })` ->
   `{ task, pushError? }`: a remote task's title/description are also pushed;
   a failed push is reported, never thrown.
-- `async moveTask(id, columnKey, { sortOrder?, status? })` -> `{ task, moved,
-  pushed, pushError? }`: appends to the column when no order is given. Moving
+- `async moveTask(id, columnKey, { beforeId?, sortOrder?, status? })` ->
+  `{ task, moved, pushed, pushError? }`. Where it lands in the column: before
+  the task `beforeId` names (`null`, or an id that is not in the column: at
+  the end), else at `sortOrder`, else at the end. A move within the task's own
+  column only reorders it: nothing is pushed to a tracker, the reply is
+  `{ task, moved: true, pushed: false }`, and with no place named
+  (`beforeId` undefined, no finite `sortOrder`) it is a no-op
+  `{ task, moved: false, pushed: false }` that emits nothing. Moving
   into a pseudo key throws. A local task just moves. For a remote task the
   status comes from StatusMapping `statusForColumn` with the statuses of the
   task's list (from [TrackerLists](TrackerLists.md)); when none fits the reply
@@ -99,7 +105,13 @@ Tokens live under the secret id `BoardService.tokenId(sourceId)` =
 - `archiveTask(id)`.
 
 Every other change emits `task.changed { taskId, reason: 'created' |
-'updated' | 'moved' | 'archived' | 'message' }`.
+'updated' | 'moved' | 'reordered' | 'archived' | 'message' }`.
+
+Private helpers of the move: `_reorder(task, column, { sortOrder, beforeId })`
+(the move within one column) and `_slot(id, columnKey, beforeId)`, the sort
+order that puts the task before `beforeId`; the column's other tasks (hidden
+ones included) are renumbered 1..n around the slot, so the order never
+depends on gaps.
 
 ### Push errors
 

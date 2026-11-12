@@ -16,7 +16,8 @@ steady cost instead of re-summarising its whole history every turn.
   the arc and the growth fields, bonds with other cast members included,
   through `CharacterProfile.apply(…, { growthOnly })`),
   then rewrites the summary when [StoryLedger](../world/StoryLedger.md)`.needsSummary`.
-  Returns true when anything changed; failures leave the records untouched.
+  Returns true when anything changed; failures leave the records untouched. A
+  [ReactionScope](ReactionScope.md) stop is rethrown from either call.
 
 ## Changes (2026-11-09, helper model)
 

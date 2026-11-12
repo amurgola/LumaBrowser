@@ -19,5 +19,13 @@ stay in the character's condition.
 - `add(char, details, turn)`: skips blanks, details already recorded (same
   words, any case or punctuation) and details already in the looks; text
   capped at 120 chars, list at `MAX` (10, newest kept). True when anything was
-  added.
+  added. It also skips a gesture, habit, movement or a reading of one
+  (`PASSING`: "fingers tapping a rapid rhythm, her tell for suppressing
+  emotion", "slow practiced movements") and a detail whose first word is a
+  garment the character is wearing ("apron strings" on someone in an apron).
+  A weaker stage model files these under `noticed`, and on the card each
+  became a tic the narrator repeated every reply. `PASSING` also rejects a
+  sound a movement makes (click and creak words: "knees clicking on the
+  stairs") and anything said to happen "as she", "as he" or "as they" do
+  something.
 - `line(char)` -> `"a; b"` or `''`.

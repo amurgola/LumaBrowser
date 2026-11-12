@@ -65,3 +65,15 @@ details, and the stage call records the lasting ones as marks
 - `forCharacter(c, paddedMoment)` (each note also carries `via`: `moment`,
   `condition` or `word`), `SurfaceGrounding.attribute(characters, text)`,
   `without(paddedMoment, unless)`, `named(c, paddedText)`, `describe(c)`.
+
+## Attribution (2026-11-12)
+
+With exactly one character on stage, a line that names nobody belongs to them
+("I rub against her leg"); with several, an unnamed line stays unattributed.
+The word after "my", "mine" or "our" is taken out of the line first: it is the
+player's own body, and "I press my nose to her ankle" used to call a
+running-nose card for the character.
+
+The surface pack gained three any-body cards for everyday contact: legs up
+close, feet, socks and shoes on an ordinary day, and how an ordinary person
+smells up close. The tears card no longer triggers on "nose" or "sniff".

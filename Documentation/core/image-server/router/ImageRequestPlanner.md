@@ -61,6 +61,11 @@ the adapter receives.
   canvas with an `edit-canvas-moved` status and `outputSize` holds the size
   asked for. Left as asked when either picture cannot be resized. The
   constructor's `resize` option replaces the scaler in tests.
+- Reference options: a request with references sends sd-server's
+  `ref_image_args` (sd.cpp docs/edit.md, for example `preset=krea2_edit`) from
+  the request's `refImageArgs`, else the model's `defaults.refImageArgs`,
+  joined with the presize marker when the references were sized here. A
+  request without references sends none.
 - `ImageRequestPlanner.measureRef(ref)` reads `{ width, height }` from a
   reference's PNG or JPEG header (Buffer, base64 or data URL), else `null`.
   The constructor's `measure` option replaces it in tests.

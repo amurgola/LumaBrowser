@@ -14,3 +14,7 @@ All static.
 ## Why
 
 The user chose that a temperature they set on a model or profile beats the hardcoded per-mode and agent-loop temperatures; `pinTemperature` also stops the model family's tuned temperature from overriding it in the local body. Compaction summaries and titles are housekeeping, so they stay at their deliberately low temperatures.
+
+A model's sampler overrides ride every call as `extra.modelSampler`. A side
+call keeps its own temperature, like the housekeeping calls: a model set to
+0.9 for prose must not raise a bookkeeping call's 0.2.

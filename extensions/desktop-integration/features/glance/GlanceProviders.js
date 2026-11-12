@@ -70,27 +70,28 @@ const calendar = {
 
 const queue = {
   id: 'queue',
-  label: 'Unread conversations',
+  label: 'Latest activity',
   setting: 'showQueue',
   extension: 'personal-hub',
-  LIMIT: 500,
+  LIMIT: 200,
 
-  async collect({ api }) {
-    const threads = await call(api, 'listThreads', { state: 'open', limit: queue.LIMIT });
+  async collect({ api, now }) {
+    const since = GlanceText.startOfDay(now).toISOString();
+    const threads = await call(api, 'listThreads', { state: 'active', since, limit: queue.LIMIT });
     if (!Array.isArray(threads)) return null;
     const sorted = threads.slice().sort((a, b) => String(b.lastAt || '').localeCompare(String(a.lastAt || '')));
     const top = sorted[0] || null;
     const items = {
-      unreadCount: threads.length,
+      activityToday: threads.length,
       latestThread: top ? { id: top.id, app: top.app || '', title: queue._title(top), lastAt: top.lastAt || null, url: top.url || '' } : null,
     };
     if (!threads.length) return { segment: null, line: null, items, tooltip: [] };
-    const tooltip = [`Queue: ${threads.length} open thread${threads.length === 1 ? '' : 's'}`];
-    for (const t of sorted.slice(0, TOOLTIP_ITEMS)) tooltip.push(`  ${t.app ? `${t.app}: ` : ''}${GlanceText.clip(queue._title(t), TITLE_CHARS)}`);
-    const text = `${threads.length} unread`;
+    const name = (t) => GlanceText.clip(`${t.app ? `${t.app}: ` : ''}${queue._title(t)}`, TITLE_CHARS);
+    const tooltip = ['Latest activity:'];
+    for (const t of sorted.slice(0, TOOLTIP_ITEMS)) tooltip.push(`  ${name(t)}`);
     return {
-      segment: { pre: text },
-      line: { id: 'queue', icon: 'inbox', text, detail: top ? GlanceText.clip(`${top.app ? `${top.app}: ` : ''}${queue._title(top)}`, TITLE_CHARS) : undefined },
+      segment: null,
+      line: { id: 'queue', icon: 'inbox', text: name(top), detail: threads.length > 1 ? `${threads.length} items today` : undefined, url: top.url || undefined },
       items,
       tooltip,
     };

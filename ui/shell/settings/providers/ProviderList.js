@@ -5,7 +5,7 @@ import EditableProviderCard from './EditableProviderCard.js';
 import AddProviderForm from './AddProviderForm.js';
 
 export default class ProviderList {
-  static EMPTY = '<div class="luma-empty luma-empty--plain">No providers yet. Use Add provider to connect one.</div>';
+  static EMPTY = '<div class="luma-empty luma-empty--plain">No providers yet. Add one below.</div>';
 
   constructor({ log, feedback }) {
     this.configs = [];
@@ -43,8 +43,10 @@ export default class ProviderList {
     const state = await this._loadState();
     const listEl = document.getElementById('providerList');
     if (!listEl) return;
+    const defaultsEl = document.getElementById('providerDefaults') || listEl;
+    defaultsEl.innerHTML = '';
     listEl.innerHTML = '';
-    this._defaults.render(listEl, { configs: this.configs, activeKey: state.activeKey, imageCfg: state.imageCfg });
+    this._defaults.render(defaultsEl, { configs: this.configs, activeKey: state.activeKey, imageCfg: state.imageCfg });
     if (this.configs.length === 0) listEl.insertAdjacentHTML('beforeend', ProviderList.EMPTY);
     for (const config of this.configs) listEl.appendChild(this._folding(config, this._card(config, state.peersById)));
   }

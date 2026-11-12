@@ -18,4 +18,5 @@ purpose: widget files are served to the Dashboard page alone
 - `formatTime(iso)`, `formatTimeRange(start, end, allDay)` (`All day`,
   `09:30 to 10:00`), `formatDate(iso)` (`Oct 8`).
 - `dayKey(iso, now)`: the local `YYYY-MM-DD` of a time (today when `iso` is
-  null); `dayLabel(dayKey, now)`: `Today`, `Tomorrow`, else `Wed, Oct 8`.
+  null); `dayLabel(dayKey, now)`: `Today`, `Tomorrow`, `Yesterday`, else
+  `Wed, Oct 8`.

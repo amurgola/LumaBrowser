@@ -30,12 +30,14 @@ export default class GearPanel {
     if (!composer) return;
     this._ctx.tabs.close();
     const pop = Dom.el('div', 'cm-gear-pop');
-    this._appendAttach(pop);
+    const keep = this._modeKeeps();
+    if (keep('attach')) this._appendAttach(pop);
     this._appendModel(pop);
     this._appendPlanLine(pop);
-    this._appendChoices(pop);
-    this._appendBrowser(pop);
-    this._appendTools(pop);
+    this._appendMode(pop);
+    if (keep('choices')) this._appendChoices(pop);
+    if (keep('browser')) this._appendBrowser(pop);
+    if (keep('tools')) this._appendTools(pop);
     composer.appendChild(pop);
     this.fit();
     window.addEventListener('resize', this._onResize);
@@ -46,6 +48,22 @@ export default class GearPanel {
     const pop = this._ctx.root && this._ctx.root.querySelector('.cm-gear-pop');
     if (!pop) return;
     PopoverFit.fitShrinkingChild(pop, pop.querySelector('.cm-gear-tools'), this._ctx.root, GearPanel.MIN_PANEL);
+  }
+
+  _modeKeeps() {
+    const def = this._ctx.state.activeModeDef;
+    if (!def || typeof def.renderGear !== 'function') return () => true;
+    const kept = Array.isArray(def.gearKeep) ? def.gearKeep : [];
+    return (section) => kept.includes(section);
+  }
+
+  _appendMode(pop) {
+    const { state, modeCtx } = this._ctx;
+    const def = state.activeModeDef;
+    if (!def || typeof def.renderGear !== 'function' || !modeCtx) return;
+    const wrap = Dom.el('div', 'cm-gear-mode');
+    pop.appendChild(wrap);
+    try { def.renderGear(wrap, modeCtx.forHooks(), { close: () => this.close(), fit: () => this.fit() }); } catch (_) { wrap.remove(); }
   }
 
   _docClick(e) {

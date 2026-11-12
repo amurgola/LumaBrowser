@@ -64,3 +64,6 @@ The story used to be one mutable blob: a regenerate built on the replaced
 reply's changes (and doubled its turn counter, clock and threads), a variant
 switch kept whatever ran last, and a deleted reply only lost its ledger rows
 and beats. Points keyed by reply id make each branch's state its own.
+
+`turnLog` (where the verbose turn log is written) is a server-owned key like
+`assetRetry`: a reaction's save keeps its own value over the stored one.

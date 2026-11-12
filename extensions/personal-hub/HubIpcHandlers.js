@@ -1,12 +1,59 @@
 const IpcEnvelope = require('../../core/shared/ipc/IpcEnvelope');
 
 class HubIpcHandlers {
+  static PANEL_CHANNELS = [
+    'listContexts', 'saveContexts', 'listContextChoices',
+    'summaryStatus', 'setSummariesEnabled', 'summarizeNow', 'listSummaryModels', 'setSummaryModel',
+    'listContacts', 'mergeContacts', 'splitContactIdentity', 'renameContact', 'keepContactsApart',
+  ];
+
   static register(ipc, api, { openUrl = async () => ({ success: false }) } = {}) {
-    const on = (channel, fn) => ipc.handle(channel, IpcEnvelope.enveloped(fn));
+    const table = {};
+    const on = (channel, fn) => {
+      table[channel] = IpcEnvelope.enveloped(fn);
+      ipc.handle(channel, table[channel]);
+    };
     HubIpcHandlers._registerCalendars(on, api, openUrl);
     HubIpcHandlers._registerBoard(on, api);
     HubIpcHandlers._registerSync(on, api);
     HubIpcHandlers._registerConnections(on, api);
+    HubIpcHandlers._registerDistilled(on, api);
+    return table;
+  }
+
+  static async invoke(table, channel, args) {
+    if (!HubIpcHandlers.PANEL_CHANNELS.includes(channel) || typeof table[channel] !== 'function') {
+      return { success: false, error: `"${channel}" is not available from the Dashboard.` };
+    }
+    return table[channel](null, ...(Array.isArray(args) ? args : []));
+  }
+
+  static _registerDistilled(on, api) {
+    on('listSummaryModels', () => api.summaryModels());
+    on('setSummaryModel', (_e, value) => ({ status: api.setSummaryModel(value || '') }));
+    on('listContexts', () => ({ contexts: api.listContexts() }));
+    on('saveContexts', (_e, contexts) => ({ contexts: api.saveContexts(contexts || []) }));
+    on('listContextChoices', () => HubIpcHandlers._contextChoices(api));
+    on('listContacts', (_e, query) => api.listContacts(query || {}));
+    on('mergeContacts', (_e, intoId, fromId) => ({ contact: api.mergeContacts(intoId, fromId) }));
+    on('splitContactIdentity', (_e, identityId) => ({ contact: api.splitContactIdentity(identityId) }));
+    on('renameContact', (_e, id, name) => ({ contact: api.renameContact(id, name) }));
+    on('keepContactsApart', (_e, aId, bId) => ({ kept: api.keepContactsApart(aId, bId) }));
+    on('summaryStatus', () => ({ status: api.summaryStatus() }));
+    on('setSummariesEnabled', (_e, enabled) => ({ status: api.setSummariesEnabled(!!enabled) }));
+    on('summarizeNow', async (_e, opts) => ({ result: await api.summarizeNow(opts || {}), status: api.summaryStatus() }));
+  }
+
+  static _contextChoices(api) {
+    const seen = new Set();
+    const tabs = [];
+    for (const row of (api.listConnections() || {}).connections || []) {
+      if (row.kind !== 'tab' || !row.partition || seen.has(row.partition)) continue;
+      seen.add(row.partition);
+      tabs.push({ value: row.partition, label: row.name || row.title || row.appLabel || row.partition });
+    }
+    const named = (sources) => (sources || []).map((s) => ({ value: s.id, label: s.label || s.id }));
+    return { tabs, calendars: named(api.listCalendarSources()), trackers: named(api.listTaskSources()) };
   }
 
   static _registerConnections(on, api) {

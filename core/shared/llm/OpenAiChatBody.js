@@ -67,7 +67,10 @@ class OpenAiChatBody {
 
   static _applyThinkingControls(body, chatTemplateKwargs, reasoningBudget) {
     if (OpenAiChatBody._isNonEmptyObject(chatTemplateKwargs)) body.chat_template_kwargs = chatTemplateKwargs;
-    if (typeof reasoningBudget === 'number') body.reasoning_budget = reasoningBudget;
+    if (typeof reasoningBudget === 'number') {
+      body.reasoning_budget = reasoningBudget;
+      body.reasoning_budget_tokens = reasoningBudget;
+    }
   }
 
   static _applyResponseFormat(body, responseFormat) {

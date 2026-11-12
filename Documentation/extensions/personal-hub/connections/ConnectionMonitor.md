@@ -20,7 +20,8 @@ Watches the sign-ins the Hub depends on and raises an alert when one is lost.
 
 Each row: `{ key, kind, app, appLabel, name, title, partition, tabId, url,
 provider, accounts, status ('ok' | 'signed_out' | 'error' | 'missing'),
-detail, areas ('queue' | 'calendar' | 'tasks'), calendarsInUse, needsAttention }`.
+detail, areas ('queue' | 'calendar' | 'tasks'), calendarsInUse, needsAttention }`
+(`queue` marks a tab that is a source of the activity feed).
 A lapsed sign-in keeps the accounts it last had so its name stays the account's.
 
 ## Alerts

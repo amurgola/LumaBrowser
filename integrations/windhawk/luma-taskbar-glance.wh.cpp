@@ -1,7 +1,7 @@
 // ==WindhawkMod==
 // @id              luma-taskbar-glance
 // @name            LumaBrowser Taskbar Glance
-// @description     Shows LumaBrowser's Hub glance (next meeting, unread, tasks due) on the Windows 11 taskbar clock, with details in the clock tooltip
+// @description     Shows LumaBrowser's Hub glance (next meeting, tasks due, running jobs) on the Windows 11 taskbar clock, with details in the clock tooltip
 // @version         1.0
 // @author          LumaBrowser
 // @github          https://github.com/amurgola/LumaBrowser
@@ -26,7 +26,7 @@
 Puts one short line from [LumaBrowser](https://lumabyte.com)'s Hub on the
 Windows 11 taskbar clock, for example:
 
-`Standup in 12m · 4 unread · 2 due`
+`Standup in 12m · 2 due · 1 running`
 
 - The line comes from Luma's Desktop Integration API
   (`GET /api/desktop/glance/`), polled in the background every 30 seconds by

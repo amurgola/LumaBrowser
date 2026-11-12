@@ -17,3 +17,10 @@ Bug M14: noThink must send both levers, because some Qwen templates ignore the b
 ## Changes (2026-11-09, helper model)
 
 `complete` takes `responseFormat` (an OpenAI `response_format` object, a JSON schema): it rides the extra beside the reasoning-off knobs, and llama-server decodes under its grammar so a bookkeeping call's JSON parses whatever model answers.
+
+## Temperature (2026-11-12)
+
+`complete` sends `extra.pinTemperature`, so the caller's temperature (0.2 by
+default) is the one used. A model family that publishes a sampler (temperature
+1.0 for the Qwen family) used to replace it; the family's other knobs still
+apply (`FamilySampler`).

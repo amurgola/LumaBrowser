@@ -21,23 +21,24 @@ class ProfilePrompt {
       + 'already given.\n'
       + '- appearance: a short comma-separated visual description (hair, build, features, age impression); keep '
       + 'the given one verbatim when there is one.\n'
-      + '- history: two or three sentences of their past before the story began: where they come from, one thing '
-      + 'that shaped them, how they came to be here. Concrete and specific; it must fit the premise and may seed a '
-      + 'later reveal.\n'
+      + '- history: ONE plain sentence of who they were before the story began, ordinary and in keeping with the '
+      + 'premise and the passage. No tragedy, dead relatives, crimes or mysteries unless the premise or the passage '
+      + 'says so. "" when nothing is known.\n'
       + '- voice: how they talk in two or three cues (register, rhythm, a habit) plus ONE short example line in '
       + 'quotes that only they would say.\n'
-      + '- wants: what they want in this story, one phrase, and it should be able to clash with what the player '
-      + 'wants. hides: one thing they conceal or will not say, or "".\n'
+      + '- wants: what they want right now in this story, one plain phrase taken from how they act in the passage. '
+      + 'hides: "" unless the premise or the passage clearly shows they conceal something, then that one thing.\n'
       + '- tells: two or three physical habits that show their feeling without naming it, specific to this person '
       + '(not jaw, breath or knuckles), e.g. "rubs the scar on her thumb when lying".\n'
       + '- bondUser: their starting attitude to the player in one or two words (wary, curious, warm, hostile, '
       + 'indebted).\n'
-      + '- bonds: one short line per OTHER cast member listed below that this character already knows or has an '
-      + 'opinion of (e.g. "owes him money and resents it", "her older sister"); leave out anyone they have no '
-      + 'relation to. {} when none. Keys are the exact cast names.\n'
+      + '- bonds: one short line per OTHER cast member listed below ONLY when the passage itself shows how this '
+      + 'character relates to them (e.g. "her older sister"); never invent a relationship. {} when none, which is '
+      + 'the usual answer. Keys are the exact cast names.\n'
       + '- Make them unlike the rest of the cast: a different role, register and want from every character listed '
       + 'below.\n'
-      + 'Fit the premise and tone. Never write the player\'s profile.';
+      + 'Stay inside what the premise and the passage establish: this card keeps the character consistent, it is '
+      + 'not a place to add plot. Fit the premise and tone. Never write the player\'s profile.';
     const user = 'Premise: ' + (d.scenario || '(none)') + '\n'
       + (d.tone ? 'Tone: ' + d.tone + '\n' : '')
       + 'The player: ' + (player.name || 'the protagonist') + (player.persona ? ' (' + player.persona + ')' : '') + '\n'
@@ -78,12 +79,14 @@ class ProfilePrompt {
       history: String(obj.history || obj.background || obj.past || '').trim(),
       voice: String(obj.voice || '').trim(),
       wants: String(obj.wants || '').trim(),
-      hides: String(obj.hides || '').trim(),
+      hides: ProfilePrompt.NOTHING.test(String(obj.hides || '').trim()) ? '' : String(obj.hides || '').trim(),
       tells: Array.isArray(obj.tells) ? obj.tells.map((t) => String(t || '').trim()).filter(Boolean) : [],
       bondUser: String(obj.bondUser || obj.bond || '').trim(),
       bonds: ProfilePrompt._bonds(obj.bonds, knownNames),
     };
   }
+
+  static NOTHING = /^[\s("']*(?:nothing(?: [a-z ]+)?|none(?: [a-z ]+)?|n\/?a|unknown|not (?:known|applicable|stated))[\s)."']*$/i;
 
   static _bonds(raw, knownNames) {
     const out = {};

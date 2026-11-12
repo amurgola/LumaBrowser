@@ -41,3 +41,10 @@ that writes the tags into its visible reply would otherwise send that
 reasoning back on every later turn. [NarratorContext](NarratorContext.md)
 runs it before trimming and reports `cleaned`; the descriptor then sends the
 cleaned history.
+
+## Headings (2026-11-12)
+
+`stripDebris` also runs [ProseCleanup](ProseCleanup.md) on a reply that has a
+markdown heading. A reply stored before the reaction tidied headings (or by an
+older add-on) still opens with one, and left in the history it is the example
+the model copies.

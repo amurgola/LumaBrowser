@@ -39,10 +39,13 @@ class ThreadRepository {
     return this.get(id);
   }
 
-  list({ state = 'open', app = null, limit = 100, offset = 0, nowIso = new Date().toISOString() } = {}) {
+  list({ state = 'active', app = null, limit = 100, offset = 0, since = null, nowIso = new Date().toISOString() } = {}) {
     const where = [];
     const params = [];
-    if (state === 'open') {
+    if (state === 'active') {
+      where.push("(state <> 'done' AND (state <> 'snoozed' OR snooze_until IS NULL OR snooze_until <= ?))");
+      params.push(nowIso);
+    } else if (state === 'open') {
       where.push("(state = 'open' OR (state = 'snoozed' AND snooze_until IS NOT NULL AND snooze_until <= ?))");
       params.push(nowIso);
     } else if (state && state !== 'all') {
@@ -52,6 +55,10 @@ class ThreadRepository {
     if (app) {
       where.push('app = ?');
       params.push(app);
+    }
+    if (since) {
+      where.push('last_at >= ?');
+      params.push(since);
     }
     const sql = `SELECT * FROM hub_threads${where.length ? ` WHERE ${where.join(' AND ')}` : ''} ORDER BY last_at DESC LIMIT ? OFFSET ?`;
     return this._db.query(sql, ...params, limit, offset).map(ThreadRepository.hydrate);

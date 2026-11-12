@@ -575,10 +575,76 @@ details[open] > summary .gs-chevron { transform: rotate(90deg); }
     border-radius: var(--radius-lg);
     box-shadow: none;
 }
-.settings-modal .gs-form-panel { margin-top: var(--space-3); }
+.settings-modal .gs-form-panel { margin-top: var(--space-2); }
 .settings-modal .gs-form-panel .form-buttons { justify-content: flex-end; }
+.settings-modal .gs-form-panel > :last-child { margin-bottom: 0; }
+.settings-modal .gs-form-panel .form-buttons { margin-top: var(--space-4); }
+.gs-form-title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+}
+
+.settings-modal .gs-add-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 40px;
+    margin: 0;
+    padding: 0 var(--space-3);
+    font-family: inherit;
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    text-align: left;
+    color: var(--text-secondary);
+    background: none;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.settings-modal .gs-add-row.ext-hidden { display: none; }
+.settings-modal .gs-add-row:hover { color: var(--text-primary); background: var(--surface-hover); }
+.settings-modal .gs-add-row:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.settings-modal .gs-add-row svg { flex: none; }
+
+.gs-choice {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+.gs-choice-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 22px);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.gs-choice-item:hover { background: var(--surface-hover); }
+.gs-choice-item:has(input:checked) { background: var(--bg-surface-2); border-color: var(--border-strong); }
+.gs-choice-item:has(input:focus-visible) { box-shadow: var(--focus-ring); }
+.settings-modal .gs-choice-item input {
+    position: absolute;
+    top: calc(var(--space-3) + 1px);
+    left: var(--space-3);
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    outline: none;
+    cursor: pointer;
+}
+.gs-choice-name { font-size: var(--text-md); font-weight: var(--weight-medium); line-height: var(--leading-tight); color: var(--text-primary); }
+.gs-choice-help { font-size: var(--text-sm); line-height: var(--leading); color: var(--text-secondary); }
 
 .provider-default-control { margin-bottom: var(--space-4); }
+.gs-body > .provider-default-control { margin-bottom: 0; }
 .settings-modal .provider-card {
     margin-bottom: var(--space-2);
     padding: 0;

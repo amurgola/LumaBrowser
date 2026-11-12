@@ -8,10 +8,16 @@ const CharacterMarks = require('../world/CharacterMarks');
 const CharacterProfile = require('../world/CharacterProfile');
 const StoryLedger = require('../world/StoryLedger');
 const OutfitWardrobe = require('../pipeline/OutfitWardrobe');
+const CastRename = require('../world/CastRename');
 
 class StageReconciler {
 
   static apply(data, ex, delta, turn = {}) {
+    if (Array.isArray(ex.characters)) ex.characters = ex.characters.filter((c) => !(c && CastResolver.isPlayer(data, c.name)));
+    if (ex.currentState && Array.isArray(ex.currentState.characters)) {
+      ex.currentState.characters = ex.currentState.characters.filter((c) => !(c && CastResolver.isPlayer(data, c.name)));
+    }
+    CastRename.apply(data, ex, delta);
     StageReconciler._characters(data, ex.characters, delta);
     if (ex.location) StageReconciler._location(data, ex.location, delta);
     if (ex.currentState) StageReconciler._presentCast(data, ex.currentState, delta, turn);
@@ -44,7 +50,11 @@ class StageReconciler {
 
   static _characters(data, newChars, delta) {
     for (const ec of newChars) {
-      const char = data.characters.find((c) => c.name && c.name.toLowerCase() === ec.name.toLowerCase());
+      const char = CastResolver.byName(data, ec.name);
+      if (char && StageReconciler._fuller(ec.name, char.name)) {
+        CastRename.rename(data, char, ec.name);
+        delta.changed = true;
+      }
       if (!char) {
         delta.addCharacter(data, { name: ec.name, description: ec.personality || '', appearance: ec.looks || '' });
         continue;
@@ -52,6 +62,12 @@ class StageReconciler {
       if (!char.appearance && ec.looks) { char.appearance = ec.looks; delta.changed = true; }
       if (!char.description && ec.personality) { char.description = ec.personality; delta.changed = true; }
     }
+  }
+
+  static _fuller(name, known) {
+    const a = String(name || '').trim();
+    const b = String(known || '').trim();
+    return a.toLowerCase() !== b.toLowerCase() && a.split(/\s+/).length > b.split(/\s+/).length;
   }
 
   static _location(data, loc, delta) {
@@ -108,7 +124,9 @@ class StageReconciler {
     if (Array.isArray(sc.noticed) && sc.noticed.length && CharacterMarks.add(char, sc.noticed, turn.turn)) delta.changed = true;
     if (sc.bondChange && sc.bondUser && CharacterProfile.setBond(char, CharacterProfile.BOND_USER, sc.bondUser)) delta.changed = true;
     if (sc.present === false) {
-      if (CharacterState.depart(char, { turn: turn.turn, sceneId, note: sc.leftTo })) delta.changed = true;
+      const was = CharacterState.of(char);
+      const where = was.present && was.sceneId ? was.sceneId : sceneId;
+      if (CharacterState.depart(char, { turn: turn.turn, sceneId: where, note: sc.leftTo })) delta.changed = true;
       return null;
     }
     if (CharacterState.arrive(char, sceneId, {
@@ -167,6 +185,8 @@ class StageReconciler {
     if (StoryLedger.record(data, chronicle.events, turn)) delta.changed = true;
     if (chronicle.clock && StoryLedger.advanceClock(data, chronicle.clock)) delta.changed = true;
     if (chronicle.threads && StoryLedger.threads(data, chronicle.threads, turn.turn)) delta.changed = true;
+    if (chronicle.pressure !== null && chronicle.pressure !== undefined && StoryLedger.keepPressure(data, chronicle.pressure)) delta.changed = true;
+    if (delta.sceneChanged && StoryLedger.of(data).pressure && StageReconciler._pressureLeftBehind(data) && StoryLedger.keepPressure(data, '')) delta.changed = true;
     for (const e of chronicle.events || []) {
       if (e.kind === 'death') {
         for (const name of e.who || []) {
@@ -180,6 +200,16 @@ class StageReconciler {
         }
       }
     }
+  }
+
+  static _pressureLeftBehind(data) {
+    const text = ' ' + StoryLedger.of(data).pressure.toLowerCase().replace(/[^a-z0-9']+/g, ' ') + ' ';
+    const names = (c) => [c.name].concat(Array.isArray(c.aliases) ? c.aliases : []).filter(Boolean)
+      .some((n) => text.includes(' ' + String(n).toLowerCase().replace(/[^a-z0-9']+/g, ' ').trim() + ' '));
+    const named = (data.characters || []).filter((c) => c && c.name && names(c));
+    if (!named.length) return false;
+    const onStage = new Set(CastResolver.currentEntries(data).map((e) => e.char.id));
+    return !named.some((c) => onStage.has(c.id));
   }
 
   static _secretOut(data, char, turn, record = true) {

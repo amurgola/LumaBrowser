@@ -9,7 +9,7 @@
   const SCENE_ASSETS = ['bg'];
   const CHAR_DEFINITION = ['name', 'description', 'appearance', 'profile', 'seed'];
   const SCENE_DEFINITION = ['name', 'description'];
-  const SERVER_KEYS = ['pendingArtAudit', 'assetRetry'];
+  const SERVER_KEYS = ['pendingArtAudit', 'assetRetry', 'turnLog'];
   const CHANGES_MAX = 24;
   const CHANGE_TEXT_MAX = 200;
 

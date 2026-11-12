@@ -68,6 +68,14 @@ class ImageModelEntries {
     loaderFlag: '--llm_vision',
   };
 
+  static QWEN3_VL_4B_LLM = {
+    role: 'llm',
+    repo: 'Qwen/Qwen3-VL-4B-Instruct-GGUF',
+    file: 'Qwen3VL-4B-Instruct-Q8_0.gguf',
+    url: `${HF}/Qwen/Qwen3-VL-4B-Instruct-GGUF/resolve/main/Qwen3VL-4B-Instruct-Q8_0.gguf?download=true`,
+    approxBytes: 4280406144,
+  };
+
   static QWEN_21_PROMPT_GUIDE =
     'This is Qwen-Image 2.1 (LLM-conditioned via Qwen3-VL). Write the positive '
     + 'prompt as a NATURAL-LANGUAGE description: subject, setting, style, '
@@ -633,6 +641,237 @@ class ImageModelEntries {
           + 'spell out any text to render in quotes. cfg is fixed at 1.0, so negative '
           + 'prompts have no effect on this model.',
       },
+      launchArgs: [],
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
+      id: 'flux-2-klein-9b',
+      label: 'FLUX.2 klein 9B',
+      blurb:
+        'Black Forest Labs\' FLUX.2 klein 9B: the larger klein, step-distilled to '
+        + '4 steps, that both generates and edits from reference pictures. The '
+        + 'fastest editor measured here (about 5 s per 1024x1024 edit on an RTX '
+        + '5090) with solid subject consistency. Qwen3-8B as the text encoder. '
+        + '~19 GB total at Q8_0 across diffusion + VAE + encoder. Non-commercial '
+        + 'licence: the 4B row is the Apache-2.0 one.',
+      family: 'flux2',
+      kind: 'generate',
+      supportsEdit: true,
+      licenseNote: 'FLUX Non-Commercial License (Black Forest Labs): the weights are for non-commercial use only; commercial use needs a licence from Black Forest Labs. Its clause on using outputs commercially is disputed, so read it before selling anything made with it.',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'leejet/FLUX.2-klein-9B-GGUF',
+          file: 'flux-2-klein-9b-Q8_0.gguf',
+          url: `${HF}/leejet/FLUX.2-klein-9B-GGUF/resolve/main/flux-2-klein-9b-Q8_0.gguf?download=true`,
+          approxBytes: 9978284192,
+          quants: [
+            { id: 'Q8_0', label: 'Q8_0 - recommended (near-lossless)', file: 'flux-2-klein-9b-Q8_0.gguf', url: `${HF}/leejet/FLUX.2-klein-9B-GGUF/resolve/main/flux-2-klein-9b-Q8_0.gguf?download=true`, approxBytes: 9978284192, recVramBytes: 14 * GB, default: true },
+            { id: 'Q4_0', label: 'Q4_0 - smallest', file: 'flux-2-klein-9b-Q4_0.gguf', url: `${HF}/leejet/FLUX.2-klein-9B-GGUF/resolve/main/flux-2-klein-9b-Q4_0.gguf?download=true`, approxBytes: 5616208032, recVramBytes: 10 * GB },
+          ],
+        },
+        vae: {
+          role: 'vae',
+          repo: 'Comfy-Org/flux2-dev',
+          file: 'flux2-vae.safetensors',
+          url: `${HF}/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors?download=true`,
+          approxBytes: 333 * MB,
+        },
+        llm: {
+          role: 'llm',
+          repo: 'unsloth/Qwen3-8B-GGUF',
+          file: 'Qwen3-8B-Q8_0.gguf',
+          url: `${HF}/unsloth/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q8_0.gguf?download=true`,
+          approxBytes: 8709519168,
+        },
+      },
+      minVramBytes: 12 * GB,
+      defaults: {
+        width: 1024,
+        height: 1024,
+        steps: 4,
+        cfgScale: 1.0,
+        sampler: 'euler',
+        promptGuide:
+          'This is FLUX.2 klein 9B (LLM-conditioned via Qwen3). Write the positive '
+          + 'prompt as a NATURAL-LANGUAGE description with concrete nouns and style '
+          + 'words; spell out any text to render in quotes. cfg is fixed at 1.0, so '
+          + 'negative prompts have no effect. When editing, describe the CHANGE as '
+          + 'an instruction and say what must stay the same.',
+      },
+      launchArgs: [],
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
+      id: 'flux-3-image-klein',
+      label: 'FLUX.3 Image Klein',
+      blurb:
+        'Black Forest Labs\' FLUX.3 Image Klein (Oct 2026): a small 5.6B model '
+        + 'that both generates and edits from up to 10 reference pictures, '
+        + 'distilled to 16 steps. The most faithful editor measured here: it '
+        + 'makes the change and leaves the rest of the picture alone (about 10 s '
+        + 'per 1024x1024 edit on an RTX 5090). Qwen3-VL 4B as the text encoder '
+        + 'and the FLUX.2 VAE. ~10.8 GB total at Q8_0. Needs a recent '
+        + 'stable-diffusion.cpp build: update the runtime in Setup if it fails '
+        + 'to load.',
+      family: 'flux3',
+      kind: 'generate',
+      supportsEdit: true,
+      licenseNote: 'FLUX Kommunity License v1.0 (Black Forest Labs): free for research and non-commercial use, and commercial use of outputs is free only while you and your affiliates stay under 5M USD annual revenue; above that, or to host or redistribute the model commercially, you need a licence from Black Forest Labs. Read it before commercial use.',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'leejet/flux-3-image-klein-GGUF',
+          file: 'flux3-image-klein-Q8_0.gguf',
+          url: `${HF}/leejet/flux-3-image-klein-GGUF/resolve/main/flux3-image-klein-Q8_0.gguf?download=true`,
+          approxBytes: 6151716032,
+          quants: [
+            { id: 'Q8_0', label: 'Q8_0 - recommended (the measured one)', file: 'flux3-image-klein-Q8_0.gguf', url: `${HF}/leejet/flux-3-image-klein-GGUF/resolve/main/flux3-image-klein-Q8_0.gguf?download=true`, approxBytes: 6151716032, recVramBytes: 10 * GB, default: true },
+            { id: 'Q6_K', label: 'Q6_K - high quality', file: 'flux3-image-klein-Q6_K.gguf', url: `${HF}/leejet/flux-3-image-klein-GGUF/resolve/main/flux3-image-klein-Q6_K.gguf?download=true`, approxBytes: 4874083520, recVramBytes: 8 * GB },
+            { id: 'Q5_K', label: 'Q5_K - balanced', file: 'flux3-image-klein-Q5_K.gguf', url: `${HF}/leejet/flux-3-image-klein-GGUF/resolve/main/flux3-image-klein-Q5_K.gguf?download=true`, approxBytes: 4173446336, recVramBytes: 8 * GB },
+            { id: 'Q4_0', label: 'Q4_0 - smallest', file: 'flux3-image-klein-Q4_0.gguf', url: `${HF}/leejet/flux-3-image-klein-GGUF/resolve/main/flux3-image-klein-Q4_0.gguf?download=true`, approxBytes: 3514023104, recVramBytes: 6 * GB },
+          ],
+        },
+        vae: {
+          role: 'vae',
+          repo: 'Comfy-Org/flux2-dev',
+          file: 'flux2-vae.safetensors',
+          url: `${HF}/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors?download=true`,
+          approxBytes: 333 * MB,
+        },
+        llm: { ...ImageModelEntries.QWEN3_VL_4B_LLM },
+      },
+      minVramBytes: 8 * GB,
+      defaults: {
+        width: 1024,
+        height: 1024,
+        steps: 16,
+        cfgScale: 1.0,
+        sampler: 'euler',
+        promptGuide:
+          'This is FLUX.3 Image Klein (LLM-conditioned via Qwen3-VL). Write the '
+          + 'positive prompt as a NATURAL-LANGUAGE description in full sentences; '
+          + 'spell out any text to render in quotes. cfg is fixed at 1.0, so '
+          + 'negative prompts have no effect. When editing, describe the CHANGE as '
+          + 'an instruction and say what must stay the same.',
+      },
+      constraints: { dimensionMultiple: 16 },
+      launchArgs: [],
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
+      id: 'flux-1-kontext-dev',
+      label: 'FLUX.1 Kontext dev',
+      blurb:
+        'Black Forest Labs\' FLUX.1 Kontext [dev], the 12B instruction editor '
+        + 'that started the reference-edit line. Still widely used and well '
+        + 'served by community LoRAs, but the newer editors in this list follow '
+        + 'instructions more closely and are several times faster (about 30 s '
+        + 'per 1024x1024 edit on an RTX 5090). ~18.4 GB total at Q8_0 across '
+        + 'diffusion + VAE + CLIP-L + T5-XXL. Non-commercial licence.',
+      family: 'flux-kontext',
+      kind: 'edit',
+      licenseNote: 'FLUX.1 [dev] Non-Commercial License (Black Forest Labs): the weights are for non-commercial use only; commercial use needs a licence from Black Forest Labs. Read it before selling anything made with it.',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'QuantStack/FLUX.1-Kontext-dev-GGUF',
+          file: 'flux1-kontext-dev-Q8_0.gguf',
+          url: `${HF}/QuantStack/FLUX.1-Kontext-dev-GGUF/resolve/main/flux1-kontext-dev-Q8_0.gguf?download=true`,
+          approxBytes: 12714452256,
+          quants: [
+            { id: 'Q8_0', label: 'Q8_0 - recommended (near-lossless)', file: 'flux1-kontext-dev-Q8_0.gguf', url: `${HF}/QuantStack/FLUX.1-Kontext-dev-GGUF/resolve/main/flux1-kontext-dev-Q8_0.gguf?download=true`, approxBytes: 12714452256, recVramBytes: 16 * GB, default: true },
+            { id: 'Q6_K', label: 'Q6_K - high quality', file: 'flux1-kontext-dev-Q6_K.gguf', url: `${HF}/QuantStack/FLUX.1-Kontext-dev-GGUF/resolve/main/flux1-kontext-dev-Q6_K.gguf?download=true`, approxBytes: 9848349984, recVramBytes: 12 * GB },
+            { id: 'Q5_K_S', label: 'Q5_K_S - balanced', file: 'flux1-kontext-dev-Q5_K_S.gguf', url: `${HF}/QuantStack/FLUX.1-Kontext-dev-GGUF/resolve/main/flux1-kontext-dev-Q5_K_S.gguf?download=true`, approxBytes: 8276616480, recVramBytes: 10 * GB },
+            { id: 'Q4_0', label: 'Q4_0 - smallest', file: 'flux1-kontext-dev-Q4_0.gguf', url: `${HF}/QuantStack/FLUX.1-Kontext-dev-GGUF/resolve/main/flux1-kontext-dev-Q4_0.gguf?download=true`, approxBytes: 6797337888, recVramBytes: 8 * GB },
+          ],
+        },
+        vae: { ...ImageModelEntries.FLUX_VAE },
+        clip_l: {
+          role: 'clip_l',
+          repo: 'comfyanonymous/flux_text_encoders',
+          file: 'clip_l.safetensors',
+          url: `${HF}/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors?download=true`,
+          approxBytes: 246 * MB,
+        },
+        t5xxl: { ...ImageModelEntries.T5XXL_Q8 },
+      },
+      minVramBytes: 12 * GB,
+      defaults: {
+        width: 1024,
+        height: 1024,
+        steps: 28,
+        cfgScale: 1.0,
+        sampler: 'euler',
+        promptGuide:
+          'This is FLUX.1 Kontext, an instruction editor. Describe the CHANGE as a '
+          + 'short, direct instruction ("change the coat to a red raincoat") and '
+          + 'name what must stay the same ("keep the face, pose and background"). '
+          + 'Put text to render in quotes. cfg is fixed at 1.0, so negative prompts '
+          + 'have no effect.',
+      },
+      launchArgs: [],
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
+      id: 'krea-2-turbo',
+      label: 'Krea 2 Turbo',
+      blurb:
+        'Krea\'s Krea 2 Turbo (June 2026): a 12B model distilled to 8 steps, '
+        + 'known for natural, un-plastic photographic looks. Generation only on '
+        + 'its own; attach the "Krea 2 General Edit" LoRA from the LoRA list to '
+        + 'turn it into an instruction editor (about 17 s per 1024x1024 edit on '
+        + 'an RTX 5090). Qwen3-VL 4B as the text encoder and the Wan 2.1 VAE. '
+        + '~19 GB total at Q8_0.',
+      family: 'krea2',
+      kind: 'generate',
+      licenseNote: 'Krea 2 Community License: free for non-commercial use, and commercial use is allowed only while you and your affiliates stay under 1M USD trailing twelve-month revenue; above that, or to host the model as a service, you need an enterprise licence from Krea. Read it before commercial use.',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'realrebelai/KREA-2_GGUFs',
+          file: 'Krea-2-Turbo-Q8_0.gguf',
+          url: `${HF}/realrebelai/KREA-2_GGUFs/resolve/main/TURBO/Krea-2-Turbo-Q8_0.gguf?download=true`,
+          approxBytes: 13625717856,
+          quants: [
+            { id: 'Q8_0', label: 'Q8_0 - recommended (the measured one)', file: 'Krea-2-Turbo-Q8_0.gguf', url: `${HF}/realrebelai/KREA-2_GGUFs/resolve/main/TURBO/Krea-2-Turbo-Q8_0.gguf?download=true`, approxBytes: 13625717856, recVramBytes: 18 * GB, default: true },
+            { id: 'Q6_K', label: 'Q6_K - high quality', file: 'Krea-2-Turbo-Q6_K.gguf', url: `${HF}/realrebelai/KREA-2_GGUFs/resolve/main/TURBO/Krea-2-Turbo-Q6_K.gguf?download=true`, approxBytes: 10521682016, recVramBytes: 14 * GB },
+            { id: 'Q5_K_S', label: 'Q5_K_S - balanced', file: 'Krea-2-Turbo-Q5_K_S.gguf', url: `${HF}/realrebelai/KREA-2_GGUFs/resolve/main/TURBO/Krea-2-Turbo-Q5_K_S.gguf?download=true`, approxBytes: 8819266656, recVramBytes: 12 * GB },
+            { id: 'Q4_K_M', label: 'Q4_K_M - smallest', file: 'Krea-2-Turbo-Q4_K_M.gguf', url: `${HF}/realrebelai/KREA-2_GGUFs/resolve/main/TURBO/Krea-2-Turbo-Q4_K_M.gguf?download=true`, approxBytes: 7216993376, recVramBytes: 10 * GB },
+          ],
+        },
+        vae: { ...ImageModelEntries.WAN_VAE },
+        llm: { ...ImageModelEntries.QWEN3_VL_4B_LLM },
+        vision: {
+          role: 'vision',
+          repo: 'Qwen/Qwen3-VL-4B-Instruct-GGUF',
+          file: 'mmproj-Qwen3VL-4B-Instruct-F16.gguf',
+          url: `${HF}/Qwen/Qwen3-VL-4B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-4B-Instruct-F16.gguf?download=true`,
+          approxBytes: 836180256,
+          loaderFlag: '--llm_vision',
+        },
+      },
+      minVramBytes: 16 * GB,
+      defaults: {
+        width: 1024,
+        height: 1024,
+        steps: 8,
+        cfgScale: 1.0,
+        sampler: 'euler',
+        refImageArgs: 'preset=krea2_edit',
+        promptGuide:
+          'This is Krea 2 Turbo (LLM-conditioned via Qwen3-VL). Write the positive '
+          + 'prompt as a NATURAL-LANGUAGE description in full sentences: subject, '
+          + 'setting, light and camera. It favours natural photographic looks. cfg '
+          + 'is fixed at 1.0, so negative prompts have no effect. With the General '
+          + 'Edit LoRA attached, describe an edit as an instruction, say concretely '
+          + 'what is removed and what is worn or shown instead, and name what stays.',
+      },
+      constraints: { dimensionMultiple: 16 },
       launchArgs: [],
       protocol: 'sd-cpp-http',
       compatibleRuntimes: [...SD_CPP_RUNTIMES],

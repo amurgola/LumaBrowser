@@ -3,6 +3,10 @@ import PeerDiscovery from './PeerDiscovery.js';
 export default class AddProviderForm {
   static ANTHROPIC_ENDPOINT = 'https://api.anthropic.com';
 
+  static DEFAULT_TYPE = 'openai';
+
+  static NAME_HINTS = { openai: 'e.g., OpenRouter, LM Studio', anthropic: 'e.g., Claude' };
+
   constructor(ctx) {
     this._ctx = ctx;
     const $ = (id) => document.getElementById(id);
@@ -19,13 +23,33 @@ export default class AddProviderForm {
     const el = this._el;
     if (!el.addBtn || !el.form) return;
     this._discovery.install();
-    el.addBtn.onclick = () => { el.form.classList.remove('ext-hidden'); el.addBtn.classList.add('ext-hidden'); this._setMode(el.type.value); };
+    el.addBtn.onclick = () => this._open();
     el.cancelBtn.onclick = () => this._cancel();
     el.type.onchange = () => {
-      el.endpoint.value = el.type.value === 'anthropic' ? AddProviderForm.ANTHROPIC_ENDPOINT : '';
-      this._setMode(el.type.value);
+      el.endpoint.value = this._type() === 'anthropic' ? AddProviderForm.ANTHROPIC_ENDPOINT : '';
+      this._setMode(this._type());
     };
     el.saveBtn.onclick = () => this._submit();
+  }
+
+  _type() {
+    const checked = this._el.type.querySelector('input:checked');
+    return checked ? checked.value : '';
+  }
+
+  _setType(type) {
+    for (const input of this._el.type.querySelectorAll('input')) input.checked = input.value === type;
+  }
+
+  _open() {
+    const el = this._el;
+    if (!this._type()) this._setType(AddProviderForm.DEFAULT_TYPE);
+    el.form.classList.remove('ext-hidden');
+    el.addBtn.classList.add('ext-hidden');
+    el.addBtn.setAttribute('aria-expanded', 'true');
+    this._setMode(this._type());
+    const first = this._type() === 'peer' ? el.peerAddr : el.name;
+    if (first) first.focus();
   }
 
   static newConfig(type, name, endpoint, apiKey, now = Date.now()) {
@@ -44,7 +68,8 @@ export default class AddProviderForm {
     if (el.endpointGroup) el.endpointGroup.classList.toggle('ext-hidden', isPeer);
     if (el.keyGroup) el.keyGroup.classList.toggle('ext-hidden', isPeer);
     if (el.peerBlock) el.peerBlock.classList.toggle('ext-hidden', !isPeer);
-    el.saveBtn.textContent = isPeer ? 'Pair' : 'Save provider';
+    if (el.name) el.name.placeholder = AddProviderForm.NAME_HINTS[type] || '';
+    el.saveBtn.textContent = isPeer ? 'Pair' : 'Add provider';
     if (isPeer) this._discovery.start(); else this._discovery.stop();
   }
 
@@ -57,6 +82,7 @@ export default class AddProviderForm {
   _closeForm() {
     this._el.form.classList.add('ext-hidden');
     this._el.addBtn.classList.remove('ext-hidden');
+    this._el.addBtn.setAttribute('aria-expanded', 'false');
   }
 
   _resetPeerFields() {
@@ -73,8 +99,8 @@ export default class AddProviderForm {
   }
 
   async _submit() {
-    const type = this._el.type.value;
-    if (!type) { this._ctx.feedback.markSaved(this._el.type, false, 'Select a provider type first'); return; }
+    const type = this._type();
+    if (!type) { this._ctx.feedback.markSaved(this._el.type, false, 'Choose a provider type first'); return; }
     if (type === 'peer') await this._pair();
     else await this._addProvider(type);
   }
@@ -90,7 +116,7 @@ export default class AddProviderForm {
     try { r = await window.sharingAPI.pair(addr, pin); } catch (e) { r = { success: false, error: e && e.message }; }
     el.saveBtn.disabled = false;
     if (!r || !r.success) { el.peerMsg.textContent = (r && r.error) || 'Pairing failed.'; return; }
-    el.type.value = '';
+    this._setType('');
     this._closeForm();
     this._discovery.stop();
     this._resetPeerFields();
@@ -108,7 +134,7 @@ export default class AddProviderForm {
     if (!name) { this._ctx.feedback.markSaved(el.name, false, 'Enter a name for this provider'); return; }
     if (!endpoint) { this._ctx.feedback.markSaved(el.endpoint, false, 'Enter the API endpoint'); return; }
     await this._ctx.list.add(AddProviderForm.newConfig(type, name, endpoint, apiKey));
-    el.type.value = '';
+    this._setType('');
     el.name.value = '';
     el.endpoint.value = '';
     el.apiKey.value = '';

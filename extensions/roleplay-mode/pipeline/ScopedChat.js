@@ -1,4 +1,5 @@
 const ReactionScope = require('./ReactionScope');
+const TurnJournal = require('../journal/TurnJournal');
 
 class ScopedChat {
   static wrap(chat) {
@@ -18,7 +19,9 @@ class ScopedChat {
     if (!scope) return chat.complete(opts);
     scope.throwIfStopped();
     const trace = (opts && opts.trace) || { conversationId: scope.conversationId || null, turnId: scope.messageId || null, callType: 'side' };
+    const started = Date.now();
     const result = await chat.complete(Object.assign({}, opts, { signal: scope.signal, trace }));
+    TurnJournal.shared.side({ conversationId: scope.conversationId, messageId: scope.messageId, opts, result, ms: Date.now() - started });
     scope.throwIfStopped();
     return result;
   }

@@ -1,8 +1,9 @@
 class StoryLedger {
   static KINDS = ['event', 'reveal', 'promise', 'death', 'move', 'injury'];
-  static LEDGER_MAX = 60;
+  static LEDGER_MAX = 80;
   static THREADS_MAX = 8;
   static THREAD_MOVES_MAX = 24;
+  static THREAD_STALE_TURNS = 8;
   static TEXT_MAX = 200;
   static SUMMARY_EVERY_TURNS = 10;
   static SUMMARY_LEDGER_ROWS = 20;
@@ -47,7 +48,7 @@ class StoryLedger {
       .filter(Boolean);
     const kept = messageId ? story.ledger.filter((r) => r && r.messageId !== messageId) : story.ledger.slice();
     const changed = rows.length > 0 || kept.length !== story.ledger.length;
-    story.ledger = kept.concat(rows).slice(-StoryLedger.LEDGER_MAX);
+    story.ledger = require('./LedgerRecall').keep(kept.concat(rows), StoryLedger.LEDGER_MAX);
     return changed;
   }
 
@@ -61,7 +62,7 @@ class StoryLedger {
     else if (adv === 'hours') story.clock.timeOfDay = StoryLedger._later(story.clock.timeOfDay, 2);
     else if (adv === 'minutes') story.clock.timeOfDay = story.clock.timeOfDay || '';
     if (reading.timeOfDay && String(reading.timeOfDay).trim()) story.clock.timeOfDay = String(reading.timeOfDay).trim().toLowerCase();
-    if (reading.weather !== undefined && reading.weather !== null) story.clock.weather = String(reading.weather).trim();
+    if (reading.weather !== undefined && reading.weather !== null && String(reading.weather).trim()) story.clock.weather = String(reading.weather).trim();
     return before !== JSON.stringify(story.clock);
   }
 
@@ -72,6 +73,14 @@ class StoryLedger {
     if (story.pressure === clean && story.pressureTurn === t) return false;
     story.pressure = clean;
     story.pressureTurn = t;
+    return true;
+  }
+
+  static keepPressure(data, text) {
+    const story = StoryLedger._ensure(data);
+    const clean = String(text || '').trim();
+    if (!story.pressure || clean) return false;
+    story.pressure = '';
     return true;
   }
 
@@ -92,13 +101,18 @@ class StoryLedger {
     for (const raw of opened) {
       const text = String(raw || '').trim().slice(0, StoryLedger.TEXT_MAX);
       if (!text) continue;
-      const known = StoryLedger._find(story, text);
+      const known = StoryLedger._find(story, text, { similar: true });
       if (known) {
         if (known.open) { StoryLedger._touch(known, t); changed = true; }
         continue;
       }
       story.threads.push({ text, open: true, turn: t, lastTurn: t, touched: 0, moves: [t] });
       changed = true;
+    }
+    if (t > 0) {
+      const live = story.threads.filter((th) => !th.open || th.pinned
+        || t - (Number(th.lastTurn) || Number(th.turn) || 0) < StoryLedger.THREAD_STALE_TURNS);
+      if (live.length !== story.threads.length) { story.threads = live; changed = true; }
     }
     if (story.threads.filter((th) => th.open).length > StoryLedger.THREADS_MAX) {
       const keep = StoryLedger._ranked(story.threads.filter((th) => th.open)).slice(0, StoryLedger.THREADS_MAX);
@@ -113,7 +127,7 @@ class StoryLedger {
     const clean = String(text || '').trim().slice(0, StoryLedger.TEXT_MAX);
     if (!clean) return false;
     const t = Number(turn) || story.turn;
-    let th = StoryLedger._find(story, clean);
+    let th = StoryLedger._find(story, clean, { similar: true });
     let changed = false;
     if (!th) {
       th = { text: clean, open: true, turn: t, lastTurn: t, touched: 0, moves: [t] };
@@ -204,14 +218,36 @@ class StoryLedger {
     th.moves = moves.slice(-StoryLedger.THREAD_MOVES_MAX);
   }
 
-  static _find(story, text) {
+  static _find(story, text, { similar = false } = {}) {
     const key = StoryLedger._norm(text);
-    return key ? story.threads.find((th) => StoryLedger._norm(th.text) === key) || null : null;
+    if (!key) return null;
+    const exact = story.threads.find((th) => StoryLedger._norm(th.text) === key);
+    if (exact || !similar) return exact || null;
+    return story.threads.find((th) => th.open && StoryLedger.sameQuestion(th.text, text)) || null;
+  }
+
+  static SAME_SHARE = 0.5;
+  static FILLER = new Set(['the', 'a', 'an', 'of', 'to', 'in', 'on', 'at', 'for', 'and', 'or', 'is', 'are', 'was', 'be',
+    'will', 'would', 'can', 'could', 'should', 'whether', 'what', 'who', 'how', 'why', 'when', 'where', 'which', 'if',
+    'this', 'that', 'these', 'those', 'his', 'her', 'their', 'its', 'he', 'she', 'they', 'it', 'about', 'with', 'from',
+    'by', 'as', 'into', 'given', 'before', 'after', 'once', 'does', 'do', 'did', 'has', 'have', 'had', 'not', 'really',
+    'truth', 'behind', 'happened', 'going']);
+
+  static sameQuestion(a, b) {
+    const words = (s) => new Set(StoryLedger._norm(s).split(' ').map((w) => w.replace(/(?:ing|ed|es|s)$/, ''))
+      .filter((w) => w.length > 2 && !StoryLedger.FILLER.has(w)));
+    const x = words(a);
+    const y = words(b);
+    const small = Math.min(x.size, y.size);
+    if (small < 2) return false;
+    let shared = 0;
+    for (const w of x) if (y.has(w)) shared += 1;
+    return shared >= 2 && shared / small >= StoryLedger.SAME_SHARE;
   }
 
   static _row(e, turn, messageId) {
     if (!e || typeof e !== 'object') return null;
-    const text = String(e.text || '').trim().slice(0, StoryLedger.TEXT_MAX);
+    const text = StoryLedger._clip(e.text, StoryLedger.TEXT_MAX);
     if (!text) return null;
     const kind = StoryLedger.KINDS.indexOf(String(e.kind || '').toLowerCase()) >= 0 ? String(e.kind).toLowerCase() : 'event';
     const who = Array.isArray(e.who) ? e.who.map((n) => String(n || '').trim()).filter(Boolean) : [];
@@ -222,6 +258,14 @@ class StoryLedger {
     const i = StoryLedger.TIMES.indexOf(String(timeOfDay || '').toLowerCase());
     if (i < 0) return timeOfDay || '';
     return StoryLedger.TIMES[Math.min(StoryLedger.TIMES.length - 1, i + steps)];
+  }
+
+  static _clip(value, max) {
+    const s = String(value || '').replace(/\s+/g, ' ').trim();
+    if (s.length <= max) return s;
+    const head = s.slice(0, max);
+    const space = head.lastIndexOf(' ');
+    return (space > max * 0.5 ? head.slice(0, space) : head).replace(/[,;:\s]+$/, '') + ' …';
   }
 
   static _norm(s) {

@@ -17,7 +17,7 @@
 
 Relays the notifications Windows shows (toasts from Teams, Slack, Outlook,
 WhatsApp, Docker, anything) to [LumaBrowser](https://lumabyte.com), which files
-them in the Personal Hub's conversation queue next to the web notifications it
+them in the Personal Hub's activity feed next to the web notifications it
 already collects. Known chat and mail apps land on the same thread as their web
 notifications.
 

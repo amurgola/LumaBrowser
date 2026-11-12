@@ -13,7 +13,7 @@ in tabs are logged and forwarded to the user's webhook.
   resolves the public API `{ getWebhookUrl(), setWebhookUrl(url), getLog(),
   getCount(), onIngest(cb) }` (`getLog` returns the entry array; `onIngest`
   returns the unsubscribe and is how the Hub extension feeds its
-  conversation queue).
+  activity feed).
 - `deactivate()`: drops the service.
 
 ## Entry files

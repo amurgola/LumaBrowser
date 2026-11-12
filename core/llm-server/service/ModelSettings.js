@@ -60,6 +60,23 @@ class ModelSettings {
     return this.view(modelRef);
   }
 
+  applySuggested(modelRef, suggested, source = '') {
+    if (!modelRef || ChatModelRef.isProfile(modelRef)) return { applied: {}, kept: {} };
+    const own = this._overrides.get(modelRef);
+    const clean = ModelOverrides.clean(suggested);
+    const applied = {};
+    const kept = {};
+    for (const [field, value] of Object.entries(clean)) {
+      if (ModelOverrides.INFO_FIELDS.includes(field)) continue;
+      if (own[field] === undefined) applied[field] = value;
+      else kept[field] = own[field];
+    }
+    if (Object.keys(applied).length) {
+      this._overrides.set(modelRef, { ...own, ...applied, settingsSource: String(source || '').trim() || own.settingsSource });
+    }
+    return { applied, kept };
+  }
+
   saveProfile(input = {}) {
     const saved = input.id
       ? this._profiles.update(input.id, { name: input.name, overrides: input.overrides })
@@ -88,6 +105,10 @@ class ModelSettings {
     return out;
   }
 
+  static localRef(filePath) {
+    return ChatModelRef.LOCAL_PREFIX + ModelSettings._pathStem(filePath);
+  }
+
   _globalLayer(isLocal) {
     const d = this._getDefaults() || {};
     return {
@@ -95,6 +116,11 @@ class ModelSettings {
       temperature: null,
       maxReplyTokens: null,
       maxParallelToolCalls: null,
+      topP: null,
+      topK: null,
+      minP: null,
+      repeatPenalty: null,
+      presencePenalty: null,
       agentTimeoutMinutes: AgentBudget.DEFAULT.timeoutMs / 60000,
       agentMaxIterations: AgentBudget.DEFAULT.maxIterations,
       ...(isLocal ? { kvCacheType: d.kvCacheType || null } : {}),

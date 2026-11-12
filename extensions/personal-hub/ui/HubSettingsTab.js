@@ -4,12 +4,15 @@ import CalendarSourcesSection from './settings/CalendarSourcesSection.js';
 import TaskSourcesSection from './settings/TaskSourcesSection.js';
 import BoardColumnsSection from './settings/BoardColumnsSection.js';
 import AutomationSection from './settings/AutomationSection.js';
+import SummarySection from './settings/SummarySection.js';
+import ContextsSection from './settings/ContextsSection.js';
+import PeopleSection from './settings/PeopleSection.js';
 
 export default class HubSettingsTab {
   static EXTENSION_ID = 'personal-hub';
   static CHANGED_CHANNEL = 'ext.personal-hub.changed';
   static NOTICE_MS = 6000;
-  static RELOAD_EVENTS = new Set(['sync.status', 'calendar.changed', 'calendar.synced', 'board.changed', 'task.changed', 'connection.changed']);
+  static RELOAD_EVENTS = new Set(['sync.status', 'calendar.changed', 'calendar.synced', 'board.changed', 'task.changed', 'connection.changed', 'context.changed']);
 
   constructor() {
     this._ipc = null;
@@ -62,6 +65,12 @@ export default class HubSettingsTab {
     const s = this._sections;
     return `
     <div class="ext-status-row"><span class="luma-field-help" id="ext-hub-notice" style="margin-top:0;min-height:17px;"></span></div>
+    ${s.summary.html()}
+    <hr class="ext-divider">
+    ${s.contexts.html()}
+    <hr class="ext-divider">
+    ${s.people.html()}
+    <hr class="ext-divider">
     ${s.sync.html()}
     <hr class="ext-divider">
     ${s.connections.html()}
@@ -77,6 +86,9 @@ export default class HubSettingsTab {
 
   _buildSections() {
     const sections = {};
+    sections.summary = new SummarySection(this);
+    sections.contexts = new ContextsSection(this);
+    sections.people = new PeopleSection(this);
     sections.sync = new SyncStatusSection(this);
     sections.connections = new ConnectionsSection(this);
     sections.calendars = new CalendarSourcesSection(this);
@@ -88,7 +100,7 @@ export default class HubSettingsTab {
 
   _all() {
     const s = this._sections;
-    return [s.sync, s.connections, s.calendars, s.tasks, s.columns, s.automation];
+    return [s.summary, s.contexts, s.people, s.sync, s.connections, s.calendars, s.tasks, s.columns, s.automation];
   }
 
   _registerTab(slotManager) {

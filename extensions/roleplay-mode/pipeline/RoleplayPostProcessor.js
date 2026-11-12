@@ -2,6 +2,8 @@ const DataMigration = require('../world/DataMigration');
 const StoryLedger = require('../world/StoryLedger');
 const SpeakerNames = require('../prompts/SpeakerNames');
 const HistoryTrimmer = require('../prompts/HistoryTrimmer');
+const ProseCleanup = require('../prompts/ProseCleanup');
+const ReplyLength = require('../prompts/ReplyLength');
 const RoleplayEnv = require('../images/RoleplayEnv');
 const RpDebug = require('../images/RpDebug');
 const BeatKind = require('../images/BeatKind');
@@ -28,9 +30,11 @@ const ReactionRegistry = require('./ReactionRegistry');
 const ScopedChat = require('./ScopedChat');
 const ConversationPath = require('../world/ConversationPath');
 const Timeline = require('../timeline');
+const TurnJournal = require('../journal/TurnJournal');
 
 class RoleplayPostProcessor {
-  constructor(chat, logger = null, { paths = new ConversationPath(), reactions = new ReactionRegistry() } = {}) {
+  constructor(chat, logger = null, { paths = new ConversationPath(), reactions = new ReactionRegistry(), journal = TurnJournal.shared } = {}) {
+    this._journal = journal;
     this._rawChat = chat;
     chat = ScopedChat.wrap(chat);
     this._chat = chat;
@@ -61,8 +65,18 @@ class RoleplayPostProcessor {
     const paths = this._paths && this._paths.tracks(conversationId, assistantMessageId) ? this._paths : null;
     const turn = new TurnChannel({ emit, setMeta, messageId: assistantMessageId, conversationId, scope, paths });
     try {
+      const raw = content;
+      if (!aborted) content = await RoleplayPostProcessor._tidy(content, replaceContent, ReplyLength.recall(conversationId));
       content = HistoryTrimmer.stripDebris(content);
-      if (aborted || !String(content || '').trim()) { turn.progress.done(); return; }
+      this._journal.reply({
+        conversationId, messageId: assistantMessageId, content: raw, tidied: content, aborted,
+        row: this._paths && typeof this._paths.message === 'function' ? this._paths.message(assistantMessageId) : null,
+      });
+      if (aborted || !String(content || '').trim()) {
+        this._journal.end({ conversationId, messageId: assistantMessageId, status: 'skipped', detail: aborted ? 'the reply was stopped' : 'the reply was empty' });
+        turn.progress.done();
+        return;
+      }
       turn.beginWorld();
       turn.progress.say('Reading the scene…');
       await this._reactions.waitForEarlier(scope);
@@ -71,15 +85,28 @@ class RoleplayPostProcessor {
       const before = Timeline.snapshot(data);
       content = await this._polishProse(data, content, replaceContent, turn);
       const { delta, directorShot } = await this._reconcile(data, content, worldEmpty, turn);
-      turn.commit(data, before);
+      const changes = turn.commit(data, before);
+      this._noteJournal(data, conversationId);
       await turn.save(data);
+      this._journal.changes({ conversationId, messageId: assistantMessageId, data, tree: paths ? paths.tree(conversationId) : [], changes });
       turn.announceWorld(data, delta.announcement());
       scope.markReconciled();
       turn.beginImages();
       await this._draw(data, content, delta, directorShot, turn);
+      this._journal.end({ conversationId, messageId: assistantMessageId, status: 'finished' });
     } catch (err) {
+      this._journal.end({
+        conversationId, messageId: assistantMessageId,
+        status: ReactionScope.isStop(err) ? 'stopped' : 'failed', detail: (err && err.message) || '',
+      });
       this._failed(err, turn);
     }
+  }
+
+  _noteJournal(data, conversationId) {
+    if (!this._journal.active(conversationId)) { if (data.turnLog) delete data.turnLog; return; }
+    const p = this._journal.paths(conversationId);
+    data.turnLog = { md: p.md, jsonl: p.jsonl };
   }
 
   static _workingData(meta, paths, conversationId, messageId) {
@@ -87,6 +114,12 @@ class RoleplayPostProcessor {
     Timeline.ensure(data);
     if (paths) Timeline.materialize(data, paths.ancestors(conversationId, messageId));
     return data;
+  }
+
+  static async _tidy(content, replaceContent, cap = 0) {
+    const clean = ReplyLength.trim(ProseCleanup.clean(content), cap);
+    if (clean === content || !clean.trim() || typeof replaceContent !== 'function') return content;
+    try { return (await replaceContent(clean)) ? clean : content; } catch (_) { return content; }
   }
 
   _failed(err, turn) {
@@ -109,16 +142,21 @@ class RoleplayPostProcessor {
     try { if (this._rawChat && typeof this._rawChat.abortImage === 'function') this._rawChat.abortImage(); } catch (_) {}
   }
 
-  async prepareTurn({ conversationId = null, meta = null } = {}) {
+  async prepareTurn({ conversationId = null, meta = null, signal = null, contextWindow = null } = {}) {
     if (!conversationId || !this._paths || !this._paths.available()) return meta;
     const path = this._paths.activeMessages(conversationId);
     if (!path.length) return meta;
     const ids = Timeline.continuationIds(path);
-    this._reactions.supersedeOffPath(conversationId, ids, 'replaced');
-    await this._reactions.settled(conversationId, ids);
+    const stopped = this._reactions.supersedeOffPath(conversationId, ids, 'replaced');
+    const waitFrom = Date.now();
+    await this._reactions.settled(conversationId, ids, signal);
     const data = TurnData.from({ data: this._paths.data(conversationId) });
     Timeline.ensure(data);
     Timeline.materialize(data, ids);
+    this._journal.prepare({
+      conversationId, data, tree: this._paths.tree(conversationId), path, continues: ids, stopped,
+      waitedMs: Date.now() - waitFrom, contextWindow,
+    });
     return Object.assign({}, meta || {}, { data });
   }
 
@@ -154,9 +192,9 @@ class RoleplayPostProcessor {
 
   static _addSpeakers(data, content, delta) {
     let added = false;
-    const known = (n) => data.characters.some((c) => c.name && c.name.toLowerCase() === n.toLowerCase());
+    const known = (n) => !!CastResolver.byName(data, n);
     for (const n of SpeakerNames.parse(content)) {
-      if (known(n)) continue;
+      if (known(n) || CastResolver.isPlayer(data, n)) continue;
       delta.addCharacter(data, { name: n });
       added = true;
     }
@@ -180,7 +218,7 @@ class RoleplayPostProcessor {
 
   async _remember(data, content, delta, turn, worldEmpty) {
     const present = CastResolver.currentEntries(data).map((e) => e.char);
-    const candidates = ProfileCall.candidates(data, present, delta.newCharIds);
+    const candidates = ProfileCall.candidates(data, present);
     if (candidates.length) {
       turn.progress.say('Getting to know ' + candidates.map((c) => c.name).join(' and ') + '…');
       if (await this._profiles.run(data, candidates, content)) delta.changed = true;
@@ -197,7 +235,8 @@ class RoleplayPostProcessor {
 
   async _draw(data, content, delta, directorShot, turn) {
     const sweep = AssetSweepPlanner.plan(data, { newCharIds: delta.newCharIds, newSceneId: delta.newSceneId });
-    const pendingOutfits = RoleplayPostProcessor._withBackfills(delta.pendingOutfits, sweep.outfitBackfills);
+    const pendingOutfits = AssetSweepPlanner.drawsFigures(data)
+      ? RoleplayPostProcessor._withBackfills(delta.pendingOutfits, sweep.outfitBackfills) : [];
     const reaction = await this._reactionPlan(data, content, directorShot, pendingOutfits, turn);
     RoleplayPostProcessor._logImagePhase(this._chat, turn, delta, sweep, pendingOutfits, reaction);
     if (!this._chat.isImageReady() || !RoleplayPostProcessor._hasWork(sweep, pendingOutfits, reaction.want)) {

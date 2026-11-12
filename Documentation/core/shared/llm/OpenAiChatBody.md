@@ -85,3 +85,6 @@ unknown fields.
 ## Changes (2026-11-09, helper model)
 
 `responseFormat`: an OpenAI `response_format` object sent as given (`_applyResponseFormat`); nothing for a missing or empty one.
+
+The reasoning budget is sent under both `reasoning_budget` and
+`reasoning_budget_tokens`: the bundled llama-server reads the second.

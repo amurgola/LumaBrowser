@@ -1,5 +1,7 @@
+const ModelOverrides = require('../../../shared/llm/ModelOverrides');
+
 class RequestSettings {
-  static HOUSEKEEPING = new Set(['compact', 'title']);
+  static HOUSEKEEPING = new Set(['compact', 'title', 'side']);
 
   static apply({ settings, temperature, extra, callType }) {
     const s = settings || {};
@@ -10,6 +12,8 @@ class RequestSettings {
       outExtra = { ...(outExtra || {}), pinTemperature: true };
     }
     if (typeof s.maxReplyTokens === 'number') outExtra = { ...(outExtra || {}), maxReplyTokens: s.maxReplyTokens };
+    const sampler = ModelOverrides.samplerBody(s);
+    if (sampler) outExtra = { ...(outExtra || {}), modelSampler: sampler };
     return { temperature: outTemp, extra: outExtra };
   }
 

@@ -9,10 +9,12 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 
 - `ImageModelEntries.ENTRIES`: Z-Image Turbo, Qwen-Image-Edit 2509, Qwen-Image-Edit 2511,
   Qwen-Image 2.1, Qwen-Image 2.1 Turbo, SD 1.5, SDXL base, Sprite Shaper XL, FLUX.1 Schnell,
-  Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B, MOSS-Image, MiniMax-H3-Image (images), then Wan 2.2 T2V, Wan 2.2
+  Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B, FLUX.2 klein 9B, FLUX.3 Image Klein, FLUX.1 Kontext dev,
+  Krea 2 Turbo, MOSS-Image, MiniMax-H3-Image (images), then Wan 2.2 T2V, Wan 2.2
   I2V, AniSora V3.2, LTX-Video 2B and MiniMax-H3 (video).
 - Shared companions `FLUX_VAE`, `T5XXL_Q8`, `WAN_VAE`, `UMT5_Q8`,
-  `QWEN_21_VAE`, `QWEN3_VL_8B_LLM`, `QWEN3_VL_8B_VISION`, the shared
+  `QWEN_21_VAE`, `QWEN3_VL_8B_LLM`, `QWEN3_VL_8B_VISION`, `QWEN3_VL_4B_LLM`
+  (one encoder file for FLUX.3 Image Klein and Krea 2 Turbo), the shared
   `QWEN_21_PROMPT_GUIDE`, `H3_QWEN3_VL_32B_LLM` (one encoder file for MiniMax-H3
   video and MiniMax-H3-Image), `H3_IMAGE_SIGMAS`, `H3_IMAGE_PROMPT_GUIDE`, plus
   `WAN_VIDEO_DEFAULTS` and `WAN_CONSTRAINTS`. Rows copy the file and default
@@ -33,7 +35,7 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 supportsI2V?, licenseNote?, files: { <role>: { role, repo, file, url,
 approxBytes, loaderFlag?, quants?, supersedes?, updateNote? } }, minVramBytes,
 defaults: { width, height, steps, cfgScale, sampler, scheduler?,
-negativePrompt?, promptGuide?, fixedSigmas?, cacheMode?, cacheOption?, videoFrames?, fps?, flowShift? }, constraints?,
+negativePrompt?, promptGuide?, fixedSigmas?, cacheMode?, cacheOption?, refImageArgs?, videoFrames?, fps?, flowShift? }, constraints?,
 launchArgs, protocol: 'sd-cpp-http'|'sd-cpp-video', compatibleRuntimes,
 preferredRuntimes?, sageAttention?, recommendedLora? }`. The last three are
 launch and install preferences a row earned by measurement: a drop-in runtime
@@ -85,6 +87,42 @@ comfortable GPU-resident size with the encoders on the CPU.
 - Chroma1-Flash: the model card's heun / 8 steps / CFG 1 recipe.
 - FLUX.2 klein 4B: a different VAE from FLUX.1 (never dedupe it); Q8_0 default
   because small models lose more to 4-bit; cfg pinned to 1.
+- The four rows below were added after the 2026-11-11 edit bake-off (three
+  edits of the same 1024x1024 sources through the image router on an RTX 5090:
+  coat to swimsuit, dog from beach to house, face turned to profile; warm
+  timings, one seed each). Each carries a `licenseNote`, because none of them
+  is plainly open: the official repos are gated, so the files come from the
+  ungated GGUF conversions sd.cpp's own docs point at.
+- FLUX.2 klein 9B: the 4B row's file set with Qwen3-8B as the encoder
+  (docs/flux2.md), 4 steps at cfg 1, `supportsEdit`. All three edits correct at
+  5 s each, the fastest editor measured; it takes a few more liberties than
+  the others (it removed the boots). leejet publishes only Q8_0 and Q4_0. FLUX
+  Non-Commercial License.
+- FLUX.3 Image Klein: a new transformer on the FLUX.2 VAE with Qwen3-VL 4B
+  (docs/flux3.md: 16 steps, cfg 1, the runtime applies the 6.93 time shift
+  itself). References go to the DiT only (sd.cpp's `flux2` reference preset),
+  so the row ships no vision projector. Best of the bake-off: all three edits
+  at 10 s each with everything the prompt did not name left alone. FLUX
+  Kommunity License v1.0 (free commercial use of outputs under 5M USD revenue,
+  per the published summaries; the gated licence text itself was not read).
+- FLUX.1 Kontext dev: `kind: 'edit'`, family `flux-kontext` (the family
+  [EditProfiles](../prompt/EditProfiles.md) already names), FLUX.1's VAE,
+  CLIP-L and the Q8 T5-XXL, 28 steps at cfg 1 per the model card. The weakest
+  reference editor of the bake-off (a romper for a swimsuit, a redrawn dog) at
+  30 s per edit; listed for its LoRA ecosystem. FLUX.1 [dev] Non-Commercial
+  License.
+- Krea 2 Turbo: the 8-step distill on the Wan 2.1 VAE with Qwen3-VL 4B
+  (docs/krea2.md). Generation only, so no `supportsEdit`: the community
+  General Edit LoRA ([ImageLoraEntries](ImageLoraEntries.md)
+  `krea2-general-edit-v2`) adds editing and
+  [ModelLoraAttacher](../ipc/ModelLoraAttacher.md) marks the installed model
+  edit-capable while it is attached. That LoRA needs sd.cpp's `krea2_edit`
+  reference preset instead of the architecture's default
+  (`krea2_ostris_edit`), which `defaults.refImageArgs` supplies through
+  [ImageRequestPlanner](../router/ImageRequestPlanner.md) whenever a request
+  carries references; the vision projector file is there for that preset. With
+  the LoRA: all three edits correct at 17 s each. Krea 2 Community License
+  (commercial use under 1M USD revenue).
 - MOSS-Image: OpenMOSS's 5B DiT with a Qwen3.5-9B `--llm`, the FLUX.2 VAE and
   an external `tokenizer.json` (`--tokenizer`), since Qwen3.5's vocabulary is not
   the Qwen tokenizer sd.cpp embeds. The diffusion file is Comfy-Org's int8

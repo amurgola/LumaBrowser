@@ -4,6 +4,7 @@ import WidgetDom from './WidgetDom.js';
 export default class HubWidgetBase {
   static REFRESH_EVENTS = [];
   static DEBOUNCE_MS = 250;
+  static TICK_MS = 0;
   static ATTENTION_AREA = null;
   static CONNECTION_EVENT = 'connection.changed';
 
@@ -13,6 +14,8 @@ export default class HubWidgetBase {
     this._data = null;
     this._detach = null;
     this._timer = null;
+    this._ticker = null;
+    this._loadSeq = 0;
     this._disposed = false;
   }
 
@@ -23,6 +26,7 @@ export default class HubWidgetBase {
     this._renderShell();
     this._mountAttention();
     this._subscribe();
+    this._startTicking();
     await this.refresh();
     return () => this.dispose();
   }
@@ -30,20 +34,23 @@ export default class HubWidgetBase {
   async refresh() {
     if (this._disposed) return;
     this._refreshAttention();
+    const seq = ++this._loadSeq;
     try {
-      this._data = await this._load();
-      if (!this._disposed) {
-        this._paint();
-        this._showError('');
-      }
+      const data = await this._load();
+      if (this._disposed || seq !== this._loadSeq) return;
+      this._data = data;
+      this._paint();
+      this._showError('');
     } catch (err) {
-      this._showError(err);
+      if (seq === this._loadSeq) this._showError(err);
     }
   }
 
   dispose() {
     this._disposed = true;
     clearTimeout(this._timer);
+    clearInterval(this._ticker);
+    this._ticker = null;
     if (this._detach) {
       try { this._detach(); } catch (_) {}
       this._detach = null;
@@ -69,6 +76,20 @@ export default class HubWidgetBase {
 
   _paint() {
     throw new Error(`${this.constructor.name} must implement _paint()`);
+  }
+
+  _tick() {
+    if (this._data != null) this._paint();
+  }
+
+  _startTicking() {
+    const every = this.constructor.TICK_MS;
+    if (!(every > 0)) return;
+    this._ticker = setInterval(() => {
+      if (this._disposed) return;
+      try { this._tick(); } catch (err) { this._showError(err); }
+    }, every);
+    if (this._ticker && typeof this._ticker.unref === 'function') this._ticker.unref();
   }
 
   _subscribe() {

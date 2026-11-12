@@ -11,8 +11,13 @@ class AssetSweepPlanner {
     return {
       sceneArtId: opts.sceneBackground ? AssetSweepPlanner._sceneArt(data, newSceneId) : null,
       faceIds: opts.autoAvatarArt ? AssetSweepPlanner._faces(data, newCharIds) : [],
-      outfitBackfills: AssetSweepPlanner._outfits(data),
+      outfitBackfills: AssetSweepPlanner.drawsFigures(data) ? AssetSweepPlanner._outfits(data) : [],
     };
+  }
+
+  static drawsFigures(data) {
+    const opts = (data && data.options) || {};
+    return !!(opts.autoImage || opts.autoAvatarArt);
   }
 
   static _sceneArt(data, newSceneId) {

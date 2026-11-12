@@ -20,6 +20,8 @@ class ChatTurn {
     this._convId = null;
     this._mode = { descriptor: null, turn: null };
     this._stream = null;
+    this._early = new AbortController();
+    this._slot = null;
   }
 
   async run(args) {
@@ -31,12 +33,14 @@ class ChatTurn {
     if (opened.error) return { success: false, error: opened.error };
     const { choicesOn: wanted, userRow, userArtifacts, userRegions, images } = this._persistUserSide();
     this._userMessageId = userRow ? userRow.id : null;
+    this._trackEarly();
     let runMessages = await this._applyMode();
     const choicesOn = wanted && ChatModeRegistry.allowsChoices(this._mode.descriptor);
     const asst = this._addPlaceholder();
     if (!asst) return { success: false, error: 'Message to regenerate was not found.' };
     this._announce(asst, userRow, userArtifacts, userRegions);
     this._openStream(asst);
+    if (this._early.signal.aborted) return this._stoppedEarly(asst);
     runMessages = await this._d.compaction.maybeCompact(runMessages, this._modelRef, this._mode.turn, this._stream.hooks, this._convId);
     runMessages = this._withStyleDocs(runMessages, choicesOn);
     runMessages = await this._withDocsSource(runMessages);
@@ -68,6 +72,18 @@ class ChatTurn {
   _supersedePrevious() {
     this._d.inFlight.abort();
     this._d.reclaimer.cancelPending();
+  }
+
+  _trackEarly() {
+    const abort = () => { try { this._early.abort(); } catch (_) {} };
+    if (this._args.nested) { ChatTurn._abortOn(this._args.nested.signal, abort); return; }
+    this._slot = { abort };
+    this._d.inFlight.begin(this._slot, false);
+  }
+
+  _stoppedEarly(asst) {
+    this._stream.abort(null);
+    return { success: true, conversationId: this._convId, assistantMessageId: asst.id, aborted: true };
   }
 
   _openConversation() {
@@ -111,6 +127,7 @@ class ChatTurn {
     this._mode = await this._d.modes.resolve({
       conversationId: this._convId, messages: this._args.messages, modelRef: this._modelRef,
       contextWindow: this._d.contextWindow.forRef(this._modelRef),
+      signal: this._early.signal,
     });
     const turn = this._mode.turn;
     if (!turn) return this._args.messages;
@@ -176,7 +193,7 @@ class ChatTurn {
       assistantMessageId: asst.id,
       contextWindow: this._d.contextWindow.forRef(this._modelRef),
       speculation: () => (this._d.speculation ? this._d.speculation.forRef(this._modelRef) : null),
-      onSettled: () => { if (!this._args.nested) this._d.inFlight.clear(); },
+      onSettled: () => { if (!this._args.nested) this._d.inFlight.clear(this._slot); },
       react: (content, aborted) => this._d.reaction.run(descriptor, {
         content, conversationId: this._convId, assistantMessageId: asst.id, send, aborted,
       }),
@@ -205,7 +222,8 @@ class ChatTurn {
     const a = this._args;
     const dial = this._d.thinking.resolve({
       modelRef: this._modelRef, messages, conversationId: this._convId, noThink: a.noThink,
-      reasoningEffort: a.reasoningEffort, agentMode: this._agentMode, evalOverrides: a.evalOverrides || null,
+      reasoningEffort: a.reasoningEffort || (this._mode.turn && this._mode.turn.reasoningEffort) || undefined,
+      agentMode: this._agentMode, evalOverrides: a.evalOverrides || null,
       modelEffort: this._modelOverrides.reasoningEffort,
     });
     try {
@@ -276,7 +294,8 @@ class ChatTurn {
       ChatTurn._abortOn(this._args.nested.signal, () => stream.abort(handle));
       return;
     }
-    this._d.inFlight.begin({ abort: () => stream.abort(handle) }, ChatModelRef.isLocal(this._modelRef));
+    this._slot = { abort: () => stream.abort(handle) };
+    this._d.inFlight.begin(this._slot, ChatModelRef.isLocal(this._modelRef));
   }
 
   static _abortOn(signal, abort) {

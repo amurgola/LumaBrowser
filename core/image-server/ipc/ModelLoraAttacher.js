@@ -16,7 +16,9 @@ class ModelLoraAttacher {
     if (!id || typeof id !== 'string') throw new Error('id required');
     const dir = this._modelDir(id);
     const manifest = ModelLoraAttacher._readManifest(dir);
-    this._applyLoras(manifest, LoraPresetRecipe.cleanLoras(loras), { distilledPreset, preset });
+    const clean = LoraPresetRecipe.cleanLoras(loras);
+    this._applyLoras(manifest, clean, { distilledPreset, preset });
+    this._applyEditSupport(manifest, clean);
     ImageModelManifest.write(dir, manifest);
     await this._slots.stopHosting(id);
   }
@@ -26,6 +28,22 @@ class ModelLoraAttacher {
     if (clean.length) defaults.loras = clean; else delete defaults.loras;
     if (distilledPreset && clean.length) LoraPresetRecipe.apply(defaults, this._presetFor(clean, preset));
     else LoraPresetRecipe.remove(defaults);
+  }
+
+  _applyEditSupport(manifest, clean) {
+    const enables = clean.some((lora) => this._curatedEntry(lora.name)?.enablesEdit);
+    if (enables && manifest.supportsEdit !== true) {
+      manifest.supportsEdit = true;
+      manifest.editFromLora = true;
+    } else if (!enables && manifest.editFromLora) {
+      delete manifest.supportsEdit;
+      delete manifest.editFromLora;
+    }
+  }
+
+  _curatedEntry(name) {
+    return this._loraCatalog.list().find((entry) => this._loraCatalog.entryFiles(entry)
+      .some((f) => String(f.file || '').replace(/\.[^.]+$/, '') === name)) || null;
   }
 
   _presetFor(clean, preset) {

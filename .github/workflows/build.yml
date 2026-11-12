@@ -13,12 +13,19 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            build_cmd: npm run build:linux -- --publish never
+            build_cmd: npm run build:linux -- --x64 --publish never
             artifact_name: linux-appimage
             artifact_path: |
               dist/*.AppImage
               dist/latest*.yml
             asar_path: dist/linux-unpacked/resources/app.asar
+          - os: ubuntu-24.04-arm
+            build_cmd: npm run build:linux -- --arm64 --publish never
+            artifact_name: linux-arm64-appimage
+            artifact_path: |
+              dist/*.AppImage
+              dist/latest*.yml
+            asar_path: dist/linux-arm64-unpacked/resources/app.asar
           - os: windows-2022
             build_cmd: npm run build:win -- --x64 --publish never
             artifact_name: windows-installer

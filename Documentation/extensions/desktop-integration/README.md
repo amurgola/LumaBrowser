@@ -210,9 +210,10 @@ extensions reach them: `require('../../../../core/shell/extensions/ExtensionGlob
 Declared optional in the manifest, so present only while installed and enabled:
 
 - `personal-hub` (the Hub), every HubService method by name, including
-  `pushQueueItem(item)` (adds a notification to the conversation queue:
-  `{ app, threadKey?, title, summary, priority, participants, url, labels, context, body, sender, at }`, see [InboxService](../personal-hub/inbox/InboxService.md)), `listThreads({ state, app, limit })`,
-  `getThread(id)`, `setThreadState(id, state, { snoozeUntil })`, `listNotifications({ since, limit })`,
+  `pushQueueItem(item)` (adds a notification to the activity feed:
+  `{ app, threadKey?, title, summary, priority, participants, url, labels, kind, context, body, sender, at }`, see [InboxService](../personal-hub/inbox/InboxService.md)), `listThreads({ state, app, since, limit })`
+  (`state` defaults to `active`, everything not dismissed),
+  `getThread(id)`, `setThreadState(id, state, { snoozeUntil })` (`done` dismisses, `open` restores), `threadToTask(threadId, opts)`, `listNotifications({ since, limit })`,
   `listEvents({ days } | { from, to })`, `listCalendarSources()`, `listColumns()`,
   `listTasks({ columnKey, sourceId, includeHidden })`, `getTask(id)`, `createTask(input)`,
   `updateTask(id, patch)`, `moveTask(id, columnKey, opts)`, `syncNow()`, `syncStatus()`,

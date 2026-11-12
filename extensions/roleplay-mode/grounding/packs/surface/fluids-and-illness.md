@@ -13,7 +13,7 @@ When: spit, spits, spat, saliva, drool, drooling, mouth, lips, swallow, swallows
 
 ## Tears and a running nose
 Tags: *
-When: cry, cries, crying, cried, tears, sob, sobs, sobbing, weep, weeping, nose, sniff, sniffs
+When: cry, cries, crying, cried, tears, sob, sobs, sobbing, weep, weeping, runny nose, running nose, sniffle, sniffles, sniffling
 - Crying hard: the nose runs and blocks, eyes swell and redden, the face goes blotchy, breath comes in hitches and hiccups; afterwards a headache and puffy lids for hours.
 - Cold air or smoke: eyes water and noses drip without any emotion.
 - A cold: clear watery snot that thickens and yellows over days; sneezing, sore red nostrils.

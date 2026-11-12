@@ -24,7 +24,36 @@ class CastResolver {
 
   static byName(data, name) {
     const n = String(name || '').toLowerCase();
-    return ((data && data.characters) || []).find((c) => c.name && c.name.toLowerCase() === n) || null;
+    if (!n) return null;
+    const chars = (data && data.characters) || [];
+    return chars.find((c) => c && c.name && c.name.toLowerCase() === n)
+      || chars.find((c) => c && Array.isArray(c.aliases) && c.aliases.some((a) => String(a || '').toLowerCase() === n))
+      || CastResolver.byPartOfName(chars, n);
+  }
+
+  static isPlayer(data, name) {
+    const p = data && data.protagonist && typeof data.protagonist === 'object' ? String(data.protagonist.name || '') : '';
+    const words = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter((w) => w && !CastResolver.TITLES.has(w));
+    const mine = words(p);
+    const theirs = words(name);
+    if (!mine.length || !theirs.length) return false;
+    return theirs.every((w) => mine.includes(w));
+  }
+
+  static TITLES = new Set(['mr', 'mrs', 'ms', 'miss', 'dr', 'sir', 'lady', 'lord', 'captain', 'sister', 'brother', 'father', 'professor', 'officer']);
+
+  static byPartOfName(chars, name) {
+    const words = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter((w) => w && !CastResolver.TITLES.has(w));
+    const want = words(name);
+    if (!want.length) return null;
+    const fits = (chars || []).filter((c) => {
+      if (!c || !c.name) return false;
+      const have = words(c.name);
+      if (!have.length) return false;
+      const [small, big] = want.length <= have.length ? [want, have] : [have, want];
+      return small.every((w) => big.includes(w));
+    });
+    return fits.length === 1 ? fits[0] : null;
   }
 
   static orderByFocus(entries, shot) {
@@ -44,7 +73,7 @@ class CastResolver {
 
   static _stateMatches(char, state) {
     return (state.charId && char.id === state.charId)
-      || (state.name && char.name && char.name.toLowerCase() === String(state.name).toLowerCase());
+      || (!state.charId && state.name && char.name && char.name.toLowerCase() === String(state.name).toLowerCase());
   }
 
   static _entryName(entry) {

@@ -124,20 +124,23 @@ class BoardService {
     return reply;
   }
 
-  async moveTask(id, columnKey, { sortOrder = null, status = null } = {}) {
+  async moveTask(id, columnKey, { sortOrder = null, status = null, beforeId = undefined } = {}) {
     const current = this._requireTask(id);
     if (StatusMapping.isPseudo(columnKey)) throw new Error('Tasks cannot be moved into an unlinked status column.');
     if (!columnKey) throw new Error('Name the column to move the task to.');
     const column = this._requireColumn(columnKey);
-    const order = Number.isFinite(sortOrder) ? sortOrder : this._tasks.nextSortOrder(column.key);
+    const place = () => (beforeId !== undefined
+      ? this._slot(id, column.key, beforeId)
+      : (Number.isFinite(sortOrder) ? sortOrder : this._tasks.nextSortOrder(column.key)));
+    if (current.columnKey === column.key) return this._reorder(current, column, { sortOrder, beforeId });
     if (!current.sourceId) {
-      const task = this._tasks.update(id, { column_key: column.key, sort_order: order });
+      const task = this._tasks.update(id, { column_key: column.key, sort_order: place() });
       this._emit('task.changed', { taskId: id, reason: 'moved' });
       return { task, moved: true, pushed: false };
     }
     const target = await this._statusForMove(current, column, status);
     if (target.needsStatus) return { task: current, moved: false, pushed: false, ...target };
-    let task = this._tasks.update(id, { column_key: column.key, sort_order: order, pending_status: target.status });
+    let task = this._tasks.update(id, { column_key: column.key, sort_order: place(), pending_status: target.status });
     const reply = { task, moved: true, pushed: false };
     const outcome = await this._pushPendingStatus(task);
     task = outcome.task;
@@ -366,6 +369,25 @@ class BoardService {
     });
   }
 
+
+  _reorder(task, column, { sortOrder, beforeId }) {
+    if (beforeId === undefined && !Number.isFinite(sortOrder)) return { task, moved: false, pushed: false };
+    const order = beforeId !== undefined ? this._slot(task.id, column.key, beforeId) : sortOrder;
+    const updated = order === task.sortOrder ? task : this._tasks.update(task.id, { sort_order: order });
+    this._emit('task.changed', { taskId: task.id, reason: 'reordered' });
+    return { task: updated, moved: true, pushed: false };
+  }
+
+  _slot(id, columnKey, beforeId) {
+    const others = this._tasks.list({ columnKey, includeHidden: true }).filter((t) => t.id !== id);
+    const found = beforeId ? others.findIndex((t) => t.id === beforeId) : -1;
+    const index = found >= 0 ? found : others.length;
+    others.forEach((other, i) => {
+      const order = i < index ? i + 1 : i + 2;
+      if (other.sortOrder !== order) this._tasks.update(other.id, { sort_order: order });
+    });
+    return index + 1;
+  }
 
   _requireTask(id) {
     const task = this._tasks.get(id);

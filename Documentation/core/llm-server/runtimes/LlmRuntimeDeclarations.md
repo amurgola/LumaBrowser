@@ -10,16 +10,18 @@ one-place edit.
 ## Members
 
 - `LlmRuntimeDeclarations.RUNTIMES`, in order:
-  - `llama-cpp-cpu`: universal fallback; Windows zip (x64 and arm64), Linux and macOS tarballs.
+  - `llama-cpp-cpu`: universal fallback; Windows zip (x64 and arm64), Linux (x64 and arm64)
+    and macOS tarballs.
     `hostLabels['darwin-arm64']` shows it as "llama.cpp (Metal)" with a Metal
     description, since ggml-org's macOS arm64 build is Metal-accelerated.
   - `llama-cpp-cuda12`: ggml-org on Windows and Linux (`ubuntu-cuda-12.x`
     builds, `LINUX_CUDA12_ASSET`); the only companion is the cudart bundle
     (cudart + cuBLAS): `WIN_CUDA12_CUDART` / `LINUX_CUDA12_CUDART`.
   - `llama-cpp-cuda13`: same with CUDA 13 assets; recommended for RTX 50. Also
-    the one CUDA build ggml-org ships for Windows arm64 (asset and cudart companion).
+    the one CUDA build ggml-org ships for Windows arm64 and for Linux arm64 (asset and cudart
+    companion each).
   - `llama-cpp-luma`: LumaByte's patched CUDA 12 build, Windows only, assets named like upstream.
-  - `llama-cpp-vulkan`: cross-vendor GPU build for Windows (x64 and arm64) and Linux.
+  - `llama-cpp-vulkan`: cross-vendor GPU build for Windows and Linux (x64 and arm64 each).
   - `llama-cpp-opencl-adreno`: Qualcomm Adreno OpenCL build for Snapdragon X,
     `platforms: ['win32-arm64']` (the only arch it exists for, so x64 hosts never
     list it), `requiresHw: { kind: 'qualcomm-gpu' }`, `backendDevice: 'GPUOpenCL'`
@@ -64,6 +66,10 @@ adapter (all `openai-compat`); `hostLabels` renames an entry per
   companions into the binary dir and the launcher sets `LD_LIBRARY_PATH`.
 - Without the CUDA runtime companions the Windows backend silently falls back
   to CPU and the Linux binary fails to load.
+- Linux arm64 has three ggml-org builds: `ubuntu-arm64`, `ubuntu-vulkan-arm64`
+  and `ubuntu-cuda-13.x-arm64` with its cudart sidecar. The other rows carry no
+  `linux-arm64` pattern and list there without a download, as on Windows on Arm.
+  ggml-org's `linux-arm64-snapdragon` (OpenCL) tarball has no row.
 - The luma-llamacpp tags (`luma-bN`) carry no upstream build number, so
   build-floor gates in the launch planner special-case `llama-cpp-luma`.
 

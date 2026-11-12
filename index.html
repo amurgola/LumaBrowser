@@ -444,25 +444,42 @@
 
             <div class="settings-section" id="aiprovidersSettings">
 
-                <section class="gs-subsection" id="gsSecProviders">
-                    <div class="gs-subsection-head">
-                        <h4 class="gs-subsection-title">LLM providers</h4>
-                        <button class="btn btn-primary" id="addProviderBtn">Add provider</button>
+                <section class="gs-subsection" id="gsSecDefaults">
+                    <h4 class="gs-subsection-title">Defaults</h4>
+                    <div class="gs-body" id="providerDefaults">
                     </div>
+                </section>
+
+                <section class="gs-subsection" id="gsSecProviders">
+                    <h4 class="gs-subsection-title">LLM providers</h4>
                     <p class="gs-group-desc">Cloud and remote LLM providers the chat, extensions and scheduled runs can use. Local runtimes and models are set up in the LLM tab.</p>
 
                     <div id="providerList">
                     </div>
 
+                    <button type="button" class="gs-add-row" id="addProviderBtn" aria-expanded="false" aria-controls="addProviderForm">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                        <span>Add provider</span>
+                    </button>
+
                     <div id="addProviderForm" class="ext-panel gs-form-panel ext-hidden">
-                        <div class="form-group">
-                            <label class="form-label" for="newProviderType">Provider type</label>
-                            <select class="form-select" id="newProviderType">
-                                <option value="">Select type...</option>
-                                <option value="openai">OpenAI-compatible API</option>
-                                <option value="anthropic">Anthropic API</option>
-                                <option value="peer">Another LumaBrowser (Network Sharing)</option>
-                            </select>
+                        <div class="gs-form-title">Add provider</div>
+                        <div class="gs-choice" id="newProviderType" role="radiogroup" aria-label="Provider type">
+                            <label class="gs-choice-item">
+                                <input type="radio" name="newProviderType" value="openai">
+                                <span class="gs-choice-name">OpenAI-compatible</span>
+                                <span class="gs-choice-help">OpenRouter, LM Studio, Ollama or any /v1 endpoint.</span>
+                            </label>
+                            <label class="gs-choice-item">
+                                <input type="radio" name="newProviderType" value="anthropic">
+                                <span class="gs-choice-name">Anthropic</span>
+                                <span class="gs-choice-help">Claude models with your API key.</span>
+                            </label>
+                            <label class="gs-choice-item">
+                                <input type="radio" name="newProviderType" value="peer">
+                                <span class="gs-choice-name">Another LumaBrowser</span>
+                                <span class="gs-choice-help">Pair with a computer that shares its models.</span>
+                            </label>
                         </div>
                         <div class="form-group" id="newProviderNameGroup">
                             <label class="form-label" for="newProviderName">Name</label>
@@ -478,10 +495,10 @@
                             <div class="form-help">Optional for local servers.</div>
                         </div>
                         <div id="newProviderPeerBlock" class="ext-hidden">
-                            <p class="form-help">
-                                Connect to another LumaBrowser on your network that has Network Sharing enabled.
-                                Enter its address and PIN, or pick a discovered host below. Its shared LLM,
-                                image generation and image editor become usable on this computer.
+                            <p class="gs-form-help">
+                                The other LumaBrowser needs Network Sharing turned on. Enter its address and PIN,
+                                or pick a discovered host below. Its shared LLM, image generation and image editor
+                                become usable on this computer.
                             </p>
                             <div class="form-group">
                                 <label class="form-label" for="newPeerAddress">Host address</label>

@@ -51,3 +51,20 @@ When: legs, leg, trousers, trouser legs, socks, sock, shoes, feet, foot, toes, a
 - Unfelt damage: a graze, bruise, blister or burn he never noticed, which is why people check by eye; cold feet can be frostnipped without any pain.
 - Moves: a leg may jump, twitch or stiffen in a spasm when touched or cold; he lifts and positions his own legs with his hands.
 - Keep him a person: he knows the routine, does the checking himself and says what he needs; he is matter of fact about it.
+
+## Legs up close (any body)
+Tags: *
+When: leg, legs, calf, calves, shin, shins, knee, knees, ankle, ankles, trouser leg, hem
+- Through cloth: what meets a hand, a shoulder or an animal's flank is the fabric first (denim stiff and cool, wool rough, a skirt hem moving, tights smooth) with the warmth of the leg coming through it a moment later.
+- The leg itself: firm at the calf, bone close under the skin at the shin and ankle; standing people shift their weight and the muscle moves under the cloth.
+- Smell at that height: washing powder and the day's wear on the cloth, floor dust, whatever they walked through or work with (coffee, oil, grass, an animal at home).
+- Reaction: people notice contact at the leg at once; they go still, step back or look down before they decide what to do about it.
+- Keep it small: one detail of cloth, warmth or smell is the whole moment.
+
+## Feet, socks and shoes on an ordinary day (any body)
+Tags: *
+When: shoe, shoes, sock, socks, foot, feet, toes, laces, heel, heels, sole, soles, sandal, sandals, sneakers, trainers, boots, boot
+- Shoes: leather, rubber or canvas, and the street on the soles (dust, wet pavement, cut grass); worn shoes crease across the toes and tread down at the outer heel.
+- Socks and feet after a normal day: faintly warm and a little damp, a mild sour-salt smell under the shoe's own; stronger after hours standing or in closed shoes, close to nothing in sandals or fresh socks.
+- Who notices: a nose at floor level (a dog, a cat, a child) gets it at once; the person does not notice at all and other adults only when a shoe comes off.
+- Keep it plain and brief: a fact of the day, never a comment on the person.

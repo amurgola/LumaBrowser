@@ -21,7 +21,9 @@ offered per model family. Extends `MediaModelCatalog`
 `file` + `url` + `approxBytes` (single) or `files: [{ file, url, approxBytes, highNoise? }]`
 (pair). Speed LoRAs carry `preset` (`steps`, `cfgScale`, `sampler`, optional
 `sigmaNodes`, `highNoiseSteps`, `highNoiseCfgScale`); style LoRAs carry `trigger`
-and no preset.
+and no preset. An edit LoRA carries `enablesEdit: true` and neither: it gives
+its base model an edit mode, and [ModelLoraAttacher](../ipc/ModelLoraAttacher.md)
+marks the model edit-capable while it is attached.
 
 ## Why
 

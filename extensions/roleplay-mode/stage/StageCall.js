@@ -3,6 +3,7 @@ const StagingParser = require('./StagingParser');
 const RpDebug = require('../images/RpDebug');
 
 const SideModel = require('../mode/SideModel');
+const ReactionScope = require('../pipeline/ReactionScope');
 class StageCall {
   static TIMEOUT_MS = 90000;
   static TEMPERATURE = 0.2;
@@ -32,6 +33,7 @@ class StageCall {
       StageCall._logParsed(ex);
       return ex;
     } catch (e) {
+      if (ReactionScope.isStop(e)) throw e;
       RpDebug.log('post.stage.error', { ms: Date.now() - started, error: e && e.message });
       if (this._logger && this._logger.warn) this._logger.warn('roleplay stage call failed', { error: e && e.message });
       return null;

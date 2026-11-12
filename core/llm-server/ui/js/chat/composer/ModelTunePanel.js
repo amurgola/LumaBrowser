@@ -8,6 +8,11 @@ export default class ModelTunePanel {
     { id: 'reasoningEffort', label: 'Thinking', kind: 'select', options: DefaultsOptions.EFFORT },
     { id: 'temperature', label: 'Temperature', kind: 'number', min: 0, max: 2, step: 0.05 },
     { id: 'maxReplyTokens', label: 'Reply limit', kind: 'number', min: 1, step: 256, suffix: 'tokens' },
+    { id: 'topP', label: 'Top P', kind: 'number', min: 0.01, max: 1, step: 0.01 },
+    { id: 'topK', label: 'Top K', kind: 'number', min: 0, max: 1000, step: 1 },
+    { id: 'minP', label: 'Min P', kind: 'number', min: 0, max: 1, step: 0.005 },
+    { id: 'repeatPenalty', label: 'Repeat penalty', kind: 'number', min: 0.5, max: 2, step: 0.01 },
+    { id: 'presencePenalty', label: 'Presence penalty', kind: 'number', min: -2, max: 2, step: 0.1 },
     { id: 'maxParallelToolCalls', label: 'Parallel tools', kind: 'number', min: 1, max: 8, step: 1, suffix: 'at once',
       hint: 'How many tool calls from one reply may run together (only reads overlap; writes still go one by one). '
         + 'One is the measured default: on a 27B model, more made runs slower and less accurate.' },
@@ -18,6 +23,8 @@ export default class ModelTunePanel {
       hint: 'How many replies (each with its tool calls) one Tools-on turn may take before it stops. '
         + 'A mode that needs more keeps its own.' },
   ];
+
+  static SAMPLER_IDS = ['topP', 'topK', 'minP', 'repeatPenalty', 'presencePenalty'];
 
   static LAUNCH_FIELDS = [
     { id: 'kvCacheType', label: 'KV cache', kind: 'select', options: [
@@ -66,12 +73,21 @@ export default class ModelTunePanel {
     const card = Dom.el('div', 'cm-modal cm-tune');
     card.innerHTML = this._headHtml()
       + '<div class="cm-tune-rows">' + ModelTunePanel.REQUEST_FIELDS.map((f) => this._rowHtml(f, this._ownValue(f.id))).join('') + '</div>'
+      + this._sourceHtml()
       + (this._showsLaunch() ? this._launchHtml() : '')
       + this._footHtml();
     back.appendChild(card);
     for (const el of card.querySelectorAll('[data-field]')) el.addEventListener('input', () => this._markRow(el));
     if (v.profile) card.querySelector('[data-tune-name]').value = v.profile.name;
     return back;
+  }
+
+  _sourceHtml() {
+    const v = this._view;
+    const source = !v.profile && v.model && v.model.overrides ? v.model.overrides.settingsSource : '';
+    if (!source) return '';
+    return '<div class="cm-tune-source" data-tune-source>Some values here were filled in from ' + HtmlEscaper.escape(source)
+      + '. Change or clear any of them.</div>';
   }
 
   _headHtml() {
@@ -136,6 +152,7 @@ export default class ModelTunePanel {
   static _valueText(field, value) {
     if (field.id === 'temperature' && value == null) return 'chat mode decides';
     if (field.id === 'maxReplyTokens' && value == null) return 'no limit';
+    if (ModelTunePanel.SAMPLER_IDS.includes(field.id) && value == null) return 'model default';
     if (field.id === 'maxParallelToolCalls' && value == null) return 'one at a time';
     if (field.id === 'agentTimeoutMinutes' && value === 0) return 'no limit';
     if (field.id === 'kvCacheType' && value == null) return 'Full (f16)';
@@ -205,6 +222,8 @@ export default class ModelTunePanel {
     const { api } = this._ctx;
     const v = this._view;
     const overrides = this._formOverrides(ModelTunePanel.REQUEST_FIELDS);
+    const source = !v.profile && v.model && v.model.overrides ? v.model.overrides.settingsSource : '';
+    if (source && ['temperature', ...ModelTunePanel.SAMPLER_IDS].some((id) => overrides[id] !== undefined)) overrides.settingsSource = source;
     let r;
     if (v.profile) {
       const name = this._back.querySelector('[data-tune-name]').value.trim();

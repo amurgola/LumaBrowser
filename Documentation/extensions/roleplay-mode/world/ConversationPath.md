@@ -17,3 +17,7 @@ Reads the conversation's message tree from the app's chat store
   `data(conversationId)` (the stored `meta.data`).
 
 Every read is defensive; without a store the mode runs on the meta it was handed.
+
+`tree(conversationId)` lists every message of the conversation, any branch,
+oldest first, as `{ id, role, parentId, active, content }`, and
+`message(messageId)` returns one stored message; both serve the turn journal.

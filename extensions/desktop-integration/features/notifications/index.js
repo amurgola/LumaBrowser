@@ -1,7 +1,7 @@
 const NotificationRelay = require('./NotificationRelay');
 
 const settingsSchema = [
-  { key: 'forwardToHub', label: 'Send to the Personal Hub queue', type: 'bool', default: true, help: 'Off: notifications are only listed under recent, not filed in the Hub.' },
+  { key: 'forwardToHub', label: 'Send to the Personal Hub activity feed', type: 'bool', default: true, help: 'Off: notifications are only listed under recent, not filed in the Hub.' },
   {
     key: 'filterMode', label: 'Which apps', type: 'select', default: 'all',
     options: [{ value: 'all', label: 'Every app except the blocked ones' }, { value: 'allowlist', label: 'Only the allowed apps' }],
@@ -15,7 +15,7 @@ const settingsSchema = [
 module.exports = {
   id: 'notifications',
   label: 'OS notifications',
-  description: 'Files the notifications Windows (or another OS) shows into the Personal Hub queue, reported by a desktop client such as the luma-notification-relay Windhawk mod.',
+  description: 'Files the notifications Windows (or another OS) shows into the Personal Hub activity feed, reported by a desktop client such as the luma-notification-relay Windhawk mod.',
   defaultEnabled: true,
   settingsSchema,
 

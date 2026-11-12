@@ -8,8 +8,8 @@ or another tool could do too. The API contract lives in
 
 | File | What |
 | --- | --- |
-| `luma-notification-relay.wh.cpp` | Sends every Windows toast to Luma's `notifications` feature (Personal Hub queue). Reads them with UserNotificationListener from Explorer. |
-| `luma-taskbar-glance.wh.cpp` | Shows the `glance` line (next event, unread, due, job progress) on the Windows 11 taskbar clock and tooltip; middle-click opens the Hub. GPL-3 (adapted from taskbar-clock-customization). |
+| `luma-notification-relay.wh.cpp` | Sends every Windows toast to Luma's `notifications` feature (Personal Hub activity feed). Reads them with UserNotificationListener from Explorer. |
+| `luma-taskbar-glance.wh.cpp` | Shows the `glance` line (next event, due, job progress) on the Windows 11 taskbar clock, and the tooltip (which also names the latest activity); middle-click opens the Hub. GPL-3 (adapted from taskbar-clock-customization). |
 | `luma-ask-window.wh.cpp` | Adds "Ask Luma about this window" to every app's window menu (title bar right-click, Alt+Space); the `ask` feature captures the window into a chat. |
 | `luma-link-redirect.wh.cpp` | Sends Edge-forced links (Start search, widgets, `microsoft-edge:`) to Luma's `open` feature; falls back to Edge when Luma is not running. |
 | `luma-explorer-actions.wh.cpp` | Adds a "Luma" submenu to Explorer's classic context menu, filled from the `file-actions` feature. |

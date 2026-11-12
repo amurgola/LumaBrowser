@@ -16,3 +16,6 @@ Chat, sharing proxies and extension slots all dispatch at the same decode slots;
 ## Changes (2026-11-09, helper model)
 
 `extra.responseFormat` reaches the adapter as `responseFormat` (the roleplay stage manager's schema).
+
+The model's own sampler (`extra.modelSampler`) is merged over a chat mode's
+sampler overrides: where both name a knob, the model's value is sent.

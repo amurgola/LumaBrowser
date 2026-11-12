@@ -62,7 +62,7 @@ class GlanceService {
     const segments = [];
     const lines = [];
     const tooltip = [];
-    const items = { currentEvent: null, nextEvent: null, unreadCount: null, latestThread: null, dueTasks: null, runningJobs: null, jobs: null };
+    const items = { currentEvent: null, nextEvent: null, activityToday: null, latestThread: null, dueTasks: null, runningJobs: null, jobs: null };
     const providers = [];
     for (const p of this._providers) {
       const api = typeof p.resolve === 'function' ? p.resolve(this._deps, (id) => this._api(id)) : this._api(p.extension);

@@ -438,10 +438,15 @@
     return ref;
   }
 
+  const THINKING_OPTIONS = [
+    { value: 'brief', label: 'Brief (recommended)' },
+    { value: 'off', label: 'Off (fastest)' },
+    { value: 'full', label: 'Full (slowest)' },
+  ];
   const LENGTH_OPTIONS = [
-    { value: 'snappy', label: 'Snappy (40 to 120 words)' },
-    { value: 'balanced', label: 'Balanced (120 to 250 words)' },
-    { value: 'lush', label: 'Lush (250 to 400 words)' },
+    { value: 'snappy', label: 'Snappy (up to 90 words)' },
+    { value: 'balanced', label: 'Balanced (up to 180 words)' },
+    { value: 'lush', label: 'Lush (up to 320 words)' },
   ];
 
   function characterProfileField() {
@@ -573,7 +578,16 @@
                 {
                   key: 'prosePolish', type: 'toggle', label: 'Polish each reply (an extra pass that rewrites stock phrases; best on larger models)',
                 },
-                { key: 'noSamplers', type: 'toggle', label: 'Turn off the anti-repetition samplers (DRY, XTC) on local models' },
+                { key: 'noSamplers', type: 'toggle', label: 'Turn off the anti-repetition sampler (DRY) on local models' },
+                {
+                  key: 'narratorThinking', type: 'select', label: 'Narrator thinking',
+                  hint: 'For models that reason before answering. Brief caps the thinking (about ten seconds); Off answers at once; Full leaves the model alone.',
+                  options: THINKING_OPTIONS,
+                },
+                {
+                  key: 'verboseLog', type: 'toggle',
+                  label: 'Verbose turn log (every prompt, reply, bookkeeping call and state change, written to a file per story)',
+                },
                 {
                   key: 'imageProfile', type: 'select', label: 'Image generation profile',
                   hint: 'Balanced is recommended. Fast reduces edit resolution and passes; Quality keeps native edits and relighting.',
@@ -1338,6 +1352,114 @@
     if (ctx.refresh) ctx.refresh();
   }
 
+  const GEAR_TOGGLES = [
+    { key: 'prosePolish', label: 'Polish each reply', title: 'An extra pass that rewrites stock phrases; best on larger models.' },
+    { key: 'noSamplers', label: 'Plain sampling (no DRY)', title: 'Turns off the anti-repetition sampler on local models: steadier wording, more repetition.' },
+    { key: 'autoImage', label: 'Draw the scene as it changes', title: 'Create an image when the visible scene changes.' },
+    { key: 'sceneBackground', label: 'Scene art as chat background', title: 'Update the chat background to match the environment.' },
+    { key: 'autoAvatarArt', label: 'Draw new characters', title: 'Auto-generate character art as new characters appear.' },
+    { key: 'verboseLog', label: 'Verbose turn log', title: 'Record every turn to a file: the prompt as sent with its size, the reply and reasoning, each bookkeeping call and answer, the state changes, and what edits, regenerations and deletions did to the story.' },
+  ];
+
+  function gearEl(tag, cls, text) {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text !== undefined) el.textContent = text;
+    return el;
+  }
+
+  async function saveGearSetting(ctx, apply) {
+    const data = ctx.meta && ctx.meta.data;
+    if (!data) return;
+    apply(data);
+    try { await saveWorld(ctx, data, 'assets'); } catch (_) {}
+  }
+
+  function renderRoleplayGear(pop, ctx, panel) {
+    const data = (ctx.meta && ctx.meta.data) || {};
+    const head = gearEl('div', 'cm-gear-sec', 'Roleplay ');
+    head.appendChild(gearEl('span', 'cm-gear-sub', 'applies from the next reply'));
+    pop.appendChild(head);
+
+    const lengthRow = gearEl('label', 'cm-gear-field');
+    lengthRow.title = 'How long the narrator may write; a small move still gets a short reply.';
+    lengthRow.appendChild(gearEl('span', null, 'Reply length'));
+    const select = gearEl('select', 'rp-gear-length');
+    for (const o of LENGTH_OPTIONS) {
+      const opt = gearEl('option', null, o.label);
+      opt.value = o.value;
+      select.appendChild(opt);
+    }
+    select.value = ['snappy', 'balanced', 'lush'].includes(data.lengthMode) ? data.lengthMode : 'balanced';
+    select.addEventListener('change', () => saveGearSetting(ctx, (d) => { d.lengthMode = select.value; }));
+    lengthRow.appendChild(select);
+    pop.appendChild(lengthRow);
+
+    const toneRow = gearEl('label', 'cm-gear-field');
+    toneRow.title = 'How the narrator writes, e.g. dry noir, clipped sentences.';
+    toneRow.appendChild(gearEl('span', null, 'Tone'));
+    const tone = gearEl('input', 'rp-gear-tone');
+    tone.type = 'text';
+    tone.placeholder = 'e.g. dry noir';
+    tone.value = String(data.tone || '');
+    tone.addEventListener('change', () => saveGearSetting(ctx, (d) => { d.tone = tone.value.trim(); }));
+    tone.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); tone.blur(); } });
+    toneRow.appendChild(tone);
+    pop.appendChild(toneRow);
+
+    const opts = data.options || {};
+    const thinkRow = gearEl('label', 'cm-gear-field');
+    thinkRow.title = 'For models that reason before answering. Brief caps the thinking (about ten seconds before the reply starts); Off answers at once; Full leaves the model alone.';
+    thinkRow.appendChild(gearEl('span', null, 'Narrator thinking'));
+    const think = gearEl('select', 'rp-gear-thinking');
+    for (const o of THINKING_OPTIONS) {
+      const opt = gearEl('option', null, o.label);
+      opt.value = o.value;
+      think.appendChild(opt);
+    }
+    think.value = ['off', 'brief', 'full'].includes(opts.narratorThinking) ? opts.narratorThinking : 'brief';
+    think.addEventListener('change', () => saveGearSetting(ctx, (d) => {
+      d.options = Object.assign({}, d.options || {}, { narratorThinking: think.value });
+    }));
+    thinkRow.appendChild(think);
+    pop.appendChild(thinkRow);
+    for (const t of GEAR_TOGGLES) {
+      const row = gearEl('label', 'cm-gear-tool rp-gear-toggle');
+      row.title = t.title;
+      const cb = gearEl('input');
+      cb.type = 'checkbox';
+      cb.checked = !!opts[t.key];
+      cb.dataset.option = t.key;
+      cb.addEventListener('change', () => saveGearSetting(ctx, (d) => {
+        d.options = Object.assign({}, d.options || {}, { [t.key]: cb.checked });
+      }));
+      row.appendChild(cb);
+      row.appendChild(gearEl('span', null, t.label));
+      pop.appendChild(row);
+    }
+
+    if (opts.verboseLog && data.turnLog && data.turnLog.md) {
+      const logRow = gearEl('button', 'cm-gear-row rp-gear-log', 'Copy turn log path');
+      logRow.type = 'button';
+      logRow.title = data.turnLog.md + '\nThe readable log; the .jsonl file beside it holds every event in full.';
+      logRow.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try { await navigator.clipboard.writeText(data.turnLog.md); logRow.textContent = 'Path copied'; } catch (_) { logRow.textContent = data.turnLog.md; }
+      });
+      pop.appendChild(logRow);
+    }
+
+    const edit = gearEl('button', 'cm-gear-row rp-gear-edit', 'Edit everything…');
+    edit.type = 'button';
+    edit.title = 'Premise, who you are, models, characters, scenes and image options';
+    edit.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (panel && panel.close) panel.close();
+      editRoleplaySettings(ctx.api, ctx);
+    });
+    pop.appendChild(edit);
+  }
+
   function rosterTitle(ch) {
     const bits = [ch.name + (ch.description ? ': ' + ch.description : '')];
     const st = ch.state && typeof ch.state === 'object' ? ch.state : {};
@@ -1727,6 +1849,10 @@
       } else {
         ctx.clearBackground();
       }
+    },
+
+    renderGear(pop, ctx, panel) {
+      renderRoleplayGear(pop, ctx, panel);
     },
 
     decorateComposer(els, ctx) {

@@ -12,6 +12,7 @@ const ModelCompanions = require('./ModelCompanions');
 const ModelDownloadRequest = require('./ModelDownloadRequest');
 const ModelTransfer = require('./ModelTransfer');
 const ShardedProgress = require('./ShardedProgress');
+const ModelCardSettingsApplier = require('../service/ModelCardSettingsApplier');
 
 class ModelFileDownloader {
   static URL_REQUIRED = 'A model URL and filename are required.';
@@ -21,7 +22,9 @@ class ModelFileDownloader {
     download = (opts) => ModelDownload.start(opts),
     pin = (repoId, opts) => HfPinnedRepo.pin(repoId, opts),
     freeSpace = undefined,
+    cardSettings = null,
   }) {
+    this._cardSettings = cardSettings || new ModelCardSettingsApplier({ modelSettings: () => (llmServerService && llmServerService.modelSettings) || null });
     this._svc = llmServerService;
     this._slot = slot;
     this._mlxInstall = mlxInstall;
@@ -74,7 +77,16 @@ class ModelFileDownloader {
       drafter: companions.drafter ? companions.drafter.file : null,
     };
     send('done', result);
+    this._applyCardSettings(request.url, destPath, send);
     return { success: true, ...result };
+  }
+
+  _applyCardSettings(url, destPath, send) {
+    const hubFile = HfModelInput.hubFileFromUrl(url);
+    if (!hubFile || !this._cardSettings) return;
+    Promise.resolve(this._cardSettings.apply({ repoId: hubFile.repoId, filePath: destPath }))
+      .then((r) => { if (r && r.found && Object.keys(r.applied || {}).length) send('settings', { modelRef: r.modelRef, applied: r.applied, source: r.source }); })
+      .catch(() => {});
   }
 
   async _pinHub(url) {

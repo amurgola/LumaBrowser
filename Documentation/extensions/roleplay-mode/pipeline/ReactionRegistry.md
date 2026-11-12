@@ -13,9 +13,12 @@ The post-turn reactions running in this process, per conversation.
 - `supersedeOffPath(conversationId, pathIds, reason)`: stops the reactions for
   replies outside the path a new turn continues from (a regenerate, an edited
   prompt). Returns the count.
-- `settled(conversationId, pathIds)`, `waitForEarlier(scope)`: resolve once the
-  world phase of the reactions on the path (or of every earlier one in the
-  conversation) is over, or after `waitMs`.
+- `settled(conversationId, pathIds, signal)`, `waitForEarlier(scope)`: resolve
+  once the world phase of the reactions on the path (or of every earlier one
+  in the conversation) is over, or after `waitMs`. `signal` (the waiting
+  turn's abort signal, optional) ends the `settled` wait as soon as it fires;
+  an already aborted signal never waits. The reactions themselves are not
+  stopped by it.
 
 ## Why
 

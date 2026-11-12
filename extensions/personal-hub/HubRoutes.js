@@ -44,7 +44,10 @@ class HubRoutes {
       return { thread: this._api.enrichThread(ref, enrichment) };
     }));
     router.get('/threads', (req, res) => HubRoutes._reply(res, () => ({
-      threads: this._api.listThreads({ state: req.query.state || 'open', app: req.query.app || null, limit: HubRoutes._int(req.query.limit, 100) }),
+      threads: this._api.listThreads({
+        state: req.query.state || 'active', app: req.query.app || null, since: req.query.since || null,
+        limit: HubRoutes._int(req.query.limit, 100), offset: HubRoutes._int(req.query.offset, 0),
+      }),
     })));
     router.get('/threads/:id', (req, res) => HubRoutes._reply(res, () => HubRoutes._found(this._api.getThread(req.params.id), 'Thread not found')));
     router.post('/threads/:id/state', (req, res) => HubRoutes._reply(res, () => ({
@@ -68,7 +71,9 @@ class HubRoutes {
     router.patch('/tasks/:id', (req, res) => HubRoutes._reply(res, () => this._api.updateTask(req.params.id, req.body || {})));
     router.post('/tasks/:id/move', (req, res) => HubRoutes._reply(res, () => {
       const body = req.body || {};
-      return this._api.moveTask(req.params.id, body.columnKey, body.status ? { status: body.status } : {});
+      const opts = body.status ? { status: body.status } : {};
+      if (body.beforeId !== undefined) opts.beforeId = body.beforeId || null;
+      return this._api.moveTask(req.params.id, body.columnKey, opts);
     }));
     router.post('/statuses/link', (req, res) => HubRoutes._reply(res, () => {
       const body = req.body || {};

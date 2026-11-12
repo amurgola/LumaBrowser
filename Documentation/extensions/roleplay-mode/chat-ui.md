@@ -87,3 +87,33 @@ Writes none (it registers through LumaChatExt).
 ## Changes (2026-11-09, helper model)
 
 The setup's More section gains a `sideModel` select ("Bookkeeping model"): same as the story model, the app's helper model (Setup), or any listed model (`sideModelOptions`); helper rows never appear among the language models.
+
+## Changes (2026-11-12, gear section)
+
+The reply length options read as ceilings: Snappy (up to 90 words), Balanced
+(up to 180 words), Lush (up to 320 words).
+
+A new hook, `renderGear(pop, ctx, panel)`, fills the roleplay's section of the
+composer gear ([GearPanel](../../core/llm-server/ui/js/chat/composer/GearPanel.md)),
+which takes the place of the chat's attach, replies, browser and tool rows (a
+roleplay turn never uses them; no `gearKeep`). Under a "Roleplay" heading
+("applies from the next reply") it renders:
+
+- Reply length, a select (`.rp-gear-length`) in a `.cm-gear-field` row.
+- Tone, a text input (`.rp-gear-tone`), saved trimmed on change; Enter leaves
+  the field.
+- One checkbox per option (`input[data-option]`): `prosePolish`,
+  `noSamplers`, `autoImage`, `sceneBackground`, `autoAvatarArt`.
+- "Edit everything…" (`.rp-gear-edit`): closes the panel and opens the full
+  settings dialog.
+
+Each change is stored at once through `ctx.setMeta` and applies from the next reply. The settings live beside the story, not on its timeline, so no story point moves and the thread is not re-rendered.
+
+## Verbose turn log (2026-11-12)
+
+The setup options and the gear carry a "Verbose turn log" toggle
+(`options.verboseLog`). Once a turn has been recorded the gear also shows
+"Copy turn log path", which copies `data.turnLog.md`.
+
+The setup options and the gear carry a "Narrator thinking" select (Brief, Off,
+Full; `options.narratorThinking`).

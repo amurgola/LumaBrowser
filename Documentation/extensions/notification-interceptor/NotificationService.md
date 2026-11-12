@@ -4,8 +4,8 @@
 
 Keeps the webhook URL, records each intercepted notification with its forward
 outcome, forwards it when a webhook is set, and announces every ingested
-notification (an EventEmitter) so other extensions, the Hub's conversation
-queue first, hear them.
+notification (an EventEmitter) so other extensions, the Hub's activity
+feed first, hear them.
 
 ## Methods
 

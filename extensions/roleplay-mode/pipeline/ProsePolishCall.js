@@ -35,6 +35,7 @@ class ProsePolishCall {
       RpDebug.log('post.polish', { ms: Date.now() - started, flagged: flagged.length, changed: out.changed, perHundred: score.perHundred });
       return { content: out.content, changed: out.changed, score };
     } catch (e) {
+      if (require('./ReactionScope').isStop(e)) throw e;
       RpDebug.log('post.polish.error', { ms: Date.now() - started, error: e && e.message });
       if (this._logger && this._logger.warn) this._logger.warn('roleplay polish call failed', { error: e && e.message });
       return { content, changed: false, score };

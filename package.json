@@ -1,6 +1,6 @@
 {
   "name": "lumabrowser",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "private": true,
   "description": "Your local AI stack in one app",
   "homepage": "https://lumabyte.com",
@@ -28,23 +28,19 @@
     "build:vscode": "node scripts/build-vscode-extension.js",
     "verify:installer": "node scripts/verify-installer-nsh.js",
     "test:node": "jest",
-    "test:e2e": "jest --config=tests/e2e/jest.config.js --runInBand",
-    "test:integration:live": "jest --config=tests/integration/live/jest.config.js --runInBand",
     "verify:asar": "node scripts/verify-asar.js",
-    "sync:prod": "node scripts/sync-prod.js",
     "windhawk:check": "node tools/windhawk/check-mods.js",
     "cleanup": "node scripts/cleanup.js",
-    "shots:readme": "node scripts/readme-shots.js",
     "test:clean": "npm run cleanup && npm test",
     "profile:performance": "node scripts/profile-performance.js",
     "bench:llm-launch": "node scripts/bench-llm-launch.js",
     "rp:text": "node scripts/rp-text-run.js",
+    "rp:state": "node scripts/rp-state-run.js",
+    "models:card-settings": "node scripts/model-card-settings.js",
     "model:download": "node scripts/model-download.js",
     "profile:summarize-runtime": "node scripts/summarize-runtime-trace.js",
     "crash:repro": "node scripts/crash-repro.js",
-    "test:performance": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js --config=tests/performance.config.js --runInBand --silent",
-    "build:site-replays": "node scripts/build-site-dev-replays.js",
-    "test:integration": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js tests/integration --runInBand --forceExit"
+    "build:site-replays": "node scripts/build-site-dev-replays.js"
   },
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.29.7",
@@ -239,18 +235,8 @@
     },
     "linux": {
       "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        }
+        "AppImage",
+        "deb"
       ],
       "icon": "icon/icon.png",
       "category": "Network",

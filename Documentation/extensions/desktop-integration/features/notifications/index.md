@@ -6,7 +6,7 @@ OS notification relay. A desktop client (the
 [luma-notification-relay](../../../../integrations/windhawk/luma-notification-relay.wh.md)
 Windhawk mod, a script, any program that can read the notifications the
 operating system shows) posts them here and Luma files them in the Personal
-Hub's conversation queue, next to the web notifications the
+Hub's activity feed, next to the web notifications the
 notification-interceptor extension catches. On by default. The work is
 [NotificationRelay](NotificationRelay.md); the contract is in the
 [README](../../README.md#5-feature-modules).
@@ -39,7 +39,7 @@ When every item is invalid (or the body is empty) it is `400 { success: false, e
 
 Statuses:
 
-- `relayed`: pushed to the Hub queue (`threadId` is the Hub thread).
+- `relayed`: pushed to the Hub activity feed (`threadId` is the Hub thread).
 - `buffered`: the Hub is not installed or is switched off; kept (up to 100,
   oldest dropped) and pushed on the next request or `flush` once it is back.
   Still a success.
@@ -70,7 +70,7 @@ shared with web notifications an automation may have labelled.
 
 | Key | Type | Default | What |
 | --- | --- | --- | --- |
-| `forwardToHub` | bool | true | off: items only appear in `recent` (status `filtered`, reason `forwarding-off`) |
+| `forwardToHub` | bool | true | `Send to the Personal Hub activity feed`; off: items only appear in `recent` (status `filtered`, reason `forwarding-off`) |
 | `filterMode` | select | `all` | `all` (every app but the blocked) or `allowlist` (only the allowed) |
 | `allowApps` | textarea | '' | one pattern per line (or comma separated): display name, AUMID or Hub app key, case-insensitive, `*` wildcard |
 | `denyApps` | textarea | '' | same format; always wins |

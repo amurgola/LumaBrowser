@@ -31,17 +31,29 @@ const MicrosoftAccounts = require('./connections/MicrosoftAccounts');
 const ConnectionMonitor = require('./connections/ConnectionMonitor');
 const AccountCalendars = require('./connections/AccountCalendars');
 const DesktopAlert = require('./connections/DesktopAlert');
+const ContextRepository = require('./context/ContextRepository');
+const ContextService = require('./context/ContextService');
+const SummaryRepository = require('./summary/SummaryRepository');
+const ActivitySummarizer = require('./summary/ActivitySummarizer');
+const FocusService = require('./focus/FocusService');
+const ContactRepository = require('./contacts/ContactRepository');
+const ContactService = require('./contacts/ContactService');
+const SnapshotRepository = require('./snapshot/SnapshotRepository');
+const ConversationReader = require('./snapshot/ConversationReader');
 
 class PersonalHubExtension {
   static OAUTH_CALLBACK_PATH = '/api/hub/oauth/callback';
   static QUEUE_PATH = '/api/hub/queue';
   static ENRICH_PATH = '/api/hub/threads/enrich';
   static DEFAULT_BASE_URL = 'http://127.0.0.1:3000';
+  static BACKFILL_NOTIFICATIONS = 3000;
 
   constructor(overrides = {}) {
     this._overrides = overrides;
     this._scheduler = null;
     this._monitor = null;
+    this._summarizer = null;
+    this._people = null;
     this._unsubscribeIngest = null;
     this._api = null;
     this._gatewayBaseUrl = null;
@@ -50,8 +62,10 @@ class PersonalHubExtension {
   async activate(context) {
     HubSchema.ensure(context.db);
     const parts = this._buildServices(context);
-    this._subscribeNotifications(context, parts.inbox);
-    HubIpcHandlers.register(context.ipc, this._buildApi(parts), { openUrl: (url) => this._openUrl(context, url) });
+    this._subscribeNotifications(context, parts.inbox, parts.tabs);
+    const api = this._buildApi(parts);
+    const settings = HubIpcHandlers.register(context.ipc, api, { openUrl: (url) => this._openUrl(context, url) });
+    api.settingsInvoke = (channel, args) => HubIpcHandlers.invoke(settings, channel, args);
     this._scheduler.start();
     this._monitor.start();
     return this._api;
@@ -60,6 +74,8 @@ class PersonalHubExtension {
   async deactivate() {
     if (this._scheduler) this._scheduler.stop();
     if (this._monitor) this._monitor.stop();
+    if (this._summarizer) this._summarizer.stop();
+    this._summarizer = null;
     if (this._unsubscribeIngest) { try { this._unsubscribeIngest(); } catch (_) {} }
     this._scheduler = null;
     this._monitor = null;
@@ -74,7 +90,13 @@ class PersonalHubExtension {
   _buildServices(context) {
     const db = context.db;
     const broadcast = this._overrides.broadcast || new HubBroadcast();
-    const emit = broadcast.emitter();
+    const announce = broadcast.emitter();
+    const emit = (type, payload) => {
+      announce(type, payload);
+      if (type !== 'thread.changed') return;
+      if (this._people && payload && (payload.reason === 'notification' || payload.reason === 'pushed')) this._people(payload.threadId, payload.notificationId);
+      if (this._summarizer) this._summarizer.schedule();
+    };
     const secrets = this._overrides.secrets || new TriggerSecrets(db.getRawDb());
     const fetchImpl = this._overrides.fetchImpl || null;
     const now = this._overrides.now || (() => new Date());
@@ -121,8 +143,20 @@ class PersonalHubExtension {
     });
     const connections = { monitor: this._monitor, accounts: new AccountCalendars({ monitor: this._monitor, calendar }), tabs };
     const inbound = new InboundToken(db);
-    const service = new HubService({ calendar, inbox, board, sync: this._scheduler, inbound, connections, now, openUrl: (url) => this._openUrl(context, url) });
-    return { service, inbox, inbound };
+    const contexts = new ContextService({ contexts: new ContextRepository(db), emit });
+    const contacts = new ContactService({ contacts: new ContactRepository(db), db, emit });
+    this._people = (threadId, notificationId) => PersonalHubExtension._observe(threadId, notificationId, { inbox, contexts, contacts });
+    PersonalHubExtension._seedContacts({ inbox, contexts, contacts });
+    const reader = new ConversationReader({ tabs, browser: context.browser || null, snapshots: new SnapshotRepository(db), sleep: this._overrides.sleep || undefined });
+    this._summarizer = new ActivitySummarizer({
+      inbox, contexts, summaries: new SummaryRepository(db), db, llm: this._overrides.llm || context.llm || null, reader, people: contacts, emit, now,
+    });
+    const focus = new FocusService({ board, calendar, summarizer: this._summarizer, db, emit, now });
+    const service = new HubService({
+      calendar, inbox, board, sync: this._scheduler, inbound, connections, contexts, summarizer: this._summarizer, focus, contacts, reader, now,
+      openUrl: (url) => this._openUrl(context, url),
+    });
+    return { service, inbox, inbound, tabs };
   }
 
   _calendarProviders({ microsoft }) {
@@ -136,12 +170,46 @@ class PersonalHubExtension {
     };
   }
 
-  _subscribeNotifications(context, inbox) {
+  _subscribeNotifications(context, inbox, tabs) {
     const interceptor = context.extensions && context.extensions['notification-interceptor'];
     if (!interceptor || typeof interceptor.onIngest !== 'function') return;
     this._unsubscribeIngest = interceptor.onIngest(({ notification }) => {
-      try { inbox.ingest(notification); } catch (err) { console.error('personal-hub: ingest failed:', err.message); }
+      try { inbox.ingest(notification, PersonalHubExtension._tabOf(notification, tabs)); } catch (err) { console.error('personal-hub: ingest failed:', err.message); }
     });
+  }
+
+  static _observe(threadId, notificationId, { inbox, contexts, contacts }) {
+    try {
+      const found = inbox.getThread(threadId);
+      const last = found && (found.notifications.find((n) => n.id === notificationId) || found.notifications[0]);
+      if (!last || !last.sender) return;
+      const contextId = contexts.resolve({ url: last.url, partition: last.partition, host: last.host, sender: last.sender, app: last.app, named: found.thread.context && (found.thread.context.hubContext || found.thread.context.company) });
+      contacts.observe({ app: last.app, sender: last.sender, contextId, at: last.receivedAt });
+    } catch (err) {
+      console.error('personal-hub: could not note the sender:', err.message);
+    }
+  }
+
+  static _seedContacts({ inbox, contexts, contacts }) {
+    try {
+      if (!contacts.isEmpty()) return;
+      const known = contexts.list();
+      const log = inbox.listNotifications({ limit: PersonalHubExtension.BACKFILL_NOTIFICATIONS }).reverse();
+      contacts.backfill(log.filter((n) => n.sender).map((n) => ({
+        app: n.app, sender: n.sender, at: n.receivedAt,
+        contextId: contexts.resolve({ url: n.url, partition: n.partition, host: n.host, sender: n.sender, app: n.app }, known),
+      })));
+    } catch (err) {
+      console.error('personal-hub: could not seed contacts:', err.message);
+    }
+  }
+
+  static _tabOf(notification, tabs) {
+    const tabId = notification && notification.tabId;
+    if (tabId == null || !tabs) return null;
+    let tab = null;
+    try { tab = tabs.persisted().find((t) => String(t.tabId) === String(tabId)) || null; } catch (_) { tab = null; }
+    return tab ? { partition: tab.partition, title: tab.title, url: tab.url } : null;
   }
 
   _buildApi({ service, inbound }) {

@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const RecordId = require('../../../core/database/RecordId');
+const ActivityKind = require('./ActivityKind');
 const NotificationClassifier = require('./NotificationClassifier');
 const ThreadKey = require('./ThreadKey');
 const ThreadRepository = require('./ThreadRepository');
@@ -50,19 +51,20 @@ class InboxService {
       data: n.data == null ? null : n.data,
     });
     this._pruneOccasionally(now);
-    this._emit(InboxService.CHANGED_EVENT, { threadId: thread.id, reason: 'notification' });
+    this._emit(InboxService.CHANGED_EVENT, { threadId: thread.id, notificationId: stored.id, reason: 'notification' });
     return { duplicate: false, notification: stored, thread };
   }
 
-  listThreads({ state = 'open', app = null, limit = 100, offset = 0 } = {}) {
-    const threads = this._threads.list({ state, app, limit, offset, nowIso: this._now().toISOString() });
-    return threads.map((thread) => ({ ...thread, lastNotification: this._lastNotification(thread.id) }));
+  listThreads({ state = 'active', app = null, limit = 100, offset = 0, since = null } = {}) {
+    const threads = this._threads.list({ state: state || 'active', app, limit, offset, since: since || null, nowIso: this._now().toISOString() });
+    const latest = this._notifications.latestForThreads(threads.map((t) => t.id));
+    return threads.map((thread) => ({ ...InboxService._withKind(thread), lastNotification: InboxService._brief(latest[thread.id]) }));
   }
 
   getThread(id) {
     const thread = this._threads.get(id);
     if (!thread) return null;
-    return { thread, notifications: this._notifications.listForThread(id) };
+    return { thread: InboxService._withKind(thread), notifications: this._notifications.listForThread(id) };
   }
 
   setThreadState(id, state, { snoozeUntil = null } = {}) {
@@ -95,7 +97,7 @@ class InboxService {
     const sender = String(item.sender || '').trim();
     const participants = [...new Set([...(Array.isArray(item.participants) ? item.participants : []), ...(sender ? [sender] : [])])];
     const thread = this._touchThread(app, threadKey, { title, participants, url: item.url || '', at });
-    const enrichment = { summary: item.summary, priority: item.priority, labels: item.labels, context: item.context };
+    const enrichment = { summary: item.summary, priority: item.priority, labels: item.labels, context: item.context, kind: item.kind };
     const columns = InboxService._enrichmentColumns(thread, enrichment);
     const enriched = Object.keys(columns).length ? this._threads.update(thread.id, columns) : thread;
     const notification = this._notifications.insert({
@@ -112,7 +114,7 @@ class InboxService {
       dedupeKey: `automation:${app}:${threadKey}:${at}`,
       data: null,
     });
-    this._emit(InboxService.CHANGED_EVENT, { threadId: thread.id, reason: 'pushed' });
+    this._emit(InboxService.CHANGED_EVENT, { threadId: thread.id, notificationId: notification.id, reason: 'pushed' });
     return { thread: enriched, notification };
   }
 
@@ -174,6 +176,11 @@ class InboxService {
     }
     if (Array.isArray(e.labels)) columns.labels = e.labels.map(String);
     if (e.context && typeof e.context === 'object') columns.context = { ...thread.context, ...e.context };
+    if (e.kind != null && String(e.kind).trim()) {
+      const kind = ActivityKind.clean(e.kind);
+      if (!kind) throw new Error(`unknown kind "${e.kind}" (${ActivityKind.ALL.join(', ')})`);
+      columns.context = { ...(columns.context || thread.context), kind };
+    }
     if (Array.isArray(e.participants)) columns.participants = [...new Set([...thread.participants, ...e.participants.map(String)])];
     if (e.url != null && String(e.url)) columns.url = String(e.url);
     if (e.taskId !== undefined) columns.task_id = e.taskId || null;
@@ -205,9 +212,16 @@ class InboxService {
     this._notifications.pruneBefore(new Date(now.getTime() - this._retentionDays * 24 * 60 * 60 * 1000).toISOString());
   }
 
-  _lastNotification(threadId) {
-    const latest = this._notifications.listForThread(threadId, { limit: 1 })[0];
-    return latest ? { title: latest.title, body: latest.body, receivedAt: latest.receivedAt, sender: latest.sender } : null;
+  static _brief(latest) {
+    if (!latest) return null;
+    return {
+      title: latest.title, body: latest.body, receivedAt: latest.receivedAt, sender: latest.sender,
+      partition: latest.partition || '', host: latest.host || '', url: latest.url || '',
+    };
+  }
+
+  static _withKind(thread) {
+    return { ...thread, kind: ActivityKind.of(thread) };
   }
 
   static _isoOrNow(value, now) {

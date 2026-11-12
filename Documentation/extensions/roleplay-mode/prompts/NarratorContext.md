@@ -12,11 +12,17 @@ caps, in three places:
 3. The newest message, after the player's own text. First the story state,
    opened by `STATE_OPEN`: `## Story so far` (clock, summary, recent
    unsummarised events, the remaining open threads), `## In the scene now` (a
-   full card per present character), `## Up close this turn`, `## Off stage`
+   card per present character, without this turn's state, which the scene
+   notes carry), `## Up close this turn`, `## Off stage`
    (one line each, capped), `## Setting`. Then the trailing anchor (`[Scene notes for this reply]`: each present
-   character's state line and outfit, the top three open threads, the
-   `Pressure:` line, the length band, and the rule that the player's choices
-   stay theirs while everyone else acts on their own wants).
+   character's state line and outfit, the top three open threads as
+   `Open questions (background, do not raise them yourself):`, the pressure as
+   `Pressure (background, only if the player stalls):` clipped to
+   `PRESSURE_TOKENS` (45), and the closing rules: the notes are private, answer
+   what the player just did as stated, stop when they have something to
+   respond to, this reply's word ceiling (`lengthRule`), only those the
+   moment involves act or speak, nothing new unless the action calls for it,
+   and the player is "you" in every sentence of narration).
 
 The router places the two parts of the newest message
 ([ModeTurnMessages](../../../core/llm-server/chat/router/ModeTurnMessages.md):
@@ -41,9 +47,12 @@ first, so the premise's hook is never pushed out by incidental ones.
 - `NarratorContext.cast(data)` -> `{ present, offstage }`: the tracked moment
   first; before any state exists every set-up character not marked absent
   starts on stage; off stage sorted by most recent activity, capped at 8.
-- `NarratorContext.card(c)` one character's block (summary, past, looks,
-  wearing, voice, tells, wants, hides, bonds, arc, recent beats, now);
-  `offstageLine(d, c)`.
+- `NarratorContext.card(c, { marks, turn, state })` one character's block, see
+  Cards below; `offstageLine(d, c)`.
+- `NarratorContext.playerMove(messages)` the trimmed text of the newest user
+  message, `''` when there is none.
+- `NarratorContext.lengthRule(d, mode, move)` the sentence that states this
+  reply's word ceiling, see Reply length below.
 
 ## Why
 
@@ -96,7 +105,82 @@ on stage on top of the `anchor` layer cap (and the body labels' own room). The
 closing rule is never what a clip cuts: the facts above it are clipped to what
 the cap leaves after the rule.
 
-The rule now also says that not everyone present needs a line, only those the
-moment involves. With a five-person cast kept on stage at an 8k window, the
-facts used to push the rule out of the cap. Replies then ran long (an average
-of 276 words, 25% inside the 120 to 250-word band) and lost the handoff.
+The rule also says that only those the moment involves act or speak. With a
+five-person cast kept on stage at an 8k window, the facts used to push the
+rule out of the cap. Replies then ran long (an average of 276 words, 25%
+inside what was then a 120 to 250-word band).
+
+## Cards (2026-11-12)
+
+`card(c, { marks = true, turn = 0, state = true })` lists the lines that keep a character
+recognisable first and the background last, so a clip at the layer's cap
+costs the background and not the voice: the name and summary, `looks`,
+`noticed since`, `wearing`, `voice`, `now`, `toward the player`, `wants`,
+`habits`, `with others`, `so far`, `earlier`, then
+`background (off the page until the story reaches it):` and
+`keeps private (no hints):`.
+
+- `earlier` (it was `lately`) lists only the beats older than the last
+  `HISTORY_TURNS` (2) turns when `turn` is given. The raw history still holds
+  the newer replies word for word, and a beat from one of them was echoed
+  back.
+- A walk-on ([CastRole](../world/CastRole.md)) gets one line: the name and
+  summary with `(in the background)`, then `looks:` and `wearing:` when known.
+- The cards close with a line saying they are for consistency, not material.
+- `state` (default true) keeps the full card. With `state: false` the card
+  leaves out what the scene notes say for this turn: `wearing:` (on a
+  walk-on's line too), the `now:` line, and `toward the player:` when the
+  state holds a `bondUser`. An attitude that exists only in the profile's
+  bonds is not in the scene notes, so it stays on the card. `_present` builds
+  the `## In the scene now` cards with `state: false`. Printed in both places,
+  the state was the largest repeat in the request, and the narrator echoed
+  it.
+
+## Reply length
+
+The scene notes' closing rules state a word ceiling for this reply, sized to
+the player's last message (`playerMove`). "Up to 180 words, fewer for a small
+move" was read as 180: a one-line action got 135 to 190 words every time.
+`lengthRule(d, mode, move)` counts the words of the move and returns:
+
+- up to `SMALL_MOVE_WORDS` (14): "the player made a small move, so answer in
+  two to four sentences, at most N words." with N = `SMALL_SHARE` (0.4) of
+  the mode's `max`, rounded to the nearest 5 (snappy 35, balanced 70, lush
+  130).
+- up to `MEDIUM_MOVE_WORDS` (40): "at most N words." with N = `MEDIUM_SHARE`
+  (0.7) of the max, rounded the same way (snappy 65, balanced 125, lush 225).
+- a longer message, no player text, or the opening turn (`story.turn` 0):
+  "at most <max> words."
+
+The rules end with a sentence that the player is "you" in every sentence of
+narration, never their name or "he", "she" or "they". The brief says the same
+once at the top ([NarratorBrief](NarratorBrief.md)); the rule after the
+history is the one a long story still obeys.
+
+The scene notes call the threads and the pressure background, and the closing
+rules open with `These notes are private`. They were `Open:` and `Pressure:`
+lines before; a reply that still announces the notes by name ("Pressure
+builds:") has the label removed by [ProseCleanup](ProseCleanup.md).
+
+## Word ceiling (2026-11-12)
+
+`wordCap(d, mode, move)` is the number `lengthRule` states; `build()` returns
+it as `wordCap`, the mode descriptor puts it on the turn and remembers it in
+`ReplyLength`, and the reaction holds an overlong reply to it.
+
+The scene notes' closing rules end with "Spoken words always sit inside double
+quotes."
+
+An off-stage line now leads with the whereabouts, then the attitude to the
+player, then the summary, so a clip at a small window costs the summary.
+
+## Recall and shorter closing rules (2026-11-12)
+
+"Story so far" gains "From earlier, relevant now:" with the ledger rows
+`LedgerRecall` picked for the player's line. The scene notes close on four
+short rules (private notes, answer the player's action then stop within the
+stated length, add nothing new, the player is "you"); the rest lives in the
+brief.
+
+With narrator thinking on Brief, the scene notes end with one more line telling
+a reasoning model to decide in a few lines and not draft or audit the reply.

@@ -74,7 +74,7 @@ export default class ConnectionsSection extends HubSection {
   _row(row) {
     const esc = HtmlEscaper.escape;
     const badges = [`<span class="luma-badge muted">${esc(row.appLabel)}</span>`];
-    if ((row.areas || []).includes('queue')) badges.push('<span class="luma-badge muted">Queue</span>');
+    if ((row.areas || []).includes('queue')) badges.push('<span class="luma-badge muted">Activity</span>');
     if (row.calendarsInUse) badges.push(`<span class="luma-badge muted">${row.calendarsInUse} calendar${row.calendarsInUse === 1 ? '' : 's'}</span>`);
     return `<div class="luma-dockpanel-row" data-key="${esc(row.key)}">
       <div class="luma-dockpanel-rowhead">

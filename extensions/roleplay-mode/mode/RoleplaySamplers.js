@@ -3,10 +3,16 @@ class RoleplaySamplers {
     dry_multiplier: 0.8,
     dry_base: 1.75,
     dry_allowed_length: 2,
-    xtc_threshold: 0.1,
-    xtc_probability: 0.5,
     min_p: 0.02,
   });
+
+  static TOKENS_PER_WORD = 4;
+  static REASONING_ROOM = 1536;
+
+  static replyCap(wordCap) {
+    const words = Number(wordCap) || 0;
+    return words > 0 ? RoleplaySamplers.REASONING_ROOM + Math.round(words * RoleplaySamplers.TOKENS_PER_WORD) : 0;
+  }
 
   static forTurn(data) {
     const opts = (data && data.options) || {};

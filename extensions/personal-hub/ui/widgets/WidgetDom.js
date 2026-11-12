@@ -62,6 +62,7 @@ export default class WidgetDom {
   static dayLabel(dayKey, now = Date.now()) {
     if (dayKey === WidgetDom.dayKey(null, now)) return 'Today';
     if (dayKey === WidgetDom.dayKey(null, now + WidgetDom.DAY_MS)) return 'Tomorrow';
+    if (dayKey === WidgetDom.dayKey(null, now - WidgetDom.DAY_MS)) return 'Yesterday';
     const date = new Date(`${dayKey}T12:00:00`);
     if (Number.isNaN(date.getTime())) return dayKey;
     return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });

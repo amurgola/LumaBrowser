@@ -1,6 +1,8 @@
 const CharacterProfile = require('../world/CharacterProfile');
 const ProfilePrompt = require('../prompts/ProfilePrompt');
 const RpDebug = require('../images/RpDebug');
+const CastRole = require('../world/CastRole');
+const ReactionScope = require('./ReactionScope');
 
 const SideModel = require('../mode/SideModel');
 class ProfileCall {
@@ -13,13 +15,12 @@ class ProfileCall {
     this._logger = logger;
   }
 
-  static candidates(data, present, newCharIds) {
-    const wanted = new Set(newCharIds || []);
+  static candidates(data, present) {
     const list = [];
     for (const c of Array.isArray(data.characters) ? data.characters : []) {
       if (!c || !c.name) continue;
-      const inScene = wanted.has(c.id) || present.some((p) => p && p.id === c.id);
-      if (inScene && CharacterProfile.isBlank(c)) list.push(c);
+      const inScene = (present || []).some((p) => p && p.id === c.id);
+      if (inScene && CharacterProfile.isBlank(c) && !CastRole.isWalkOn(c)) list.push(c);
     }
     return list.slice(0, ProfileCall.PER_TURN_MAX);
   }
@@ -49,6 +50,7 @@ class ProfileCall {
       RpDebug.log('post.profile', { ms: Date.now() - started, name: char.name, ok: !!patch, error: r && r.error });
       return patch ? CharacterProfile.apply(char, patch) : false;
     } catch (e) {
+      if (ReactionScope.isStop(e)) throw e;
       RpDebug.log('post.profile.error', { ms: Date.now() - started, name: char.name, error: e && e.message });
       if (this._logger && this._logger.warn) this._logger.warn('roleplay profile call failed', { error: e && e.message });
       return false;

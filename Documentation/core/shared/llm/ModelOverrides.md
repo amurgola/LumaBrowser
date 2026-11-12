@@ -17,3 +17,11 @@ All static.
 ## Why
 
 The override stores, the profile store and the resolver all need the same field list and the same notion of "unset", and a value the user cleared must disappear rather than be stored as an empty override that hides the layer below. Keeping launch fields off profiles means switching between profiles never reloads the model.
+
+## Sampler fields (2026-11-12)
+
+Request fields `topP`, `topK`, `minP`, `repeatPenalty` and `presencePenalty`
+(`SAMPLER_RANGES`) join the overrides; `samplerBody(overrides)` gives them as
+request body keys (`top_p`, `top_k`, `min_p`, `repeat_penalty`,
+`presence_penalty`). `settingsSource` (an info field, never sent) notes where
+filled-in values came from; on its own it does not count as an override.

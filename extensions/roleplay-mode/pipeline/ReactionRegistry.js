@@ -30,12 +30,12 @@ class ReactionRegistry {
     return n;
   }
 
-  settled(conversationId, pathIds) {
+  settled(conversationId, pathIds, signal = null) {
     const on = new Set(pathIds || []);
     const waits = this._inConversation(conversationId)
       .filter((s) => on.has(s.messageId) && !s.stopped && !s.isReconciled)
       .map((s) => s.reconciled);
-    return ReactionRegistry._within(waits, this._waitMs);
+    return ReactionRegistry._within(waits, this._waitMs, signal);
   }
 
   waitForEarlier(scope) {
@@ -50,11 +50,21 @@ class ReactionRegistry {
     return Array.from(this._live).filter((s) => s.conversationId === conversationId);
   }
 
-  static _within(promises, ms) {
-    if (!promises.length) return Promise.resolve();
+  static _within(promises, ms, signal = null) {
+    if (!promises.length || (signal && signal.aborted)) return Promise.resolve();
     let timer = null;
-    const cap = new Promise((resolve) => { timer = setTimeout(resolve, ms); });
-    return Promise.race([Promise.all(promises), cap]).finally(() => clearTimeout(timer));
+    let onAbort = null;
+    const cap = new Promise((resolve) => {
+      timer = setTimeout(resolve, ms);
+      if (signal && typeof signal.addEventListener === 'function') {
+        onAbort = () => resolve();
+        signal.addEventListener('abort', onAbort, { once: true });
+      }
+    });
+    return Promise.race([Promise.all(promises), cap]).finally(() => {
+      clearTimeout(timer);
+      if (onAbort) { try { signal.removeEventListener('abort', onAbort); } catch (_) {} }
+    });
   }
 }
 

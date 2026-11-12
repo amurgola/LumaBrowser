@@ -6,12 +6,12 @@ const D = GlanceService.DEFAULTS;
 module.exports = {
   id: 'glance',
   label: 'Glance',
-  description: 'GET /api/desktop/glance/ answers a one-line Hub summary (next event, unread, due tasks) for taskbar clocks and other tiny surfaces; POST /glance/open opens the Hub.',
+  description: 'GET /api/desktop/glance/ answers a one-line Hub summary (next event, due tasks, running jobs, latest activity) for taskbar clocks and other tiny surfaces; POST /glance/open opens the Hub.',
   defaultEnabled: true,
 
   settingsSchema: [
     { key: 'showCalendar', label: 'Next calendar event', type: 'bool', default: D.showCalendar, help: 'The event in progress, else the next one within 24 hours (Hub calendars).' },
-    { key: 'showQueue', label: 'Unread conversations', type: 'bool', default: D.showQueue, help: 'How many threads are open in the Hub conversation queue.' },
+    { key: 'showQueue', label: 'Latest activity', type: 'bool', default: D.showQueue, help: 'Names the latest items of the Hub activity feed in the tooltip and the lines. It adds no count: nothing in the feed is unread.' },
     { key: 'showTasks', label: 'Tasks due', type: 'bool', default: D.showTasks, help: 'Board tasks due today or overdue, outside the done column.' },
     { key: 'showRunning', label: 'Running timed tasks', type: 'bool', default: D.showRunning, help: 'Scheduled agent tasks running right now (covered by Running jobs while the jobs feature is on).' },
     { key: 'showJobs', label: 'Running jobs', type: 'bool', default: D.showJobs, help: 'Renders, downloads and chat replies from the jobs feature, e.g. "42%".' },

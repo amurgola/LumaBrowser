@@ -13,6 +13,7 @@ export default class AutomationSection extends HubSection {
   "participants": ["Dana Reyes"],
   "url": "https://mail.google.com/mail/u/0/#inbox/18c2a",
   "labels": ["billing"],
+  "kind": "mail (optional: chat, mail, calendar, task or other; read from the app when left out)",
   "body": "The latest message text (optional)"
 }`;
 
@@ -23,7 +24,7 @@ export default class AutomationSection extends HubSection {
   "priority": "urgent",
   "labels": ["decision"],
   "context": { "deadline": "2026-10-10" },
-  "taskId": "task_... (optional, links the thread to a board task)"
+  "taskId": "task_... (optional, links the item to a board task)"
 }`;
 
   constructor(tab, { onInfo = () => {} } = {}) {
@@ -36,10 +37,10 @@ export default class AutomationSection extends HubSection {
     const esc = HtmlEscaper.escape;
     return `
     <h4 class="luma-section-label">Automation access</h4>
-    <div class="luma-field-help">An automation such as n8n can push items into the conversation queue and add context to threads it has already analysed. The Notifications tab's webhook keeps forwarding every intercepted notification to it; these endpoints are the way back.</div>
+    <div class="luma-field-help">An automation such as n8n can push items into the activity feed (a mail digest, a calendar notice, anything worth knowing about your day) and add context to items it has already analysed. The Notifications tab's webhook keeps forwarding every intercepted notification to it; these endpoints are the way back.</div>
     <div class="luma-kv ext-mt-8">
       <div class="luma-kv-row"><span class="luma-kv-key">Base URL</span><span class="luma-kv-val"><code class="luma-code-inline" id="ext-hub-autoBase"></code></span></div>
-      <div class="luma-kv-row"><span class="luma-kv-key">Queue</span><span class="luma-kv-val"><code class="luma-code-inline">POST</code> <code class="luma-code-inline" id="ext-hub-autoQueue"></code></span></div>
+      <div class="luma-kv-row"><span class="luma-kv-key">Activity</span><span class="luma-kv-val"><code class="luma-code-inline">POST</code> <code class="luma-code-inline" id="ext-hub-autoQueue"></code></span></div>
       <div class="luma-kv-row"><span class="luma-kv-key">Enrich</span><span class="luma-kv-val"><code class="luma-code-inline">POST</code> <code class="luma-code-inline" id="ext-hub-autoEnrich"></code></span></div>
       <div class="luma-kv-row"><span class="luma-kv-key">Token</span><span class="luma-kv-val">
         <input type="password" class="luma-field-input" id="ext-hub-autoToken" readonly style="max-width:260px">
@@ -49,11 +50,11 @@ export default class AutomationSection extends HubSection {
     </div>
     <div class="luma-field-help ext-mt-8">Send <code class="luma-code-inline">Authorization: Bearer &lt;token&gt;</code> with each request.</div>
     <details class="ext-details ext-mt-8">
-      <summary>Example: push a queue item</summary>
+      <summary>Example: push an activity item</summary>
       <pre>${esc(AutomationSection.QUEUE_EXAMPLE)}</pre>
     </details>
     <details class="ext-details">
-      <summary>Example: enrich a thread</summary>
+      <summary>Example: enrich an item</summary>
       <pre>${esc(AutomationSection.ENRICH_EXAMPLE)}</pre>
       <div class="luma-field-help">Address the thread by <code class="luma-code-inline">id</code> or by <code class="luma-code-inline">app</code> plus <code class="luma-code-inline">threadKey</code>.</div>
     </details>`;

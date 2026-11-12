@@ -11,7 +11,9 @@ per-source accent colours and a few inline icons. Listed in the manifest's
 
 - `LOCAL` (`'local'`), `LOCAL_COLOR`, `SOURCE_PALETTE` (six colours distinct
   on the dark page, never the accent orange that marks UI state),
-  `MAX_AVATARS` (3), `ICONS` (`hide`, `show`, `open`, `close` SVGs).
+  `MAX_AVATARS` (3), `ICONS` (`hide`, `show`, `open`, `settings`, `close`
+  SVGs; `settings` is the gear of
+  [HubSettingsPanel](HubSettingsPanel.md)`.button`).
 - `sourceKey(task)`: the task's `sourceId`, else `LOCAL`.
 - `sourceColors(tasks)` -> `{ sourceKey: color }`: sources in label order take
   the palette in turn, so a source keeps its colour between paints; `LOCAL`

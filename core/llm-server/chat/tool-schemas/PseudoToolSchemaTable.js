@@ -53,7 +53,7 @@ class PseudoToolSchemaTable {
       properties: {
         title: { type: 'string', description: 'Short title' },
         html: { type: 'string', description: 'HTML markup for the module (use res-* attributes for ResonantJS bindings). Goes inside the module container "root".' },
-        js: { type: 'string', description: 'JS body executed with (root, R, Chart, store, luma). root=container element, R=a scoped Resonant instance (R.add(name,val), R.format(...)), Chart=Chart.js when requested in libs, store=persistent async key-value data, luma=host browser bridge (await luma.fetchPage(url,{mode}) → page/API content, no CORS limits; await luma.openTab(url); luma.ext(id).call(method,...args) for extension data such as the Hub\'s tasks, calendar and conversation queue, id "personal-hub").' },
+        js: { type: 'string', description: 'JS body executed with (root, R, Chart, store, luma). root=container element, R=a scoped Resonant instance (R.add(name,val), R.format(...)), Chart=Chart.js when requested in libs, store=persistent async key-value data, luma=host browser bridge (await luma.fetchPage(url,{mode}) → page/API content, no CORS limits; await luma.openTab(url); luma.ext(id).call(method,...args) for extension data such as the Hub\'s tasks, calendar and activity feed, id "personal-hub").' },
         libs: { type: 'array', items: { type: 'string' }, description: 'Optional extra libraries to load, e.g. ["chartjs"].' },
       },
       required: ['html'],

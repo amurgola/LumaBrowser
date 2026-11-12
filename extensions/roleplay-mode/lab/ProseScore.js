@@ -3,7 +3,7 @@ const NarratorBrief = require('../prompts/NarratorBrief');
 const SpeakerNames = require('../prompts/SpeakerNames');
 
 class ProseScore {
-  static BANDS = Object.freeze({ snappy: [40, 120], balanced: [120, 250], lush: [250, 400] });
+  static BANDS = Object.freeze({ snappy: [15, 90], balanced: [25, 180], lush: [60, 320] });
   static HANDOFF = /(?:\?|"|\.|!)\s*$/;
   static TRAILING_SUMMARY = /\b(?:and so|in the end|little did|would never be the same|as the night wore on|the adventure (?:had )?begun)\b[^.]*\.\s*$/i;
 

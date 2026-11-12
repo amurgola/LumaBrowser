@@ -47,3 +47,14 @@ The `roleplay` chat mode descriptor.
   `groundingLog` shape, or null), bounded to `GROUNDING_MEMORY` conversations,
   newest kept. The router drops the turn's `groundingNotes` field, so the
   Roleplay Lab reads it here after each turn.
+
+## Turn log and ceiling (2026-11-12)
+
+`_prepared` times the two knowledge-base lookups and hands them to
+`journalGrounding`, which records a `grounding` event in the verbose turn log
+(per lookup: on or off, whether a knowledge base answered, how long it took,
+what each character on stage was looked up by and which cards came back). It
+also remembers the turn's word ceiling in `ReplyLength`.
+
+The turn carries the story's "Narrator thinking" setting (`NarratorThinking`):
+a thinking budget with the samplers for Brief, `reasoningEffort: 'off'` for Off.

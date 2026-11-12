@@ -10,7 +10,7 @@ class WorldDelta {
   }
 
   addCharacter(data, fields) {
-    const char = Object.assign({ id: RoleplayIds.mint('char'), description: '', appearance: '', seed: RoleplayIds.seed(), art: null }, fields);
+    const char = Object.assign({ id: RoleplayIds.mint('char'), description: '', appearance: '', seed: RoleplayIds.seed(), art: null, origin: 'story' }, fields);
     data.characters.push(char);
     this.newCharIds.push(char.id);
     this.changed = true;

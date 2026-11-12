@@ -19,18 +19,18 @@ opening is [GlanceOpener](GlanceOpener.md). The Windhawk client is
   "success": true,
   "generatedAt": "2026-10-23T14:00:00.000Z",
   "ttlSeconds": 30,
-  "line": "Standup in 30m · 4 unread · 2 due",
+  "line": "Standup in 30m · 2 due",
   "lines": [
     { "id": "event:e1", "icon": "calendar", "text": "Standup in 30m", "detail": "Zoom / Work", "url": "https://..." },
-    { "id": "queue", "icon": "inbox", "text": "4 unread", "detail": "Teams: Bob" },
+    { "id": "queue", "icon": "inbox", "text": "Teams: Bob", "detail": "4 items today", "url": "https://..." },
     { "id": "tasks", "icon": "task", "text": "2 due", "detail": "1 overdue", "url": "https://..." },
     { "id": "running", "icon": "clock", "text": "1 running", "detail": "Morning digest" }
   ],
-  "tooltip": "Luma\nNext: Standup at 10:30am, Zoom\nQueue: 4 open threads\n  Teams: Bob\n...",
+  "tooltip": "Luma\nNext: Standup at 10:30am, Zoom\nLatest activity:\n  Teams: Bob\n...",
   "items": {
     "currentEvent": null,
     "nextEvent": { "id", "title", "startsAt", "endsAt", "inProgress", "location", "url", "source" },
-    "unreadCount": 4,
+    "activityToday": 4,
     "latestThread": { "id", "app", "title", "lastAt", "url" },
     "dueTasks": { "count": 2, "overdue": 1, "today": 1, "tasks": [{ "id", "title", "dueAt", "overdue", "url" }] },
     "runningJobs": [{ "id", "name" }]
@@ -46,7 +46,13 @@ opening is [GlanceOpener](GlanceOpener.md). The Windhawk client is
   show (and the `emptyText` setting is empty): a client then shows its own
   default.
 - `lines`: one entry per provider that has something; `id` is stable per
-  provider (`event:<id>` for the event).
+  provider (`event:<id>` for the event). The `queue` line names the latest
+  item of today's activity feed (`app: title`), with `N items today` as its
+  detail when there is more than one.
+- The activity feed adds nothing to `line`: it is context, nothing in it is
+  unread, so there is no count to show. It appears in `lines`, in the tooltip
+  (under `Latest activity:`) and in `items` (`activityToday`, how many items
+  had activity today, and `latestThread`).
 - `tooltip`: plain text, `\n` separated, empty when there is nothing.
 - `items`: the raw facts; a key is null when its provider is off or its
   extension is missing.
@@ -61,11 +67,11 @@ Body `{ target: 'hub' | 'event' | 'thread' | 'task', id? }` (no body: `hub`).
 Brings Luma's main window to the front, then:
 
 - `hub`: opens (or re-activates) the Dashboard tab, where the Hub's agenda,
-  board and queue widgets live.
+  board and activity widgets live.
 - `event` / `thread` / `task`: the item's link (meeting, chat thread, ClickUp
   task) in a new tab; an item without a link opens the Dashboard. Without `id`,
-  the item the glance shows now (current or next event, newest open thread,
-  first task due).
+  the item the glance shows now (current or next event, latest activity item
+  of today, first task due).
 
 Answers `{ success: true, target, opened: 'url' | 'dashboard', focused, id?, url? }`;
 `400` for an unknown target, `404` for an unknown id, `503` when the Dashboard
@@ -77,7 +83,7 @@ first so the window can really take the focus.
 | Key | Type | Default | What |
 | --- | --- | --- | --- |
 | `showCalendar` | bool | true | the event in progress, else the next within 24 h |
-| `showQueue` | bool | true | open threads in the conversation queue |
+| `showQueue` | bool | true | `Latest activity`: names the latest items of the Hub activity feed in the tooltip and the lines; adds no count |
 | `showTasks` | bool | true | board tasks due today or overdue |
 | `showRunning` | bool | true | timed tasks running now |
 | `showJobs` | bool | true | job progress from the jobs feature (renders, downloads, chat replies) |

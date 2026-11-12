@@ -50,6 +50,22 @@ class ConversationPath {
     return ids.reverse();
   }
 
+  tree(conversationId) {
+    const s = this._s();
+    if (!s || typeof s.listMessages !== 'function') return [];
+    try {
+      return (s.listMessages(conversationId) || []).map((m) => ({
+        id: m.id, role: m.role, parentId: m.parentId || null, active: m.variantActive !== false && m.variantActive !== 0, content: m.content || '',
+      }));
+    } catch (_) {
+      return [];
+    }
+  }
+
+  message(messageId) {
+    return this._get(messageId);
+  }
+
   liveIds(conversationId) {
     const s = this._s();
     if (!s || typeof s.listMessages !== 'function') return null;

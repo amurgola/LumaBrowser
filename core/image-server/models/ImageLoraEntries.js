@@ -137,6 +137,24 @@ class ImageLoraEntries {
       licenseNote: 'Apache-2.0.',
     },
     {
+      id: 'krea2-general-edit-v2',
+      label: 'Krea 2 General Edit V2 (instruction editing)',
+      family: 'krea2',
+      repo: 'conradlocke/krea2-identity-edit',
+      file: 'krea2_general_edit_v2.safetensors',
+      url: 'https://huggingface.co/conradlocke/krea2-identity-edit/resolve/main/krea2_general_edit_v2.safetensors?download=true',
+      approxBytes: 1828285656,
+      blurb: 'Turns Krea 2 Turbo into an instruction editor: change outfits, swap '
+        + 'backgrounds, remove or add objects, relight, restyle, while keeping what '
+        + 'the instruction does not name. Passed all three edits of the 2026-11-11 '
+        + 'bake-off at 17 s each on an RTX 5090. It stays applied to plain '
+        + 'generations too, so remove it for those. Keep weight 1.0; do not '
+        + 'combine it with the Identity Edit LoRA.',
+      weight: 1.0,
+      enablesEdit: true,
+      licenseNote: 'Krea 2 Identity Edit V2 License (Lars Bouaraba), on top of the Krea 2 Community License: free for personal and non-commercial use; any commercial use needs a written licence from the author, agreed case by case.',
+    },
+    {
       id: 'klein-spritesheet',
       label: '2x2 Sprite Sheet (fal)',
       family: 'flux2',

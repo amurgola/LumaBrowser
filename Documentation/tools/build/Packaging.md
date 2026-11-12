@@ -27,7 +27,10 @@ Identical to legacy except where the rebuild's layout needs it:
 - Targets: win nsis + portable (no arch in the config: the host's, or the CLI's
   `--x64` / `--arm64`; CI builds both; `nsis.buildUniversalInstaller: false` so a
   single-arch build is named per arch, `LumaBrowser Setup <v>-arm64.exe`, while x64
-  as the default arch keeps `LumaBrowser Setup <v>.exe`), linux AppImage + deb (x64), mac dmg + zip
+  as the default arch keeps `LumaBrowser Setup <v>.exe`), linux AppImage + deb (no arch in the
+  config either, since an arch named there beats the CLI flag: CI builds x64 and arm64, and
+  electron-builder names the arm64 files `LumaBrowser-<v>-arm64.AppImage` and
+  `latest-linux-arm64.yml` by itself), mac dmg + zip
   (hardened runtime, notarize, `build/entitlements.mac.plist`); NSIS includes
   `build/installer.nsh` and shows `LICENSE`.
 
@@ -66,7 +69,9 @@ with `--if-present` until the IDE port adds their npm scripts.
 
 ## CI (.github/workflows/build.yml)
 
-Manual dispatch, or a published GitHub release. Matrix ubuntu-latest / windows-2022 (x64) /
+Manual dispatch, or a published GitHub release. Matrix ubuntu-latest (x64) / ubuntu-24.04-arm
+(arm64: native for the same reason as Windows on Arm; its `latest-linux-arm64.yml` is the manifest
+electron-updater asks for on an arm64 host, so it needs no merge) / windows-2022 (x64) /
 windows-11-arm (arm64: native, so `npm ci` installs the win32-arm64 prebuilds; the installer
 gets its `-arm64` suffix from `buildUniversalInstaller: false` and the portable's fixed
 `artifactName` is overridden on the CLI to carry `-arm64`, so neither collides with the x64 leg's file) / macos-latest (arm64 only),

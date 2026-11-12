@@ -17,5 +17,5 @@ a contact) so replies, forwards and mailer noise land on the same thread.
 ## Why
 
 A Gmail notification for "Re: Invoice 42" and the later "Fwd: [EXTERNAL]
-Invoice 42" are one conversation to the user; the key makes them one thread
-in the queue.
+Invoice 42" are one conversation to the user; the key makes them one item
+in the activity feed.

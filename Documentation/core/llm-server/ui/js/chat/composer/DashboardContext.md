@@ -32,7 +32,7 @@ where the host has no Dashboard (the web client).
 ## Why
 
 The Dashboard is where the user already consolidated their day (agenda, task
-board, conversation queue, pinned live modules); one mention hands the model
+board, activity feed, pinned live modules); one mention hands the model
 exactly that view instead of a round of tool calls. The host side is
 [DashboardSnapshot](../../../../../dashboard/DashboardSnapshot.md) through
 [PageContextActions](../../../../ipc/PageContextActions.md)`.readDashboard`.

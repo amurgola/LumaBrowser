@@ -19,3 +19,7 @@ The three setting layers a chat model call sees: the global defaults, the model'
 ## Why
 
 Every caller that sees a model ref (the turn, the dispatcher, the context window, capabilities, the picker list) needs the same answer for a profile, so the resolution lives once. The Chat defaults card keeps reading the plain defaults, so one model's KV choice is never shown or saved back as the global one; only a launch reads `launchDefaults` (through `LLMServerService.getLaunchDefaults`).
+
+`applySuggested(modelRef, suggested, source)` fills in settings a model's card
+recommends, only where the model has no value yet, with a note of the source.
+`ModelSettings.localRef(filePath)` is the `local::` ref of a model file.

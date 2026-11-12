@@ -131,6 +131,54 @@ class HubSchema {
       synced        INTEGER NOT NULL DEFAULT 0,
       sync_error    TEXT
     )`,
+    `CREATE TABLE IF NOT EXISTS hub_contexts (
+      id            TEXT PRIMARY KEY,
+      name          TEXT NOT NULL,
+      color         TEXT DEFAULT '',
+      sort_order    INTEGER NOT NULL DEFAULT 0
+    )`,
+    `CREATE TABLE IF NOT EXISTS hub_context_rules (
+      context_id    TEXT NOT NULL,
+      kind          TEXT NOT NULL,
+      value         TEXT NOT NULL
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_hub_context_rules_context ON hub_context_rules (context_id)`,
+    `CREATE TABLE IF NOT EXISTS hub_contacts (
+      id            TEXT PRIMARY KEY,
+      name          TEXT NOT NULL,
+      created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    `CREATE TABLE IF NOT EXISTS hub_contact_identities (
+      id            TEXT PRIMARY KEY,
+      contact_id    TEXT NOT NULL,
+      app           TEXT NOT NULL DEFAULT '',
+      handle        TEXT NOT NULL,
+      display       TEXT DEFAULT '',
+      context_id    TEXT NOT NULL DEFAULT '',
+      first_at      TEXT NOT NULL,
+      last_at       TEXT NOT NULL,
+      count         INTEGER NOT NULL DEFAULT 1
+    )`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_hub_contact_identities_key ON hub_contact_identities (app, handle, context_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_hub_contact_identities_contact ON hub_contact_identities (contact_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_hub_contact_identities_handle ON hub_contact_identities (handle)`,
+    `CREATE TABLE IF NOT EXISTS hub_snapshots (
+      thread_id     TEXT PRIMARY KEY,
+      scope         TEXT NOT NULL DEFAULT '',
+      url           TEXT DEFAULT '',
+      text          TEXT NOT NULL DEFAULT '',
+      source_at     TEXT NOT NULL DEFAULT '',
+      taken_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    `CREATE TABLE IF NOT EXISTS hub_summaries (
+      context_key   TEXT PRIMARY KEY,
+      signature     TEXT NOT NULL DEFAULT '',
+      summary       TEXT,
+      model         TEXT DEFAULT '',
+      error         TEXT,
+      updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
     `CREATE INDEX IF NOT EXISTS idx_hub_task_messages_task ON hub_task_messages (task_id, at)`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_hub_task_messages_remote ON hub_task_messages (task_id, remote_id)`,
   ];

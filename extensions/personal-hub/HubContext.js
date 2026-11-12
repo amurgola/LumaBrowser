@@ -3,20 +3,44 @@ class HubContext {
   static MAX_EVENTS = 150;
   static MAX_TASKS_PER_COLUMN = 60;
   static MAX_THREADS = 60;
+  static ACTIVITY_DAYS = 7;
+  static ACTIVITY_NOTE = 'What reached the user recently: chat messages, mail, calendar and task notices. This is background about their day, not a to-do list: nothing here is unread or waiting to be cleared.';
   static MAX_NOTIFICATIONS = 120;
   static DESCRIPTION_CHARS = 200;
   static BODY_CHARS = 240;
 
   static WIDGETS = {
+    focus: (api, opts) => HubContext.focus(api, opts),
     agenda: (api, opts) => HubContext.agenda(api, opts),
     board: (api, opts) => HubContext.board(api, opts),
-    inbox: (api, opts) => HubContext.queue(api, opts),
+    inbox: (api, opts) => HubContext.activity(api, opts),
   };
 
   static render(api, widgetId, { now = new Date() } = {}) {
     const build = HubContext.WIDGETS[String(widgetId || '')];
     if (!build) throw new Error(`Unknown Hub widget "${widgetId}"`);
     return build(api, { now });
+  }
+
+  static focus(api, { now }) {
+    const focus = api.getFocus();
+    const lines = ['### Working on', focus.now ? HubContext._taskLine(focus.now, now) : '- Nothing picked.', '', `### Needs them (${focus.needs.length + (focus.more || 0)})`];
+    if (!focus.needs.length) lines.push('- Nothing right now.');
+    for (const need of focus.needs) lines.push(HubContext._needLine(need));
+    if (focus.more) lines.push(`- ...and ${focus.more} more`);
+    lines.push('', '### Calendar');
+    const { current, next } = focus.calendar || {};
+    if (current) lines.push(`- Now: ${current.title} (until ${HubContext._clock(current.endsAt)})`);
+    if (next) lines.push(`- Next: ${next.title} at ${HubContext._clock(next.startsAt)}${HubContext._dayKey(next.startsAt) === HubContext._dayKey(now.toISOString()) ? '' : ' tomorrow'}`);
+    if (!current && !next) lines.push('- Nothing coming up.');
+    lines.push('', HubContext._more('hub_list_summaries for what is going on in each context; hub_list_tasks for the whole board'));
+    return { title: 'Focus', text: HubContext._join(lines) };
+  }
+
+  static _needLine(need) {
+    if (need.kind === 'task') return `- [${need.id}] ${need.reason}: ${need.title}${need.where ? ` (${need.where})` : ''}`;
+    if (need.kind === 'context') return `- ${need.title}: ${HubContext._clip(need.reason, HubContext.BODY_CHARS)}`;
+    return `- [${need.id}] ${need.reason}: ${need.title}${need.where ? ` (${need.where})` : ''}`;
   }
 
   static agenda(api, { now }) {
@@ -54,7 +78,7 @@ class HubContext {
       lines.push('The board is empty.');
     } else {
       const known = new Set(columns.map((c) => c.key));
-      for (const column of columns) lines.push(...HubContext._lane(column.title, visible.filter((t) => t.columnKey === column.key), now));
+      for (const column of columns) lines.push(...HubContext._lane(column.title, visible.filter((t) => t.columnKey === column.key), now, { done: !!column.isDone }));
       for (const group of HubContext._pseudoGroups(visible.filter((t) => !known.has(t.columnKey)))) {
         lines.push(...HubContext._lane(`${group.status} (tracker status with no column yet)`, group.tasks, now));
       }
@@ -65,19 +89,19 @@ class HubContext {
     return { title: 'Task board', text: HubContext._join(lines) };
   }
 
-  static _lane(title, tasks, now) {
+  static _lane(title, tasks, now, { done = false } = {}) {
     const lines = [`### ${title} (${tasks.length})`];
     if (!tasks.length) lines.push('- (empty)');
-    for (const t of tasks.slice(0, HubContext.MAX_TASKS_PER_COLUMN)) lines.push(HubContext._taskLine(t, now));
+    for (const t of tasks.slice(0, HubContext.MAX_TASKS_PER_COLUMN)) lines.push(HubContext._taskLine(t, now, { done }));
     if (tasks.length > HubContext.MAX_TASKS_PER_COLUMN) lines.push(`- ...and ${tasks.length - HubContext.MAX_TASKS_PER_COLUMN} more`);
     lines.push('');
     return lines;
   }
 
-  static _taskLine(t, now) {
+  static _taskLine(t, now, { done = false } = {}) {
     const bits = [];
     if (t.priority && t.priority !== 'normal') bits.push(t.priority);
-    if (t.dueAt) bits.push(`due ${HubContext._dueLabel(t.dueAt, now)}`);
+    if (t.dueAt) bits.push(`due ${HubContext._dueLabel(t.dueAt, now, { done })}`);
     const where = [t.sourceLabel, t.spaceName, t.listName].filter(Boolean).join(' > ');
     if (where) bits.push(where);
     if (Array.isArray(t.assignees) && t.assignees.length) bits.push(`assigned ${t.assignees.join(', ')}`);
@@ -96,20 +120,42 @@ class HubContext {
     return [...groups.values()];
   }
 
-  static queue(api, { now }) {
-    const threads = (api.listThreads({ state: 'open', limit: HubContext.MAX_THREADS }) || [])
+  static activity(api, { now }) {
+    const today = HubContext._startOfDay(now);
+    const since = new Date(today.getTime() - (HubContext.ACTIVITY_DAYS - 1) * 86400000).toISOString();
+    const items = (api.listThreads({ state: 'active', since, limit: HubContext.MAX_THREADS }) || [])
       .slice().sort((a, b) => String(b.lastAt || '').localeCompare(String(a.lastAt || '')));
-    const lines = [`### Open threads (${threads.length})`];
-    if (!threads.length) lines.push('- Queue clear.');
-    for (const t of threads) lines.push(HubContext._threadLine(t, now));
+    const todayIso = today.toISOString();
+    const fresh = items.filter((t) => String(t.lastAt || '') >= todayIso);
+    const earlier = items.filter((t) => String(t.lastAt || '') < todayIso);
+    const lines = [HubContext.ACTIVITY_NOTE, '', ...HubContext._byContext(api), `### Today (${fresh.length})`];
+    if (!fresh.length) lines.push('- Nothing yet today.');
+    for (const t of fresh) lines.push(HubContext._threadLine(t, now));
+    if (earlier.length) {
+      lines.push('', `### Earlier this week (${earlier.length})`);
+      for (const t of earlier) lines.push(HubContext._threadLine(t, now));
+    }
     lines.push('', ...HubContext._todayLog(api, now));
-    lines.push(HubContext._more('hub_list_threads for reviewed, snoozed or done threads; hub_get_thread for a thread\'s notifications; hub_list_notifications for earlier days'));
-    return { title: 'Conversation queue', text: HubContext._join(lines) };
+    lines.push(HubContext._more('hub_list_threads for older or dismissed items; hub_get_thread for the notifications behind an item; hub_list_notifications for earlier days'));
+    return { title: 'Activity', text: HubContext._join(lines) };
+  }
+
+  static _byContext(api) {
+    const cards = typeof api.listSummaries === 'function' ? ((api.listSummaries() || {}).cards || []) : [];
+    if (!cards.length) return [];
+    const lines = [`### By context (${cards.length})`];
+    for (const card of cards) {
+      const needs = card.needsYou ? ` Needs them: ${card.reason || 'yes'}.` : '';
+      lines.push(`- ${card.name} (${card.count} item${card.count === 1 ? '' : 's'}): ${HubContext._clip([card.headline, card.summary].filter(Boolean).join('. '), HubContext.BODY_CHARS * 2)}${needs}`);
+    }
+    lines.push('');
+    return lines;
   }
 
   static _threadLine(t, now) {
     const last = t.lastNotification || {};
     const bits = [HubContext._ago(t.lastAt, now)];
+    if (t.kind && t.kind !== 'other') bits.unshift(t.kind);
     if (t.priority && t.priority !== 'normal') bits.push(t.priority);
     if (t.count > 1) bits.push(`${t.count} notifications`);
     if (Array.isArray(t.labels) && t.labels.length) bits.push(`labels ${t.labels.join(', ')}`);
@@ -173,11 +219,11 @@ class HubContext {
     return `${HubContext._pad(d.getHours())}:${HubContext._pad(d.getMinutes())}`;
   }
 
-  static _dueLabel(iso, now) {
+  static _dueLabel(iso, now, { done = false } = {}) {
     const key = HubContext._dayKey(iso);
     const today = HubContext._dayKey(now.toISOString());
     if (key === today) return 'today';
-    const overdue = key < today;
+    const overdue = !done && key < today;
     return `${key}${overdue ? ', overdue' : ''}`;
   }
 

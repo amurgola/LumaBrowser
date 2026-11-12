@@ -62,6 +62,12 @@ class LocalRequest {
     hooks.onStatus({ phase: 'waiting-for-slot', inFlight: busy, slots });
   }
 
+  static _samplers(extra) {
+    const mode = extra && extra.samplerOverrides && typeof extra.samplerOverrides === 'object' ? extra.samplerOverrides : null;
+    const model = extra && extra.modelSampler && typeof extra.modelSampler === 'object' ? extra.modelSampler : null;
+    return mode || model ? { ...(mode || {}), ...(model || {}) } : undefined;
+  }
+
   _dispatch(adapter, plan, messages, temperature, hooks, tools, extra, log) {
     const settle = this._countRequest();
     const sentAt = Date.now();
@@ -70,7 +76,7 @@ class LocalRequest {
       messages,
       temperature,
       familySamplerDefaults: FamilySampler.forTurn(plan, extra),
-      samplerOverrides: extra && extra.samplerOverrides && typeof extra.samplerOverrides === 'object' ? extra.samplerOverrides : undefined,
+      samplerOverrides: LocalRequest._samplers(extra),
       tools: (tools && tools.length) ? tools : undefined,
       parallelToolCalls: !!(extra && extra.parallelToolCalls),
       chatTemplateKwargs: extra && extra.chatTemplateKwargs,

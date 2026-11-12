@@ -3,6 +3,7 @@ const CharacterMarks = require('../world/CharacterMarks');
 const CharacterProfile = require('../world/CharacterProfile');
 const CharacterState = require('../world/CharacterState');
 const StoryLedger = require('../world/StoryLedger');
+const CastRole = require('../world/CastRole');
 
 class StagingPrompt {
   static POSES = ['standing', 'sitting', 'kneeling', 'lying', 'away', 'jumping'];
@@ -40,7 +41,7 @@ class StagingPrompt {
   }
 
   static _schema(draws = { shot: true, slots: true }) {
-    return 'Schema: {"newCharacters":[{"name":string,"looks":string,"personality":string}],'
+    return 'Schema: {"newCharacters":[{"name":string,"looks":string,"personality":string,"was":string}],'
       + '"location":{"name":string,"desc":string,"isNew":boolean},'
       + '"present":[{"name":string,"present":boolean,"emotion":string,"intent":string,"condition":string,'
       + '"bondUser":string,"bondChange":string,"beat":string,"leftTo":string,"revealed":boolean,"noticed":[string],'
@@ -49,7 +50,7 @@ class StagingPrompt {
       + '"outfitChanged":boolean}],'
       + '"events":[{"kind":"event"|"reveal"|"promise"|"death"|"move"|"injury","text":string,"who":[names]}],'
       + '"clock":{"advance":"none"|"minutes"|"hours"|"next-morning"|"days","timeOfDay":string,"weather":string},'
-      + '"threads":{"opened":[string],"advanced":[string],"closed":[string]}'
+      + '"threads":{"opened":[string],"advanced":[string],"closed":[string]},"pressure":string'
       + (draws.shot ? ',"shot":{"pose":one of [' + StagingPrompt.POSES.join(', ') + '],"facing":"camera"|"away",'
         + '"framing":"full"|"close","focus":[names],"group":boolean,"contact":boolean,'
         + '"action":string,"props":[strings]}' : '')
@@ -70,12 +71,13 @@ class StagingPrompt {
     }
     presentProps.outfitChanged = { type: 'boolean' };
     const properties = {
-      newCharacters: { type: 'array', items: { type: 'object', properties: { name: str, looks: str, personality: str }, required: ['name', 'looks', 'personality'] } },
+      newCharacters: { type: 'array', items: { type: 'object', properties: { name: str, looks: str, personality: str, was: str }, required: ['name', 'looks', 'personality', 'was'] } },
       location: { type: 'object', properties: { name: str, desc: str, isNew: { type: 'boolean' } }, required: ['name', 'desc', 'isNew'] },
       present: { type: 'array', items: { type: 'object', properties: presentProps, required: ['name', 'present', 'emotion', 'intent', 'condition', 'bondUser', 'bondChange', 'beat', 'leftTo', 'revealed', 'noticed', 'outfit', 'outfitChanged'] } },
       events: { type: 'array', items: { type: 'object', properties: { kind: { type: 'string', enum: ['event', 'reveal', 'promise', 'death', 'move', 'injury'] }, text: str, who: strings }, required: ['kind', 'text', 'who'] } },
       clock: { type: 'object', properties: { advance: { type: 'string', enum: ['none', 'minutes', 'hours', 'next-morning', 'days'] }, timeOfDay: str, weather: str }, required: ['advance', 'timeOfDay', 'weather'] },
       threads: { type: 'object', properties: { opened: strings, advanced: strings, closed: strings }, required: ['opened', 'advanced', 'closed'] },
+      pressure: str,
     };
     if (draws.shot) {
       properties.shot = {
@@ -88,7 +90,7 @@ class StagingPrompt {
         required: ['pose', 'facing', 'framing', 'focus', 'group', 'contact', 'action', 'props'],
       };
     }
-    return { type: 'object', properties, required: ['newCharacters', 'present', 'events', 'clock', 'threads'] };
+    return { type: 'object', properties, required: ['newCharacters', 'location', 'present', 'events', 'clock', 'threads', 'pressure'] };
   }
 
   static responseFormat(draws) {
@@ -96,20 +98,26 @@ class StagingPrompt {
   }
 
   static _castRules() {
-    return '- newCharacters: characters newly introduced in this passage, or whose '
+    return '- newCharacters: NAMED characters who newly take part in this passage, or whose '
       + 'physical appearance is revealed for the first time. "looks" = a short '
       + 'comma-separated visual description for an image generator (hair, build, '
-      + 'features). "personality" = a short phrase. Do NOT include the protagonist/'
-      + 'the player. Use [] if none.\n'
+      + 'features), ONLY what the passage shows, "" when it shows nothing. "personality" = a short phrase. '
+      + 'Do NOT include the protagonist/the player. People the passage only mentions, overhears or sees in the '
+      + 'background (a customer, a guard, a crowd, a neighbour heard through a wall, someone talked about) are '
+      + 'scenery, not characters: leave them out here and out of "present", and never give one a label such as '
+      + '"Customer 1". "was" = when this passage gives a NAME to someone already in the known characters under a '
+      + 'label (the "Woman" says she is Clare), that exact known label; they are the same person, so list them '
+      + 'once, under the new name, in "present" too. Otherwise "". Use [] if none.\n'
       + '- location: the place the action is currently happening. "name" must be a '
       + 'SHORT, GENERAL, REUSABLE place name (e.g. "the street", "the dormitory", '
       + '"the dining hall"), NOT an overly specific or proper name; the same kind '
       + 'of place should get the same name so it is recognised and reused later. If '
       + 'the place is the same as or essentially equivalent to one in the known '
       + 'locations list, REUSE that exact known name and set "isNew": false. '
-      + '"isNew" is true only for a genuinely new place. Omit the whole "location" '
-      + 'key if the passage does not clearly establish a place.\n'
-      + '- present: EVERY non-player character physically present with the '
+      + '"isNew" is true only for a genuinely new place. When neither the passage nor the prior scene tells '
+      + 'where the action is, give "name": "" (never guess); when the passage does not move, repeat the prior '
+      + 'current scene.\n'
+      + '- present: EVERY named non-player character physically present with the '
       + 'protagonist AFTER this passage, one entry each, exact names. Start from the '
       + 'prior present characters: keep each of them unless they clearly left (a character who '
       + 'only stood by or stayed silent is still present; give them "" for "beat"), then add arrivals. Mark '
@@ -119,7 +127,7 @@ class StagingPrompt {
       + 'presence resets: only characters described at the NEW location are '
       + 'present; anyone left behind at the previous location must be marked '
       + 'present=false, even if they were present a moment ago. '
-      + '"emotion" = a brief current mood. "intent" = what they want right now, one short phrase, '
+      + '"emotion" = their current mood in one to three plain words. "intent" = what they want right now, one short phrase, '
       + 'or "" if unchanged from before. "condition" = the state of their body in plain words: injuries and '
       + 'where (e.g. "sword arm severed below the elbow, bleeding heavily"), illness (feverish, vomiting, '
       + 'dysentery), hygiene (unwashed for days, freshly bathed), drunk, exhausted, soaked and the like, '
@@ -129,15 +137,17 @@ class StagingPrompt {
       + '"bleeding heavily"). '
       + '"bondUser" = their standing attitude to the player in one or two words (wary, warming, trusts, '
       + 'fond, hostile, indebted); copy the known one unless this passage changed it, and when it did '
-      + 'also set "bondChange" to why (else ""). "beat" = ONE past-tense sentence of what this character '
-      + 'did, learned or decided in this passage, naming the player as "the player"; "" if they only stood by. '
+      + 'also set "bondChange" to why (else ""). "beat" = ONE short past-tense sentence IN YOUR OWN WORDS (never '
+      + 'copied from the passage, at most 20 words) of what this character did, learned or decided in this '
+      + 'passage, naming the player as "the player"; "" if they only stood by. '
       + '"revealed" = true ONLY when what this character hides (their "hides" in the roster) came into the open '
       + 'in THIS passage: they said it, showed it, or the player learned it; else false. '
       + '"noticed" = LASTING physical details of this character\'s body that the passage shows for the FIRST time '
       + '(calluses, a black toenail, bunions, wasted calves, a scar, a tattoo, freckles, a smell they carry), each a '
       + 'short phrase in the passage\'s own words. A detail belongs here only if it would still be true after a hot '
       + 'bath and a night\'s sleep; passing states (wet, cold, pruned, red, bluish, swollen tonight) go in "condition". '
-      + 'Not clothing, not anything already in their looks or noticed list; [] if none.\n';
+      + 'Not clothing, not a gesture, habit, movement or expression, not anything already in their looks or noticed '
+      + 'list. Most passages show none: [].\n';
   }
 
   static _wardrobeRules(draws = { shot: true, slots: true }) {
@@ -157,7 +167,7 @@ class StagingPrompt {
       + 'their known wardrobe already contains an outfit that suits this scene, '
       + 'reuse that exact description. If a garment comes off, the outfit is what '
       + 'remains, including what is absent when it matters (e.g. "white dress '
-      + 'shirt, loosened tie, suit trousers, no jacket").\n'
+      + 'shirt, loosened tie, suit trousers, no jacket"). Never write "unknown".\n'
       + '- If their "currently wearing" outfit below still fits the scene and has '
       + 'NOT changed, return it VERBATIM: copy the exact same wording, do not '
       + 'reword, abbreviate, or drop adjectives, and set "outfitChanged": false. '
@@ -180,17 +190,26 @@ class StagingPrompt {
   }
 
   static _chronicleRules() {
-    return '- events: the things in THIS passage a reader would need to remember later, each ONE concrete '
-      + 'past-tense sentence with names (not pronouns). "kind": "reveal" for a secret or fact coming out, '
+    return '- events: what HAPPENED between the player and the characters in THIS passage that a reader would '
+      + 'need to remember later: at most two, each ONE concrete past-tense sentence of at most 25 words with names '
+      + '(not pronouns). "kind": "reveal" for a secret or fact coming out, '
       + '"promise" for a promise, deal or threat, "death" when someone dies, "move" when the party travels '
-      + 'somewhere new, "injury" for wounds and illness, else "event". Routine talk, scenery and mood are '
-      + 'NOT events. Use [] when nothing worth remembering happened.\n'
-      + '- clock: how much story time passed in this passage ("none" for a continuous beat) and the time of '
-      + 'day and weather AFTER it when the passage states or clearly implies them, else "".\n'
-      + '- threads: "opened" = new unresolved hooks introduced here (a question, a debt, a looming arrival), '
-      + 'one short phrase each; "advanced" = known open threads this passage moved forward without resolving '
+      + 'somewhere new, "injury" for wounds and illness, else "event". Routine talk, scenery, mood, background '
+      + 'noise, gossip and things only mentioned or overheard are NOT events. Use [] when nothing worth '
+      + 'remembering happened; most small exchanges have one event or none.\n'
+      + '- clock: how much story time passed in this passage ("none" for a continuous beat, which most are; '
+      + '"next-morning" only when the passage itself sleeps through a night). "timeOfDay" = one of dawn, morning, '
+      + 'midday, afternoon, evening, dusk, night, late night, and "weather" = one or two words, each AFTER the '
+      + 'passage when it states or clearly implies them, else "".\n'
+      + '- threads: "opened" = a genuinely NEW unresolved question the passage raised that no known open thread '
+      + 'already covers, one short phrase; at most one, and most passages open none. A rewording of a known '
+      + 'thread is not new. "advanced" = known open threads this passage moved forward without resolving '
       + '(a clue, a step, a complication), copied VERBATIM from the known threads list; "closed" = known open '
-      + 'threads this passage resolved, copied VERBATIM. [] when none.\n';
+      + 'threads this passage resolved or made moot (the question was answered, the player left it behind), '
+      + 'copied VERBATIM. [] when none.\n'
+      + '- pressure: the pressure before this passage (given below), checked against what just happened. If it '
+      + 'still holds, copy it VERBATIM. If the passage resolved it, the player walked away from it, or it '
+      + 'describes a moment that is now over, write "" (do not invent a new one).\n';
   }
 
   static _shotRules() {
@@ -231,7 +250,8 @@ class StagingPrompt {
       + 'Prior present characters: ' + (currentPeople.length ? currentPeople.join(' | ') : '(none)') + '\n'
       + 'Known locations: ' + (knownScenes.length ? knownScenes.join(', ') : '(none)') + '\n'
       + 'Clock before this passage: ' + StoryLedger.clockLine(d) + '\n'
-      + 'Known open threads: ' + (threads.length ? threads.join(' | ') : '(none)');
+      + 'Known open threads: ' + (threads.length ? threads.join(' | ') : '(none)') + '\n'
+      + 'Pressure before this passage: ' + (StoryLedger.of(d).pressure || '(none)');
   }
 
   static _roster(d) {
@@ -243,8 +263,8 @@ class StagingPrompt {
         const state = CharacterState.of(c);
         const profile = CharacterProfile.of(c);
         const bond = state.bondUser || profile.bonds[CharacterProfile.BOND_USER];
-        return '- ' + c.name
-          + ' | currently wearing: ' + (c.currentOutfitDesc || '(unknown)')
+        return '- ' + c.name + (c.origin === 'story' && CastRole.isLabel(c.name) ? ' (a label: no name given yet)' : '')
+          + (c.currentOutfitDesc ? ' | currently wearing: ' + c.currentOutfitDesc : '')
           + (known.length ? ' | known wardrobe: ' + known.join('; ') : '')
           + (bond ? ' | toward the player: ' + bond : '')
           + (state.condition ? ' | condition: ' + state.condition : '')

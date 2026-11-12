@@ -1,5 +1,5 @@
 class PromptBudget {
-  static CHARS_PER_TOKEN = 3.6;
+  static CHARS_PER_TOKEN = 4.0;
   static DEFAULT_WINDOW = 16384;
   static REFERENCE_WINDOW = 16384;
   static MIN_SCALE = 0.5;
@@ -52,7 +52,9 @@ class PromptBudget {
     if (s.length <= maxChars) return s;
     const head = s.slice(0, maxChars);
     const cut = Math.max(head.lastIndexOf('. '), head.lastIndexOf('\n'));
-    return (cut > maxChars * 0.5 ? head.slice(0, cut + 1) : head).trimEnd() + ' …';
+    if (cut > maxChars * 0.5) return head.slice(0, cut + 1).trimEnd() + ' …';
+    const space = head.lastIndexOf(' ');
+    return (space > maxChars * 0.5 ? head.slice(0, space) : head).trimEnd() + ' …';
   }
 
   static _text(m) {

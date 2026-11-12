@@ -41,3 +41,12 @@ When: skin, shoulder, neck, sleeve, sleeves, rolls up, bare back
 - By age: a child's skin is smooth and quick to flush or bruise; a young adult's marked by acne scars, tan lines or freckles; an old person's thin, creased, spotted and quick to bruise and tear.
 - After a hard night: gooseflesh, a blue tinge at the lips and nail beds in the cold, red pressure marks from straps and seams, scrapes not yet noticed.
 - Lasting marks worth giving a body: a scar with a story, a tattoo, a birthmark, freckles, a vaccination dent, stretch marks; once named, keep them.
+
+## How an ordinary person smells up close (any body)
+Tags: *
+When: sniff, sniffs, sniffing, smell, smells, smelling, scent, nose, nuzzle, nuzzles, inhale, inhales
+Unless: smell trouble, smells trouble, smell a rat, sniffs at the idea
+- Layers, strongest first: what they work with or just handled (coffee, cooking, machine oil, paper, soil), then soap, shampoo or laundry, then the skin itself, warm and faintly salty.
+- Where it gathers: hair and the collar hold it longest; hands smell of the last thing they held; clothes of the room they spent the day in.
+- An animal's nose reads far more than a person's: other animals, food eaten hours ago, where the shoes have been.
+- Keep it light: one or two plain notes, nothing that judges them.

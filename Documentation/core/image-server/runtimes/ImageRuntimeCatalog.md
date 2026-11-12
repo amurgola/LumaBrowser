@@ -12,7 +12,8 @@ planner. Extends [RuntimeCatalog](../../shared/runtime/RuntimeCatalog.md).
 - Inherited: `getCatalog`, `getById`, `platformKey`, `getAssetPattern`,
   `getRepo`, `getCompanionAssetPatterns`, `getBinaryNames`, `fingerprint`.
 - Statics: `RUNTIMES`, `SD_BIN_NAMES`, `CUDART_COMPANION`, `WIN_CUDA12_ASSET`,
-  `WIN_ARM64_CUDA13_ASSET`, `CUDART_ARM64_COMPANION`.
+  `WIN_ARM64_CUDA13_ASSET`, `CUDART_ARM64_COMPANION`, `LINUX_ARM64_CUDA13_ASSET`,
+  `CUDART_LINUX_ARM64_COMPANION`.
 
 ## Rows
 
@@ -20,7 +21,7 @@ planner. Extends [RuntimeCatalog](../../shared/runtime/RuntimeCatalog.md).
 |---|---|---|
 | `sd-cpp-cpu` | leejet CPU (Windows `cpu`, formerly avx2/avx/noavx; Linux, macOS) | all |
 | `sd-cpp-cuda12` | leejet CUDA 12 + cudart companion zip | win32 |
-| `sd-cpp-luma` | amurgola/luma-sdcpp (patched; CUDA 12 on x64, CUDA 13 on Windows on Arm) | win32 |
+| `sd-cpp-luma` | amurgola/luma-sdcpp (patched; CUDA 12 on x64, CUDA 13 on Windows on Arm and Linux arm64) | win32, linux-arm64 |
 | `sd-cpp-vulkan` | leejet Vulkan | win32, linux |
 
 Every row is `kind: 'image-inference'` and `protocol: 'sd-cpp-http'` (the video
@@ -49,5 +50,13 @@ adapter is picked per model row, not per runtime).
   `cudart-sd-bin-win-cu13-arm64.zip` (built by its
   `build-windows-cuda-arm64.ps1`, sm_121a). `requiresHw` stays at CUDA 12
   because every NVIDIA Windows on Arm machine ships an R580+ driver.
+- leejet ships no Linux arm64 build either, so `sd-cpp-luma` is also the only
+  image runtime with a download there: the luma-sdcpp release carries
+  `sd-<tag>-bin-linux-cuda13-arm64.tar.gz` and
+  `cudart-sd-bin-linux-cu13-arm64.tar.gz` (built by its
+  `build-linux-cuda-arm64.sh` in NVIDIA's CUDA 13.5 Ubuntu 24.04 image, so
+  glibc 2.39 is the floor). `platforms` names `linux-arm64`, not `linux`, so
+  the row stays hidden on Linux x64. A Linux arm64 host without an NVIDIA GPU
+  has no prebuilt image runtime.
 - leejet's Windows CPU build was one zip per ISA (avx2/avx/noavx) until
   2026-10 and is now one `win-cpu-x64` zip; the pattern takes both.

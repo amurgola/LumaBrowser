@@ -40,3 +40,5 @@ folds, so a user hunting for "context length" or "make the chat remember more"
 has nothing to scan. The catalog gives each one plain words and synonyms, and the
 drift test renders the real builders so a renamed id breaks the build instead of
 a search result.
+
+Tune entries for Top P, Top K, Min P, Repeat penalty and Presence penalty.

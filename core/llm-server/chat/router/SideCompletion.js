@@ -22,6 +22,7 @@ class SideCompletion {
     const tag = trace || SideCompletion.DEFAULT_TRACE;
     const extra = off ? { ...(off.extra || {}), trace: tag } : { trace: tag };
     if (responseFormat && typeof responseFormat === 'object') extra.responseFormat = responseFormat;
+    extra.pinTemperature = true;
     return this._withRetries({
       modelRef: ref,
       messages: off ? off.messages : messages,

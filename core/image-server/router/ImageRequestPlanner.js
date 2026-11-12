@@ -212,7 +212,7 @@ class ImageRequestPlanner {
         ...this._effective,
         loras: ImageLoraSpecs.resolve(Array.isArray(r.loras) ? { loras: r.loras } : md, this._lorasDir),
         customSigmas: this._customSigmas,
-        refImageArgs: this._refs.refImageArgs,
+        refImageArgs: this._refImageArgs(),
         refMaxPixels: this._refMaxPixels(),
         cacheMode: r.cacheMode || md.cacheMode || null,
         cacheOption: r.cacheOption || md.cacheOption || null,
@@ -225,6 +225,12 @@ class ImageRequestPlanner {
       refSizes: this._refs.refSizes,
       outputSize: this._outputSize,
     };
+  }
+
+  _refImageArgs() {
+    const own = this._refCount ? (this._request.refImageArgs || this._md.refImageArgs || null) : null;
+    const parts = [own, this._refs.refImageArgs].filter(Boolean).map(String);
+    return parts.length ? parts.join(',') : null;
   }
 
   _refMaxPixels() {

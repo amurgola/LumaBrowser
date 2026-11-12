@@ -5,6 +5,7 @@ const ConsolidatePrompt = require('../prompts/ConsolidatePrompt');
 const RpDebug = require('../images/RpDebug');
 
 const SideModel = require('../mode/SideModel');
+const ReactionScope = require('./ReactionScope');
 class ConsolidateCall {
   static TIMEOUT_MS = 90000;
   static TEMPERATURE = 0.2;
@@ -57,6 +58,7 @@ class ConsolidateCall {
       CharacterProfile.apply(char, { wants: fold.wants, hides: fold.hides, bondUser: fold.bondUser, bonds: fold.bonds }, { growthOnly: true });
       return true;
     } catch (e) {
+      if (ReactionScope.isStop(e)) throw e;
       RpDebug.log('post.consolidate.error', { ms: Date.now() - started, error: e && e.message });
       if (this._logger && this._logger.warn) this._logger.warn('roleplay fold call failed', { error: e && e.message });
       return false;
@@ -73,6 +75,7 @@ class ConsolidateCall {
       RpDebug.log('post.consolidate.summary', { ms: Date.now() - started, ok: !!text, rows: rows.length });
       return text ? StoryLedger.applySummary(data, text, StoryLedger.of(data).turn) : false;
     } catch (e) {
+      if (ReactionScope.isStop(e)) throw e;
       RpDebug.log('post.consolidate.error', { ms: Date.now() - started, error: e && e.message });
       if (this._logger && this._logger.warn) this._logger.warn('roleplay summary call failed', { error: e && e.message });
       return false;

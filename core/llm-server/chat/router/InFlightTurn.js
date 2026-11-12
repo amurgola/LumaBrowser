@@ -9,7 +9,8 @@ class InFlightTurn {
     this.local = !!(handle && local);
   }
 
-  clear() {
+  clear(own = null) {
+    if (own && this.handle !== own) return;
     this.handle = null;
     this.local = false;
   }

@@ -44,3 +44,7 @@ while the nested name prompt or delete confirm is open.
   `ctx` needs `api`, `root`, `state.models` (for the base model's label),
   `models.refresh()` and `models.selectRef(ref)`; `thinkPill.load()` is called
   after a save when present.
+
+The panel carries the sampler fields (Top P, Top K, Min P, Repeat penalty,
+Presence penalty) and, when values were filled in from a model card, a line
+saying where from.

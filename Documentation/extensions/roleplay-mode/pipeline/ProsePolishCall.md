@@ -13,4 +13,5 @@ it. Off by default.
 - `new ProsePolishCall(chat, logger)`; `ProsePolishCall.wanted(data)`.
 - `request(data, content, flagged)` temperature 0.5, 90 s, `noThink`.
 - `run(data, content)` -> `{ content, changed, score }`; clean prose, a
-  failure or an unusable reply return the text unchanged.
+  failure or an unusable reply return the text unchanged. A
+  [ReactionScope](ReactionScope.md) stop is rethrown.
