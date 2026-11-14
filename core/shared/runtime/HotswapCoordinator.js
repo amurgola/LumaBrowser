@@ -2,6 +2,7 @@ const VramReleaseWaiter = require('./placement/VramReleaseWaiter');
 
 class HotswapCoordinator {
   static DEFAULT_VRAM_WAIT_MS = 12000;
+  static ROUND_TRIP_POOL_ID = 'auto-swap';
 
   constructor({ sleep } = {}) {
     this._servers = new Map();
@@ -40,6 +41,15 @@ class HotswapCoordinator {
     return run;
   }
 
+  swapOut(serverId, residentIds, card) {
+    const members = [serverId, ...residentIds];
+    if (!Number.isInteger(card) || members.some((id) => this._poolForServer(id))) return Promise.resolve(null);
+    this._pools.set(HotswapCoordinator.ROUND_TRIP_POOL_ID, {
+      card, members: new Set(members), resident: null, chain: Promise.resolve(), borrower: serverId,
+    });
+    return this.acquire(serverId);
+  }
+
   release(serverId) {
     const pool = this._poolForServer(serverId);
     if (pool && pool.resident === serverId) pool.resident = null;
@@ -56,7 +66,13 @@ class HotswapCoordinator {
     const evicted = await this._evictOthers(pool, serverId);
     if (evicted) await this._waiter.wait(pool.card, before ? before.free : null, this._vramWaitMs);
     pool.resident = serverId;
+    this._endRoundTrip(pool, serverId);
     return pool.card;
+  }
+
+  _endRoundTrip(pool, serverId) {
+    if (!pool.borrower || serverId === pool.borrower) return;
+    if (this._pools.get(HotswapCoordinator.ROUND_TRIP_POOL_ID) === pool) this._pools.delete(HotswapCoordinator.ROUND_TRIP_POOL_ID);
   }
 
   async _evictOthers(pool, serverId) {

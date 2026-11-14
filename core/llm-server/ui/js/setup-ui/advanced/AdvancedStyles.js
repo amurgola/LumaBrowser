@@ -15,6 +15,17 @@ export default class AdvancedStyles {
       display:flex; gap:10px; align-items:center; background:var(--bg-surface-2); color:var(--text-primary); }
     .adv-gate.warn { background:var(--warning-dim); color:var(--warning); }
     .adv-gate.ok { background:var(--bg-surface-2); color:var(--text-secondary); }
+    .adv-preview-rigs { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-2); margin:0 2px var(--space-3); }
+    .adv-preview-rigs .adv-mini.sel { background:var(--bg-elevated); color:var(--text-primary); border-color:var(--accent); }
+    .adv-preview-banner { position:sticky; top:0; z-index:2; border-radius:var(--radius-lg); padding:var(--space-2) var(--space-3);
+      margin-bottom:var(--space-4); background:var(--bg-surface-2); border:1px solid var(--warning); color:var(--text-primary); font-size:var(--text-md); }
+    .adv-preview-banner b { color:var(--warning); }
+    .adv-preview-note { color:var(--text-secondary); font-size:var(--text-sm); margin-top:2px; }
+    .adv-preview-summary { margin:var(--space-2) 0 0; padding-left:var(--space-4); color:var(--text-primary); line-height:var(--leading); }
+    .adv-previewing { min-height:100vh; }
+    .adv-previewing .adv-tray, .adv-previewing .adv-lanes { pointer-events:none; }
+    .adv-previewing .adv-tray:not(:has(.adv-chip)) { display:none; }
+    .adv-previewing .adv-lane-actions, .adv-previewing .adv-sing-head button, .adv-previewing .adv-cut { display:none; }
     .adv-tray { display:flex; flex-wrap:wrap; gap:var(--space-2); padding:var(--space-3); border:1px dashed var(--border-strong);
       border-radius:var(--radius-lg); min-height:54px; margin-bottom:var(--space-4); align-items:center;
       transition:border-color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease); }

@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.1.8
+
+### New features
+- **Preview the automatic plan on another PC (LLM > Advanced > Model placement):** a row above the canvas, "Preview the automatic plan on", offers five example PCs: an 8 GB card with 16, 32 or 64 GB of RAM, a 16 GB card with 32 GB and a 24 GB card with 64 GB. Picking one draws what Automatic Local Setup would choose there (the chat model, the image model and where each goes) with the planner's own summary lines, under a "Preview: not this PC" banner. It is the planner a fresh install runs, with the real model catalogs, so the plan is what that PC would be set up with. The canvas draws lanes only for cards this PC has, so there was no way to see what a smaller PC gets.
+  - The preview is read-only: nothing is saved or loaded, the chips cannot be dragged and Auto-arrange is disabled. Sizes are the planner's estimates, not measured footprints. "This PC" returns to your own layout.
+  - Video and music are not part of Automatic Local Setup, so they are not in the preview.
+
+### Changes
+- **An image model that cannot load beside the chat model now takes its place.** With everything left on automatic, a chat model spread over the cards could leave a few GB on each. An image model that fit no card was then offloaded to system RAM beside it and failed to start: on an RTX 5090 with an RTX 3090, the 40 GB MiniMax-H3 image model failed stable-diffusion.cpp's workspace check on the 3090. The chat model is now stopped first, the image model loads, and the chat model comes back on the next chat turn, as the members of a singularity do.
+  - This applies only when the image slot and the chat model are both automatic and no GPU is chosen for the chat model. Anything you placed yourself behaves as before, and so does an image model that fits beside the chat model or is offloaded onto a card the chat model does not use.
+- **Model placement canvas:**
+  - The page no longer scrolls back to the top each time a chip is dropped.
+  - A singularity added to a saved layout that already had one could get the same id, and a chip dropped in it landed in the first box.
+- **The agent's live tab shows in short windows.** The preview card in chat is 16:10 at the column's width. In a window with under about 750 px of content height (a 720p display, a window that is not maximized) it was taller than the chat's scroll area, so the page was never shown and the card stayed an empty box. Its height is now capped to fit the window.
+- **Game mode:** a game canvas a few pixels larger than the play frame no longer puts scrollbars over the game.
+- **The README is a short front door, with the detail in feature pages.** It now covers what the app is, the download for each computer, the first run, what runs on which hardware and what leaves your machine, with an animated demo at the top. What each part does in full is in seven pages under `Documentation/features`, with their own screenshots: Browser, Local models, Images, video, music and voice, Agents and coding, Computer use, Automation and triggers, and Sharing.
+
 ## 2.1.7
 
 ### New features

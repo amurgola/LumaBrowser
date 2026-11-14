@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const CudaPin = require('../../shared/runtime/CudaPin');
 const ClipPlacement = require('../server/ClipPlacement');
+const ChatSwapOut = require('./ChatSwapOut');
 const ImageLaunchPlanner = require('../server/ImageLaunchPlanner');
 const ImageSlotRoles = require('./ImageSlotRoles');
 const ImageSlotPlacement = require('./ImageSlotPlacement');
@@ -30,6 +31,7 @@ class ImageSlotLaunch {
     await this._allocatePorts();
     await this._evictSwapSibling();
     await this._placeOnGpus();
+    if (await this._swapOutCrowdingChat()) await this._placeOnGpus();
     const launch = await this._planLaunch();
     this._logLaunch();
     await this._server.start(launch);
@@ -92,6 +94,24 @@ class ImageSlotLaunch {
       settingsDb: this._service.settingsDb,
       diagnostics: this._diag,
     });
+  }
+
+  async _swapOutCrowdingChat() {
+    const card = ChatSwapOut.cardToFree({
+      placement: this._placement,
+      role: this._role,
+      settingsDb: this._service.settingsDb,
+      claims: this._ledgerClaims(),
+    });
+    if (card == null || typeof this._deps.hotswap.swapOut !== 'function') return false;
+    if ((await this._deps.hotswap.swapOut(this._role, [ChatSwapOut.CHAT_SERVER_ID], card)) == null) return false;
+    this._deps.log(`[image-server] ${this._role}: the chat model left GPU ${card} so ${this._modelId} can load; it returns on the next chat turn.`);
+    try { this._diag = this._deps.liveMemory(this._diag); } catch (_) {}
+    return true;
+  }
+
+  _ledgerClaims() {
+    try { return this._deps.vramCoordinator.snapshot(); } catch (_) { return null; }
   }
 
   async _planLaunch() {

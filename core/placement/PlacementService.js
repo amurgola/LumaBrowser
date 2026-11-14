@@ -20,6 +20,8 @@ const VramPeakSampler = require('./service/VramPeakSampler');
 const MeasuredFootprintRecorder = require('./service/MeasuredFootprintRecorder');
 const PlacementTestRun = require('./service/PlacementTestRun');
 const PlacementLifecycle = require('./service/PlacementLifecycle');
+const PlacementPreview = require('./service/PlacementPreview');
+const PreviewRigs = require('./service/PreviewRigs');
 
 class PlacementService {
   constructor(deps = {}) {
@@ -82,6 +84,11 @@ class PlacementService {
 
   async getVramSnapshot() {
     return this._snapshotBuilder.build();
+  }
+
+
+  previewRig(rigId) {
+    return { rigs: PreviewRigs.list(), preview: rigId ? new PlacementPreview().describe(rigId) : null };
   }
 
 

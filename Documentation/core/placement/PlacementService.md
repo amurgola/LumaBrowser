@@ -36,6 +36,9 @@ musicServerService?, groundingServerService?, getAgentDeps?, ...seams })`
   applies it to the LLM, image and music services, reconfigures hotswap pools
   and, with any pool, warms it in the background. Returns `getConfig()`.
 - `autoArrange()` saves the all-automatic layout and returns `getConfig()`.
+- `previewRig(rigId)` returns `{ rigs, preview }`: the example PCs ([PreviewRigs](service/PreviewRigs.md)) and,
+  for a known id, what Automatic Local Setup would plan there ([PlacementPreview](service/PlacementPreview.md)),
+  else null. Read-only: the saved layout, the ledger and the servers are not touched.
 - `getMeasured()` the [measured footprints](service/MeasuredFootprintStore.md).
 - `isAvailable()` true when the LLM has `runtimeId` and `modelPath` and the
   image service `runtimeId` and `modelId`.

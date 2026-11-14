@@ -14,3 +14,7 @@ The starter files of a game folder and the managed AI runtime. Only missing file
 ## luma-ai-runtime.js
 
 The in-game `window.AI` runtime is a browser script, but the main process reads it as data and copies it into each AI game, so it ships with the extension (copied from legacy, em-dashes removed) under its legacy name. It must not be bytecoded by the packaged build.
+
+## Page style
+
+The scaffold page sets `overflow: hidden` on `html, body`: a game canvas a few pixels larger than the play frame would otherwise put scrollbars over the game (seen while filming the demo video, 2026-11-13).

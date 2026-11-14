@@ -21,6 +21,7 @@ Rendering: [PlacementRows](PlacementRows.md), [PlacementLanes](PlacementLanes.md
 [TestRenderPanel](TestRenderPanel.md), [TestRenderTables](TestRenderTables.md),
 [PromptPreviewPanel](PromptPreviewPanel.md), [AdvancedStyles](AdvancedStyles.md).
 Sub-tabs: [AdvancedSubtabs](AdvancedSubtabs.md), [ChatDataWipe](ChatDataWipe.md).
+Example PC preview: [PlacementPreviewMode](PlacementPreviewMode.md).
 
 ## Methods
 
@@ -33,8 +34,11 @@ Sub-tabs: [AdvancedSubtabs](AdvancedSubtabs.md), [ChatDataWipe](ChatDataWipe.md)
   `openers.advanced`): applies the current sub-tab, injects the styles, wires
   Auto-arrange, loads the config and VRAM snapshot, renders. Without a placement
   API the body reads "Placement API unavailable."
-- `render()`: gate, context row, split editor, Automatic tray, combine row,
-  lanes, chips, controls, test render, prompt preview.
+- `render()`: the example PC row, then gate, context row, split editor, Automatic
+  tray, combine row, lanes, chips, controls, test render, prompt preview. While an
+  example PC is previewed it draws only the row, the preview banner, the tray, the
+  lanes and the chips, adds `adv-previewing` to `#advBody` and disables
+  `#advAutoArrange`. `open()` always returns to this PC.
 - Canvas actions used by the renderers: `drop(itemKey, target)`,
   `setContextSplit(enabled)`, `createGroup(devices)`, `ungroup(id)`,
   `reorder(id, from, to)`, `addSingularity(resId)`, `removeSingularity(id)`,
@@ -46,3 +50,9 @@ Sub-tabs: [AdvancedSubtabs](AdvancedSubtabs.md), [ChatDataWipe](ChatDataWipe.md)
 Reads `document` (`#advancedRoot`, `#advSubtabs`, `#advBody`, `#advAutoArrange`,
 `#pageTitle`, `#chatDataWipe`, `#chatDataStatus`); writes a `<style id="adv-styles">`
 into `<head>`. No `window` globals.
+
+## Scroll position across a redraw
+
+`render()` rebuilds the whole body. It holds the body at its current height (an inline `min-height`) until the
+rebuild is done, so the page does not scroll back up under the pointer each time a chip is dropped or an example PC
+is picked. A preview is shorter than the real canvas, so `.adv-previewing` keeps a `min-height` of the viewport.

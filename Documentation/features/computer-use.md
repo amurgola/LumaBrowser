@@ -1,0 +1,57 @@
+# Computer use that stays on your machine
+
+## Desktop control (Windows)
+
+- The agent sees and operates other apps, accessibility tree first and vision
+  second, with a small local grounding model finding what the tree does not
+  list.
+- No per-step cost: a long task is free to run as long as it needs.
+- Screenshots never leave the machine, and a window is captured on its own,
+  never the whole screen with whatever else is open.
+- It works inside your own logged-in apps and browser profile, so there is no
+  second login and no bot check for being a headless browser.
+- Clicks land where they should on 4K, high-DPI and multi-monitor setups:
+  everything is measured in physical pixels and mapped back per window.
+
+## Staying in control
+
+- **Ctrl+Alt+Shift** in any app: the screen edge lights the window the agent
+  is working on and the island says what it is doing.
+- Ctrl+Alt+Shift+Space pauses or continues, Ctrl+Alt+Shift+Esc stops, and
+  Ctrl+Alt+Shift+Y and N answer its approvals. All can be rebound.
+- Approvals can be granted once, for the chat, or for one window only.
+- Typing into a password field, or acting in a checkout, payment or banking
+  window, always asks first. Unattended runs refuse them.
+- When it meets a sign-in, a CAPTCHA or a bot check, the agent stops and hands
+  the window to you.
+
+## Window tabs (Windows)
+
+Ctrl+Alt+Shift+T opens any desktop window as a live tab.
+
+- The tab shows a live picture of the window, and a Text panel shows its
+  accessible text. The chat can read it like any other tab.
+- A Control switch passes your clicks and typing through to the real window.
+- Because it is an ordinary tab, Tab Share can stream it.
+
+## Lumabyte (Windows)
+
+Ctrl+Alt+Shift+A docks a chat panel to any app window, one thread per app. It
+can act inside that window when desktop control is allowed.
+
+## System-wide hotkeys
+
+Read the selection aloud, rewrite it, or send the clipboard or a screen region
+to chat. On Windows, macOS (needs the Accessibility permission) and Linux.
+
+## Desktop Integration API
+
+A token-protected local API at `/api/desktop` for Windhawk mods, AutoHotkey,
+PowerToys and scripts.
+
+- Ask about a window, run file actions (describe, summarize, read aloud, add
+  to a knowledge base), list running jobs, and get a one-line glance of your
+  day.
+- Discovery file at `%USERPROFILE%\.lumabrowser\desktop.json`.
+- Six optional Windhawk mods install from Settings, such as "Ask Luma about
+  this window" in every window's menu and a Luma submenu in Explorer.

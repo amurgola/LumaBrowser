@@ -11,6 +11,7 @@ class PlacementApi extends PreloadSection {
         getMeasured: () => ipcRenderer.invoke('core.placement.getMeasured'),
         getVramSnapshot: () => ipcRenderer.invoke('core.placement.getVramSnapshot'),
         getHotswapInfo: () => ipcRenderer.invoke('core.placement.getHotswapInfo'),
+        previewRig: (rigId) => ipcRenderer.invoke('core.placement.previewRig', rigId),
         start: () => ipcRenderer.invoke('core.placement.start'),
         stop: () => ipcRenderer.invoke('core.placement.stop'),
         runTest: () => ipcRenderer.invoke('core.placement.runTest'),

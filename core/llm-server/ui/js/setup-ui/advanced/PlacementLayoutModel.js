@@ -120,7 +120,8 @@ export default class PlacementLayoutModel {
   }
 
   addSingularity(resId) {
-    this._singularitySeq += 1;
+    const taken = new Set(this.layout.singularities.map((s) => s.id));
+    do { this._singularitySeq += 1; } while (taken.has('s' + this._singularitySeq));
     this.layout.singularities.push({ id: 's' + this._singularitySeq, members: [], resource: resId });
   }
 

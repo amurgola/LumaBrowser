@@ -8,13 +8,14 @@ Unknown flags and malformed values throw (the message carries `usage()`), so a t
 | Option | Field | Default |
 |---|---|---|
 | `--out <dir>` | `outDir` (resolved against the repo root) | `Documentation/images` |
-| `--only <scenes>` | `scenes`, a subset of `chat, setup, fit` in that canonical order | all three |
+| `--only <scenes>` | `scenes`, a subset of `chat, setup, fit, media, demo` in that canonical order | all five |
 | `--prompt <text>` | `prompt`, the question the chat scene asks | the README's llama.cpp release question |
 | `--query <text>` | `query`, the Hugging Face search the fit scene types | `unsloth/Qwen3.6-27B-GGUF` |
 | `--quant <text>` | `quant`, the quantization the fit scene selects; `none` keeps the dialog's default | `Q4_K_M` |
 | `--model <text>` | `model`, substring of the local model ref or name to prefer | null (the default local model) |
 | `--size <WxH>` | `size`, window content size in CSS pixels | `1600x1000` |
 | `--timeout <sec>` | `timeoutMs`, how long one chat turn may take | 600 s |
+| `--clip-seconds <n>` | `clipSeconds`, the demo clip is sped up to run no longer than this | 30 |
 | `--capture <mode>` | `capture`: `window` (desktopCapturer) or `screen` (Windows CopyFromScreen) | `window` |
 | `--keep` | `keep`, leave the app running until Ctrl+C | false |
 

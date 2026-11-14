@@ -1991,6 +1991,7 @@
         .cm-tp-slot {
             aspect-ratio: 16 / 10;
             width: 100%;
+            max-height: max(160px, calc(100vh - 300px));
             background: var(--bg-root);
             border-top: 1px solid var(--border-soft);
         }

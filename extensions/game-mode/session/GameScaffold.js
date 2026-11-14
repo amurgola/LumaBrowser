@@ -24,7 +24,8 @@ class GameScaffold {
 <meta charset="utf-8">
 <title>${title}</title>
 <style>
-  html, body { margin: 0; height: 100%; background: #10131a; color: #93a0b4;
+  /* overflow: a canvas a few pixels larger than the frame would otherwise put scrollbars over the game. */
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #10131a; color: #93a0b4;
     font: 14px/1.5 system-ui, sans-serif; display: flex; align-items: center; justify-content: center; }
   /* The placeholder line hides itself the moment a game canvas mounts, so a
      build that keeps this file never shows stale scaffold text over the game. */

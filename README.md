@@ -1,222 +1,109 @@
 <p align="center">
-  <img src="icon/icon.png" alt="LumaBrowser" width="96" height="96">
+  <img src="icon/icon.png" alt="" width="88" height="88">
 </p>
 
 <h1 align="center">LumaBrowser</h1>
 
 <p align="center">
   <b>Your local AI stack in one app.</b><br>
-  A web browser with a GPU-aware LLM runtime, chat and agents, local image,
-  video, music and voice, and browser automation for the AI tools you already use.
+  A web browser that runs language, image, video and voice models on your own
+  GPUs, and lets agents work in the tabs you are already signed in to.
 </p>
 
 <p align="center">
-  <a href="https://lumabyte.com">Website</a> ·
-  <a href="https://github.com/amurgola/LumaBrowser/releases/latest">Download</a> ·
+  <a href="https://github.com/amurgola/LumaBrowser/releases/latest"><b>Download</b></a> ·
+  <a href="Documentation/features/README.md">Features</a> ·
   <a href="https://lumabyte.com/apis">API docs</a> ·
-  <a href="Documentation/index.md">Agentic developer docs</a> ·
-  <a href="#license">License</a>
+  <a href="https://lumabyte.com">Website</a>
 </p>
 
 <p align="center">
-  Free · Open source (AGPL-3.0) · Runs on your own machine
+  Free · Open source (AGPL-3.0) · Windows, macOS and Linux
 </p>
 
 <p align="center">
-  <img src="Documentation/images/chat.png" alt="LumaBrowser chat answering a question after searching the web" width="900">
+  <img src="Documentation/images/demo.gif" alt="LumaBrowser showing that a model fits this GPU with its predicted speed, then a local model searching the web and answering in chat" width="900">
 </p>
 
----
+## Download
 
-LumaBrowser replaces the pile of separate tools people run for local AI (a
-model server, a chat UI, an image generator, a voice stack, a headless browser
-for agents) with one desktop app. It looks at your GPUs, tells you which models
-fit before you download them, and runs everything locally. Your own tabs, logins
-and files stay on your machine, and outside agents like Claude Code, Codex,
-Cline and OpenCode can drive the browser through MCP.
+Get the file for your computer from the
+**[latest release](https://github.com/amurgola/LumaBrowser/releases/latest)**
+(under "Assets"), then open it.
 
-## Get started
-
-### 1. Install
-
-Download the latest build from [GitHub Releases](https://github.com/amurgola/LumaBrowser/releases/latest):
-
-| Platform | File |
+| Your computer | File to download |
 |---|---|
-| Windows x64 | Installer or portable `.exe` |
-| Windows arm64 (Snapdragon X) | Installer or portable `.exe` named `-arm64` |
-| Linux x64 | AppImage |
-| macOS (Apple Silicon) | `.dmg` |
+| Windows | `LumaBrowser.Setup.<version>.exe` (or the `portable` one, which needs no install) |
+| Windows on Arm (Snapdragon X) | `LumaBrowser.Setup.<version>-arm64.exe` |
+| Mac (Apple Silicon) | `LumaBrowser-<version>-arm64.dmg` |
+| Linux | `LumaBrowser-<version>.AppImage`, or `-arm64.AppImage` on Arm |
 
-Or, with Node 18 or newer, fetch and launch the latest build from the terminal:
+Or, with Node 18 or newer, fetch and launch the latest build from a terminal:
 
 ```sh
 npx lumabrowser start
 ```
 
-### 2. Pick a model
+## One app instead of five
 
-Open **Models**. LumaBrowser reads your hardware and puts a fit badge and a
-predicted speed on every model before you download it. Search Hugging Face
-directly, or link models you already have in LM Studio, Ollama or the Hugging
-Face cache without downloading them again.
+Most local AI setups are a pile of separate tools. LumaBrowser is those tools
+as one desktop app that shares your GPUs, your models and your browser.
+
+| What people run today | In LumaBrowser |
+|---|---|
+| A model server (Ollama, LM Studio, llama.cpp) | Runtimes for every GPU vendor, with each model sized to your hardware before you download it |
+| A chat interface | Chat with web browsing, files, a knowledge base and your own agents |
+| An image tool | Image, video and music generation, plus area editing and outpainting |
+| A voice stack | Speech to text, text to speech and voice cloning |
+| A headless browser for agents | Your real browser, with your logins, over MCP, ACP, WebDriver and CDP |
+| A cloud computer-use service | Desktop control that runs locally: no per-step cost, and screenshots never leave the machine |
+
+## First run
+
+**1. Pick a model.** Open **Models** and search. LumaBrowser reads your
+hardware and puts a fit badge and a predicted speed on every model before you
+download it. Models you already have in LM Studio, Ollama or the Hugging Face
+cache can be linked without downloading them again.
 
 <p align="center">
-  <img src="Documentation/images/model-fit.png" alt="Model search showing a fit badge and predicted speed for each quantization" width="800">
+  <img src="Documentation/images/model-fit.png" alt="Model search showing that a quantization fits this GPU, with its predicted speed" width="800">
 </p>
 
-### 3. Give it a task
-
-Open a chat and ask for something that needs the web:
+**2. Give it a task.** Open a chat and ask for something that needs the web:
 
 > Search the web for the latest llama.cpp release and tell me in a few bullets what changed.
 
 The agent opens its own tabs, reads the pages and answers. Your tabs stay yours.
 
-## Which part do I need?
+**3. Connect what you already use.** Point Claude Code, Codex, Cline, OpenCode
+or your editor at it from **Settings > Editors & agents**.
+
+## What is inside
+
+| | |
+|---|---|
+| **[Browser](Documentation/features/browser.md)**<br>A Chromium browser with an ad blocker, Chrome extensions, a password manager, private windows, and a Shift Shift search for any setting or chat. | **[Local models](Documentation/features/local-models.md)**<br>llama.cpp and MLX runtimes for NVIDIA, AMD, Intel, Qualcomm and Apple hardware. Splits a model across GPUs or machines, and speeds it up with a drafter. |
+| **[Images, video, music and voice](Documentation/features/media.md)**<br>FLUX, Qwen-Image, MiniMax-H3, Wan 2.2 and more, a CivitAI browser, and edits that change only the area you paint. | **[Agents and coding](Documentation/features/agents.md)**<br>Named agents, a coding agent that also runs in your terminal and editor, tools the agent writes for itself, and signed-in sites turned into APIs. |
+| **[Computer use](Documentation/features/computer-use.md)**<br>The agent operates other apps on your desktop, shows which window it is in, and always asks before a password field or a checkout. | **[Automation](Documentation/features/automation.md) and [sharing](Documentation/features/sharing.md)**<br>Triggers, page watches and recurring tasks. Share your models and GPUs with your other devices, or a live tab by link. |
+
+What changed in each version is in the
+[release notes](https://github.com/amurgola/LumaBrowser/releases).
+
+## For your agents and tools
 
 | You want to... | Use |
 |---|---|
-| Chat with local models, generate images, browse with an assistant | The desktop app |
-| Let Claude Code, Codex, Cline or OpenCode use a real browser | [MCP server](#connect-your-ai-agent) |
-| Point Selenium, Puppeteer or Playwright at it | [WebDriver or CDP](#connect-your-ai-agent) |
-| A coding agent in your terminal | `luma` CLI, see [cli/README.md](cli/README.md) |
-| The same agent in your editor | VS Code (also Cursor, Windsurf, VSCodium) and JetBrains plugins, installed from the app |
-| Run it on a server | [Docker](#docker) |
+| Let Claude Code, Codex, Cline or OpenCode use a real browser | The MCP server, written into their config for you from Settings |
+| Run your LumaBrowser agents inside JetBrains Air or Zed | `luma acp` (Agent Client Protocol) |
+| Point Selenium, Puppeteer or Playwright at it | WebDriver on `127.0.0.1:9515`, CDP on `127.0.0.1:9222` (both off by default) |
+| Call local models from your own code | The OpenAI and Anthropic compatible API on `127.0.0.1:8317` (off by default) |
+| A coding agent in your terminal or editor | The `luma` CLI ([cli/README.md](cli/README.md)) and the VS Code and JetBrains plugins |
 
-## Features
+Setup for each is in
+[Agents and coding](Documentation/features/agents.md#connecting-outside-agents),
+and the full API reference is at [lumabyte.com/apis](https://lumabyte.com/apis).
 
-**Browser**
-- Chromium-based browser with tabs, history, bookmarks and a built-in ad
-  blocker (Ghostery engine), plus Chrome extensions: a curated store of ones
-  that work in Electron (Bitwarden, Dark Reader, SponsorBlock, React DevTools
-  and more), any Chrome Web Store link, or an unpacked folder.
-- **Luma On Demand**: a floating voice or text panel on any page that acts on
-  the current tab.
-- **Dashboard**: a grid of live widgets from chats and extensions.
-
-**Local LLMs, fitted to your hardware**
-- llama.cpp runtimes for CPU, CUDA 12, CUDA 13 and Vulkan, MLX on Apple
-  Silicon, and add-on ik_llama.cpp and NInfer runtimes.
-- Sizes each model and its KV cache to your video memory, chooses full,
-  partial or CPU offload, and moves MoE experts to the CPU when that is faster.
-- Splits one model across several GPUs, or across other machines over
-  llama.cpp RPC.
-- Optional local API that speaks both the OpenAI and Anthropic formats on
-  `http://127.0.0.1:8317`. Off by default.
-- Also works with any OpenAI-compatible endpoint (LM Studio, Ollama, vLLM)
-  and with Anthropic.
-
-<p align="center">
-  <img src="Documentation/images/llm-setup.png" alt="LLM setup with runtimes, models and per-model settings" width="800">
-</p>
-
-**Image, video, music and voice**
-- Images: FLUX.1 Schnell, FLUX.2 klein, Qwen-Image and Qwen-Image-Edit,
-  Z-Image Turbo, Chroma, SDXL, SD 1.5, with LoRA support and import from Hugging
-  Face, a URL or a local file.
-- Video: Wan 2.2 (text and image to video), LTX-Video, AniSora, MiniMax-H3.
-- Music: MiniMax-Music3 (CUDA, Linux or WSL2, about 34 GB of video memory).
-- Speech-to-text: Parakeet, Qwen3-ASR and whisper.cpp.
-- Text-to-speech: Kokoro, Pocket TTS, KittenTTS and Piper voices, plus
-  Chatterbox and KittenTTS 2 voice cloning.
-
-**Agents and coding**
-- Chat with tools: browsing, page reading, file and image tools, a knowledge
-  base over your PDFs and documents (BM25 plus optional embeddings).
-- **Agents**: named sub-agents with their own prompt, tools, model and
-  knowledge, callable from chat, the API or MCP.
-- **Code mode**: a coding agent that also powers the `luma` CLI and the IDE
-  plugins, and can build and hot-install LumaBrowser extensions.
-- **Tool Forge**: the agent writes, tests and publishes new sandboxed tools
-  that only get the network access they declare.
-- Connect outside MCP servers over stdio, streamable HTTP or SSE.
-
-**Computer use that stays on your machine**
-- **Desktop control** (Windows): the agent sees and operates other apps,
-  accessibility tree first and vision second, with a small local grounding
-  model finding what the tree does not list. No per-step cost: a long task is
-  free to run as long as it needs.
-- Screenshots never leave the machine, and a window is captured on its own,
-  never the whole screen with whatever else is open.
-- It works inside your own logged-in apps and browser profile, so there is no
-  second login and no bot check for being a headless browser.
-- Clicks land where they should on 4K, high-DPI and multi-monitor setups:
-  everything is measured in physical pixels and mapped back per window.
-- **Ctrl+Alt+Shift** in any app: the screen edge lights the window the agent is
-  working on, the island says what it is doing, and Space pauses, Escape
-  stops, Y and N answer its approvals. Typing into a password field or acting
-  in a checkout always asks first.
-
-**Automation and triggers**
-- Forward web notifications from any tab to a webhook.
-- Watch a page, or one element on it, and get a notification or webhook when it
-  changes.
-- Capture network responses matching a URL pattern and forward them.
-- Recurring AI tasks with an optional response schema and result webhook.
-- Start an agent run from an incoming webhook (Slack and GitHub presets), a
-  file or folder change, a notification or a page change, with filters,
-  cooldowns and quiet hours.
-- Push to your phone through ntfy.
-
-**Sharing**
-- Share your models, image and voice generation, agents and (opt-in) GPUs with
-  your other devices. PIN pairing, mDNS discovery, pinned TLS.
-- Optional web app (PWA) for phones and tablets on your network.
-- Share a live tab by link; viewers can watch or take control.
-
-**Extensions**
-- Everything above the core is an extension. Write your own with a
-  `manifest.js` and a `main.js`, and add routes, MCP tools and UI. See
-  [Documentation/core/shell/extensions](Documentation/core/shell/extensions/).
-
-## Connect your AI agent
-
-### MCP
-
-LumaBrowser can write its MCP entry into Claude Code, Cline, Codex and OpenCode
-for you from **Settings**, or export the config to a file. By hand it looks like
-this:
-
-```json
-{
-  "mcpServers": {
-    "luma-browser": {
-      "command": "node",
-      "args": ["<install dir>/resources/app.asar.unpacked/mcp-server.js"],
-      "env": { "LUMA_API_PORT": "3000" }
-    }
-  }
-}
-```
-
-The server starts LumaBrowser if it is not running. Tools cover browsing, tabs,
-page reading and extraction, agents, timed tasks, page monitors, and any MCP
-servers you have connected to LumaBrowser.
-
-### WebDriver and CDP
-
-Both are off by default. Turn them on in Settings, then:
-
-```python
-# Selenium (W3C WebDriver), default 127.0.0.1:9515
-driver = webdriver.Remote("http://127.0.0.1:9515", options=options)
-```
-
-```js
-// Puppeteer or Playwright (Chrome DevTools Protocol), default 127.0.0.1:9222
-const browser = await puppeteer.connect({ browserURL: 'http://127.0.0.1:9222' });
-```
-
-Clients only see the tabs automation created, never your own. Either driver can
-ask the LLM to resolve a selector that stopped matching.
-
-### REST and local model APIs
-
-The full API reference (REST, MCP tools and the OpenAI and Anthropic
-compatible local API) lives at [lumabyte.com/apis](https://lumabyte.com/apis).
-
-## System requirements
+## Will it run on my computer?
 
 | Tier | Video memory | What runs well |
 |---|---|---|
@@ -230,37 +117,41 @@ workloads (LLMs are the exception: they can split across cards).
 | GPU | Support |
 |---|---|
 | NVIDIA | CUDA 12 and CUDA 13 (recommended for RTX 50) on Windows; Vulkan or CUDA on Linux |
-| AMD, Intel | Vulkan on Windows and Linux. No ROCm backend yet. |
-| Apple Silicon | MLX for LLMs; CPU for image generation |
+| AMD | Vulkan on Windows and Linux; ROCm when the AMD HIP SDK (Windows) or ROCm (Linux) is installed |
+| Intel | Vulkan on Windows and Linux; SYCL for Arc and Core Ultra graphics; OpenVINO (experimental) for Intel GPUs and NPUs |
+| Qualcomm Adreno (Windows on Arm) | OpenCL for LLMs |
+| Apple Silicon | MLX or llama.cpp (Metal) for LLMs; CPU for image generation |
 | None | CPU builds of every runtime |
 
-## Privacy
+## What leaves your machine
 
 Your browsing, chats, models, generated media and files stay on your machine.
 Nothing you type into a chat is sent anywhere unless you choose a cloud model.
-
-What does leave the machine, and how to turn it off:
+This is everything that does go out, and how to turn it off:
 
 | What | Sent to | Default | Turn off |
 |---|---|---|---|
-| Usage ping: version, platform, machine id, every 5 minutes | lumabyte.com | On | Settings > General |
-| Update check | lumabyte.com | On | Settings: automatic update checks |
+| Usage ping: version, platform, machine id, every 5 minutes | lumabyte.com | On | Settings > Privacy & permissions > Usage data |
+| Update check | lumabyte.com | On | Settings > About > Updates |
 | Extension catalog | lumabyte.com | Only when you open Extensions | |
 | Chrome extension downloads and update checks: extension id, Chromium version | Google (clients2.google.com) | Only when you install or update one | |
+| CivitAI searches, model pages, thumbnails and downloads (with your CivitAI key, if you set one) | civitai.com | Only when you open Browse CivitAI | |
 | Ad-block lists, runtimes, models | Ghostery, GitHub, Hugging Face and model hosts | When needed | |
 
 No feature depends on the usage ping.
 
-## Security
+**Security.** Browser automation hands an agent your browser: anything an MCP,
+WebDriver or CDP client can see, the model behind it can see. Connect only
+agents you trust, keep those ports on localhost (the default), and set an API
+key in **Settings > API & MCP** before you expose the REST API on port 3000,
+which needs no key by default. Text from tools, web pages and windows is
+treated as content to read, never as commands, and saved passwords are never
+shown to a model.
 
-Browser automation hands an agent your browser. Anything an MCP, WebDriver or
-CDP client can see, the model behind it can see. Connect only agents you trust,
-and keep the API, WebDriver and CDP ports on localhost (the default).
+## Docker and development
 
-The REST API on port 3000 does not require a key by default. Set an API key in
-Settings before you expose it beyond localhost.
-
-## Docker
+<details>
+<summary>Run it on a server with Docker</summary>
 
 The Docker image runs the full app headless and serves the desktop in your
 browser over noVNC. It is meant for servers and agent hosts.
@@ -276,7 +167,10 @@ In Docker the API accepts any address and needs no key by default. Do not
 publish port 3000 to a network you do not trust without setting an API key.
 GPU acceleration is not used in the container.
 
-## Development
+</details>
+
+<details>
+<summary>Build from source</summary>
 
 You need Node 20 and a C++ toolchain (Visual Studio 2022 Build Tools on
 Windows) for the native SQLite module.
@@ -287,18 +181,18 @@ npm run dev          # start the app in developer mode
 npm test             # unit tests under Electron
 npm run test:e2e     # end-to-end suites
 npm run build        # installers for the current platform
-npm run shots:readme # retake the screenshots in this README from a blank-slate app
+npm run shots:readme # retake this README's screenshots and demo clip from a blank-slate app
+npm run readme:check # word budget, links and images of this README
 ```
-
-### Agentic developer docs
 
 The [Documentation](Documentation/index.md) folder is written for coding agents
 as much as for people. Every code file has a matching doc at
-`Documentation/<same path>.md` covering its purpose, public methods and why it
-exists, and [Documentation/index.md](Documentation/index.md) lists them all in
-one line each. Point your agent at the index first so it can find the right
-file without reading the whole codebase, and have it update the doc whenever it
-changes the file.
+`Documentation/<same path>.md`, and
+[Documentation/index.md](Documentation/index.md) lists them all in one line
+each. Point your agent at the index first, and have it update the doc whenever
+it changes the file.
+
+</details>
 
 ## Contributing
 
@@ -311,11 +205,10 @@ LumaBrowser is free software under the
 [GNU Affero General Public License v3.0 or later](LICENSE). You may use it,
 study it, change it and redistribute it. If you distribute a modified version,
 or run one for other people over a network, you must publish your changes
-under the same license.
-
-Running unmodified official builds, including inside a company, needs nothing
-more. Organizations that want to keep their modifications private, combine
-LumaBrowser with proprietary software, or ship private extensions can obtain a
+under the same license. Running unmodified official builds, including inside a
+company, needs nothing more. Organizations that want to keep their
+modifications private, combine LumaBrowser with proprietary software, or ship
+private extensions can obtain a
 [commercial license](COMMERCIAL-LICENSE.md) from Lumabyte, LLC.
 
 LumaBrowser is owned and maintained by Lumabyte, LLC, an Ohio company, which

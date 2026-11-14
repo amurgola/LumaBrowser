@@ -18,6 +18,7 @@ class PlacementIpcHandlers {
     this._handle('core.placement.getMeasured', () => ({ measured: svc.getMeasured() }));
     this._handle('core.placement.getVramSnapshot', async () => ({ snapshot: await svc.getVramSnapshot() }));
     this._handle('core.placement.getHotswapInfo', async () => ({ info: await svc.getHotswapInfo() }));
+    this._handle('core.placement.previewRig', (_e, rigId) => svc.previewRig(rigId));
     this._handle('core.placement.start', () => svc.startAll());
     this._handle('core.placement.stop', () => svc.stopAll());
     this._handle('core.placement.runTest', (event) => this._runTest(event));

@@ -25,6 +25,11 @@ One launch of a model on an image slot. A new instance per launch, created by
   3. Two ports from the slot's window: public (auth proxy) then private (sd-server, loopback).
   4. `hotswap.acquire(role)`; when it evicted a sibling, re-read live VRAM.
   5. `placement.place(...)` with `ImageSlotPlacement.requiredBytes(model, role)`.
+     When [ChatSwapOut](ChatSwapOut.md)`.cardToFree` names a card (a RAM offload
+     onto a card the automatic chat model fills), `hotswap.swapOut(role, ['llm'],
+     card)` stops the chat model and waits for the card, a log line says so, live
+     VRAM is re-read and the model is placed again. The chat model's next start
+     evicts this model through the same round-trip pool.
   6. Plan: [VaeTilingPolicy](VaeTilingPolicy.md), `ClipPlacement.decide`
      (placement plus the CPU-runtime verdict),
      [SageAttentionPolicy](SageAttentionPolicy.md)`.decide` (skipped on a CPU

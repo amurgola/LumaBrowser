@@ -15,6 +15,7 @@ class LlmRecommendation {
       file: download.file,
       url: download.url,
       approxBytes: pick.model.variants[pick.quant].approxBytes,
+      vramNeedBytes: AutoPlanRanking.vramNeedOf(pick),
       contextSize: pick.contextSize,
       runtimeId: RecommenderRuntimePicker.pick(hw),
       kvCacheType: pick.kvCacheType,

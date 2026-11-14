@@ -23,6 +23,14 @@ Single-occupancy enforcement for the singularity pools of the
   as live) and, if anything was stopped, waiting for the card's VRAM
   ([VramReleaseWaiter](placement/VramReleaseWaiter.md)). Resolves `null` for a
   server in no pool. Serialised per pool; a throwing `stop` does not wedge it.
+- `swapOut(serverId, residentIds, card)` forms the one-round-trip pool
+  `auto-swap` of `serverId` and `residentIds` on `card`, then `acquire(serverId)`
+  (stops the live residents and waits for the card). The pool stays while the
+  borrower (`serverId`) re-acquires; the first acquire by a resident evicts the
+  borrower and ends the pool. Resolves `null`, forming nothing, when `card` is not
+  an integer or any of them already belongs to a pool. `configure` drops it like
+  any other pool. Used by [ChatSwapOut](../../image-server/service/ChatSwapOut.md)
+  through ImageSlotLaunch.
 - `release(serverId)` clears the resident pointer if that server holds it.
 - `sharePool(a, b)` true when both are in one pool (never co-resident).
 - `isEnabled()` true when any pool is configured.
@@ -34,6 +42,12 @@ A singularity holds models that share one GPU but cannot be co-resident.
 This deliberately inverts VramCoordinator's "never evict" rule, but only inside
 a configured pool and only on that pool's card. Pools on different cards swap
 independently, each with its own promise chain and resident pointer.
+
+`swapOut` exists for a profile with no layout (ISSUES.md entry 12): on a 5090 +
+3090 box the chat model filled both cards, the H3 image model was offloaded onto
+the 3090 beside it and sd.cpp ran out of compute room. The round-trip pool gives
+that one pairing singularity behaviour (image in, chat back) without writing a
+layout, and ends so a later model that fits beside the chat model is not swapped.
 
 Swaps are fast when RAM is large: the model file stays in the OS page cache,
 so a reload is a PCIe upload rather than a disk read. This class does not

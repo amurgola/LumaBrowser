@@ -9,6 +9,19 @@ into webhooks and automations. Everything runs on the user's own machine.
 Every code file has a doc here at the same path. When you change a file,
 update its doc, and update this index if its purpose changed.
 
+## features
+
+What the product does, for people rather than for code. The README links here instead of listing every feature.
+
+- [features/README.md](features/README.md): index of the feature pages.
+- [features/browser.md](features/browser.md): everyday browsing, ad blocking and Chrome extensions, password manager, search palette, Luma On Demand, Dashboard and Hub.
+- [features/local-models.md](features/local-models.md): model search and fit, runtimes per GPU vendor, placement, drafters, helper model, per-model settings, other providers and the local API.
+- [features/media.md](features/media.md): image models, CivitAI, image editing, media viewer, video, music and voice.
+- [features/agents.md](features/agents.md): chat tools, agents, Code mode, Tool Forge, Site APIs, Roleplay, and MCP, ACP, WebDriver and CDP setup.
+- [features/computer-use.md](features/computer-use.md): desktop control and its safeguards, window tabs, Lumabyte, system-wide hotkeys, Desktop Integration API.
+- [features/automation.md](features/automation.md): notification and network forwarding, page watches, recurring tasks, triggers, ntfy.
+- [features/sharing.md](features/sharing.md): Network Sharing, the web app, Tab Share.
+
 ## core/shared
 
 Small building blocks shared by more than one subsystem.
@@ -145,7 +158,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/runtime/server/ChildReaper.md](core/shared/runtime/server/ChildReaper.md): kills a child and resolves on its real exit; has `reap`, `killNow`.
 - [core/shared/runtime/server/RuntimeLogRing.md](core/shared/runtime/server/RuntimeLogRing.md): bounded child output log with the stderr tail; has `capture`, `snapshot`, `clear`, `errorTail`.
 - [core/shared/runtime/server/RuntimeSpawnEnv.md](core/shared/runtime/server/RuntimeSpawnEnv.md): spawn cwd and env (library path, CUDA pin, runtime extra env) for a runtime binary; has `build`, `isPinned`.
-- [core/shared/runtime/HotswapCoordinator.md](core/shared/runtime/HotswapCoordinator.md): single-occupancy eviction per hotswap pool; has `shared`, `configure`, `register`, `acquire`, `release`, `snapshot`.
+- [core/shared/runtime/HotswapCoordinator.md](core/shared/runtime/HotswapCoordinator.md): single-occupancy eviction per hotswap pool, plus the one-round-trip pool automatic placement forms; has `shared`, `configure`, `register`, `acquire`, `swapOut`, `release`, `snapshot`.
 - [core/shared/runtime/placement/VramReleaseWaiter.md](core/shared/runtime/placement/VramReleaseWaiter.md): waits for a card's VRAM to be reclaimed after eviction; has `read`, `wait`.
 - [core/shared/runtime/PlacementLayout.md](core/shared/runtime/PlacementLayout.md): unified placement layout schema, normalizer and queries; has `emptyLayout`, `normalizeLayout`, `resourceById`, `orderedDevices`, `placedItems`, `hotswapPools`.
 - [core/shared/runtime/placement/PlacementStore.md](core/shared/runtime/placement/PlacementStore.md): loads and saves the placement layout; has `load`, `save`, `migrateLegacy`.
@@ -1135,6 +1148,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementItems.md](core/llm-server/ui/js/setup-ui/advanced/PlacementItems.md): the draggable model items of the placement canvas and the fallback empty layout.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementLanes.md](core/llm-server/ui/js/setup-ui/advanced/PlacementLanes.md): builds the drop lanes: local GPUs, ordered groups, remote peer GPUs (including unpaired refs, marked unavailable) and System RAM, each with its plan bar and singularity boxes.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementLayoutModel.md](core/llm-server/ui/js/setup-ui/advanced/PlacementLayoutModel.md): the placement canvas's state and every edit a drag, group or singularity action makes to it.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementPreviewMode.md](core/llm-server/ui/js/setup-ui/advanced/PlacementPreviewMode.md): the example PC preview of the placement canvas: the row of PCs, the read-only plan under its "Preview: not this PC" banner, and the way back; has `load`, `picker`, `describe`, `show`, `leave`.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementRows.md](core/llm-server/ui/js/setup-ui/advanced/PlacementRows.md): the rows above the lanes: the allocation gate, the "split LLM context" toggle and the "combine GPUs" picker.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementText.md](core/llm-server/ui/js/setup-ui/advanced/PlacementText.md): text helpers of the placement canvas.
 - [core/llm-server/ui/js/setup-ui/advanced/PromptPreviewPanel.md](core/llm-server/ui/js/setup-ui/advanced/PromptPreviewPanel.md): the "System prompt preview" panel: the exact system prompt of a Tools-on turn from the current settings.
@@ -1756,6 +1770,7 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/service/VaeTilingPolicy.md](core/image-server/service/VaeTilingPolicy.md): VAE tiling decision; has `decide`.
 - [core/image-server/service/SageAttentionPolicy.md](core/image-server/service/SageAttentionPolicy.md): per-launch --sage-attn decision (CUDA build, Ampere+ card, model opt-in); has `decide`.
 - [core/image-server/service/PreferredImageRuntime.md](core/image-server/service/PreferredImageRuntime.md): one-launch swap onto a model's preferred drop-in runtime (MiniMax-H3 on the LumaByte build); has `pick`, `interchangeable`.
+- [core/image-server/service/ChatSwapOut.md](core/image-server/service/ChatSwapOut.md): when an image launch swaps out the resident automatic chat model instead of offloading beside it; has `cardToFree`.
 - [core/image-server/service/UserGpuPin.md](core/image-server/service/UserGpuPin.md): whether the user pinned a slot to a GPU; has `isPinnedToGpu`.
 - [core/image-server/service/ImageLaunchInputs.md](core/image-server/service/ImageLaunchInputs.md): pre-launch runtime, model and API key checks; has `runtime`, `model`, `apiKeyRefusal`.
 - [core/image-server/service/ImageLaunchLog.md](core/image-server/service/ImageLaunchLog.md): the image launch console line; has `line`.
@@ -2376,7 +2391,7 @@ Small building blocks shared by more than one subsystem.
 ## core/placement
 
 - [core/placement/PlacementIpcHandlers.md](core/placement/PlacementIpcHandlers.md): IPC controller for `core.placement.*`; has `register`.
-- [core/placement/PlacementService.md](core/placement/PlacementService.md): unified placement canvas backend (layout, start and stop, VRAM snapshot, hotswap gate, measuring test); has `getConfig`, `setConfig`, `autoArrange`, `getVramSnapshot`, `startAll`, `stopAll`, `runTest`.
+- [core/placement/PlacementService.md](core/placement/PlacementService.md): unified placement canvas backend (layout, start and stop, VRAM snapshot, hotswap gate, measuring test); has `getConfig`, `setConfig`, `autoArrange`, `previewRig`, `getVramSnapshot`, `startAll`, `stopAll`, `runTest`.
 - [core/placement/service/BestEffort.md](core/placement/service/BestEffort.md): null-on-throw reads for placement; has `read`.
 - [core/placement/service/PlacementServers.md](core/placement/service/PlacementServers.md): managed model services by layout item; has `runtimeServer`, `status`, `isAvailable`.
 - [core/placement/service/MeasuredFootprintStore.md](core/placement/service/MeasuredFootprintStore.md): measured test-render footprints per model; has `all`, `merge`.
@@ -2393,6 +2408,8 @@ Small building blocks shared by more than one subsystem.
 - [core/placement/service/PlacementTestTurn.md](core/placement/service/PlacementTestTurn.md): one timed placement test chat turn; has `run`.
 - [core/placement/service/PlacementTestRun.md](core/placement/service/PlacementTestRun.md): the placement test sequence; has `run`.
 - [core/placement/service/PlacementLifecycle.md](core/placement/service/PlacementLifecycle.md): starts and unloads the placed models; has `startAll`, `stopAll`.
+- [core/placement/service/PreviewRigs.md](core/placement/service/PreviewRigs.md): the example PCs the canvas can preview and their diagnostics snapshots; has `list`, `byId`, `diagnostics`.
+- [core/placement/service/PlacementPreview.md](core/placement/service/PlacementPreview.md): what Automatic Local Setup would plan on an example PC, in the canvas shapes; has `describe`.
 
 ## core/palette
 
@@ -4213,17 +4230,25 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [tools/docs/FrontMatterParser.md](tools/docs/FrontMatterParser.md): reads the leading `---` block of a markdown doc.
 - [tools/docs/GitQuery.md](tools/docs/GitQuery.md): runs a read-only git command in a folder (stderr ignored) for the docs tools.
 
+## tools/docs/readme-check
+
+- [tools/docs/readme-check/ReadmeCheck.md](tools/docs/readme-check/ReadmeCheck.md): the checks behind `npm run readme:check`: word budget, relative links and images exist, anchors have headings, images have alt text, no em or en dash; has `run`, `countWords`, `links`, `images`, `anchors`.
+- [tools/docs/readme-check/ReadmeCheckCli.md](tools/docs/readme-check/ReadmeCheckCli.md): the `node scripts/readme-check.js` command: checks README.md (with the word budget) and the Documentation/features pages, exits 1 on any problem; `--max-words`.
+
 ## tools/docs/readme-shots
 
-- [tools/docs/readme-shots/ReadmeShotsCli.md](tools/docs/readme-shots/ReadmeShotsCli.md): the `node scripts/readme-shots.js` command (`npm run shots:readme`): boots a blank-slate copy of the app on the e2e AppLauncher, captures Setup and model-fit first, then one local-model chat with web search, and writes llm-setup.png, model-fit.png and chat.png to Documentation/images.
-- [tools/docs/readme-shots/ShotOptions.md](tools/docs/readme-shots/ShotOptions.md): the command line (`--out`, `--only`, `--prompt`, `--query`, `--quant`, `--model`, `--size`, `--timeout`, `--capture`, `--keep`); unknown flags throw with usage.
-- [tools/docs/readme-shots/BlankSlate.md](tools/docs/readme-shots/BlankSlate.md): the settings.db edits that make the seeded copy a blank slate (chat, artifact, task, trigger, history and bookmark tables cleared; no restored or persisted tabs; no remembered chat model; setup complete; update check off).
+- [tools/docs/readme-shots/ReadmeShotsCli.md](tools/docs/readme-shots/ReadmeShotsCli.md): the `node scripts/readme-shots.js` command (`npm run shots:readme`): boots a blank-slate copy of the app on the e2e AppLauncher, hides the notification log, captures Setup, model-fit and Image setup first, then one local-model chat with web search, then records the demo, and writes llm-setup.png, model-fit.png, media.png, chat.png and demo.gif to Documentation/images.
+- [tools/docs/readme-shots/ShotOptions.md](tools/docs/readme-shots/ShotOptions.md): the command line (`--out`, `--only`, `--prompt`, `--query`, `--quant`, `--model`, `--size`, `--timeout`, `--clip-seconds`, `--capture`, `--keep`); unknown flags throw with usage.
+- [tools/docs/readme-shots/BlankSlate.md](tools/docs/readme-shots/BlankSlate.md): the settings.db edits that make the seeded copy a blank slate (chat, artifact, task, trigger, history and bookmark tables cleared, children before parents; no restored or persisted tabs; no remembered chat model; setup complete; update check off; Network Sharing off with its public address and network name removed).
 - [tools/docs/readme-shots/LocalModelPick.md](tools/docs/readme-shots/LocalModelPick.md): picks a `local::` model from `llmDiagAPI.listModels()` (preferred substring, else the default, else the first) and makes it the remembered chat model; throws when none is local.
 - [tools/docs/readme-shots/PageSanitizer.md](tools/docs/readme-shots/PageSanitizer.md): replaces the machine name with DESKTOP and the home dir with a generic one in text nodes, input values and titles before a capture.
 - [tools/docs/readme-shots/WindowCapture.md](tools/docs/readme-shots/WindowCapture.md): whole-window capture (tab strip plus active view) through desktopCapturer in the main process at physical size, with a Windows CopyFromScreen fallback; also sizes and raises the LumaBrowser window.
 - [tools/docs/readme-shots/ChatScene.md](tools/docs/readme-shots/ChatScene.md): one agent turn through `llmDiagAPI.chat2` (tools on), the conversation opened in the UI, run card leading unless the thread barely overflows.
 - [tools/docs/readme-shots/SetupScene.md](tools/docs/readme-shots/SetupScene.md): the Setup toggle, folds closed, scrolled to top, identity scrubbed; runs before any model server starts.
 - [tools/docs/readme-shots/ModelFitScene.md](tools/docs/readme-shots/ModelFitScene.md): the Search models dialog on the query's own result row with the chosen quantization, clipped from the top through the Download row.
+- [tools/docs/readme-shots/MediaScene.md](tools/docs/readme-shots/MediaScene.md): the Image tab of LLM Setup, scrolled to the top and scrubbed, before any server starts; `reset` returns to the LLM tab.
+- [tools/docs/readme-shots/DemoScene.md](tools/docs/readme-shots/DemoScene.md): the animated demo played live in a 980x640 window with the sidebar folded: the fit search, then a question typed into the composer and answered with web search, recorded by DemoClip.
+- [tools/docs/readme-shots/DemoClip.md](tools/docs/readme-shots/DemoClip.md): ffmpeg gfxcapture recording of the app window alone (Windows, ffmpeg 8+), sped up to a time budget and written as a palette GIF plus an MP4; has `requireTools`, `start`, `render`, `speedFor`.
 
 ## tools/build
 

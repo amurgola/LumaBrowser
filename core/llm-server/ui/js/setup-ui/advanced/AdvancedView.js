@@ -8,6 +8,7 @@ import PlacementControls from './PlacementControls.js';
 import PlacementFit from './PlacementFit.js';
 import PlacementLanes from './PlacementLanes.js';
 import PlacementLayoutModel from './PlacementLayoutModel.js';
+import PlacementPreviewMode from './PlacementPreviewMode.js';
 import PlacementRows from './PlacementRows.js';
 import PromptPreviewPanel from './PromptPreviewPanel.js';
 import SplitEditorPanel from './SplitEditorPanel.js';
@@ -33,6 +34,7 @@ export default class AdvancedView {
     this._controls = new PlacementControls(this);
     this._test = new TestRenderPanel(this);
     this._prompt = new PromptPreviewPanel(() => this._api && this._api.chat);
+    this._preview = new PlacementPreviewMode(this);
   }
 
   init() {
@@ -46,8 +48,9 @@ export default class AdvancedView {
     if (!api) { this._showError('Placement API unavailable.'); return; }
     AdvancedStyles.inject(this._doc);
     this._wireAutoArrange();
+    this._preview.leave();
     try {
-      const [cfg, snap] = await Promise.all([api.getConfig(), api.getVramSnapshot()]);
+      const [cfg, snap] = await Promise.all([api.getConfig(), api.getVramSnapshot(), this._preview.load()]);
       this.model.applyConfig(cfg && cfg.config);
       this.model.setSnapshot(snap && snap.snapshot);
       this.render();
@@ -59,9 +62,14 @@ export default class AdvancedView {
   render() {
     const body = this._doc.getElementById('advBody');
     if (!body) return;
+    body.style.minHeight = `${body.offsetHeight}px`;
     body.className = '';
     body.innerHTML = '';
     this.model.ensureGpuResources();
+    this._lockAutoArrange();
+    const picker = this._preview.picker();
+    if (picker) body.appendChild(picker);
+    if (this._preview.active) { this._renderPreview(body); body.style.minHeight = ''; return; }
     body.appendChild(this._rows.gate());
     body.appendChild(this._rows.contextRow());
     this._splitPanel.render(body);
@@ -74,6 +82,7 @@ export default class AdvancedView {
     this._controls.render(body);
     this._test.render(body);
     this._prompt.render(body);
+    body.style.minHeight = '';
   }
 
   status(text) {
@@ -156,6 +165,20 @@ export default class AdvancedView {
         this.render();
       }
     } catch (_) {}
+  }
+
+  _renderPreview(body) {
+    body.classList.add('adv-previewing');
+    body.appendChild(this._preview.describe());
+    const tray = this._tray();
+    body.appendChild(tray);
+    body.appendChild(this._lanes.build());
+    this._chips.distribute(body, tray);
+  }
+
+  _lockAutoArrange() {
+    const btn = this._doc.getElementById('advAutoArrange');
+    if (btn) btn.disabled = this._preview.active;
   }
 
   _tray() {

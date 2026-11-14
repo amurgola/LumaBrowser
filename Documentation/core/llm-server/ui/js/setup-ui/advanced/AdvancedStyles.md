@@ -11,3 +11,8 @@ The placement canvas stylesheet, injected once into the page head the first time
 ## Globals
 
 Writes `<head>`.
+
+## Preview height
+
+`.adv-previewing { min-height:100vh; }` keeps the page from scrolling up when an example PC's shorter plan replaces
+the real canvas.

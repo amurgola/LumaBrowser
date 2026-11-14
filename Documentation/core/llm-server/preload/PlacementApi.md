@@ -18,6 +18,7 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `placement.getMeasured()` | invoke `core.placement.getMeasured` |
 | `placement.getVramSnapshot()` | invoke `core.placement.getVramSnapshot` |
 | `placement.getHotswapInfo()` | invoke `core.placement.getHotswapInfo` |
+| `placement.previewRig(rigId)` | invoke `core.placement.previewRig` |
 | `placement.start()` | invoke `core.placement.start` |
 | `placement.stop()` | invoke `core.placement.stop` |
 | `placement.runTest()` | invoke `core.placement.runTest` |
