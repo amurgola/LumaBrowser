@@ -56,3 +56,7 @@ groups, and the people who need a setting rarely know its label. A hand-written
 list with synonyms and plain descriptions finds "make links open here" or "block
 popups" where a label search would not, and the drift test keeps the list honest
 as the modal changes.
+
+## Luma Live entries
+
+`general.on-demand` is labelled "Luma Live" (keywords keep "on demand" for the old name) and `general.on-demand-auto-listen` is "Listen when Luma Live opens" (`core.onDemand.autoListen`, target `#gsOnDemandAutoListen`); both have a value spec in SettingValueSpecs.

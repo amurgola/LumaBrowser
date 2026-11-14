@@ -4,11 +4,12 @@ import StatusText from './StatusText.js';
 import EndpointRow from './EndpointRow.js';
 
 export default class SiteCard {
-  constructor({ site, invoke, reload, openBuilder }) {
+  constructor({ site, invoke, reload, openBuilder, openDetails }) {
     this._site = site;
     this._invoke = invoke;
     this._reload = reload;
     this._openBuilder = openBuilder;
+    this._openDetails = openDetails;
     this._rows = [];
   }
 
@@ -53,7 +54,7 @@ export default class SiteCard {
       wrap.appendChild(Dom.el('div', 'luma-empty luma-empty--plain', 'No endpoints yet. Edit in chat to record one.'));
       return wrap;
     }
-    this._rows = endpoints.map((endpoint) => new EndpointRow({ site: this._site, endpoint, invoke: this._invoke, reload: this._reload }));
+    this._rows = endpoints.map((endpoint) => new EndpointRow({ site: this._site, endpoint, invoke: this._invoke, reload: this._reload, openDetails: this._openDetails }));
     for (const row of this._rows) wrap.appendChild(row.render());
     return wrap;
   }

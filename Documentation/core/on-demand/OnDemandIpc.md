@@ -22,3 +22,7 @@ IPC controller for Luma On Demand. Routes only; no logic.
 The panel channels drive chat turns against the user's tab, so no other
 renderer may call them. Not wrapped in `IpcEnvelope` because the legacy replies
 (raw state, `undefined` for foreign senders) are what the renderer expects.
+
+## Listening on open
+
+`on-demand:get-auto-listen` and `on-demand:set-auto-listen(on)` (shell channels, like `get-enabled` and `set-enabled`) read and write the overlay's `autoListen`; the setter replies `{ success: true, autoListen }`.

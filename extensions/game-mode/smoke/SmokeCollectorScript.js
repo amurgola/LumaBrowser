@@ -167,6 +167,10 @@ class SmokeCollectorScript {
     }, 900);
   }
 
+  // A position that is a number and not equal to itself: the game's own math made it NaN. (An object type with
+  // no x or y at all is not counted.)
+  function isNaNNumber(v) { return typeof v === 'number' && v !== v; }
+
   function probeGames() {
     var out = [];
     for (var gi = 0; gi < S.games.length; gi++) {
@@ -178,9 +182,10 @@ class SmokeCollectorScript {
           var sc = active[si];
           var cam = sc.cameras && sc.cameras.main;
           var kids = sc.children && sc.children.list ? sc.children.list : [];
-          var visible = 0, byType = {}, texKeys = {};
+          var visible = 0, byType = {}, texKeys = {}, nanCount = 0;
           for (var ki = 0; ki < kids.length; ki++) {
             var k = kids[ki];
+            if (isNaNNumber(k.x) || isNaNNumber(k.y)) nanCount++;
             if (k.visible !== false && (k.alpha == null || k.alpha > 0)) visible++;
             var t = k.type || 'Object'; byType[t] = (byType[t] || 0) + 1;
             if (k.texture && k.texture.key) texKeys[k.texture.key] = true;
@@ -193,6 +198,7 @@ class SmokeCollectorScript {
             try {
               objs.push({
                 type: o.type || 'Object', x: Math.round(o.x), y: Math.round(o.y), depth: o.depth,
+                nan: isNaNNumber(o.x) || isNaNNumber(o.y),
                 alpha: o.alpha, visible: o.visible !== false,
                 w: o.displayWidth != null ? Math.round(o.displayWidth) : (o.width != null ? Math.round(o.width) : null),
                 h: o.displayHeight != null ? Math.round(o.displayHeight) : (o.height != null ? Math.round(o.height) : null),
@@ -204,7 +210,7 @@ class SmokeCollectorScript {
           }
           info.scenes.push({
             key: sc.scene ? sc.scene.key : '?',
-            objects: kids.length, visible: visible, byType: byType,
+            objects: kids.length, visible: visible, nan: nanCount, byType: byType,
             textures: Object.keys(texKeys),
             list: objs,
             camera: cam ? { x: cam.x, y: cam.y, width: cam.width, height: cam.height,

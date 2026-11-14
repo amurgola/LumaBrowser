@@ -1,6 +1,7 @@
 const ChatModeRegistry = require('./ChatModeRegistry');
 const ScheduledTaskPrompt = require('./scheduled-task/ScheduledTaskPrompt');
 const ScheduledTaskTools = require('./scheduled-task/ScheduledTaskTools');
+const SetupFormConsent = require('./scheduled-task/SetupFormConsent');
 
 class ScheduledTaskMode {
   static ID = 'scheduled-task';
@@ -36,7 +37,7 @@ class ScheduledTaskMode {
     };
   }
 
-  buildTurn({ conversationId } = {}) {
+  buildTurn({ conversationId, messages } = {}) {
     const task = conversationId ? this._store.getByConversation(conversationId) : null;
     const tools = this._tools.build();
     return {
@@ -45,6 +46,7 @@ class ScheduledTaskMode {
       agent: true,
       tools,
       allowedTools: tools.map((t) => t.name),
+      preApprovedTools: SetupFormConsent.preApprovedTools(messages, task),
       noBrowser: true,
     };
   }

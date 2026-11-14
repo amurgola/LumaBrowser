@@ -10,7 +10,11 @@ with its curated catalog row. Used by [ImageModelsScanner](ImageModelsScanner.md
 - `ImageModelRecord.build({ id, dir, manifest, files, catalogEntry, catalogList })`
   returns `{ id, name, label, dir, family, kind, supportsI2V, supportsEdit,
   files, minVramBytes, defaults, constraints, protocol, compatibleRuntimes,
-  launchArgs, preferredRuntimes, sageAttention, vaeTiling, licenseNote, fileUpdates, civitai, manifest }`:
+  launchArgs, preferredRuntimes, minRuntimeTags, sageAttention, vaeTiling, licenseNote, fileUpdates, civitai, manifest }`:
+  - `minRuntimeTags` (catalog, else manifest, else `{}`): the oldest release
+    tag per runtime id that loads the model, read by
+    [PreferredImageRuntime](service/PreferredImageRuntime.md) to skip or refuse
+    an older install (ISSUES.md entry 11).
   - `vaeTiling` is `false` when the catalog row or the manifest says exactly
     `false` (a VAE that tiles itself), else `undefined`; read by
     [VaeTilingPolicy](service/VaeTilingPolicy.md).

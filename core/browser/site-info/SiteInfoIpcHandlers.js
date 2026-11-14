@@ -10,9 +10,9 @@ class SiteInfoIpcHandlers {
   register() {
     const i = this._info;
     this._handle('core.siteInfo.get', (tabId) => i.get(tabId));
-    this._handle('core.siteInfo.setPermission', (tabId, kind, value) => i.setPermission(tabId, kind, value));
-    this._handle('core.siteInfo.setAdblock', (tabId, off) => i.setAdblock(tabId, off));
-    this._handle('core.siteInfo.clearData', (tabId) => i.clearData(tabId));
+    this._handle('core.siteInfo.setPermission', (tabId, kind, value, origin) => i.setPermission(tabId, kind, value, origin));
+    this._handle('core.siteInfo.setAdblock', (tabId, off, origin) => i.setAdblock(tabId, off, origin));
+    this._handle('core.siteInfo.clearData', (tabId, origin) => i.clearData(tabId, origin));
   }
 
   _handle(channel, fn) {

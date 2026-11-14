@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const CoreRequire = require('../CoreRequire');
 const GameJson = require('../session/GameJson');
+const NoScrollbarStyle = require('../flatten/NoScrollbarStyle');
 
 const Slug = CoreRequire.load('shared/text/Slug');
 
@@ -33,7 +34,7 @@ class GameZipExporter {
   }
 
   static _portableIndex(abs) {
-    return fs.readFileSync(abs, 'utf8').replace(GameZipExporter.ENGINE_TAG, '"phaser.min.js"');
+    return NoScrollbarStyle.apply(fs.readFileSync(abs, 'utf8').replace(GameZipExporter.ENGINE_TAG, '"phaser.min.js"'));
   }
 }
 

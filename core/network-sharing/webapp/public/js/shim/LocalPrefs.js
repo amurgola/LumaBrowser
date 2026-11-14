@@ -1,13 +1,16 @@
 export default class LocalPrefs {
   static SIDEBAR_KEY = 'luma.web.sidebar';
   static MODEL_KEY = 'luma.web.model';
+  static NARROW_QUERY = '(max-width: 760px)';
 
-  constructor(storage) {
+  constructor(storage, win = null) {
     this._storage = storage;
+    this._win = win;
   }
 
   getSidebarCollapsed() {
-    return Promise.resolve(this._get(LocalPrefs.SIDEBAR_KEY, '0') === '1');
+    const stored = this._get(LocalPrefs.SIDEBAR_KEY, null);
+    return Promise.resolve(stored == null ? this._narrowScreen() : stored === '1');
   }
 
   setSidebarCollapsed(collapsed) {
@@ -18,6 +21,14 @@ export default class LocalPrefs {
   setLastModelRef(ref) {
     this._set(LocalPrefs.MODEL_KEY, ref);
     return Promise.resolve({ success: true });
+  }
+
+  _narrowScreen() {
+    try {
+      return !!(this._win && this._win.matchMedia && this._win.matchMedia(LocalPrefs.NARROW_QUERY).matches);
+    } catch (_) {
+      return false;
+    }
   }
 
   _get(key, fallback) {

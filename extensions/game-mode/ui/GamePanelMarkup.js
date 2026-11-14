@@ -1,7 +1,7 @@
 import HtmlEscaper from '../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 
 export default class GamePanelMarkup {
-  static STATUS_LABEL = { editing: 'Building', error: 'Needs fixing' };
+  static STATUS_LABEL = { editing: 'Building', ready: 'Ready', error: 'Needs fixing', stopped: 'Stopped' };
 
   static ASSET_LABEL = { pending: 'Generating…', done: 'Generated', placeholder: 'Placeholder', error: 'Failed' };
 

@@ -29,3 +29,7 @@ rim. Listening uses the ember accent, not a status green.
 Read: `window.onDemandAPI` (preload), `localStorage` (`od.speak`,
 `od.autoVoice`), `navigator.mediaDevices`, `AudioContext`, `performance`,
 animation frames. Written: none (legacy `window.OdVoice` is gone).
+
+## Listening on open
+
+When the panel expands it starts the microphone only if the state from main allows it (`autoListen` not false, the Settings switch), the panel's own memory allows it (`od.autoVoice`, off after the user switched the microphone off here), speech recognition is set up and a model is ready. A state without `autoListen` (an older main process) counts as allowed.

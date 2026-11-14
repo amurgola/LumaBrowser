@@ -6,10 +6,15 @@ class TabPreviewManager extends EventEmitter {
   static MODE_KEY = 'core.chat.tabPreview';
   static FRAME_INTERVAL_MS = 1500;
   static HIDDEN_BOUNDS = { x: 0, y: 0, width: 0, height: 0 };
+  static CAPTURE_SIZE = { width: 1024, height: 640 };
+  static CAPTURE_WAIT_MS = 1000;
+  static CAPTURE_POLL_MS = 50;
   static DOC_HEIGHT_SCRIPT = 'Math.max(document.documentElement.scrollHeight||0, document.body ? document.body.scrollHeight||0 : 0)';
 
-  constructor(mainWindow, tabViewManager, { db } = {}) {
+  constructor(mainWindow, tabViewManager, { db, captureWaitMs = TabPreviewManager.CAPTURE_WAIT_MS, capturePollMs = TabPreviewManager.CAPTURE_POLL_MS } = {}) {
     super();
+    this._captureWaitMs = captureWaitMs;
+    this._capturePollMs = capturePollMs;
     this.mainWindow = mainWindow;
     this.tabViewManager = tabViewManager;
     this.preview = null;
@@ -74,15 +79,59 @@ class TabPreviewManager extends EventEmitter {
   }
 
   async captureFrame({ maxWidth = 640, quality = 70 } = {}) {
-    const entry = this.preview ? this.tabViewManager.getEntry(this.preview.tabId) : null;
+    const p = this.preview;
+    const entry = p ? this.tabViewManager.getEntry(p.tabId) : null;
     if (!entry) return null;
+    const lent = this._isOffScreen(p) && this._lendPlaceUnderneath(entry, p);
     try {
-      const image = await entry.webContents.capturePage();
+      const image = lent ? await this._firstPaintedImage(entry) : await entry.webContents.capturePage();
       if (!image || image.isEmpty()) return null;
       return TabPreviewManager._encodeFrame(image, maxWidth, quality);
     } catch (_) {
       return null;
+    } finally {
+      if (lent) this._takeBackLentPlace(entry, p);
     }
+  }
+
+  _isOffScreen(p) {
+    return !p.shown && this.tabViewManager.activeTabId !== p.tabId;
+  }
+
+  _lendPlaceUnderneath(entry, p) {
+    const content = this.tabViewManager.currentBounds;
+    if (!content || !content.width || !content.height) return false;
+    const size = p.lastSize || TabPreviewManager.CAPTURE_SIZE;
+    try {
+      this.mainWindow.contentView.removeChildView(entry.view);
+      this.mainWindow.contentView.addChildView(entry.view, 0);
+      entry.view.setBounds({
+        x: content.x, y: content.y, width: Math.min(size.width, content.width), height: Math.min(size.height, content.height),
+      });
+      entry.view.setVisible(true);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async _firstPaintedImage(entry) {
+    const deadline = Date.now() + this._captureWaitMs;
+    for (;;) {
+      const image = await entry.webContents.capturePage();
+      if (image && !image.isEmpty()) return image;
+      if (Date.now() >= deadline) return null;
+      await new Promise((resolve) => setTimeout(resolve, this._capturePollMs));
+    }
+  }
+
+  _takeBackLentPlace(entry, p) {
+    if (this.preview === p && p.shown) return;
+    if (this.tabViewManager.activeTabId === p.tabId) return;
+    try {
+      entry.view.setVisible(false);
+      entry.view.setBounds(TabPreviewManager.HIDDEN_BOUNDS);
+    } catch (_) {}
   }
 
   reapply() {
@@ -172,6 +221,7 @@ class TabPreviewManager extends EventEmitter {
       entry.view.setVisible(true);
       entry.view.setBounds(bounds);
       p.shown = true;
+      p.lastSize = { width: bounds.width, height: bounds.height };
       this._fitZoom(bounds);
     } catch (err) {
       console.warn('[TabPreviewManager] apply failed:', err && err.message);

@@ -1,4 +1,5 @@
 import Dom from '../../dom/Dom.js';
+import PlacementStaleNotice from './PlacementStaleNotice.js';
 
 export default class PlacementControls {
   static SNAPSHOT_REFRESH_MS = 1500;
@@ -32,7 +33,7 @@ export default class PlacementControls {
     const payload = this._savePayload(row);
     try {
       const r = await api.setConfig(payload);
-      if (r && r.success) this._saved(r.config);
+      if (r && r.success) await this._saved(r.config);
       else this._view.status('Save failed: ' + ((r && r.error) || 'unknown'));
     } catch (e) { this._view.status('Save failed: ' + (e && e.message)); }
   }
@@ -73,9 +74,11 @@ export default class PlacementControls {
     return { layout: this._view.model.layout, autoStart, autoStopMs };
   }
 
-  _saved(config) {
+  async _saved(config) {
     this._view.model.applyConfig(config);
     this._view.render();
-    this._view.status('Saved.' + (this._view.model.canApply ? '' : ' Run a test render to enable allocation.'));
+    await this._view.refreshSnapshot();
+    this._view.status('Saved.' + (this._view.model.canApply ? '' : ' Run a test render to enable allocation.')
+      + (this._view.stale.entries().length ? PlacementStaleNotice.SAVED_HINT : ''));
   }
 }

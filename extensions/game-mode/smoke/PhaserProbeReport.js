@@ -14,10 +14,16 @@ class PhaserProbeReport {
     return lines;
   }
 
+  static nanObjects(games) {
+    let count = 0;
+    for (const g of games || []) for (const sc of g.scenes || []) count += Number(sc.nan) || 0;
+    return count;
+  }
+
   static _scene(sc) {
     const types = Object.entries(sc.byType || {}).map(([t, n]) => `${t}×${n}`).join(', ');
     const objLines = (sc.list || []).map((o) => `    - ${PhaserProbeReport._object(o)}`);
-    return `  scene "${sc.key}": ${sc.objects} objects (${sc.visible} visible${types ? `: ${types}` : ''}); ${PhaserProbeReport._camera(sc.camera)}`
+    return `  scene "${sc.key}": ${sc.objects} objects (${sc.visible} visible${types ? `: ${types}` : ''})${sc.nan ? `, ${sc.nan} with a NaN POSITION` : ''}; ${PhaserProbeReport._camera(sc.camera)}`
       + (sc.textures && sc.textures.length ? `; textures in use: ${sc.textures.join(', ')}` : '')
       + (objLines.length ? `\n${objLines.join('\n')}` : '');
   }
@@ -31,7 +37,8 @@ class PhaserProbeReport {
   }
 
   static _object(o) {
-    const bits = [`${o.type}${o.tex ? `[${o.tex}]` : ''} @(${o.x},${o.y})`, `depth ${o.depth}`];
+    const at = o.nan ? '@(NaN) POSITION IS NaN' : `@(${o.x},${o.y})`;
+    const bits = [`${o.type}${o.tex ? `[${o.tex}]` : ''} ${at}`, `depth ${o.depth}`];
     if (o.w != null || o.h != null) bits.push(`${o.w}x${o.h}`);
     if (o.alpha !== 1) bits.push(`alpha ${o.alpha}`);
     if (o.visible === false) bits.push('HIDDEN');

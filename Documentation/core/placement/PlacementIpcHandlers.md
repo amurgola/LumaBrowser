@@ -19,6 +19,8 @@ IPC controller for the Advanced tab's unified model placement: routes
   - `core.placement.getHotswapInfo` -> `{ info }` (RAM-sufficiency gate and suggested card for hotswap mode)
   - `core.placement.previewRig(rigId)` -> `previewRig(rigId)` as is: `{ rigs, preview }` (read-only)
   - `core.placement.start` / `core.placement.stop` -> `startAll()` / `stopAll()` replies as-is
+  - `core.placement.reloadStale` -> `reloadStale()`: `{ stopped }`, the items unloaded because the saved layout
+    places them elsewhere
   - `core.placement.runTest` -> `runTest(send)`; progress streams to the invoking
     renderer on `core.placement.testEvent` as `{ type, payload }`. A throw also
     sends `{ type: 'error', payload: { message } }` before the failure reply.

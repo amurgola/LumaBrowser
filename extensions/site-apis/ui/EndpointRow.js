@@ -8,11 +8,12 @@ import RunList from './RunList.js';
 export default class EndpointRow {
   static COPY_RESET_MS = 1500;
 
-  constructor({ site, endpoint, invoke, reload, runList }) {
+  constructor({ site, endpoint, invoke, reload, openDetails, runList }) {
     this._site = site;
     this._endpoint = endpoint;
     this._invoke = invoke;
     this._reload = reload;
+    this._openDetails = openDetails;
     this._runList = runList || new RunList(invoke);
     this._detail = null;
     this._open = null;
@@ -32,23 +33,41 @@ export default class EndpointRow {
     row.appendChild(this._actions());
     this._detail = Dom.el('div', 'sapi-detail ext-hidden');
     row.appendChild(this._detail);
+    this._restoreDetail();
     return row;
   }
 
   toggle(which) {
     if (this._open === which) { this._close(); return; }
+    this._openDetails.open(this._endpoint, which);
+    this._show(which, null);
+  }
+
+  _restoreDetail() {
+    const saved = this._openDetails.restore(this._endpoint);
+    if (saved) this._show(saved.which, saved);
+  }
+
+  _show(which, saved) {
     this._open = which;
     this._detail.textContent = '';
     this._detail.classList.remove('ext-hidden');
     if (which === 'run') {
-      const form = new RunForm({ site: this._site, endpoint: this._endpoint, invoke: this._invoke, onRan: () => this._reload() });
+      const form = new RunForm({ site: this._site, endpoint: this._endpoint, invoke: this._invoke, onRan: (result, values) => this._ran(result, values) });
       this._detail.appendChild(form.render());
+      if (saved) form.restore(saved);
       return;
     }
     this._runList.load(this._endpoint.id, this._detail);
   }
 
+  _ran(result, values) {
+    this._openDetails.ran(this._endpoint.id, values, result);
+    this._reload();
+  }
+
   _close() {
+    this._openDetails.close(this._endpoint.id);
     this._open = null;
     this._detail.textContent = '';
     this._detail.classList.add('ext-hidden');

@@ -61,6 +61,12 @@ class PlacementServers {
     }
   }
 
+  async stop(itemKey) {
+    if (itemKey === 'music') return this.music.stopServer();
+    if (itemKey === 'grounding') return this.grounding.stop();
+    return this._runtimeServerOf(itemKey).stop();
+  }
+
   _runtimeServerOf(itemKey) {
     switch (itemKey) {
       case 'llm': return this.llm.runtimeServer;

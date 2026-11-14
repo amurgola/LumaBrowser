@@ -15,7 +15,8 @@ class ImageSlotPicker {
 
   static requestRole({ explicitRole, model, wantId, defaults }) {
     if (explicitRole) return explicitRole;
-    const isEdit = (model && model.kind === 'edit') || wantId === (defaults && defaults.editModelId);
+    const onlyEditDefault = !!defaults && wantId === defaults.editModelId && wantId !== defaults.modelId;
+    const isEdit = (model && model.kind === 'edit') || onlyEditDefault;
     return isEdit ? ImageSlotPicker.EDIT : ImageSlotPicker.GENERATE;
   }
 

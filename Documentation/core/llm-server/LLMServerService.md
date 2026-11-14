@@ -152,3 +152,7 @@ and RAM pin through this facade, which is why those stay public methods here.
 ## Changes (2026-11-09, helper model)
 
 `helperModel` (a [HelperModelService](helper/HelperModelService.md)) is a fourth companion built in `_createCompanions` (seam `deps.helperModel`); `LlmDefaults` gets its settings; `releaseRuntime` also releases it and resolves `{ server, router, helper }`; `resumeRuntime` applies it back; `shutdown` stops it.
+
+## Defaults listeners (2026-11-14)
+
+`onDefaultsChanged(listener)` registers `listener(defaults)`, called after every `setDefaults(patch)`. Every writer of the defaults comes through `setDefaults` (the Setup card and the chat's model picker over IPC, the router switching models in LocalServerPrep, tools), so a listener hears of a change whoever made it. A throwing listener never fails the save. [LlmServerBroadcast](ipc/LlmServerBroadcast.md)`.relayDefaults` is the one listener today.

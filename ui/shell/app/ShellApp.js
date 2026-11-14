@@ -134,7 +134,7 @@ export default class ShellApp {
     });
     this.prompts = new PermissionPrompts({ store, addressBar: this.addressBar });
     this.popupBadge = new PopupBlockedBadge({ store, popupMenu });
-    this.siteInfo = new SiteInfoMenu({ store, popupMenu, openSettings: () => this.settings.open('privacy') });
+    this.siteInfo = new SiteInfoMenu({ store, popupMenu, host, openSettings: () => this.settings.open('privacy') });
     const openPasswords = () => this.settings.open('passwords');
     this.vaultKey = new VaultKeyBadge({ store, popupMenu, openPasswords });
     this.vaultPrompt = new VaultSavePrompt({ store, addressBar: this.addressBar, onAnswered: () => this.vaultKey.update(store.active()) });
@@ -235,7 +235,7 @@ export default class ShellApp {
       store: this.store, strip: this.strip, addressBar: this.addressBar, nav: this.nav, chromeKind: this.chromeKind,
       star: this.star, popupBadge: this.popupBadge, vaultKey: this.vaultKey, vaultPrompt: this.vaultPrompt, favicons: this.favicons, closedTabs: this.closedTabs, persistedMenu: this.persistedMenu,
       prompts: this.prompts, autocomplete: this.autocomplete, findBar: this.findBar, editBar: this.editBar,
-      host: this.host, bounds: this.bounds, browserRenderer: this.browserRenderer,
+      host: this.host, bounds: this.bounds, browserRenderer: this.browserRenderer, siteInfo: this.siteInfo,
     });
   }
 

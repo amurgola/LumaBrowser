@@ -21,6 +21,8 @@ No method throws; an absent or failing service reads as null.
 - `imageDefaults()`, `musicDefaults()` (`{}` when unreadable), `musicEnabled()`.
 - `isAvailable()` LLM `runtimeId` and `modelPath`, and image `runtimeId` and `modelId`.
 - `applyAutoStop(ms)` `setAutoUnloadMs(ms)` on the LLM, image and music services.
+- `async stop(item)` unloads one item's model: `music.stopServer()`, `grounding.stop()`, otherwise the item's
+  supervisor `stop()`. Unlike the readers above it throws when the service is absent or the stop fails.
 
 ## Why
 

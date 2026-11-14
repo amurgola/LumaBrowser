@@ -18,6 +18,7 @@ export default class BrowserDataSettings {
     await this._loadStartPage();
     await this._loadSearchEngine();
     await this._loadOnDemand();
+    await this._loadOnDemandAutoListen();
     await this._loadBookmarksBar();
     await this._loadDarkMode();
   }
@@ -95,6 +96,21 @@ export default class BrowserDataSettings {
     toggle.addEventListener('change', async () => {
       try {
         await window.ipcBridge.invoke('on-demand:set-enabled', toggle.checked);
+        this._feedback.markSaved(toggle, true);
+      } catch (e) {
+        this._feedback.markSaved(toggle, false, e.message);
+      }
+    });
+  }
+
+  async _loadOnDemandAutoListen() {
+    const toggle = document.getElementById('gsOnDemandAutoListen');
+    if (!toggle) return;
+    try { toggle.checked = (await window.ipcBridge.invoke('on-demand:get-auto-listen')) !== false; }
+    catch (_) { toggle.checked = true; }
+    toggle.addEventListener('change', async () => {
+      try {
+        await window.ipcBridge.invoke('on-demand:set-auto-listen', toggle.checked);
         this._feedback.markSaved(toggle, true);
       } catch (e) {
         this._feedback.markSaved(toggle, false, e.message);

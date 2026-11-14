@@ -16,6 +16,8 @@ class LoopFeedback {
       + 'page left unchanged each time.',
     'stale-search': (f) => `Heads-up: the last ${f.facts.searches} searches turned up almost nothing that earlier `
       + 'results had not already shown.',
+    'uncompiled-reads': (f) => `Heads-up: the page has now been read ${f.facts.reads} times in a row and no endpoint `
+      + 'has been compiled.',
   };
 
   static REDIRECT = {
@@ -26,6 +28,8 @@ class LoopFeedback {
       + 'to locate.',
     'stale-search': 'If the results answer the question, write your reply; otherwise open a result URL to read it '
       + 'in full.',
+    'uncompiled-reads': 'Compile the endpoint now with the fields that already extract. If a field cannot be '
+      + 'extracted as asked, stop reading and tell the user which field and why.',
   };
 
   static compose(finding, level) {

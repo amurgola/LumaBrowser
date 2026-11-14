@@ -26,6 +26,8 @@ export default class DefaultsCard {
     this._helperHint = new HelperModelHint(ctx);
     this._autoPinInFlight = null;
     this._saveNoteTimer = null;
+    this._renderedForm = null;
+    this._followOutsideChanges();
   }
 
   async render() {
@@ -52,7 +54,9 @@ export default class DefaultsCard {
   }
 
   async onChange() {
-    const res = await this._ctx.api.setDefaults(DefaultsForm.read(this._ctx.doc));
+    const patch = DefaultsForm.changes(this._renderedForm, DefaultsForm.read(this._ctx.doc));
+    if (!Object.keys(patch).length) return;
+    const res = await this._ctx.api.setDefaults(patch);
     if (!(res && res.success)) return;
     this.renderView(res.defaults);
     this.showSaveNote(!!res.serverStopped);
@@ -67,11 +71,12 @@ export default class DefaultsCard {
     if (this._saveNoteTimer) { clearTimeout(this._saveNoteTimer); this._saveNoteTimer = null; }
     const note = doc.createElement('div');
     note.id = 'defaultsSaveNote';
-    note.className = 'defaults-save-note' + (serverStopped ? ' stopped' : '');
+    note.className = serverStopped ? 'defaults-save-note stopped' : 'defaults-saved';
     note.textContent = serverStopped
       ? 'Saved. The running model was stopped so the new settings can apply; it relaunches automatically on your next chat message.'
       : 'Saved.';
-    body.prepend(note);
+    if (serverStopped) body.prepend(note);
+    else doc.getElementById('defaultsPill').before(note);
     if (!serverStopped) this._saveNoteTimer = setTimeout(() => { note.remove(); this._saveNoteTimer = null; }, DefaultsCard.SAVE_NOTE_MS);
   }
 
@@ -127,6 +132,17 @@ export default class DefaultsCard {
     } catch (_) {}
   }
 
+  _followOutsideChanges() {
+    const api = this._ctx.api;
+    if (!api || typeof api.onServerEvent !== 'function') return;
+    api.onServerEvent((event) => {
+      if (!event || event.type !== 'defaults-changed' || !this._ctx.lastDefaults) return;
+      const defaults = event.payload && event.payload.defaults;
+      if (!defaults || JSON.stringify(defaults) === JSON.stringify(this._ctx.lastDefaults)) return;
+      this.renderView(defaults);
+    });
+  }
+
   _wire() {
     const doc = this._ctx.doc;
     for (const id of DefaultsCard.SHARED_CONTROLS) {
@@ -138,6 +154,7 @@ export default class DefaultsCard {
     this._helperHint.refresh();
     PeerGpusHint.fill(this._ctx.api, doc);
     this._wireOwnSaves();
+    this._renderedForm = DefaultsForm.read(doc);
   }
 
   _wireOwnSaves() {

@@ -34,7 +34,7 @@ class OnDemandWindowFactory {
       skipTaskbar: true,
       focusable: true,
       roundedCorners: false,
-      title: 'Luma On Demand',
+      title: 'Luma Live',
       width: side,
       height: side,
       webPreferences: {

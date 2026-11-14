@@ -21,12 +21,18 @@ One launch of a model on an image slot. A new instance per launch, created by
      refuse missing API keys. Then
      [PreferredImageRuntime](PreferredImageRuntime.md)`.pick` may move this
      launch onto a runtime the model's row prefers (MiniMax-H3 onto the LumaByte
-     build when installed); settings are untouched.
+     build when installed and new enough); settings are untouched. Its `error`
+     (the runtime left to launch is older than the row's `minRuntimeTags`, for
+     example an `sd-cpp-luma` before `luma-b4` for MiniMax-H3-Image) is the last
+     refusal, before any port or VRAM work (ISSUES.md entry 11).
   3. Two ports from the slot's window: public (auth proxy) then private (sd-server, loopback).
   4. `hotswap.acquire(role)`; when it evicted a sibling, re-read live VRAM.
   5. `placement.place(...)` with `ImageSlotPlacement.requiredBytes(model, role)`.
      When [ChatSwapOut](ChatSwapOut.md)`.cardToFree` names a card (a RAM offload
-     onto a card the automatic chat model fills), `hotswap.swapOut(role, ['llm'],
+     onto a card the automatic chat model fills, or on a one card box a model
+     whose need exceeds the room the chat model leaves; it is handed the ledger
+     debited cards without this slot's own claim and the required bytes; never
+     asked on a CPU runtime), `hotswap.swapOut(role, ['llm'],
      card)` stops the chat model and waits for the card, a log line says so, live
      VRAM is re-read and the model is placed again. The chat model's next start
      evicts this model through the same round-trip pool.

@@ -14,9 +14,10 @@
 
   .cm-composer-bar { padding: 10px 12px calc(max(14px, env(safe-area-inset-bottom)) + var(--cm-bar-slack, 0px)); }
   .cm-composer { padding: 12px 12px 8px; }
-  .cm-composer-row { gap: 6px; }
+  .cm-composer-row { gap: 6px; flex-wrap: wrap; }
   .cm-composer-left { gap: 6px; }
-  .cm-composer-right { gap: 6px; min-width: 0; }
+  .cm-composer-right { gap: 6px; min-width: 0; margin-left: auto; }
+  .cm-send { flex: none; }
   .cm-tools { padding: 0 10px 0 9px; font-size: var(--text-sm); }
   .cm-model-pill { border-color: var(--border-strong); padding: 5px 11px; }
   .cm-model-pill b, .cm-model-pill .cm-caret { display: none; }

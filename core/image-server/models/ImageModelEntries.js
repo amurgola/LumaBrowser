@@ -999,6 +999,7 @@ class ImageModelEntries {
       launchArgs: ['--rng', 'cpu'],
       vaeTiling: false,
       preferredRuntimes: ['sd-cpp-luma'],
+      minRuntimeTags: { 'sd-cpp-luma': 'luma-b4' },
       protocol: 'sd-cpp-http',
       compatibleRuntimes: [...SD_CPP_RUNTIMES],
     },

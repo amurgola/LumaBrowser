@@ -16,7 +16,8 @@ State and arithmetic: [PlacementLayoutModel](PlacementLayoutModel.md),
 [PlacementFit](PlacementFit.md), [LlmSplit](LlmSplit.md), [RemoteRefs](RemoteRefs.md),
 [PlacementItems](PlacementItems.md), [PlacementText](PlacementText.md).
 Rendering: [PlacementRows](PlacementRows.md), [PlacementLanes](PlacementLanes.md),
-[PlacementChips](PlacementChips.md), [DropTargets](DropTargets.md),
+[PlacementChips](PlacementChips.md), [PlacementRunningMarks](PlacementRunningMarks.md),
+[PlacementStaleNotice](PlacementStaleNotice.md), [DropTargets](DropTargets.md),
 [SplitEditorPanel](SplitEditorPanel.md), [PlacementControls](PlacementControls.md),
 [TestRenderPanel](TestRenderPanel.md), [TestRenderTables](TestRenderTables.md),
 [PromptPreviewPanel](PromptPreviewPanel.md), [AdvancedStyles](AdvancedStyles.md).
@@ -34,8 +35,9 @@ Example PC preview: [PlacementPreviewMode](PlacementPreviewMode.md).
   `openers.advanced`): applies the current sub-tab, injects the styles, wires
   Auto-arrange, loads the config and VRAM snapshot, renders. Without a placement
   API the body reads "Placement API unavailable."
-- `render()`: the example PC row, then gate, context row, split editor, Automatic
-  tray, combine row, lanes, chips, controls, test render, prompt preview. While an
+- `render()`: the example PC row, then gate, the stale notice (when a running model is not where the saved
+  layout puts it), context row, split editor, Automatic
+  tray, combine row, lanes, chips, running marks, controls, test render, prompt preview. While an
   example PC is previewed it draws only the row, the preview banner, the tray, the
   lanes and the chips, adds `adv-previewing` to `#advBody` and disables
   `#advAutoArrange`. `open()` always returns to this PC.

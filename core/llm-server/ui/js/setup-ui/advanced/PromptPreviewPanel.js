@@ -4,6 +4,9 @@ import HtmlEscaper from '../../format/HtmlEscaper.js';
 export default class PromptPreviewPanel {
   constructor(chatApi) {
     this._chatApi = chatApi;
+    this._panel = null;
+    this._last = null;
+    this._withImages = false;
   }
 
   render(body) {
@@ -17,10 +20,9 @@ export default class PromptPreviewPanel {
       + '<div class="adv-prompt-segs" id="advPromptSegs"></div>'
       + '<pre class="adv-prompt-out" id="advPromptOut" hidden></pre>');
     body.appendChild(panel);
-    panel.querySelector('#advPromptBtn').addEventListener('click', () => this.show(panel));
-    panel.querySelector('#advPromptImg').addEventListener('change', () => {
-      if (!panel.querySelector('#advPromptOut').hidden) this.show(panel);
-    });
+    this._panel = panel;
+    this._wire(panel);
+    this._restore(panel);
   }
 
   async show(panel) {
@@ -28,13 +30,8 @@ export default class PromptPreviewPanel {
     const parts = PromptPreviewPanel._parts(panel);
     if (!api || !api.previewSystemPrompt) { parts.status.textContent = 'Preview API unavailable.'; return; }
     parts.status.textContent = 'Building…';
-    try {
-      const r = await api.previewSystemPrompt({ withImages: parts.withImages.checked ? 1 : 0 });
-      if (r && r.success && typeof r.prompt === 'string') PromptPreviewPanel._paint(parts, r);
-      else PromptPreviewPanel._fail(parts, (r && r.error) || 'unknown');
-    } catch (e) {
-      PromptPreviewPanel._fail(parts, e && e.message);
-    }
+    this._last = await PromptPreviewPanel._fetch(api, this._withImages);
+    this._restore(this._panel || panel);
   }
 
   static summary(r) {
@@ -42,6 +39,32 @@ export default class PromptPreviewPanel {
     const extBit = (r.extTools && r.extTools.length) ? ' · ' + r.extTools.length + ' extension tool(s)' : '';
     const tokens = (r.tokensEstimate != null) ? r.tokensEstimate : Math.ceil(Number(r.chars || 0) / 4);
     return '~' + Number(tokens).toLocaleString() + ' tokens · ' + toolBit + extBit;
+  }
+
+  _wire(panel) {
+    panel.querySelector('#advPromptBtn').addEventListener('click', () => this.show(panel));
+    panel.querySelector('#advPromptImg').addEventListener('change', (event) => {
+      this._withImages = event.target.checked;
+      if (!panel.querySelector('#advPromptOut').hidden) this.show(panel);
+    });
+  }
+
+  _restore(panel) {
+    const parts = PromptPreviewPanel._parts(panel);
+    parts.withImages.checked = this._withImages;
+    if (!this._last) return;
+    if (this._last.response) PromptPreviewPanel._paint(parts, this._last.response);
+    else PromptPreviewPanel._fail(parts, this._last.error);
+  }
+
+  static async _fetch(api, withImages) {
+    try {
+      const r = await api.previewSystemPrompt({ withImages: withImages ? 1 : 0 });
+      if (r && r.success && typeof r.prompt === 'string') return { response: r };
+      return { error: (r && r.error) || 'unknown' };
+    } catch (e) {
+      return { error: e && e.message };
+    }
   }
 
   static _parts(panel) {

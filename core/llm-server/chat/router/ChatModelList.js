@@ -3,6 +3,8 @@ const ProviderConfigService = require('../../../llm-service/ProviderConfigServic
 const StoredProviderConfigs = require('../../../llm-service/service/StoredProviderConfigs');
 
 class ChatModelList {
+  static HOST_LOCAL_PREFIX = 'Local · ';
+
   constructor({ llmServerService, db }) {
     this._service = llmServerService;
     this._db = db;
@@ -60,7 +62,7 @@ class ChatModelList {
     const out = [];
     for (const config of this._db.get('llm.providerConfigs', []) || []) {
       if (!config || config.managedByCore || !config.endpoint) continue;
-      for (const modelId of ChatModelList._modelIdsOf(config)) out.push(ChatModelList._remoteRow(config, modelId));
+      for (const model of ChatModelList._modelsOf(config)) out.push(ChatModelList._remoteRow(config, model));
     }
     return out;
   }
@@ -95,22 +97,30 @@ class ChatModelList {
     };
   }
 
-  static _modelIdsOf(config) {
-    const ids = (Array.isArray(config.models) && config.models.length)
-      ? config.models.map((m) => m.id)
-      : (config.selectedModel ? [config.selectedModel] : []);
-    return [...new Set(ids.filter(Boolean))];
+  static _modelsOf(config) {
+    const models = (Array.isArray(config.models) && config.models.length)
+      ? config.models
+      : (config.selectedModel ? [{ id: config.selectedModel }] : []);
+    const seen = new Set();
+    return models.filter((model) => model && model.id && !seen.has(model.id) && seen.add(model.id));
   }
 
-  static _remoteRow(config, modelId) {
+  static _remoteRow(config, model) {
     return {
-      ref: `${config.id}::${modelId}`,
-      label: `${config.name || config.type}: ${modelId}`,
+      ref: `${config.id}::${model.id}`,
+      label: `${config.name || config.type}: ${ChatModelList._remoteName(model)}`,
       providerId: config.id,
       providerType: config.type,
       isLocal: false,
       ready: true,
+      ...(model.luma_kind === 'helper' ? { role: 'helper' } : {}),
     };
+  }
+
+  static _remoteName(model) {
+    const label = typeof model.luma_label === 'string' ? model.luma_label.trim() : '';
+    if (!label) return model.id;
+    return label.startsWith(ChatModelList.HOST_LOCAL_PREFIX) ? label.slice(ChatModelList.HOST_LOCAL_PREFIX.length) : label;
   }
 
   _defaultRef(models) {

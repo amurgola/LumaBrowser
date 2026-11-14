@@ -14,6 +14,7 @@ class PlacementApi extends PreloadSection {
         previewRig: (rigId) => ipcRenderer.invoke('core.placement.previewRig', rigId),
         start: () => ipcRenderer.invoke('core.placement.start'),
         stop: () => ipcRenderer.invoke('core.placement.stop'),
+        reloadStale: () => ipcRenderer.invoke('core.placement.reloadStale'),
         runTest: () => ipcRenderer.invoke('core.placement.runTest'),
         onTestEvent: PreloadSection.subscribe(ipcRenderer, 'core.placement.testEvent'),
       },

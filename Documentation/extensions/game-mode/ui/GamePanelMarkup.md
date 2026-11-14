@@ -13,7 +13,7 @@ The status card's markup.
 - `GamePanelMarkup.assetDot(asset)`: `ok` done, `bad` error, `writing`
   pending, else `queued`; title from `ASSET_LABEL`.
 - `GamePanelMarkup.html(game, collapsed)`: head (name, `AI` tag for AI games,
-  status from `STATUS_LABEL`, collapse toggle), one `.gm-row` per file then
+  status from `STATUS_LABEL`: Building, Ready, Needs fixing or Stopped; collapse toggle), one `.gm-row` per file then
   asset, Play / Pop out, Export zip plus Share link (web) or New game (AI),
   and a hidden `.gm-note`. Buttons are disabled until `playable`. Text is
   escaped with `HtmlEscaper.escapeText` (`&`, `<`, `>`), as legacy did.

@@ -12,7 +12,8 @@ Applies main's tab events: `tab:state` (mirror, strip, toolbar for the active ta
   tab) the full order from `tabAPI.getOrder()` re-sorts the strip.
 - The active tab's state also updates the address bar's blocked pop-up badge (`popupBadge`) and, when its URL changed
   or another tab became active, the saved-password key (`vaultKey`); a switch re-renders the save-password bubble
-  (`vaultPrompt`) so only the active tab's offer shows.
+  (`vaultPrompt`) so only the active tab's offer shows. It also tells the site info popup (`siteInfo.onNavigated`),
+  which closes when its tab has moved to another site.
 
 ## Globals
 

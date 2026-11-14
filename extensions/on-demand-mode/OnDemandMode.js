@@ -21,8 +21,8 @@ class OnDemandMode {
   descriptor() {
     return {
       id: OnDemandMode.MODE_ID,
-      label: 'Luma On Demand',
-      description: 'The page assistant behind the floating Live panel: acts on the tab you are looking at.',
+      label: 'Luma Live',
+      description: 'The page assistant behind the floating Luma Live panel: acts on the tab you are looking at.',
       requirements: ['llm'],
       hidden: true,
       agent: true,

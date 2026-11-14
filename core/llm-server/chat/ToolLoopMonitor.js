@@ -8,11 +8,12 @@ const LoopTelemetry = require('./tool-loop/LoopTelemetry');
 const ResultNovelty = require('./tool-loop/ResultNovelty');
 const SearchAllowanceCheck = require('./tool-loop/SearchAllowanceCheck');
 const StaleSearchCheck = require('./tool-loop/StaleSearchCheck');
+const UncompiledReadsCheck = require('./tool-loop/UncompiledReadsCheck');
 
 class ToolLoopMonitor {
   static PROGRESS_NOVELTY = 0.5;
 
-  constructor({ searchAllowance } = {}) {
+  constructor({ searchAllowance, modeTools } = {}) {
     this._history = new CallHistory();
     this._novelty = new ResultNovelty();
     this._ladder = new InterventionLadder();
@@ -21,6 +22,7 @@ class ToolLoopMonitor {
     this._checks = [
       new IdenticalStreakCheck(), new EchoedLookupCheck(), this._searches, new InertActionCheck(), new StaleSearchCheck(),
     ];
+    if (UncompiledReadsCheck.appliesTo(modeTools)) this._checks.push(new UncompiledReadsCheck());
   }
 
   async attempt(name, params, run) {

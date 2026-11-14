@@ -22,7 +22,12 @@ Executes one agent tool call on the working tab.
   `result.note` to "The page asked to wait; after Ns it moved on by itself to
   <url>. The elements below are that page."; one that never moved sets
   `InterstitialWait.STILL_WAITING_NOTE`. Skipped without `browserService.executeJs`.
-- `create_tab` with a url: same, on the new tab.
+- `create_tab` with a url: same, on the new tab. Every successful `create_tab`
+  records the new tab's id (`result.data.id`); `openedTabIds` answers a copy,
+  oldest first. [AgentRun](AgentRun.md) puts it on the run result so
+  [BridgeRun](../chat/bridge/BridgeRun.md) can close those tabs after a
+  background run (ISSUES.md 23: nothing recorded them, so each scheduled task
+  run that opened one left it in the strip).
 - `click`, `type`, `click_at`, `locate`: on a URL change, wait 800 ms, wait out
   an interstitial the same way, and attach the new page's digest (the old
   page's refs died with it).

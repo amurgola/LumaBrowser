@@ -1,5 +1,52 @@
 # Changelog
 
+## 2.1.9
+
+### New features
+- **Luma On Demand is now Luma Live, with a switch for its microphone (Settings > General > Luma in the browser):** the tile on web pages and its panel had two names, "Luma On Demand" and "the Live panel". Both are now Luma Live, in Settings, the search palette, the tile's tooltip and the assistant's own name. Searching "on demand" still finds it, and nothing stored changes.
+  - **"Listen when Luma Live opens"** (on by default): the panel starts listening as soon as it opens, unless you last switched its microphone off there. Turn it off to always wait for a click on the microphone. A panel opened in a room where people are talking picked up that speech and sent it to the page as a command.
+- **The placement canvas shows where each model is loaded, and can apply a saved layout (LLM > Advanced > Model placement):** a layout is read when a model loads, so saving one never moved a model that was already running, and nothing on screen said so. A chat model left on the smaller card ran at a seventh of its speed until every model was stopped by hand.
+  - A "Saved, not applied yet" notice above the lanes lists each running model the saved layout puts somewhere else: where it is now and where the layout wants it. "Unload to apply" unloads only those models, and each loads in its saved place the next time it is used. Nothing is unloaded without that click, since an unload ends a reply or a render in progress.
+  - A dashed "running here" mark (or "loading here", with "partly in RAM" for an offload) sits in the lane of each card a loaded model is on, when its chip is not already there. An automatic model's chip stays in the Automatic tray, so the canvas had no way to say which card it had landed on.
+- **The Scheduled Task form creates the task without a second approval.** Pressing "Start task setup" is the go-ahead. The create step used to wait on an approval card inside the turn's step list, and a user who did not notice it within two minutes got no task and no clear reason. The form now says that starting setup creates the task, the create step stays open in the chat with what was made ("Created "name", runs every hour"), and the reply quotes the run prompt as stored.
+  - This covers only that first create call. Changing a task, running it now, a setup that went through questions in chat and a task described by typing still ask.
+
+### Changes
+- **An image runtime too old for a model is skipped, or refused with a message that says to update it.** Installs fetch the latest release and nothing checked the version afterwards, so a LumaByte stable-diffusion.cpp install from before `luma-b4` was picked for MiniMax-H3-Image and failed with "get sd version from file failed". An old preferred runtime is now passed over for the configured one. When the old one is the runtime that would launch, the render stops before any loading with the build it needs and where to update it (Setup > Image > Image runtimes). A hand-built or PATH binary with no release tag is never blocked.
+- **On a one-card PC, an image model that does not fit beside the chat model takes its place.** 2.1.8 added this for two cards. With one card the image model was loaded into whatever VRAM the chat model left. Its need is now weighed against the card's free room: if it does not fit, the chat model is stopped first and comes back on the next chat turn. A model that fits still loads beside it.
+  - Choosing a GPU for the image model counts as placing it yourself, as choosing one for the chat model already did.
+  - Saving a placement layout while the chat model is swapped out no longer brings it back beside the image model it made room for.
+- **With one model as both the generation and the edit default, chat pictures use the generation slot.** They ran on the edit slot, so the Image Generate chip on the placement canvas decided nothing, and a layout that boxed chat, Image Generate and Video on one card did not swap the chat model out.
+- **A failed image or video server is not retried by the model.** When the server itself fails (a model that will not load, a crash, a capacity error) the tool result now says that calling again this turn will not help and to tell the user what failed. A local chat model had called `generate_image` four times on one load failure. A request the model can correct (an unknown model, a text-to-video model asked to animate a picture) keeps its plain error.
+- **The agent's live tab keeps its last frame when the card is not on screen.** A run that ended while its preview card was scrolled out of view, or while another tab was in front, left an empty box in the chat. The final frame is now captured in those cases too.
+- **Background runs clean up their tabs.**
+  - Tabs the model opened itself during a scheduled task, a trigger or any other run nobody is watching are closed when the run ends. Each scheduled run used to leave one in the tab strip. Tabs opened in an interactive chat turn stay.
+  - Closing a background tab that was the last web tab no longer opens a New Tab and switches to it. The replacement tab is activated only when the tab you closed was the one in front.
+- **The site info popup stays with the site it was opened on.** If the tab moves to another site while the popup is open (an agent or a script driving it), the popup closes, and a permission change, ad-block switch or "clear data" that arrives after the move is refused. A popup naming one site can no longer change another.
+- **Chat defaults (LLM > Setup):**
+  - The card saves only the control you changed. It used to send every control, so a card drawn before the chat's model picker changed the default model wrote the old model back on the next unrelated change, which also stopped the running server.
+  - The card redraws when a default is changed elsewhere (the chat's model picker, a model switch by the router).
+  - "Saved." appears beside the status pill. It was added at the top of the card, which pushed the controls down for four seconds and back on every change.
+- **Model placement canvas:**
+  - An opened system prompt preview stays open when the canvas redraws. It used to close, and the page jumped.
+  - The Setup / Chat switch no longer covers the right end of Auto-arrange at window widths around 1250 px.
+- **Numbered lists keep their numbers in chat.** A list with blank lines or a paragraph between its items was drawn as several lists that each started at 1, so the steps read 1, 1, 1.
+- **Text-to-speech voices are no longer listed as chat models.** GGUF voices that an add-on downloads below the chat models folder were read by the chat model scan.
+- **Network Sharing:**
+  - A paired PC's helper model is not offered as a chat choice, and is not shared onward as this PC's own helper.
+  - A paired PC's models are listed by name in the model picker, not by their internal reference.
+  - In the web app on a phone, the chat list starts closed (it is a drawer there, and it opened over the composer on the first screen after pairing), and the composer's buttons wrap so Send stays on screen.
+- **Game mode:**
+  - The card's status chip follows the build: Building while a turn runs, then Ready, Needs fixing or Stopped. It read "Building" forever, while the game was played and shared.
+  - The smoke test fails a game whose objects have NaN positions. Such a game boots, paints its backdrop and throws no error while nothing moves or is drawn (the usual cause is an `update` called without its frame time), and it used to come back clean with Play offered. The report says how many objects are affected and where to look.
+  - The no-scrollbar rule from 2.1.8 is applied when a game is served, shared or exported as a zip, not written into the game's own page. Games made before 2.1.8, and games whose page the agent rewrote, did not have it. A game that is meant to scroll can still say so.
+- **Site APIs:**
+  - A run's result stays on screen. The page rebuilt itself after each run, which wiped the result within half a second. An open Run form (with its values and last result) or run history now survives the rebuild; a recompiled endpoint does not show its old result.
+  - The builder is told to compile when it keeps reading. Asked for fields it could not reach, the builder model tried selector after selector and never compiled, until its 40 steps ran out. After four page reads in a row with no endpoint compiled it is told to compile with the fields that already extract, or to say which field cannot be extracted and why.
+- **Tab Share:** a double click on "Create link" no longer closes the dialog. Done takes that button's place once the link exists, and now ignores clicks for the first 400 ms.
+- Scheduled task steps have their own labels in chat ("Creating and testing the scheduled task…").
+- The launch plan's reason for not using the locked RAM tier is correct when the RAM pin is on: it said the expert pool was bulk-read, where the pin already holds the whole model file in RAM.
+
 ## 2.1.8
 
 ### New features

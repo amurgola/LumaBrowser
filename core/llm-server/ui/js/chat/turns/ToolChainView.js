@@ -10,6 +10,8 @@ export default class ToolChainView {
 
   static REASON_MAX = 200;
 
+  static KEPT_OPEN = ['create_scheduled_task'];
+
   constructor(ctx) {
     this._ctx = ctx;
   }
@@ -20,11 +22,15 @@ export default class ToolChainView {
     const streaming = m === this._ctx.state.streamMsg;
     const running = streaming || tools.some((x) => x.status === 'run');
     if (running) m._chainOpen = true;
-    else if (!m._chainUserToggled) m._chainOpen = false;
+    else if (!m._chainUserToggled) m._chainOpen = ToolChainView._keptOpen(tools);
     const wrap = Dom.el('div', 'cm-chain' + (m._chainOpen ? ' open' : '') + (running ? ' running' : ''));
     wrap.appendChild(this._head(m, tools, running, wrap));
     wrap.appendChild(this._body(m, tools, streaming, running));
     return wrap;
+  }
+
+  static _keptOpen(tools) {
+    return tools.some((tc) => tc.status === 'ok' && ToolChainView.KEPT_OPEN.includes(tc.tool));
   }
 
   signature(m) {

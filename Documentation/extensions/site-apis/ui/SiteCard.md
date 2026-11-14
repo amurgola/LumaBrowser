@@ -8,8 +8,9 @@ the statusNote as tooltip and as a line under the origin), the Open tab, Edit in
 
 ## Methods
 
-- `new SiteCard({ site, invoke, reload, openBuilder })`; `render()` answers the `.luma-card.sapi-site` element;
-  `rows` the EndpointRows.
+- `new SiteCard({ site, invoke, reload, openBuilder, openDetails })`; `render()` answers the `.luma-card.sapi-site`
+  element; `rows` the EndpointRows. `openDetails` (the page's [OpenEndpointDetails](OpenEndpointDetails.md)) is
+  passed on to each row.
 - Open tab: `showSiteTab(site.id)`; on success closes the Settings modal (the tab is now in front), else alerts.
 - Edit in chat: `openBuilder({ siteId })`.
 - Delete: `Dialogs.confirm` naming the endpoint count, then `deleteSite(site.id)` and `reload()`.

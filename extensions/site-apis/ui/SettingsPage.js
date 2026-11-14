@@ -2,6 +2,7 @@ import Dom from '../../../core/llm-server/ui/js/dom/Dom.js';
 import Dialogs from '../../../core/llm-server/ui/js/dialogs/Dialogs.js';
 import StatusText from './StatusText.js';
 import SiteCard from './SiteCard.js';
+import OpenEndpointDetails from './OpenEndpointDetails.js';
 
 export default class SettingsPage {
   static NO_TABS = 'No persisted tabs. Open the site, sign in, then right-click its tab and choose Keep alive before creating a Site API.';
@@ -14,6 +15,7 @@ export default class SettingsPage {
     this._getPersistedTabs = getPersistedTabs || SettingsPage.persistedTabs;
     this._sites = [];
     this._cards = [];
+    this._openDetails = new OpenEndpointDetails();
     this._summaryEl = root ? root.querySelector('#ext-sapi-summary') : null;
     this._sitesEl = root ? root.querySelector('#ext-sapi-sites') : null;
     this._pickerEl = root ? root.querySelector('#ext-sapi-picker') : null;
@@ -24,6 +26,7 @@ export default class SettingsPage {
 
   render(sites) {
     this._sites = Array.isArray(sites) ? sites : [];
+    this._openDetails.keepOnly(this._sites);
     if (this._summaryEl) this._summaryEl.textContent = StatusText.summary(this._sites);
     if (!this._sitesEl) return;
     this._sitesEl.textContent = '';
@@ -33,7 +36,7 @@ export default class SettingsPage {
       return;
     }
     for (const site of this._sites) {
-      const card = new SiteCard({ site, invoke: this._invoke, reload: this._reload, openBuilder: this._openBuilder });
+      const card = new SiteCard({ site, invoke: this._invoke, reload: this._reload, openBuilder: this._openBuilder, openDetails: this._openDetails });
       this._cards.push(card);
       this._sitesEl.appendChild(card.render());
     }

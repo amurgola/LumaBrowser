@@ -324,11 +324,21 @@
                     <div class="gs-body">
                         <div class="gs-row">
                             <div class="gs-row-text">
-                                <span class="gs-row-label">Luma On Demand</span>
+                                <span class="gs-row-label">Luma Live</span>
                                 <span class="gs-row-help">Shows a tile on web pages: click it to talk to the page you are on.</span>
                             </div>
-                            <label class="luma-switch" aria-label="Luma On Demand">
+                            <label class="luma-switch" aria-label="Luma Live">
                                 <input type="checkbox" id="gsOnDemand" checked>
+                                <span class="luma-switch-track"></span>
+                            </label>
+                        </div>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Listen when Luma Live opens</span>
+                                <span class="gs-row-help">Luma Live starts listening as soon as you open it, unless you last switched its microphone off there. Turn this off to always wait for a click on the microphone.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Listen when the Luma Live panel opens">
+                                <input type="checkbox" id="gsOnDemandAutoListen" checked>
                                 <span class="luma-switch-track"></span>
                             </label>
                         </div>

@@ -19,3 +19,7 @@ to the user's own tab, limits it to the page tools and points
 - `OnDemandMode.MODE_ID`, `ALLOWED_TOOLS` (frozen: page read/act tools,
   `navigate`, `get_tabs`, `search_knowledge_base`; no `create_tab`, artifacts,
   images or web search).
+
+## Naming
+
+The mode's label, the extension's name and the agent's own name in its prompt read "Luma Live" since 2026-11-14; the mode id stays `on-demand`. See [OnDemandOverlay](../../core/on-demand/OnDemandOverlay.md), Naming.

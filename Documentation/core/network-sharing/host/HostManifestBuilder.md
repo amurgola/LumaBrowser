@@ -42,3 +42,7 @@ template, which a client cannot work out for itself.
 ## Changes (2026-11-09, helper model)
 
 A `helper::` row from the router (the resident helper model, `isHelper` / `role: helper`) goes out with the local slot as `kind: helper` with its own window (`_helperWindow`, from `chatRouter.contextWindowFor`), never under the remote toggle: it runs on the host card, and a client may pick it as a story's bookkeeping model while its narrator runs elsewhere.
+
+## Never passing on a peer's models (2026-11-14)
+
+A model whose ref starts with `peer:` came from another host and is never put in this host's manifest. That check now runs before the helper branch too: a paired host's helper model arrives here with `role: 'helper'` and would otherwise have gone out again as this machine's own helper.

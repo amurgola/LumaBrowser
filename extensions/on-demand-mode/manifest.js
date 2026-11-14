@@ -1,10 +1,10 @@
 module.exports = {
   id: 'on-demand-mode',
-  name: 'Luma On Demand',
+  name: 'Luma Live',
   version: '0.1.0',
   distributable: false,
   description:
-    'The agent behind Luma On Demand, the floating Live panel on every web '
+    'The agent behind Luma Live, the floating panel on every web '
     + 'page. Say or type what you want done on the page you are looking at '
     + '("click the news button", "scroll to the comments", "what does this '
     + 'article say?") and it acts on that tab with the browser tools, guided '

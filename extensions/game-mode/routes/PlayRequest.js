@@ -1,5 +1,7 @@
 const fs = require('fs');
+const path = require('path');
 const CoreRequire = require('../CoreRequire');
+const NoScrollbarStyle = require('../flatten/NoScrollbarStyle');
 
 const ContainedPath = CoreRequire.load('shared/fs/ContainedPath');
 
@@ -12,9 +14,13 @@ class PlayRequest {
     const root = PlayRequest._root(api, slash === -1 ? rel : rel.slice(0, slash));
     if (!root) return { status: 404 };
     const assetRel = slash === -1 ? '' : rel.slice(slash + 1);
-    try {
-      return { root, file: ContainedPath.resolveWithin(root, assetRel || 'index.html') };
-    } catch (_) { return { status: 403 }; }
+    let file;
+    try { file = ContainedPath.resolveWithin(root, assetRel || 'index.html'); } catch (_) { return { status: 403 }; }
+    return { root, file, entry: path.relative(root, file).toLowerCase() === 'index.html' };
+  }
+
+  static async entryHtml(file) {
+    try { return NoScrollbarStyle.apply(await fs.promises.readFile(file, 'utf8')); } catch (_) { return null; }
   }
 
   static _root(api, rawConv) {

@@ -1,5 +1,6 @@
 const ImageModelPins = require('../assets/ImageModelPins');
 const GameKind = require('../session/GameKind');
+const GameSessions = require('../session/GameSessions');
 const GameKnowledgeBase = require('../GameKnowledgeBase');
 const GameSystemPrompt = require('../prompts/GameSystemPrompt');
 const PixelPost = require('../pixel/PixelPost');
@@ -51,7 +52,7 @@ class GameTurnBuilder {
   }
 
   _tools(data, conversationId, modelRef) {
-    this._resetWholeReads(conversationId);
+    this._beginTurn(conversationId);
     const kind = GameKind.normalize(data.kind);
     const scopeFields = { context: this._context, conversationId, sessions: this._sessions, gameDir: this._folders.gameDirFor(conversationId), name: data.name, kind };
     const { truncator, wholeFileMaxBytes, ctxPerSlot } = ReadBudget.compute();
@@ -69,9 +70,11 @@ class GameTurnBuilder {
     ];
   }
 
-  _resetWholeReads(conversationId) {
+  _beginTurn(conversationId) {
     const existing = this._sessions.get(conversationId);
-    if (existing && existing.readWhole) existing.readWhole.clear();
+    if (!existing) return;
+    existing.status = GameSessions.EDITING;
+    if (existing.readWhole) existing.readWhole.clear();
   }
 
   _aiPromptTool(scopeFields) {

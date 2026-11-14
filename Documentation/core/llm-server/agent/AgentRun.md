@@ -38,6 +38,10 @@ assistant message, and either review a no-tool reply with the
 [ToolBatchRunner](ToolBatchRunner.md), which answers the dropped calls too. The reasoning tail rides as carried
 notes on the batch's first result.
 
+The run keeps its [AgentToolExecutor](AgentToolExecutor.md) and copies its
+`openedTabIds` (the tabs `create_tab` opened) onto the result, so a background
+caller can close them when the run ends (ISSUES.md 23).
+
 ## Iteration events
 
 Every iteration starts with `onEvent({ type: 'iteration', iteration (1-based),

@@ -9,6 +9,12 @@ class LlmServerBroadcast {
     runtimeServer.on('log', (e) => LlmServerBroadcast.toAll(LlmServerBroadcast.SERVER_EVENT_CHANNEL, { type: 'log', payload: e }));
   }
 
+  static relayDefaults(llmServerService) {
+    if (!llmServerService || typeof llmServerService.onDefaultsChanged !== 'function') return;
+    llmServerService.onDefaultsChanged((defaults) =>
+      LlmServerBroadcast.toAll(LlmServerBroadcast.SERVER_EVENT_CHANNEL, { type: 'defaults-changed', payload: { defaults } }));
+  }
+
   static relayArtifactData(artifactDataStore) {
     artifactDataStore.on('change', ({ rootId, rev, keys }) =>
       LlmServerBroadcast.toAll(LlmServerBroadcast.ARTIFACT_DATA_CHANNEL, { rootId, rev, keys }));

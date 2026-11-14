@@ -18,8 +18,10 @@ later edits one recurring background agent run, stored in
 - `register()` registers `descriptor()` and returns the mode; `unregister()` removes it.
 - `descriptor()`: `{ id: 'scheduled-task', label: 'Scheduled Task', icon, description,
   requirements: ['llm'], launcher: 'sidebar', agent: true, buildTurn }`.
-- `buildTurn({ conversationId })` returns `{ systemPrompt, temperature: 0.3,
-  agent: true, tools, allowedTools, noBrowser: true }`. The prompt is
+- `buildTurn({ conversationId, messages })` returns `{ systemPrompt, temperature: 0.3,
+  agent: true, tools, allowedTools, preApprovedTools, noBrowser: true }`. `preApprovedTools` is
+  `['create_scheduled_task']` for the turn that answers a submitted setup form, else `[]`
+  ([SetupFormConsent](scheduled-task/SetupFormConsent.md)). The prompt is
   [ScheduledTaskPrompt](scheduled-task/ScheduledTaskPrompt.md) with the
   conversation's task and the scheduler's `describeRunTools(conversationId)`
   (null, so no tool list, when the scheduler is missing or throws). The tools

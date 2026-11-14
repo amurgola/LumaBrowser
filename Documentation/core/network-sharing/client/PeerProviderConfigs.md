@@ -25,3 +25,7 @@ them.
 A reachable host that reports zero LLMs is usually still warming up after a
 reboot; dropping its config left the user on "No model" until a reload. A
 deliberate un-share goes through `unregister`.
+
+## Model kind (2026-11-14)
+
+Each stored model also keeps `luma_kind`, what the host's manifest says it is (`local`, `remote`, `helper`; left off when the host does not say). [ChatModelList](../../llm-server/chat/router/ChatModelList.md) marks a `helper` one `role: 'helper'`, so the host's helper model is not offered as a chat choice on this side. A config stored before this has no kinds until the peer next registers.

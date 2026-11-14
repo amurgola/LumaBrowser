@@ -14,6 +14,10 @@ extension engine ([TtsEngineRegistry](TtsEngineRegistry.md)) to that engine.
   (tests pass a fake).
 - `getRuntimesDir()` is `<appBaseDir>/runtimes`; `getModelsDir()` is
   `<appBaseDir>/models/tts`.
+- The constructor registers that folder in [ModelFolderRegistry](../shared/ModelFolderRegistry.md) as kind
+  `TtsServerService.FOLDER_KIND` (`tts`). It sits inside the default chat models folder, and the audio.cpp
+  voices an add-on downloads below it (`models/tts/chatterbox`) are GGUF files, which the chat model scan read
+  as chat models; registered, the scan stops at the folder.
 - Settings (through [TtsVoiceSettings](TtsVoiceSettings.md)):
   `getDefaultModelId` / `setDefaultModelId`, `getSid` / `setSid`,
   `getSpeed` / `setSpeed`, `getAutoUnloadMs`.

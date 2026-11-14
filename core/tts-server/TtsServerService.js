@@ -1,6 +1,7 @@
 const os = require('os');
 const path = require('path');
 const AppPaths = require('../shared/AppPaths');
+const ModelFolderRegistry = require('../shared/ModelFolderRegistry');
 const IdleTimer = require('../shared/runtime/server/IdleTimer');
 const SherpaRuntimeLayout = require('./runtimes/SherpaRuntimeLayout');
 const SherpaWorkerEnv = require('./runtimes/SherpaWorkerEnv');
@@ -20,6 +21,7 @@ class TtsServerService {
   static WORKER_FILE = 'TtsWorker.js';
   static MIN_THREADS = 4;
   static MAX_THREADS = 12;
+  static FOLDER_KIND = 'tts';
 
   constructor(settingsDb, { engines = TtsEngineRegistry.shared, fork = null } = {}) {
     this._settings = new TtsVoiceSettings(settingsDb);
@@ -33,6 +35,7 @@ class TtsServerService {
     this._requestCounter = 0;
     this._ensureChain = Promise.resolve();
     this._idle = new IdleTimer(() => this._onIdle());
+    ModelFolderRegistry.register(TtsServerService.FOLDER_KIND, () => this.getModelsDir());
   }
 
   static threadCount(cpuCount = os.cpus().length) {

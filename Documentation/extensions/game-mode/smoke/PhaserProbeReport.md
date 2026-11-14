@@ -6,4 +6,6 @@ Renders the Phaser probe: per game, active scenes with object counts by type, ca
 
 ## Methods
 
-- `PhaserProbeReport.lines(games)`.
+- `PhaserProbeReport.lines(games)`. A scene line adds ", N with a NaN POSITION" and a listed object reads
+  `@(NaN) POSITION IS NaN` when the collector flagged it.
+- `PhaserProbeReport.nanObjects(games)`: how many objects, over every active scene, have a NaN position.

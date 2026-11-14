@@ -22,8 +22,8 @@ export default class MarkdownBlocks {
       this._block('<blockquote>' + MarkdownInline.render(m[1]) + '</blockquote>');
     } else if ((m = line.match(/^\s*[-*+]\s+(.*)$/))) {
       this._listItem('ul', m[1]);
-    } else if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))) {
-      this._listItem('ol', m[1]);
+    } else if ((m = line.match(/^\s*(\d+)[.)]\s+(.*)$/))) {
+      this._listItem('ol', m[2], Number(m[1]));
     } else if (/^\s*$/.test(line)) {
       this._block('');
     } else {
@@ -36,13 +36,18 @@ export default class MarkdownBlocks {
     this._html.push(html);
   }
 
-  _listItem(type, text) {
+  _listItem(type, text, firstNumber) {
     if (this._listType !== type) {
       this._closeList();
-      this._html.push('<' + type + '>');
+      this._html.push(MarkdownBlocks._openTag(type, firstNumber));
       this._listType = type;
     }
     this._html.push('<li>' + MarkdownInline.render(text) + '</li>');
+  }
+
+  static _openTag(type, firstNumber) {
+    const numbered = type === 'ol' && Number.isSafeInteger(firstNumber) && firstNumber !== 1;
+    return numbered ? '<ol start="' + firstNumber + '">' : '<' + type + '>';
   }
 
   _closeList() {

@@ -15,6 +15,11 @@ class AgentToolExecutor {
     this._tabLookup = new TabLookup(options.browserService);
     this._interstitial = options.interstitialWait
       || new InterstitialWait({ browserService: options.browserService, sleep: this._wait });
+    this._openedTabIds = [];
+  }
+
+  get openedTabIds() {
+    return this._openedTabIds.slice();
   }
 
   async execute(tool, params, defaultTabId) {
@@ -54,6 +59,7 @@ class AgentToolExecutor {
 
   async _createTab(params, tabId) {
     const result = await this._browserTools.executeTool('create_tab', params, this._browserService);
+    if (result.success && result.data && result.data.id != null) this._openedTabIds.push(result.data.id);
     if (result.success && params.url) {
       await this._afterPageLoad(result, result.data?.id ?? tabId, AgentToolExecutor.NAVIGATION_SETTLE_MS);
     }

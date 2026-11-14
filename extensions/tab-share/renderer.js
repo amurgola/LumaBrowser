@@ -4,6 +4,7 @@
   const EXT_ID = 'tab-share';
   const CH = (name) => `ext.${EXT_ID}.${name}`;
   const STYLE_ID = 'ext-ts-style';
+  const DONE_GUARD_MS = 400;
   const FLAG_SVG = '<svg class="tab-flag tab-flag-share" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>';
   const STYLE = `
 .tab-strip .tab .tab-flag-share { display: none; }
@@ -238,10 +239,12 @@
           : 'The tab is not running right now. The link resumes when it is restored.';
         q('#ext-ts-dlg-dot').className = `luma-dot ${share.live ? (share.viewers ? 'ok' : 'warn') : 'bad'}`;
         if (!this.status.available) this._warn(dlg, this.status.reason || 'Sharing is currently unavailable.');
+        if (dlg.offeredCreate) { dlg.offeredCreate = false; dlg.doneArmedAt = Date.now() + DONE_GUARD_MS; }
         btn('Stop sharing', 'is-danger', async () => { await this.stop(share.id); this._closeDialog(); });
-        btn('Done', 'is-primary', () => this._closeDialog());
+        btn('Done', 'is-primary', () => { if (Date.now() >= (dlg.doneArmedAt || 0)) this._closeDialog(); });
       } else {
         link.hidden = true;
+        dlg.offeredCreate = true;
         if (!this.status.available) this._warn(dlg, this.status.reason || 'Sharing is currently unavailable.');
         btn('Cancel', '', () => this._closeDialog());
         const create = btn('Create link', 'is-primary', async () => {

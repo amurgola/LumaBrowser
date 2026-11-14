@@ -14,8 +14,10 @@ class HotswapCoordinator {
 
   configure(pools = [], opts = {}) {
     const previous = this._residentsById();
+    const roundTrip = this._pools.get(HotswapCoordinator.ROUND_TRIP_POOL_ID);
     this._pools.clear();
     for (const pool of (Array.isArray(pools) ? pools : [])) this._addPool(pool, previous);
+    this._keepRoundTrip(roundTrip);
     this._applyOptions(opts);
   }
 
@@ -68,6 +70,12 @@ class HotswapCoordinator {
     pool.resident = serverId;
     this._endRoundTrip(pool, serverId);
     return pool.card;
+  }
+
+  _keepRoundTrip(roundTrip) {
+    if (!roundTrip) return;
+    for (const member of roundTrip.members) if (this._poolForServer(member)) return;
+    this._pools.set(HotswapCoordinator.ROUND_TRIP_POOL_ID, roundTrip);
   }
 
   _endRoundTrip(pool, serverId) {

@@ -12,6 +12,10 @@ Writes the model-facing text for a loop finding.
   - `insist`: a firm "change course" line plus the redirect;
   - `conclude`: `WRAP_UP`, which asks for the reply to the user now.
 - Unknown patterns get a generic sentence. No text uses an em-dash.
+- `uncompiled-reads` ([UncompiledReadsCheck](UncompiledReadsCheck.md)): "the
+  page has now been read N times in a row and no endpoint has been compiled",
+  redirected to compiling with the fields that already extract, or telling
+  the user which field cannot be extracted as asked.
 
 ## Why
 

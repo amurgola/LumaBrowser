@@ -25,9 +25,9 @@ class ImageSlotLaunch {
     const refusal = ImageLaunchInputs.defaultsRefusal(this._defaults.runtimeId, this._modelId)
       || await this._resolveRuntime()
       || await this._resolveModel()
-      || ImageLaunchInputs.apiKeyRefusal(this._service.getApiKeyForLaunch());
+      || ImageLaunchInputs.apiKeyRefusal(this._service.getApiKeyForLaunch())
+      || this._preferRuntime();
     if (refusal) return { success: false, error: refusal };
-    this._preferRuntime();
     await this._allocatePorts();
     await this._evictSwapSibling();
     await this._placeOnGpus();
@@ -70,6 +70,7 @@ class ImageSlotLaunch {
     const picked = PreferredImageRuntime.pick({ model: this._model, configured: this._runtime, runtimes: this._runtimes });
     this._runtime = picked.runtime;
     this._runtimeNote = picked.note;
+    return picked.error;
   }
 
   async _allocatePorts() {
@@ -97,11 +98,14 @@ class ImageSlotLaunch {
   }
 
   async _swapOutCrowdingChat() {
+    if (this._cpuOnly) return false;
     const card = ChatSwapOut.cardToFree({
       placement: this._placement,
       role: this._role,
       settingsDb: this._service.settingsDb,
       claims: this._ledgerClaims(),
+      cards: this._otherClaimsDebited(),
+      requiredBytes: this._requiredBytes,
     });
     if (card == null || typeof this._deps.hotswap.swapOut !== 'function') return false;
     if ((await this._deps.hotswap.swapOut(this._role, [ChatSwapOut.CHAT_SERVER_ID], card)) == null) return false;
@@ -112,6 +116,10 @@ class ImageSlotLaunch {
 
   _ledgerClaims() {
     try { return this._deps.vramCoordinator.snapshot(); } catch (_) { return null; }
+  }
+
+  _otherClaimsDebited() {
+    try { return this._deps.vramCoordinator.debitedDevices(this._diag, { excludeServerId: this._role }); } catch (_) { return null; }
   }
 
   async _planLaunch() {

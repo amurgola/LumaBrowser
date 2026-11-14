@@ -39,10 +39,17 @@ class AgentTurnDispatch {
       llmExtra: t.llmExtra,
       ...AgentTurnDispatch._evalExtras(t.evalOverrides),
       approvalOverride: t.approvalOverride,
-      approvedTools: grants && Array.isArray(grants.granted) ? grants.granted.slice() : null,
+      approvedTools: AgentTurnDispatch._approvedTools(grants, t.modeTurn),
       onRunApproval: grants && typeof grants.onGranted === 'function' ? grants.onGranted : null,
       onRunApprovalUsed: grants && typeof grants.onUsed === 'function' ? grants.onUsed : null,
     });
+  }
+
+  static _approvedTools(grants, modeTurn) {
+    const carried = grants && Array.isArray(grants.granted) ? grants.granted : null;
+    const fromMode = modeTurn && Array.isArray(modeTurn.preApprovedTools) ? modeTurn.preApprovedTools.map(String) : [];
+    if (!carried && !fromMode.length) return null;
+    return [...new Set([...(carried || []), ...fromMode])];
   }
 
   static _withDefaults(turn) {

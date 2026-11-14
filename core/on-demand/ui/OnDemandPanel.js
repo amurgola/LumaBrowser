@@ -237,7 +237,8 @@ export default class OnDemandPanel {
   _onOpened(st) {
     this.loadHistory();
     this._el.txt.focus();
-    if (this._prefs.autoVoice && st.stt && st.hasModel && this._voice && !this._voice.isOn()) this._voice.start();
+    const mayListen = st.autoListen !== false && this._prefs.autoVoice;
+    if (mayListen && st.stt && st.hasModel && this._voice && !this._voice.isOn()) this._voice.start();
   }
 
   static _hostOf(url) {

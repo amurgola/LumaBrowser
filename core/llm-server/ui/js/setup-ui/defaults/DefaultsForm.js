@@ -21,6 +21,14 @@ export default class DefaultsForm {
     return payload;
   }
 
+  static changes(rendered, current) {
+    const patch = {};
+    for (const key of Object.keys(current)) {
+      if (JSON.stringify(current[key]) !== JSON.stringify((rendered || {})[key])) patch[key] = current[key];
+    }
+    return patch;
+  }
+
   static thinking(position) {
     const noThink = position === 'off';
     return { noThink, reasoningEffort: noThink ? 'default' : position };

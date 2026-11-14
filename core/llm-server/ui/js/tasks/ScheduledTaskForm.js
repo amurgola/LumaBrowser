@@ -20,7 +20,9 @@ export default class ScheduledTaskForm {
       + 'model and the tools checked in its gear panel. Every run is recorded under '
       + 'Scheduled in the sidebar, and you can reopen this chat any time to change '
       + 'or run the task. LumaBrowser must be running for the schedule to fire; '
-      + 'closing the window to the tray is fine.',
+      + 'closing the window to the tray is fine. Starting setup creates the task '
+      + 'straight away, with no separate approval step: the chat then shows what '
+      + 'was scheduled, and you can change, pause or delete it at any time.',
     submitLabel: 'Start task setup',
     fields: [
       {

@@ -1,25 +1,34 @@
 const PlacementLayout = require('../../shared/runtime/PlacementLayout');
 const RemoteDeviceRef = require('../../shared/runtime/placement/RemoteDeviceRef');
 const BestEffort = require('./BestEffort');
+const StalePlacements = require('./StalePlacements');
 
 const MIB = 1024 * 1024;
 
 class VramSnapshotBuilder {
-  constructor({ servers, gpu, vram, getSharingClient }) {
+  constructor({ servers, gpu, vram, getSharingClient, loadLayout }) {
     this._servers = servers;
     this._gpu = gpu;
     this._vram = vram;
     this._getSharingClient = getSharingClient;
+    this._loadLayout = loadLayout || (() => null);
   }
 
   build() {
     const ledger = this._vram.snapshot();
     const apps = BestEffort.read(() => this._gpu.readComputeApps()) || {};
+    const servers = this._serverSlots(ledger, apps);
     return {
       devices: this._localDevices(),
       remoteDevices: this._remoteDevices(),
-      servers: this._serverSlots(ledger, apps),
+      servers,
+      stale: this._stale(servers),
     };
+  }
+
+  _stale(servers) {
+    const layout = BestEffort.read(() => this._loadLayout());
+    return layout ? StalePlacements.of(layout, servers) : [];
   }
 
   _localDevices() {

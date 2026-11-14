@@ -24,7 +24,8 @@ normalises its output onto the chat router's hooks.
    [AgentBudget](AgentBudget.md), [RunHealth](turn/RunHealth.md),
    [RunToolCallParser](parsing/RunToolCallParser.md), and the executor chain
    [TruncationGuard](tools/TruncationGuard.md) -> [ToolCallPipeline](tools/ToolCallPipeline.md)
-   ([ToolLoopMonitor](../ToolLoopMonitor.md), watched by RunHealth for the done payload;
+   ([ToolLoopMonitor](../ToolLoopMonitor.md), given the mode's injected tool names as
+   `modeTools` so the Site API builder's runs get its uncompiled-reads check; watched by RunHealth for the done payload;
    [ApprovalCheck](tools/ApprovalCheck.md))
    -> [ToolDispatch](tools/ToolDispatch.md), in a [BridgeToolbox](tools/BridgeToolbox.md).
    The approval policy is `ApprovalPolicy.resolveRun` over the
@@ -64,7 +65,12 @@ normalises its output onto the chat router's hooks.
    [TabPreviewSession](TabPreviewSession.md), none for a pinned tab) and
    `shouldAbort`.
 6. The preview ends BEFORE any terminal hook, then [TurnFinisher](turn/TurnFinisher.md);
-   a lazily created work tab is closed after, off the critical path.
+   a lazily created work tab is closed after, off the critical path. When nobody
+   can take over (`allowTakeover` false: a scheduled task, a trigger, an eval or a
+   proxied turn) the tabs the model opened itself with `create_tab` (the run
+   result's `openedTabIds`) are closed too; each scheduled task run used to leave
+   one in the strip (ISSUES.md 23). An interactive chat turn keeps them: the user
+   asked for them.
 7. On the run's first request (the driver's `onFirstSend`): the task text as
    sent is written to the user row
    (`chatStore.updateMessage(userMessageId, { sentContent })`), so later turns

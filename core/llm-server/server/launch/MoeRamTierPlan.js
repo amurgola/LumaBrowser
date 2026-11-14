@@ -37,9 +37,14 @@ class MoeRamTierPlan {
     if (!moe.cpuMoeEnabled || !moe.moeSplit) return 'no expert offload';
     if (!flags.moeTiers) return 'the runtime has no locked RAM tier (LumaByte runtime luma-b5 or newer)';
     if (overrides.noMoeRamTier) return 'turned off in Setup';
-    if (!loading.moeNeedsMmap) return 'the expert pool fits RAM and is bulk-read instead';
+    if (!loading.moeNeedsMmap) return MoeRamTierPlan._fitsRamReason(loading);
     if (!(loading.ramTotalBytes > 0)) return 'system RAM size unknown';
     return null;
+  }
+
+  static _fitsRamReason(loading) {
+    if (loading.ramPinned) return 'the expert pool fits RAM and the RAM pin already holds the whole model file there';
+    return 'the expert pool fits RAM and is bulk-read instead';
   }
 
   static _profilePath({ flags, moe, overrides, files }) {

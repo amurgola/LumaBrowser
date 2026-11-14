@@ -13,6 +13,9 @@ The ordered list of every tool call requested in one run.
 - `lastSucceededBefore(record, test)`: the latest earlier call that ran,
   succeeded and passes `test`, or `null`.
 - `countRan(test)`, `latestRan(test, count)` (newest first).
+- `ranStreak(test)`: how many of the latest calls that ran pass `test` with
+  no break; held calls (never ran) are skipped. Used by
+  [UncompiledReadsCheck](UncompiledReadsCheck.md).
 
 ## Why
 

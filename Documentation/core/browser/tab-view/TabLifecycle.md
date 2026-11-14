@@ -16,8 +16,10 @@ Creates, closes, hides, reorders and destroys tabs, in whichever window they liv
   silent, hidden, pinned, internal and automation tabs always go to the main window.
 - `close(tabId)`: pinned tabs refuse. Closing the main window's last regular strip tab first
   opens a start-page tab (`startPageUrl` setting, default duckduckgo) right after
-  it. Regular browsing tabs with a URL go to `recentlyClosed` (newest last, 25 max).
-  Persisted tabs are hidden, others destroyed.
+  it. That tab is activated only when the closing tab was the active one; a background
+  tab (an agent's work tab closed when its run ends) gets a replacement that leaves
+  focus where it is. Regular browsing tabs with a URL go to `recentlyClosed` (newest
+  last, 25 max). Persisted tabs are hidden, others destroyed.
 - `reopenClosed(hostId = 0)`, `move(tabId, toIndex)` (emits `tabMoved`, sends `tab:moved`
   with the order to the tab's window).
 - `hide(tabId)`: marks hidden, denies pending permission prompts, mutes and
@@ -38,6 +40,8 @@ Creates, closes, hides, reorders and destroys tabs, in whichever window they liv
 Closing must never leave the user facing an empty strip, or only the pinned LLM
 tab, with a close button that silently does nothing. The neighbour of a closing
 active tab is resolved before the tab leaves the strip.
+
+The replacement used to be activated always. A scheduled task closing its background work tab, when that was the last web tab, then opened a New Tab and switched to it with nobody at the keyboard (ISSUES.md 23). A user closing their last tab is closing the active one, so for them nothing changed.
 
 ## First navigation waits for Chrome extension loads
 

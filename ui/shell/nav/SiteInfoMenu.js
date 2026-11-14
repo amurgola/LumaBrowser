@@ -7,11 +7,14 @@ export default class SiteInfoMenu {
 
   static WORDS = { ask: 'Ask', allow: 'Allow', block: 'Block' };
 
-  constructor({ store, popupMenu, openSettings }) {
+  constructor({ store, popupMenu, openSettings, host }) {
     this._store = store;
     this._menu = popupMenu;
     this._openSettings = openSettings;
+    this._host = host;
+    this._shown = null;
     this.el = null;
+    if (host) host.onHide(() => { this._shown = null; });
   }
 
   install() {
@@ -28,14 +31,25 @@ export default class SiteInfoMenu {
     if (!tab || !window.ipcBridge) return;
     const info = await window.ipcBridge.invoke('core.siteInfo.get', tab.id);
     if (!info || !info.success) return;
+    const change = async (channel, ...args) => { await window.ipcBridge.invoke(channel, tab.id, ...args, info.origin); this.open(); };
     const { items, map } = SiteInfoMenu.build(info, {
-      setPermission: async (kind, value) => { await window.ipcBridge.invoke('core.siteInfo.setPermission', tab.id, kind, value); this.open(); },
-      setAdblock: async (off) => { await window.ipcBridge.invoke('core.siteInfo.setAdblock', tab.id, off); this.open(); },
-      clearData: async () => { await window.ipcBridge.invoke('core.siteInfo.clearData', tab.id); this.open(); },
+      setPermission: (kind, value) => change('core.siteInfo.setPermission', kind, value),
+      setAdblock: (off) => change('core.siteInfo.setAdblock', off),
+      clearData: () => change('core.siteInfo.clearData'),
       settings: () => this._openSettings(),
     });
     const r = this.el.getBoundingClientRect();
     this._menu.open('context', items, map, { x: Math.max(0, r.left - 6), y: r.bottom + 10, width: SiteInfoMenu.WIDTH });
+    this._shown = { tabId: tab.id, origin: info.origin };
+  }
+
+  onNavigated(tabId, url) {
+    if (!this._shown || this._shown.tabId !== tabId || SiteInfoMenu.originOf(url) === this._shown.origin) return;
+    if (this._host) this._host.hide();
+  }
+
+  static originOf(url) {
+    try { return new URL(url).origin; } catch (_) { return null; }
   }
 
   static build(info, actions) {

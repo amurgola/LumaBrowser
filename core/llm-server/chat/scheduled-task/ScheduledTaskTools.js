@@ -30,7 +30,8 @@ class ScheduledTaskTools {
     const prompt = String(params.prompt || '').trim();
     if (!prompt) return { success: false, error: 'prompt is required' };
     const task = this._createTask(conversationId, params, prompt);
-    const result = { success: true, task: { id: task.id, title: task.title, frequency: TaskInterval.describe(task.intervalMs), nextRunAt: task.nextRunAt } };
+    const frequency = TaskInterval.describe(task.intervalMs);
+    const result = { success: true, summary: `Created "${task.title}", runs ${frequency}`, task: { id: task.id, title: task.title, frequency, nextRunAt: task.nextRunAt } };
     if (params.run_test !== false) result.test = await this._testAfterCreate(task.id);
     return result;
   }

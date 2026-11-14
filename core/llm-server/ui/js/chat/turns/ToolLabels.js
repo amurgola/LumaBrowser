@@ -48,6 +48,9 @@ export default class ToolLabels {
     generate_asset: 'Generating asset…',
     fetch_gamedev_doc: 'Fetching game-dev doc…',
     test_ai_prompt: 'Testing in-game AI prompt…',
+    create_scheduled_task: 'Creating and testing the scheduled task…',
+    update_scheduled_task: 'Changing the scheduled task…',
+    run_scheduled_task: 'Running the scheduled task…',
   };
 
   static humanize(name) {

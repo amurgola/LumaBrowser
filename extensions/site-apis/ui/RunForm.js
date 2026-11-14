@@ -46,16 +46,26 @@ export default class RunForm {
   async submit() {
     if (!this._el) return null;
     this._busy(true);
+    const values = this.values();
     let result;
     try {
-      result = await this._invoke('run', this._site.id, this._endpoint.name, this.values());
+      result = await this._invoke('run', this._site.id, this._endpoint.name, values);
     } catch (err) {
       result = { success: false, error: err && err.message ? err.message : String(err) };
     }
     this._busy(false);
     this.showResult(result);
-    this._onRan(result);
+    this._onRan(result, values);
     return result;
+  }
+
+  restore({ values, result }) {
+    for (const [name, input] of this._inputs) {
+      if (!values || !(name in values)) continue;
+      if (input.type === 'checkbox') input.checked = !!values[name];
+      else input.value = String(values[name]);
+    }
+    if (result) this.showResult(result);
   }
 
   showResult(result) {

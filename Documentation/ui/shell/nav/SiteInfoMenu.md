@@ -13,6 +13,12 @@ Clicking (or Enter on) the lock or warning before the address opens the site inf
 
 The menu re-opens after each change.
 
+The popup belongs to the site it was opened on. When its tab moves to another origin while it is open (an agent or
+a script driving the tab), `onNavigated` closes it, and every change sends the origin the popup was showing so
+[SiteInfo](../../../core/browser/site-info/SiteInfo.md) refuses one that arrives after the move. A popup naming one
+site can therefore never grant a permission to, or delete the data of, another.
+
 ## Methods
 
-- `new SiteInfoMenu({ store, popupMenu, openSettings })`, `install()`, `open()`, `SiteInfoMenu.build(info, actions)`.
+- `new SiteInfoMenu({ store, popupMenu, openSettings, host })`, `install()`, `open()`, `onNavigated(tabId, url)`
+  (called by TabEventSync for the active tab), `SiteInfoMenu.build(info, actions)`, `SiteInfoMenu.originOf(url)`.

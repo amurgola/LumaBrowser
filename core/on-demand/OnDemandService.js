@@ -1,13 +1,13 @@
 class OnDemandService {
   static MODE_ID = 'on-demand';
-  static TITLE_PREFIX = 'On Demand: ';
+  static TITLE_PREFIX = 'Luma Live: ';
   static TITLE_MAX = 60;
   static SWEEP_LIMIT = 1000;
 
   static ERRORS = {
     notReady: { success: false, error: 'The chat backend is not ready yet.' },
     empty: { success: false, error: 'Nothing to send.' },
-    modeMissing: { success: false, code: 'MODE_MISSING', error: 'Luma On Demand is not loaded yet. Restart LumaBrowser to enable it.' },
+    modeMissing: { success: false, code: 'MODE_MISSING', error: 'Luma Live is not loaded yet. Restart LumaBrowser to enable it.' },
     noModel: { success: false, error: 'No language model is set up yet. Open the LLM tab to configure one.', code: 'NO_MODEL' },
   };
 

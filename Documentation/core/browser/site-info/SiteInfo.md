@@ -18,5 +18,9 @@ The policies read the same stores, so a change applies at once; an ad blocker or
 - `new SiteInfo({ db, getTabViewManager, adblocker })`.
 - `get(tabId)` -> `{ success, origin, host, secure, private, permissions, adblock: { available, on }, cookies }`
   (regular http(s) tabs only).
-- `setPermission(tabId, kind, 'ask' | 'allow' | 'block')`, `setAdblock(tabId, off)`, `clearData(tabId)` ->
-  `{ success, removed }`.
+- `setPermission(tabId, kind, 'ask' | 'allow' | 'block', expectedOrigin?)`, `setAdblock(tabId, off, expectedOrigin?)`,
+  `clearData(tabId, expectedOrigin?)` -> `{ success, removed }`.
+
+Each change acts on the origin the tab is on when the call arrives. The popup passes `expectedOrigin`, the origin it
+was showing; when the tab has since moved to another origin (or is gone) the change is refused with
+`{ success: false, moved: true }` and nothing is written, deleted or reloaded.

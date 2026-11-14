@@ -21,8 +21,10 @@ with no notifications.
 - `normalize(dir)`: absolute, separator-normalized, case-folded on Windows,
   no trailing separator.
 
-Registered by [LLMServerService](../llm-server/LLMServerService.md) (`'llm'`)
-and [ImageServerService](../image-server/ImageServerService.md) (`'image'`);
+Registered by [LLMServerService](../llm-server/LLMServerService.md) (`'llm'`),
+[ImageServerService](../image-server/ImageServerService.md) (`'image'`) and
+[TtsServerService](../tts-server/TtsServerService.md) (`'tts'`, whose GGUF voices would otherwise list as chat
+models);
 read by [ModelDirWalker](../llm-server/scanner/ModelDirWalker.md) through
 [LlmModelsScanner](../llm-server/LlmModelsScanner.md) and by
 [ImageModelsScanner](../image-server/ImageModelsScanner.md).

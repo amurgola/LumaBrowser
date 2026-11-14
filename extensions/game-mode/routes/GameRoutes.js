@@ -41,13 +41,20 @@ class GameRoutes {
     }
   }
 
-  _play(req, res) {
+  async _play(req, res) {
     const target = PlayRequest.resolve(this._api, req.path);
     if (target.status) return res.status(target.status).end();
     res.set('Cache-Control', 'no-store');
+    if (target.entry) return this._sendEntry(res, target.file);
     return res.sendFile(path.relative(target.root, target.file), {
       root: target.root, etag: false, lastModified: false, cacheControl: false,
     }, (err) => { if (err && !res.headersSent) res.status(err.status || 404).end(); });
+  }
+
+  async _sendEntry(res, file) {
+    const html = await PlayRequest.entryHtml(file);
+    if (html == null) return res.status(404).end();
+    return res.type('html').send(html);
   }
 
   async _openTab(req, res) {

@@ -185,7 +185,7 @@ class TabLifecycle {
     if (!entry.isInStrip() || entry.isInternal() || entry.hostId !== TabHosts.MAIN_ID) return;
     const others = this._registry.inStrip(TabHosts.MAIN_ID).filter((tab) => tab.id !== entry.id && !tab.isInternal());
     if (others.length > 0) return;
-    this.create(this._startPageUrl(), { activate: true, index: this._registry.indexOf(entry.id) + 1 });
+    this.create(this._startPageUrl(), { activate: this._registry.isActive(entry.id), index: this._registry.indexOf(entry.id) + 1 });
   }
 
   _rememberClosed(entry) {

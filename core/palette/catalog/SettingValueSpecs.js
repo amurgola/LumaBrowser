@@ -32,6 +32,7 @@ const SettingValueSpecs = {
   'music.enabled': ON_OFF,
 
   'general.on-demand': { format: 'onoff', default: true },
+  'general.on-demand-auto-listen': { format: 'onoff', default: true },
   'general.palette-shift': { format: 'onoff', default: true },
   'general.start-hidden': { format: 'onoff', default: true },
   'general.restore-tabs': ON_OFF,

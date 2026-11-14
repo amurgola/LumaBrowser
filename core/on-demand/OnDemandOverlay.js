@@ -9,9 +9,10 @@ const OnDemandIpc = require('./OnDemandIpc');
 
 class OnDemandOverlay extends EventEmitter {
   static ENABLED_KEY = 'core.onDemand.enabled';
+  static AUTO_LISTEN_KEY = 'core.onDemand.autoListen';
   static POS_KEY = 'core.onDemand.pos';
   static PAD = OnDemandPlacement.PAD;
-  static PAGE_ONLY_ERROR = 'Luma On Demand works on web pages only.';
+  static PAGE_ONLY_ERROR = 'Luma Live works on web pages only.';
 
   static SHELL_EVENTS = ['move', 'resize', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen', 'restore', 'show', 'hide', 'minimize'];
 
@@ -37,6 +38,16 @@ class OnDemandOverlay extends EventEmitter {
     this.enabled = Boolean(enabled);
     this._saveSetting(OnDemandOverlay.ENABLED_KEY, this.enabled);
     if (!this.enabled) this.expanded = false;
+    this._sync();
+  }
+
+  isAutoListen() {
+    return this.autoListen;
+  }
+
+  setAutoListen(on) {
+    this.autoListen = Boolean(on);
+    this._saveSetting(OnDemandOverlay.AUTO_LISTEN_KEY, this.autoListen);
     this._sync();
   }
 
@@ -98,6 +109,7 @@ class OnDemandOverlay extends EventEmitter {
       conversationId: this.service.trackedConversation(tabId),
       model: this.service.currentModelLabel(),
       hasModel: Boolean(this.service.currentModelRef()),
+      autoListen: this.autoListen,
       stt: OnDemandOverlay._safeFlag(this._sttReady),
       tts: OnDemandOverlay._safeFlag(this._ttsReady),
     };
@@ -160,6 +172,7 @@ class OnDemandOverlay extends EventEmitter {
 
   _restoreSettings() {
     this.enabled = this.db.get(OnDemandOverlay.ENABLED_KEY, true) !== false;
+    this.autoListen = this.db.get(OnDemandOverlay.AUTO_LISTEN_KEY, true) !== false;
     const saved = this.db.get(OnDemandOverlay.POS_KEY, null);
     this.pos = OnDemandPlacement.isValidPosition(saved) ? saved : null;
   }

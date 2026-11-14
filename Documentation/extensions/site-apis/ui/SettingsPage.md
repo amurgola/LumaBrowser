@@ -9,7 +9,9 @@ The settings page over [settings.html](../settings.md): summary, the New site AP
 
 - `new SettingsPage(root, { invoke, reload, openBuilder, getPersistedTabs? })`; `getPersistedTabs` defaults to
   `window.tabAPI.getPersisted()` (the same list the strip's persisted-tabs button shows).
-- `render(sites)`: the summary line (`StatusText.summary`) and the cards, or the empty state.
+- `render(sites)`: the summary line (`StatusText.summary`) and the cards, or the empty state. The page keeps one
+  [OpenEndpointDetails](OpenEndpointDetails.md) for its lifetime and hands it to every card, so an open Run form
+  (with its last result) or run history survives the rebuild; endpoints no longer listed are forgotten first.
 - `togglePicker()`: New site API lists the persisted tabs (title plus URL); picking one calls
   `openBuilder({ tabId })` and closes the picker; no persisted tabs shows how to persist one. `closePicker()`.
 - `cards`: the rendered SiteCards (tests).

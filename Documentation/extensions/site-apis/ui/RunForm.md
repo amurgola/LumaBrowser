@@ -10,7 +10,9 @@ The inline Run form under an endpoint row.
   (`number` inputs for numbers, a checkbox for booleans, the default as the value, the example or description as
   the placeholder, `*` after a required name) and a Run button.
 - `values()`: the inputs keyed by name; blanks are left out so the endpoint's defaults apply, numbers are coerced.
-- `submit()`: `invoke('run', site.id, endpoint.name, values())`, then `showResult` and `onRan(result)` (the row's
-  reload, so the last-run line updates).
+- `submit()`: `invoke('run', site.id, endpoint.name, values())`, then `showResult` and `onRan(result, values)` (the
+  row remembers both, then reloads so the last-run line updates).
+- `restore({ values, result })`: after `render()`, puts back the inputs and the result of an earlier run, so the
+  form survives the page re-render its own run causes.
 - `showResult(result)`: success renders `JSON.stringify(data, null, 2)` in a `.luma-code` block (capped at 20000
   characters); a fault renders `StatusText.fault(fault, advice)` in a `.luma-error` block.

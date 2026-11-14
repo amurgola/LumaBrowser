@@ -71,6 +71,7 @@ class LlmServerIpcHandlers {
     });
     const s = LlmServerIpcHandlers._services(llmServerService, ipcDeps, router);
     LlmServerBroadcast.wire(llmServerService.runtimeServer);
+    LlmServerBroadcast.relayDefaults(llmServerService);
     s.availability.watch();
     LlmServerIpcHandlers._registerSettings(llmServerService, s);
     LlmServerIpcHandlers._registerDiagnostics(llmServerService, s);

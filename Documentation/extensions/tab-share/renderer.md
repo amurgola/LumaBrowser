@@ -14,7 +14,11 @@ deactivate, _instance }` (`_instance` is the e2e harness hook). Three surfaces:
 2. the share dialog (`.lm-overlay`): View only / View and interact, Create
    link, the link with Copy, the watcher line and dot, Stop sharing / Done;
    changing the mode of a live share calls `setMode`; Escape or a backdrop
-   click closes;
+   click closes. Done takes Create link's place (primary, right) once the
+   share exists, often from the `changed` push before the share call
+   returns, so it ignores clicks for 400 ms after that swap: a double click
+   on Create link used to close the dialog (ISSUES.md 20). A dialog opened
+   on an existing share has no guard;
 3. the share flag on shared live tabs in the strip (`.ext-ts-shared` plus an
    SVG in `.tab-flags`) and the settings page (`settings.html`): the
    availability line, the share list (mode select, Copy link, Open tab, Stop),

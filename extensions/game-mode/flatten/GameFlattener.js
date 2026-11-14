@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const CoreRequire = require('../CoreRequire');
+const NoScrollbarStyle = require('./NoScrollbarStyle');
 const PhaserDist = require('./PhaserDist');
 
 const ContainedPath = CoreRequire.load('shared/fs/ContainedPath');
@@ -31,7 +32,7 @@ class GameFlattener {
   }
 
   execute() {
-    this._html = fs.readFileSync(path.join(this._gameDir, 'index.html'), 'utf8');
+    this._html = NoScrollbarStyle.apply(fs.readFileSync(path.join(this._gameDir, 'index.html'), 'utf8'));
     this._inlinePhaser();
     this._inlineLocalScripts();
     this._inlineAssets();

@@ -102,7 +102,7 @@ class BridgeRun {
       attention: this._host.approvalAttention || null,
       risk: DesktopCallRisk.assessor(() => BridgeGlobals.desktopService()),
     });
-    const loopMonitor = new ToolLoopMonitor();
+    const loopMonitor = new ToolLoopMonitor({ modeTools: this._toolSet.injected.defs.map((def) => def.name) });
     this._health.watchToolLoop(loopMonitor);
     const vaultCaller = VaultToolsHandler.callerOf({ allowTakeover: this._o.allowTakeover, approvalOverride: this._o.approvalOverride });
     const pipeline = new ToolCallPipeline({ toolSet: this._toolSet, loopMonitor, health: this._health, approval, dispatch, vaultCaller });
@@ -278,9 +278,17 @@ class BridgeRun {
   }
 
   _closeWorkTab(result) {
-    if (!result || !result.createdTab || result.tabId == null) return;
+    if (!result) return;
+    const tabIds = this._tabsToClose(result);
+    if (!tabIds.length) return;
     const browserService = this._o.deps.browserService;
-    Promise.resolve().then(() => browserService.closeTab(result.tabId)).catch(() => {});
+    for (const tabId of tabIds) Promise.resolve().then(() => browserService.closeTab(tabId)).catch(() => {});
+  }
+
+  _tabsToClose(result) {
+    const tabIds = result.createdTab && result.tabId != null ? [result.tabId] : [];
+    if (this._o.allowTakeover || !Array.isArray(result.openedTabIds)) return tabIds;
+    return [...tabIds, ...result.openedTabIds.filter((tabId) => !tabIds.includes(tabId))];
   }
 
   static _defined(options) {

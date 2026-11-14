@@ -21,6 +21,7 @@ class PlacementIpcHandlers {
     this._handle('core.placement.previewRig', (_e, rigId) => svc.previewRig(rigId));
     this._handle('core.placement.start', () => svc.startAll());
     this._handle('core.placement.stop', () => svc.stopAll());
+    this._handle('core.placement.reloadStale', () => svc.reloadStale());
     this._handle('core.placement.runTest', (event) => this._runTest(event));
   }
 

@@ -48,6 +48,10 @@ musicServerService?, groundingServerService?, getAgentDeps?, ...seams })`
   CUDA card, or null.
 - `async getVramSnapshot()` see [VramSnapshotBuilder](service/VramSnapshotBuilder.md).
 - `startAll()`, `stopAll()` see [PlacementLifecycle](service/PlacementLifecycle.md).
+- `async reloadStale()` unloads the running models the saved layout places elsewhere (the snapshot's `stale`,
+  [StalePlacements](service/StalePlacements.md)) and returns `{ stopped: [item] }`. Saving never moves a loaded
+  model by itself, since that would end a reply or a render in progress; this is the user's explicit way to
+  apply a layout now. A model that fails to stop is left out of `stopped`.
 - `maybeAutoStart()` applies the auto-stop, then starts the layout only when
   `autoStart` is on and `isAvailable()`: `{ success: true, started }`.
 - `runTest(send)` see [PlacementTestRun](service/PlacementTestRun.md).

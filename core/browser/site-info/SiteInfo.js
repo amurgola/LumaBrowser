@@ -4,6 +4,7 @@ const PermissionKinds = require('../PermissionKinds');
 class SiteInfo {
   static KINDS = ['camera', 'microphone', 'notifications', 'popups'];
   static VALUES = ['ask', 'allow', 'block'];
+  static MOVED = Object.freeze({ success: false, moved: true });
 
   constructor({ db, getTabViewManager, adblocker = null }) {
     this._sites = new SitePermissionStore(db);
@@ -28,24 +29,27 @@ class SiteInfo {
     };
   }
 
-  setPermission(tabId, kind, value) {
+  setPermission(tabId, kind, value, expectedOrigin) {
     const tab = this._tab(tabId);
+    if (SiteInfo._moved(tab, expectedOrigin)) return SiteInfo.MOVED;
     if (!tab || !SiteInfo.KINDS.includes(kind) || !SiteInfo.VALUES.includes(value)) return { success: false };
     if (value === 'ask') this._sites.forget(tab.origin, kind);
     else this._sites.remember(tab.origin, [kind], value);
     return { success: true, value };
   }
 
-  setAdblock(tabId, off) {
+  setAdblock(tabId, off, expectedOrigin) {
     const tab = this._tab(tabId);
-    if (!tab || !this._adblocker || typeof this._adblocker.setSiteAllowed !== 'function') return { success: false };
+    if (SiteInfo._moved(tab, expectedOrigin)) return SiteInfo.MOVED;
+    if (!tab ||!this._adblocker || typeof this._adblocker.setSiteAllowed !== 'function') return { success: false };
     const res = this._adblocker.setSiteAllowed(tab.host, !!off);
     SiteInfo._reload(tab.entry);
     return res;
   }
 
-  async clearData(tabId) {
+  async clearData(tabId, expectedOrigin) {
     const tab = this._tab(tabId);
+    if (SiteInfo._moved(tab, expectedOrigin)) return SiteInfo.MOVED;
     if (!tab) return { success: false };
     const sess = tab.entry.webContents.session;
     let removed = 0;
@@ -92,6 +96,10 @@ class SiteInfo {
     const origin = PermissionKinds.originOf(url);
     if (!origin || !/^https?:/.test(origin)) return null;
     return { entry, origin, host: new URL(origin).hostname.toLowerCase() };
+  }
+
+  static _moved(tab, expectedOrigin) {
+    return !!expectedOrigin && (!tab || tab.origin !== expectedOrigin);
   }
 
   static _reload(entry) {

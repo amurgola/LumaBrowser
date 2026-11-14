@@ -87,8 +87,9 @@ class AgentRun {
       : ToolOutputTruncator.DEFAULT_MAX_BYTES;
     this._verifier = new CompletionVerifier();
     this._gate = new FinalAnswerGate({ history: this._history, steps: this._steps, emit: (event) => this._emit(event), verifier: this._verifier });
+    this._executor = new AgentToolExecutor({ ...this._deps, screenshotVision: this._o.screenshotVision });
     this._batchRunner = new ToolBatchRunner({
-      executor: new AgentToolExecutor({ ...this._deps, screenshotVision: this._o.screenshotVision }),
+      executor: this._executor,
       guard: new ToolCallGuard({ allowedTools: this._o.tools }),
       compactor: resultCompactor,
       toolResultBudget,
@@ -225,6 +226,7 @@ class AgentRun {
       finalResponse: this._finalResponse,
       tabId: this._workTab.id,
       createdTab: this._workTab.created,
+      openedTabIds: this._executor.openedTabIds,
       iterations: this._iterations,
       durationMs: this._clock.elapsedMs(),
       toolCalls: this._toolCalls,

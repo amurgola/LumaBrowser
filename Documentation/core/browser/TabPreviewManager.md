@@ -58,3 +58,13 @@ preview is hidden, and a slow capture that outlives a detach is discarded.
 
 Drag regions need no handling: TabViewManager neutralizes `-webkit-app-region` in
 every tab document.
+
+## Capturing a preview that is not on screen (2026-11-14)
+
+`captureFrame` used to answer null for a preview that was hidden: the card scrolled out of view, another tab in front, or a preview never shown at all (ISSUES.md entry 1). The run's last frame comes from `captureFrame` (TabPreviewSession.end), so such a finished card stayed an empty box.
+
+Measured in the running app before choosing a fix: `capturePage` on a hidden view gives an empty image at any size, with or without `stayHidden`; a visible view placed outside the window also gives an empty image, because it is never painted (an earlier probe that seemed to work had flashed the view on screen first). A visible view inside the window at the bottom of the view stack, covered by the active tab's view, paints and is captured in about 70 ms.
+
+So a preview that is not on screen (`_isOffScreen`: not painted over its card, and not the user's active tab) is lent a place underneath for the capture (`_lendPlaceUnderneath`): re-added at stack index 0, placed at the content area's corner at the size it last had over its card (`lastSize`, else `CAPTURE_SIZE` 1024x640, never larger than the content area), made visible. `_firstPaintedImage` asks every `CAPTURE_POLL_MS` (50) for up to `CAPTURE_WAIT_MS` (1000) until an image is not empty. `_takeBackLentPlace` then hides it again, unless it was painted over its card or became the active tab while the capture ran. With no content area to hide under, nothing is lent and the answer is null as before. A preview on screen is captured in the same tick, untouched. The frame ticker still runs only while the preview is shown; only this one capture reaches a hidden view.
+
+Constructor seams for tests: `{ captureWaitMs, capturePollMs }`.

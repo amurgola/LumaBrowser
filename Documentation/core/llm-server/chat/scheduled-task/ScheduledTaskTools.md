@@ -14,7 +14,8 @@ exist only inside the mode's setup turns, never in the runs.
   and a non-blank `prompt`; refuses when the conversation already has a task.
   Creates it with `every_minutes` (default 60) as the interval, renames the
   setup chat to the task title, emits `tasks-changed`, and unless
-  `run_test === false` runs `scheduler.runInline(id, { kind: 'test' })`.
+  `run_test === false` runs `scheduler.runInline(id, { kind: 'test' })`. The result carries
+  `summary: 'Created "<title>", runs <interval>'`, the line the chat's step card shows.
   Returns `{ success, task: { id, title, frequency, nextRunAt }, test? }`; with
   no scheduler the test is `{ ran: false, error: 'scheduler not ready; the task will still run on schedule' }`.
 - `update(params, ctx)` (`update_scheduled_task`): patches `title`, `prompt`,

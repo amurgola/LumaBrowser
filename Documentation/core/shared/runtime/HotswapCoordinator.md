@@ -9,7 +9,7 @@ Single-occupancy enforcement for the singularity pools of the
 
 - `HotswapCoordinator.shared` the process-wide instance every service registers with.
 - `new HotswapCoordinator({ sleep })` (`sleep` injectable for tests).
-- `configure(pools, { vramWaitMs, cardFreeReader })` replaces all pools.
+- `configure(pools, { vramWaitMs, cardFreeReader })` replaces all layout pools.
   `pools` is `[{ id, card, members: serverId[] }]`, normally
   `PlacementLayout.hotswapPools(layout)`. Pools with fewer than 2 members or a
   non-integer card are ignored; a missing id becomes `pool_<card>`. A pool id
@@ -28,8 +28,10 @@ Single-occupancy enforcement for the singularity pools of the
   (stops the live residents and waits for the card). The pool stays while the
   borrower (`serverId`) re-acquires; the first acquire by a resident evicts the
   borrower and ends the pool. Resolves `null`, forming nothing, when `card` is not
-  an integer or any of them already belongs to a pool. `configure` drops it like
-  any other pool. Used by [ChatSwapOut](../../image-server/service/ChatSwapOut.md)
+  an integer or any of them already belongs to a pool. `configure` keeps an
+  open round trip unless the new layout pools one of its members (that pool then
+  governs them): saving a layout mid swap used to drop it, and the chat model
+  came back beside the image model it had made room for. Used by [ChatSwapOut](../../image-server/service/ChatSwapOut.md)
   through ImageSlotLaunch.
 - `release(serverId)` clears the resident pointer if that server holds it.
 - `sharePool(a, b)` true when both are in one pool (never co-resident).

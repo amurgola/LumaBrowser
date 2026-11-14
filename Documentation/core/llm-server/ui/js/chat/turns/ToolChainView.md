@@ -9,7 +9,8 @@ card outside it. Consecutive steps the loop ran as one batch (stamped `_batch`
 by [ToolEventReducer](../stream/ToolEventReducer.md)) share a row: a small
 header ([ToolLabels](ToolLabels.md)`.batchLabel` while running, "Ran N
 together" after) over their cards side by side. Open while running, collapsed once settled unless the user
-toggled it. Approval cards (Allow once / Allow for this run / Decline, all
+toggled it, or unless a step in `KEPT_OPEN` succeeded (`create_scheduled_task`: it made something that outlives the
+chat, and a submitted setup form runs it with no approval card, so its card stays on screen). Approval cards (Allow once / Allow for this run / Decline, all
 equally easy; a tool in a grant family says what the grant covers, e.g.
 "Allow desktop control for this run", or "for this chat" when `grantScope` is
 `'chat'`) answer `api.approvalRespond`; takeover cards (I did it, continue /

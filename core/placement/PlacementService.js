@@ -86,6 +86,15 @@ class PlacementService {
     return this._snapshotBuilder.build();
   }
 
+  async reloadStale() {
+    const snapshot = await this.getVramSnapshot();
+    const stopped = [];
+    for (const { item } of snapshot.stale) {
+      if (await PlacementService._stopped(() => this._servers.stop(item))) stopped.push(item);
+    }
+    return { stopped };
+  }
+
 
   previewRig(rigId) {
     return { rigs: PreviewRigs.list(), preview: rigId ? new PlacementPreview().describe(rigId) : null };
@@ -124,7 +133,10 @@ class PlacementService {
     this._hotswapWiring = new HotswapWiring({ servers: this._servers, hotswap: seams.hotswap, settingsDb: this._db });
     this._poolModels = new PoolModels({ servers: this._servers, imageScanner: seams.imageScanner, musicCatalog: seams.musicCatalog });
     this._prewarmer = new PoolPrewarmer({ poolModels: this._poolModels });
-    this._snapshotBuilder = new VramSnapshotBuilder({ servers: this._servers, gpu: seams.gpu, vram: seams.vram, getSharingClient: seams.getSharingClient });
+    this._snapshotBuilder = new VramSnapshotBuilder({
+      servers: this._servers, gpu: seams.gpu, vram: seams.vram, getSharingClient: seams.getSharingClient,
+      loadLayout: () => PlacementStore.load(this._db),
+    });
     this._lifecycle = new PlacementLifecycle({
       servers: this._servers, settingsDb: this._db, gate: this._gate, prewarmer: this._prewarmer, getLauncher: seams.getLauncher,
     });
@@ -149,6 +161,10 @@ class PlacementService {
     const cards = BestEffort.read(() => this._gpu.readDevices(null)) || [];
     if (!cards.length) return null;
     return cards.slice().sort((a, b) => b.totalBytes - a.totalBytes)[0].index;
+  }
+
+  static async _stopped(stop) {
+    try { await stop(); return true; } catch (_) { return false; }
   }
 
   static _patched(layout, patch) {

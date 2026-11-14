@@ -37,7 +37,10 @@ approxBytes, loaderFlag?, quants?, supersedes?, updateNote? } }, minVramBytes,
 defaults: { width, height, steps, cfgScale, sampler, scheduler?,
 negativePrompt?, promptGuide?, fixedSigmas?, cacheMode?, cacheOption?, refImageArgs?, videoFrames?, fps?, flowShift? }, constraints?,
 launchArgs, protocol: 'sd-cpp-http'|'sd-cpp-video', compatibleRuntimes,
-preferredRuntimes?, sageAttention?, recommendedLora? }`. The last three are
+preferredRuntimes?, minRuntimeTags?, sageAttention?, recommendedLora? }`.
+`minRuntimeTags` maps a runtime id to the oldest release tag that loads the row
+(`luma-b<n>` or `master-<n>`, see
+[RuntimeReleaseTag](../service/RuntimeReleaseTag.md)). The other three are
 launch and install preferences a row earned by measurement: a drop-in runtime
 to use when installed ([PreferredImageRuntime](../service/PreferredImageRuntime.md)),
 sd.cpp's native SageAttention ([SageAttentionPolicy](../service/SageAttentionPolicy.md)),
@@ -144,6 +147,10 @@ comfortable GPU-resident size with the encoders on the CPU.
   file. Not usable: the community GGUFs (ComfyUI's flattened tensor layout)
   and Comfy-Org's w4a8 file (sd.cpp fails to identify it). Needs sd.cpp with
   upstream PR 2324; measured on that PR's head plus the LumaByte tensor patch.
+  `minRuntimeTags: { 'sd-cpp-luma': 'luma-b4' }`: luma-b4 (upstream master-1088)
+  is the first LumaByte release that loads it, so an older `sd-cpp-luma` is
+  skipped or, when it is the only choice, refused with an update message
+  (ISSUES.md entry 11).
   Default canvas 2048x2048: the official pipeline never renders below 4 MP, and
   on an RTX 5090 the six steps took 12 s through sd-cli at 1024x1024 and
   2048x2048 alike. Through the app (sd-server, warm) a 2048x2048 picture took

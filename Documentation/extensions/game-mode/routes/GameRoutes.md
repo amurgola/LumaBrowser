@@ -7,3 +7,7 @@ Controller for `/api/ext/game-mode` (the entry `routes.js` calls `GameRoutes.cre
 ## Methods
 
 - `GameRoutes.create(context)` -> an express Router.
+
+## Entry page (2026-11-14)
+
+`GET /play/...` sends the game's own index.html through `PlayRequest.entryHtml` (html, still no-store; 404 if unreadable) so it carries the no-scrollbar rule; every other file is still `sendFile`. ISSUES.md 32.

@@ -33,6 +33,17 @@ class CallHistory {
     return this._records.filter((r) => r.ran && test(r)).length;
   }
 
+  ranStreak(test) {
+    let count = 0;
+    for (let i = this._records.length - 1; i >= 0; i -= 1) {
+      const record = this._records[i];
+      if (!record.ran) continue;
+      if (!test(record)) break;
+      count += 1;
+    }
+    return count;
+  }
+
   latestRan(test, count) {
     const out = [];
     for (let i = this._records.length - 1; i >= 0 && out.length < count; i -= 1) {

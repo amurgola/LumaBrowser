@@ -53,6 +53,7 @@ class PeerProviderConfigs {
     return {
       id: model.ref,
       luma_label: model.label,
+      ...(model.kind ? { luma_kind: String(model.kind) } : {}),
       ...(context > 0 ? { luma_context: Math.floor(context) } : {}),
     };
   }

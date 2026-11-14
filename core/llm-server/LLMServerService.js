@@ -59,6 +59,7 @@ class LLMServerService {
   constructor(settingsDb, options = {}) {
     if (!settingsDb) throw new Error('LLMServerService requires a SettingsDatabase');
     this.settingsDb = settingsDb;
+    this._defaultsListeners = [];
     this.apiSecurity = options.apiSecurity || null;
     this.queueManager = null;
     this._deps = LLMServerService._resolveDeps(options);
@@ -161,7 +162,17 @@ class LLMServerService {
 
   getDefaults() { return this._defaults.get(); }
   getLaunchDefaults() { return this.modelSettings.launchDefaults(this.getDefaults()); }
-  setDefaults(patch) { return this._defaults.set(patch); }
+  setDefaults(patch) {
+    const defaults = this._defaults.set(patch);
+    for (const listener of this._defaultsListeners) {
+      try { listener(defaults); } catch (_) {}
+    }
+    return defaults;
+  }
+
+  onDefaultsChanged(listener) {
+    if (typeof listener === 'function') this._defaultsListeners.push(listener);
+  }
 
 
   getModelCaps(modelPath) { return this._runningCaps.get(modelPath); }

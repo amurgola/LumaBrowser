@@ -8,7 +8,10 @@ created by [BridgeRun](bridge/BridgeRun.md) and used by
 
 ## Methods
 
-- `new ToolLoopMonitor({ searchAllowance? })`.
+- `new ToolLoopMonitor({ searchAllowance?, modeTools? })`. `modeTools` is the
+  names of the tools the chat mode injected into the run (BridgeRun passes
+  them); it decides whether [UncompiledReadsCheck](tool-loop/UncompiledReadsCheck.md)
+  joins the checks.
 - `attempt(name, params, run)`: `run` is `async () => ({ result, ran })`
   (`ran: false` when something downstream refused the call). Resolves to the
   same shape:
@@ -29,7 +32,11 @@ Checks, in order: [IdenticalStreakCheck](tool-loop/IdenticalStreakCheck.md),
 [EchoedLookupCheck](tool-loop/EchoedLookupCheck.md),
 [SearchAllowanceCheck](tool-loop/SearchAllowanceCheck.md) (these can hold a
 call back), then [InertActionCheck](tool-loop/InertActionCheck.md) and
-[StaleSearchCheck](tool-loop/StaleSearchCheck.md) (these only add a note).
+[StaleSearchCheck](tool-loop/StaleSearchCheck.md) (these only add a note),
+and last, only for runs whose mode injected `compile_endpoint` (the Site API
+builder), [UncompiledReadsCheck](tool-loop/UncompiledReadsCheck.md) (a note;
+added for ISSUES.md 21, where the builder repeated extract calls with varied
+selectors that none of the other checks treat as a loop).
 Text comes from [LoopFeedback](tool-loop/LoopFeedback.md).
 
 ## Why

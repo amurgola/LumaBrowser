@@ -21,5 +21,6 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `placement.previewRig(rigId)` | invoke `core.placement.previewRig` |
 | `placement.start()` | invoke `core.placement.start` |
 | `placement.stop()` | invoke `core.placement.stop` |
+| `placement.reloadStale()` | invoke `core.placement.reloadStale` |
 | `placement.runTest()` | invoke `core.placement.runTest` |
 | `placement.onTestEvent(cb)` | subscribe `core.placement.testEvent` |

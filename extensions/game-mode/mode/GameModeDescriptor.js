@@ -1,5 +1,6 @@
 const fs = require('fs');
 const PendingAssetDrainer = require('../assets/PendingAssetDrainer');
+const GameSessions = require('../session/GameSessions');
 const GameSnapshot = require('../session/GameSnapshot');
 const GameDataStores = require('../store/GameDataStores');
 const GameDelegate = require('./GameDelegate');
@@ -45,6 +46,7 @@ class GameModeDescriptor {
     const s = this._sessions.get(conversationId);
     if (!s || !s.workspaceId) return;
     await this._settleAssets(s, emit, aborted);
+    s.status = GameSessions.statusAfterTurn(s, aborted);
     let game = null;
     try { game = GameSnapshot.of(s); } catch (_) { return; }
     try { setMeta({ data: { ...((meta && meta.data) || {}), game } }); } catch (_) {}

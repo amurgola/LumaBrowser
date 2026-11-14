@@ -118,6 +118,7 @@ export default class TabEventSync {
     d.chromeKind.apply(state.kind || (entry && entry.kind) || 'user');
     d.star.refresh(state.url);
     if (d.popupBadge) d.popupBadge.update(entry || state);
+    if (d.siteInfo) d.siteInfo.onNavigated(state.id, state.url || '');
     if (d.vaultKey && (!entry || entry._vaultUrl !== state.url)) {
       if (entry) entry._vaultUrl = state.url;
       d.vaultKey.update(entry || state);

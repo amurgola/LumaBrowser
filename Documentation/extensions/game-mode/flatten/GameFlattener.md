@@ -12,3 +12,7 @@ Collapses a game folder into one self-contained HTML document: Phaser inlined, e
 ## Containment
 
 External and absolute script sources are left alone, and a source resolving outside the game folder (`ContainedPath.resolveWithin`) is never read.
+
+## No scrollbars (2026-11-14)
+
+The page read from index.html first goes through [NoScrollbarStyle](NoScrollbarStyle.md), before any script is inlined, so share links and smoke runs (which load the flat page) get the same `overflow: hidden` rule as Play. The rule used to live only in the scaffold's placeholder index.html, which the agent may rewrite and older games never had (ISSUES.md 32). index.html on disk is not changed.

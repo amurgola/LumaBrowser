@@ -69,6 +69,7 @@ class SmokeReport {
     this._canvas();
     this._screenCheck(shots);
     this._lines.push(...PhaserProbeReport.lines(this._report.games));
+    this._nanCheck();
     this._errorsBlock();
     this._resourcesAndConsole();
     this._frameRate();
@@ -115,6 +116,16 @@ class SmokeReport {
     }
   }
 
+  _nanCheck() {
+    this._nanObjects = PhaserProbeReport.nanObjects(this._report.games);
+    if (!this._nanObjects) return;
+    const plural = this._nanObjects === 1 ? '' : 's';
+    this._lines.push(`${this._nanObjects} object${plural} have a NaN position: the game's own math produced NaN, so `
+      + 'nothing moves and those objects are not drawn, even though no error was thrown. The usual cause is an update '
+      + 'that multiplies by a frame time it never received: update(time, delta) called from a timer or by hand without '
+      + 'delta, or a speed or size read from an undefined field. Find where x or y is assigned and guard the input.');
+  }
+
   _errorsBlock() {
     const errors = this._errors;
     if (!errors.length) return;
@@ -146,7 +157,7 @@ class SmokeReport {
   }
 
   _verdict() {
-    const ok = !!this._report.canvas && !this._errors.length && !this._isBlack();
+    const ok = !!this._report.canvas && !this._errors.length && !this._isBlack() && !this._nanObjects;
     const seen = this._screen === 'content' || this._screen === 'flat';
     this._lines.push(ok
       ? `No runtime errors detected${seen ? ' and the canvas is painting content' : ''}. This proves the game boots${seen ? ' and draws' : ' (no frame was captured, so not that it draws)'}; the user `
@@ -161,6 +172,7 @@ class SmokeReport {
     if (this._errors.length) bits.push(`${this._errors.length} error${this._errors.length === 1 ? '' : 's'}`);
     if (!this._report.canvas) bits.push('no canvas');
     if (this._isBlack()) bits.push('BLACK SCREEN');
+    if (this._nanObjects) bits.push('NaN positions');
     return `smoke · ${bits.join(' · ') || 'issues'}`;
   }
 }

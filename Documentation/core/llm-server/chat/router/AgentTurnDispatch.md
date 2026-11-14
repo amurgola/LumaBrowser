@@ -13,3 +13,7 @@ Routes a Tools-on chat turn through the agent bridge.
 ## Why
 
 The wire history is stripped to role and content, so an edit_image follow-up needs the persisted rows to find artifact ids. Only the user's policy may be refreshed mid-run; a mode's pin and an eval's task list are exact.
+
+## Pre-approved tools
+
+A mode turn may carry `preApprovedTools` (tool names). They are added to the grants the run starts with (`approvedTools`), beside any carried in through `runApprovals` or the conversation's family grants, so the approval gate lets those calls through without a card. The one user is the Scheduled Task setup form ([SetupFormConsent](../scheduled-task/SetupFormConsent.md)). With neither source the value stays null.

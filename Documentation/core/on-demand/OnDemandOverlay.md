@@ -58,3 +58,11 @@ backend is reachable.
   conversation and keeps the panel open.
 - Keyboard routing is in [OnDemandKeyboard](OnDemandKeyboard.md); tab reads in
   [OnDemandTabLookup](OnDemandTabLookup.md).
+
+## Naming (2026-11-14)
+
+The feature is shown to users as **Luma Live**: the Settings row, the search palette entry, the tile's tooltip, the window title, the extension name, the hidden mode's label, the agent's own name in its prompt, the error texts and the hidden conversations' title prefix (`Luma Live: `). It used to be shown as "Luma On Demand" with a panel called "the Live panel", two names for one thing. Only what a person reads changed: the code, the folders (`core/on-demand`, `extensions/on-demand-mode`), the mode id `on-demand`, the IPC channels (`on-demand:*`), the settings keys (`core.onDemand.*`) and the panel's localStorage keys (`od.*`) keep the On Demand name, so nothing stored needs migrating. The palette entry keeps "on demand" as a keyword for people who search the old name. "Live" elsewhere in the app means something else: live modules (chat artifacts that update) and the Dashboard's Live and Edit modes.
+
+## Listening when the panel opens
+
+`core.onDemand.autoListen` (default on; `isAutoListen()`, `setAutoListen(on)`, sent to the panel as `state().autoListen`) is the Settings switch "Listen when Luma Live opens". On, the panel opens its microphone as soon as it expands, unless the user last switched the microphone off in the panel (the panel's own `od.autoVoice`). Off, it always waits for a click on the microphone. The default stays on by the owner's choice; the switch exists because a panel opened in a room where people are talking picks up that speech and sends it to the page as a command.

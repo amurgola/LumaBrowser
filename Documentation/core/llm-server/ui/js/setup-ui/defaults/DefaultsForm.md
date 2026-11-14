@@ -15,3 +15,7 @@ None.
 ## Changes (2026-11-09, helper model)
 
 `_helper(doc, payload)`: `payload.helperModel = { enabled, modelPath?, contextSize? }` only when the toggle rendered, the file and window only when their rows did.
+
+## Changes only
+
+`DefaultsForm.changes(rendered, current)`: the fields of `current` whose value differs from `rendered` (both from `read`), compared by JSON so the helper model block is compared by value and sent whole. A control that appeared since the draw counts as changed; with no draw on record every field is returned. [DefaultsCard](DefaultsCard.md) saves this instead of the whole form.

@@ -1150,6 +1150,12 @@
         .defaults-save-note.stopped {
             background: var(--warning-dim);
         }
+        .card-head > .defaults-saved {
+            margin-left: auto;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
         .defaults-row {
             display: flex;
             align-items: center;

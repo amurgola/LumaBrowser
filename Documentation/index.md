@@ -14,7 +14,7 @@ update its doc, and update this index if its purpose changed.
 What the product does, for people rather than for code. The README links here instead of listing every feature.
 
 - [features/README.md](features/README.md): index of the feature pages.
-- [features/browser.md](features/browser.md): everyday browsing, ad blocking and Chrome extensions, password manager, search palette, Luma On Demand, Dashboard and Hub.
+- [features/browser.md](features/browser.md): everyday browsing, ad blocking and Chrome extensions, password manager, search palette, Luma Live, Dashboard and Hub.
 - [features/local-models.md](features/local-models.md): model search and fit, runtimes per GPU vendor, placement, drafters, helper model, per-model settings, other providers and the local API.
 - [features/media.md](features/media.md): image models, CivitAI, image editing, media viewer, video, music and voice.
 - [features/agents.md](features/agents.md): chat tools, agents, Code mode, Tool Forge, Site APIs, Roleplay, and MCP, ACP, WebDriver and CDP setup.
@@ -620,6 +620,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/safe-fetch/ResponseCharset.md](core/llm-server/chat/safe-fetch/ResponseCharset.md): maps a Content-Type charset to a Buffer encoding; has `encodingFor`.
 - [core/llm-server/chat/ScheduledTaskMode.md](core/llm-server/chat/ScheduledTaskMode.md): the scheduled-task chat mode; has `register`, `unregister`, `descriptor`, `buildTurn`.
 - [core/llm-server/chat/scheduled-task/ScheduledTaskPrompt.md](core/llm-server/chat/scheduled-task/ScheduledTaskPrompt.md): the scheduled-task setup system prompt; has `build`.
+- [core/llm-server/chat/scheduled-task/SetupFormConsent.md](core/llm-server/chat/scheduled-task/SetupFormConsent.md): when a submitted setup form stands in for the approval card of `create_scheduled_task` (first turn only, no task yet, that tool only); has `preApprovedTools`.
 - [core/llm-server/chat/scheduled-task/ScheduledTaskTools.md](core/llm-server/chat/scheduled-task/ScheduledTaskTools.md): the scheduled-task create, update and run tools; has `build`, `create`, `update`, `runNow`.
 - [core/llm-server/chat/scheduled-task/ScheduledTaskToolSpecs.md](core/llm-server/chat/scheduled-task/ScheduledTaskToolSpecs.md): scheduled-task tool names, descriptions and schemas; has `create`, `update`, `run`.
 - [core/llm-server/chat/scheduled-task/TaskInterval.md](core/llm-server/chat/scheduled-task/TaskInterval.md): task intervals as readable frequencies; has `describe`, `toMinutes`, `fromMinutes`.
@@ -1149,6 +1150,8 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementLanes.md](core/llm-server/ui/js/setup-ui/advanced/PlacementLanes.md): builds the drop lanes: local GPUs, ordered groups, remote peer GPUs (including unpaired refs, marked unavailable) and System RAM, each with its plan bar and singularity boxes.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementLayoutModel.md](core/llm-server/ui/js/setup-ui/advanced/PlacementLayoutModel.md): the placement canvas's state and every edit a drag, group or singularity action makes to it.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementPreviewMode.md](core/llm-server/ui/js/setup-ui/advanced/PlacementPreviewMode.md): the example PC preview of the placement canvas: the row of PCs, the read-only plan under its "Preview: not this PC" banner, and the way back; has `load`, `picker`, `describe`, `show`, `leave`.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementRunningMarks.md](core/llm-server/ui/js/setup-ui/advanced/PlacementRunningMarks.md): "running here" marks on the card lanes for where each loaded model really is (automatic models, and models still on an old card); has `distribute`, `mark`.
+- [core/llm-server/ui/js/setup-ui/advanced/PlacementStaleNotice.md](core/llm-server/ui/js/setup-ui/advanced/PlacementStaleNotice.md): the "Saved, not applied yet" notice for running models the saved layout would move, with "Unload to apply"; has `entries`, `build`, `reload`, `describe`.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementRows.md](core/llm-server/ui/js/setup-ui/advanced/PlacementRows.md): the rows above the lanes: the allocation gate, the "split LLM context" toggle and the "combine GPUs" picker.
 - [core/llm-server/ui/js/setup-ui/advanced/PlacementText.md](core/llm-server/ui/js/setup-ui/advanced/PlacementText.md): text helpers of the placement canvas.
 - [core/llm-server/ui/js/setup-ui/advanced/PromptPreviewPanel.md](core/llm-server/ui/js/setup-ui/advanced/PromptPreviewPanel.md): the "System prompt preview" panel: the exact system prompt of a Tools-on turn from the current settings.
@@ -1547,7 +1550,7 @@ Small building blocks shared by more than one subsystem.
 - [core/network-sharing/webapp/public/js/shim/ChatTurnRunner.md](core/network-sharing/webapp/public/js/shim/ChatTurnRunner.md): the shim's `chat2`: persists the turn on the device, streams it from the host, and re-emits it as the requestId-keyed chat event stream the chat expects.
 - [core/network-sharing/webapp/public/js/shim/HostThinking.md](core/network-sharing/webapp/public/js/shim/HostThinking.md): the host's thinking capability (`/sharing/resources` `.thinking`), fetched once per session.
 - [core/network-sharing/webapp/public/js/shim/LlmApiShim.md](core/network-sharing/webapp/public/js/shim/LlmApiShim.md): the web build of `window.llmDiagAPI`: the surface the transport-agnostic chat ([ChatMode](core/llm-server/ui/js/chat/ChatMode.md)) consumes, built from HTTP ([LumaApi](core/network-sharing/webapp/public/js/transport/LumaApi.md)) plus on-device storage ([LumaStore](core/network-sharing/webapp/public/js/store/LumaStore.md)).
-- [core/network-sharing/webapp/public/js/shim/LocalPrefs.md](core/network-sharing/webapp/public/js/shim/LocalPrefs.md): per-device chat preferences in localStorage: `luma.web.sidebar` (`'1'` collapsed) and `luma.web.model`.
+- [core/network-sharing/webapp/public/js/shim/LocalPrefs.md](core/network-sharing/webapp/public/js/shim/LocalPrefs.md): per-device chat preferences in localStorage: `luma.web.sidebar` (`'1'` collapsed; unset, the chat list starts closed on a phone sized screen) and `luma.web.model`.
 - [core/network-sharing/webapp/public/js/shim/ShimArtifactData.md](core/network-sharing/webapp/public/js/shim/ShimArtifactData.md): the shim's live-artifact data surface (`all` / `mutate` / `onChanged`, the desktop preload's shape, read by the chat's LiveArtifacts through `ArtifactDataStore` with `{ kind: 'ipc', api: api.artifactData }`) over `/sharing/artifact-data/<id>`.
 - [core/network-sharing/webapp/public/js/shim/ShimArtifacts.md](core/network-sharing/webapp/public/js/shim/ShimArtifacts.md): the shim's `artifact` surface.
 - [core/network-sharing/webapp/public/js/shim/ShimConversations.md](core/network-sharing/webapp/public/js/shim/ShimConversations.md): the shim's `conv` surface over the device store, in the desktop's reply shapes.
@@ -1615,6 +1618,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/tool-loop/IdenticalStreakCheck.md](core/llm-server/chat/tool-loop/IdenticalStreakCheck.md): holds a fourth identical back-to-back call.
 - [core/llm-server/chat/tool-loop/EchoedLookupCheck.md](core/llm-server/chat/tool-loop/EchoedLookupCheck.md): holds a lookup identical to, or a rewording of, an earlier success.
 - [core/llm-server/chat/tool-loop/SearchAllowanceCheck.md](core/llm-server/chat/tool-loop/SearchAllowanceCheck.md): holds searches past the turn's shared allowance; has `spent`.
+- [core/llm-server/chat/tool-loop/UncompiledReadsCheck.md](core/llm-server/chat/tool-loop/UncompiledReadsCheck.md): the loop check that nudges the Site API builder after four page reads in a row with no endpoint compiled; only in runs that have `compile_endpoint`.
 - [core/llm-server/chat/tool-loop/InertActionCheck.md](core/llm-server/chat/tool-loop/InertActionCheck.md): notes a browser action that repeatedly changed nothing on the same target and page.
 - [core/llm-server/chat/tool-loop/StaleSearchCheck.md](core/llm-server/chat/tool-loop/StaleSearchCheck.md): notes consecutive searches that brought almost nothing new.
 - [core/llm-server/chat/tool-loop/InterventionLadder.md](core/llm-server/chat/tool-loop/InterventionLadder.md): loop pressure mapped to steer, insist, conclude; has `climb`, `ease`.
@@ -1769,6 +1773,7 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/service/ImageSlotPlacement.md](core/image-server/service/ImageSlotPlacement.md): image slot VRAM placement with auto-fit; has `place`, `requiredBytes`, `budgetString`.
 - [core/image-server/service/VaeTilingPolicy.md](core/image-server/service/VaeTilingPolicy.md): VAE tiling decision; has `decide`.
 - [core/image-server/service/SageAttentionPolicy.md](core/image-server/service/SageAttentionPolicy.md): per-launch --sage-attn decision (CUDA build, Ampere+ card, model opt-in); has `decide`.
+- [core/image-server/service/RuntimeReleaseTag.md](core/image-server/service/RuntimeReleaseTag.md): compares an installed image runtime's release tag (`luma-b<n>` or `master-<n>`) with the minimum a model row states; an unknown tag never blocks a launch; has `installedTag`, `isOlder`, `parse`.
 - [core/image-server/service/PreferredImageRuntime.md](core/image-server/service/PreferredImageRuntime.md): one-launch swap onto a model's preferred drop-in runtime (MiniMax-H3 on the LumaByte build); has `pick`, `interchangeable`.
 - [core/image-server/service/ChatSwapOut.md](core/image-server/service/ChatSwapOut.md): when an image launch swaps out the resident automatic chat model instead of offloading beside it; has `cardToFree`.
 - [core/image-server/service/UserGpuPin.md](core/image-server/service/UserGpuPin.md): whether the user pinned a slot to a GPU; has `isPinnedToGpu`.
@@ -1809,7 +1814,7 @@ Small building blocks shared by more than one subsystem.
 
 - [core/on-demand/OnDemandGeometry.md](core/on-demand/OnDemandGeometry.md): where the On Demand icon and panel sit in the page area; has `defaultPosition`, `clampPosition`, `iconBounds`, `panelBounds`.
 - [core/on-demand/OnDemandService.md](core/on-demand/OnDemandService.md): the per-tab hidden On Demand conversations; has `send`, `abort`, `history`, `refreshTab`, `trackedConversation`, `onTabClosed`, `sweep`, `dispose`.
-- [core/on-demand/OnDemandOverlay.md](core/on-demand/OnDemandOverlay.md): the floating On Demand tile and Live panel; has `setEnabled`, `setExpanded`, `sendTurn`, `abortTurn`, `history`, `destroy`.
+- [core/on-demand/OnDemandOverlay.md](core/on-demand/OnDemandOverlay.md): the floating Luma Live tile and panel (code name On Demand); has `setEnabled`, `setAutoListen`, `setExpanded`, `sendTurn`, `abortTurn`, `history`, `destroy`.
 - [core/on-demand/OnDemandPlacement.md](core/on-demand/OnDemandPlacement.md): On Demand tile, panel and window bounds; has `pageRect`, `innerBounds`, `windowBounds`, `tileRect`.
 - [core/on-demand/OnDemandTabLookup.md](core/on-demand/OnDemandTabLookup.md): fail-soft TabViewManager reads for On Demand; has `activeTabId`, `tabInfo`, `pageRect`.
 - [core/on-demand/OnDemandWindowFactory.md](core/on-demand/OnDemandWindowFactory.md): creates the transparent On Demand window; has `create`.
@@ -2393,7 +2398,7 @@ Small building blocks shared by more than one subsystem.
 - [core/placement/PlacementIpcHandlers.md](core/placement/PlacementIpcHandlers.md): IPC controller for `core.placement.*`; has `register`.
 - [core/placement/PlacementService.md](core/placement/PlacementService.md): unified placement canvas backend (layout, start and stop, VRAM snapshot, hotswap gate, measuring test); has `getConfig`, `setConfig`, `autoArrange`, `previewRig`, `getVramSnapshot`, `startAll`, `stopAll`, `runTest`.
 - [core/placement/service/BestEffort.md](core/placement/service/BestEffort.md): null-on-throw reads for placement; has `read`.
-- [core/placement/service/PlacementServers.md](core/placement/service/PlacementServers.md): managed model services by layout item; has `runtimeServer`, `status`, `isAvailable`.
+- [core/placement/service/PlacementServers.md](core/placement/service/PlacementServers.md): managed model services by layout item; has `runtimeServer`, `status`, `isAvailable`, `stop`.
 - [core/placement/service/MeasuredFootprintStore.md](core/placement/service/MeasuredFootprintStore.md): measured test-render footprints per model; has `all`, `merge`.
 - [core/placement/service/PlacementGate.md](core/placement/service/PlacementGate.md): allocation gate on measured or stated footprints; has `canApply`.
 - [core/placement/service/HotswapWiring.md](core/placement/service/HotswapWiring.md): registers servers for hotswap eviction; has `wire`, `applyPools`.
@@ -2408,6 +2413,7 @@ Small building blocks shared by more than one subsystem.
 - [core/placement/service/PlacementTestTurn.md](core/placement/service/PlacementTestTurn.md): one timed placement test chat turn; has `run`.
 - [core/placement/service/PlacementTestRun.md](core/placement/service/PlacementTestRun.md): the placement test sequence; has `run`.
 - [core/placement/service/PlacementLifecycle.md](core/placement/service/PlacementLifecycle.md): starts and unloads the placed models; has `startAll`, `stopAll`.
+- [core/placement/service/StalePlacements.md](core/placement/service/StalePlacements.md): the running models that sit somewhere other than where the saved layout puts them; has `of`.
 - [core/placement/service/PreviewRigs.md](core/placement/service/PreviewRigs.md): the example PCs the canvas can preview and their diagnostics snapshots; has `list`, `byId`, `diagnostics`.
 - [core/placement/service/PlacementPreview.md](core/placement/service/PlacementPreview.md): what Automatic Local Setup would plan on an example PC, in the canvas shapes; has `describe`.
 
@@ -3262,6 +3268,7 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [extensions/site-apis/ui/SiteApisRenderer.md](extensions/site-apis/ui/SiteApisRenderer.md): drives the settings page, the changed push and the tab menu item; has `activate`, `deactivate`, `load`, `openBuilder`, `contributeMenu`.
 - [extensions/site-apis/ui/SettingsPage.md](extensions/site-apis/ui/SettingsPage.md): summary, persisted-tab picker and site cards; has `render`, `togglePicker`, `closePicker`.
 - [extensions/site-apis/ui/SiteCard.md](extensions/site-apis/ui/SiteCard.md): one site with status pill, Open tab, Edit in chat, Delete and its endpoint rows; has `render`, `rows`.
+- [extensions/site-apis/ui/OpenEndpointDetails.md](extensions/site-apis/ui/OpenEndpointDetails.md): what the Site APIs settings page remembers per endpoint across a re-render (the open detail, the last run's values and result), dropped when the endpoint is gone or its definition changed; has `open`, `close`, `ran`, `restore`, `keepOnly`.
 - [extensions/site-apis/ui/EndpointRow.md](extensions/site-apis/ui/EndpointRow.md): one endpoint with tool name copy, badges, Run, Runs, Delete; has `render`, `toggle`.
 - [extensions/site-apis/ui/RunForm.md](extensions/site-apis/ui/RunForm.md): the inline params form and its JSON or fault result; has `render`, `values`, `submit`, `showResult`.
 - [extensions/site-apis/ui/RunList.md](extensions/site-apis/ui/RunList.md): the last ten runs with status, duration and fault; has `load`, `render`, `row`.
@@ -3581,6 +3588,7 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [extensions/game-mode/assets/PlaceholderPng.md](extensions/game-mode/assets/PlaceholderPng.md): the solid-colour placeholder PNG every asset gets before its real image exists, so a game never 404s an asset.
 - [extensions/game-mode/assets/RuntimeAssetGenerator.md](extensions/game-mode/assets/RuntimeAssetGenerator.md): `AI.image()` from inside a running game: the build-time pipeline for play-time art under `assets/runtime/`, memoised per request and one render at a time process-wide.
 - [extensions/game-mode/assets/RuntimeImageIndex.md](extensions/game-mode/assets/RuntimeImageIndex.md): the memo of play-time images an AI game has drawn, `.gamedata/images.json`, keyed by the game's `key` or a request hash.
+- [extensions/game-mode/flatten/NoScrollbarStyle.md](extensions/game-mode/flatten/NoScrollbarStyle.md): the no-scrollbar style rule added to a game page when it is served for Play, flattened for sharing or the smoke run, or exported; has `apply`.
 - [extensions/game-mode/flatten/GameFlattener.md](extensions/game-mode/flatten/GameFlattener.md): collapses a game folder into one self-contained HTML document: Phaser inlined, every local script inlined in order (`</script` escaped), every referenced `assets/` file a data: URI.
 - [extensions/game-mode/flatten/PhaserDist.md](extensions/game-mode/flatten/PhaserDist.md): locates the vendored `node_modules/phaser/dist/phaser.min.js` beside the repo root (dev) or under `app.getAppPath()` (packaged).
 - [extensions/game-mode/lint/CommentBlanker.md](extensions/game-mode/lint/CommentBlanker.md): blanks `//` and block comment bodies with spaces while keeping every offset and newline, so lint findings map onto the source and prose in comments never fires.
@@ -3922,7 +3930,7 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/overlay/OverlayActionRouter.md](ui/shell/overlay/OverlayActionRouter.md): routes overlay clicks and hovers to the permission prompt, the notification log or the open popup (suggestions, folder, context/gear menu, downloads list).
 - [ui/shell/overlay/PopupMenu.md](ui/shell/overlay/PopupMenu.md): every popup menu (context menus, gear menu, bookmark folders): one open path, one action dispatch, and arrow/Home/End/Enter/Space/Escape keys.
 - [ui/shell/permissions/PermissionPrompts.md](ui/shell/permissions/PermissionPrompts.md): camera / microphone / notification prompts in the overlay's 'perm' layer, anchored under the address bar, only for the active tab; answers go back through `permissionPromptAPI.respond`.
-- [ui/shell/settings/BrowserDataSettings.md](ui/shell/settings/BrowserDataSettings.md): start page, search engine, Luma On Demand, bookmarks-bar visibility (migrating the old localStorage value once) and force dark mode.
+- [ui/shell/settings/BrowserDataSettings.md](ui/shell/settings/BrowserDataSettings.md): start page, search engine, Luma Live (on or off, and listening when it opens), bookmarks-bar visibility (migrating the old localStorage value once) and force dark mode.
 - [ui/shell/settings/BrowsingDataCleaner.md](ui/shell/settings/BrowsingDataCleaner.md): confirm-then-clear browsing history and browser cache, shared by the gear menu, General and History.
 - [ui/shell/settings/CopyButton.md](ui/shell/settings/CopyButton.md): copies a value and flashes the button label (third use of the pattern, extracted).
 - [ui/shell/settings/SettingsFeedback.md](ui/shell/settings/SettingsFeedback.md): saved/Failed ticks beside autosaving controls with a row error line, and the modal toast (falls back to the notification log when Settings is not on screen).

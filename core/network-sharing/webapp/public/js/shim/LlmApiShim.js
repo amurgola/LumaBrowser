@@ -20,7 +20,7 @@ export default class LlmApiShim {
     const runner = new ChatTurnRunner({ api, store, events: chatEvents });
     return LlmApiShim._surface({
       api, store, win, serverEvents, chatEvents, models, runner,
-      prefs: new LocalPrefs(win.localStorage),
+      prefs: new LocalPrefs(win.localStorage, win),
       thinking: new HostThinking(api),
       attachments: new AttachmentReader({ doc: win.document, FileReaderImpl: win.FileReader }),
     });

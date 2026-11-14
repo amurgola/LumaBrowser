@@ -10,6 +10,8 @@ import PlacementLanes from './PlacementLanes.js';
 import PlacementLayoutModel from './PlacementLayoutModel.js';
 import PlacementPreviewMode from './PlacementPreviewMode.js';
 import PlacementRows from './PlacementRows.js';
+import PlacementRunningMarks from './PlacementRunningMarks.js';
+import PlacementStaleNotice from './PlacementStaleNotice.js';
 import PromptPreviewPanel from './PromptPreviewPanel.js';
 import SplitEditorPanel from './SplitEditorPanel.js';
 import TestRenderPanel from './TestRenderPanel.js';
@@ -30,6 +32,8 @@ export default class AdvancedView {
     this._rows = new PlacementRows(this);
     this._lanes = new PlacementLanes(this);
     this._chips = new PlacementChips(this);
+    this._marks = new PlacementRunningMarks(this);
+    this.stale = new PlacementStaleNotice(this);
     this._splitPanel = new SplitEditorPanel(this);
     this._controls = new PlacementControls(this);
     this._test = new TestRenderPanel(this);
@@ -71,6 +75,8 @@ export default class AdvancedView {
     if (picker) body.appendChild(picker);
     if (this._preview.active) { this._renderPreview(body); body.style.minHeight = ''; return; }
     body.appendChild(this._rows.gate());
+    const staleNotice = this.stale.build();
+    if (staleNotice) body.appendChild(staleNotice);
     body.appendChild(this._rows.contextRow());
     this._splitPanel.render(body);
     const tray = this._tray();
@@ -79,6 +85,7 @@ export default class AdvancedView {
     body.appendChild(Dom.el('div', 'adv-grid-note', AdvancedView.GRID_NOTE));
     body.appendChild(this._lanes.build());
     this._chips.distribute(body, tray);
+    this._marks.distribute(body);
     this._controls.render(body);
     this._test.render(body);
     this._prompt.render(body);

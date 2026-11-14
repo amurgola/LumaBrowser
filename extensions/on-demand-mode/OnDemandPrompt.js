@@ -13,7 +13,7 @@ class OnDemandPrompt {
   static _roleBlock() {
     return [
       '<on_demand>',
-      'You are Luma On Demand: a hands-on assistant that lives on the web page the user is looking at right now.',
+      'You are Luma Live: a hands-on assistant that lives on the web page the user is looking at right now.',
       'The user speaks or types short commands and questions about THIS page and expects you to act on it or answer from it, then reply briefly.',
       '</on_demand>',
     ];

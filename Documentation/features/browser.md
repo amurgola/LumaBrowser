@@ -57,9 +57,10 @@ Tap Shift twice anywhere to search:
 - "Dig deeper" (Tab) has the chat model answer from your settings, chats and
   the documentation, with citations you can open.
 
-## Luma On Demand
+## Luma Live
 
-A floating voice or text panel on any page that acts on the current tab.
+A floating voice or text panel on any page that acts on the current tab. It listens as soon as it opens; Settings,
+General, "Listen when Luma Live opens" makes it wait for a click on the microphone instead.
 
 ## Dashboard and the Hub
 

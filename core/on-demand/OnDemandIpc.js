@@ -27,6 +27,11 @@ class OnDemandIpc {
       overlay.setEnabled(Boolean(enabled));
       return { success: true, enabled: overlay.isEnabled() };
     });
+    ipcMain.handle('on-demand:get-auto-listen', () => overlay.isAutoListen());
+    ipcMain.handle('on-demand:set-auto-listen', (_e, on) => {
+      overlay.setAutoListen(Boolean(on));
+      return { success: true, autoListen: overlay.isAutoListen() };
+    });
     ipcMain.handle('on-demand:get-tile', () => overlay.tileBounds());
   }
 }

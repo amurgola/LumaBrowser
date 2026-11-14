@@ -8,3 +8,7 @@ Streams a game as a portable zip: every file in the folder, `phaser.min.js` bund
 
 - `fileName(root)` `<slug of game.json name>.zip`, else `game.zip` ([Slug](../../../core/shared/text/Slug.md)).
 - `stream({ root, phaserPath, output, onError })` (archiver, zlib level 9).
+
+## No scrollbars (2026-11-14)
+
+The zipped index.html also gets the [NoScrollbarStyle](../flatten/NoScrollbarStyle.md) rule, like Play and share links (ISSUES.md 32).
