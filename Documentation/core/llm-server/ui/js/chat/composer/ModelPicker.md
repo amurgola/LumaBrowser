@@ -50,3 +50,7 @@ usage meter divides by.
 ## Changes (2026-11-09, helper model)
 
 Rows with `role: 'helper'` (the resident helper model) are left out of the provider groups: it is a mode's bookkeeping model, not a chat choice.
+
+## Changes (2026-11-14, `onModelPicked`)
+
+`selectLocal`, `selectProfile` and `selectRemote` end by telling the active chat mode which model was picked: `modeCtx.callHook('onModelPicked', state.modelRef, modeCtx.forHooks())` (`_picked`). A mode that pins its turns to a model of its own has to hear of the pick: a roleplay runs every turn on the model its story records (`data.llmModel`), so a model picked in the gear changed the pill and nothing else, and the next reply still came from the model chosen at setup. Restoring a conversation's model on open sets `state.modelRef` directly and announces nothing.

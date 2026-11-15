@@ -47,7 +47,8 @@ class LabRouter {
     const HelperStream = LabRouter.core('llm-server/chat/router/HelperStream');
     const request = new LocalRequest({ llmServerService: service, runtimeCatalog: LlmRuntimeCatalog.shared, adapterRegistry: ChatAdapterRegistry });
     const localStream = new LocalStream({ llmServerService: service, prep: { prepare: async () => {} }, request });
-    const remoteStream = { stream: () => { throw new Error('the Roleplay Lab serves local models only'); } };
+    const RemoteStream = LabRouter.core('llm-server/chat/router/RemoteStream');
+    const remoteStream = new RemoteStream({ db });
     const helperStream = service.helperModel
       ? new HelperStream({ helper: service.helperModel, runtimeCatalog: LlmRuntimeCatalog.shared, adapterRegistry: ChatAdapterRegistry })
       : null;

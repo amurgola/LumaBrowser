@@ -24,10 +24,11 @@ export default class ChatEventRouter {
   }
 
   handle(evt) {
-    if (!evt || evt.requestId !== this._ctx.state.reqId) return;
+    if (!evt) return;
     const handler = this._handlers[evt.type];
-    if (handler) handler(evt.payload);
-    else this._modeEvent(evt);
+    if (!handler) { this._modeEvent(evt); return; }
+    if (evt.requestId !== this._ctx.state.reqId) return;
+    handler(evt.payload);
   }
 
   _meta(p) {
@@ -45,6 +46,7 @@ export default class ChatEventRouter {
     const { state } = this._ctx;
     const minted = !state.streamConvId;
     state.streamConvId = cid;
+    state.rememberRequest(state.reqId, cid);
     if (state.activeId == null && !this._ctx.landing.isShowing()) state.activeId = cid;
     if (minted && !state.conversations.some((c) => c.id === cid)) this._ctx.convList.refresh();
   }
@@ -198,7 +200,8 @@ export default class ChatEventRouter {
 
   _modeEvent(evt) {
     const { state } = this._ctx;
-    if (!state.streamOnScreen()) return;
+    const conversationId = state.conversationOfRequest(evt.requestId);
+    if (!conversationId || conversationId !== state.activeId) return;
     this._ctx.modeCtx.callHook('onChatEvent', { type: evt.type, payload: evt.payload }, this._ctx.modeCtx.forEvents());
   }
 }

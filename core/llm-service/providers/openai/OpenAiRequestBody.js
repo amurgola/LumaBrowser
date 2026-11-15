@@ -7,6 +7,7 @@ class OpenAiRequestBody {
     'promptCacheKey', 'local', 'samplerOverrides', 'repetitionGuard',
     'max_tokens',
     'model',
+    'chatTemplateKwargs', 'reasoningBudget',
   ]);
 
   static build(messages, options, { streaming, endpoint, managedLocal, selectedModel }) {
@@ -20,6 +21,8 @@ class OpenAiRequestBody {
       stream: !!streaming,
       local: options.local !== undefined ? !!options.local : managedLocal,
       samplerOverrides: options.samplerOverrides,
+      chatTemplateKwargs: options.chatTemplateKwargs,
+      reasoningBudget: options.reasoningBudget,
       promptCacheKey: OpenAiRequestBody._promptCacheKey(options, endpoint),
       extra: OpenAiRequestBody._forwardedOptions(options),
     });

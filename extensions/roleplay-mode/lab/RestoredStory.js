@@ -206,6 +206,25 @@ class RestoredStory {
     ];
   }
 
+  static WALK_THREAD = 'Whether Daniel and Elena walk down to the canal tonight';
+
+  static alternateTurn() {
+    const S = RestoredStory.SCENES;
+    const first = RestoredStory.turns()[11];
+    return {
+      player: first.player,
+      reply: 'Elena listens with her eyes closed, then pushes the blanket off her shoulders.\n\n'
+        + '**Elena:** "No screens. My head cannot take a screen." She gets up and finds her shoes by the door. "Walk me down to the canal instead. Ten minutes of cold air and I will be a person again."',
+      stage: RestoredStory._stage({
+        location: { name: S.home, desc: '', isNew: false },
+        present: [RestoredStory._present('Elena', { emotion: 'restless, tired', intent: 'to walk down to the canal for some air', condition: 'a headache since three', bondUser: 'loving', beat: 'Listened to the player\'s day and asked for a walk to the canal instead of an evening on the sofa.', outfit: 'soft grey sweater, leggings, wool socks' })],
+        events: [{ text: 'Elena asked to walk down to the canal for some air instead of staying in.', who: ['Elena', 'Daniel'] }],
+        clock: { timeOfDay: 'evening' },
+        threads: { opened: [RestoredStory.WALK_THREAD] },
+      }),
+    };
+  }
+
   static PROFILES = Object.freeze({
     'Marcus Bell': { summary: 'Daniel\'s desk neighbour at Harlow Mutual, dry and easygoing.', appearance: 'broad man, loosened green tie, rolled shirt sleeves', history: 'Has worked claims at Harlow Mutual for nine years.', voice: 'Short, dry sentences; teases. "You sound like a drain."', wants: 'to close the Hendry claim', hides: '', tells: ['rubs the back of his neck when embarrassed', 'checks his watch before he stands'], bondUser: 'friendly', bonds: {} },
     'Priya Nair': { summary: 'The barista at the Juniper Cafe, brisk and friendly.', appearance: 'young woman, dark braid, mustard apron', history: 'Works the lunch shift at the Juniper Cafe.', voice: 'Quick and bright; says sorry with a grin. "On the house."', wants: 'to get through the lunch rush', hides: '', tells: ['taps the dead card reader when she remembers it', 'wipes her hands on her apron before taking money'], bondUser: 'friendly', bonds: {} },
@@ -220,8 +239,9 @@ class RestoredStory {
     + 'Who is where: Marcus Bell is at the office until seven. Priya Nair is at the Juniper Cafe. Mrs. Okafor is in flat 2B.\n'
     + 'Promises and debts: Marcus Bell owes the player twenty dollars, due Friday. The player promised to water Mrs. Okafor\'s plants on Saturday and Sunday.';
 
-  static script({ fallbackNarrator = 'Nothing else happens for a moment.' } = {}) {
+  static script({ fallbackNarrator = 'Nothing else happens for a moment.', alternate = false } = {}) {
     const turns = RestoredStory.turns();
+    if (alternate) turns.splice(11, 0, RestoredStory.alternateTurn());
     const text = (m) => (typeof (m && m.content) === 'string' ? m.content : '');
     return {
       narrator: async (call) => {

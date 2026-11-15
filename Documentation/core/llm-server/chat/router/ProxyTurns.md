@@ -15,3 +15,7 @@ Turns run for a paired Network Sharing client: never persisted, never touching t
 ## Why
 
 The client owns its history. The sharing route fires abort from both its socket-close handler and its abort endpoint.
+
+## Changes (2026-11-14, a client's side call)
+
+`stream` tags the dispatch `callType: 'side'` when the client pinned its temperature (`extra.pinTemperature`, read from the body by [ClientRequestKnobs](../../../network-sharing/host/llm/ClientRequestKnobs.md)), `'sharing'` otherwise (`_callType`). A pinned call is one of the client's side calls (a roleplay bookkeeping call asking for 0.2): as a side call the host's own Tune temperature for the model leaves it alone ([RequestSettings](RequestSettings.md) `HOUSEKEEPING`), as it would on the client's own server.

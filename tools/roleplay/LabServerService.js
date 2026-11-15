@@ -1,7 +1,7 @@
 class LabServerService {
   static RUNTIME_ID = 'llama-cpp-luma';
 
-  constructor({ chatStore, host = '127.0.0.1', port, ctx = 16384, effort = 'default', modelStem = 'model', runtimeId = LabServerService.RUNTIME_ID, helperModel = null } = {}) {
+  constructor({ chatStore, host = '127.0.0.1', port, ctx = 16384, effort = 'default', modelStem = 'model', runtimeId = LabServerService.RUNTIME_ID, helperModel = null, plan = null } = {}) {
     this.chatStore = chatStore;
     this.modelSettings = null;
     this.helperModel = helperModel;
@@ -17,7 +17,7 @@ class LabServerService {
       dirty: false,
       plan: null,
       authKey: null,
-      getStatus: () => ({ state: 'ready', host: this._host, port: this._port, plan: null }),
+      getStatus: () => ({ state: 'ready', host: this._host, port: this._port, plan }),
       markActive: () => {},
     };
   }

@@ -1,5 +1,6 @@
 const path = require('path');
 const ChatModelRef = require('./ChatModelRef');
+const PeerModelRef = require('./PeerModelRef');
 const HarmonyModel = require('../HarmonyModel');
 const ModelFamilies = require('../../server/ModelFamilies');
 
@@ -11,6 +12,7 @@ class ModelCapabilities {
     this._service = llmServerService;
     this._db = db;
     this._families = null;
+    this._peers = new PeerModelRef({ db });
   }
 
   visionActive(rawRef) {
@@ -35,7 +37,7 @@ class ModelCapabilities {
     const modelRef = this._base(rawRef);
     if (typeof modelRef !== 'string') return false;
     if (HarmonyModel.matches(modelRef)) return true;
-    if (!ChatModelRef.isLocal(modelRef)) return true;
+    if (!ChatModelRef.isLocal(modelRef)) return !this._peers.is(modelRef);
     const setting = this._db ? this._db.get(ModelCapabilities.NATIVE_TOOLS_SETTING, null) : null;
     if (setting === false) return false;
     const family = this._family(modelRef);

@@ -35,3 +35,7 @@ thinking-dial rule) reaches the Lab the day it lands.
 ## Changes (2026-11-09, helper model)
 
 `localDispatcher` adds the app's `HelperStream` over `service.helperModel` (a [LabHelperModel](LabHelperModel.md)) when the service has one, so `helper::` refs route as in the app.
+
+## Changes (2026-11-14, the remote path)
+
+`localDispatcher` builds the app's own `RemoteStream` over the settings double instead of a stub that threw "the Roleplay Lab serves local models only". A run whose settings hold a provider config (a [LabSharingHost](LabSharingHost.md) standing in for a paired host) reaches it exactly as a client does; without one a remote ref fails as "not configured".

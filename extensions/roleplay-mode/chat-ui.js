@@ -40,17 +40,38 @@
     await ctx.setMeta({ data });
   }
 
+  async function storedData(ctx) {
+    const meta = ctx && ctx.api && ctx.api.conv && ctx.api.conv.meta;
+    if (meta && typeof meta.get === 'function' && ctx.conversationId) {
+      try {
+        const r = await meta.get(ctx.conversationId);
+        const data = r && r.success && r.meta && r.meta.data;
+        if (data && typeof data === 'object') return data;
+      } catch (_) {}
+    }
+    return (ctx && ctx.meta && ctx.meta.data) || null;
+  }
+
+  async function changeStored(ctx, how, apply) {
+    const data = await storedData(ctx);
+    if (!data) return null;
+    apply(data);
+    try { await saveWorld(ctx, data, how); } catch (_) {}
+    return data;
+  }
+
   async function syncHeadWithThread(ctx) {
     const T = timeline();
-    const data = ctx && ctx.meta && ctx.meta.data;
     const conv = ctx && ctx.api && ctx.api.conv;
-    if (!T || !data || !ctx.conversationId || !conv || typeof conv.messages !== 'function') return;
+    if (!T || !(ctx && ctx.meta && ctx.meta.data) || !ctx.conversationId || !conv || typeof conv.messages !== 'function') return;
     let msgs = [];
     try {
       const r = await conv.messages(ctx.conversationId);
       msgs = (r && Array.isArray(r.messages)) ? r.messages : [];
     } catch (_) { return; }
     if (!msgs.length) return;
+    const data = await storedData(ctx);
+    if (!data) return;
     const idsBefore = (data.characters || []).map((c) => c && c.id).join('|');
     const added = T.ensure(data);
     const moved = T.materialize(data, msgs.map((m) => m.id));
@@ -1036,13 +1057,14 @@
         if (refined && refined.b64) img = refined;
       }
       if (asst) appendSceneImage(asst, { b64: img.b64, mime: img.mime });
-      data.images = data.images || {};
-      data.images[msg.id] = Object.assign({}, data.images[msg.id], {
-        b64: img.b64, mime: img.mime || 'image/png',
-        gen: { prompt, modelRef: data.baseModel || null, slot: null, painted: true, sceneId, width, height },
+      await changeStored(ctx, 'assets', (d) => {
+        d.images = d.images || {};
+        d.images[msg.id] = Object.assign({}, d.images[msg.id], {
+          b64: img.b64, mime: img.mime || 'image/png',
+          gen: { prompt, modelRef: data.baseModel || null, slot: null, painted: true, sceneId, width, height },
+        });
+        d.lastShot = { b64: img.b64, mime: img.mime || 'image/png', sceneId, messageId: msg.id };
       });
-      data.lastShot = { b64: img.b64, mime: img.mime || 'image/png', sceneId, messageId: msg.id };
-      try { await saveWorld(ctx, data, 'assets'); } catch (_) {}
     } catch (_) {
       if (asst) clearSceneLoading(asst);
     }
@@ -1071,10 +1093,11 @@
       const r = await gen(ctx.api, opts);
       if (r && r.b64) {
         appendSceneImage(asst, { b64: r.b64, mime: r.mime });
-        data.images = data.images || {};
-        data.images[msg.id] = Object.assign({}, data.images[msg.id], { b64: r.b64, mime: r.mime || 'image/png' });
-        data.lastShot = { b64: r.b64, mime: r.mime || 'image/png', sceneId: recipe.sceneId || data.activeSceneId || null, messageId: msg.id };
-        try { await saveWorld(ctx, data, 'assets'); } catch (_) {}
+        await changeStored(ctx, 'assets', (d) => {
+          d.images = d.images || {};
+          d.images[msg.id] = Object.assign({}, d.images[msg.id], { b64: r.b64, mime: r.mime || 'image/png' });
+          d.lastShot = { b64: r.b64, mime: r.mime || 'image/png', sceneId: recipe.sceneId || d.activeSceneId || null, messageId: msg.id };
+        });
       } else {
         clearSceneLoading(asst);
       }
@@ -1087,15 +1110,13 @@
       if (ctx.api && ctx.api.conv && ctx.api.conv.deleteMessage) {
         await ctx.api.conv.deleteMessage(msg.id);
       }
-      const data = ctx.meta && ctx.meta.data;
-      if (data) {
+      rpActivity.delete(msg.id);
+      await changeStored(ctx, 'assets', (data) => {
         if (data.images && data.images[msg.id]) delete data.images[msg.id];
         if (data.lastShot && data.lastShot.messageId === msg.id) data.lastShot = null;
-        rpActivity.delete(msg.id);
         if (timeline()) { try { timeline().forget(data, msg.id); } catch (_) {} }
         if (shared() && shared().forgetTurn) { try { shared().forgetTurn(data, msg.id); } catch (_) {} }
-        try { await ctx.setMeta({ data }); } catch (_) {}
-      }
+      });
       turnEl.remove();
       if (ctx.refresh) ctx.refresh();
     } catch (_) {}
@@ -1132,7 +1153,7 @@
   }
 
   async function clearStoryState(ctx) {
-    const cur = (ctx.meta && ctx.meta.data) || {};
+    const cur = (await storedData(ctx)) || {};
     let data;
     try { data = JSON.parse(JSON.stringify(cur)); } catch (_) { data = Object.assign({}, cur); }
     (data.characters || []).forEach((c) => {
@@ -1168,10 +1189,10 @@
       it.textContent = s.name || '(scene)';
       it.addEventListener('click', async () => {
         menu.remove();
-        const nextState = Object.assign({}, data.currentState || {}, { sceneId: s.id });
-        data.activeSceneId = s.id;
-        data.currentState = nextState;
-        await saveWorld(ctx, data, 'head');
+        await changeStored(ctx, 'head', (d) => {
+          d.activeSceneId = s.id;
+          d.currentState = Object.assign({}, d.currentState || {}, { sceneId: s.id });
+        });
         if (data.options && data.options.sceneBackground && s.bg && s.bg.b64) {
           ctx.applyBackground(s.bg.b64, s.bg.mime);
         }
@@ -1369,10 +1390,7 @@
   }
 
   async function saveGearSetting(ctx, apply) {
-    const data = ctx.meta && ctx.meta.data;
-    if (!data) return;
-    apply(data);
-    try { await saveWorld(ctx, data, 'assets'); } catch (_) {}
+    await changeStored(ctx, 'assets', apply);
   }
 
   function renderRoleplayGear(pop, ctx, panel) {
@@ -1838,6 +1856,11 @@
 
     onOpenConversation(meta, ctx) {
       syncHeadWithThread(ctx);
+    },
+
+    onModelPicked(ref, ctx) {
+      if (!ref || typeof ref !== 'string' || !ctx || !ctx.conversationId || !(ctx.meta && ctx.meta.data)) return null;
+      return changeStored(ctx, 'assets', (d) => { d.llmModel = ref; });
     },
 
     applyTheme(rootEl, meta, ctx) {

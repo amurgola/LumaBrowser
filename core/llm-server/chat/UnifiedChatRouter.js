@@ -22,6 +22,7 @@ const SideCompletion = require('./router/SideCompletion');
 const TitleGenerator = require('./router/TitleGenerator');
 const CompactionGate = require('./router/CompactionGate');
 const ThinkingDial = require('./router/ThinkingDial');
+const PeerModelRef = require('./router/PeerModelRef');
 const AgentTurnDispatch = require('./router/AgentTurnDispatch');
 const InFlightTurn = require('./router/InFlightTurn');
 const LocalSlotReclaimer = require('./router/LocalSlotReclaimer');
@@ -211,7 +212,7 @@ class UnifiedChatRouter {
       contextWindow: this._window,
       speculation: new LocalSpeculationInfo({ llmServerService: this.llmServerService }),
       compaction: this._compaction,
-      thinking: new ThinkingDial({ llmServerService: this.llmServerService, chatStore }),
+      thinking: new ThinkingDial({ llmServerService: this.llmServerService, chatStore, peers: new PeerModelRef({ db: this.db }) }),
       agentDispatch: new AgentTurnDispatch({
         agentBridge: this.agentBridge, chatStore, getAgentDeps, policy: this._policy, contextWindow: this._window,
       }),

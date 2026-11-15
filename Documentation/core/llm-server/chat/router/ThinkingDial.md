@@ -12,3 +12,7 @@ How hard the model should think this turn, resolved into request knobs.
 ## Why
 
 The model layer sits below the conversation pill (a per-chat choice) and above the global default, so a profile like "Fast" can turn thinking off without touching the global setting. Voice mode's per-turn boolean is the strongest statement (dead air kills a spoken conversation); the legacy global boolean is the weakest layer. An agent turn left to the template's default reasons at xhigh on every tool pick (76 s an iteration on Qwen3.8).
+
+## Changes (2026-11-14, a paired host decides in silence)
+
+`new ThinkingDial({ llmServerService, chatStore, peers })`: `peers` is a [PeerModelRef](PeerModelRef.md) (null: no model is ever a paired host's). For a paired host's model the fallback layer (this side's Setup default, the legacy "Disable thinking" switch) is left out of `resolveDial`, so with nothing chosen on the turn, the chat's pill or the model's Tune setting, no knob is sent and the host's own dial applies. The Setup default is a setting for this side's local server, not a choice about the host's model; sent along it read on the host as a stated preference and replaced the host's dial. It never used to arrive (the knobs went out misnamed until the same day's fix in [OpenAiRequestBody](../../../llm-service/providers/openai/OpenAiRequestBody.md)), which is why this only became visible then. Other remote providers and the local server keep the Setup default. The whole rule is in [RemoteStream](RemoteStream.md).

@@ -24,3 +24,7 @@ Only the current local model has a row, but picking a profile of another install
 ## Changes (2026-11-14, a peer's helper model)
 
 A remote row whose model carries `luma_kind: 'helper'` (a paired host's helper model) gets `role: 'helper'`, the same mark as this machine's own helper row, so pickers keep it out of the chat choices.
+
+## Changes (2026-11-14)
+
+A paired host's rows carry `peer: true` (`_remoteRow`, from the config's `peerManaged`), so the chat page can tell a model that runs under the host's settings ([ThinkPill](../../ui/js/chat/composer/ThinkPill.md)).

@@ -43,3 +43,7 @@ and `[DONE]`; a cancelled non-stream turn answers the partial content.
 ## Changes (2026-11-09, response_format)
 
 A client's `response_format` object rides the proxy extra as `responseFormat` (`_withResponseFormat`), so a shared clerk decodes a mode's schema under the grammar as a local side call does.
+
+## Changes (2026-11-14, the client's sampling and length fields)
+
+The proxy extra also takes what [ClientRequestKnobs](ClientRequestKnobs.md) reads from the body: `max_tokens` (or `max_completion_tokens`) as `maxTokens`, the llama-server sampler numbers as `samplerOverrides`, and `luma_pin_temperature: true` as `pinTemperature`. The host's local path then applies them as it does for its own turns (the smaller of the client's cap and the host's Tune cap; the host's own model sampler still wins over the client's where both name a knob). Before this the handler read only the temperature and the thinking knobs.

@@ -24,3 +24,7 @@ planner's answer: the planner reads the file's header first, so a renamed or
 repacked model got one family, and with it one tool-call protocol, from its
 name on the turn that started the server and another from its plan on every
 turn after, and flipped back whenever the server was stopped.
+
+## Changes (2026-11-14, a paired host takes the text fence)
+
+`nativeToolsActive` is false for a paired LumaBrowser host's model ([PeerModelRef](PeerModelRef.md)); every other remote endpoint stays native. The host's sharing endpoint streams the model's text and takes no tool schemas: a client's `tools` array reached the host's handler and was handed to nobody, so on the native route the model was shown no tools at all while this side's prompt, built for the native route, carried no fence guidance either. Tools from a client chat on a host model could not be called. The text fence crosses a plain stream and is what the host itself uses for most local families. Not covered: a Harmony (gpt-oss) model on a paired host still reads as native here, since that family's calls only work with registered tools; it needs the host to pass schemas through. Measured with `tmp/rpdiag/tools-probe.js` (one schema on the wire, none given to the host's model); the agent turn itself was not run end to end through a host.

@@ -29,7 +29,9 @@ export default class ModeContext {
         const hit = this._ctx.els.scroll.querySelector('.cm-turn[data-msg-id="' + SelectorText.attrValue(messageId) + '"]');
         if (hit) return hit;
       }
-      return this._ctx.stream.turnEl();
+      const live = this._ctx.stream.turnEl();
+      const liveId = live && live.dataset ? live.dataset.msgId : '';
+      return messageId && liveId && liveId !== messageId ? null : live;
     };
     base.streamingTurnEl = () => this._ctx.stream.turnEl();
     return base;

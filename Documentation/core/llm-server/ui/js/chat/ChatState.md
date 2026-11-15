@@ -14,6 +14,10 @@ frames by message id.
   message object is in `messages`). Legacy `streamConvActive`.
 - `isNewestMessage(m)`.
 - `newRequestId()`: sets and returns `reqId` (`req-<ms>-<rand>`).
+- `rememberRequest(requestId, conversationId)`, `conversationOfRequest(requestId)`: which conversation a turn ran
+  in, for the newest `REQUESTS_REMEMBERED` (16) requests sent from this surface (`requestConversations`). A mode's
+  reaction sends events after its turn's stream has ended and after a newer turn has taken `reqId`;
+  [ChatEventRouter](stream/ChatEventRouter.md) matches them through this. `null` for an unknown request.
 - `resetChatOptions(toolsOn)`: tools flag, empty denylist, replies on, no
   thinking override, documentation source off (`docsSource`, the
   "@lumabrowser-documentation" pill, see [DocsSourceContext](composer/DocsSourceContext.md)).

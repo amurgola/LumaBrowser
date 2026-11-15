@@ -75,7 +75,8 @@ export default class ThinkPill {
   async _loadDefault() {
     const { api, state } = this._ctx;
     try {
-      const d = api.getDefaults ? await api.getDefaults() : null;
+      state.thinkHostDecides = this._onPairedHost();
+      const d = !state.thinkHostDecides && api.getDefaults ? await api.getDefaults() : null;
       state.thinkDefault = (d && d.noThink) ? 'off' : ((d && d.reasoningEffort) || 'default');
       state.thinkDefaultFrom = 'Setup';
       const tuned = await this._tunedEffort();
@@ -83,6 +84,13 @@ export default class ThinkPill {
     } catch (_) {
       state.thinkDefault = 'default';
     }
+  }
+
+  _onPairedHost() {
+    const { state } = this._ctx;
+    const row = (state.models || []).find((m) => m.ref === state.modelRef);
+    const base = row && row.isProfile ? (state.models || []).find((m) => m.ref === row.baseRef) : row;
+    return !!(base && base.peer);
   }
 
   async _tunedEffort() {
@@ -102,9 +110,14 @@ export default class ThinkPill {
     const inherited = !state.reasoningEffort;
     host.hidden = false;
     host.className = 'cm-effort' + (inherited ? ' cm-effort-inherited' : '');
+    const hostDecides = state.thinkHostDecides && state.thinkDefaultFrom === 'Setup';
     host.title = inherited
-      ? 'Thinking budget for this chat. Following your default (' + ThinkPill.labelFor(dial, active) + ') from ' + (state.thinkDefaultFrom || 'Setup') + '.'
-      : 'Thinking budget for this chat only. Your default is ' + ThinkPill.labelFor(dial, state.thinkDefault) + '.';
+      ? (hostDecides
+        ? 'Thinking budget for this chat. Nothing is chosen here, so the setting of the host applies.'
+        : 'Thinking budget for this chat. Following your default (' + ThinkPill.labelFor(dial, active) + ') from ' + (state.thinkDefaultFrom || 'Setup') + '.')
+      : (hostDecides
+        ? 'Thinking budget for this chat only. Without a choice here the setting of the host applies.'
+        : 'Thinking budget for this chat only. Your default is ' + ThinkPill.labelFor(dial, state.thinkDefault) + '.');
     host.innerHTML = dial.map((d) => {
       const off = d.enabled === false;
       return '<button type="button" class="cm-effort-seg' + (d.id === active ? ' on' : '') + (off ? ' unavailable' : '') + '"'

@@ -30,3 +30,7 @@ Only what the router reads is here, and the two defaults a user could change
 ## Changes (2026-11-09, helper model)
 
 `helperModel`: a [LabHelperModel](LabHelperModel.md) or null (no `helper::` route).
+
+## Changes (2026-11-14, launch plan)
+
+`plan` (constructor option, default null) is what `runtimeServer.getStatus().plan` returns: the launch plan fields the local request reads (`familySamplerDefaults`, `modelFamily`). The app's planner fills them in; a run that stands in for a sharing host passes them (`TextRunCli.hostPlan`) so the model family's published sampler applies as it does there.

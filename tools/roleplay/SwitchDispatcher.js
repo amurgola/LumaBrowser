@@ -16,6 +16,10 @@ class SwitchDispatcher {
     return this._useLive;
   }
 
+  useScript(script) {
+    if (script) this._script = script;
+  }
+
   observe(fn) {
     if (typeof fn !== 'function') return () => {};
     this._observers.add(fn);

@@ -70,6 +70,43 @@ class StateProbes {
         },
       },
       {
+        id: 'delete-reply', title: 'Deleting only the last reply leaves the story where the reply before it left it',
+        action: { type: 'send', text: 'I ask her how her head is now.', after: [{ type: 'delete-reply', turn: 12 }] },
+        expect: {
+          scene: S.home, present: ['Elena'], absentKnown: true, noPressure: true, turn: 11, historyMessages: 23,
+          notInRequest: ['Paper Moonlight', 'Northbound', RestoredStory.MOVIE_THREAD],
+          reply: { avoids: [/paper moonlight|northbound/i], sceneAfter: S.home, presentAfter: ['Elena'] },
+        },
+      },
+      {
+        id: 'edit-last', title: 'Editing the last message rewinds to the reply before it',
+        action: { type: 'edit', turn: 12, text: 'I tell her about lunch and ask whether she has eaten anything today.' },
+        expect: {
+          scene: S.home, present: ['Elena'], absentKnown: true, noPressure: true, turn: 11, historyTurns: 11,
+          notInRequest: ['Paper Moonlight', 'Northbound', RestoredStory.MOVIE_THREAD, 'drop onto the sofa'],
+          reply: { avoids: [/paper moonlight|northbound/i], sceneAfter: S.home, presentAfter: ['Elena'] },
+        },
+      },
+      {
+        id: 'regenerate-continue', title: 'Carrying on after a regeneration follows the new reply, not the one it replaced',
+        action: { type: 'send', text: 'I ask her what she would like to do with the evening.', after: [{ type: 'regenerate', turn: 12, alternate: true }] },
+        expect: {
+          scene: S.home, present: ['Elena'], absentKnown: true, turn: 12, historyMessages: 24,
+          notInRequest: ['Paper Moonlight', 'Northbound', RestoredStory.MOVIE_THREAD],
+          scripted: { inRequest: ['canal'], openThread: RestoredStory.WALK_THREAD, noPressure: true },
+          reply: { avoids: [/paper moonlight|northbound/i] },
+        },
+      },
+      {
+        id: 'variant-back', title: 'Switching back to the first version of a reply brings its story back',
+        action: { type: 'send', text: 'I pick the film.', after: [{ type: 'regenerate', turn: 12, alternate: true }, { type: 'show-first', turn: 12 }] },
+        expect: Object.assign({}, home, {
+          historyTurns: 12, openThread: RestoredStory.MOVIE_THREAD, inRequest: ['Paper Moonlight'],
+          scripted: { notInRequest: ['canal', RestoredStory.WALK_THREAD] },
+          reply: { mentions: [/paper moonlight|northbound|comedy|thriller|film/i], sceneAfter: S.home, presentAfter: ['Elena'] },
+        }),
+      },
+      {
         id: 'small-window', title: 'With the history trimmed, memory still holds the day', window: 3072,
         action: { type: 'send', text: 'I open my notebook to the note I made at lunch. How much does Marcus owe me, and when did he say he would pay?' },
         expect: Object.assign({}, home, { historyTurns: null, trimmed: true, inRequest: ['twenty dollars', 'Friday'], reply: { mentions: [/twenty|\b20\b/i, /friday/i], sceneAfter: S.home, presentAfter: ['Elena'] } }),
@@ -77,8 +114,15 @@ class StateProbes {
     ];
   }
 
-  static context(probe, { request, before }) {
-    const e = probe.expect;
+  static expectations(probe, contextOnly) {
+    const e = Object.assign({}, probe.expect);
+    const s = (contextOnly && e.scripted) || {};
+    for (const [key, value] of Object.entries(s)) e[key] = Array.isArray(value) ? (e[key] || []).concat(value) : value;
+    return e;
+  }
+
+  static context(probe, { request, before, stored = null, contextOnly = false }) {
+    const e = StateProbes.expectations(probe, contextOnly);
     const out = [];
     const add = (name, ok, detail = '') => out.push({ name, ok: !!ok, detail });
     const text = (m) => (typeof (m && m.content) === 'string' ? m.content : '');
@@ -125,6 +169,12 @@ class StateProbes {
         return !t || text(m).trim() !== (i % 2 === 0 ? t.player : t.reply).trim();
       });
       add('every history message is the stored one, in order', wrong < 0, wrong < 0 ? 'all match' : 'message ' + (wrong + 1) + ' differs');
+    }
+    if (e.historyMessages !== null && e.historyMessages !== undefined) {
+      const branch = Array.isArray(stored) ? stored : [];
+      add('the history is the ' + e.historyMessages + ' messages of the branch on screen', history.length === e.historyMessages && branch.length === e.historyMessages, history.length + ' sent, ' + branch.length + ' stored');
+      const wrong = history.findIndex((m, i) => !branch[i] || m.role !== branch[i].role || text(m).trim() !== text(branch[i]).trim());
+      add('every history message is the stored one of that branch, in order', wrong < 0, wrong < 0 ? 'all match' : 'message ' + (wrong + 1) + ' differs');
     }
     if (e.trimmed) {
       add('older turns were trimmed from the history', history.length < 24 && history.length >= 2, history.length + ' of 24 messages kept');

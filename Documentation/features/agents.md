@@ -44,7 +44,10 @@ A narrator with a story memory.
 
 - Each character keeps a profile, a state and a history. The story keeps its
   clock, open threads and a running summary.
-- Regenerating or branching a reply rewinds the world to that point.
+- Regenerating or branching a reply rewinds the world to that point. Deleting a reply, editing your last
+  message, or carrying on from a regenerated reply all continue from the branch on screen: the history, the
+  cast, the place and the story record are that branch's.
+- The model picked in the composer's gear is the story's model from the next reply.
 - Reply length, tone and narrator thinking are set from the composer.
 
 ## Connecting outside agents

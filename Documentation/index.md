@@ -1529,6 +1529,7 @@ Small building blocks shared by more than one subsystem.
 - [core/network-sharing/host/llm/ChatCompletionTurn.md](core/network-sharing/host/llm/ChatCompletionTurn.md): one shared chat completions turn; has `run`.
 - [core/network-sharing/host/llm/ChatCompletionStream.md](core/network-sharing/host/llm/ChatCompletionStream.md): chat completions SSE and JSON writer; has `chunk`, `usage`, `finish`, `completion`.
 - [core/network-sharing/host/llm/ChatTurnInputs.md](core/network-sharing/host/llm/ChatTurnInputs.md): images, agent mode and tool allow-list for a shared turn; has `images`, `wantsAgent`, `allowedTools`.
+- [core/network-sharing/host/llm/ClientRequestKnobs.md](core/network-sharing/host/llm/ClientRequestKnobs.md): the reply cap, sampler numbers and temperature pin a shared client sent, as the extra the host's dispatcher takes; has `of`, `apply`.
 - [core/network-sharing/host/llm/ResponsesTurn.md](core/network-sharing/host/llm/ResponsesTurn.md): OpenAI Responses API shim turn; has `run`.
 - [core/network-sharing/host/llm/ResponsesStream.md](core/network-sharing/host/llm/ResponsesStream.md): Responses SSE writer; has `started`, `delta`, `completed`, `failed`.
 - [core/network-sharing/host/llm/ResponsesInput.md](core/network-sharing/host/llm/ResponsesInput.md): Responses input to chat messages; has `toMessages`.
@@ -2744,6 +2745,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/router/ModelCapabilities.md](core/llm-server/chat/router/ModelCapabilities.md): what the model behind a chat model ref can do this turn, read from the LIVE launch plan.
 - [core/llm-server/chat/router/ModelContextWindow.md](core/llm-server/chat/router/ModelContextWindow.md): the context window ONE request gets from the model behind a chat model ref, in tokens.
 - [core/llm-server/chat/router/ModelDispatcher.md](core/llm-server/chat/router/ModelDispatcher.md): the one choke point every chat model call passes through.
+- [core/llm-server/chat/router/PeerModelRef.md](core/llm-server/chat/router/PeerModelRef.md): whether a chat model ref is a paired LumaBrowser host's model (its provider config is `peerManaged`); has `is`.
 - [core/llm-server/chat/router/ProxyTurns.md](core/llm-server/chat/router/ProxyTurns.md): turns run for a paired Network Sharing client: never persisted, never touching the host user's in-flight turn.
 - [core/llm-server/chat/router/RemoteStream.md](core/llm-server/chat/router/RemoteStream.md): streams one chat request to a remote provider config through an ephemeral provider that never writes the user's settings.
 - [core/llm-server/chat/router/RequestSettings.md](core/llm-server/chat/router/RequestSettings.md): applies a model's or profile's temperature and reply cap to one model call; has `apply`, `maxTokens`.
@@ -4224,6 +4226,7 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [tools/roleplay/LabHelperModel.md](tools/roleplay/LabHelperModel.md): a CLI-launched helper server presented with the HelperModelService surface, so the Lab router routes helper:: as the app does.
 - [tools/roleplay/LabRouter.md](tools/roleplay/LabRouter.md): builds the app's chat router for the Lab outside the app, over an in-memory chat store and the real local dispatch path.
 - [tools/roleplay/LabServerService.md](tools/roleplay/LabServerService.md): the llmServerService the Lab's router runs on, a running llama-server presented as the managed one.
+- [tools/roleplay/LabSharingHost.md](tools/roleplay/LabSharingHost.md): the host half of Network Sharing for the Lab, the app's chat-completions handler over a second router on a loopback port, recording what each request carried; has `start`, `providerConfig`, `clientRef`, `requests`, `stop`.
 - [tools/roleplay/StateProbeCli.md](tools/roleplay/StateProbeCli.md): `npm run rp:state`: restores the scripted long story and runs the state probes, context only or on a live model.
 - [tools/roleplay/StateProbeRunner.md](tools/roleplay/StateProbeRunner.md): restores the scripted story through the real chat router and runs one probe turn per fresh restore.
 - [tools/roleplay/SwitchDispatcher.md](tools/roleplay/SwitchDispatcher.md): a dispatcher that answers from a script until switched to a real one.

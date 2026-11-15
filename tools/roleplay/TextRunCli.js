@@ -4,6 +4,7 @@ const LabRouter = require('./LabRouter');
 const LabServerService = require('./LabServerService');
 const LabHelperModel = require('./LabHelperModel');
 const LabChat = require('./LabChat');
+const LabSharingHost = require('./LabSharingHost');
 
 class TextRunCli {
   static USAGE = [
@@ -22,6 +23,8 @@ class TextRunCli {
     '  --side-port <n>      port for the helper server (default 8398)',
     '  --side-device <n>    CUDA_VISIBLE_DEVICES for the helper server (default 1 when a second card exists)',
     '  --side-ctx <n>       the helper server\'s context size (default 8192)',
+    '  --via-host           play the story as a paired Network Sharing client does: every model call crosses the app\'s',
+    '                       sharing proxy (a loopback host over the same server) instead of the local path',
     '  --effort <level>     the thinking dial\'s global default: off, low, medium, high, xhigh or default (the',
     '                       template\'s own; default). The app\'s Setup default is what a user runs with.',
     '  --turns <n>          play only the first n scripted turns',
@@ -43,7 +46,7 @@ class TextRunCli {
   }
 
   static parse(argv) {
-    const o = { baseUrl: 'http://127.0.0.1:8317/v1', model: '', runtime: 'runtimes/llama-cpp-luma', port: 8399, ctx: 16384, gpuLayers: 99, serverArgs: [], device: '', sideModel: '', sidePort: 8398, sideDevice: '', sideCtx: 8192, effort: 'default', turns: 0, scenario: '', grounding: true, judge: false, mockSideCalls: false, label: '', out: '', repo: '', help: false };
+    const o = { baseUrl: 'http://127.0.0.1:8317/v1', model: '', runtime: 'runtimes/llama-cpp-luma', port: 8399, ctx: 16384, gpuLayers: 99, serverArgs: [], device: '', sideModel: '', sidePort: 8398, sideDevice: '', sideCtx: 8192, viaHost: false, effort: 'default', turns: 0, scenario: '', grounding: true, judge: false, mockSideCalls: false, label: '', out: '', repo: '', help: false };
     const list = Array.isArray(argv) ? argv : [];
     for (let i = 0; i < list.length; i += 1) {
       const a = list[i];
@@ -61,6 +64,7 @@ class TextRunCli {
       else if (a === '--side-port') o.sidePort = parseInt(next(), 10) || o.sidePort;
       else if (a === '--side-device') o.sideDevice = String(next() || '');
       else if (a === '--side-ctx') o.sideCtx = parseInt(next(), 10) || o.sideCtx;
+      else if (a === '--via-host') o.viaHost = true;
       else if (a === '--effort') o.effort = TextRunCli._effort(next());
       else if (a === '--turns') o.turns = parseInt(next(), 10) || 0;
       else if (a === '--judge') o.judge = true;
@@ -124,6 +128,7 @@ class TextRunCli {
     let server = null;
     let side = null;
     let lab = null;
+    let shared = null;
     const logs = { main: path.join(outRoot, 'rp-text-llama-server.log'), side: path.join(outRoot, 'rp-text-helper-server.log') };
     try {
       if (o.model) server = await this._launch(o, d, { model: o.model, args: TextRunCli.serverArgs(o), port: o.port, device: o.device, logPath: logs.main, label: 'story model' });
@@ -134,20 +139,24 @@ class TextRunCli {
         helper = new LabHelperModel({ stem: TextRunCli.stem(o.sideModel), port: o.sidePort, ctx: o.sideCtx, ready: () => side.alive });
       }
       this._knowledgeBase(o);
-      lab = this._router(o, d, helper);
+      if (o.viaHost) shared = await this._sharingHost(o);
+      lab = this._router(o, d, helper, shared);
+      const storyRef = shared ? shared.host.clientRef() : TextRunCli.modelRef(o);
       const where = o.model ? 'http://127.0.0.1:' + o.port + ' (' + path.basename(o.model) + ')' : o.baseUrl;
-      this._log('narrating against ' + where + ' through the chat router, thinking ' + o.effort + ', window ' + o.ctx
+      this._log('narrating against ' + where + ' through the chat router' + (shared ? ' as a sharing client of ' + shared.host.endpoint() : '')
+        + ', thinking ' + o.effort + ', window ' + o.ctx
         + (helper ? ', bookkeeping on ' + helper.ref() + ' at :' + o.sidePort : ''));
       const svc = new d.LabService({ mode: lab.mode, router: lab.router, complete: (opts) => lab.chat.complete(opts), Harness: d.LabHarness, outRoot, contextWindow: (n) => { lab.service.ctxPerSlot = n; } });
       svc.broadcast = (type, p) => this._progress(type, p);
       const tap = TextRunCli.debugTap();
       let result;
       try {
-        result = await svc.runText({ options: { turns: o.turns || undefined, scenario: o.scenario || undefined, grounding: o.grounding, judge: o.judge, mockSideCalls: o.mockSideCalls, modelRef: TextRunCli.modelRef(o), sideModel: helper ? 'helper' : undefined } });
+        result = await svc.runText({ options: { turns: o.turns || undefined, scenario: o.scenario || undefined, grounding: o.grounding, judge: o.judge, mockSideCalls: o.mockSideCalls, modelRef: storyRef, sideModel: helper ? 'helper' : undefined } });
       } finally {
         tap.stop();
       }
       result.debug = TextRunCli.debugSummary(tap.events);
+      if (shared) result.wire = TextRunCli.wireSummary(shared.host.requests);
       result.servers = { main: TextRunCli.serverStats(server ? logs.main : null), helper: TextRunCli.serverStats(side ? logs.side : null) };
       if (o.label && result.outDir) {
         const labelled = result.outDir + '-' + o.label.replace(/[^a-z0-9_-]+/gi, '-');
@@ -161,6 +170,7 @@ class TextRunCli {
       return result;
     } finally {
       if (lab) lab.close();
+      if (shared) { await shared.host.stop(); shared.close(); }
       if (side) await side.stop();
       if (server) await server.stop();
     }
@@ -227,15 +237,48 @@ class TextRunCli {
     };
   }
 
-  _router(o, d, helper = null) {
+  _router(o, d, helper = null, shared = null) {
     const chatStore = LabRouter.chatStore();
     const { host, port } = TextRunCli.endpoint(o);
     const service = new LabServerService({ chatStore, host, port, ctx: o.ctx, effort: o.effort, modelStem: TextRunCli.modelRef(o).replace(/^local::/, ''), helperModel: helper });
-    const built = LabRouter.build({ service, mode: null, dispatcher: this._deps.dispatcher || null });
+    const db = LabRouter.settingsDb(shared ? { 'llm.providerConfigs': [shared.host.providerConfig(o.ctx)] } : {});
+    const built = LabRouter.build({ service, mode: null, dispatcher: this._deps.dispatcher || null, db });
     const chat = new LabChat({ router: built.router, Harness: d.LabHarness });
     const mode = d.RoleplayModeDescriptor.build(chat, new d.RoleplayPostProcessor(chat));
     built.registry.register(mode, 'roleplay-mode');
     return { router: built.router, service, chat, mode, close: built.close };
+  }
+
+  async _sharingHost(o) {
+    const stem = TextRunCli.modelRef(o).replace(/^local::/, '');
+    const { host, port } = TextRunCli.endpoint(o);
+    const service = new LabServerService({ chatStore: LabRouter.chatStore(), host, port, ctx: o.ctx, effort: o.effort, modelStem: stem, plan: TextRunCli.hostPlan(stem) });
+    const built = LabRouter.build({ service, mode: null });
+    const sharing = new LabSharingHost({ router: built.router, modelRef: TextRunCli.modelRef(o), effort: o.effort });
+    await sharing.start();
+    return { host: sharing, close: built.close };
+  }
+
+  static hostPlan(stem) {
+    const ModelFamilies = LabRouter.core('llm-server/server/ModelFamilies');
+    const ModelFamilyTable = LabRouter.core('llm-server/server/ModelFamilyTable');
+    const family = ModelFamilies.detect({ name: stem });
+    const profile = family ? ModelFamilyTable.FAMILIES[family] : null;
+    return { modelFamily: family, familySamplerDefaults: profile && profile.samplerDefaults ? { ...profile.samplerDefaults } : null };
+  }
+
+  static wireSummary(requests) {
+    const list = Array.isArray(requests) ? requests : [];
+    const fields = {};
+    for (const r of list) {
+      for (const [key, value] of Object.entries(r.fields || {})) {
+        const f = fields[key] || (fields[key] = { n: 0, values: [] });
+        f.n += 1;
+        const shown = JSON.stringify(value);
+        if (shown.length <= 80 && !f.values.includes(shown) && f.values.length < 6) f.values.push(shown);
+      }
+    }
+    return { requests: list.length, fields };
   }
 
   _knowledgeBase(o) {
@@ -297,6 +340,10 @@ class TextRunCli {
       if (!sv || !sv.requests) continue;
       lines.push((name === 'main' ? 'Story server' : 'Helper server') + ': ' + sv.requests + ' requests, prompt eval avg ' + sv.promptTokensAvg + ' tokens in ' + (sv.promptMsAvg / 1000).toFixed(1) + ' s, '
         + 'request avg ' + (sv.totalMsAvg / 1000).toFixed(1) + ' s, busy ' + (sv.totalMsSum / 1000).toFixed(0) + ' s in all');
+    }
+    if (r.wire) {
+      lines.push('Sharing host: ' + r.wire.requests + ' requests; body fields sent: '
+        + Object.entries(r.wire.fields).map(([k, f]) => k + ' x' + f.n + (f.values.length ? ' ' + f.values.join('|') : '')).join(', '));
     }
     if (r.outDir) lines.push('Report: ' + r.outDir);
     return lines.join('\n');

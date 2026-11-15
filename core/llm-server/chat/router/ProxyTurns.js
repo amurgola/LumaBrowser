@@ -13,8 +13,12 @@ class ProxyTurns {
   async stream({ modelRef, messages, temperature, hooks, images = [], extra = null }) {
     const ref = this.resolveRef(modelRef);
     const handle = await this._dispatch(ref, messages, temperature, hooks, images, null,
-      { ...(extra || {}), trace: { conversationId: null, callType: 'sharing' } });
+      { ...(extra || {}), trace: { conversationId: null, callType: ProxyTurns._callType(extra) } });
     return this.wrapHandle(ref, handle);
+  }
+
+  static _callType(extra) {
+    return extra && extra.pinTemperature === true ? 'side' : 'sharing';
   }
 
   agent({ modelRef, messages, temperature, hooks, images = [], priorArtifacts = [], allowedTools = null, extra = null,

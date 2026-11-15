@@ -23,3 +23,7 @@ greyed, with the reason as tooltip.
 
 Before the conversation row exists the position rides the next chat2 call;
 afterwards `api.conv.setReasoningEffort(id, value)` persists it.
+
+## Changes (2026-11-14, a paired host's model)
+
+`_loadDefault` sets `state.thinkHostDecides` when the selected model (or a profile's base) is a paired host's row (`peer`), and does not read this side's Setup default for it: the pill then shows the Auto position as inherited and its tooltip says "Nothing is chosen here, so the setting of the host applies." A Tune setting on the model still counts as a choice and shows as before. This mirrors [ThinkingDial](../../../../chat/router/ThinkingDial.md), which sends nothing for such a model unless something was chosen.

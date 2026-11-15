@@ -117,3 +117,16 @@ The setup options and the gear carry a "Verbose turn log" toggle
 
 The setup options and the gear carry a "Narrator thinking" select (Brief, Off,
 Full; `options.narratorThinking`).
+
+## Changes (2026-11-14, add-on 1.2.3: page-side saves start from the stored story)
+
+`storedData(ctx)` reads the story as stored right now (`api.conv.meta.get`, falling back to the page's copy), and `changeStored(ctx, how, apply)` applies one change to it and saves through `saveWorld`. The page-side changes made during play go through it: a gear setting (`saveGearSetting`), a removed turn (`removeTurn`), a scene picked from the scene menu, a redrawn or painted image; `clearStoryState` starts from the stored story too.
+
+Why: the server's reaction writes the story after every reply, and the page's copy is only as new as the last `mode:world` it received. The chat page dropped every mode event that arrived after the reply's `done` (core [ChatEventRouter](../../core/llm-server/ui/js/chat/stream/ChatEventRouter.md), fixed the same day), so the copy stayed as it was when the conversation was opened, and these saves wrote that copy back whole: the ledger, the cast's states and the timeline points of every reply since were erased, and the narrator then worked from a world several turns old until the story state was cleared. With the core fix the copy keeps up; reading the store first keeps the saves right on an app that still drops the events, and in the moments between a reaction's save and its announcement.
+
+## Changes (2026-11-14, the picked model, the head sync)
+
+- `onModelPicked(ref, ctx)` (the core [ModelPicker](../../core/llm-server/ui/js/chat/composer/ModelPicker.md) hook): the model picked in the gear or the model menu is stored as the story's `llmModel` (through `changeStored`), which is what the narrator's turn is pinned to and what the bookkeeping calls follow. Returns the save's promise, or null without an open story or a ref. Before this the pick was ignored and the story kept answering from the model chosen at setup.
+- `syncHeadWithThread` reads the stored story after it has read the thread and moves that, so a reopen right after a regeneration cannot write an older copy over what the new reply's reaction saved.
+
+Checked in the running app (2026-11-14, isolated data folder, through the real composer): the world update showed under the reply while it ran and when it finished, without reopening; a reply-length change made afterwards kept the story's turn, events and timeline point; a second model picked in the gear became `llmModel` and wrote the next reply.

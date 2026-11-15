@@ -2,9 +2,10 @@ const ThinkingOff = require('../../../llm-service/ThinkingOff');
 const ReasoningEffort = require('../../../shared/llm/ReasoningEffort');
 
 class ThinkingDial {
-  constructor({ llmServerService, chatStore }) {
+  constructor({ llmServerService, chatStore, peers = null }) {
     this._service = llmServerService;
     this._store = chatStore;
+    this._peers = peers;
   }
 
   resolve(turn) {
@@ -30,8 +31,12 @@ class ThinkingDial {
       turn: turn.reasoningEffort,
       conversation: conv ? conv.reasoningEffort : null,
       model: turn.modelEffort,
-      fallback: defaults.noThink ? 'off' : defaults.reasoningEffort,
+      fallback: this._hostDecides(turn.modelRef) ? null : (defaults.noThink ? 'off' : defaults.reasoningEffort),
     });
+  }
+
+  _hostDecides(modelRef) {
+    try { return !!(this._peers && this._peers.is(modelRef)); } catch (_) { return false; }
   }
 
   _thinkingOff(turn) {

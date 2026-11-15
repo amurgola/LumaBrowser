@@ -34,3 +34,7 @@ the stairs and ends on the sofa with his wife Elena choosing a film.
   bookkeeping answer by the passage it was asked about; an unknown passage gets
   `quietStage` (same place, nobody new, nothing recorded).
 - `PROFILES`, `SUMMARY`, `LUNCH_PRESSURE`, `HUNGER_THREAD`, `MOVIE_THREAD`, `SCENES`.
+
+## Changes (2026-11-14, a second answer to turn twelve)
+
+`alternateTurn()` is another reply to turn twelve with its stage answer (Elena asks for a walk to the canal instead of a film; opens `WALK_THREAD`), sharing nothing with the first answer, so a request that mixes the two branches shows. `script({ alternate: true })` answers turn twelve with it (the first answer's bookkeeping stays known). Used by the `regenerate-continue` and `variant-back` probes.

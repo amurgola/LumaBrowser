@@ -7,6 +7,7 @@ class RemoteStream {
   static PROVIDERS = { openai: OpenAICompatibleProvider, anthropic: AnthropicProvider };
   static PEER_ABORT_PATH = '/v1/chat/abort';
   static PEER_ABORT_TIMEOUT_MS = 5000;
+  static PEER_PIN_TEMPERATURE = 'luma_pin_temperature';
 
   constructor({ db }) {
     this._db = db;
@@ -17,7 +18,7 @@ class RemoteStream {
     const peerTurnId = config.peerManaged ? `turn_${crypto.randomBytes(8).toString('hex')}` : null;
     const session = provider.createChatCompletionStreamSession(
       messages,
-      RemoteStream._options(modelId, temperature, extra, peerTurnId, tools),
+      RemoteStream._options(modelId, temperature, extra, peerTurnId, tools, !!config.peerManaged),
       RemoteStream._handlers(hooks),
     );
     RemoteStream._settle(session, hooks);
@@ -39,7 +40,7 @@ class RemoteStream {
     return provider;
   }
 
-  static _options(modelId, temperature, extra, peerTurnId, tools = null) {
+  static _options(modelId, temperature, extra, peerTurnId, tools = null, peer = false) {
     const options = {
       temperature,
       model: modelId,
@@ -47,10 +48,28 @@ class RemoteStream {
       reasoningBudget: (extra && typeof extra.reasoningBudget === 'number') ? extra.reasoningBudget : undefined,
       response_format: (extra && extra.responseFormat && typeof extra.responseFormat === 'object') ? extra.responseFormat : undefined,
       sessionId: peerTurnId || undefined,
-      max_tokens: (extra && typeof extra.maxReplyTokens === 'number') ? extra.maxReplyTokens : undefined,
+      max_tokens: RemoteStream._replyCap(extra),
     };
+    if (peer) Object.assign(options, RemoteStream._peerOptions(extra));
     if (Array.isArray(tools) && tools.length) options.tools = tools;
     return options;
+  }
+
+  static _replyCap(extra) {
+    const mode = extra && extra.samplerOverrides && extra.samplerOverrides.max_tokens;
+    const caps = [extra && extra.maxReplyTokens, mode].filter((n) => typeof n === 'number' && n > 0);
+    return caps.length ? Math.min(...caps) : undefined;
+  }
+
+  static _peerOptions(extra) {
+    const out = {};
+    const samplers = extra && extra.samplerOverrides && typeof extra.samplerOverrides === 'object' ? { ...extra.samplerOverrides } : null;
+    if (samplers) {
+      delete samplers.max_tokens;
+      if (Object.keys(samplers).length) out.samplerOverrides = samplers;
+    }
+    if (extra && extra.pinTemperature === true) out[RemoteStream.PEER_PIN_TEMPERATURE] = true;
+    return out;
   }
 
   static _handlers(hooks) {

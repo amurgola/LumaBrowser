@@ -113,6 +113,7 @@ export default class ModelPicker {
     if (tokens) state.ctxByRef[model.ref] = tokens;
     try { api.setDefaults({ modelPath: model.path, contextSize: tokens || this.chosenCtx(model) || null }); } catch (_) {}
     try { api.setLastModelRef(model.ref); } catch (_) {}
+    this._picked();
     this.renderPill();
     this._ctx.popovers.closeAll();
   }
@@ -125,8 +126,14 @@ export default class ModelPicker {
       try { api.setDefaults({ modelPath: base.path, contextSize: this.chosenCtx(base) || null }); } catch (_) {}
     }
     try { api.setLastModelRef(row.ref); } catch (_) {}
+    this._picked();
     this.renderPill();
     this._ctx.popovers.closeAll();
+  }
+
+  _picked() {
+    const modeCtx = this._ctx.modeCtx;
+    if (modeCtx) modeCtx.callHook('onModelPicked', this._ctx.state.modelRef, modeCtx.forHooks());
   }
 
   selectRef(ref) {
@@ -146,6 +153,7 @@ export default class ModelPicker {
   selectRemote(m) {
     this._ctx.state.modelRef = m.ref;
     try { this._ctx.api.setLastModelRef(m.ref); } catch (_) {}
+    this._picked();
     this.renderPill();
     this._ctx.popovers.closeAll();
   }

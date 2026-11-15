@@ -113,6 +113,7 @@ class ChatModelList {
       providerType: config.type,
       isLocal: false,
       ready: true,
+      ...(config.peerManaged === true ? { peer: true } : {}),
       ...(model.luma_kind === 'helper' ? { role: 'helper' } : {}),
     };
   }

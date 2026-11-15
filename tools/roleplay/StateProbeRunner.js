@@ -72,13 +72,14 @@ class StateProbeRunner {
     const session = await this.restore({ window: probe.window || null });
     const out = { id: probe.id, title: probe.title, action: probe.action, contextOnly: !this._live, context: [], reply: [], request: null, replyText: '', before: null, after: null };
     try {
+      if (this._live) session.dispatcher.goLive();
+      await this._prelude(session, probe.action.after, LabTurnDriver);
       const plan = this._plan(session, probe.action, LabTurnDriver);
       out.before = session.state(plan.continues);
       const requests = [];
       const stop = session.router.observeDispatch((r) => {
         if (r && r.trace && r.trace.conversationId === session.conversationId && r.trace.callType === 'chat') requests.push(r.messages);
       });
-      if (this._live) session.dispatcher.goLive();
       try {
         const turn = await this._turn(session, plan.args, LabTurnDriver);
         out.replyText = turn.reply;
@@ -88,7 +89,7 @@ class StateProbeRunner {
       }
       out.request = requests[requests.length - 1] || null;
       out.after = session.state();
-      out.context = StateProbes.context(probe, { request: out.request, before: out.before });
+      out.context = StateProbes.context(probe, { request: out.request, before: out.before, stored: plan.history, contextOnly: !this._live });
       if (this._live) out.reply = StateProbes.reply(probe, { reply: out.replyText, after: out.reacted ? out.after : null });
     } catch (e) {
       out.error = (e && e.message) || String(e);
@@ -100,6 +101,23 @@ class StateProbeRunner {
     return out;
   }
 
+  async _prelude(session, steps, LabTurnDriver) {
+    const { RestoredStory } = this._x;
+    for (const step of Array.isArray(steps) ? steps : []) {
+      const turn = session.turns[step.turn - 1];
+      if (step.type === 'regenerate') {
+        if (step.alternate && !this._live) session.dispatcher.useScript(RestoredStory.script({ alternate: true }));
+        await this._turn(session, this._plan(session, step, LabTurnDriver).args, LabTurnDriver);
+      } else if (step.type === 'delete-reply') {
+        session.store.deleteMessage(turn.assistantId);
+      } else if (step.type === 'show-first') {
+        session.store.setActiveVariant(turn.assistantId);
+      } else {
+        throw new Error('unknown probe step ' + step.type);
+      }
+    }
+  }
+
   _plan(session, action, LabTurnDriver) {
     const { store, conversationId, turns } = session;
     const active = () => store.listActiveMessages(conversationId);
@@ -108,18 +126,19 @@ class StateProbeRunner {
     if (action.type === 'regenerate') {
       const t = turns[action.turn - 1];
       const before = upTo(t.userId, true);
-      return { continues: upTo(t.userId, false).map((m) => m.id), args: Object.assign(base, { regenerateMessageId: t.assistantId, messages: LabTurnDriver.context(before) }) };
+      const earlier = upTo(t.userId, false);
+      return { continues: earlier.map((m) => m.id), history: earlier, args: Object.assign(base, { regenerateMessageId: t.assistantId, messages: LabTurnDriver.context(before) }) };
     }
     if (action.type === 'edit') {
       const t = turns[action.turn - 1];
       const before = upTo(t.userId, false);
-      return { continues: before.map((m) => m.id), args: Object.assign(base, { editMessageId: t.userId, userMessage: action.text, messages: LabTurnDriver.context(before).concat([{ role: 'user', content: action.text }]) }) };
+      return { continues: before.map((m) => m.id), history: before, args: Object.assign(base, { editMessageId: t.userId, userMessage: action.text, messages: LabTurnDriver.context(before).concat([{ role: 'user', content: action.text }]) }) };
     }
     if (action.type === 'delete') {
       for (const t of turns.slice(-action.count).reverse()) { store.deleteMessage(t.assistantId); store.deleteMessage(t.userId); }
     }
     const path = active();
-    return { continues: path.map((m) => m.id), args: Object.assign(base, { userMessage: action.text, messages: LabTurnDriver.context(path).concat([{ role: 'user', content: action.text }]) }) };
+    return { continues: path.map((m) => m.id), history: path, args: Object.assign(base, { userMessage: action.text, messages: LabTurnDriver.context(path).concat([{ role: 'user', content: action.text }]) }) };
   }
 
   async _turn(session, args, LabTurnDriver) {

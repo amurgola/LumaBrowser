@@ -48,3 +48,13 @@ npm run rp:text -- --model "%USERPROFILE%\.lmstudio\models\unsloth__Qwen3.8-27B-
 ## Changes (2026-11-09, helper model)
 
 `--side-model <gguf>` launches a helper llama-server (`--side-port` 8398, `--side-device` the second card when one exists, `--side-ctx` 8192; `sideServerArgs`, `serverEnv`) and gives the story `sideModel: 'helper'`; `--device <n>` pins the story server. The run taps the mode's rp-debug lines (`debugTap`, `debugSummary`: stage calls, parsed, failed, average time) and reads each launched server's log (`serverStats`: requests, prompt tokens evaluated, request time), both in the summary and in `text-run.json` (`debug`, `servers`).
+
+## Changes (2026-11-14, `--via-host`)
+
+`--via-host` plays the story as a paired Network Sharing client does. `_sharingHost` builds a second router over the same server (with `hostPlan(stem)`: the model family and its sampler) behind a [LabSharingHost](LabSharingHost.md), and the story's router gets that host's provider config in its settings, so the story model is the ref `peer:lab:llm::local::<stem>` and every narrator and bookkeeping call crosses the app's sharing handler. The host's router is built first: the router built last is the one the mode finds its conversation on. The summary gains a `Sharing host:` line and `text-run.json` a `wire` object (`wireSummary`): how many requests arrived and, per body field, how many carried it and its distinct short values, which is how a field that never crosses shows up.
+
+```
+npm run rp:text -- --via-host --model <gguf> --ctx 65536 --effort low --server-arg --cache-reuse --server-arg 256
+```
+
+Before this every Lab run used the local path, so nothing a paired client does differently was ever exercised.

@@ -1,4 +1,6 @@
 export default class ChatState {
+  static REQUESTS_REMEMBERED = 16;
+
   constructor() {
     this._initModels();
     this._initNavigation();
@@ -19,6 +21,19 @@ export default class ChatState {
   newRequestId() {
     this.reqId = 'req-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
     return this.reqId;
+  }
+
+  rememberRequest(requestId, conversationId) {
+    if (!requestId || !conversationId) return;
+    this.requestConversations.delete(requestId);
+    this.requestConversations.set(requestId, conversationId);
+    while (this.requestConversations.size > ChatState.REQUESTS_REMEMBERED) {
+      this.requestConversations.delete(this.requestConversations.keys().next().value);
+    }
+  }
+
+  conversationOfRequest(requestId) {
+    return (requestId && this.requestConversations.get(requestId)) || null;
   }
 
   resetChatOptions(toolsOn) {
@@ -68,6 +83,7 @@ export default class ChatState {
     this.streaming = false;
     this.streamConvId = null;
     this.reqId = null;
+    this.requestConversations = new Map();
     this.streamMsg = null;
     this.regenActive = false;
     this.autoScrollPaused = false;
@@ -83,6 +99,7 @@ export default class ChatState {
     this.thinkDial = null;
     this.thinkSupported = false;
     this.thinkDefault = 'default';
+    this.thinkHostDecides = false;
     this.toolCatalog = null;
     this.attachments = [];
     this.context = [];

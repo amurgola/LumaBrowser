@@ -142,7 +142,7 @@ export default class TurnSender {
     state.streamConvId = state.activeId || null;
     this._ctx.stream.append();
     this._ctx.composer.setSendStop(true);
-    state.newRequestId();
+    state.rememberRequest(state.newRequestId(), state.streamConvId);
     state.autoScrollPaused = false;
     this._ctx.main.pinBottom();
   }
