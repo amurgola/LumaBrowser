@@ -13,15 +13,26 @@ Everything that waits for Electron's ready event.
      self-gates on consent). In the background; a failure is logged
      `Machine identity failed:` and the pulse never starts.
   2. [SessionSetup](SessionSetup.md)`.applyPolicies()`.
-  3. `chromeExtensionService.init()`.
-  4. The setup gate: `core.setupComplete`.
-  5. `SessionSetup.hookSessions()`.
-  6. [ContextMenu](../../core/shell/ContextMenu.md) (before the window, it
+  3. `_openSecretStores()`: awaits `open()` on the vault's
+     [VaultStore](../../core/vault/VaultStore.md) and the
+     [TriggerSecrets](../../core/llm-server/chat/triggers/TriggerSecrets.md), so
+     they are decrypted into memory before any window, page or webhook asks for
+     one. A store that fails to open is logged (`[secrets] the <name> could not be
+     opened:`), reads as empty, and the app still starts. Boot log
+     `secret stores opened`.
+  4. `chromeExtensionService.init()`.
+  5. The setup gate: `core.setupComplete`.
+  6. `SessionSetup.hookSessions()`.
+  7. [ContextMenu](../../core/shell/ContextMenu.md) (before the window, it
      attaches from `web-contents-created`) and [AppMenu](AppMenu.md).
-  7. The main window ([MainWindow](../window/MainWindow.md)`.create()`).
-  8. Setup complete: [DeferredServices](DeferredServices.md)`.start()`; else
+  8. The main window ([MainWindow](../window/MainWindow.md)`.create()`).
+  9. Setup complete: [DeferredServices](DeferredServices.md)`.start()`; else
      wait for the setup wizard's finish.
-  9. [BackgroundStarts](BackgroundStarts.md).
+  10. [BackgroundStarts](BackgroundStarts.md).
+
+The secret stores are opened here because the OS keychain
+([OsKeychain](../../core/shared/OsKeychain.md)) is asynchronous and only works
+once the app is ready.
 
 ## Extension menu and navigation
 

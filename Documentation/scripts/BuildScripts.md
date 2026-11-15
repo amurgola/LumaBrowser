@@ -5,7 +5,7 @@ path. Each one only wires a `tools/build/` class (see [Packaging](../tools/build
 
 | Script | Calls | Notes |
 |---|---|---|
-| `scripts/after-pack.js` | [DistributableExtensionPruner](../tools/build/pack/DistributableExtensionPruner.md) | `build.afterPack`; exports the hook function. Direct use: `node scripts/after-pack.js <appOutDir>` |
+| `scripts/after-pack.js` | [DistributableExtensionPruner](../tools/build/pack/DistributableExtensionPruner.md), then [WerHelperRenamer](../tools/build/pack/WerHelperRenamer.md) | `build.afterPack`; exports the hook function (resolves the pruner's removed folders). Direct use: `node scripts/after-pack.js <appOutDir>` |
 | `scripts/build-hooks.js` | [BuildHooks](../tools/build/BuildHooks.md) | `build.onNodeModuleFile`; exports `onNodeModuleFile` |
 | `scripts/verify-asar.js` | [AsarLayoutVerifier](../tools/build/verify/AsarLayoutVerifier.md) | `npm run verify:asar -- --asar <path>`. Exit 0 pass, 1 fail, 2 no `--asar` or crash |
 | `scripts/build-extensions.js` | [AddonPackager](../tools/build/addons/AddonPackager.md) | `npm run build:extensions` |

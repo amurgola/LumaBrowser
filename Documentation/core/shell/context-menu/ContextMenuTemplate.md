@@ -29,6 +29,9 @@ Builds the Electron menu template for one right click, Chrome style.
   bitmap copy at the hit point), Copy image address (src only), Save image as
   (src or recovered src). A recovered multi-megabyte data: URL is fine to
   download but not to navigate to or paste, so the URL-only items stay hidden.
+  Copy link address and Copy image address go through `_copy(text)`: Electron's
+  clipboard write is asynchronous since Electron 44, and a write that fails
+  (clipboard busy) is swallowed rather than shown.
 - Editing: inputs get undo/redo/cut/copy/paste/pasteAndMatchStyle/delete/selectAll
   roles with their edit flags; a selection gets copy (and selectAll); a plain
   area gets selectAll when there is anything to select.

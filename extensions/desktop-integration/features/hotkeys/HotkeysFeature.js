@@ -10,6 +10,7 @@ const ScreenTextReader = require('./ScreenTextReader');
 const SelectionClipboard = require('./SelectionClipboard');
 const SelectionRewriter = require('./SelectionRewriter');
 const X11Bridge = require('./X11Bridge');
+const SystemClipboard = require('../../../../core/desktop/service/SystemClipboard');
 const KWinHintTarget = require('./KWinHintTarget');
 
 class HotkeysFeature {
@@ -59,12 +60,13 @@ class HotkeysFeature {
     const ExtensionGlobals = require('../../../../core/shell/extensions/ExtensionGlobals');
     const win = process.platform === 'win32' ? require('../../../../core/desktop/Win32') : null;
     const bridge = deps.bridge !== undefined ? deps.bridge : X11Bridge.forSession({ log: console });
+    const clipboard = SystemClipboard.fromElectron(electron);
     return {
       globalShortcut: electron.globalShortcut,
       bridge,
       hintTarget: deps.hintTarget !== undefined ? deps.hintTarget : KWinHintTarget.forSession(),
-      clipboard: electron.clipboard,
-      keys: SelectionKeys.create({ clipboard: electron.clipboard, bridge }),
+      clipboard,
+      keys: SelectionKeys.create({ clipboard, bridge }),
       getRouter: () => ExtensionGlobals.chatRouter(),
       region: new RegionCapture({ electron, win, overlay: new RegionOverlay({ BrowserWindow: electron.BrowserWindow }) }),
       notify: (title, body) => HotkeysFeature._electronNotify(electron, title, body),
@@ -104,7 +106,7 @@ class HotkeysFeature {
     this._chord = new ChordHint({
       held: () => parts.keys.heldModifiers(),
       groups: () => this._hintGroups(),
-      onShow: (modifiers, entries) => { this._target.begin(); this._showHint(modifiers, entries); },
+      onShow: (modifiers, entries) => { this._target.begin(); this._showHint(modifiers, entries); this._refreshClipboardHint(); },
       onHide: () => { this._hint = null; this._target.end(); if (deps.overlay) deps.overlay.unpeek(); },
       onPoll: () => this._pollTarget(),
       now: parts.now,
@@ -232,6 +234,14 @@ class HotkeysFeature {
     try { hwnd = this._parts.keys.foregroundWindow ? this._parts.keys.foregroundWindow() : 0; } catch (_) { hwnd = 0; }
     this._hint = { modifiers, hwnd };
     this._peekHint(entries);
+  }
+
+  _refreshClipboardHint() {
+    this._actions.refreshClipboardState().then((changed) => {
+      if (!changed || !this._hint) return;
+      const entries = this._hintGroups()[this._hint.modifiers];
+      if (entries && entries.length) this._peekHint(entries);
+    }).catch(() => {});
   }
 
   _peekHint(entries) {

@@ -7,7 +7,11 @@
 
 ## Methods
 
-- `new RendererCpuProfiler(webContents)`.
+- `new RendererCpuProfiler(webContents, { shareDebugger = false })`. With
+  `shareDebugger` the debugger is one the caller already attached (the
+  [DebuggerTraceRecorder](DebuggerTraceRecorder.md)'s during a runtime trace):
+  the profiler neither attaches nor detaches it, it only sends its Profiler
+  commands.
 - `start()`, `stop()`, `detach()` as CpuProfiler.
 
 ## Why start can fail

@@ -15,7 +15,12 @@ Builds the services everything else leans on, over the one settings database.
   - `networkWatcherService`, `networkInterceptor` over it;
   - `machineIdentity` (`LUMA_MACHINE_ID` honoured), `telemetryConsent`
     (`isDev` counts as opted out), `pulseService` over both;
-  - `chromeExtensionService`, `adblockerService` (store and engine cache in the data folder);
+  - `chromeExtensionService`, `adblockerService` (store and engine cache in the data folder),
+    `promptApiService` ([PromptApiService](../../core/prompt-api/PromptApiService.md), the
+    "Local model for web pages" feature, off unless the user turns it on, and then each site
+    asks first through `access: new PromptApiAccess()` ([PromptApiAccess](../../core/prompt-api/PromptApiAccess.md));
+    its router is read per request through `ExtensionGlobals.chatRouter()`, and tab sessions are handed to it by
+    [SessionSetup](../ready/SessionSetup.md));
   - `apiSecurity`;
   - `activityLogService` over its own `<dataDir>/activity-log.db`, with the
     callers `core.browser`, `core.llm`, `core.shell` registered.

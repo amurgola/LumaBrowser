@@ -1,6 +1,11 @@
 const DistributableExtensionPruner = require('../tools/build/pack/DistributableExtensionPruner');
+const WerHelperRenamer = require('../tools/build/pack/WerHelperRenamer');
 
-const afterPack = (context) => new DistributableExtensionPruner().prune(context);
+const afterPack = async (context) => {
+  const removed = await new DistributableExtensionPruner().prune(context);
+  new WerHelperRenamer().rename(context);
+  return removed;
+};
 
 module.exports = afterPack;
 

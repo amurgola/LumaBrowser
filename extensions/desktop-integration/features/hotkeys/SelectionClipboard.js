@@ -1,5 +1,3 @@
-const ClipboardSnapshot = require('../../../../core/desktop/service/ClipboardSnapshot');
-
 class SelectionClipboard {
   static COPY_TIMEOUT_MS = 800;
   static POLL_MS = 15;
@@ -27,14 +25,14 @@ class SelectionClipboard {
       const hwnd = this._keys.foregroundWindow();
       if (this._keys.copyMode === 'primary') return this._fromPrimary(hwnd);
       await this.releaseModifiers();
-      const saved = ClipboardSnapshot.take(this._clipboard);
-      const before = this._keys.clipboardSequence();
+      const saved = await this._clipboard.snapshot();
+      const before = await this._keys.clipboardSequence();
       this._keys.sendCombo('copy');
       const changed = await this._waitForSequenceChange(before, SelectionClipboard.COPY_TIMEOUT_MS);
       if (!changed) return typeof this._keys.readPrimary === 'function' ? this._fromPrimary(hwnd) : SelectionClipboard._noSelection();
       await this._sleep(SelectionClipboard.SETTLE_MS);
-      const text = this._clipboard.readText();
-      this._restore(saved);
+      const text = await this._clipboard.readText();
+      await this._restore(saved);
       if (!text || !text.trim()) return SelectionClipboard._noSelection();
       return { success: true, text, hwnd };
     } catch (err) {
@@ -53,14 +51,14 @@ class SelectionClipboard {
         return { success: false, error: 'The window the text came from is no longer in front', code: 'FOCUS_LOST' };
       }
       await this.releaseModifiers();
-      const saved = ClipboardSnapshot.take(this._clipboard);
-      this._clipboard.writeText(text);
+      const saved = await this._clipboard.snapshot();
+      await this._clipboard.writeText(text);
       try {
         this._keys.sendCombo('paste');
       } finally {
         await this._sleep(SelectionClipboard.PASTE_RESTORE_MS);
       }
-      return { success: true, restored: this._restoreIfOurs(saved, text) };
+      return { success: true, restored: await this._clipboard.restoreIfStill(text, saved) };
     } catch (err) {
       return { success: false, error: (err && err.message) || String(err), code: 'FAILED' };
     }
@@ -85,8 +83,8 @@ class SelectionClipboard {
     return reason ? { success: false, error: reason, code: 'NO_PERMISSION' } : null;
   }
 
-  _fromPrimary(hwnd) {
-    const text = this._keys.readPrimary();
+  async _fromPrimary(hwnd) {
+    const text = await this._keys.readPrimary();
     return text && text.trim() ? { success: true, text, hwnd, primary: true } : SelectionClipboard._noSelection();
   }
 
@@ -95,7 +93,7 @@ class SelectionClipboard {
     let polls = Math.ceil(timeoutMs / SelectionClipboard.POLL_MS);
     do {
       await this._sleep(SelectionClipboard.POLL_MS);
-      if (this._keys.clipboardSequence() !== before) return true;
+      if ((await this._keys.clipboardSequence()) !== before) return true;
     } while (this._now() < deadline && polls-- > 0);
     return false;
   }
@@ -107,23 +105,14 @@ class SelectionClipboard {
     return this._keys.foregroundWindow() === hwnd;
   }
 
-  _restore(saved) {
+  async _restore(saved) {
     if (!saved) return false;
     try {
-      ClipboardSnapshot.restore(this._clipboard, saved);
+      await this._clipboard.restore(saved);
       return true;
     } catch (_) {
       return false;
     }
-  }
-
-  _restoreIfOurs(saved, text) {
-    try {
-      if (this._clipboard.readText() !== text) return false;
-    } catch (_) {
-      return false;
-    }
-    return this._restore(saved);
   }
 
   static _noSelection() {

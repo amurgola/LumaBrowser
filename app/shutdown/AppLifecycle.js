@@ -10,6 +10,7 @@ class AppLifecycle {
     this._s = ctx.services;
     this._shutdown = shutdown || new ShutdownSequence(ctx, { log });
     this._log = log;
+    this._lateErrorListener = null;
   }
 
   wire() {
@@ -39,15 +40,31 @@ class AppLifecycle {
     const controller = this._ctx.quitController;
     if (controller.isQuitting) return null;
     this._log.log('App before-quit, cleaning up...');
+    this._logLateErrors();
     try { this._s.cliHandshake.remove(); } catch (_) {}
     try { if (this._ctx.tabViewManager) this._ctx.tabViewManager.sealSession(); } catch (_) {}
     return controller.requestQuit().then((outcome) => {
-      if (outcome === 'kept-open') this._log.warn('[quit] kept open after a hung shutdown; services may be partially stopped until the next quit');
+      if (outcome === 'kept-open') {
+        this._log.warn('[quit] kept open after a hung shutdown; services may be partially stopped until the next quit');
+        this._restoreErrorBox();
+      }
       return outcome;
     }).catch((err) => {
       this._log.error('[quit] quit controller failed, forcing exit:', err && err.message);
       this._ctx.app.exit(1);
     });
+  }
+
+  _logLateErrors() {
+    if (this._lateErrorListener) return;
+    this._lateErrorListener = (err) => this._log.error('[quit] error during shutdown:', (err && err.stack) || err);
+    this._ctx.proc.on('uncaughtException', this._lateErrorListener);
+  }
+
+  _restoreErrorBox() {
+    if (!this._lateErrorListener) return;
+    this._ctx.proc.removeListener('uncaughtException', this._lateErrorListener);
+    this._lateErrorListener = null;
   }
 
   onChildProcessGone(details) {

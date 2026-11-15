@@ -3,11 +3,14 @@
 `extensions/desktop-integration/features/hotkeys/SelectionClipboard.js`
 
 Reads and replaces the text selected in the foreground application through the
-clipboard, leaving the user's clipboard as it was (text, HTML, RTF and images,
-via desktop control's `ClipboardSnapshot`; other formats such as copied files
-are lost). Luma never takes focus: keystrokes go to the window in front.
+clipboard, leaving the user's clipboard as it was (every format, through a
+[SystemClipboard](../../../../core/desktop/service/SystemClipboard.md) snapshot;
+when the platform refuses its own raw formats, text, HTML, RTF and PNG are put
+back). Luma never takes focus: keystrokes go to the window in front. Every
+clipboard read and write is awaited.
 
-- `constructor({ keys, clipboard, sleep?, now? })`: `keys` is the platform's
+- `constructor({ keys, clipboard, sleep?, now? })`: `clipboard` is a
+  SystemClipboard; `keys` is the platform's
   backend from [SelectionKeys](SelectionKeys.md): [NativeKeys](NativeKeys.md)
   (Windows), [MacKeys](MacKeys.md) or [LinuxKeys](LinuxKeys.md). Optional
   backend members change the flow:

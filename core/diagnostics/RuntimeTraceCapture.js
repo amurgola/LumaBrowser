@@ -3,6 +3,7 @@ const path = require('path');
 const EventLoopDelaySampler = require('./EventLoopDelaySampler');
 const MainCpuProfiler = require('./MainCpuProfiler');
 const RendererCpuProfiler = require('./RendererCpuProfiler');
+const DebuggerTraceRecorder = require('./DebuggerTraceRecorder');
 const RuntimeTraceScripts = require('./RuntimeTraceScripts');
 const RuntimeTraceSummary = require('./RuntimeTraceSummary');
 
@@ -14,13 +15,14 @@ class RuntimeTraceCapture {
   static COUNTDOWN_MS = 1000;
   static FINAL_TOAST_MS = 12000;
 
-  constructor({ electron, webContents, dir, durationMs, mainProfiler, summarize = RuntimeTraceSummary.summarize }) {
+  constructor({ electron, webContents, dir, durationMs, mainProfiler, traceRecorder, summarize = RuntimeTraceSummary.summarize }) {
     this._electron = electron;
     this._wc = webContents;
     this.dir = dir;
     this._durationMs = durationMs;
     this._mainProfiler = mainProfiler || new MainCpuProfiler();
-    this._rendererProfiler = new RendererCpuProfiler(webContents);
+    this._traceRecorder = traceRecorder || new DebuggerTraceRecorder(webContents);
+    this._rendererProfiler = null;
     this._summarize = summarize;
     this._notes = [];
     this._timers = [];
@@ -65,7 +67,7 @@ class RuntimeTraceCapture {
 
   async _startChromiumTrace() {
     try {
-      await this._electron.contentTracing.startRecording({ included_categories: RuntimeTraceCapture.TRACE_CATEGORIES });
+      await this._traceRecorder.start(RuntimeTraceCapture.TRACE_CATEGORIES);
       this._tracing = true;
     } catch (err) {
       this._tracing = false;
@@ -80,6 +82,7 @@ class RuntimeTraceCapture {
 
   async _startRendererProfile() {
     this._rendererProfiling = false;
+    this._rendererProfiler = new RendererCpuProfiler(this._wc, { shareDebugger: this._tracing });
     try {
       await this._rendererProfiler.start();
       this._rendererProfiling = true;
@@ -141,7 +144,8 @@ class RuntimeTraceCapture {
   async _stopChromiumTrace() {
     if (!this._tracing) return;
     try {
-      await this._electron.contentTracing.stopRecording(path.join(this.dir, 'chromium-trace.json'));
+      const trace = await this._traceRecorder.stop();
+      fs.writeFileSync(path.join(this.dir, 'chromium-trace.json'), JSON.stringify(trace));
     } catch (err) {
       this._notes.push(`chromium trace failed to stop: ${err.message}`);
     }

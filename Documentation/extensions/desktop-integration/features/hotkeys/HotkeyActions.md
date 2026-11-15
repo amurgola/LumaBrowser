@@ -7,6 +7,7 @@ The four actions of the [hotkeys feature](index.md). Every method resolves
 
 - `constructor({ speech, handoff, selection, rewriter, region, clipboard, screenText?, options(), onError(id, message)?, now? })`.
   `options()` returns `{ instruction, modelRef, timeoutMs, autoSend, readScreen, screenTextModel }`.
+  `clipboard` is a [SystemClipboard](../../../../core/desktop/service/SystemClipboard.md).
 - `run(id, source)`: `source` may carry `hwnd` and `frame` (a DIP rect), the
   window picked on the shortcut hint. Guards unknown (`UNKNOWN_ACTION`), unsupported
   (`UNSUPPORTED`) and already running (`BUSY`) actions, then dispatches.
@@ -27,7 +28,13 @@ The four actions of the [hotkeys feature](index.md). Every method resolves
 - `canReadScreen()`: `readScreen` is on and the screen text model can see images now.
 - `readiness(id, { framed })` -> `{ disabled, note }` for the shortcut hint:
   what the key will do, or why it cannot (no voice, the AI chat not running,
-  an empty clipboard, already running, not Windows).
+  an empty clipboard, already running, not Windows). The clipboard answers
+  asynchronously and `readiness` cannot wait, so `clipboard-to-chat` answers
+  from the last look (`refreshClipboardState`); before the first look the
+  clipboard counts as holding something.
+- `refreshClipboardState()`: looks at the clipboard again (`hasTextOrImage`)
+  and resolves whether the answer changed. A clipboard that cannot be read
+  counts as holding something, so the action stays reachable.
 - `stopSpeaking()`: `speech.stop()`.
 - `rewriteSelection()`: copy, [SelectionRewriter](SelectionRewriter.md), paste
   back into the window the text came from, with a busy island
@@ -37,7 +44,7 @@ The four actions of the [hotkeys feature](index.md). Every method resolves
 - `activity` (constructor): [HotkeyActivity](HotkeyActivity.md), or a no-op;
   clipboard and screenshot handoffs flash "Sent to LumaBrowser".
 - `clipboardToChat(source)`: short text as the prompt (4000 characters), long
-  text as a `text` attachment, an image as a PNG attachment; `EMPTY_CLIPBOARD`
+  text as a `text` attachment, an image (`readImagePng`) as a PNG attachment; `EMPTY_CLIPBOARD`
   when there is neither.
 - `screenshotToChat(source)`: [RegionCapture](RegionCapture.md) (a drag, or
   `source.frame` captured whole as `window.png`) with the overlay hidden, then

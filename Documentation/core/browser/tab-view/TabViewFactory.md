@@ -11,7 +11,9 @@ Builds a tab's native view, parks it in its window, moves it between windows, an
   `session.fromPartition(partition)` with the [ChromeIdentity](../ChromeIdentity.md)
   user agent and Accept-Language, context isolation, no node integration, the
   given preload (else the default), an opaque white background and 20 max listeners.
-  `backgroundThrottling` is off for silent and keep-alive tabs.
+  `backgroundThrottling` is off for silent and keep-alive tabs. `sandbox` is
+  `!preloadPath`: a web tab (default preload) runs in Chromium's sandbox; a tab
+  given a preload of its own (the app's internal pages) stays unsandboxed.
 - `attach(entry)`: adds the view to the tab's window hidden at 0x0 bounds, with crash-trace
   marks `tab:create` and `tab:attached`.
 - `reparent(entry, toHostId)`: hides the view, removes it from its window and parks it
@@ -31,6 +33,15 @@ compositing every frame against the window, which made the whole window flash
 in time with video-heavy pages. The adblocker and extensions also hook new
 sessions, but persist:* partitions can be recycled, so both calls are repeated
 here as an idempotent safety net.
+
+Web tabs are sandboxed because a sandboxed renderer starts faster and can take
+the warm spare renderer ([ProcessSetup](../../../app/process/ProcessSetup.md)
+enables `SpareRendererForSitePerProcess`). The default preload is then the
+self-contained bundle [PreloadBundle](../tab-preload/PreloadBundle.md) writes,
+since a sandboxed preload can require nothing but `electron`. Internal pages'
+own preloads require local modules, which only an unsandboxed renderer allows.
+Measured on a local page: a new tab finished loading in 63 ms unsandboxed,
+37 ms sandboxed, 12 ms sandboxed with the spare renderer.
 
 ## extensionsSettling
 

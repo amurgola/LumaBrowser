@@ -22,6 +22,9 @@ const AdblockerService = require('../../core/adblocker/AdblockerService');
 const ApiSecurity = require('../../core/shell/ApiSecurity');
 const ActivityLogStore = require('../../core/activity-log/ActivityLogStore');
 const ActivityLogService = require('../../core/activity-log/ActivityLogService');
+const PromptApiService = require('../../core/prompt-api/PromptApiService');
+const PromptApiAccess = require('../../core/prompt-api/PromptApiAccess');
+const ExtensionGlobals = require('../../core/shell/extensions/ExtensionGlobals');
 
 class FoundationServices {
   static ACTIVITY_LOG_FILE = 'activity-log.db';
@@ -82,6 +85,7 @@ class FoundationServices {
   _buildBrowserAddOns() {
     this._s.chromeExtensionService = new ChromeExtensionService(this._db, this._ctx.dataDir, { bridge: new ShimBridge() });
     this._s.adblockerService = new AdblockerService(this._db, this._ctx.dataDir);
+    this._s.promptApiService = new PromptApiService({ db: this._db, getRouter: () => ExtensionGlobals.chatRouter(), access: new PromptApiAccess() });
   }
 
   _wireVault() {

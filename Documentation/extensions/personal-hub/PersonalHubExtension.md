@@ -43,7 +43,8 @@ when a one-line notification is not enough. Agents reach it through the
   or `null` without one, with the reader as `reader` and the contact service
   as `people`), [FocusService](focus/FocusService.md)
   and the [HubService](HubService.md) facade (given `contacts` and `reader`
-  too); subscribes to
+  too); awaits `secrets.open()` so the stored tokens are decrypted into memory
+  before the schedulers start and the first sync asks for one; subscribes to
   `context.extensions['notification-interceptor'].onIngest` so every
   intercepted notification lands in the activity feed, together with the
   persisted tab that raised it (`_tabOf`); registers
@@ -54,7 +55,8 @@ when a one-line notification is not enough. Agents reach it through the
   may use; starts the master tick and the connection monitor; resolves the
   public API.
 - `deactivate()`: stops the tick, the monitor and the summariser's pending
-  timer and drops the notification subscription.
+  timer, drops the notification subscription, and awaits `secrets.idle()` so a
+  token saved a moment ago reaches the database.
 - `getApi()`: the public API, or null while inactive.
 - `static _tabOf(notification, tabs)`: `{ partition, title, url }` of the
   persisted tab a notification names by `tabId`

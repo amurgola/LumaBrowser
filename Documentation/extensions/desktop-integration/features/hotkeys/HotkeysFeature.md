@@ -9,8 +9,10 @@ runs [HotkeyActions](HotkeyActions.md) from a shortcut or REST, and reports.
 - `static ACTIONS`: `{ id, label, description, defaultBinding }` per action.
 - `static settingsSchema()`: the declarative fields `index.js` exports.
 - `static defaultParts()`: the real parts (Electron `globalShortcut`,
-  `clipboard`, `BrowserWindow`, `Notification`; the platform's keys backend from
-  [SelectionKeys](SelectionKeys.md);
+  `BrowserWindow`, `Notification`; a
+  [SystemClipboard](../../../../core/desktop/service/SystemClipboard.md) over
+  Electron's clipboard, shared by the actions and the platform's keys backend
+  from [SelectionKeys](SelectionKeys.md);
   `ExtensionGlobals.chatRouter()`; [RegionCapture](RegionCapture.md) over
   `core/desktop/Win32` on Windows). Electron is required lazily.
 - `constructor(deps, parts)`: parts `{ globalShortcut, bridge?, hintTarget?, clipboard, keys, getRouter, region, notify(title, body), screenText?, sleep?, now? }`
@@ -44,7 +46,10 @@ runs [HotkeyActions](HotkeyActions.md) from a shortcut or REST, and reports.
   "Stop reading" while speaking, "Capture window" with a window picked), each
   with its `HotkeyActions.readiness` note (shown under the island when pointed
   at) and greyed out when it cannot work now (no voice, the AI chat down, an
-  empty clipboard, already running). It opens on the foreground window's
+  empty clipboard, already running). The clipboard answers asynchronously, so
+  the hint shows with the last known clipboard state and `_refreshClipboardHint()`
+  (run on every show) redraws it when `HotkeyActions.refreshClipboardState()`
+  says the state changed. It opens on the foreground window's
   monitor with `HINT_CAPTION` under it. A click on a window while it is up
   ([HintTarget](HintTarget.md), polled through `ChordHint`'s `onPoll`) re-peeks
   framed on that window, captioned "Working on <title>"; the desktop or the

@@ -21,11 +21,14 @@ class ToolForgeExtension {
     this._sandbox = null;
     this._host = null;
     this._retryTimer = null;
+    this._configStore = null;
   }
 
   async activate(context) {
     const rawDb = context.db.getRawDb();
     const parts = this._buildParts(rawDb, context.logger);
+    this._configStore = parts.configStore;
+    await this._configStore.open();
     ForgeToolHandler.shared.setService(parts.service);
     ToolForgeExtension._seedBuildersOff(rawDb);
     this._registerWhenReady(0);
@@ -37,6 +40,8 @@ class ToolForgeExtension {
     if (this._retryTimer) clearTimeout(this._retryTimer);
     this._retryTimer = null;
     try { if (this._sandbox) this._sandbox.dispose(); } catch (_) {}
+    if (this._configStore) { try { await this._configStore.idle(); } catch (_) {} }
+    this._configStore = null;
     ToolForgeExtension._unregisterUserTools();
     ForgeToolHandler.shared.setService(null);
     this._sandbox = null;

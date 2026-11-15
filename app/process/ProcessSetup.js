@@ -7,7 +7,7 @@ const LaunchUrls = require('./LaunchUrls');
 const NewTabPage = require('../../core/browser/newtab/NewTabPage');
 
 class ProcessSetup {
-  static SWITCHES = [['enable-features', 'UseSkiaRenderer'], ['force-color-profile', 'srgb'], ['disable-features', 'CalculateNativeWinOcclusion']];
+  static SWITCHES = [['enable-features', 'UseSkiaRenderer,SpareRendererForSitePerProcess'], ['force-color-profile', 'srgb'], ['disable-features', 'CalculateNativeWinOcclusion']];
   static LINUX_SWITCHES = [['enable-transparent-visuals']];
 
   constructor(ctx, { crashTracer = CrashTracer, debugLog = DebugLog, log = console } = {}) {

@@ -6,6 +6,7 @@ const TriggerRunTools = require('./TriggerRunTools');
 const TriggerRunPrompt = require('./TriggerRunPrompt');
 const TriggerResultShape = require('./TriggerResultShape');
 const TriggerRetryScheduler = require('./TriggerRetryScheduler');
+const TriggerMemoryFollowUp = require('./TriggerMemoryFollowUp');
 
 class TriggerRunExecution {
   static RUN_TIMEOUT_MS = 5 * 60 * 1000;
@@ -40,13 +41,14 @@ class TriggerRunExecution {
   }
 
   async _runToCompletion() {
-    const { deps, chatStore, bridge } = this._s.runtime();
+    const { deps, chatStore, bridge, router } = this._s.runtime();
     const cfg = this._s.runConfig.resolve(this._trigger, deps);
     const transcript = RunTranscript.open(chatStore, { title: this._trigger.title, label: 'fire', modelRef: cfg.modelRef });
     this._startRun(transcript);
     const userMessage = TriggerPayload.buildUserMessage(this._trigger.action && this._trigger.action.prompt, this._event);
     transcript.addUser(userMessage);
     const result = await this._driveBridge(bridge, transcript, deps, cfg, userMessage);
+    await this._keepMemory(router, cfg, result);
     transcript.addAssistant(result, cfg.modelRef);
     const verdict = this._verdict(result);
     this._s.triggerStore.recordRunFinish(this._run.id, { status: verdict.status, error: verdict.errorText, response: result.finalResponse || null });
@@ -92,6 +94,15 @@ class TriggerRunExecution {
       kbScope: cfg.kbScope || null,
       modeSystemPrompt: TriggerRunPrompt.system(this._trigger, this._opts.kind, this._event, cfg, this._state),
     });
+  }
+
+  async _keepMemory(router, cfg, result) {
+    if (result.error || this._state.memorySaved || !router || typeof router.complete !== 'function') return;
+    const followUp = new TriggerMemoryFollowUp({ complete: (opts) => router.complete(opts), triggerStore: this._s.triggerStore, emitEvent: this._s.emitEvent });
+    const saved = await followUp.save({ trigger: this._trigger, modelRef: cfg.modelRef, event: this._event, response: result.finalResponse });
+    if (!saved) return;
+    this._state.memorySaved = true;
+    result.toolTrace = [...(result.toolTrace || []), saved];
   }
 
   _onToolEvent(ev, control) {

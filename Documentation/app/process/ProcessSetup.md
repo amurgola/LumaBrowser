@@ -28,9 +28,23 @@ Process configuration that precedes everything else.
   4. dev only: the console ring buffer behind the chat's "Copy Logs";
   5. [UnhandledRejectionTap](UnhandledRejectionTap.md);
   6. `app.userAgentFallback = ChromeIdentity.USER_AGENT` (service workers read it);
-  7. Chromium switches: `enable-features=UseSkiaRenderer`,
+  7. Chromium switches: `enable-features=UseSkiaRenderer,SpareRendererForSitePerProcess`,
      `force-color-profile=srgb`, `disable-features=CalculateNativeWinOcclusion`,
      and on Linux `enable-transparent-visuals`.
+
+## Why the switches
+
+- `UseSkiaRenderer`: Vulkan rasterization stays off (full-window flashing on
+  video-heavy pages).
+- `SpareRendererForSitePerProcess`: one sandboxed renderer is kept warm, so a
+  new (sandboxed, see [TabViewFactory](../../core/browser/tab-view/TabViewFactory.md))
+  tab does not wait for a process to start. Measured on a local page: 37 ms to
+  load without it, 12 ms with it. Both features ride one `enable-features`
+  switch, because a second `enable-features` switch would replace the first.
+- `force-color-profile=srgb`: a single HDR image must not flip the whole window
+  into HDR output.
+- `CalculateNativeWinOcclusion` off: occlusion recalculation woke the window on
+  every tab repaint and flashed the chrome in time with video frames.
 
 ## Extension load warnings
 

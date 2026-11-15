@@ -1,6 +1,6 @@
 class SitePermissionStore {
   static SITES_KEY = 'core.permissions.sites';
-  static KINDS = ['camera', 'microphone', 'popups', 'notifications'];
+  static KINDS = ['camera', 'microphone', 'popups', 'notifications', 'localModel'];
 
   constructor(db) {
     this._db = db || null;

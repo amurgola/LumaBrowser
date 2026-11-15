@@ -19,7 +19,9 @@ profile ([ProfileEnvironment](ProfileEnvironment.md)), then:
    `report.json` and prints the headline JSON. `console.log` is written and the launched app closed even on failure.
 
 Output folder: `test-data/performance/<label>/` with `report.json`, `chromium-trace.json` (startup trace),
-`runtime-trace.json`, `main.cpuprofile`, `shell.png`, `console.log` and the `profile/` data folder.
+`runtime-trace.pftrace` (`RUNTIME_TRACE_FILE`: the interaction trace, in Perfetto protobuf format because
+`contentTracing` writes nothing else since Electron 45; open it in ui.perfetto.dev), `main.cpuprofile`, `shell.png`,
+`console.log` and the `profile/` data folder. The startup trace `chromium-trace.json` is still JSON.
 Thin entry: `scripts/profile-performance.js` (`npm run profile:performance -- <label> [--first-run] [--no-adblock]`).
 
 ## Methods

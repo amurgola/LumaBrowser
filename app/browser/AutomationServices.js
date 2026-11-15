@@ -6,6 +6,7 @@ const BrowserService = require('../../core/browser/BrowserService');
 const VisualGroundingService = require('../../core/browser/vision/VisualGroundingService');
 const DesktopService = require('../../core/desktop/DesktopService');
 const DesktopIpcHandlers = require('../../core/desktop/DesktopIpcHandlers');
+const SystemClipboard = require('../../core/desktop/service/SystemClipboard');
 const AppGlobals = require('../AppGlobals');
 
 class AutomationServices {
@@ -40,7 +41,8 @@ class AutomationServices {
   }
 
   _buildVisionAndDesktop(browserService, resolutionCache) {
-    const { nativeImage, clipboard } = this._ctx.electron;
+    const { nativeImage } = this._ctx.electron;
+    const clipboard = SystemClipboard.fromElectron(this._ctx.electron);
     const db = this._s.db;
     const visualGrounding = new VisualGroundingService({ llmService: this._s.llmService, tabManager: this._ctx.tabManager, db, nativeImage, resolutionCache });
     browserService.setVisualGrounding(visualGrounding);

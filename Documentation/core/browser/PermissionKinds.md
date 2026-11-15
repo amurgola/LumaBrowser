@@ -15,11 +15,13 @@ requesting origin, the kinds asked for (camera, microphone, notifications), and 
   other permission.
 - `PermissionKinds.kindsOfCheck(mediaType)` the same for a check handler's single
   `details.mediaType`.
-- `PermissionKinds.describe(kinds)` the prompt phrase, e.g. `use your camera and microphone`
-  or `show notifications`.
+- `PermissionKinds.describe(kinds)` the prompt phrase, e.g. `use your camera and microphone`,
+  `show notifications` or `use your local AI model`.
 - `PermissionKinds.isExtensionUrl(url)` true for `chrome-extension://` URLs.
 - `PermissionKinds.hostOf(origin)` host (with port) for the prompt, or the origin itself.
 - Constants: `MEDIA_KINDS` (`['camera', 'microphone']`), `APP_ORIGIN` (`'file://'`),
-  `NOTIFICATIONS`, `EXTENSION_PREFIX`.
+  `NOTIFICATIONS`, `LOCAL_MODEL` (`'localModel'`: a page prompting the local model through
+  the web Prompt API; not an Electron permission, [PromptApiAccess](../prompt-api/PromptApiAccess.md)
+  asks for it), `DISPLAY_CAPTURE` (`'display-capture'`), `EXTENSION_PREFIX`.
 
 Returned kind arrays are always fresh copies.

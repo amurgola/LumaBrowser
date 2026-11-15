@@ -57,11 +57,14 @@ class PersonalHubExtension {
     this._unsubscribeIngest = null;
     this._api = null;
     this._gatewayBaseUrl = null;
+    this._secrets = null;
   }
 
   async activate(context) {
     HubSchema.ensure(context.db);
     const parts = this._buildServices(context);
+    this._secrets = parts.secrets;
+    await this._secrets.open();
     this._subscribeNotifications(context, parts.inbox, parts.tabs);
     const api = this._buildApi(parts);
     const settings = HubIpcHandlers.register(context.ipc, api, { openUrl: (url) => this._openUrl(context, url) });
@@ -77,6 +80,8 @@ class PersonalHubExtension {
     if (this._summarizer) this._summarizer.stop();
     this._summarizer = null;
     if (this._unsubscribeIngest) { try { this._unsubscribeIngest(); } catch (_) {} }
+    if (this._secrets) { try { await this._secrets.idle(); } catch (_) {} }
+    this._secrets = null;
     this._scheduler = null;
     this._monitor = null;
     this._unsubscribeIngest = null;
@@ -156,7 +161,7 @@ class PersonalHubExtension {
       calendar, inbox, board, sync: this._scheduler, inbound, connections, contexts, summarizer: this._summarizer, focus, contacts, reader, now,
       openUrl: (url) => this._openUrl(context, url),
     });
-    return { service, inbox, inbound, tabs };
+    return { service, inbox, inbound, tabs, secrets };
   }
 
   _calendarProviders({ microsoft }) {

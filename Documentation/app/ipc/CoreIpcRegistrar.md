@@ -12,7 +12,8 @@ Registers every core IPC controller once, at boot. Wiring only.
   2. [TelemetryIpcHandlers](../../core/telemetry/TelemetryIpcHandlers.md) (an
      opt-out change starts or stops the pulse), [SettingsIpcHandlers](../../core/shell/SettingsIpcHandlers.md)
      (`onSetupFinalized` starts the deferred services), ChromeExtensionIpcHandlers,
-     AdblockerIpcHandlers;
+     AdblockerIpcHandlers, and [PromptApiIpcHandlers](../../core/prompt-api/PromptApiIpcHandlers.md)
+     (`core.promptApi.*`, the "Local model for web pages" switch) when `promptApiService` exists;
   3. `LlmServerIpcHandlers.register(llmServerService, deps)` with the same deps
      as legacy (db, getAgentDeps, the artifact, scheduled-task and trigger
      stores, runners and emitters, getHookBaseUrls, image, music, dashboard,

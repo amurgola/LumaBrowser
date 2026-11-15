@@ -1,6 +1,6 @@
 {
   "name": "lumabrowser",
-  "version": "2.1.9",
+  "version": "2.2.0",
   "private": true,
   "description": "Your local AI stack in one app",
   "homepage": "https://lumabyte.com",
@@ -47,7 +47,7 @@
     "@electron/asar": "^3.4.1",
     "@electron/rebuild": "^4.2.0",
     "cross-env": "^10.0.0",
-    "electron": "^43.3.0",
+    "electron": "^45.3.2",
     "electron-builder": "^26.17.0",
     "jest": "^30.1.1",
     "jest-environment-jsdom": "^30.5.2",

@@ -6,12 +6,15 @@ class DesktopHandshake {
   static FILE_NAME = 'desktop.json';
   static DIR_NAME = '.lumabrowser';
   static ENV_OVERRIDE = 'LUMA_DESKTOP_HANDSHAKE';
+  static ISOLATED_DATA_DIR = 'LUMA_DATA_DIR';
   static FILE_MODE = 0o600;
   static API_BASE = '/api/desktop';
 
   static handshakePath(env = process.env) {
     const override = env[DesktopHandshake.ENV_OVERRIDE];
     if (override && String(override).trim()) return path.resolve(String(override).trim());
+    const isolated = env[DesktopHandshake.ISOLATED_DATA_DIR];
+    if (isolated && String(isolated).trim()) return path.join(path.resolve(String(isolated).trim()), DesktopHandshake.FILE_NAME);
     return path.join(os.homedir(), DesktopHandshake.DIR_NAME, DesktopHandshake.FILE_NAME);
   }
 

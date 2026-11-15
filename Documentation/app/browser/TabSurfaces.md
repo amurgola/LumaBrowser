@@ -9,7 +9,11 @@ Builds the window's tab layer and the views stacked over it.
 - `new TabSurfaces(ctx, { log? })`.
 - `build(win)` sets on the context:
   - `tabViewManager` ([TabViewManager](../../core/browser/TabViewManager.md))
-    with `<root>/webview-preload.js`, the network interceptor, Chrome
+    with the tab preload bundle (`_bundleTabPreload()`: [PreloadBundle](../../core/browser/tab-preload/PreloadBundle.md)
+    joins `<root>/webview-preload.js` (`TAB_PRELOAD`) and its local requires into
+    `<data dir>/preload/tab-preload.js` (`TAB_PRELOAD_BUNDLE`) on every boot, because
+    web tabs are sandboxed and a sandboxed preload can require only `electron`; an
+    edit to any preload module applies on the next start), the network interceptor, Chrome
     extensions, adblocker, db and favicon cache; `tabManager` over it; `vaultService.attachTabs` so the
     password manager hears each tab's preload;
   - favicon updates relayed to the shell as `tab-view:favicon`;

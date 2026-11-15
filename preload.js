@@ -25,6 +25,8 @@ try {
     openExternal: (url) => ipcRenderer.invoke('core.shell.openExternal', url),
     getTelemetryStatus: () => ipcRenderer.invoke('core.telemetry.getStatus'),
     setTelemetryOptOut: (optOut) => ipcRenderer.invoke('core.telemetry.setOptOut', optOut),
+    getPromptApiStatus: () => ipcRenderer.invoke('core.promptApi.getStatus'),
+    setPromptApiEnabled: (enabled) => ipcRenderer.invoke('core.promptApi.setEnabled', enabled),
     getApiPort: () => ipcRenderer.invoke('core.settings.getApiPort'),
     getEffectiveApiPort: () => ipcRenderer.invoke('core.settings.getEffectiveApiPort'),
     getApiStatus: () => ipcRenderer.invoke('core.settings.getApiStatus'),

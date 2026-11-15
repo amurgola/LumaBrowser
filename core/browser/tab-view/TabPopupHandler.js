@@ -1,5 +1,4 @@
 class TabPopupHandler {
-  static POPUP_WINDOW_OPTIONS = { autoHideMenuBar: true };
 
   constructor({ registry, createTab, gate = null }) {
     this._registry = registry;
@@ -34,10 +33,16 @@ class TabPopupHandler {
       return { action: 'deny' };
     }
     if (TabPopupHandler._needsRealWindow(url, disposition)) {
-      return { action: 'allow', overrideBrowserWindowOptions: TabPopupHandler.POPUP_WINDOW_OPTIONS };
+      return { action: 'allow', overrideBrowserWindowOptions: TabPopupHandler._popupWindowOptions(entry) };
     }
     this._openAsTab(entry, url, disposition);
     return { action: 'deny' };
+  }
+
+  static _popupWindowOptions(entry) {
+    const wc = entry.webContents;
+    const opener = wc && typeof wc.getLastWebPreferences === 'function' ? wc.getLastWebPreferences() : null;
+    return { autoHideMenuBar: true, webPreferences: { sandbox: !opener || opener.sandbox !== false } };
   }
 
   static _needsRealWindow(url, disposition) {

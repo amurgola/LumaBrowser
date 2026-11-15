@@ -312,7 +312,7 @@ class TriggerRunner {
     const chatStore = router && router.chatStore;
     if (!router || !deps || !chatStore) throw new Error('agent runtime is not ready');
     if (!this._bridge) this._bridge = this._bridgeFactory(router);
-    return { deps, chatStore, bridge: this._bridge };
+    return { deps, chatStore, bridge: this._bridge, router };
   }
 
   _captureSample(trigger, event, { detail, dedupeKey = null, source }) {

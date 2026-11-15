@@ -33,6 +33,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/AppPaths.md](core/shared/AppPaths.md): picks the base dir for managed models and runtimes and migrates it out of the install dir; has `resolveBaseDir`, `migration`.
 - [core/shared/ImageModelPicker.md](core/shared/ImageModelPicker.md): quality-first image model pick against one card's budget; has `pickImageModel`, `cardBudgetBytesFromHw`.
 - [core/shared/ModelDescriptor.md](core/shared/ModelDescriptor.md): one host-independent shape for the LLM and image model lists; has `toLlmDescriptor`, `toImageInstalledDescriptor`, `toImageCatalogDescriptor`.
+- [core/shared/OsKeychain.md](core/shared/OsKeychain.md): the OS keychain over Electron's asynchronous safeStorage, asked once whether it can encrypt; records in the old synchronous format; has `ready`, `available`, `seal`, `open`.
 - [core/shared/ModelFolderRegistry.md](core/shared/ModelFolderRegistry.md): where each model service keeps its files, registered as lazy providers, so the LLM scanner steps around the image models folder nested under its own and the image scanner the reverse; has `register`, `unregister`, `folderOf`, `foldersExcept`, `isOneOf`, `normalize`.
 - [core/shared/hardwareTiers.json.md](core/shared/hardwareTiers.json.md): hardware tier rows shared with the website; data file.
 - [core/shared/audio/WavCodec.md](core/shared/audio/WavCodec.md): dependency-free WAV reader and writer; has `parse`, `encode`, `durationSec`.
@@ -117,6 +118,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/runtime/rampin/LinuxMemoryLock.md](core/shared/runtime/rampin/LinuxMemoryLock.md): mlock through koffi with a memlock limit check; has `prepare`, `mapFile`, `lockAsync`.
 - [core/shared/text/LineDiff.md](core/shared/text/LineDiff.md): bounded line diff into hunks with context; has `diff`.
 - [core/shared/text/Slug.md](core/shared/text/Slug.md): filesystem- and id-safe slugs; has `from`.
+- [core/shared/text/ThinkingText.md](core/shared/text/ThinkingText.md): removes a model's `<think>` blocks from a reply used as plain text; has `strip`.
 - [core/shared/registry/ContributionRegistry.md](core/shared/registry/ContributionRegistry.md): base class for registries extensions contribute to, tracking which extension owns which ids; has `register`, `unregister`, `unregisterByExtension`, `get`, `getById`, `has`, `list`, `extensions`.
 - [core/shared/HardwareTiers.md](core/shared/HardwareTiers.md): classifies a machine into a hardware tier row; has `classify`, `minGpuBytes`.
 - [core/shared/llm/ContextBudget.md](core/shared/llm/ContextBudget.md): context-window shares, fixed costs and a coherence check; has `resolveBudget`, `assertCoherent`, `headroomShare`, `compactionTrigger`.
@@ -190,9 +192,9 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/InputDriver.md](core/browser/InputDriver.md): trusted mouse clicks via sendInputEvent; has `trustedClick`, `toDip`.
 - [core/browser/LlmFallbackOrchestrator.md](core/browser/LlmFallbackOrchestrator.md): finds a working selector from a plain-language description; has `resolve`, `execute`.
 - [core/browser/PasskeyShim.md](core/browser/PasskeyShim.md): page source that holds passkey requests the user did not start; has `SOURCE`.
-- [core/browser/PermissionManager.md](core/browser/PermissionManager.md): deny-by-default web permission policy with camera/microphone/notification prompts; has `install`, `attachSession`, `handleRequest`, `check`, `decideMedia`, `respond`, site list methods.
+- [core/browser/PermissionManager.md](core/browser/PermissionManager.md): deny-by-default web permission policy with camera/microphone/notification/local model prompts; has `install`, `attachSession`, `handleRequest`, `check`, `decideMedia`, `decideSiteAccess`, `siteBlocked`, `respond`, site list methods.
 - [core/browser/PermissionKinds.md](core/browser/PermissionKinds.md): permission request origin, media kinds and prompt wording; has `originOf`, `kindsOf`, `kindsOfCheck`, `describe`, `hostOf`.
-- [core/browser/SitePermissionStore.md](core/browser/SitePermissionStore.md): remembered allow/block answers per origin (camera, microphone, pop-ups, notifications); has `answerFor`, `remember`, `list`, `clear`, `clearAll`.
+- [core/browser/SitePermissionStore.md](core/browser/SitePermissionStore.md): remembered allow/block answers per origin (camera, microphone, pop-ups, notifications, local model); has `answerFor`, `remember`, `list`, `clear`, `clearAll`.
 - [core/browser/SearchEngines.md](core/browser/SearchEngines.md): omnibox search engines and their query URLs; has `byId`, `urlFor`, `currentId`.
 - [core/browser/TabPreviewManager.md](core/browser/TabPreviewManager.md): shows a live tab inside another tab's renderer rect; has `attach`, `setRect`, `detach`, `focus`, `captureFrame`, `reapply`, `destroy`.
 - [core/browser/TabPreviewGeometry.md](core/browser/TabPreviewGeometry.md): rect mapping and fit-zoom maths for the tab preview; has `toWindowRect`, `clampZoom`, `widthZoom`, `fittedZoom`.
@@ -341,6 +343,7 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/tab-preload/MainWorldScript.md](core/browser/tab-preload/MainWorldScript.md): builds the page script the tab preload runs in the page's MAIN world: the window.chrome and passkey shims, then the Notification and ServiceWorkerRegistration.showNotification overrides that report every notification with `window.postMessage`.
 - [core/browser/tab-preload/NotificationForwarder.md](core/browser/tab-preload/NotificationForwarder.md): the isolated-world half of notification interception: hears the main-world script's postMessage reports and sends each payload to the main process.
 - [core/browser/tab-preload/TabPreload.md](core/browser/tab-preload/TabPreload.md): installs the tab preload: injects the main-world script at document start and starts the notification forwarder and the LoginFormWatcher.
+- [core/browser/tab-preload/PreloadBundle.md](core/browser/tab-preload/PreloadBundle.md): joins a preload and its relative requires into one self-contained file, so sandboxed web tabs can load the tab preload; has `write`, `build`.
 - [core/browser/tab-preload/NewTabBridge.md](core/browser/tab-preload/NewTabBridge.md): window.lumaNewTab, exposed only on luma://newtab.
 - [core/browser/tab-preload/AddressFormWatcher.md](core/browser/tab-preload/AddressFormWatcher.md): address autofill page side: reports focus in address forms and submitted addresses, fills a picked profile.
 - [core/browser/tab-preload/FieldMenuKeys.md](core/browser/tab-preload/FieldMenuKeys.md): arrow keys, Enter and Escape drive the autofill list from the page's field.
@@ -904,6 +907,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/trigger-runner/TriggerRunConfig.md](core/llm-server/chat/trigger-runner/TriggerRunConfig.md): run model and tools for a trigger; has `resolve`.
 - [core/llm-server/chat/trigger-runner/TriggerRunTools.md](core/llm-server/chat/trigger-runner/TriggerRunTools.md): run-scoped trigger tools and allow-list; has `build`, `allowList`.
 - [core/llm-server/chat/trigger-runner/SaveMemoryTool.md](core/llm-server/chat/trigger-runner/SaveMemoryTool.md): the save_memory trigger tool; has `definition`.
+- [core/llm-server/chat/trigger-runner/TriggerMemoryFollowUp.md](core/llm-server/chat/trigger-runner/TriggerMemoryFollowUp.md): writes a memory-keeping trigger's notes in one follow-up call when its run saved none; has `save`.
 - [core/llm-server/chat/trigger-runner/RespondToWebhookTool.md](core/llm-server/chat/trigger-runner/RespondToWebhookTool.md): the respond_to_webhook trigger tool; has `definition`.
 - [core/llm-server/chat/trigger-runner/TriggerResultShape.md](core/llm-server/chat/trigger-runner/TriggerResultShape.md): checks a trigger result against its expected shape; has `resultJson`, `error`.
 - [core/llm-server/chat/trigger-runner/TriggerSampleEvent.md](core/llm-server/chat/trigger-runner/TriggerSampleEvent.md): turns a sample into a trigger event; has `for`.
@@ -1408,6 +1412,16 @@ Small building blocks shared by more than one subsystem.
 - [core/telemetry/TelemetryConsent.md](core/telemetry/TelemetryConsent.md): whether the anonymous pulse may be sent (never in dev mode or after opt-out); has `allowed`, `optOut`, `setOptOut`, `status`.
 - [core/telemetry/TelemetryIpcHandlers.md](core/telemetry/TelemetryIpcHandlers.md): IPC controller for the Settings telemetry switch; has `register`.
 
+## core/prompt-api
+
+- [core/prompt-api/PromptApiService.md](core/prompt-api/PromptApiService.md): "Local model for web pages" (off by default, `core.promptApi.enabled`): registers a utility process for the web Prompt API on every tab session and answers its prompts with the chat router's default model; text only, no streaming, `responseConstraint` ignored, nominal 8192 context; each site asks first (PromptApiAccess); has `enabled`, `status`, `setEnabled`, `attachSession`, `apply`, `dispose`.
+- [core/prompt-api/PromptApiAccess.md](core/prompt-api/PromptApiAccess.md): whether a page may use the local model: the app's own pages may, a site gets its remembered answer or an Allow once / Always allow / Block prompt in its tab (kind `localModel`); has `blocked`, `allowed`.
+- [core/prompt-api/PromptApiIpcHandlers.md](core/prompt-api/PromptApiIpcHandlers.md): IPC controller for the "Local model for web pages" switch (`core.promptApi.getStatus`, `core.promptApi.setEnabled`); has `register`.
+- [core/prompt-api/worker/prompt-api-worker.md](core/prompt-api/worker/prompt-api-worker.md): utility process entry: sets Electron's Prompt API handler, one LocalLanguageModel class per calling page.
+- [core/prompt-api/worker/ParentRequests.md](core/prompt-api/worker/ParentRequests.md): request and reply by id over a utility process's parent port; has `send`.
+- [core/prompt-api/worker/PromptConversation.md](core/prompt-api/worker/PromptConversation.md): one Prompt API session's text-only conversation as chat messages, with token estimates; has `fromInitialPrompts`, `toChatMessages`, `estimateTokens`, `withInput`, `record`, `append`, `usage`, `clone`.
+- [core/prompt-api/worker/LocalLanguageModel.md](core/prompt-api/worker/LocalLanguageModel.md): builds the LanguageModelUtility subclass a page's Prompt API sessions run on, answered by the main process; has `define`.
+
 ## core/llm-service
 
 - [core/llm-service/LLMQueueManager.md](core/llm-service/LLMQueueManager.md): per-model LLM request queues with concurrency limits; has `registerModel`, `setConcurrency`, `ensureConcurrency`, `enqueue`, `getSnapshot`.
@@ -1634,7 +1648,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/triggers/TriggerRunPreamble.md](core/llm-server/chat/triggers/TriggerRunPreamble.md): the system preamble for a trigger run; has `build`.
 - [core/llm-server/chat/triggers/TriggerMemoryBlock.md](core/llm-server/chat/triggers/TriggerMemoryBlock.md): a trigger's memory notes and recent-run summary; has `build`.
 - [core/llm-server/chat/triggers/WebhookPresets.md](core/llm-server/chat/triggers/WebhookPresets.md): Slack, GitHub and generic webhook verification, dedupe and acks; has `normalizePreset`, `verify`, `dedupeKeyFor`, `loopGuard`, `ackResponse`.
-- [core/llm-server/chat/triggers/TriggerSecrets.md](core/llm-server/chat/triggers/TriggerSecrets.md): one per-trigger secret, encrypted when the keychain allows; has `has`, `get`, `set`, `delete`.
+- [core/llm-server/chat/triggers/TriggerSecrets.md](core/llm-server/chat/triggers/TriggerSecrets.md): one secret per id (trigger secrets, the Hub's tokens), sealed when the keychain allows, decrypted once at startup and written behind; has `open`, `idle`, `has`, `get`, `set`, `delete`.
 
 ## core/media-shared
 
@@ -2332,7 +2346,7 @@ Small building blocks shared by more than one subsystem.
 - [core/desktop/service/DesktopRunControl.md](core/desktop/service/DesktopRunControl.md): the user's Pause and Stop on a desktop run, checked before every action and every SendInput batch; has `pause`, `resume`, `stop`, `hold`, `check`, `subscribe`.
 - [core/desktop/service/DesktopActivity.md](core/desktop/service/DesktopActivity.md): start and end events for every desktop action, for the ring and island; has `subscribe`, `describe`, `start`, `end`.
 - [core/desktop/service/DesktopKeyboard.md](core/desktop/service/DesktopKeyboard.md): key combos, Unicode keystrokes and clipboard pastes; has `combo`, `typeKeys`, `enter`, `paste`.
-- [core/desktop/service/ClipboardSnapshot.md](core/desktop/service/ClipboardSnapshot.md): saves and restores the user's clipboard around a paste; has `take`, `restore`.
+- [core/desktop/service/SystemClipboard.md](core/desktop/service/SystemClipboard.md): the system clipboard over Electron's asynchronous clipboard (text, PNG, primary selection) and a snapshot of every format put back after a paste; has `fromElectron`, `readText`, `writeText`, `readSelectionText`, `readImagePng`, `hasTextOrImage`, `snapshot`, `restore`, `restoreIfStill`.
 - [core/desktop/service/TypingMode.md](core/desktop/service/TypingMode.md): desktop typing modes and when to paste; has `isValid`, `shouldPaste`.
 - [core/desktop/service/ScreenFrames.md](core/desktop/service/ScreenFrames.md): maps screenshot pixels back to screen pixels; has `record`, `toScreen`.
 - [core/desktop/service/ScreenshotImage.md](core/desktop/service/ScreenshotImage.md): turns a capture into a downscaled PNG; has `fromShot`, `fullSize`.
@@ -2369,7 +2383,8 @@ Small building blocks shared by more than one subsystem.
 - [core/diagnostics/EventLoopDelaySampler.md](core/diagnostics/EventLoopDelaySampler.md): bucketed main event-loop delay; has `start`, `stop`.
 - [core/diagnostics/CpuProfiler.md](core/diagnostics/CpuProfiler.md): base class for DevTools-protocol CPU profilers; has `start`, `stop`, `detach`.
 - [core/diagnostics/MainCpuProfiler.md](core/diagnostics/MainCpuProfiler.md): main-process CPU profiler; has `start`, `stop`, `detach`.
-- [core/diagnostics/RendererCpuProfiler.md](core/diagnostics/RendererCpuProfiler.md): renderer CPU profiler via webContents.debugger; has `start`, `stop`, `detach`.
+- [core/diagnostics/RendererCpuProfiler.md](core/diagnostics/RendererCpuProfiler.md): renderer CPU profiler via webContents.debugger, optionally sharing a debugger already attached; has `start`, `stop`, `detach`.
+- [core/diagnostics/DebuggerTraceRecorder.md](core/diagnostics/DebuggerTraceRecorder.md): records a Chromium trace as JSON trace events over a webContents debugger (CDP Tracing); has `start`, `stop`.
 
 ## core/games
 
@@ -2509,8 +2524,7 @@ Small building blocks shared by more than one subsystem.
 
 - [core/vault/VaultService.md](core/vault/VaultService.md): the password manager: save / update offers after sign-ins and address forms, autofill lists (logins and addresses), fills only on the login's own site, settings operations and CSV import/export.
 - [core/vault/VaultIpcHandlers.md](core/vault/VaultIpcHandlers.md): the `core.vault.*` channels, answered only for the browser chrome.
-- [core/vault/VaultStore.md](core/vault/VaultStore.md): sealed vault items in the settings db; never overwrites a vault this account cannot open.
-- [core/vault/VaultCipher.md](core/vault/VaultCipher.md): safeStorage seal/open for the vault (plain text without a keychain).
+- [core/vault/VaultStore.md](core/vault/VaultStore.md): sealed vault items in the settings db, decrypted once at startup and written behind in order; never overwrites a vault this account cannot open; has `open`, `idle`, `status`, `all`, `get`, `loginsFor`, `add`, `update`, `remove`.
 - [core/vault/AutofillFields.md](core/vault/AutofillFields.md): the address / contact fields autofill knows, how a page field is recognised, name splitting, when an address is worth saving.
 - [core/vault/VaultLock.md](core/vault/VaultLock.md): the optional master password (scrypt hash, auto-lock, slow-down after wrong guesses) gating assistant use and password reveal / export.
 - [core/vault/VaultAgentAccess.md](core/vault/VaultAgentAccess.md): the assistant's vault rules: allowed items only, masked listing, site-bound fills, outside callers, lock.
@@ -2885,7 +2899,7 @@ Small building blocks shared by more than one subsystem.
 
 - [extensions/tool-forge/ChatRouterDeps.md](extensions/tool-forge/ChatRouterDeps.md): reaches the chat router the LLM server publishes, read on every call because the router does not exist yet when the extension activates at boot.
 - [extensions/tool-forge/CodeHash.md](extensions/tool-forge/CodeHash.md): the SHA-256 (hex) of a tool's code.
-- [extensions/tool-forge/ConfigStore.md](extensions/tool-forge/ConfigStore.md): per-tool config values (API keys etc.) under one settings key per tool, `toolForge.config.<name>`.
+- [extensions/tool-forge/ConfigStore.md](extensions/tool-forge/ConfigStore.md): per-tool config values (API keys etc.) under one settings key per tool, `toolForge.config.<name>`, decrypted once at startup and written behind; has `open`, `idle`, `setValues`, `resolve`, `status`, `clear`.
 - [extensions/tool-forge/ForgeService.md](extensions/tool-forge/ForgeService.md): the create -> test -> publish state machine behind the builder tools, and the safety gates between the steps.
 - [extensions/tool-forge/ForgeToolDefinitions.md](extensions/tool-forge/ForgeToolDefinitions.md): the `create_tool`, `test_tool` and `publish_tool` definitions.
 - [extensions/tool-forge/ForgeToolHandler.md](extensions/tool-forge/ForgeToolHandler.md): routes builder tool calls to the [ForgeService](extensions/tool-forge/ForgeService.md) and wraps every reply in the MCP envelope ([McpEnvelope](extensions/tool-forge/McpEnvelope.md), `isError` = `!success`).
@@ -3868,7 +3882,7 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 
 ## webview-preload.md
 
-- [webview-preload.md](webview-preload.md): tab-view preload entry (Notification main-world override and shims).
+- [webview-preload.md](webview-preload.md): web tab preload entry (Notification main-world override and shims), bundled into one file at boot for sandboxed tabs.
 
 ## ui/shell
 
@@ -3955,6 +3969,7 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/settings/general/RestartNotes.md](ui/shell/settings/general/RestartNotes.md): "Restart required" notes get a "Restart now" action (confirm, then `core.settings.relaunch`).
 - [ui/shell/settings/general/SettingToggle.md](ui/shell/settings/general/SettingToggle.md): autosaving switch: write, Saved tick, revert and error on failure.
 - [ui/shell/settings/general/TelemetrySwitch.md](ui/shell/settings/general/TelemetrySwitch.md): the Privacy check-in switch over `core.telemetry` (on = allowed, so it saves the inverse opt-out); a development build locks it off.
+- [ui/shell/settings/general/PromptApiSwitch.md](ui/shell/settings/general/PromptApiSwitch.md): the Privacy switch "Let web pages use your local model" over `core.promptApi` (off by default); has `install`, `load`, `apply`.
 - [ui/shell/settings/providers/AddProviderForm.md](ui/shell/settings/providers/AddProviderForm.md): the "+ Add Provider" form, including pairing with another LumaBrowser by address and PIN.
 - [ui/shell/settings/providers/DefaultProviderControl.md](ui/shell/settings/providers/DefaultProviderControl.md): the Defaults control: default LLM provider and default image generation / editor servers (plus a shared server's model).
 - [ui/shell/settings/providers/DefaultProviderOptions.md](ui/shell/settings/providers/DefaultProviderOptions.md): the resolvable choices of the Default LLM picker.
@@ -3976,7 +3991,7 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/vault/VaultSavePrompt.md](ui/shell/vault/VaultSavePrompt.md): the save / update password bubble under the address bar.
 - [ui/shell/vault/VaultFieldMenu.md](ui/shell/vault/VaultFieldMenu.md): the autofill list under a focused sign-in field (chrome overlay, so pages cannot read it).
 - [ui/shell/vault/VaultKeyBadge.md](ui/shell/vault/VaultKeyBadge.md): the address bar key icon listing the page's saved logins.
-- [ui/shell/settings/security/SitePermissionsPanel.md](ui/shell/settings/security/SitePermissionsPanel.md): remembered camera / microphone answers per origin with Clear and Clear all; re-read when the Security tab opens.
+- [ui/shell/settings/security/SitePermissionsPanel.md](ui/shell/settings/security/SitePermissionsPanel.md): remembered per-origin answers (camera, microphone, pop-ups, notifications, local AI model) with Clear and Clear all; re-read when the Privacy & permissions tab opens.
 - [ui/shell/settings/sharing/NetworkSharingPanel.md](ui/shell/settings/sharing/NetworkSharingPanel.md): network Sharing host settings (enable, name, PIN, bind mode, share flags, web backend) composing the firewall, web tools, tokens and peers parts; reloads on open and warms mDNS discovery.
 - [ui/shell/settings/sharing/SharingFirewall.md](ui/shell/settings/sharing/SharingFirewall.md): the firewall status badge and the elevated "Allow through firewall" button.
 - [ui/shell/settings/sharing/SharingPeersList.md](ui/shell/settings/sharing/SharingPeersList.md): already-paired peers: enable, attach GPUs, refresh, remove; follows `sharing:peers-changed`.
@@ -4268,8 +4283,9 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [tools/build/docs-rag/DocsRagBuilder.md](tools/build/docs-rag/DocsRagBuilder.md): `npm run build:docs-rag`: builds `dist/docs-rag/docs-rag.db`, the documentation knowledge base the app ships in `resources/docs-rag` (RagStore schema, scope `docs:lumabrowser`, path-prefixed chunks, prebuilt metadata); has `run`, `chunk`, `contentHash`, `defaultOutPath`.
 - [tools/build/docs-rag/DocsPageSet.md](tools/build/docs-rag/DocsPageSet.md): the Documentation pages the docs index is built from: the prod mirror's selection scrubbed (dev checkout) or the folder as is (prod checkout); has `list`, `detectMode`.
 - [tools/build/pack/AppAsarLocator.md](tools/build/pack/AppAsarLocator.md): finds the packed archive in an electron-builder output folder: `resources/app.asar` (Windows, Linux), `<ProductName>.app/Contents/Resources/app.asar`, or any `*.app` bundle (macOS).
-- [tools/build/pack/DistributableExtensionPruner.md](tools/build/pack/DistributableExtensionPruner.md): the electron-builder `afterPack` step (`scripts/after-pack.js`): removes every `distributable: true` extension (read from the manifests inside the archive) from app.asar and repacks with `build.asarUnpack` plus what electron-builder already unpacked; no distributables, no repack.
+- [tools/build/pack/DistributableExtensionPruner.md](tools/build/pack/DistributableExtensionPruner.md): the first electron-builder `afterPack` step (`scripts/after-pack.js`): removes every `distributable: true` extension (read from the manifests inside the archive) from app.asar and repacks with `build.asarUnpack` plus what electron-builder already unpacked; no distributables, no repack.
 - [tools/build/pack/UnpackGlob.md](tools/build/pack/UnpackGlob.md): combines `build.asarUnpack` patterns into one brace glob for `@electron/asar`'s repack, each anchored with `**/` because the repack matches absolute crawl paths.
+- [tools/build/pack/WerHelperRenamer.md](tools/build/pack/WerHelperRenamer.md): the second `afterPack` step: renames Electron's Windows Error Reporting helper `electron_wer.dll` to `<productFilename>_wer.dll` so Windows loads it; has `rename`.
 - [tools/build/pack/UnpackedSnapshot.md](tools/build/pack/UnpackedSnapshot.md): turns what electron-builder put in `app.asar.unpacked` into unpack patterns (`node_modules/<pkg>/**` per package, exact paths otherwise) so the afterPack repack keeps them.
 - [tools/build/release/InstallerNshVerifier.md](tools/build/release/InstallerNshVerifier.md): `npm run verify:installer`: compiles `build/installer.nsh` the way electron-builder does, in both passes (installer, then uninstaller with `-DBUILD_UNINSTALLER`), with `makensis -WX`, so an unreferenced function (the 1.8.4 LumaStrStr failure) shows up in seconds instead of at the end of a packaging run.
 - [tools/build/release/UpdateManifestMerger.md](tools/build/release/UpdateManifestMerger.md): folds the `latest.yml` electron-builder writes on each per-architecture Windows CI leg into one file per platform (x64 entries first, since electron-updater takes the first `.exe` when no name carries `process.arch`); entry `scripts/merge-update-manifests.js --into <primary> <secondary...>`.

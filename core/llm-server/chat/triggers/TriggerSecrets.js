@@ -1,26 +1,48 @@
+const OsKeychain = require('../../../shared/OsKeychain');
+const FileMutationQueue = require('../../../shell/FileMutationQueue');
+
 class TriggerSecrets {
   static KEY_PREFIX = 'core.triggers.secret.';
 
-  constructor(settingsDb, crypto) {
+  constructor(settingsDb, keychain = new OsKeychain(), log = console) {
     this.db = settingsDb;
-    this._crypto = crypto || null;
+    this._keychain = keychain;
+    this._log = log;
+    this._known = new Map();
+    this._writes = new FileMutationQueue();
+  }
+
+  async open() {
+    await this._keychain.ready();
+    for (const [key, record] of Object.entries(this._storedRecords())) {
+      if (this._known.has(key)) continue;
+      const { text, stale } = await this._keychain.open(record);
+      if (text == null) continue;
+      this._known.set(key, text);
+      if (stale) this._store(key, text);
+    }
+  }
+
+  idle() {
+    return this._writes.run(TriggerSecrets.KEY_PREFIX, () => {});
   }
 
   encryptionAvailable() {
-    const storage = this._safeStorage();
-    try { return !!(storage && storage.isEncryptionAvailable && storage.isEncryptionAvailable()); } catch (_) { return false; }
+    return this._keychain.available();
   }
 
   has(id) {
-    const stored = this._read(id);
+    const key = TriggerSecrets._key(id);
+    if (this._known.has(key)) return this._known.get(key) != null;
+    const stored = this._read(key);
     return !!(stored && (stored.enc || stored.plain));
   }
 
   get(id) {
-    const stored = this._read(id);
-    if (!stored) return null;
-    if (stored.plain) return String(stored.plain);
-    return stored.enc ? this._decrypt(stored.enc) : null;
+    const key = TriggerSecrets._key(id);
+    if (this._known.has(key)) return this._known.get(key);
+    const stored = this._read(key);
+    return stored && stored.plain ? String(stored.plain) : null;
   }
 
   set(id, value) {
@@ -29,34 +51,43 @@ class TriggerSecrets {
       this.delete(id);
       return { set: false, encrypted: false };
     }
-    const encrypted = this.encryptionAvailable();
-    this.db.set(TriggerSecrets._key(id), encrypted ? { enc: this._encrypt(text) } : { plain: text });
-    return { set: true, encrypted };
+    const key = TriggerSecrets._key(id);
+    this._known.set(key, text);
+    this._store(key, text);
+    return { set: true, encrypted: this.encryptionAvailable() };
   }
 
   delete(id) {
-    try {
-      if (this.db && typeof this.db.delete === 'function') this.db.delete(TriggerSecrets._key(id));
-      else if (this.db) this.db.set(TriggerSecrets._key(id), null);
-    } catch (_) {}
+    const key = TriggerSecrets._key(id);
+    this._known.set(key, null);
+    this._queue(() => this._remove(key));
   }
 
-  _safeStorage() {
-    if (this._crypto) return this._crypto;
-    try { this._crypto = require('electron').safeStorage; } catch (_) { this._crypto = null; }
-    return this._crypto;
+  _store(key, text) {
+    this._queue(async () => {
+      const record = await this._keychain.seal(text);
+      if (this.db) this.db.set(key, record);
+    });
   }
 
-  _read(id) {
-    return this.db ? this.db.get(TriggerSecrets._key(id), null) : null;
+  _queue(write) {
+    this._writes.run(TriggerSecrets.KEY_PREFIX, write)
+      .catch((err) => this._log.error('[secrets] a secret could not be stored:', err && err.message));
   }
 
-  _encrypt(text) {
-    return this._safeStorage().encryptString(text).toString('base64');
+  _remove(key) {
+    if (!this.db) return;
+    if (typeof this.db.delete === 'function') this.db.delete(key);
+    else this.db.set(key, null);
   }
 
-  _decrypt(base64) {
-    try { return this._safeStorage().decryptString(Buffer.from(base64, 'base64')); } catch (_) { return null; }
+  _storedRecords() {
+    if (!this.db || typeof this.db.getAllKeysWithPrefix !== 'function') return {};
+    return this.db.getAllKeysWithPrefix(TriggerSecrets.KEY_PREFIX) || {};
+  }
+
+  _read(key) {
+    return this.db ? this.db.get(key, null) : null;
   }
 
   static _key(id) {

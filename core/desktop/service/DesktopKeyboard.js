@@ -1,6 +1,5 @@
 const DesktopError = require('../DesktopError');
 const DesktopKeys = require('../DesktopKeys');
-const ClipboardSnapshot = require('./ClipboardSnapshot');
 
 class DesktopKeyboard {
   static VK_RETURN = 0x0d;
@@ -47,14 +46,14 @@ class DesktopKeyboard {
   }
 
   async paste(w, text, clipboard) {
-    const saved = ClipboardSnapshot.take(clipboard);
-    clipboard.writeText(text);
+    const saved = await clipboard.snapshot();
+    await clipboard.writeText(text);
     let restored = false;
     try {
       await this.combo(w, 'ctrl+v');
     } finally {
       await this._sleep(DesktopKeyboard.PASTE_RESTORE_MS);
-      restored = DesktopKeyboard._restoreIfOurs(clipboard, saved, text);
+      restored = await clipboard.restoreIfStill(text, saved);
     }
     return restored;
   }
@@ -81,17 +80,6 @@ class DesktopKeyboard {
     }
     const i = held.findIndex((h) => h.vk === e.vk);
     if (i >= 0) held.splice(i, 1);
-  }
-
-  static _restoreIfOurs(clipboard, saved, text) {
-    if (!saved) return false;
-    try {
-      if (clipboard.readText() !== text) return false;
-      ClipboardSnapshot.restore(clipboard, saved);
-      return true;
-    } catch (_) {
-      return false;
-    }
   }
 }
 

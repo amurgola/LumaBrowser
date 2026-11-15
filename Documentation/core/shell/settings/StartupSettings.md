@@ -9,7 +9,8 @@ Run on startup, "start hidden" and "restore tabs on restart".
 - `new StartupSettings({ db, app })` with electron's `app`.
 - `getRunOnStartup()` `app.getLoginItemSettings().openAtLogin`.
 - `setRunOnStartup(enabled)` registers the login item with the stored hidden
-  choice: `{ openAtLogin, openAsHidden, args: hidden ? ['--hidden'] : [] }`.
+  choice: `{ openAtLogin, args: hidden ? ['--hidden'] : [] }`. The `--hidden` argument alone
+  carries the choice (Electron 44 removed `openAsHidden`, which only ever worked on macOS 12 and older).
 - `getConfig()` `{ openAtLogin, startHidden, restoreTabs }` as booleans.
 - `setStartHidden(hidden)` stores `core.app.startHidden` and re-registers the
   login item only when it is on.

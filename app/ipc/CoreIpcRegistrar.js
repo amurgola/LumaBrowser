@@ -1,4 +1,5 @@
 const TelemetryIpcHandlers = require('../../core/telemetry/TelemetryIpcHandlers');
+const PromptApiIpcHandlers = require('../../core/prompt-api/PromptApiIpcHandlers');
 const SettingsIpcHandlers = require('../../core/shell/SettingsIpcHandlers');
 const ShellIpcHandlers = require('../../core/shell/ShellIpcHandlers');
 const ChromeExtensionIpcHandlers = require('../../core/chrome-extensions/ChromeExtensionIpcHandlers');
@@ -81,6 +82,7 @@ class CoreIpcRegistrar {
       openUrlInTab: (url) => this._ctx.tabViewManager && this._ctx.tabViewManager.createTab(url),
     }).register();
     new AdblockerIpcHandlers(s.adblockerService).register();
+    if (s.promptApiService) new PromptApiIpcHandlers(s.promptApiService).register();
   }
 
   _registerLlmServer() {

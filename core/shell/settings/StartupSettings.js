@@ -44,7 +44,6 @@ class StartupSettings {
   _applyLoginItem(enabled, hidden) {
     this._app.setLoginItemSettings({
       openAtLogin: !!enabled,
-      openAsHidden: !!hidden,
       args: hidden ? [StartupSettings.HIDDEN_ARG] : [],
     });
   }

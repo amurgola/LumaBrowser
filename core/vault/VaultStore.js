@@ -1,5 +1,6 @@
 const crypto = require('crypto');
-const VaultCipher = require('./VaultCipher');
+const OsKeychain = require('../shared/OsKeychain');
+const FileMutationQueue = require('../shell/FileMutationQueue');
 const VaultSites = require('./VaultSites');
 const AutofillFields = require('./AutofillFields');
 
@@ -17,34 +18,46 @@ class VaultStore {
     return String(title || '').trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
   }
 
-  constructor(db, { cipher = new VaultCipher(), now = () => Date.now() } = {}) {
+  constructor(db, { cipher = new OsKeychain(), now = () => Date.now(), log = console } = {}) {
     this._db = db;
     this._cipher = cipher;
     this._now = now;
+    this._log = log;
     this._items = null;
     this._unreadable = false;
+    this._writes = new FileMutationQueue();
+  }
+
+  async open() {
+    await this._cipher.ready();
+    if (this._load()) return this.status();
+    const { text, stale } = await this._cipher.open(this._db.get(VaultStore.DATA_KEY, null));
+    this._adopt(text);
+    if (stale && !this._unreadable) this._save(this._items);
+    return this.status();
+  }
+
+  idle() {
+    return this._writes.run(VaultStore.DATA_KEY, () => {});
   }
 
   status() {
-    this._load();
-    return { encrypted: this._cipher.available(), unreadable: this._unreadable, count: this._items.length };
+    const items = this._current();
+    return { encrypted: this._cipher.available(), unreadable: this._unreadable, count: items.length };
   }
 
   all() {
-    this._load();
-    return this._items.map((item) => ({ ...item })).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    return this._current().map((item) => ({ ...item })).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }
 
   get(id) {
-    this._load();
-    const item = this._items.find((i) => i.id === id);
+    const item = this._current().find((i) => i.id === id);
     return item ? { ...item } : null;
   }
 
   loginsFor(url) {
-    this._load();
     const out = [];
-    for (const item of this._items) {
+    for (const item of this._current()) {
       if (item.type !== 'login') continue;
       const match = VaultSites.match(item.origin, url);
       if (match) out.push({ ...item, match });
@@ -54,8 +67,7 @@ class VaultStore {
   }
 
   findLogin(origin, username) {
-    this._load();
-    const item = this._items.find((i) => i.type === 'login' && i.origin === origin && (i.username || '') === (username || ''));
+    const item = this._current().find((i) => i.type === 'login' && i.origin === origin && (i.username || '') === (username || ''));
     return item ? { ...item } : null;
   }
 
@@ -119,24 +131,36 @@ class VaultStore {
   }
 
   _mutate(change) {
-    this._load();
+    if (!this._load()) throw new Error('The saved passwords are still being opened. Try again in a moment.');
     if (this._unreadable) throw new Error('The saved passwords cannot be opened on this account, so nothing can be changed.');
     const next = this._items.map((i) => ({ ...i }));
     change(next);
-    this._write(next);
     this._items = next;
+    this._save(next);
   }
 
-  _write(items) {
-    const sealed = this._cipher.seal(JSON.stringify({ v: VaultStore.VERSION, items }));
-    this._db.set(VaultStore.DATA_KEY, { v: VaultStore.VERSION, ...sealed });
+  _save(items) {
+    const text = JSON.stringify({ v: VaultStore.VERSION, items });
+    this._writes.run(VaultStore.DATA_KEY, async () => {
+      const sealed = await this._cipher.seal(text);
+      this._db.set(VaultStore.DATA_KEY, { v: VaultStore.VERSION, ...sealed });
+    }).catch((err) => this._log.error('[vault] a change to the saved passwords could not be stored:', err && err.message));
+  }
+
+  _current() {
+    return this._load() ? this._items : [];
   }
 
   _load() {
-    if (this._items) return;
+    if (this._items) return true;
     const record = this._db ? this._db.get(VaultStore.DATA_KEY, null) : null;
-    if (!record) { this._items = []; return; }
-    const text = this._cipher.open(record);
+    if (!record) { this._items = []; return true; }
+    if (typeof record.plain !== 'string') return false;
+    this._adopt(record.plain);
+    return true;
+  }
+
+  _adopt(text) {
     let parsed = null;
     try { parsed = text ? JSON.parse(text) : null; } catch (_) { parsed = null; }
     if (!parsed || !Array.isArray(parsed.items)) {

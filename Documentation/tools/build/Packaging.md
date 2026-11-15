@@ -9,7 +9,8 @@ Identical to legacy except where the rebuild's layout needs it:
 - `appId` `com.lumabyte.lumabrowser`, `productName` `LumaBrowser`,
   `publish` generic `https://lumabyte.com/install/` (kept for cutover; it is what
   electron-builder writes into `resources/app-update.yml`).
-- `afterPack` `./scripts/after-pack.js` ([DistributableExtensionPruner](pack/DistributableExtensionPruner.md)),
+- `afterPack` `./scripts/after-pack.js` ([DistributableExtensionPruner](pack/DistributableExtensionPruner.md),
+  then [WerHelperRenamer](pack/WerHelperRenamer.md) on Windows),
   `onNodeModuleFile` `./scripts/build-hooks.js` ([BuildHooks](BuildHooks.md)).
 - `extraResources`: `cli` (bin, lib, package.json, README.md, LICENSE) to
   `resources/cli`, `ide/dist` (JetBrains plugin, VS Code vsix) to `resources/ide`,

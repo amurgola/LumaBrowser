@@ -16,6 +16,7 @@ class HotkeyActions {
     this._rewriter = rewriter;
     this._region = region;
     this._clipboard = clipboard;
+    this._clipboardHolds = true;
     this._options = options;
     this._now = now;
     this._utterance = null;
@@ -54,9 +55,15 @@ class HotkeyActions {
       return { disabled: false, note: 'Rewrites the selected text in place' };
     }
     if (id === 'clipboard-to-chat') {
-      return this._clipboardHasContent() ? { disabled: false, note: 'Opens a new chat with what you copied' } : { disabled: true, note: 'The clipboard is empty' };
+      return this._clipboardHolds ? { disabled: false, note: 'Opens a new chat with what you copied' } : { disabled: true, note: 'The clipboard is empty' };
     }
     return { disabled: false, note: framed ? 'Sends this window to a new chat as an image' : 'Drag over the screen; it opens in a new chat' };
+  }
+
+  async refreshClipboardState() {
+    const before = this._clipboardHolds;
+    try { this._clipboardHolds = !!(await this._clipboard.hasTextOrImage()); } catch (_) { this._clipboardHolds = true; }
+    return this._clipboardHolds !== before;
   }
 
   canReadScreen() {
@@ -155,7 +162,7 @@ class HotkeyActions {
     }
     const pasted = await this._selection.pasteText(rewritten.text, { hwnd: grab.hwnd });
     if (!pasted.success) {
-      try { this._clipboard.writeText(rewritten.text); } catch (_) {}
+      try { await this._clipboard.writeText(rewritten.text); } catch (_) {}
       const failed = { ...pasted, error: `${pasted.error}. The rewritten text is on the clipboard.`, text: rewritten.text, onClipboard: true };
       work.finish(failed);
       return { ...failed, shown };
@@ -165,7 +172,7 @@ class HotkeyActions {
   }
 
   async clipboardToChat(source) {
-    const { prompt, attachments } = this._clipboardContent();
+    const { prompt, attachments } = await this._clipboardContent();
     if (!prompt && !attachments.length) return { success: false, error: 'The clipboard holds no text or image', code: 'EMPTY_CLIPBOARD' };
     const r = await this._handoff.open({ prompt, attachments, autoSend: !!this._options().autoSend, source: HotkeyActions._source(source) });
     if (r && r.success) this._activity.flash({ action: 'clipboard-to-chat', result: r, title: 'Sent to LumaBrowser' });
@@ -187,37 +194,17 @@ class HotkeyActions {
     this._activity.dispose();
   }
 
-  _clipboardHasContent() {
-    try {
-      const formats = typeof this._clipboard.availableFormats === 'function' ? this._clipboard.availableFormats() : null;
-      if (Array.isArray(formats)) return formats.some((f) => /^(text|image)\//.test(f));
-      return !!String(this._clipboard.readText() || '').trim() || !!HotkeyActions._readImage(this._clipboard);
-    } catch (_) {
-      return true;
-    }
-  }
-
-  _clipboardContent() {
+  async _clipboardContent() {
     const attachments = [];
     let prompt = '';
-    const image = HotkeyActions._readImage(this._clipboard);
-    if (image) attachments.push({ kind: 'image', name: 'clipboard.png', mime: 'image/png', data: image.toPNG().toString('base64') });
-    let text = '';
-    try { text = this._clipboard.readText() || ''; } catch (_) { text = ''; }
+    const png = await this._clipboard.readImagePng().catch(() => null);
+    if (png) attachments.push({ kind: 'image', name: 'clipboard.png', mime: 'image/png', data: png.toString('base64') });
+    const text = await this._clipboard.readText().catch(() => '');
     if (text.trim()) {
       if (text.length <= HotkeyActions.PROMPT_MAX_CHARS) prompt = text;
       else attachments.push({ kind: 'text', name: 'clipboard.txt', mime: 'text/plain', text });
     }
     return { prompt, attachments };
-  }
-
-  static _readImage(clipboard) {
-    try {
-      const image = typeof clipboard.readImage === 'function' ? clipboard.readImage() : null;
-      return image && typeof image.isEmpty === 'function' && !image.isEmpty() ? image : null;
-    } catch (_) {
-      return null;
-    }
   }
 
   static _source(source) {

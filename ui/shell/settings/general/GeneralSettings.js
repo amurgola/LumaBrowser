@@ -1,6 +1,7 @@
 import SettingToggle from './SettingToggle.js';
 import RestartNotes from './RestartNotes.js';
 import TelemetrySwitch from './TelemetrySwitch.js';
+import PromptApiSwitch from './PromptApiSwitch.js';
 import CliShimSwitch from './CliShimSwitch.js';
 import IdeInstallerList from './IdeInstallerList.js';
 import LlmServerSettings from './LlmServerSettings.js';
@@ -26,7 +27,7 @@ export default class GeneralSettings {
     this._buildParts();
     new RestartNotes({ feedback: this._feedback }).install();
     document.addEventListener('settings:open', () => this.load());
-    for (const part of [this._port, this._telemetry, this._cliShim, this._jetbrains, this._vscode, this._windhawk, this._llm, this._endpoints]) part.install();
+    for (const part of [this._port, this._telemetry, this._promptApi, this._cliShim, this._jetbrains, this._vscode, this._windhawk, this._llm, this._endpoints]) part.install();
     this._wireSwitches();
     this._wireButtons();
     new FoldGroups().install();
@@ -44,6 +45,7 @@ export default class GeneralSettings {
       this._el.mcpEnabled.checked = await window.electronAPI.getMcpEnabled();
       await this._loadStartup();
       this._telemetry.load();
+      this._promptApi.load();
       await this._loadDns();
       try { this._el.adblocker.checked = await window.ipcBridge.invoke('core.adblocker.getEnabled'); } catch (e) {}
       await this._llm.load();
@@ -77,6 +79,7 @@ export default class GeneralSettings {
     const feedback = this._feedback;
     this._port = new ApiPortSetting({ feedback, input: this._portInput });
     this._telemetry = new TelemetrySwitch({ feedback });
+    this._promptApi = new PromptApiSwitch({ feedback });
     this._cliShim = new CliShimSwitch({ feedback });
     this._jetbrains = new IdeInstallerList({ feedback, config: IdeInstallerList.JETBRAINS });
     this._vscode = new IdeInstallerList({ feedback, config: IdeInstallerList.VSCODE });

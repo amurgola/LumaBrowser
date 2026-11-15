@@ -95,7 +95,7 @@ class ContextMenuTemplate {
     this._push({ label: 'Open link in default browser', click: () => { shell.openExternal(url).catch(() => {}); } });
     if (this._tab.isTabPage) this._push({ label: 'Save link as', click: () => ContextMenuTemplate._quietly(() => this._webContents.downloadURL(url)) });
     this._push(
-      { label: 'Copy link address', click: () => clipboard.writeText(url) },
+      { label: 'Copy link address', click: () => ContextMenuTemplate._copy(url) },
       ContextMenuTemplate.SEPARATOR,
     );
   }
@@ -108,7 +108,7 @@ class ContextMenuTemplate {
       this._push({ label: 'Open image in new tab', click: () => this._tab.openInNewTab(this._imageUrl, false) });
     }
     this._push({ label: 'Copy image', click: () => ContextMenuTemplate._quietly(() => wc.copyImageAt(x, y)) });
-    if (this._imageUrl) this._push({ label: 'Copy image address', click: () => clipboard.writeText(this._imageUrl) });
+    if (this._imageUrl) this._push({ label: 'Copy image address', click: () => ContextMenuTemplate._copy(this._imageUrl) });
     if (this._saveUrl) this._push({ label: 'Save image as', click: () => ContextMenuTemplate._quietly(() => wc.downloadURL(this._saveUrl)) });
     this._push(ContextMenuTemplate.SEPARATOR);
   }
@@ -176,6 +176,10 @@ class ContextMenuTemplate {
 
   static _quietly(action) {
     try { action(); } catch {}
+  }
+
+  static _copy(text) {
+    try { Promise.resolve(clipboard.writeText(text)).catch(() => {}); } catch {}
   }
 }
 

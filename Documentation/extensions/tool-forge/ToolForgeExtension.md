@@ -15,14 +15,16 @@ Activation wiring of Tool Forge. `main.js` is a thin entry exporting
   [ForgeService](ForgeService.md) (`validator: CodeValidator`,
   `getExistingNames` = `AgentToolCatalog.getAllToolNames(aggregator)` or `[]`,
   `enableTool` = [PublishedToolEnabler](PublishedToolEnabler.md)). Then:
-  connects [ForgeToolHandler](ForgeToolHandler.md)`.shared` to the service;
+  awaits `configStore.open()` so every tool's stored config is decrypted before
+  a tool can run; connects [ForgeToolHandler](ForgeToolHandler.md)`.shared` to the service;
   seeds the builder tools default-off once
   (`AgentToolCatalog.seedDefaultOffAgentTools(rawDb, FORGE_TOOL_NAMES)`);
   registers published tools, retrying every `REGISTER_RETRY_MS` (2000) up to
   `REGISTER_MAX_ATTEMPTS` (60) until the aggregator exists; registers
   [MyToolsSetupActions](MyToolsSetupActions.md) with `context.setupTab.onInvoke`.
   Returns nothing (legacy exposed no API).
-- `deactivate()`: stops the retry, disposes the sandbox, unregisters
+- `deactivate()`: stops the retry, disposes the sandbox, awaits
+  `configStore.idle()` (a value saved a moment ago reaches the database), unregisters
   `user-tools` from the aggregator, disconnects the builder tools (they answer
   `Tool Forge is not ready yet.`).
 

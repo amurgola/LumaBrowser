@@ -8,6 +8,11 @@ features, writtenAt }`. Modeled on
 [CliHandshake](../../core/shell/CliHandshake.md): atomic write (temp file and
 rename), mode 0600 where the OS has one, owner-checked removal.
 
+An isolated run (`LUMA_DATA_DIR` set: an e2e or profiling harness, a container) writes
+`<LUMA_DATA_DIR>/desktop.json` instead. It is not the installed app desktop clients look
+for, and writing the shared file with its own token, then removing it on exit, left those
+clients without a handshake until the installed app next rewrote it.
+
 ## Methods
 
 - `DesktopHandshake.handshakePath(env?)`, `DesktopHandshake.read(file?)` (null

@@ -3,13 +3,14 @@ const CpuProfiler = require('./CpuProfiler');
 class RendererCpuProfiler extends CpuProfiler {
   static PROTOCOL_VERSION = '1.3';
 
-  constructor(webContents) {
+  constructor(webContents, { shareDebugger = false } = {}) {
     super();
     this._debugger = webContents.debugger;
+    this._shared = shareDebugger;
   }
 
   async _attach() {
-    this._debugger.attach(RendererCpuProfiler.PROTOCOL_VERSION);
+    if (!this._shared) this._debugger.attach(RendererCpuProfiler.PROTOCOL_VERSION);
   }
 
   _send(method, params) {
@@ -17,7 +18,7 @@ class RendererCpuProfiler extends CpuProfiler {
   }
 
   _detach() {
-    this._debugger.detach();
+    if (!this._shared) this._debugger.detach();
   }
 }
 

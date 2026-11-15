@@ -337,6 +337,16 @@ const ENTRIES = [
   },
 
   {
+    id: 'general.prompt-api',
+    label: 'Let web pages use your local model',
+    description: 'Answers pages that use the browser built-in AI (the Prompt API, LanguageModel) with your default chat model, on this computer. Each site asks first, like camera access. Off by default.',
+    keywords: ['prompt api', 'built-in ai', 'language model', 'web ai', 'window.ai', 'local model for websites', 'gemini nano'],
+    path: ['Privacy & permissions', 'Local model for web pages'],
+    kind: 'toggle',
+    target: at('privacy', '#gsPromptApiEnabled'),
+  },
+
+  {
     id: 'general.telemetry',
     label: 'Anonymous check-in',
     description: 'Sends a once-a-day version and platform ping to lumabyte.com. Nothing you browse or type is sent. Turn it off to opt out.',

@@ -2,7 +2,7 @@
 
 `core/browser/tab-preload/MainWorldScript.js`
 
-Builds the page script the tab preload runs in the page's MAIN world: the window.chrome and passkey shims, then the Notification and `ServiceWorkerRegistration.prototype.showNotification` overrides that report every notification with `window.postMessage`. CommonJS (preload of an unsandboxed view).
+Builds the page script the tab preload runs in the page's MAIN world: the window.chrome and passkey shims, then the Notification and `ServiceWorkerRegistration.prototype.showNotification` overrides that report every notification with `window.postMessage`. CommonJS, joined into the sandboxed web tab preload at boot by [PreloadBundle](PreloadBundle.md), so it may require only relative files and no Node APIs.
 
 ## Methods
 

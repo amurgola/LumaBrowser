@@ -2,7 +2,8 @@
 
 `tools/build/pack/DistributableExtensionPruner.js`
 
-The electron-builder `afterPack` step (`scripts/after-pack.js`). Distributable
+The first electron-builder `afterPack` step (`scripts/after-pack.js`; the hook
+then runs [WerHelperRenamer](WerHelperRenamer.md)). Distributable
 extensions ship as add-on zips ([AddonPackager](../addons/AddonPackager.md)),
 never inside the app, so this removes every extension whose manifest has
 `distributable: true` from the packed app.asar. The manifests are read from the

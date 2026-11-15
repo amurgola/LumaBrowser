@@ -70,7 +70,7 @@ class TabViewFactory {
       preload: preloadPath || this._preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: !preloadPath,
       backgroundThrottling: !silent && !keepAlive,
     };
   }

@@ -21,6 +21,11 @@ The app's lifecycle events.
   stale one would send the CLI to a dead port); seals the tab manager's session
   snapshot before any tab closes; `requestQuit()`, warning when the
   user kept the app open; a controller failure forces `app.exit(1)`.
+  From the first Quit on, an uncaught error is logged (`[quit] error during
+  shutdown`) instead of raising Electron's error box: services close while pages
+  and windows are still alive, a late callback from one of them can reach a closed
+  service, and the box blocks the main thread so the app never exits. The error box
+  comes back if the user keeps the app open after a hung shutdown.
 - `onChildProcessGone(details)` logs a non-clean GPU or utility process exit.
 - `onAllWindowsClosed()` stops the gateway and quits.
 - `onActivate()` (dock or taskbar): reopens a closed window, or renews a

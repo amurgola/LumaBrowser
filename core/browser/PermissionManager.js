@@ -59,6 +59,14 @@ class PermissionManager {
   }
 
   check(wc, permission, requestingOrigin, details) {
+    try {
+      return this._check(wc, permission, requestingOrigin, details);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  _check(wc, permission, requestingOrigin, details) {
     if (permission === PermissionKinds.NOTIFICATIONS) return this._checkNotifications(wc, requestingOrigin, details);
     if (permission !== 'media') return true;
     const origin = PermissionKinds.originOf(requestingOrigin) || PermissionKinds.originOf(this._urlOf(wc, details));
@@ -76,6 +84,18 @@ class PermissionManager {
     if (origin === PermissionKinds.APP_ORIGIN) return true;
     if (!origin) return false;
     return this._isAllowed(this._tabOf(wc), origin, PermissionKinds.NOTIFICATIONS) === true;
+  }
+
+  decideSiteAccess(wc, requestingOrigin, kind) {
+    const origin = PermissionKinds.originOf(requestingOrigin) || PermissionKinds.originOf(this._urlOf(wc));
+    if (origin === PermissionKinds.APP_ORIGIN) return Promise.resolve(true);
+    if (!origin) return Promise.resolve(false);
+    return this.decideMedia(wc, origin, [kind]);
+  }
+
+  siteBlocked(requestingOrigin, kind) {
+    const origin = PermissionKinds.originOf(requestingOrigin);
+    return !!origin && this._sites.answerFor(origin, kind) === 'block';
   }
 
   decideMedia(wc, origin, kinds) {
@@ -145,6 +165,7 @@ class PermissionManager {
   static _immediateVerdict({ permission, origin, kinds, extension }) {
     if (permission === PermissionKinds.NOTIFICATIONS && extension) return { granted: true, why: 'extension' };
     if (permission === 'clipboard-sanitized-write') return { granted: origin === PermissionKinds.APP_ORIGIN };
+    if (permission === PermissionKinds.DISPLAY_CAPTURE) return { granted: origin === PermissionKinds.APP_ORIGIN, why: 'display capture' };
     if (permission === 'fullscreen') return { granted: true, why: 'fullscreen' };
     if (!kinds) return { granted: false, why: 'unsupported' };
     if (origin === PermissionKinds.APP_ORIGIN) return { granted: true, why: 'app ui' };

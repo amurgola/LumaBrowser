@@ -16,6 +16,7 @@ class ReadyPhase {
     this._resolveIdentity();
     const sessions = new SessionSetup(this._ctx, { log: this._log });
     sessions.applyPolicies();
+    await this._openSecretStores();
     await this._initChromeExtensions();
     const setupComplete = Boolean(this._s.db.get('core.setupComplete', null));
     this._ctx.boot.log(`setup gate: core.setupComplete=${setupComplete}`);
@@ -34,6 +35,18 @@ class ReadyPhase {
       this._ctx.boot.log('pulseService started');
     })();
     this._ctx.identityReady.catch((err) => this._log.error('Machine identity failed:', err && err.message));
+  }
+
+  async _openSecretStores() {
+    const stores = [
+      ['vault', this._s.vaultService && this._s.vaultService.store],
+      ['trigger secrets', this._s.triggerSecrets],
+    ];
+    for (const [name, store] of stores) {
+      if (!store) continue;
+      try { await store.open(); } catch (err) { this._log.error(`[secrets] the ${name} could not be opened:`, err && err.message); }
+    }
+    this._ctx.boot.log('secret stores opened');
   }
 
   async _initChromeExtensions() {

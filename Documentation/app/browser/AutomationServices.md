@@ -17,6 +17,8 @@ Builds browser automation on top of the window's tabs.
   - [VisualGroundingService](../../core/browser/vision/VisualGroundingService.md)
     sharing the resolution cache, set on BrowserService (published `__lumaVisualGrounding`);
   - [DesktopService](../../core/desktop/DesktopService.md) (published `__lumaDesktop`,
-    off until the user enables it) and its `core.desktop.*` IPC;
+    off until the user enables it) and its `core.desktop.*` IPC; its clipboard is
+    Electron's wrapped in a [SystemClipboard](../../core/desktop/service/SystemClipboard.md)
+    (`SystemClipboard.fromElectron`, null without one);
   - TabViewManager `viewAttached`, `tabCreated`, `tabClosed`, `tabNavigated`
     forwarded through BrowserService (`viewAttached` as `webviewAttached`).

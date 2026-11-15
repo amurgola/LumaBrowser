@@ -8,6 +8,7 @@ class ShutdownSequence {
     this._log.log('Cleaning up before exit...');
     this._stopBackgroundWork();
     await this._s.extensionManager.deactivate();
+    await this._storeSecrets();
     if (this._s.networkInterceptor) this._s.networkInterceptor.detachAll();
     await this._stopModelServers();
     await this._stopNetworkSurfaces();
@@ -25,6 +26,12 @@ class ShutdownSequence {
     ]) {
       try { stop(); } catch (_) {}
     }
+  }
+
+  async _storeSecrets() {
+    const s = this._s;
+    await ShutdownSequence._quietly(() => s.vaultService.store.idle());
+    await ShutdownSequence._quietly(() => s.triggerSecrets.idle());
   }
 
   async _stopModelServers() {

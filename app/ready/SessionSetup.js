@@ -27,6 +27,7 @@ class SessionSetup {
     this._bearer.attach(session.defaultSession);
     this._bearer.attach(session.fromPartition(SessionSetup.MAIN_PARTITION));
     this._serveNewTab(session.fromPartition(SessionSetup.MAIN_PARTITION));
+    this._offerLocalModel(session.fromPartition(SessionSetup.MAIN_PARTITION));
     this._attachShimBridge(session.defaultSession);
     this._attachShimBridge(session.fromPartition(SessionSetup.MAIN_PARTITION));
   }
@@ -63,6 +64,11 @@ class SessionSetup {
     if (this._s.adblockerService.ready) this._s.adblockerService.applyToSession(sess);
     this._bearer.attach(sess);
     this._serveNewTab(sess);
+    this._offerLocalModel(sess);
+  }
+
+  _offerLocalModel(sess) {
+    if (this._s.promptApiService) this._s.promptApiService.attachSession(sess);
   }
 
   _serveNewTab(sess) {

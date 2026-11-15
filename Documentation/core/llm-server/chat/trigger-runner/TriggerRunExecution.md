@@ -9,7 +9,7 @@ for each run it starts.
 
 - `new TriggerRunExecution(services, trigger, event, { kind, dedupeKey,
   deliveryId, deliveryIds, attempt, retryOf, source, resolvers })`. `services`:
-  `{ triggerStore, settingsDb, runtime() -> { deps, chatStore, bridge },
+  `{ triggerStore, settingsDb, runtime() -> { deps, chatStore, bridge, router },
   heldGate, logger, emitEvent, runConfig, approvalHold, retries,
   failureNotifier }`.
 - `execute()`: resolves `{ run, retryPending }`. `run` is the finished run row
@@ -33,12 +33,18 @@ for each run it starts.
    agent's `kbScope`. Approval tool events go to
    [TriggerApprovalHold](TriggerApprovalHold.md) with a control that pauses the
    clock and hands the [HeldGate](HeldGate.md) back, then resumes and retakes it.
-4. Verdict: a bridge error, else a [TriggerResultShape](TriggerResultShape.md)
+4. Memory: a run that succeeded without calling `save_memory`, on a trigger that
+   keeps memory, gets its notes written by
+   [TriggerMemoryFollowUp](TriggerMemoryFollowUp.md) (one call to
+   `router.complete`). The save joins the run's tool trace, so the transcript and
+   the runs view show it like the `save_memory` call it stands in for. Skipped
+   when the run failed, saved its own notes, or the runtime has no router.
+5. Verdict: a bridge error, else a [TriggerResultShape](TriggerResultShape.md)
    mismatch, fails the run.
-5. Real events only: a retryable failure goes to
+6. Real events only: a retryable failure goes to
    [TriggerRetryScheduler](TriggerRetryScheduler.md); otherwise
    [TriggerFailureNotifier](TriggerFailureNotifier.md) records the fire.
-6. Transcript pruning, `run-finished` `{ triggerId, runId, kind, status, title,
+7. Transcript pruning, `run-finished` `{ triggerId, runId, kind, status, title,
    retryPending }`.
 
 A thrown step records the run as error (or the delivery as `error` when no run

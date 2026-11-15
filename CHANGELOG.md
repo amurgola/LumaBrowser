@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.2.0
+
+### New features
+- **Web pages can use your local model (Settings > Privacy & permissions > Local model for web pages):** pages that call the browser's built-in AI (the web Prompt API: `LanguageModel.create()`, `prompt()`) are answered by your default chat model, on this computer. Off by default, since a page that may prompt the model uses your GPU.
+  - **Each site asks first, like camera access:** Allow once, Always allow or Block, shown in the site's tab. The answer is remembered per site and listed under site permissions as "Local AI model", where it can be cleared. A blocked site is told no model is available, so it never learns it was refused.
+  - Switching the setting off ends the Prompt API sessions pages have open. The switch is in the search palette as "Let web pages use your local model" (also found by "prompt api", "built-in ai", "window.ai" and "gemini nano").
+  - Limits: text only (a picture or audio part is refused), a streamed prompt arrives as one chunk, `responseConstraint` is ignored, and a page sees a nominal 8,192 token window, not the loaded model's real one.
+- **Triggers with memory keep their notes when the model forgets to save them.** A run is told to call `save_memory` before its final report, but a model told to "reply with X and nothing else" skipped it, so a prompt-mode trigger kept no notes at all. A run that succeeds without saving now gets one short follow-up call that writes the notes from what the run received and answered. It appears in the run's steps like the `save_memory` call it stands in for, and costs nothing for runs that saved their own.
+
+### Changes
+- **Electron 45** (was 43).
+- **New tabs open faster.**
+  - Web tabs now run in Chromium's sandbox, and a spare renderer is kept warm so a new tab does not wait for a process to start. On a local page a new tab finished loading in 63 ms before, 37 ms sandboxed, and 12 ms with the spare renderer.
+  - The New Tab page is served by Chromium directly, with no request touching the app's main thread, so it opens just as fast while the app is busy.
+  - Pop-up windows a page opens (sign-in popups) run in the same sandbox as their tab, so they keep their link to the page that opened them.
+- **Saved passwords and secrets use the OS keychain's new interface.** The vault, trigger secrets (Slack signing secret, GitHub webhook secret, header token), Personal Hub tokens and Tool Forge config are decrypted once at startup and held in memory. A change applies at once and is written to the database in order, and quitting waits for a change made a moment before. The stored format is unchanged: data saved by an older build opens, and an older build can read what this one writes (verified on Windows).
+  - A vault that has not finished opening reads as empty and refuses writes, so a list missing its items can never replace the stored one. A store that fails to open is logged and the app still starts.
+- **A paste by the app puts your whole clipboard back.** Desktop control's paste and the hotkeys' selection actions borrow the clipboard and restore it afterwards. They used to restore text, HTML, RTF and images only, so copied files and app-private formats were lost. Every format is now kept, and something you copy in the meantime still wins.
+- **An error while quitting no longer blocks the exit.** Services close while pages are still alive, and a late callback into a closed service raised an error box that held the app open. Such an error is now logged, and a page asking for a permission during shutdown is answered "not granted".
+- **Windows:** the crash reporter now catches fast-fail terminations (the Windows Error Reporting helper that ships with Electron 45 is installed under the name Windows looks for).
+- **Diagnostics:** the runtime trace covers the shell's renderer, the browser process and the GPU process; other tabs' renderers are no longer in it. The performance profiler's interaction trace is written as `runtime-trace.pftrace` (open it in ui.perfetto.dev). Electron 45 writes its own traces in that format only.
+- A second copy of the app run with its own data folder (`LUMA_DATA_DIR`: a test or profiling run) no longer overwrites the installed app's desktop handshake file, which left desktop clients without a connection until the installed app next rewrote it.
+
 ## 2.1.9
 
 ### New features

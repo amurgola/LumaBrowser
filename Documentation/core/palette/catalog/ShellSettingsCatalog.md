@@ -60,3 +60,10 @@ as the modal changes.
 ## Luma Live entries
 
 `general.on-demand` is labelled "Luma Live" (keywords keep "on demand" for the old name) and `general.on-demand-auto-listen` is "Listen when Luma Live opens" (`core.onDemand.autoListen`, target `#gsOnDemandAutoListen`); both have a value spec in SettingValueSpecs.
+
+## Local model for web pages
+
+`general.prompt-api` is "Let web pages use your local model" (path Privacy & permissions, Local model for web pages; a
+toggle with target `#gsPromptApiEnabled` on the `privacy` tab), just before `general.telemetry`. Its keywords cover
+"prompt api", "built-in ai", "language model", "window.ai" and "gemini nano". It carries no `key`, so the palette shows
+no current value for it. The switch is [PromptApiSwitch](../../../ui/shell/settings/general/PromptApiSwitch.md).

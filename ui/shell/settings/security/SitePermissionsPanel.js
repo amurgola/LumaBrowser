@@ -6,6 +6,7 @@ export default class SitePermissionsPanel {
     { key: 'microphone', label: 'Microphone', always: true },
     { key: 'popups', label: 'Pop-ups' },
     { key: 'notifications', label: 'Notifications' },
+    { key: 'localModel', label: 'Local AI model' },
   ];
 
   install() {

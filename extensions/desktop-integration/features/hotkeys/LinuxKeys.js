@@ -86,8 +86,8 @@ class LinuxKeys {
     return LinuxKeys.NO_PASTE;
   }
 
-  readPrimary() {
-    try { return this._clipboard ? String(this._clipboard.readText('selection') || '') : ''; } catch (_) { return ''; }
+  async readPrimary() {
+    try { return this._clipboard ? await this._clipboard.readSelectionText() : ''; } catch (_) { return ''; }
   }
 
   heldModifiers() {
@@ -108,8 +108,8 @@ class LinuxKeys {
     api.flush();
   }
 
-  clipboardSequence() {
-    try { return this._clipboard ? String(this._clipboard.readText() || '') : ''; } catch (_) { return ''; }
+  async clipboardSequence() {
+    try { return this._clipboard ? await this._clipboard.readText() : ''; } catch (_) { return ''; }
   }
 
   foregroundWindow() {

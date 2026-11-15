@@ -1,13 +1,18 @@
+const path = require('path');
 const TabViewManager = require('../../core/browser/TabViewManager');
 const TabManager = require('../../core/browser/TabManager');
 const ChromeOverlay = require('../../core/browser/ChromeOverlay');
 const TabPreviewManager = require('../../core/browser/TabPreviewManager');
 const OnDemandOverlay = require('../../core/on-demand/OnDemandOverlay');
 const ChatModeRegistry = require('../../core/llm-server/chat/ChatModeRegistry');
+const PreloadBundle = require('../../core/browser/tab-preload/PreloadBundle');
 const AppGlobals = require('../AppGlobals');
 const VoiceReadiness = require('./VoiceReadiness');
 
 class TabSurfaces {
+  static TAB_PRELOAD = 'webview-preload.js';
+  static TAB_PRELOAD_BUNDLE = ['preload', 'tab-preload.js'];
+
   constructor(ctx, { log = console } = {}) {
     this._ctx = ctx;
     this._s = ctx.services;
@@ -27,7 +32,7 @@ class TabSurfaces {
   _buildTabs(win) {
     const s = this._s;
     this._ctx.tabViewManager = new TabViewManager(win, {
-      preloadPath: this._ctx.path('webview-preload.js'),
+      preloadPath: this._bundleTabPreload(),
       networkInterceptor: s.networkInterceptor,
       chromeExtensionService: s.chromeExtensionService,
       adblockerService: s.adblockerService,
@@ -36,6 +41,10 @@ class TabSurfaces {
     });
     this._ctx.tabManager = new TabManager(this._ctx.tabViewManager);
     if (s.vaultService) s.vaultService.attachTabs(this._ctx.tabViewManager);
+  }
+
+  _bundleTabPreload() {
+    return PreloadBundle.write(this._ctx.path(TabSurfaces.TAB_PRELOAD), path.join(this._ctx.dataDir, ...TabSurfaces.TAB_PRELOAD_BUNDLE));
   }
 
   _relayFavicons(win) {

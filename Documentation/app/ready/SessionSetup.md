@@ -38,4 +38,11 @@ load starts misses it.
 
 `luma://newtab` is served on persist:main and every session created later (`NewTabPage.attach` with `net.fetch`).
 
+## Local model for web pages
+
+`_offerLocalModel(sess)` hands persist:main (in `hookSessions()`) and every session created later to
+[PromptApiService](../../core/prompt-api/PromptApiService.md)`.attachSession`, which registers the web Prompt API
+handler on it when the user has switched "Local model for web pages" on. Nothing happens without a
+`promptApiService`.
+
 In-memory sessions (private windows, `isPersistent()` false) get no Chrome extensions or extension worker bridge.

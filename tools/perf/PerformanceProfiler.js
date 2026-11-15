@@ -17,6 +17,7 @@ class PerformanceProfiler {
   static IDLE_MS = 6000;
   static SETTINGS_OPENS = 5;
   static TRACE_WAIT_MS = 30000;
+  static RUNTIME_TRACE_FILE = 'runtime-trace.pftrace';
 
   constructor(root, deps) {
     this._root = root;
@@ -134,7 +135,7 @@ class PerformanceProfiler {
 
   async _finishCaptures() {
     await this._app.evaluate(({ contentTracing }, file) => contentTracing.stopRecording(file),
-      path.join(this._output, 'runtime-trace.json'));
+      path.join(this._output, PerformanceProfiler.RUNTIME_TRACE_FILE));
     await this._page.screenshot({ path: path.join(this._output, 'shell.png') });
     const tracePath = path.join(this._output, ProfileEnvironment.STARTUP_TRACE_FILE);
     const deadline = Date.now() + PerformanceProfiler.TRACE_WAIT_MS;

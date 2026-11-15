@@ -2,6 +2,8 @@ class PermissionKinds {
   static MEDIA_KINDS = ['camera', 'microphone'];
   static APP_ORIGIN = 'file://';
   static NOTIFICATIONS = 'notifications';
+  static LOCAL_MODEL = 'localModel';
+  static DISPLAY_CAPTURE = 'display-capture';
   static EXTENSION_PREFIX = 'chrome-extension://';
 
   static originOf(url) {
@@ -32,6 +34,7 @@ class PermissionKinds {
 
   static describe(kinds) {
     if (kinds.includes(PermissionKinds.NOTIFICATIONS)) return 'show notifications';
+    if (kinds.includes(PermissionKinds.LOCAL_MODEL)) return 'use your local AI model';
     const hasCamera = kinds.includes('camera');
     const hasMicrophone = kinds.includes('microphone');
     if (hasCamera && hasMicrophone) return 'use your camera and microphone';

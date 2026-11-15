@@ -27,7 +27,9 @@ not from a scripted launch. One capture is one
 
 ## Output files
 
-`chromium-trace.json`, `main.cpuprofile`, `renderer.cpuprofile`, `report.json`,
+`chromium-trace.json` (JSON trace events of the shell renderer, the browser and
+the GPU process, from [DebuggerTraceRecorder](DebuggerTraceRecorder.md); other
+tabs' renderers are not in it), `main.cpuprofile`, `renderer.cpuprofile`, `report.json`,
 then `summary.json` and `summary.md` from
 [RuntimeTraceSummary](RuntimeTraceSummary.md). `scripts/summarize-runtime-trace.js`
 re-runs the summary over an existing capture.

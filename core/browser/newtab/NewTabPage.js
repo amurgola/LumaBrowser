@@ -12,6 +12,7 @@ class NewTabPage {
   static START_PAGE_KEY = 'startPageUrl';
   static DEFAULT_START_PAGE = 'https://duckduckgo.com';
   static DIR = path.join(__dirname, '..', '..', '..', 'ui', 'newtab');
+  static INDEX = 'newtab.html';
   static FILES = { '/': 'newtab.html', '/newtab.html': 'newtab.html', '/newtab.css': 'newtab.css', '/newtab.js': 'newtab.js' };
   static MAX_SITES = 8;
 
@@ -39,8 +40,13 @@ class NewTabPage {
     if (!sess || !sess.protocol || NewTabPage._sessions.has(sess)) return;
     NewTabPage._sessions.add(sess);
     try {
-      sess.protocol.handle(NewTabPage.SCHEME, (request) => NewTabPage.serve(request.url, fetchFile));
+      if (typeof sess.protocol.registerSource === 'function') sess.protocol.registerSource(NewTabPage.SCHEME, NewTabPage.source());
+      else sess.protocol.handle(NewTabPage.SCHEME, (request) => NewTabPage.serve(request.url, fetchFile));
     } catch (_) {}
+  }
+
+  static source() {
+    return { routes: [{ match: { host: NewTabPage.HOST }, source: { type: 'directory', root: NewTabPage.DIR, index: NewTabPage.INDEX } }] };
   }
 
   static serve(url, fetchFile) {

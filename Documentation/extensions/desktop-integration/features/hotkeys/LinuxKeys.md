@@ -10,12 +10,12 @@ The selection actions' keyboard and clipboard parts on Linux, with the
 - **X11** ([X11Api](X11Api.md)): held modifiers from the key map, the focused
   window (`foregroundWindow`, `focusWindow`), Ctrl+C / Ctrl+V and key-ups (both
   sides of a modifier) injected with XTEST. X has no clipboard change counter,
-  so `clipboardSequence()` is the clipboard text; when Ctrl+C leaves it
+  so `clipboardSequence()` resolves the clipboard text; when Ctrl+C leaves it
   unchanged, SelectionClipboard asks `readPrimary()`. `unavailableReason()`
   names a missing libX11 or libXtst.
 - **Wayland**: no app may inject keys into another, so `copyMode` is `primary`:
-  the selection is the primary selection (`clipboard.readText('selection')`,
-  the highlighted text, no keystroke). Pasting runs `wtype -M ctrl v -m ctrl`
+  the selection is the primary selection (the highlighted text, no keystroke).
+  Pasting runs `wtype -M ctrl v -m ctrl`
   (wlroots desktops) or `ydotool key 29:1 47:1 47:0 29:0` (needs `ydotoold`),
   whichever is on `PATH` first (`WAYLAND_TOOLS`, `TOOL_TIMEOUT_MS` 2000);
   without either `canPaste()` is false and `noPasteReason` says what to install.
@@ -25,6 +25,12 @@ The selection actions' keyboard and clipboard parts on Linux, with the
   `releaseKeys()` go through it, and `canPaste()` is true with Ctrl+V sent by
   its XTEST injection (`sendCombo(['Control_L', 'v'])`), which the compositor
   forwards to the focused app the way it does for xdotool.
+
+The `clipboard` constructor option is a
+[SystemClipboard](../../../../core/desktop/service/SystemClipboard.md), so both
+clipboard reads are asynchronous: `readPrimary()` resolves its
+`readSelectionText()` and `clipboardSequence()` its `readText()`, each `''` when
+there is no clipboard or the read fails.
 
 The primary selection can be stale: it holds the last highlighted text even
 after the highlight is gone in some apps.
