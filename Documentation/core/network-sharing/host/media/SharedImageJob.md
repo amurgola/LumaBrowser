@@ -33,3 +33,7 @@ the host's own local image slot and streams its events as NDJSON. A
 `forceLocal` serves the host's own slot, never a remote image server the host
 picked as its own backend. Abort listens to the response closing, because
 `req` `close` fires once the body is read and used to abort every request.
+
+## Changes (2026-11-14, exact size crosses)
+
+`_generateOnRouter` passes `snapNative: false` through when the client asked for it. A caller's "render exactly this size" used to be dropped between a client and its host, so the host snapped an edit to the model's native size; the roleplay turns that snap off on purpose for figure renders. A side-by-side of the same request on a host and through a paired client now shows every generation parameter equal; the client's request differs only in `slot` (always named) and `forceLocal`.

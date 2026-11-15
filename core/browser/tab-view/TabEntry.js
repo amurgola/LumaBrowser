@@ -15,6 +15,7 @@ class TabEntry {
     this.keepAlive = !!keepAlive;
     this.hidden = !!hidden;
     this.hostId = Number.isInteger(hostId) ? hostId : TabHosts.MAIN_ID;
+    this.viewSize = null;
     this.url = url;
     this.title = title;
     this.loading = false;

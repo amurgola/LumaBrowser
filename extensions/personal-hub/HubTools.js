@@ -35,8 +35,41 @@ class HubTools {
     },
     {
       name: 'hub_list_contacts',
-      description: 'The people the Hub has seen in the user\'s activity: each contact with every way they appear (app, name or address, context), plus pairs that may be the same person. Use it to recognise that a Slack name and a mail sender are one person.',
-      inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Part of a name, address or app' }, limit: { type: 'number' } } },
+      description: 'The people and organisations the Hub has seen in the user\'s activity: each contact with every way they appear (app, name or address, context) and what the user recorded about them (kind person or general, relation, birth date, further details, notes; `about` is all of it in one line), plus pairs that may be the same person. Use it to learn who someone is to the user before writing to or about them, and to recognise that a Slack name and a mail sender are one person.',
+      inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Part of a name, address, app or of what is recorded (a relation, a note)' }, limit: { type: 'number' } } },
+    },
+    {
+      name: 'hub_update_contact',
+      description: 'Record what the user told you about a contact (a con_... id from hub_list_contacts). Only facts the user stated or confirmed; for something you inferred from messages use hub_suggest_contact_details. Only what you pass changes.',
+      mutating: true,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Contact id (con_...)' },
+          kind: { type: 'string', enum: ['person', 'general'], description: 'person, or general for a business, an organisation or a contact not placed yet' },
+          fields: { type: 'object', description: 'A person has relation (who they are to the user), birthday (YYYY-MM-DD, or MM-DD without a year) and sex (female, male, other); a general contact has what (what it is) and website. An empty value clears a field.' },
+          addDetails: { type: 'array', items: { type: 'object', properties: { label: { type: 'string' }, value: { type: 'string' } }, required: ['label', 'value'] }, description: 'Further contact details by label (Phone, Address, Works at): added, or updated when the label exists; an empty value removes it' },
+          addNote: { type: 'string', description: 'One more line of notes for the assistant' },
+          notes: { type: 'string', description: 'Replaces all the notes' },
+        },
+        required: ['id'],
+      },
+    },
+    {
+      name: 'hub_suggest_contact_details',
+      description: 'Propose details about a contact for the user to accept or dismiss on the contact (nothing is written into the profile). Pass `suggestions` you inferred from messages, or leave them out to have the Hub\'s own model read what the contact sent.',
+      mutating: true,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Contact id (con_...)' },
+          suggestions: {
+            type: 'array',
+            items: { type: 'object', properties: { key: { type: 'string', description: 'kind, relation, birthday, sex, what, website, note, or detail:<Label>' }, value: { type: 'string' }, why: { type: 'string', description: 'The message that shows it, in a few words' } }, required: ['key', 'value'] },
+          },
+        },
+        required: ['id'],
+      },
     },
     {
       name: 'hub_merge_contacts',
@@ -286,6 +319,10 @@ class HubTools {
     hub_list_summaries: (api) => ({ success: true, ...HubTools._summaries(api.listSummaries()) }),
     hub_list_contexts: (api) => ({ success: true, contexts: api.listContexts() }),
     hub_list_contacts: (api, args) => ({ success: true, ...api.listContacts({ query: args.query || '', limit: args.limit || 50 }) }),
+    hub_update_contact: (api, args) => ({ success: true, contact: api.saveContactProfile(args.id, HubTools._without(args, 'id')) }),
+    hub_suggest_contact_details: async (api, args) => (Array.isArray(args.suggestions)
+      ? { success: true, contact: api.suggestContactDetails(args.id, args.suggestions) }
+      : { success: true, ...(await api.learnContact(args.id)) }),
     hub_merge_contacts: (api, args) => ({ success: true, contact: api.mergeContacts(args.intoId, args.fromId) }),
     hub_snapshot_thread: async (api, args) => {
       const result = await api.snapshotThread(args.id, { force: !!args.force });

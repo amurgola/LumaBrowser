@@ -10,6 +10,11 @@ class Win32Windows {
   static DWMWA_EXTENDED_FRAME_BOUNDS = 9;
   static DWMWA_CLOAKED = 14;
   static SW_RESTORE = 9;
+  static SW_SHOWNORMAL = 1;
+  static SW_SHOWNOACTIVATE = 4;
+  static SWP_RESIZE_IN_PLACE = 0x0002 | 0x0004 | 0x0010;
+  static PLACEMENT_BYTES = 44;
+  static PLACEMENT_SHOW_OFFSET = 8;
   static SM_XVIRTUALSCREEN = 76;
   static SM_YVIRTUALSCREEN = 77;
   static SM_CXVIRTUALSCREEN = 78;
@@ -69,6 +74,33 @@ class Win32Windows {
       Win32Input.sendInputs(Win32Input.altTap());
     }
     return a.GetForegroundWindow() === hwnd;
+  }
+
+  static resizeFrame(hwnd, width, height) {
+    const a = Win32Api.load();
+    if (a.IsIconic(hwnd)) return false;
+    if (a.IsZoomed(hwnd)) a.ShowWindow(hwnd, Win32Windows.SW_SHOWNOACTIVATE);
+    const buf = Buffer.alloc(16);
+    if (!a.GetWindowRect(hwnd, buf)) return false;
+    const outer = Win32Buffers.rectFrom(buf);
+    const frame = Win32Windows.windowRect(hwnd) || outer;
+    const outerWidth = Math.round(width + outer.width - frame.width);
+    const outerHeight = Math.round(height + outer.height - frame.height);
+    return !!a.SetWindowPos(hwnd, 0, 0, 0, outerWidth, outerHeight, Win32Windows.SWP_RESIZE_IN_PLACE);
+  }
+
+  static placement(hwnd) {
+    const buf = Buffer.alloc(Win32Windows.PLACEMENT_BYTES);
+    buf.writeUInt32LE(Win32Windows.PLACEMENT_BYTES, 0);
+    return Win32Api.load().GetWindowPlacement(hwnd, buf) ? buf : null;
+  }
+
+  static restorePlacement(hwnd, placement) {
+    const buf = Buffer.from(placement);
+    if (buf.readUInt32LE(Win32Windows.PLACEMENT_SHOW_OFFSET) === Win32Windows.SW_SHOWNORMAL) {
+      buf.writeUInt32LE(Win32Windows.SW_SHOWNOACTIVATE, Win32Windows.PLACEMENT_SHOW_OFFSET);
+    }
+    return !!Win32Api.load().SetWindowPlacement(hwnd, buf);
   }
 
   static popupInfo(hwnd) {

@@ -188,6 +188,8 @@ class HubSchema {
     "ALTER TABLE hub_tasks ADD COLUMN remote_status_color TEXT DEFAULT ''",
     "ALTER TABLE hub_tasks ADD COLUMN list_id TEXT DEFAULT ''",
     'ALTER TABLE hub_tasks ADD COLUMN sync_error TEXT',
+    "ALTER TABLE hub_contacts ADD COLUMN kind TEXT NOT NULL DEFAULT 'general'",
+    "ALTER TABLE hub_contacts ADD COLUMN profile TEXT NOT NULL DEFAULT '{}'",
   ];
 
   static DEFAULT_COLUMNS = [

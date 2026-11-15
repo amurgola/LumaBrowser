@@ -67,4 +67,6 @@ Measured in the running app before choosing a fix: `capturePage` on a hidden vie
 
 So a preview that is not on screen (`_isOffScreen`: not painted over its card, and not the user's active tab) is lent a place underneath for the capture (`_lendPlaceUnderneath`): re-added at stack index 0, placed at the content area's corner at the size it last had over its card (`lastSize`, else `CAPTURE_SIZE` 1024x640, never larger than the content area), made visible. `_firstPaintedImage` asks every `CAPTURE_POLL_MS` (50) for up to `CAPTURE_WAIT_MS` (1000) until an image is not empty. `_takeBackLentPlace` then hides it again, unless it was painted over its card or became the active tab while the capture ran. With no content area to hide under, nothing is lent and the answer is null as before. A preview on screen is captured in the same tick, untouched. The frame ticker still runs only while the preview is shown; only this one capture reaches a hidden view.
 
+Both places that hide a background view again (`_takeBackLentPlace`, `_unpaint`) go through `_park(entry)`. A tab a remote viewer has sized (`entry.viewSize`, Tab Share) is not hidden there: it goes back to the layout (`TabViewManager.layoutTab`), which keeps it at that size behind the active tab ([TabLayout](tab-view/TabLayout.md)).
+
 Constructor seams for tests: `{ captureWaitMs, capturePollMs }`.

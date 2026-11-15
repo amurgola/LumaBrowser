@@ -313,6 +313,7 @@ button.hub-link { border: 0; background: transparent; padding: 0; font: inherit;
 .hub-settings .ext-mt-8 { margin-top: var(--space-2); }
 .hub-settings .ext-mb-8 { margin-bottom: var(--space-2); }
 .hub-settings .luma-section-label { margin-top: var(--space-2); }
+.hub-settings .ext-form-row-inline > .luma-field-select { flex: 1; min-width: 0; }
 
 .hub-task-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
 .hub-task-form select { flex: 1 1 110px; min-width: 0; height: 28px; border: 1px solid var(--hub-border); background: var(--hub-input); color: var(--hub-text);
@@ -324,6 +325,9 @@ button.hub-link { border: 0; background: transparent; padding: 0; font: inherit;
 .hub-thread-title { font-weight: var(--weight-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 .hub-thread-time { color: var(--hub-dim); font-size: var(--text-xs); white-space: nowrap; }
 .hub-thread-people { color: var(--hub-dim); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-thread-people .hub-person-link { color: inherit; font-size: inherit; }
+.hub-thread-people .hub-person-link:hover { color: var(--hub-text); }
+.hub-person-role { color: var(--hub-muted); }
 .hub-thread-text { color: var(--hub-dim); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .hub-task-mark { display: block; margin-top: 2px; color: var(--hub-good); font-size: var(--text-xs); font-weight: var(--weight-medium); }
 

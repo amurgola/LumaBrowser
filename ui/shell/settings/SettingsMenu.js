@@ -44,6 +44,7 @@ export default class SettingsMenu {
     return [
       { action: 'new-tab', label: 'New tab', hint: 'Ctrl+T' },
       { action: 'new-private-window', label: 'New private window', hint: 'Ctrl+Shift+N' },
+      { action: 'new-terminal', label: 'New terminal', hint: 'Ctrl+Shift+`' },
       { sep: true },
       { action: 'history', label: 'History', hint: 'Ctrl+H' },
       { action: 'bookmarks', label: 'Bookmarks', hint: 'Ctrl+Shift+O' },
@@ -69,6 +70,7 @@ export default class SettingsMenu {
     return {
       'new-tab': () => this._tabs.create(undefined, { focusUrl: true }),
       'new-private-window': () => { if (window.tabAPI && window.tabAPI.openPrivateWindow) window.tabAPI.openPrivateWindow(); },
+      'new-terminal': () => { if (window.ipcBridge) window.ipcBridge.invoke('core.terminal.openTab', {}); },
       history: () => this._history.open(),
       bookmarks: () => this._bookmarks.open(),
       downloads: () => this._downloads.toggleMenu(),

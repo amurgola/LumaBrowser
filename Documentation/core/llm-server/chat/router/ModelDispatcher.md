@@ -17,3 +17,7 @@ Chat turns, agent steps, compaction, titles, side completions and sharing proxie
 ## Changes (2026-11-09, helper model)
 
 `helperStream` (a [HelperStream](HelperStream.md), null without a helper on the build) is the third route: `helper::` refs go to `helperStream.stream(stem, ...)`; without one they reject with `No helper model is available on this build.`
+
+## Changes (2026-11-14)
+
+`_route` takes the call's trace tag and, for a remote ref, adds its `callType` to the extra the remote stream gets. The local adapters still never see the tag. A paired host needs to know a housekeeping call from a turn ([RemoteStream](RemoteStream.md)).

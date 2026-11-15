@@ -30,3 +30,5 @@ surface can reach the activated service.
 `distributable: true`. Their stamped chat UI gets `chatUiModule: true` and their Setup tab
 `module: true`, so the LLM tab loads those scripts with `type="module"`. Add-ons
 (distributable or user-installed) stay classic scripts.
+
+A manifest's `terminalProfiles` array is registered with `TerminalProfileContributions` (CLI add-ons: programs offered wherever terminals are opened).

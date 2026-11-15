@@ -15,6 +15,10 @@ export default class HubSettingsPanel {
 
   static _current = null;
 
+  static openPerson(host, person, doc = document) {
+    return HubSettingsPanel.open(host, 'people', doc, person);
+  }
+
   static button(host, pane = 'summary') {
     return WidgetDom.el('button', {
       class: 'hub-icon-btn hub-open-settings', title: 'Hub settings', 'aria-label': 'Hub settings',
@@ -22,11 +26,11 @@ export default class HubSettingsPanel {
     }, [TaskChrome.icon('settings')]);
   }
 
-  static open(host, pane = 'summary', doc = document) {
+  static open(host, pane = 'summary', doc = document, target = null) {
     if (HubSettingsPanel._current) HubSettingsPanel._current.close();
     const panel = new HubSettingsPanel(host, doc);
     HubSettingsPanel._current = panel;
-    panel.shown = panel.show(pane);
+    panel.shown = panel.show(pane, target);
     return panel;
   }
 
@@ -48,7 +52,7 @@ export default class HubSettingsPanel {
     return !!this._el;
   }
 
-  async show(pane = 'summary') {
+  async show(pane = 'summary', target = null) {
     if (this._el) this.close();
     HubWidgetStyles.ensure(this._doc);
     this._pane = HubSettingsPanel.PANES.some((p) => p.key === pane) ? pane : 'summary';
@@ -69,6 +73,8 @@ export default class HubSettingsPanel {
     this._doc.addEventListener('keydown', this._onKey);
     for (const s of this._sections) s.instance.bind(this._el.querySelector(`.hub-settings-pane[data-pane="${s.key}"]`));
     this._paintTabs();
+    const shown = this._sections.find((s) => s.key === this._pane);
+    if (target && typeof shown.instance.focus === 'function') shown.instance.focus(target);
     await this.reloadAll();
   }
 

@@ -18,9 +18,13 @@ malformed, oversized or unknown is dropped (null).
     shift, alt, meta), unknown dropped, de-duplicated.
   - `{ t:'text', s }`: non-empty, cut to 2000 chars.
   - `{ t:'nav', a:'back'|'forward'|'reload' }`, `{ t:'ping' }`.
+  - `{ t:'size', w, h }`: the guest asks for the tab at its viewing area's size
+    (CSS px). Rounded to whole pixels and clamped to `MIN_VIEW_PX` (240) ..
+    `MAX_VIEW_PX` (4096); missing, zero, negative or non-numeric rejects.
+    `{ t:'size', off:true }` (exactly `true`) gives the tab its own size back.
   - `{ t:'rtc', k:'want'|'answer'|'cand'|'up'|'down' }`: an answer needs an
     SDP of at most 48 KB; a candidate needs a `candidate` string of at most
     512 chars (`sdpMid` cut to 32, `sdpMLineIndex` integer or null).
 - Limits are statics: `MAX_MSG_BYTES` (64 KB), `MAX_TEXT_CHARS`,
   `MAX_SDP_CHARS`, `MAX_KEY_CHARS`, `MAX_CANDIDATE_CHARS`, `MAX_SDP_MID_CHARS`,
-  `MAX_WHEEL_DELTA`.
+  `MAX_WHEEL_DELTA`, `MIN_VIEW_PX`, `MAX_VIEW_PX`.

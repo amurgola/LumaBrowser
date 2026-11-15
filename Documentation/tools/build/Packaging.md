@@ -24,6 +24,10 @@ Identical to legacy except where the rebuild's layout needs it:
   axios with its dependency chain) plus the three `core/shell/mcp-stdio/*.js` files the
   stand-alone MCP server now requires. Natives electron-builder unpacks on its
   own (better-sqlite3, @napi-rs/canvas) are kept by the afterPack repack.
+  `node_modules/@lydell/**` (the terminal's node-pty) is unpacked whole: beside
+  its `.node` files it starts `OpenConsole.exe` / `spawn-helper` and a worker
+  script, which must be real files. Its `.pdb` debug symbols are left out of
+  `files`.
   Preloads and workers are not unpacked: Electron loads them through the archive.
 - Targets: win nsis + portable (no arch in the config: the host's, or the CLI's
   `--x64` / `--arm64`; CI builds both; `nsis.buildUniversalInstaller: false` so a

@@ -18,6 +18,15 @@ class MergedSourceTable {
         + 'game_press / game_hold / game_click / game_mouse_move -> game_wait (screenshot) -> plan; '
         + 'keep goals and notes with game_set_goals / game_note; game_status reports when you are stuck.',
     }),
+    'core.terminal': Object.freeze({
+      key: 'terminal',
+      label: 'Terminal',
+      stub: 'Work in a real interactive terminal on the computer of the user, shown to them in a browser tab: '
+        + 'terminal_run types a command into a shell that stays open between calls (it keeps its folder, variables '
+        + 'and running programs) and replies with the output and exit code; terminal_send answers prompts and drives '
+        + 'REPLs, ssh and full-screen programs; terminal_read reads the screen or waits for output; terminal_list / '
+        + 'terminal_open / terminal_close manage terminals. The user must have switched AI terminal access on.',
+    }),
     'core.delegation': Object.freeze({
       key: 'delegation',
       label: 'Delegation',

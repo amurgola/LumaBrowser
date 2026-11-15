@@ -10,21 +10,27 @@ const ContextFilesBlock = require('./ContextFilesBlock');
 const DecodeSlots = require('./DecodeSlots');
 
 const BatchScheduler = CoreRequire.require('llm-server/chat/BatchScheduler');
+const AgentToolCatalog = CoreRequire.require('llm-service/AgentToolCatalog');
 
 class CodeTurnBuilder {
   static TEMPERATURE = 0.2;
   static AGENT_BUDGET = { maxIterations: 40, noTimeout: true, reasoningCharsPerStep: 1e9, reasoningCharsTotal: 1e9 };
 
-  constructor({ context, sessions }) {
+  static BROWSE_GROUP = 'browse';
+
+  constructor({ context, sessions, dockedTabs = null }) {
     this._context = context;
     this._sessions = sessions;
+    this._dockedTabs = dockedTabs;
   }
 
   build({ meta, conversationId, modelRef = null }) {
     const data = (meta && meta.data) || {};
     const plan = this._planTools(data, meta, conversationId, modelRef);
     const overlay = plan.mode === 'project' ? AgentOverlay.resolve(data) : null;
-    const allowedTools = AgentOverlay.mergeAllowedTools(plan.tools ? [...plan.tools.map((t) => t.name), 'validate_code'] : null, overlay);
+    const workTabId = plan.mode === 'project' && this._dockedTabs ? this._dockedTabs.get(conversationId) : null;
+    const pinned = plan.tools ? [...plan.tools.map((t) => t.name), 'validate_code', ...(workTabId == null ? [] : CodeTurnBuilder.browserToolNames())] : null;
+    const allowedTools = AgentOverlay.mergeAllowedTools(pinned, overlay);
     return {
       systemPrompt: this._systemPrompt(data, plan, overlay, conversationId),
       temperature: CodeTurnBuilder.TEMPERATURE,
@@ -32,9 +38,14 @@ class CodeTurnBuilder {
       tools: plan.tools,
       allowedTools,
       ...AgentOverlay.turnFields(overlay),
-      noBrowser: true,
+      ...(workTabId == null ? { noBrowser: true } : { noBrowser: false, workTabId }),
       agentBudget: plan.tools ? { ...CodeTurnBuilder.AGENT_BUDGET } : null,
     };
+  }
+
+  static browserToolNames() {
+    const group = AgentToolCatalog.BASE_TOOL_GROUPS.find((g) => g.id === CodeTurnBuilder.BROWSE_GROUP);
+    return group ? group.tools.map((tool) => tool.name) : [];
   }
 
   _planTools(data, meta, conversationId, modelRef) {

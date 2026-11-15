@@ -18,6 +18,10 @@ export default class PanelResizer {
       axis: 'row', cssVar: '--ai-chat-height', targetSelector: '#aiChatPanel', min: 180,
       maxFn: () => Math.round(window.innerHeight * 0.85), storeKey: 'aiChatHeight',
     },
+    'terminal-dock': {
+      axis: 'row', cssVar: '--terminal-dock-height', targetSelector: '#terminalDock', min: 140,
+      maxFn: () => Math.round(window.innerHeight * 0.85), storeKey: 'terminalDockHeight',
+    },
   };
 
   install() {

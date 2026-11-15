@@ -3,6 +3,7 @@ import RestartNotes from './RestartNotes.js';
 import TelemetrySwitch from './TelemetrySwitch.js';
 import PromptApiSwitch from './PromptApiSwitch.js';
 import CliShimSwitch from './CliShimSwitch.js';
+import TerminalSettingsRows from './TerminalSettingsRows.js';
 import IdeInstallerList from './IdeInstallerList.js';
 import LlmServerSettings from './LlmServerSettings.js';
 import ApiPortSetting from './ApiPortSetting.js';
@@ -27,7 +28,7 @@ export default class GeneralSettings {
     this._buildParts();
     new RestartNotes({ feedback: this._feedback }).install();
     document.addEventListener('settings:open', () => this.load());
-    for (const part of [this._port, this._telemetry, this._promptApi, this._cliShim, this._jetbrains, this._vscode, this._windhawk, this._llm, this._endpoints]) part.install();
+    for (const part of [this._port, this._telemetry, this._promptApi, this._cliShim, this._terminal, this._jetbrains, this._vscode, this._windhawk, this._llm, this._endpoints]) part.install();
     this._wireSwitches();
     this._wireButtons();
     new FoldGroups().install();
@@ -36,6 +37,7 @@ export default class GeneralSettings {
 
   async load() {
     this._cliShim.load();
+    this._terminal.load();
     this._jetbrains.load();
     this._vscode.load();
     this._windhawk.load();
@@ -81,6 +83,7 @@ export default class GeneralSettings {
     this._telemetry = new TelemetrySwitch({ feedback });
     this._promptApi = new PromptApiSwitch({ feedback });
     this._cliShim = new CliShimSwitch({ feedback });
+    this._terminal = new TerminalSettingsRows({ feedback });
     this._jetbrains = new IdeInstallerList({ feedback, config: IdeInstallerList.JETBRAINS });
     this._vscode = new IdeInstallerList({ feedback, config: IdeInstallerList.VSCODE });
     this._windhawk = new IdeInstallerList({ feedback, config: IdeInstallerList.WINDHAWK });

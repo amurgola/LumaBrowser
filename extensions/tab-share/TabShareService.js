@@ -161,6 +161,7 @@ class TabShareService extends EventEmitter {
   static _shareRefusal(entry) {
     if (!entry) return 'That tab no longer exists.';
     if ((entry.kind && entry.kind !== 'user') || entry.silent) return 'Only regular browsing tabs can be shared.';
+    if (/^luma:/i.test(String(entry.url || ''))) return 'Only regular browsing tabs can be shared.';
     return null;
   }
 
@@ -213,6 +214,7 @@ class TabShareService extends EventEmitter {
       getMeta: () => ({ title: s.title, url: s.url }),
       log: this._log,
       rtc: this._transport.hooksFor(s),
+      setViewSize: (size) => { if (typeof tvm.setTabViewSize === 'function') tvm.setTabViewSize(s.tabId, size); },
     });
     streamer.on('viewers', () => this._changed('viewers', s.id));
     streamer.on('transport', () => this._changed('viewers', s.id));

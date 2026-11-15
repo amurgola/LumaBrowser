@@ -59,8 +59,8 @@ class CodeModeDescriptor {
     return build && build.dir ? { root: build.dir, label: build.id || 'Extension' } : null;
   }
 
-  static create(context, sessions) {
-    const turns = new CodeTurnBuilder({ context, sessions });
+  static create(context, sessions, dockedTabs = null) {
+    const turns = new CodeTurnBuilder({ context, sessions, dockedTabs });
     const persister = new BuildStatePersister({ context, sessions });
     return {
       id: CodeModeDescriptor.MODE_ID,

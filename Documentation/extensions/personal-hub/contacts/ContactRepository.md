@@ -3,8 +3,8 @@
 `extensions/personal-hub/contacts/ContactRepository.js`
 
 Plain queries over `hub_contacts` and `hub_contact_identities`: the people
-the Hub has seen, and the names or addresses each one goes by in each app
-and context. One contact has many identities; an identity is unique per
+the Hub has seen, what is kept about each (its kind and profile), and the
+names or addresses each one goes by in each app and context. One contact has many identities; an identity is unique per
 `(app, handle, context)`. The rules that join identities into people live in
 [ContactService](ContactService.md).
 
@@ -13,7 +13,10 @@ and context. One contact has many identities; an identity is unique per
 - `new ContactRepository(db)`: `db` is the extension's DatabaseService.
 - Contacts: `getContact(id)` -> the row or `null`, `insertContact({ id,
   name })` (stamps both times and returns the row), `renameContact(id,
-  name)` -> the row, `deleteContact(id)` -> whether a row went,
+  name)` -> the row, `saveProfile(id, kind, profile)` -> the row (`kind`
+  `person` or `general`, `profile` the object
+  [ContactProfile](ContactProfile.md) keeps, stored as JSON; stamps
+  `updated_at`), `deleteContact(id)` -> whether a row went,
   `listContacts()` by name, `countContacts()`.
 - Identities: `getIdentity(id)`, `findIdentity(app, handle, contextId)` (the
   one identity of that key; a missing context is the empty string),
@@ -29,7 +32,9 @@ and context. One contact has many identities; an identity is unique per
   `moveIdentities(fromContactId, toContactId)` -> how many moved.
 - `static hydrateContact(row)`, `static hydrateIdentity(row)`.
 
-Contacts hydrate to `{ id, name, createdAt, updatedAt }`, identities to
+Contacts hydrate to `{ id, name, kind, profile, createdAt, updatedAt }`
+(`kind` `general` when the column is empty, `profile` the parsed JSON, `{}`
+when it does not parse), identities to
 `{ id, contactId, app, handle, display, contextId, firstAt, lastAt, count }`.
 `contextId` is stored as an empty string when the sender belongs to no
 context and reads back as `null`.

@@ -47,3 +47,7 @@ A client's `response_format` object rides the proxy extra as `responseFormat` (`
 ## Changes (2026-11-14, the client's sampling and length fields)
 
 The proxy extra also takes what [ClientRequestKnobs](ClientRequestKnobs.md) reads from the body: `max_tokens` (or `max_completion_tokens`) as `maxTokens`, the llama-server sampler numbers as `samplerOverrides`, and `luma_pin_temperature: true` as `pinTemperature`. The host's local path then applies them as it does for its own turns (the smaller of the client's cap and the host's Tune cap; the host's own model sampler still wins over the client's where both name a knob). Before this the handler read only the temperature and the thinking knobs.
+
+## Changes (2026-11-14, the agent default)
+
+`_agentDefault(extra, body)`: when the client marked the turn as its own agent loop (`luma_agent_turn`) and neither the client nor this host's dial produced a thinking position, the agent default applies (`ReasoningEffort.AGENT_DEFAULT`), exactly as on this host's own agent turn. A position from either side wins.

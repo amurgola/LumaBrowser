@@ -55,6 +55,13 @@ Lifecycle and strip ([TabLifecycle](tab-view/TabLifecycle.md), [TabActivation](t
 - `reopenClosedTab(windowId = 0)`, `moveTab(tabId, toIndex)` (clamped to the tab's pin block), `switchToTab(tabId)`,
   `showTab(tabId)`, `cycleTab(delta, windowId = 0)`, `selectTabByIndex(n, windowId = 0)`
   (n <= 0 is the last tab), `setBounds(bounds, windowId = 0)`, `destroyAll()`.
+- `setTabViewSize(tabId, size)`: sizes one tab's view to a remote viewer's window
+  (`{ width, height }`, Tab Share's interact guests) without resizing the window; null gives the tab
+  the content area back. The view never grows past the content area
+  ([TabLayout](tab-view/TabLayout.md)). `{ success }` or not found. Every tab switch
+  (`windowTabSwitched`) runs `TabLayout.refitBackground()`.
+- `layoutTab(tabId)`: puts a tab's view back where the layout wants it, for a caller that moved it
+  ([TabPreviewManager](TabPreviewManager.md)).
 
 Windows ([TabHosts](tab-view/TabHosts.md), [TabTransfer](tab-view/TabTransfer.md)):
 

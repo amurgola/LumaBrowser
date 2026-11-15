@@ -6,15 +6,18 @@ One shared tab's frame feed and input sink, an EventEmitter.
 
 ## Methods
 
-- `new TabStreamer({ getWebContents, getView, getFallbackBounds, getMode, getMeta, log, rtc, sleep })`.
+- `new TabStreamer({ getWebContents, getView, getFallbackBounds, getMode, getMeta, log, rtc, sleep, setViewSize })`.
   `rtc`: `{ available(), createPeer(send) -> { answer, candidate, close } | null }`.
+  `setViewSize({ width, height } | null)`: sizes the tab's view to a guest's
+  window, or gives it back to the host.
 - `addClient(ws)`: refuses once destroyed or at `MAX_CLIENTS` (8) with
   `{ t:'ended', reason:'ended'|'full' }` and close code 4001. Otherwise sends
   `{ t:'hello', mode, title, url, vw, vh, rtc }`, the last frame meta and
   JPEG, and kicks the loop. Emits `viewers` (count).
 - `removeClient(ws)`; `viewerCount`, `videoViewerCount` getters;
   `rtcAvailable()`.
-- `broadcastMode()` (`{ t:'mode' }`), `broadcastMeta()` (`{ t:'meta' }`, kicks).
+- `broadcastMode()` (`{ t:'mode' }`; leaving interact also gives the tab its
+  host size back), `broadcastMeta()` (`{ t:'meta' }`, kicks).
 - `destroy(reason)`: every viewer gets `{ t:'ended', reason }` and close code
   4000; emits `viewers` 0; idempotent. `isDestroyed()`.
 - `captureOnce()` -> `'sent' | 'same' | 'skip'`. A changed size broadcasts
@@ -33,9 +36,28 @@ Everything else is input and is honoured only when `getMode()` is
 `'interact'`, within the per-socket rate limit (240/s), and with a live tab;
 otherwise dropped server-side, never trusted to the client. Input is parsed by
 [ClientMessageParser](ClientMessageParser.md), mapped by
-[InputEventMapper](InputEventMapper.md) against the last frame's view size (or
-the live view size before the first frame) and applied by
+[InputEventMapper](InputEventMapper.md) against the live view size (the last
+frame's only when there is no view to ask) and applied by
 [TabInputSink](TabInputSink.md).
+
+## View size
+
+`size` is input too, and it changes the tab for every guest, so a guest only
+sends it on purpose (the viewer's Fit button, then that guest's own resizes
+while it holds the tab). [TabViewFit](TabViewFit.md) keeps one holder, the last
+guest to ask: `{ t:'size', w, h }` claims the tab, `{ t:'size', off:true }`
+from the holder gives it back, and the holder leaving, the share leaving
+interact mode or `destroy` frees it. Each guest that gains or loses the tab is
+told `{ t:'fit', on }`, which is what its Fit button shows. Guests joining,
+leaving or resizing without holding the tab change nothing. The host never
+grows the view past its own content area, so the streamer reads the size the
+view really got.
+
+Guests scale their scroll distances by the view size in the frame meta, and the
+frame loop stops while every guest is on video, so the meta would go stale
+there. Each input message and each size change therefore compares the live view
+size with the last meta and, when it differs, broadcasts
+`{ t:'frame', w, h, vw, vh }` with the new `vw`, `vh` at once.
 
 ## WebRTC
 

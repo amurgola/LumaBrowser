@@ -404,7 +404,7 @@ const ENTRIES = [
   {
     id: 'general.terminal',
     label: 'Terminal',
-    description: 'The luma command for your terminal.',
+    description: 'The built-in terminal, AI access to it, and the luma command.',
     keywords: ['terminal', 'command line', 'cli', 'shell'],
     path: ['Editors & agents', 'Terminal'],
     kind: 'section',
@@ -418,6 +418,24 @@ const ENTRIES = [
     path: ['Editors & agents', 'Terminal'],
     kind: 'toggle',
     target: at('integrations', '#gsCliShim'),
+  },
+  {
+    id: 'general.terminal-profile',
+    label: 'Default terminal',
+    description: 'The shell a new terminal tab and the terminal panel under the page start with.',
+    keywords: ['shell', 'powershell', 'bash', 'zsh', 'cmd', 'command prompt', 'terminal profile'],
+    path: ['Editors & agents', 'Terminal'],
+    kind: 'select',
+    target: at('integrations', '#gsTerminalProfile'),
+  },
+  {
+    id: 'general.terminal-agent',
+    label: 'Let AI use the terminal',
+    description: 'Lets the assistant, and AI tools connected through MCP or the local API, open terminals and run commands on this computer. Off until you turn it on.',
+    keywords: ['ai terminal', 'agent shell', 'run commands', 'terminal tools', 'computer use', 'command line access'],
+    path: ['Editors & agents', 'Terminal'],
+    kind: 'toggle',
+    target: at('integrations', '#gsTerminalAgent'),
   },
 
   {

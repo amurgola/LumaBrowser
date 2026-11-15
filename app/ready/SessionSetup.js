@@ -2,7 +2,7 @@ const ChromeIdentity = require('../../core/browser/ChromeIdentity');
 const DnsResolver = require('../../core/shell/DnsResolver');
 const PermissionManager = require('../../core/browser/PermissionManager');
 const InternalBearerInjector = require('./InternalBearerInjector');
-const NewTabPage = require('../../core/browser/newtab/NewTabPage');
+const LumaPages = require('../../core/browser/LumaPages');
 
 class SessionSetup {
   static MAIN_PARTITION = 'persist:main';
@@ -26,7 +26,7 @@ class SessionSetup {
     this._ctx.app.on('session-created', (sess) => this._onSessionCreated(sess));
     this._bearer.attach(session.defaultSession);
     this._bearer.attach(session.fromPartition(SessionSetup.MAIN_PARTITION));
-    this._serveNewTab(session.fromPartition(SessionSetup.MAIN_PARTITION));
+    this._serveLumaPages(session.fromPartition(SessionSetup.MAIN_PARTITION));
     this._offerLocalModel(session.fromPartition(SessionSetup.MAIN_PARTITION));
     this._attachShimBridge(session.defaultSession);
     this._attachShimBridge(session.fromPartition(SessionSetup.MAIN_PARTITION));
@@ -63,7 +63,7 @@ class SessionSetup {
     }
     if (this._s.adblockerService.ready) this._s.adblockerService.applyToSession(sess);
     this._bearer.attach(sess);
-    this._serveNewTab(sess);
+    this._serveLumaPages(sess);
     this._offerLocalModel(sess);
   }
 
@@ -71,10 +71,10 @@ class SessionSetup {
     if (this._s.promptApiService) this._s.promptApiService.attachSession(sess);
   }
 
-  _serveNewTab(sess) {
+  _serveLumaPages(sess) {
     const net = this._ctx.electron.net;
     if (!net || typeof net.fetch !== 'function') return;
-    NewTabPage.attach(sess, (fileUrl) => net.fetch(fileUrl));
+    LumaPages.attach(sess, (fileUrl) => net.fetch(fileUrl));
   }
 }
 

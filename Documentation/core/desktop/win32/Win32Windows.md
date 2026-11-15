@@ -25,6 +25,18 @@ Top-level windows as desktop control sees them.
 - `focusWindow(hwnd)` restores a minimized window and brings it to the
   foreground; returns whether it got there.
 - `virtualScreen()` the bounding rect of all monitors.
+- `resizeFrame(hwnd, width, height)` sizes a window so its visible frame is
+  that many physical pixels, where it stands and without raising it
+  (`SetWindowPos` with NOMOVE, NOZORDER, NOACTIVATE; the outer rect is the frame
+  plus the invisible resize border). A maximized window is un-maximized first
+  (`SW_SHOWNOACTIVATE`); a minimized one is left alone (false). The app's own
+  size limits may clamp the result.
+- `placement(hwnd)` the window's `WINDOWPLACEMENT` (show state and restored
+  position) as an opaque buffer, or null; `restorePlacement(hwnd, placement)`
+  puts it back, without taking the foreground when the window was neither
+  maximized nor minimized. Used by window tabs to follow a Tab Share guest's
+  size and then undo it
+  ([WindowTabFit](../../../extensions/desktop-integration/features/window-tabs/WindowTabFit.md)).
 
 ## Why focusWindow works so hard
 

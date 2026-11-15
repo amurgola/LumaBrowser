@@ -19,3 +19,9 @@ The client owns its history. The sharing route fires abort from both its socket-
 ## Changes (2026-11-14, a client's side call)
 
 `stream` tags the dispatch `callType: 'side'` when the client pinned its temperature (`extra.pinTemperature`, read from the body by [ClientRequestKnobs](../../../network-sharing/host/llm/ClientRequestKnobs.md)), `'sharing'` otherwise (`_callType`). A pinned call is one of the client's side calls (a roleplay bookkeeping call asking for 0.2): as a side call the host's own Tune temperature for the model leaves it alone ([RequestSettings](RequestSettings.md) `HOUSEKEEPING`), as it would on the client's own server.
+
+## Changes (2026-11-14, the call's kind is named, not inferred)
+
+`_callType` reads `extra.clientCallType` (`side`, `title`, `compact`, sent by the client as `luma_call_type`) and is `'sharing'` otherwise. The first version inferred a side call from a pinned temperature, but the client's agent loop pins its temperature too, and such a step then escaped the host's Tune temperature, which the host's own agent step does not.
+
+`agent` runs with `withholdTools: HostOnlyTools.isHostOnly`: a turn run for someone else never gets the terminal tools.

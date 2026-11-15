@@ -10,7 +10,7 @@ class StartupSettings {
   }
 
   getRunOnStartup() {
-    return this._app.getLoginItemSettings().openAtLogin;
+    return [true, false].some((hidden) => this._app.getLoginItemSettings({ args: this._loginArgs(hidden) }).openAtLogin);
   }
 
   setRunOnStartup(enabled) {
@@ -42,10 +42,11 @@ class StartupSettings {
   }
 
   _applyLoginItem(enabled, hidden) {
-    this._app.setLoginItemSettings({
-      openAtLogin: !!enabled,
-      args: hidden ? [StartupSettings.HIDDEN_ARG] : [],
-    });
+    this._app.setLoginItemSettings({ openAtLogin: !!enabled, args: this._loginArgs(hidden) });
+  }
+
+  _loginArgs(hidden) {
+    return hidden ? [StartupSettings.HIDDEN_ARG] : [];
   }
 }
 

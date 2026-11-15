@@ -77,6 +77,7 @@ module.exports = {
       './ui/settings/SummarySection.js',
       './ui/settings/ContextsSection.js',
       './ui/settings/PeopleSection.js',
+      './ui/settings/ContactProfileForm.js',
     ],
     api: [
       'listEvents', 'listCalendarSources',

@@ -40,7 +40,9 @@ seeds the default board columns the first time.
   it and the last `error`
   ([ActivitySummarizer](summary/ActivitySummarizer.md)).
 - `hub_contacts`: the people the activity feed has seen, one row per person
-  (`name`).
+  (`name`), with `kind` (`person` or `general`, default `general`) and
+  `profile`, what is known about the contact as JSON (default `{}`;
+  [ContactProfile](contacts/ContactProfile.md)).
 - `hub_contact_identities`: every way a contact appears (`contact_id`, the
   `app`, the `handle`: an address or a normalised name, the `display` name,
   the `context_id` it was seen in, empty for none, `first_at`, `last_at` and
@@ -58,8 +60,10 @@ That is fourteen tables.
 ## Methods
 
 - `ensure(db)`: runs every `CREATE ... IF NOT EXISTS`, applies `ADDED_COLUMNS`
-  (`hub_tasks.hidden`, `remote_status_color`, `list_id` and `sync_error` for databases made
-  before them; each skipped when the column exists), then seeds `DEFAULT_COLUMNS`
+  (`hub_tasks.hidden`, `remote_status_color`, `list_id` and `sync_error`,
+  and `hub_contacts.kind` (`TEXT NOT NULL DEFAULT 'general'`) and
+  `hub_contacts.profile` (`TEXT NOT NULL DEFAULT '{}'`); each skipped when
+  the column exists), then seeds `DEFAULT_COLUMNS`
   (backlog, todo, doing, review, done) when the column table is empty.
 
 ## Why

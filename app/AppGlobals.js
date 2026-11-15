@@ -23,6 +23,7 @@ class AppGlobals {
     '__lumaDesktop',
     '__lumaGames',
     '__lumaRuntimeTracer',
+    '__lumaTerminal',
   ];
 
   static publish(name, value, target = global) {

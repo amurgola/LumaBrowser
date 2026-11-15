@@ -1,3 +1,5 @@
+const JsonColumn = require('../../../core/database/JsonColumn');
+
 class ContactRepository {
   constructor(db) {
     this._db = db;
@@ -16,6 +18,11 @@ class ContactRepository {
 
   renameContact(id, name) {
     this._db.run('UPDATE hub_contacts SET name = ?, updated_at = ? WHERE id = ?', name, new Date().toISOString(), id);
+    return this.getContact(id);
+  }
+
+  saveProfile(id, kind, profile) {
+    this._db.run('UPDATE hub_contacts SET kind = ?, profile = ?, updated_at = ? WHERE id = ?', kind, JSON.stringify(profile || {}), new Date().toISOString(), id);
     return this.getContact(id);
   }
 
@@ -75,7 +82,10 @@ class ContactRepository {
   }
 
   static hydrateContact(row) {
-    return { id: row.id, name: row.name, createdAt: row.created_at, updatedAt: row.updated_at };
+    return {
+      id: row.id, name: row.name, kind: row.kind || 'general', profile: JsonColumn.parse(row.profile || '{}', {}),
+      createdAt: row.created_at, updatedAt: row.updated_at,
+    };
   }
 
   static hydrateIdentity(row) {

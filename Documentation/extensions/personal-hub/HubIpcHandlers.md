@@ -20,7 +20,8 @@ API's `settingsInvoke`, which may only use the channels in `PANEL_CHANNELS`.
   `listContexts`, `saveContexts`, `listContextChoices`, `summaryStatus`,
   `setSummariesEnabled`, `summarizeNow`, `listSummaryModels`,
   `setSummaryModel`, `listContacts`, `mergeContacts`,
-  `splitContactIdentity`, `renameContact`, `keepContactsApart`.
+  `splitContactIdentity`, `renameContact`, `keepContactsApart`,
+  `saveContactProfile`, `learnContact`, `resolveContactSuggestion`.
 - `async invoke(table, channel, args)`: one settings call from the
   Dashboard. It runs the same enveloped handler as the IPC channel (with a
   `null` event and `args` spread; anything but an array counts as no
@@ -55,9 +56,12 @@ API's `settingsInvoke`, which may only use the channels in `PANEL_CHANNELS`.
 | `setAccountCalendar(input)` | `{ accounts }` after adding or removing the calendar |
 | `listContexts`, `saveContexts(contexts)` | `{ contexts }` |
 | `listContextChoices` | `{ tabs, calendars, trackers }`, each `[{ value, label }]`: what can be ticked into a context |
-| `listContacts({ query?, limit? })` | `{ contacts, suggestions }`: the people the Hub has seen and the pairs that may be one person |
+| `listContacts({ query?, limit? })` | `{ contacts, suggestions, kinds }`: the people the Hub has seen (each with its profile), the pairs that may be one person, and the form of each kind of contact |
 | `mergeContacts(intoId, fromId)`, `splitContactIdentity(identityId)`, `renameContact(id, name)` | `{ contact }` |
 | `keepContactsApart(aId, bId)` | `{ kept }`; the pair is not suggested again |
+| `saveContactProfile(id, patch)` | `{ contact }`; a missing patch is `{}` |
+| `learnContact(id)` | `{ contact, read, added }`: the Hub's model read the contact's messages and `added` suggestions wait on it |
+| `resolveContactSuggestion(id, suggestionId, accept)` | `{ contact }`; `accept` is read as a boolean, false dismisses |
 | `summaryStatus`, `setSummariesEnabled(enabled)` | `{ status }` |
 | `listSummaryModels` | `{ models, chosen }`: `[{ value, label }]` with `value` as `<providerId>::<modelId>`, and the summariser slot's current pick (`''` when none) |
 | `setSummaryModel(value)` | `{ status }`; `''` goes back to the app's active provider |

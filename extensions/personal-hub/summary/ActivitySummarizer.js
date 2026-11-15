@@ -158,7 +158,7 @@ class ActivitySummarizer {
   async _ask(group, items) {
     let reply;
     try {
-      reply = await this._llm.sendCompletion(ActivitySummarizer.SLOT, SummaryPrompt.messages({ name: group.name }, this._enrich(items), { now: this._now() }), {
+      reply = await this._llm.sendCompletion(ActivitySummarizer.SLOT, SummaryPrompt.messages({ name: group.name }, this._enrich(items), { now: this._now(), who: this._who(items) }), {
         temperature: 0.2, max_tokens: ActivitySummarizer.MAX_TOKENS, label: `Hub summary: ${group.name}`,
       });
     } catch (err) {
@@ -182,14 +182,28 @@ class ActivitySummarizer {
   }
 
   _names(item) {
-    if (!this._people) return item.participants || [];
     return (item.participants || []).map((name) => {
-      let contact = null;
-      try { contact = this._people.lookup({ app: item.app, sender: name, contextId: item.contextId || null }); } catch (_) { contact = null; }
+      const contact = this._contact(item, name);
       if (!contact) return name;
       const others = [...new Set(contact.identities.map((i) => i.app).filter((app) => app && app !== item.app))];
       return `${contact.name}${others.length ? ` (also on ${others.join(', ')})` : ''}`;
     });
+  }
+
+  _who(items) {
+    const known = new Map();
+    for (const item of items) {
+      for (const name of item.participants || []) {
+        const contact = this._contact(item, name);
+        if (contact && contact.about && !known.has(contact.id)) known.set(contact.id, { name: contact.name, about: contact.about });
+      }
+    }
+    return [...known.values()];
+  }
+
+  _contact(item, name) {
+    if (!this._people) return null;
+    try { return this._people.lookup({ app: item.app, sender: name, contextId: item.contextId || null }); } catch (_) { return null; }
   }
 
   async _deepen(items, summary) {

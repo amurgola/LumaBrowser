@@ -89,19 +89,24 @@ as cards are written.
 - `_ask(group, items)` -> `{ summary }` or `{ error }`: one question about
   one card, `llm.sendCompletion(SLOT, messages, { temperature: 0.2,
   max_tokens: 700, label: 'Hub summary: <name>' })` with
-  [SummaryPrompt](SummaryPrompt.md)`.messages` over the enriched items, the
-  reply read through ResponseText and `SummaryPrompt.parse`. A thrown call,
+  [SummaryPrompt](SummaryPrompt.md)`.messages` over the enriched items and
+  `who: _who(items)`, the reply read through ResponseText and `SummaryPrompt.parse`. A thrown call,
   a refused reply (`The model did not answer.`) or one that does not parse
   (`The model did not answer in the expected form.`) is the error.
 - `_enrich(items)`: the items as the prompt wants them. Each gets `people`
   (`_names`) and `snapshot`: the conversation text when the reader holds a
   snapshot of the item's latest activity (its `sourceAt` equals the item's
   `lastAt`), else empty, so an outdated conversation is never sent.
-- `_names(item)`: each participant looked up as a contact
-  (`people.lookup({ app, sender, contextId })`). A known one is named as the
-  contact, with `(also on slack, gmail)` listing the other apps that person
-  appears in; an unknown one, or any when there is no contact service, stays
-  as it came.
+- `_names(item)`: each participant looked up as a contact (`_contact`). A
+  known one is named as the contact, with `(also on slack, gmail)` listing
+  the other apps that person appears in; an unknown one, or any when there
+  is no contact service, stays as it came.
+- `_who(items)` -> `[{ name, about }]`: what the user recorded about the
+  people in these items, each contact once, only those whose `about` is
+  not empty.
+- `_contact(item, name)`: the contact a participant is known as
+  (`people.lookup({ app, sender, contextId })`), or `null` without a
+  contact service or when the lookup throws.
 - When the first answer says the card may need the user (`needsYou`), the
   card is worth a closer look. `_deepen(items, summary)` reads the
   conversations behind the items the answer's asks name, or behind the
@@ -115,6 +120,9 @@ as cards are written.
   and the first stands.
 - The stored row carries the group's signature, so a deepened card is not
   written again until its items change.
+- The signature is made from the context's name and its items, not from
+  what is recorded about their people. A profile edited later reaches a card's text at the
+  card's next rewrite (when its items change, or with `force`).
 
 ## Events
 

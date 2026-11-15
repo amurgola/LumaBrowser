@@ -17,6 +17,8 @@ const ActionCatalog = Object.freeze([
   { id: 'zoom-reset', label: 'Reset zoom', keys: 'Ctrl+0', keywords: ['actual size', '100%'], run: { shell: 'zoom-reset' } },
   { id: 'clear-data', label: 'Clear browsing data', keys: 'Ctrl+Shift+Delete', keywords: ['delete cookies', 'clear cache', 'wipe history'], run: { shell: 'clear-data' } },
   { id: 'focus-url', label: 'Go to address bar', keys: 'Ctrl+L', keywords: ['url bar', 'omnibox', 'type address'], run: { shell: 'focus-url' } },
+  { id: 'new-terminal', label: 'New terminal tab', keys: 'Ctrl+Shift+`', keywords: ['shell', 'command line', 'powershell', 'bash', 'console', 'cli'], run: { shell: 'new-terminal' } },
+  { id: 'toggle-terminal', label: 'Terminal panel', keys: 'Ctrl+`', keywords: ['shell', 'command line', 'console', 'dock', 'show terminal', 'hide terminal'], run: { shell: 'toggle-terminal' } },
   { id: 'open-chat', label: 'Open chat', keys: '', keywords: ['ai', 'assistant', 'llm', 'ask', 'new chat', 'conversation'], run: { main: 'open-chat' } },
   { id: 'open-settings', label: 'Open settings', keys: '', keywords: ['preferences', 'options', 'configure'], run: { main: 'open-settings' } },
 ]);

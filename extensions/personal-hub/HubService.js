@@ -3,9 +3,10 @@ const HubContext = require('./HubContext');
 class HubService {
   static SIGN_IN_URLS = { google: 'https://calendar.google.com/calendar/u/0/r', microsoft: 'https://teams.cloud.microsoft/' };
 
-  constructor({ calendar, inbox, board, sync, inbound, openUrl, connections = null, contexts = null, summarizer = null, focus = null, contacts = null, reader = null, now = () => new Date() }) {
+  constructor({ calendar, inbox, board, sync, inbound, openUrl, connections = null, contexts = null, summarizer = null, focus = null, contacts = null, profiler = null, reader = null, now = () => new Date() }) {
     this._now = now;
     this._contacts = contacts;
+    this._profiler = profiler;
     this._reader = reader;
     this._contexts = contexts;
     this._summarizer = summarizer;
@@ -46,9 +47,19 @@ class HubService {
   ingestNotification(notification, tab) { return this._inbox.ingest(notification, tab); }
   listThreads(query) {
     const items = this._inbox.listThreads(query || {});
-    if (!this._contexts) return items;
-    const contexts = this._contexts.list();
-    return items.map((item) => ({ ...item, contextId: this._contexts.forItem(item, contexts) }));
+    const contexts = this._contexts ? this._contexts.list() : null;
+    const filed = contexts ? items.map((item) => ({ ...item, contextId: this._contexts.forItem(item, contexts) })) : items;
+    return filed.map((item) => this._withPeople(item));
+  }
+
+  _withPeople(item) {
+    if (!this._contacts) return item;
+    const people = [];
+    for (const name of item.participants || []) {
+      const contact = this._contacts.lookup({ app: item.app, sender: name, contextId: item.contextId || null });
+      if (contact) people.push({ participant: name, name: contact.name, contactId: contact.id, kind: contact.kind, role: contact.role, about: contact.about });
+    }
+    return { ...item, people };
   }
   getThread(id) { return this._inbox.getThread(id); }
   setThreadState(id, state, opts) { return this._inbox.setThreadState(id, state, opts || {}); }
@@ -109,9 +120,17 @@ class HubService {
   }
 
   listContacts(query) {
-    if (!this._contacts) return { contacts: [], suggestions: [] };
-    return { contacts: this._contacts.list(query || {}), suggestions: this._contacts.suggestions() };
+    if (!this._contacts) return { contacts: [], suggestions: [], kinds: [] };
+    return { contacts: this._contacts.list(query || {}), suggestions: this._contacts.suggestions(), kinds: this._contacts.kinds() };
   }
+  getContact(id) { return this._contacts ? this._contacts.get(id) : null; }
+  saveContactProfile(id, patch) { return this._requireContacts().saveProfile(id, patch || {}); }
+  suggestContactDetails(id, proposals) { return this._requireContacts().propose(id, proposals || []); }
+  learnContact(id) {
+    if (!this._profiler) throw new Error('Contacts are not available.');
+    return this._profiler.learn(id);
+  }
+  resolveContactSuggestion(id, suggestionId, accept) { return this._requireContacts().resolveSuggestion(id, suggestionId, !!accept); }
   mergeContacts(intoId, fromId) { return this._requireContacts().merge(intoId, fromId); }
   splitContactIdentity(identityId) { return this._requireContacts().split(identityId); }
   renameContact(id, name) { return this._requireContacts().rename(id, name); }
@@ -132,7 +151,8 @@ class HubService {
 
   listSummaries() {
     if (!this._summarizer) return { cards: [], status: { enabled: false, available: false } };
-    return { cards: this._summarizer.cards(), status: this._summarizer.status() };
+    const cards = this._summarizer.cards().map((card) => ({ ...card, items: card.items.map((item) => this._withPeople(item)) }));
+    return { cards, status: this._summarizer.status() };
   }
   summaryStatus() { return this._summarizer ? this._summarizer.status() : { enabled: false, available: false }; }
   summaryModels() { return this._summarizer ? this._summarizer.models() : { models: [], chosen: '' }; }

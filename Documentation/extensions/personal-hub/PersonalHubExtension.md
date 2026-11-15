@@ -36,14 +36,17 @@ when a one-line notification is not enough. Agents reach it through the
   [BoardService](board/BoardService.md) with the ClickUp provider,
   [HubSyncScheduler](sync/HubSyncScheduler.md), [InboundToken](InboundToken.md),
   [ContextService](context/ContextService.md),
-  [ContactService](contacts/ContactService.md) (seeded by `_seedContacts`),
-  [ConversationReader](snapshot/ConversationReader.md) over the session
-  tabs and `context.browser`,
+  [ContactService](contacts/ContactService.md) (given `now`, seeded by
+  `_seedContacts`), one [SnapshotRepository](snapshot/SnapshotRepository.md)
+  shared by the [ConversationReader](snapshot/ConversationReader.md) (over
+  the session tabs and `context.browser`) and the
+  [ContactProfiler](contacts/ContactProfiler.md) (over the contact service,
+  the inbox, the context service and the LLM service),
   [ActivitySummarizer](summary/ActivitySummarizer.md) (over `context.llm`,
   or `null` without one, with the reader as `reader` and the contact service
   as `people`), [FocusService](focus/FocusService.md)
-  and the [HubService](HubService.md) facade (given `contacts` and `reader`
-  too); awaits `secrets.open()` so the stored tokens are decrypted into memory
+  and the [HubService](HubService.md) facade (given `contacts`, `profiler`
+  and `reader` too); awaits `secrets.open()` so the stored tokens are decrypted into memory
   before the schedulers start and the first sync asks for one; subscribes to
   `context.extensions['notification-interceptor'].onIngest` so every
   intercepted notification lands in the activity feed, together with the
@@ -120,9 +123,11 @@ mount, `http://127.0.0.1:3000` is assumed.
   `Activity`, each with `context: 'widgetContext'`
   so the chat's `@dashboard` can read it ([HubContext](HubContext.md)), their
   shared assets including `TaskChrome.js`, `StatusPicker.js`,
-  [HubSettingsPanel](ui/widgets/HubSettingsPanel.md)`.js` and the four
+  [HubSettingsPanel](ui/widgets/HubSettingsPanel.md)`.js` and the five
   settings files it shares with Settings > Hub (`ui/settings/HubSection.js`,
-  `SummarySection.js`, `ContextsSection.js`, `PeopleSection.js`), and the
+  `SummarySection.js`, `ContextsSection.js`, `PeopleSection.js` and the
+  `ContactProfileForm.js` that section imports; the Dashboard serves widget
+  files unbundled, so every imported file is listed), and the
   `api` method allow-list,
   which covers the board's `listTaskTargets`, `setTasksHidden`, `linkStatus`
   and `addStatusColumn`, the activity feed's `threadToTask` and

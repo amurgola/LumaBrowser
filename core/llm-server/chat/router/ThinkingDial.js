@@ -10,7 +10,7 @@ class ThinkingDial {
 
   resolve(turn) {
     const { extra, messages } = this._resolveDial(turn);
-    return { messages, plainExtra: extra, agentExtra: ThinkingDial._agentExtra(turn, extra) };
+    return { messages, plainExtra: extra, agentExtra: this._agentExtra(turn, extra) };
   }
 
   _resolveDial(turn) {
@@ -45,10 +45,11 @@ class ThinkingDial {
     return { extra: resolved.extra, messages: turn.noThink === true ? resolved.messages : turn.messages };
   }
 
-  static _agentExtra(turn, extra) {
+  _agentExtra(turn, extra) {
     if (!(turn.agentMode && extra === null && turn.noThink !== true)) return extra;
-    const level = (turn.evalOverrides && turn.evalOverrides.agentEffort) || ReasoningEffort.AGENT_DEFAULT;
-    return ReasoningEffort.extraFor(level);
+    const chosen = turn.evalOverrides && turn.evalOverrides.agentEffort;
+    if (!chosen && this._hostDecides(turn.modelRef)) return { agentTurn: true };
+    return ReasoningEffort.extraFor(chosen || ReasoningEffort.AGENT_DEFAULT);
   }
 }
 

@@ -28,7 +28,7 @@ class ModelDispatcher {
     const request = { modelRef: target.ref, messages, temperature: applied.temperature, tools, extra: applied.extra, images, trace: tag || null };
     this._notify(request);
     const runHooks = this._traced(hooks, tag, modelRef, request);
-    return this._route(target.ref, messages, applied.temperature, runHooks, images, tools, applied.extra);
+    return this._route(target.ref, messages, applied.temperature, runHooks, images, tools, applied.extra, tag);
   }
 
   _notify(request) {
@@ -72,7 +72,7 @@ class ModelDispatcher {
     }
   }
 
-  _route(modelRef, messages, temperature, hooks, images, tools, extra) {
+  _route(modelRef, messages, temperature, hooks, images, tools, extra, tag = null) {
     if (ChatModelRef.isLocal(modelRef)) {
       return this._local.stream(ChatModelRef.localName(modelRef), messages, temperature, hooks, images, tools, extra);
     }
@@ -82,7 +82,8 @@ class ModelDispatcher {
     }
     const config = this._remoteConfig(modelRef);
     const sendMessages = images.length ? MessageImages.inject(messages, images) : messages;
-    return this._remote.stream(config, ChatModelRef.split(modelRef).modelId, sendMessages, temperature, hooks, extra, tools);
+    const remoteExtra = tag && tag.callType ? { ...(extra || {}), callType: tag.callType } : extra;
+    return this._remote.stream(config, ChatModelRef.split(modelRef).modelId, sendMessages, temperature, hooks, remoteExtra, tools);
   }
 
   _remoteConfig(modelRef) {

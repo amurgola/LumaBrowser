@@ -16,8 +16,6 @@ class NewTabPage {
   static FILES = { '/': 'newtab.html', '/newtab.html': 'newtab.html', '/newtab.css': 'newtab.css', '/newtab.js': 'newtab.js' };
   static MAX_SITES = 8;
 
-  static _sessions = new WeakSet();
-
   static privilegedScheme() {
     return { scheme: NewTabPage.SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } };
   }
@@ -36,17 +34,8 @@ class NewTabPage {
     return mode === 'start' ? String(start).trim() || NewTabPage.DEFAULT_START_PAGE : NewTabPage.URL;
   }
 
-  static attach(sess, fetchFile) {
-    if (!sess || !sess.protocol || NewTabPage._sessions.has(sess)) return;
-    NewTabPage._sessions.add(sess);
-    try {
-      if (typeof sess.protocol.registerSource === 'function') sess.protocol.registerSource(NewTabPage.SCHEME, NewTabPage.source());
-      else sess.protocol.handle(NewTabPage.SCHEME, (request) => NewTabPage.serve(request.url, fetchFile));
-    } catch (_) {}
-  }
-
-  static source() {
-    return { routes: [{ match: { host: NewTabPage.HOST }, source: { type: 'directory', root: NewTabPage.DIR, index: NewTabPage.INDEX } }] };
+  static routes() {
+    return [{ match: { host: NewTabPage.HOST }, source: { type: 'directory', root: NewTabPage.DIR, index: NewTabPage.INDEX } }];
   }
 
   static serve(url, fetchFile) {

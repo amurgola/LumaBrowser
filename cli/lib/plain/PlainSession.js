@@ -4,6 +4,7 @@ const AnsiCodes = require('./AnsiCodes');
 const AgentList = require('./AgentList');
 const BridgeLink = require('../BridgeLink');
 const FrameWaiters = require('../FrameWaiters');
+const HostTerminal = require('../connect/HostTerminal');
 
 const C = AnsiCodes;
 
@@ -161,7 +162,7 @@ class PlainSession {
 
   _hello(agent) {
     const o = this.opts;
-    this.send('hello', { cwd: this._cwd(), agent, conversationId: o.resume || null, approval: o.yes ? 'never' : 'ask' });
+    this.send('hello', { cwd: this._cwd(), agent, conversationId: o.resume || null, approval: o.yes ? 'never' : 'ask', terminal: HostTerminal.id() });
     return this.wait('ready');
   }
 

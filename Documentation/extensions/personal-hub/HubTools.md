@@ -28,12 +28,16 @@ and task board. `mcp-tools.js` exports `{ tools: HubTools.TOOLS, handler }`.
 - `hub_list_contexts`: the user's contexts with the rules that file
   accounts, tabs, calendars and trackers under each
   ([ContextService](context/ContextService.md)).
-- `hub_list_contacts { query, limit = 50 }`: the people the Hub has seen in
-  the user's activity, `{ contacts, suggestions }`: each contact with every
-  way they appear (app, name or address, context), plus the pairs that may
-  be the same person ([ContactService](contacts/ContactService.md)). It is
-  how the model recognises that a Slack name and a mail sender are one
-  person.
+- `hub_list_contacts { query, limit = 50 }`: the people and organisations
+  the Hub has seen in the user's activity, `{ contacts, suggestions, kinds
+  }`: each contact with every way they appear (app, name or address,
+  context) and what the user recorded about them (kind person or general,
+  relation, birth date, further details, notes; `about` is all of it in one
+  line), the pairs that may be the same person, and the form of each kind
+  ([ContactService](contacts/ContactService.md)). `query` also matches what
+  is recorded (a relation, a note). It is how the model learns who someone
+  is to the user before writing to or about them, and recognises that a
+  Slack name and a mail sender are one person.
 - `hub_snapshot_thread { id, force? }`: reads the conversation behind an
   activity item from the user's own signed-in tab (more than the
   notification's one line) and keeps it: `{ success: true, snapshot }` with
@@ -63,7 +67,24 @@ and task board. `mcp-tools.js` exports `{ tools: HubTools.TOOLS, handler }`.
   replies with the focus view), `hub_merge_contacts { intoId, fromId }`
   (records that two contacts are the same person: everything `fromId` goes
   by moves to `intoId`; only when the user confirms it; replies with the
-  merged `contact`), `hub_set_thread_state { id, state }`
+  merged `contact`), `hub_update_contact { id, kind?, fields?, addDetails?,
+  addNote?, notes? }` (records what the user told the model about a
+  contact; only facts the user stated or confirmed, anything inferred goes
+  through `hub_suggest_contact_details`; every argument but `id` is passed
+  to `saveContactProfile` as the patch, so only what is given changes;
+  `kind` is `person` or `general`, `fields` holds a person's `relation`,
+  `birthday` and `sex` or a general contact's `what` and `website`, an
+  empty value clearing a field; `addDetails` adds or updates details by
+  label, an empty value removing one; `addNote` adds a line, `notes`
+  replaces them all; replies with the `contact`),
+  `hub_suggest_contact_details { id, suggestions? }` (async; proposes
+  details for the user to accept or dismiss, nothing is written into the
+  profile: with a `suggestions` array (`[{ key, value, why? }]`, `key` one of
+  `kind`, `relation`, `birthday`, `sex`, `what`, `website`, `note` or
+  `detail:<Label>`) those are kept through `suggestContactDetails` and the
+  reply is the `contact`; without it the Hub's own model reads what the
+  contact sent (`learnContact`) and the reply is `{ contact, read, added
+  }`), `hub_set_thread_state { id, state }`
   (`done` dismisses an item from the feed, `open` puts it back; only when the
   user asks, since items do not need clearing and new activity brings a
   dismissed one back), `hub_enrich_thread` (by id, or app + threadKey; creates

@@ -47,16 +47,24 @@ manifest's `dashboard.assets`, together with the section files it imports.
   widget's head (`.hub-icon-btn.hub-open-settings`, titled `Hub settings`,
   [TaskChrome](TaskChrome.md)`.icon('settings')`); a click opens the panel
   on that pane in the button's own document. `host` is the widget host.
-- `static open(host, pane = 'summary', doc = document)`: closes the current
-  panel if there is one, opens a new one and returns it. `panel.shown` is a
-  promise that resolves once the sections are loaded.
+- `static open(host, pane = 'summary', doc = document, target = null)`:
+  closes the current panel if there is one, opens a new one and returns it.
+  `panel.shown` is a promise that resolves once the sections are loaded.
+  `target` is what the pane's section should show first (see `show`).
+- `static openPerson(host, person, doc = document)`: opens the `people`
+  pane on one contact with what is known about it showing; `person` is
+  `{ contactId, name }`. The activity widget calls it when a known person
+  is clicked ([HubInboxWidget](HubInboxWidget.md)).
 - `static closeCurrent()`: closes the open panel, if any. The focus and
   activity widgets call it from `dispose()`.
 - `new HubSettingsPanel(host, doc = document)`: builds one instance of each
   section with the panel as its tab.
 - `isOpen()`.
-- `async show(pane = 'summary')`: builds the dialog, binds every section to
-  its pane and loads them; resolves once they are loaded.
+- `async show(pane = 'summary', target = null)`: builds the dialog, binds
+  every section to its pane and loads them; resolves once they are loaded.
+  With a `target`, the shown pane's section gets `focus(target)` after it
+  is bound and before the loads, when it has a `focus` method
+  ([PeopleSection](../settings/PeopleSection.md)`.focus`).
 - `close()`.
 
 What a section expects of its settings tab:

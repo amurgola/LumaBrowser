@@ -15,7 +15,10 @@ Control switch and a picker. The window handle and its program come in the URL
 - Capture: `navigator.mediaDevices.getDisplayMedia({ video: { frameRate } })`;
   the feature's handler grants this page its own window. The video fills the
   stage (`object-fit: contain`). A track that ends offers Try again.
-- State: `state` every second while the tab is visible (5 s hidden): the
+- State: `state` every second while the tab is visible (5 s hidden), and
+  150 ms after the page is resized, each call carrying the stage's size
+  (`{ stage: { width, height } }`), which the feature sizes the window to while
+  a Tab Share guest has sized the tab: the
   header's title and meta line (`Live view of <app>'s window in LumaBrowser.`),
   `document.title`, the status chip (Starting, Live, Minimized, Closed, No
   picture), the Restore button while minimized, the Control switch enabled only

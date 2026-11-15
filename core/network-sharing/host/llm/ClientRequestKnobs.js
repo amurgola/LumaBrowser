@@ -7,6 +7,11 @@ class ClientRequestKnobs {
     'reasoning_budget_tokens',
   ]);
   static PIN_TEMPERATURE = 'luma_pin_temperature';
+  static AGENT_TURN = 'luma_agent_turn';
+  static COMPLEXITY = 'luma_complexity';
+  static CALL_TYPE = 'luma_call_type';
+  static COMPLEXITIES = Object.freeze(['heavy', 'light']);
+  static CALL_TYPES = Object.freeze(['side', 'title', 'compact']);
 
   static apply(extra, body) {
     const knobs = ClientRequestKnobs.of(body);
@@ -21,6 +26,9 @@ class ClientRequestKnobs {
     const samplers = ClientRequestKnobs._samplers(b);
     if (samplers) out.samplerOverrides = samplers;
     if (b[ClientRequestKnobs.PIN_TEMPERATURE] === true) out.pinTemperature = true;
+    if (b[ClientRequestKnobs.AGENT_TURN] === true) out.agentTurn = true;
+    if (ClientRequestKnobs.COMPLEXITIES.includes(b[ClientRequestKnobs.COMPLEXITY])) out.complexity = b[ClientRequestKnobs.COMPLEXITY];
+    if (ClientRequestKnobs.CALL_TYPES.includes(b[ClientRequestKnobs.CALL_TYPE])) out.clientCallType = b[ClientRequestKnobs.CALL_TYPE];
     return out;
   }
 

@@ -5,6 +5,7 @@ class HubIpcHandlers {
     'listContexts', 'saveContexts', 'listContextChoices',
     'summaryStatus', 'setSummariesEnabled', 'summarizeNow', 'listSummaryModels', 'setSummaryModel',
     'listContacts', 'mergeContacts', 'splitContactIdentity', 'renameContact', 'keepContactsApart',
+    'saveContactProfile', 'learnContact', 'resolveContactSuggestion',
   ];
 
   static register(ipc, api, { openUrl = async () => ({ success: false }) } = {}) {
@@ -39,6 +40,9 @@ class HubIpcHandlers {
     on('splitContactIdentity', (_e, identityId) => ({ contact: api.splitContactIdentity(identityId) }));
     on('renameContact', (_e, id, name) => ({ contact: api.renameContact(id, name) }));
     on('keepContactsApart', (_e, aId, bId) => ({ kept: api.keepContactsApart(aId, bId) }));
+    on('saveContactProfile', (_e, id, patch) => ({ contact: api.saveContactProfile(id, patch || {}) }));
+    on('learnContact', async (_e, id) => api.learnContact(id));
+    on('resolveContactSuggestion', (_e, id, suggestionId, accept) => ({ contact: api.resolveContactSuggestion(id, suggestionId, !!accept) }));
     on('summaryStatus', () => ({ status: api.summaryStatus() }));
     on('setSummariesEnabled', (_e, enabled) => ({ status: api.setSummariesEnabled(!!enabled) }));
     on('summarizeNow', async (_e, opts) => ({ result: await api.summarizeNow(opts || {}), status: api.summaryStatus() }));

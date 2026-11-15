@@ -15,10 +15,11 @@ nothing is counted as unread and nothing needs clearing. An item can be
 opened, read (the conversation behind it, fetched from its signed-in tab and
 shown under the row), turned into a board task, or dismissed from the feed
 (with undo, and a toggle that shows the dismissed ones so they can be
-restored). Extends
+restored). A participant the Hub knows as a contact is named with who they
+are to the user and opens what is known about them. Extends
 [HubWidgetBase](HubWidgetBase.md); reloads on `thread.changed`,
-`summary.changed` and `context.changed`, and every minute (`TICK_MS` =
-60000).
+`summary.changed`, `context.changed` and `contact.changed`, and every
+minute (`TICK_MS` = 60000).
 
 ## Views
 
@@ -91,6 +92,17 @@ restored). Extends
   time (a clock time today, `5 min ago` style for earlier days, the full date
   as tooltip), the participants line, and the summary or the last
   notification's body or title (two-line clamp).
+- The participants line (`.hub-thread-people`, `_peopleEl`): with no known
+  contact among the item's `people` it is the names as plain text, left out
+  when the title already says them. Otherwise each participant in order,
+  comma separated: one the Hub knows is a link button (`_personLink`,
+  `.hub-link.hub-person-link`, the contact's name, its `about` as tooltip,
+  else `What is known about this contact`) followed by its role in
+  parentheses (`.hub-person-role`) when it has one; two spellings of one
+  contact show once; an unknown participant stays plain text. A click
+  opens the settings panel on that person
+  ([HubSettingsPanel](HubSettingsPanel.md)`.openPerson(host, { contactId,
+  name }, doc)`) with the About form open.
 - Actions are quiet text buttons (`.hub-row-action`) that show with the row
   under the pointer: `Open` (when the item has a url, through
   `host.openTab`), `Read` (or `Hide` once it was read), `To task` (or the

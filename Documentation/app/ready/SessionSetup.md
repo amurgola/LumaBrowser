@@ -46,3 +46,5 @@ handler on it when the user has switched "Local model for web pages" on. Nothing
 `promptApiService`.
 
 In-memory sessions (private windows, `isPersistent()` false) get no Chrome extensions or extension worker bridge.
+
+The `luma:` pages (new tab, terminal) are attached to each session through `LumaPages.attach`.

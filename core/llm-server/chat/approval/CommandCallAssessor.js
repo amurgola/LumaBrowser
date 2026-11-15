@@ -12,6 +12,11 @@ class CommandCallAssessor {
       cwd: (p) => p && p.cwd,
       shell: (p) => ((p && p.shell && p.shell !== 'auto') ? p.shell : null),
     },
+    terminal_run: {
+      command: (p) => p && p.command,
+      cwd: () => null,
+      shell: () => null,
+    },
   };
 
   static isCommandTool(toolName) {

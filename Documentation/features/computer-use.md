@@ -25,6 +25,22 @@
 - When it meets a sign-in, a CAPTCHA or a bot check, the agent stops and hands
   the window to you.
 
+## Terminal
+
+- A real terminal inside the browser, on Windows, macOS and Linux: PowerShell, Command Prompt, Git Bash and WSL on
+  Windows, your login shell elsewhere. Ctrl+Shift+backtick opens one as a tab; it lives in the tab strip like any
+  page, keeps its folder across restarts and gives the shell its usual keys (Ctrl+R, Ctrl+W, Ctrl+L).
+- Ctrl+backtick opens a terminal under the page you are on, the way the chat panel does. It belongs to that tab:
+  it steps aside when you switch to another tab or to the LLM tab and is back, still running, when you return.
+  Programs in it can read which tab they sit under, and `luma` started there works on that page: "go to reddit.com"
+  navigates the tab above it.
+- Command-line apps you have installed (Claude Code, Codex, Gemini CLI and others) appear as one-click terminals, and
+  extensions can add their own.
+- With **Let AI use the terminal** switched on (it is off by default), the assistant and MCP clients can open a
+  terminal, run commands, answer prompts and drive full-screen programs in a session that keeps its state. You watch
+  it in a tab, **Take over** stops it typing at any time, risky commands always ask, and the terminal is never
+  offered to people you share your models with.
+
 ## Window tabs (Windows)
 
 Ctrl+Alt+Shift+T opens any desktop window as a live tab.

@@ -137,6 +137,12 @@ comfortable GPU-resident size with the encoders on the CPU.
   sampled in 12 s versus 36 s for 50 plain steps with no visible loss in text,
   skin or hair; Vulkan runs the same row at about half that speed. Below 20
   steps dpm++2m over-sharpens lettering. Real CFG, so the short negative applies.
+  Rechecked 2026-11-14 on luma-b4 after EasyCache was found to speckle Anima:
+  three scenes (portrait with lettering, anime, smooth sky) at 28 steps with
+  and without the cache, same seeds. The cache skipped 12 to 13 of 28 steps
+  (11 to 12 s against 17.4 s) and added no speckle (isolated-pixel deviation
+  up 1 to 7 percent, against about 55 percent on Anima); the cost is slightly
+  softer fine texture. The cache stays on.
   Canvases are /16. Needs an sd.cpp build from 2026-10-17 (master-973) or newer.
 - MiniMax-H3-Image (2026-11-10): the H3 transformer without its audio branch,
   a 20B generate + edit checkpoint distilled to six steps with one output head

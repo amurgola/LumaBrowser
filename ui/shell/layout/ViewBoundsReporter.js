@@ -7,6 +7,7 @@ export default class ViewBoundsReporter {
     '#aiActivityPanel',
     '#notificationLog',
     '#aiChatPanel',
+    '#terminalDock',
     '#aiChatConfirmModal',
     '#extensionBottomBar',
     '#historyModal',

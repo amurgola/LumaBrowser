@@ -44,6 +44,7 @@ class ShutdownSequence {
     await ShutdownSequence._quietly(() => s.ttsServerService.stop());
     await ShutdownSequence._quietly(() => s.groundingServerService.shutdown());
     await ShutdownSequence._quietly(() => global.__lumaDesktop && global.__lumaDesktop.shutdown());
+    await ShutdownSequence._quietly(() => s.terminalService.shutdown());
   }
 
   async _stopNetworkSurfaces() {

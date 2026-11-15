@@ -1,3 +1,5 @@
+const ModelText = require('../ModelText');
+
 class SummaryPrompt {
   static ITEM_CHARS = 320;
   static HEADLINE_CHARS = 90;
@@ -5,6 +7,7 @@ class SummaryPrompt {
   static REASON_CHARS = 160;
   static MAX_ASKS = 4;
   static SNAPSHOT_CHARS = 1500;
+  static MAX_WHO = 12;
 
   static SYSTEM = [
     'You keep one person on top of their notifications so they can protect their focus.',
@@ -19,29 +22,31 @@ class SummaryPrompt {
     '- asks: at most 4 items that each need this person, "id" copied exactly from the [id] of the item, "what" the action in a few words. Empty when needsYou is false.',
     'An item may be followed by "Conversation:" lines: that is the conversation itself as read from their own screen. Trust it over the one-line notification, and use it to tell whether a question was already answered.',
     'People are named as this person knows them; "(also on ...)" means the same person writes from those apps too.',
+    'A "Who is who" list may follow the activity: what this person has recorded about the people in it. Use it to judge how much a message matters to them and to say who someone is; never repeat private details that the activity itself does not call for.',
     'Only use what the items say. If the text of an item is too thin to tell, do not guess that it needs them.',
   ].join('\n');
 
-  static messages(context, items, { now = new Date() } = {}) {
+  static messages(context, items, { now = new Date(), who = [] } = {}) {
     const lines = items.map((item) => SummaryPrompt._itemLine(item, now));
     const user = [
       `Context: ${context.name}`,
       `Now: ${now.toISOString()}`,
       `Activity (${items.length} item${items.length === 1 ? '' : 's'}, newest first):`,
       ...lines,
+      ...SummaryPrompt._whoLines(who),
     ].join('\n');
     return [{ role: 'system', content: SummaryPrompt.SYSTEM }, { role: 'user', content: user }];
   }
 
   static parse(text, items) {
-    const raw = SummaryPrompt._json(text);
+    const raw = ModelText.json(text);
     if (!raw || typeof raw !== 'object') return null;
-    const headline = SummaryPrompt._clip(raw.headline, SummaryPrompt.HEADLINE_CHARS);
-    const summary = SummaryPrompt._clip(raw.summary, SummaryPrompt.SUMMARY_CHARS);
+    const headline = ModelText.clip(raw.headline, SummaryPrompt.HEADLINE_CHARS);
+    const summary = ModelText.clip(raw.summary, SummaryPrompt.SUMMARY_CHARS);
     if (!headline && !summary) return null;
     const known = new Set(items.map((item) => item.id));
     const asks = (Array.isArray(raw.asks) ? raw.asks : [])
-      .map((ask) => ({ threadId: String((ask && ask.id) || '').replace(/^\[|\]$/g, ''), what: SummaryPrompt._clip(ask && ask.what, SummaryPrompt.REASON_CHARS) }))
+      .map((ask) => ({ threadId: String((ask && ask.id) || '').replace(/^\[|\]$/g, ''), what: ModelText.clip(ask && ask.what, SummaryPrompt.REASON_CHARS) }))
       .filter((ask) => known.has(ask.threadId) && ask.what)
       .slice(0, SummaryPrompt.MAX_ASKS);
     const needsYou = raw.needsYou === true || raw.needsYou === 'true';
@@ -49,7 +54,7 @@ class SummaryPrompt {
       headline: headline || summary,
       summary,
       needsYou,
-      reason: needsYou ? SummaryPrompt._clip(raw.reason, SummaryPrompt.REASON_CHARS) : '',
+      reason: needsYou ? ModelText.clip(raw.reason, SummaryPrompt.REASON_CHARS) : '',
       asks: needsYou ? asks : [],
     };
   }
@@ -61,10 +66,15 @@ class SummaryPrompt {
     if (item.count > 1) facts.push(`${item.count} notifications`);
     if (item.priority && item.priority !== 'normal') facts.push(`marked ${item.priority}`);
     if (item.taskId) facts.push('already a task on their board');
-    const text = SummaryPrompt._clip(item.summary || last.body || last.title, SummaryPrompt.ITEM_CHARS);
+    const text = ModelText.clip(item.summary || last.body || last.title, SummaryPrompt.ITEM_CHARS);
     const title = item.title || people || '(untitled)';
     const line = `- [${item.id}] ${item.kind || 'other'}/${item.app}: "${title}"${people && people !== title ? ` with ${people}` : ''} (${facts.join('; ')})${text ? `: ${text}` : ''}`;
     return item.snapshot ? `${line}\n${SummaryPrompt._conversation(item.snapshot)}` : line;
+  }
+
+  static _whoLines(who) {
+    const known = (who || []).filter((person) => person && person.name && person.about).slice(0, SummaryPrompt.MAX_WHO);
+    return known.length ? ['Who is who:', ...known.map((person) => `- ${person.name}: ${person.about}`)] : [];
   }
 
   static _conversation(text) {
@@ -80,20 +90,6 @@ class SummaryPrompt {
     if (mins < 60) return `${mins} min ago`;
     const hours = Math.round(mins / 60);
     return hours < 24 ? `${hours} h ago` : `${Math.round(hours / 24)} d ago`;
-  }
-
-  static _json(text) {
-    const s = String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '');
-    const end = s.lastIndexOf('}');
-    for (let start = s.indexOf('{'); start >= 0 && start < end; start = s.indexOf('{', start + 1)) {
-      try { return JSON.parse(s.slice(start, end + 1)); } catch (_) {}
-    }
-    return null;
-  }
-
-  static _clip(value, max) {
-    const s = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
-    return s.length > max ? `${s.slice(0, max - 3).trimEnd()}...` : s;
   }
 }
 

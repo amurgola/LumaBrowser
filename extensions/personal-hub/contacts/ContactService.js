@@ -1,17 +1,20 @@
 const RecordId = require('../../../core/database/RecordId');
+const ContactProfile = require('./ContactProfile');
 
 class ContactService {
   static CONTACT_PREFIX = 'con';
   static IDENTITY_PREFIX = 'cid';
+  static SUGGESTION_PREFIX = 'sug';
   static NOT_SAME_KEY = 'contacts.notSame';
   static MAX_NAME = 60;
   static EMAIL = /([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i;
   static NOT_PEOPLE = /^(no-?reply|notifications?|mailer-daemon|do-?not-?reply|support|team|admin|system|bot)\b|\bbot$|\bvia\b/i;
 
-  constructor({ contacts, db, emit = () => {} }) {
+  constructor({ contacts, db, emit = () => {}, now = () => new Date() }) {
     this._contacts = contacts;
     this._db = db;
     this._emit = emit;
+    this._now = now;
   }
 
 
@@ -58,10 +61,14 @@ class ContactService {
     const wanted = String(query || '').trim().toLowerCase();
     const byContact = this._identitiesByContact();
     const contacts = this._contacts.listContacts()
-      .map((contact) => ContactService._withIdentities(contact, byContact.get(contact.id) || []))
+      .map((contact) => this._shape(contact, byContact.get(contact.id) || []))
       .filter((c) => c.identities.length)
-      .filter((c) => !wanted || c.name.toLowerCase().includes(wanted) || c.identities.some((i) => i.handle.includes(wanted) || i.app.includes(wanted)));
+      .filter((c) => !wanted || c.name.toLowerCase().includes(wanted) || c.about.toLowerCase().includes(wanted) || c.identities.some((i) => i.handle.includes(wanted) || i.app.includes(wanted)));
     return contacts.sort((a, b) => String(b.lastAt || '').localeCompare(String(a.lastAt || ''))).slice(0, limit);
+  }
+
+  kinds() {
+    return ContactProfile.KINDS;
   }
 
   get(id) {
@@ -95,10 +102,12 @@ class ContactService {
     const into = this._contacts.getContact(intoId);
     const from = this._contacts.getContact(fromId);
     if (!into || !from) throw new Error('Contact not found.');
+    const joined = ContactProfile.merge(into.kind, into.profile, from.kind, from.profile);
+    this._contacts.saveProfile(into.id, joined.kind, joined.profile);
     this._contacts.moveIdentities(from.id, into.id);
     this._contacts.deleteContact(from.id);
     this._emit('contact.changed', { contactId: into.id, reason: 'merged' });
-    return this._describe(into);
+    return this.get(into.id);
   }
 
   split(identityId) {
@@ -128,6 +137,30 @@ class ContactService {
   }
 
 
+  saveProfile(id, patch = {}) {
+    const contact = this._known(id);
+    const kind = patch.kind == null || patch.kind === '' ? contact.kind : ContactProfile.cleanKind(patch.kind);
+    this._contacts.saveProfile(id, kind, ContactProfile.apply(kind, contact.profile, patch, { now: this._now() }));
+    return this._profileChanged(id, 'profile');
+  }
+
+  propose(id, proposals) {
+    const contact = this._known(id);
+    const profile = ContactProfile.propose(contact.kind, contact.profile, proposals, { now: this._now(), makeId: () => RecordId.create(ContactService.SUGGESTION_PREFIX) });
+    this._contacts.saveProfile(id, contact.kind, profile);
+    return this._profileChanged(id, 'suggested');
+  }
+
+  resolveSuggestion(id, suggestionId, accept) {
+    const contact = this._known(id);
+    const next = accept
+      ? ContactProfile.accept(contact.kind, contact.profile, suggestionId, { now: this._now() })
+      : { kind: contact.kind, profile: ContactProfile.dismiss(contact.profile, suggestionId) };
+    this._contacts.saveProfile(id, next.kind, next.profile);
+    return this._profileChanged(id, accept ? 'profile' : 'suggested');
+  }
+
+
   static parse(sender, app = '') {
     const raw = String(sender || '').replace(/\s+/g, ' ').trim();
     if (!raw || raw.length > ContactService.MAX_NAME * 2) return null;
@@ -151,8 +184,19 @@ class ContactService {
     return found ? this._contacts.getContact(found.contactId) : null;
   }
 
+  _known(id) {
+    const contact = this._contacts.getContact(id);
+    if (!contact) throw new Error('Contact not found.');
+    return contact;
+  }
+
+  _profileChanged(id, reason) {
+    this._emit('contact.changed', { contactId: id, reason });
+    return this.get(id);
+  }
+
   _describe(contact) {
-    return contact ? ContactService._withIdentities(contact, this._contacts.identitiesOf(contact.id)) : null;
+    return contact ? this._shape(contact, this._contacts.identitiesOf(contact.id)) : null;
   }
 
   _identitiesByContact() {
@@ -170,10 +214,15 @@ class ContactService {
     this._db.set(ContactService.NOT_SAME_KEY, [...rejected]);
   }
 
-  static _withIdentities(contact, identities) {
+  _shape(contact, identities) {
+    const { fields, details, notes, suggested } = ContactProfile.read(contact.profile);
     return {
       id: contact.id,
       name: contact.name,
+      kind: contact.kind,
+      profile: { fields, details, notes, suggested },
+      role: ContactProfile.role(contact.kind, contact.profile),
+      about: ContactProfile.about(contact.kind, contact.profile, { now: this._now() }),
       identities,
       lastAt: identities.reduce((latest, i) => (String(i.lastAt || '') > latest ? i.lastAt : latest), ''),
       count: identities.reduce((n, i) => n + (i.count || 0), 0),

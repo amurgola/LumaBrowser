@@ -2,6 +2,7 @@ const Accelerators = require('../Accelerators');
 const TabErrorPage = require('./TabErrorPage');
 const TabConsoleLog = require('./TabConsoleLog');
 const DoubleShift = require('../../palette/DoubleShift');
+const TerminalPage = require('../../terminal/TerminalPage');
 
 class TabPageEvents {
   static NEUTRALIZE_APP_REGION_CSS = '* { -webkit-app-region: no-drag !important; }';
@@ -55,7 +56,7 @@ class TabPageEvents {
       return;
     }
     const fullscreen = !!(this._isPageFullscreen && this._isPageFullscreen(entry));
-    const action = Accelerators.match(input, { loading: entry.loading, fullscreen });
+    const action = Accelerators.match(input, { loading: entry.loading, fullscreen, terminal: TerminalPage.isTerminal(entry.url) });
     if (!action) return;
     if (action === 'exit-fullscreen') {
       event.preventDefault();

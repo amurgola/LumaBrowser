@@ -1,4 +1,5 @@
 const ThinkingKnobs = require('../../../llm-server/server/ThinkingKnobs');
+const ReasoningEffort = require('../../../shared/llm/ReasoningEffort');
 const SharedLlmTurn = require('./SharedLlmTurn');
 const ChatTurnInputs = require('./ChatTurnInputs');
 const ClientRequestKnobs = require('./ClientRequestKnobs');
@@ -31,8 +32,14 @@ class ChatCompletionTurn extends SharedLlmTurn {
     this._wantAgent = ChatTurnInputs.wantsAgent(body, agentTurn);
     this._images = ChatTurnInputs.images(body.attachments);
     this._priorArtifacts = Array.isArray(body.priorArtifacts) ? body.priorArtifacts : [];
-    const thinking = ChatCompletionTurn._withResponseFormat(ThinkingKnobs.extra(body, this._service.hostDialPosition()), body);
+    const dial = ChatCompletionTurn._agentDefault(ThinkingKnobs.extra(body, this._service.hostDialPosition()), body);
+    const thinking = ChatCompletionTurn._withResponseFormat(dial, body);
     this._extra = ClientRequestKnobs.apply(thinking, body);
+  }
+
+  static _agentDefault(extra, body) {
+    if (extra || !body || body[ClientRequestKnobs.AGENT_TURN] !== true) return extra;
+    return ReasoningEffort.extraFor(ReasoningEffort.AGENT_DEFAULT);
   }
 
   static _withResponseFormat(extra, body) {

@@ -3,20 +3,23 @@ const ExtensionUrls = require('./ExtensionUrls');
 const ManifestFields = require('./ManifestFields');
 const McpToolSetMerger = require('./McpToolSetMerger');
 const SetupTabRegistry = require('../../llm-server/chat/SetupTabRegistry');
+const TerminalProfileContributions = require('../../terminal/shells/TerminalProfileContributions');
 
 class ExtensionWiring {
   static LOOPBACK = '127.0.0.1';
 
-  constructor({ restGateway, mcpAggregator, setupTabs = SetupTabRegistry.shared, onError = () => {} }) {
+  constructor({ restGateway, mcpAggregator, setupTabs = SetupTabRegistry.shared, terminalProfiles = TerminalProfileContributions.shared, onError = () => {} }) {
     this._restGateway = restGateway || null;
     this._mcpAggregator = mcpAggregator || null;
     this._setupTabs = setupTabs;
+    this._terminalProfiles = terminalProfiles;
     this._onError = onError;
   }
 
   wire({ id, manifest, context, api, registry }) {
     this._registerChatModes(id, manifest, context);
     this._registerSetupTab(id, manifest);
+    this._registerTerminalProfiles(id, manifest);
     this._registerRoutes(id, manifest, context, api);
     this._mountExposedRoutes(id, registry);
     this._registerMcpTools(id, manifest, registry);
@@ -54,6 +57,10 @@ class ExtensionWiring {
       console.error(`ExtensionManager: failed to register setupTab for "${id}":`, err.message);
       this._onError(id, 'setupTab', err.message);
     }
+  }
+
+  _registerTerminalProfiles(id, manifest) {
+    if (Array.isArray(manifest.terminalProfiles)) this._terminalProfiles.register(id, manifest.terminalProfiles);
   }
 
   _registerRoutes(id, manifest, context, api) {

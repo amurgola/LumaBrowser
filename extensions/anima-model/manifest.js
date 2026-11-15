@@ -1,7 +1,7 @@
 module.exports = {
   id: 'anima-model',
   name: 'Anima Image Model',
-  version: '1.0.0',
+  version: '1.0.1',
   description:
     'Adds the Anima anime text-to-image model (CircleStone Labs × Comfy Org, '
     + 'built on NVIDIA Cosmos-Predict2) to the image-model catalog for one-click '

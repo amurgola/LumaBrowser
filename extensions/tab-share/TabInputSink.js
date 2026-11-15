@@ -1,4 +1,6 @@
 class TabInputSink {
+  static APP_PAGE = /^luma:/i;
+
   constructor({ getWebContents, log, sleep } = {}) {
     this._getWebContents = getWebContents || (() => null);
     this._log = log || (() => {});
@@ -41,7 +43,11 @@ class TabInputSink {
   _liveWebContents() {
     const wc = this._getWebContents();
     if (!wc || (typeof wc.isDestroyed === 'function' && wc.isDestroyed())) return null;
-    return wc;
+    return TabInputSink._isAppPage(wc) ? null : wc;
+  }
+
+  static _isAppPage(wc) {
+    try { return typeof wc.getURL === 'function' && TabInputSink.APP_PAGE.test(wc.getURL()); } catch (_) { return false; }
   }
 
   static _goBack(wc) {

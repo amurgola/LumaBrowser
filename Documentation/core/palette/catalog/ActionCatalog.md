@@ -16,3 +16,5 @@ clear browsing data, go to address bar. `run.main` is run by
 
 Add an entry with an existing AcceleratorActions action name and its shortcut as
 the [AcceleratorTable](../../../ui/shell/keyboard/AcceleratorTable.md) binds it.
+
+Two terminal commands: "New terminal tab" (`new-terminal`) and "Terminal panel" (`toggle-terminal`).

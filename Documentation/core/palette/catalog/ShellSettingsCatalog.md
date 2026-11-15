@@ -67,3 +67,5 @@ as the modal changes.
 toggle with target `#gsPromptApiEnabled` on the `privacy` tab), just before `general.telemetry`. Its keywords cover
 "prompt api", "built-in ai", "language model", "window.ai" and "gemini nano". It carries no `key`, so the palette shows
 no current value for it. The switch is [PromptApiSwitch](../../../ui/shell/settings/general/PromptApiSwitch.md).
+
+Editors & agents > Terminal lists "Default terminal" (`general.terminal-profile`) and "Let AI use the terminal" (`general.terminal-agent`).

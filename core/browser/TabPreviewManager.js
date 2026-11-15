@@ -128,7 +128,12 @@ class TabPreviewManager extends EventEmitter {
   _takeBackLentPlace(entry, p) {
     if (this.preview === p && p.shown) return;
     if (this.tabViewManager.activeTabId === p.tabId) return;
+    this._park(entry);
+  }
+
+  _park(entry) {
     try {
+      if (entry.viewSize) { this.tabViewManager.layoutTab(entry.id); return; }
       entry.view.setVisible(false);
       entry.view.setBounds(TabPreviewManager.HIDDEN_BOUNDS);
     } catch (_) {}
@@ -246,10 +251,7 @@ class TabPreviewManager extends EventEmitter {
 
   _unpaint(entry, tabId) {
     if (this.tabViewManager.activeTabId === tabId) return this._handBackPromotedZoom(entry);
-    try {
-      entry.view.setVisible(false);
-      entry.view.setBounds(TabPreviewManager.HIDDEN_BOUNDS);
-    } catch (_) {}
+    return this._park(entry);
   }
 
   _handBackPromotedZoom(entry) {

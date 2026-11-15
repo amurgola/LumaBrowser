@@ -3,6 +3,7 @@ const { pathToFileURL } = require('url');
 const HotkeyBindings = require('../hotkeys/HotkeyBindings');
 const WindowProbe = require('../lumabyte/WindowProbe');
 const WindowTabInput = require('./WindowTabInput');
+const WindowTabFit = require('./WindowTabFit');
 
 class WindowTabsFeature {
   static ACTION = 'open';
@@ -18,7 +19,7 @@ class WindowTabsFeature {
   static settingsSchema() {
     return [
       { key: 'binding', label: 'Open as tab shortcut', type: 'hotkey', default: WindowTabsFeature.DEFAULT_BINDING, help: 'Opens the window in front as a tab (or shows its tab). On the shortcut hint, the same key opens the picked window. Empty = no shortcut (REST still works).' },
-      { key: 'control', label: 'Pass clicks, keys and scrolling on the tab through to the window', type: 'bool', default: true, help: 'With the tab\'s Control switch on, what you do on the live view goes to the real window as input, which comes to the front for each action. Uses desktop control, which must be allowed in the LLM tab (Visual grounding card). Also what a Tab Share guest with an interact link gets.' },
+      { key: 'control', label: 'Pass clicks, keys and scrolling on the tab through to the window', type: 'bool', default: true, help: 'With the tab\'s Control switch on, what you do on the live view goes to the real window as input, which comes to the front for each action. Uses desktop control, which must be allowed in the LLM tab (Visual grounding card). Also what a Tab Share guest with an interact link gets, and what lets a guest that presses Fit resize the window to their screen (it goes back when they leave).' },
       { key: 'textRefreshSec', label: 'Window text refresh (seconds)', type: 'number', default: 10, min: 3, max: 120, help: 'How often the tab re-reads the window\'s accessible text (UI Automation) while it is the active tab; a background tab reads it less often.' },
       { key: 'frameRate', label: 'Capture frame rate', type: 'number', default: 30, min: 5, max: 60, help: 'The live view\'s frames per second.' },
     ];
@@ -43,6 +44,7 @@ class WindowTabsFeature {
       focusWindow: win ? (h) => require('../../../../core/desktop/win32/Win32Windows').focusWindow(h) : () => false,
       listWindows: win ? () => require('../../../../core/desktop/Win32').listTopLevelWindows({ includeOwned: false }) : () => [],
       imagePath: win ? (pid) => require('../../../../core/desktop/Win32').processImagePath(pid) : () => '',
+      windowSizing: win ? require('../../../../core/desktop/win32/Win32Windows') : null,
     };
     if (win) {
       const Win32 = require('../../../../core/desktop/Win32');
@@ -82,6 +84,7 @@ class WindowTabsFeature {
     this._tabs = new Map();
     this._bindings = new HotkeyBindings({ globalShortcut: parts.globalShortcut, onFire: () => this.fire(), log: deps.log });
     this._input = new WindowTabInput({ getDesktop: parts.getDesktop, probe: parts.probe, allowed: () => deps.settings.get('control', true) !== false });
+    this._fit = new WindowTabFit({ win: parts.windowSizing, probe: parts.probe });
     this._pageBase = pathToFileURL(path.join(WindowTabsFeature.UI, WindowTabsFeature.PAGE)).href;
     this._unhint = null;
     this._handler = false;
@@ -154,7 +157,7 @@ class WindowTabsFeature {
     await this._syncTabs();
     const entry = this._tabs.get(Number(hwnd));
     if (!entry) return { success: false, error: 'No tab for that window', code: 'NOT_FOUND' };
-    this._tabs.delete(Number(hwnd));
+    this._forget(Number(hwnd));
     if (entry.tabId != null) {
       try { await this._deps.browser.closeTab(entry.tabId); } catch (_) {}
     }
@@ -174,7 +177,7 @@ class WindowTabsFeature {
     return `${this._pageBase}?hwnd=${Number(hwnd)}&app=${encodeURIComponent(String((app && app.exe) || ''))}`;
   }
 
-  state(page) {
+  state(page, data = {}, sender = null) {
     const hwnd = page.hwnd;
     const alive = !!hwnd && this._probe.alive(hwnd);
     const app = alive ? this._probe.app(hwnd) : null;
@@ -182,6 +185,7 @@ class WindowTabsFeature {
       this._tabs.set(hwnd, { tabId: null, app, title: this._probe.title(hwnd), openedAt: Date.now() });
     }
     const ok = alive && this._tabs.has(hwnd);
+    if (ok) this._syncFit(hwnd, data.stage, sender);
     const s = this._deps.settings;
     return {
       success: true,
@@ -239,7 +243,7 @@ class WindowTabsFeature {
     const problem = this._refusal(target);
     if (problem) return { success: false, error: problem };
     const previous = this._tabs.get(page.hwnd);
-    if (previous && page.hwnd !== target) this._tabs.delete(page.hwnd);
+    if (previous && page.hwnd !== target) this._forget(page.hwnd);
     const app = this._probe.app(target);
     if (!this._tabs.has(target)) this._tabs.set(target, { tabId: previous ? previous.tabId : null, app, title: this._probe.title(target), openedAt: Date.now() });
     const url = this.pageUrl(target, app);
@@ -284,6 +288,7 @@ class WindowTabsFeature {
     this._disposed = true;
     if (this._unhint) this._unhint();
     this._bindings.dispose();
+    this._fit.releaseAll();
     if (this._handler && this._parts.session) {
       try { this._parts.session.setDisplayMediaRequestHandler(null); } catch (_) {}
     }
@@ -311,7 +316,7 @@ class WindowTabsFeature {
       if (!p) return { success: false, error: 'Not a window tab' };
       return fn(p, data || {}, event);
     });
-    page('state', (p) => this.state(p));
+    page('state', (p, data, event) => this.state(p, data, event && event.sender));
     page('text', (p) => this.text(p));
     page('icon', (p) => this.icon(p));
     page('input', (p, data) => (this._tabs.has(p.hwnd) ? this._input.handle(p.hwnd, data) : { success: false, error: 'The window is gone.' }));
@@ -384,17 +389,49 @@ class WindowTabsFeature {
       if (page && page.hwnd) open.set(page.hwnd, t.id);
     }
     for (const [hwnd, entry] of this._tabs) {
-      if (!open.has(hwnd)) this._tabs.delete(hwnd);
+      if (!open.has(hwnd)) this._forget(hwnd);
       else if (entry.tabId == null) entry.tabId = open.get(hwnd);
     }
   }
 
   _switchTo(tabId) {
     try {
-      const tm = this._deps.browser && typeof this._deps.browser.getTabManager === 'function' ? this._deps.browser.getTabManager() : null;
-      const tvm = tm && tm.tabViewManager;
+      const tvm = this._tabViews();
       if (tvm && typeof tvm.switchToTab === 'function') tvm.switchToTab(tabId);
     } catch (_) {}
+  }
+
+  _tabViews() {
+    const tm = this._deps.browser && typeof this._deps.browser.getTabManager === 'function' ? this._deps.browser.getTabManager() : null;
+    return (tm && tm.tabViewManager) || null;
+  }
+
+
+  _syncFit(hwnd, stage, sender) {
+    const follows = this._sizedByGuest(sender) && this._input.status().allowed;
+    this._fit.sync(hwnd, follows ? WindowTabsFeature._stage(stage) : null);
+  }
+
+  _sizedByGuest(sender) {
+    try {
+      const tvm = this._tabViews();
+      if (!sender || !tvm || typeof tvm.findTabIdByWebContents !== 'function') return false;
+      const entry = tvm.getEntry(tvm.findTabIdByWebContents(sender));
+      return !!(entry && entry.viewSize);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  _forget(hwnd) {
+    this._tabs.delete(hwnd);
+    this._fit.release(hwnd);
+  }
+
+  static _stage(stage) {
+    const width = Number(stage && stage.width);
+    const height = Number(stage && stage.height);
+    return { width: Number.isFinite(width) ? width : 0, height: Number.isFinite(height) ? height : 0 };
   }
 
   _focusApp() {

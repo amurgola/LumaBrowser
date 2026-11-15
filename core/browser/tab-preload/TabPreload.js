@@ -3,6 +3,7 @@ const NotificationForwarder = require('./NotificationForwarder');
 const LoginFormWatcher = require('./LoginFormWatcher');
 const AddressFormWatcher = require('./AddressFormWatcher');
 const NewTabBridge = require('./NewTabBridge');
+const TerminalPageBridge = require('./TerminalPageBridge');
 const FullscreenEscape = require('./FullscreenEscape');
 const FieldMenuKeys = require('./FieldMenuKeys');
 
@@ -21,6 +22,7 @@ class TabPreload {
     new LoginFormWatcher(this._ipcRenderer, this._window).install();
     new AddressFormWatcher(this._ipcRenderer, this._window).install();
     NewTabBridge.install(this._contextBridge, this._ipcRenderer, this._window);
+    TerminalPageBridge.install(this._contextBridge, this._ipcRenderer, this._window);
     FullscreenEscape.install(this._window);
     new FieldMenuKeys(this._ipcRenderer, this._window).install();
   }

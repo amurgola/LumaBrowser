@@ -6,6 +6,8 @@ class ClientMessageParser {
   static MAX_CANDIDATE_CHARS = 512;
   static MAX_SDP_MID_CHARS = 32;
   static MAX_WHEEL_DELTA = 2000;
+  static MIN_VIEW_PX = 240;
+  static MAX_VIEW_PX = 4096;
 
   static MOUSE_KINDS = new Set(['move', 'down', 'up']);
   static RTC_KINDS = new Set(['want', 'answer', 'cand', 'up', 'down']);
@@ -72,6 +74,13 @@ class ClientMessageParser {
     return { t: 'nav', a: msg.a };
   }
 
+  static _parseSize(msg) {
+    if (msg.off === true) return { t: 'size', off: true };
+    const w = ClientMessageParser._viewPx(msg.w);
+    const h = ClientMessageParser._viewPx(msg.h);
+    return w == null || h == null ? null : { t: 'size', w, h };
+  }
+
   static _parseRtc(msg) {
     if (!ClientMessageParser.RTC_KINDS.has(msg.k)) return null;
     const out = { t: 'rtc', k: msg.k };
@@ -126,6 +135,12 @@ class ClientMessageParser {
     return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : null;
   }
 
+  static _viewPx(v) {
+    const px = Math.round(Number(v));
+    if (!Number.isFinite(px) || px <= 0) return null;
+    return Math.min(ClientMessageParser.MAX_VIEW_PX, Math.max(ClientMessageParser.MIN_VIEW_PX, px));
+  }
+
   static _PARSERS = new Map([
     ['ping', ClientMessageParser._parsePing],
     ['mouse', ClientMessageParser._parseMouse],
@@ -134,6 +149,7 @@ class ClientMessageParser {
     ['key', ClientMessageParser._parseKey],
     ['text', ClientMessageParser._parseText],
     ['nav', ClientMessageParser._parseNav],
+    ['size', ClientMessageParser._parseSize],
     ['rtc', ClientMessageParser._parseRtc],
   ]);
 }

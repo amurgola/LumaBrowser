@@ -43,7 +43,11 @@ every widget's `context`.
   when `listSummaries()` has cards: `### By context (<n>)` with one line per
   summary card, `- Acme (4 items): headline. summary. Needs them:
   <reason>.` (the last part only when the card says someone is waiting), so
-  the model reads the distilled view before the item list. Then the active items of the
+  the model reads the distilled view before the item list. Then
+  `_whoIsWho(items)`: `### Who is who (<n>)`, one line `- Name: about` per
+  contact named in the items' `people` that has something recorded
+  (`about` not empty), each contact once; left out when nobody is
+  described. Then the active items of the
   last `ACTIVITY_DAYS` = 7 days, newest activity first
   (`listThreads({ state: 'active', since, limit: 60 })`, `since` being local
   midnight six days back): `### Today (<n>)` (`- Nothing yet today.` when
@@ -54,6 +58,8 @@ every widget's `context`.
   `other`. Then `### Notifications today (<n>)`: the raw log since local
   midnight (`listNotifications({ since, limit: 121 })`), newest first,
   `- HH:MM app: sender: body`, at most 120 (then the count reads `120+`).
+  The closing `More:` hint names `hub_list_threads`, `hub_get_thread`,
+  `hub_list_notifications` and `hub_list_contacts` (for who someone is).
 
 ## Why
 
@@ -64,5 +70,7 @@ board with the tracker statuses the user has not sorted yet, and the day's
 notification log (older days are a `hub_list_notifications` call away, which
 is why that tool exists). The activity section says in so many words that it
 is background, so the model does not report its items as unread or pending.
+Who is who comes before the items so the model knows who a participant is
+to the user (an ex-wife, a landlord, the bank) when it reads them.
 Ids are included so the model can act with `hub_get_task`, `hub_move_task`,
 `hub_thread_to_task` and friends.

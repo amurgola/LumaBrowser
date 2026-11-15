@@ -10,12 +10,13 @@ live modules all call these methods, so their names are the contract
 
 ## Methods
 
-- `new HubService({ calendar, inbox, board, sync, inbound, openUrl, connections?, contexts?, summarizer?, focus?, contacts?, reader?, now? })`:
+- `new HubService({ calendar, inbox, board, sync, inbound, openUrl, connections?, contexts?, summarizer?, focus?, contacts?, profiler?, reader?, now? })`:
   `connections` is `{ monitor, accounts, tabs }`; `contexts` a
   [ContextService](context/ContextService.md), `summarizer` an
   [ActivitySummarizer](summary/ActivitySummarizer.md), `focus` a
   [FocusService](focus/FocusService.md), `contacts` a
-  [ContactService](contacts/ContactService.md), `reader` a
+  [ContactService](contacts/ContactService.md), `profiler` a
+  [ContactProfiler](contacts/ContactProfiler.md), `reader` a
   [ConversationReader](snapshot/ConversationReader.md) (each optional:
   without one its reads answer empty and its writes throw); `now()` returns
   a Date (for the chat context).
@@ -35,8 +36,11 @@ live modules all call these methods, so their names are the contract
   default, everything not dismissed; `done` lists the dismissed items, `all`
   every one; `since` is an ISO time; each item carries its `kind`, its
   `contextId` (the context it is filed under by
-  `ContextService.forItem`, or `null`) and `lastNotification`, newest
-  activity first), `getThread(id)`,
+  `ContextService.forItem`, or `null`), `lastNotification` and, with a
+  contact service, `people`: the participants the Hub knows as contacts,
+  `[{ participant, name, contactId, kind, role, about }]`, each found by
+  `ContactService.lookup` over the item's app and context (`_withPeople`);
+  newest activity first), `getThread(id)`,
   `setThreadState(id, state, { snoozeUntil })` (`done` dismisses an item from
   the feed, `open` restores it; `reviewed` and `snoozed` are still accepted),
   `setThreadsState(ids, state)` (the same for several items at once, a whole
@@ -71,14 +75,26 @@ live modules all call these methods, so their names are the contract
   found.`; the reader adds its own. The item is built by `_feedItem`: one
   feed item as `listThreads` gives it, with its `lastNotification` (title,
   body, time, sender, partition, host, url) and `contextId`.
-- People: `listContacts({ query?, limit? })` -> `{ contacts, suggestions }`
-  (who the Hub has seen, each with its identities, and the pairs that may
-  be one person; both empty without the contact service),
+- People: `listContacts({ query?, limit? })` -> `{ contacts, suggestions,
+  kinds }` (who the Hub has seen, each with its identities and profile, the
+  pairs that may be one person, and the form of each kind of contact; all
+  three empty without the contact service), `getContact(id)` -> the
+  contact or `null` (also `null` without the service),
   `mergeContacts(intoId, fromId)`, `splitContactIdentity(identityId)`,
-  `renameContact(id, name)` (each answers the contact) and
+  `renameContact(id, name)` (each answers the contact),
   `keepContactsApart(aId, bId)` (the user said two suggested contacts are
-  different people). The four writes throw `Contacts are not available.`
-  without the service. See [ContactService](contacts/ContactService.md).
+  different people), `saveContactProfile(id, patch)` (what is known about
+  the contact: `{ kind?, fields?, details?, addDetails?, notes?, addNote?
+  }`, a missing patch is `{}`), `suggestContactDetails(id, proposals)`
+  (`[{ key, value, why }]` kept as suggestions on the contact),
+  `resolveContactSuggestion(id, suggestionId, accept)` (accepted, it is
+  written into the profile; otherwise dismissed), each answering the
+  contact, and `async learnContact(id)` -> `{ contact, read, added }` (the
+  Hub's model reads what the contact sent and proposes;
+  [ContactProfiler](contacts/ContactProfiler.md)`.learn`). The writes throw
+  `Contacts are not available.` without the contact service, and
+  `learnContact` throws the same message without the profiler. See
+  [ContactService](contacts/ContactService.md).
 - Contexts (the companies or areas everything is filed under):
   `listContexts()` -> `[{ id, name, color, sortOrder, rules: [{ kind,
   value }] }]` (empty without a context service), `saveContexts(contexts)`
@@ -87,7 +103,8 @@ live modules all call these methods, so their names are the contract
   See [ContextService](context/ContextService.md).
 - Activity summaries (the distilled feed): `listSummaries()` -> `{ cards,
   status }` (one card per context with recent activity; see
-  [ActivitySummarizer](summary/ActivitySummarizer.md)`.cards` and `.status`),
+  [ActivitySummarizer](summary/ActivitySummarizer.md)`.cards` and `.status`;
+  each card's items carry `people` as in `listThreads`),
   `summaryStatus()`, `setSummariesEnabled(enabled)` -> the status,
   `summaryModels()` -> `{ models: [{ value, label }], chosen }` (the models
   the summariser can use and the one it uses now),

@@ -50,8 +50,9 @@ class RemoteImageAdapter extends ImageAdapter {
     });
   }
 
-  _body({ model, prompt, negativePrompt, width, height, steps, cfgScale, seed, sampler, scheduler, initImage, strength, refImages, mask }) {
+  _body({ model, prompt, negativePrompt, width, height, steps, cfgScale, seed, sampler, scheduler, initImage, strength, refImages, mask, snapNative }) {
     return {
+      ...(snapNative === false ? { snapNative: false } : {}),
       model: model || null,
       prompt,
       negativePrompt,

@@ -128,7 +128,7 @@ class HubContext {
     const todayIso = today.toISOString();
     const fresh = items.filter((t) => String(t.lastAt || '') >= todayIso);
     const earlier = items.filter((t) => String(t.lastAt || '') < todayIso);
-    const lines = [HubContext.ACTIVITY_NOTE, '', ...HubContext._byContext(api), `### Today (${fresh.length})`];
+    const lines = [HubContext.ACTIVITY_NOTE, '', ...HubContext._byContext(api), ...HubContext._whoIsWho(items), `### Today (${fresh.length})`];
     if (!fresh.length) lines.push('- Nothing yet today.');
     for (const t of fresh) lines.push(HubContext._threadLine(t, now));
     if (earlier.length) {
@@ -136,7 +136,7 @@ class HubContext {
       for (const t of earlier) lines.push(HubContext._threadLine(t, now));
     }
     lines.push('', ...HubContext._todayLog(api, now));
-    lines.push(HubContext._more('hub_list_threads for older or dismissed items; hub_get_thread for the notifications behind an item; hub_list_notifications for earlier days'));
+    lines.push(HubContext._more('hub_list_threads for older or dismissed items; hub_get_thread for the notifications behind an item; hub_list_notifications for earlier days; hub_list_contacts for who someone is'));
     return { title: 'Activity', text: HubContext._join(lines) };
   }
 
@@ -150,6 +150,17 @@ class HubContext {
     }
     lines.push('');
     return lines;
+  }
+
+  static _whoIsWho(items) {
+    const known = new Map();
+    for (const item of items) {
+      for (const person of item.people || []) {
+        if (person.about && !known.has(person.contactId)) known.set(person.contactId, person);
+      }
+    }
+    if (!known.size) return [];
+    return [`### Who is who (${known.size})`, ...[...known.values()].map((person) => `- ${person.name}: ${person.about}`), ''];
   }
 
   static _threadLine(t, now) {

@@ -8,6 +8,8 @@ const SourceTree = require('../shared/SourceTree');
 const fs = BuildFs.get();
 
 class AsarLayoutVerifier {
+  static UNPACKED_PACKAGES = ['node_modules/koffi', 'node_modules/@lydell/node-pty'];
+
   constructor({ asarPath, sourceRoot, asar = require('@electron/asar'), nodePath = process.execPath, log = console.log }) {
     this._asarPath = asarPath;
     this._sourceRoot = sourceRoot;
@@ -75,9 +77,12 @@ class AsarLayoutVerifier {
     const packed = natives.filter((rel) => !fs.existsSync(this._unpackedPath(rel)));
     for (const rel of packed) this._log(`  [FAIL] ${rel} is still inside app.asar`);
     this._record(packed.length === 0, `${natives.length - packed.length}/${natives.length} native .node files are in app.asar.unpacked/`);
-    if ([...this._shipped].some((rel) => rel.startsWith('node_modules/koffi/'))) {
-      this._record(fs.existsSync(this._unpackedPath('node_modules/koffi/package.json')), 'node_modules/koffi is in app.asar.unpacked/');
-    }
+    for (const pkg of AsarLayoutVerifier.UNPACKED_PACKAGES) this._checkPackageUnpacked(pkg);
+  }
+
+  _checkPackageUnpacked(pkg) {
+    if (![...this._shipped].some((rel) => rel.startsWith(`${pkg}/`))) return;
+    this._record(fs.existsSync(this._unpackedPath(`${pkg}/package.json`)), `${pkg} is in app.asar.unpacked/`);
   }
 
   _unpackedPath(rel) {

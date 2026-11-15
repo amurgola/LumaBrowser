@@ -22,12 +22,19 @@ class Accelerators {
     '+': () => 'zoom-in',
     '-': () => 'zoom-out',
     '0': () => 'zoom-reset',
+    '`': (shift) => (shift ? 'new-terminal' : 'toggle-terminal'),
+    '~': () => 'new-terminal',
   };
+
+  static TERMINAL_SHIFT_ACTIONS = { t: 'new-tab', w: 'close-tab', n: 'new-private-window', l: 'focus-url', f: 'find' };
+  static ZOOM_KEYS = new Set(['=', '+', '-', '0']);
+  static TERMINAL_KEYS = new Set(['`', '~']);
 
   static match(input, ctx = {}) {
     if (!Accelerators._isKeyDown(input)) return null;
     const keys = Accelerators._readKeys(input);
     if (Accelerators._isAltGr(input, keys)) return null;
+    if (ctx.terminal && !Accelerators.IS_MAC) return Accelerators._matchInTerminal(keys);
     if (!keys.mod && !keys.alt) return Accelerators._matchUnmodified(keys, ctx);
     if (keys.alt && !keys.mod) return Accelerators._matchAltChord(keys);
     return Accelerators._matchPrimaryChord(keys);
@@ -54,6 +61,16 @@ class Accelerators {
 
   static _isAltGr(input, keys) {
     return !Accelerators.IS_MAC && !!input.control && keys.alt;
+  }
+
+  static _matchInTerminal(keys) {
+    if (keys.alt) return null;
+    if (!keys.mod) return keys.key === 'F11' ? 'fullscreen' : (keys.key === 'F12' ? 'devtools' : null);
+    const tabAction = Accelerators._matchTabKey(keys);
+    if (tabAction) return tabAction === 'hard-reload' ? null : tabAction;
+    if (Accelerators.ZOOM_KEYS.has(keys.lower) || Accelerators.TERMINAL_KEYS.has(keys.lower)) return Accelerators._matchLetter(keys);
+    if (!keys.shift || !Object.prototype.hasOwnProperty.call(Accelerators.TERMINAL_SHIFT_ACTIONS, keys.lower)) return null;
+    return Accelerators.TERMINAL_SHIFT_ACTIONS[keys.lower];
   }
 
   static _matchUnmodified({ key, shift }, ctx) {

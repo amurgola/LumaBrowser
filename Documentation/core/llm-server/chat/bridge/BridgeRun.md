@@ -102,3 +102,5 @@ The tool context also carries `approvalOverride` (set for terminal sessions and 
 to treat those runs as outside callers.
 
 The ToolCallPipeline also gets `vaultCaller` (`VaultToolsHandler.callerOf` of the run) for key placeholders.
+
+Option `withholdTools` is passed to `RunToolSet`.

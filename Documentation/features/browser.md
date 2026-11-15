@@ -76,7 +76,11 @@ General, "Listen when Luma Live opens" makes it wait for a click on the micropho
 - **Focus widget:** the task you said you are working on, at most five things
   that need you, and the calendar event in progress and the next one.
 - **People:** the Hub remembers who reaches you and every way they appear, so
-  a chat name and a mail sender can be one person.
+  a chat name and a mail sender can be one person. Mark each contact a
+  person or a general contact (a business, or someone not placed yet) and
+  add a relation, a birth date, further details and notes that the
+  assistant reads. The Hub's model can suggest details from your
+  conversations; nothing is kept until you accept it.
 - **To task:** turn anything asked of you into a board task in one click.
 
 ## Extensions

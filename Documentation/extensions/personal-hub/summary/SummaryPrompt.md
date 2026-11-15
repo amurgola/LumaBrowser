@@ -20,9 +20,12 @@ asked of them.
   conversation itself as read from the user's own screen, to be trusted over
   the one-line notification and used to tell whether a question was already
   answered; and people are named as the user knows them, `(also on ...)`
-  meaning the same person writes from those apps too. An item too thin to
-  tell is not to be guessed at.
-- `messages(context, items, { now? })` -> `[{ role, content }]` (system, then
+  meaning the same person writes from those apps too. A third says a `Who
+  is who` list may follow the activity: what the user recorded about the
+  people in it, to judge how much a message matters to them and to say who
+  someone is, never repeating private details the activity does not call
+  for. An item too thin to tell is not to be guessed at.
+- `messages(context, items, { now?, who? })` -> `[{ role, content }]` (system, then
   user). `context` is `{ name }`; `items` are feed items, newest first. The
   user message names the context and the time, then one line per item:
   `- [thr_id] kind/app: "Title" with participants (30 min ago; 3
@@ -35,12 +38,18 @@ asked of them.
   text read from the tab, which follows the item's line as an indented
   `Conversation:` block, one indented line per non-empty line of the text.
   Only the newest `SNAPSHOT_CHARS` = 1500 characters are sent, behind a
-  leading `[...]` when the text was cut.
+  leading `[...]` when the text was cut. `who` (`[{ name, about }]`, default
+  empty) is what the user recorded about the people in the items: after the
+  item lines comes `Who is who:` with one `- Name: about` line each, at most
+  `MAX_WHO` = 12, entries without a name or an `about` left out; nothing is
+  added when none is left.
 - `parse(text, items)` -> `{ headline, summary, needsYou, reason, asks:
   [{ threadId, what }] }`, or `null` when the reply is not a usable answer
   (no JSON object, or neither a headline nor a summary). Reads the first
-  `{...}` span that parses, after dropping `<think>` sections, so a reply
-  that reasons first or wraps the object in a code fence still works. The
+  `{...}` span that parses, after dropping `<think>` sections
+  ([ModelText](../ModelText.md)`.json`), so a reply that reasons first or
+  wraps the object in a code fence still works. Texts are cut to one line
+  by `ModelText.clip`, ending in `...` when cut. The
   headline is cut to `HEADLINE_CHARS` = 90, the summary to `SUMMARY_CHARS` =
   600, the reason and each ask to `REASON_CHARS` = 160; a missing headline
   falls back to the summary. Asks naming an item that was not sent are
@@ -56,4 +65,6 @@ nothing needs the user. A notification carries one line, which is often too
 thin to tell whether anyone is still waiting, so the conversation is sent
 when the Hub has read it, cut to its newest end to keep a local model's
 prompt small. Naming people as known contacts lets the model see that a
-Slack name and a mail sender are one person.
+Slack name and a mail sender are one person, and the who-is-who list tells
+it who they are to the user: a message from an ex-wife or a landlord weighs
+differently from a newsletter.

@@ -15,6 +15,7 @@ const SessionCommands = require('./SessionCommands');
 const SessionKeys = require('./SessionKeys');
 const SessionView = require('./SessionView');
 const HomePath = require('./HomePath');
+const HostTerminal = require('../../connect/HostTerminal');
 
 class App {
   static SPINNER_MS = 180;
@@ -290,7 +291,7 @@ class App {
   }
 
   _sendHello(agent, conversationId, approval) {
-    this.send('hello', { cwd: this.cwd, agent: agent || null, conversationId: conversationId || null, approval, suggest: this.suggest });
+    this.send('hello', { cwd: this.cwd, agent: agent || null, conversationId: conversationId || null, approval, suggest: this.suggest, terminal: HostTerminal.id() });
   }
 
   _wasPromptNotAgent(ready, agent, conversationId) {

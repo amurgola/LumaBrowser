@@ -31,21 +31,28 @@ export default class Downloads {
     window.tabAPI.onDownload((p) => this.onEvent(p));
     if (typeof window.tabAPI.listDownloads === 'function') {
       window.tabAPI.listDownloads().then((list) => {
-        for (const d of (Array.isArray(list) ? list : [])) this.onEvent(d);
+        for (const d of (Array.isArray(list) ? list : [])) this._remember(d);
       }).catch(() => {});
     }
   }
 
   onEvent(p) {
-    if (!p || p.id == null) return;
+    const change = this._remember(p);
+    if (!change) return;
+    const { prev, next } = change;
+    if (prev.state !== 'done' && next.state === 'done') this._log.add(`Download finished: ${next.filename || 'file'}`, 'success');
+    else if (prev.state !== 'failed' && next.state === 'failed') this._log.add(`Download failed: ${next.filename || 'file'}`, 'error');
+  }
+
+  _remember(p) {
+    if (!p || p.id == null) return null;
     const id = String(p.id);
     const prev = this._items.get(id) || { id, startedAt: Date.now() };
     const next = Object.assign({}, prev, p, { id });
     this._items.set(id, next);
     this.refreshButton();
     if (this.menuOpen) this.showMenu();
-    if (prev.state !== 'done' && next.state === 'done') this._log.add(`Download finished: ${next.filename || 'file'}`, 'success');
-    else if (prev.state !== 'failed' && next.state === 'failed') this._log.add(`Download failed: ${next.filename || 'file'}`, 'error');
+    return { prev, next };
   }
 
   refreshButton() {

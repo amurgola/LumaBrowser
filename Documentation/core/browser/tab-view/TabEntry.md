@@ -8,7 +8,7 @@ callers (TabManager, TabPreviewManager, On Demand, the dashboard) read its field
 ## Fields
 
 `id`, `view`, `webContents`, `partition`, `silent`, `kind`, `pinned`, `keepAlive`,
-`hidden`, `hostId` (the window the view is drawn in, [TabHosts](TabHosts.md); 0 is the main window), `url`, `title`, `loading`, `canGoBack`, `canGoForward`, `zoomLevel`,
+`hidden`, `hostId` (the window the view is drawn in, [TabHosts](TabHosts.md); 0 is the main window), `viewSize` (`{ width, height }` while a remote viewer has sized the view, [TabLayout](TabLayout.md); else null), `url`, `title`, `loading`, `canGoBack`, `canGoForward`, `zoomLevel`,
 `createdAt`, `openerTabId` (the tab whose page opened this one, else null),
 `lastNavigatedAt`, `lastActivatedAt` (set when the tab is brought to the front;
 the AI chat offers the page the user was just on), `lastHttpStatus`, `favicon`,

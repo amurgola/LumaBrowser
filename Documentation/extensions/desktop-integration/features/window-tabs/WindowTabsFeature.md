@@ -13,6 +13,7 @@ REST lists, opens and closes.
   or shows its tab; on the shortcut hint it acts on the picked window.
 - `control` (bool, on): the tab's Control switch may pass clicks, keys and
   scrolling through to the window. Uses desktop control (its gate applies).
+  Also what lets a Tab Share interact guest's screen size resize the window.
 - `textRefreshSec` (3..120, 10): how often an active tab re-reads the window's
   accessible text; a background tab reads every 45 s.
 - `frameRate` (5..60, 30): the capture's frames per second.
@@ -26,7 +27,9 @@ REST lists, opens and closes.
   `closeUia`, `getDesktop` (`global.__lumaDesktop`), `session` (the shared tab
   partition), `webContentsFromFrame`, `sourceFor(hwnd)` (the desktopCapturer
   window source whose id starts `window:<hwnd>:`), `icon(imagePath)`
-  (`app.getFileIcon` as a data URL), `focusWindow`, `listWindows`, `imagePath`.
+  (`app.getFileIcon` as a data URL), `focusWindow`, `listWindows`, `imagePath`,
+  `windowSizing` ([Win32Windows](../../../../core/desktop/win32/Win32Windows.md)
+  for [WindowTabFit](WindowTabFit.md), null off Windows).
 - `new WindowTabsFeature(deps, parts)`; `supported` (Windows, a probe and
   `deps.browser`); `start()` registers the shortcut, the page IPC, the capture
   handler and the hint key; `instance()` -> `{ mount, onSettingsChanged, dispose }`.
@@ -44,13 +47,15 @@ REST lists, opens and closes.
 - `close(hwnd)`, `list()` (entries whose tab the browser still has; tab ids
   learned from the open tabs' URLs), `pageUrl(hwnd, app)` (the page's file URL
   with `hwnd` and `app` (its exe) in the query), `describe()`, `mount(router)`,
-  `applyBindings()`, `onSettingsChanged(key)`, `dispose()` (unregisters, removes
-  the display-media handler, closes UIA), `static statusFor(code)`.
+  `applyBindings()`, `onSettingsChanged(key)`, `dispose()` (unregisters, puts
+  back every window still sized for a guest, removes the display-media handler,
+  closes UIA), `static statusFor(code)`.
 - The page (IPC `ext.desktop-integration.window-tabs.page.*`, a caller that is
   not one of the feature's pages by URL gets `Not a window tab`):
-  `state(page)` (`{ hwnd, alive, title, app: { name, exe }, minimized, visible, control: { allowed, reason }, textRefreshSec, frameRate }`;
+  `state(page, { stage }, sender)` (`{ hwnd, alive, title, app: { name, exe }, minimized, visible, control: { allowed, reason }, textRefreshSec, frameRate }`;
   a page whose window is not registered, a tab restored after a restart, is
-  adopted when the handle still belongs to the same program), `text(page)`
+  adopted when the handle still belongs to the same program; `stage` is the
+  page's picture area, see below), `text(page)`
   (the accessible text through WindowContext), `icon(page)`, `input` (through
   [WindowTabInput](WindowTabInput.md), only while the window is a tab),
   `restore` (brings a minimized window back), `windows()` (titled app windows
@@ -61,6 +66,19 @@ REST lists, opens and closes.
   partition; a request from one of the feature's pages whose window is a live
   tab gets `{ video: <that window's source> }`, anything else `{}` (denied, as
   with no handler). Removed on dispose.
+
+## Following a Tab Share guest's size (2026-11-15)
+
+An interact guest that presses Fit sizes the shared tab to its own window
+([TabLayout](../../../../core/browser/tab-view/TabLayout.md)). For a window tab
+that only resizes the page around the picture, so the window itself follows:
+every `state` call carries the page's picture area (`stage`, DIP), and while the
+sender's tab has a `viewSize` and input may pass through (`control` on and the
+desktop control gate open) [WindowTabFit](WindowTabFit.md) sizes the window's
+visible frame to it. When the tab is no longer sized (that guest gave it back
+or left, the share stopped or went view-only) the window goes back to how it sat. A window that
+stops being a tab (closed, switched to another window in the picker, its tab
+gone) is put back too. A page with no layout yet changes nothing.
 
 ## Why
 

@@ -4,6 +4,7 @@ const InputEventMapper = require('./InputEventMapper');
 const TabFrameGrabber = require('./TabFrameGrabber');
 const TabInputSink = require('./TabInputSink');
 const TabViewer = require('./TabViewer');
+const TabViewFit = require('./TabViewFit');
 
 class TabStreamer extends EventEmitter {
   static ACTIVE_INTERVAL_MS = 100;
@@ -13,7 +14,7 @@ class TabStreamer extends EventEmitter {
   static CLOSE_ENDED = 4000;
   static CLOSE_REFUSED = 4001;
 
-  constructor({ getWebContents, getView, getFallbackBounds, getMode, getMeta, log, rtc, sleep } = {}) {
+  constructor({ getWebContents, getView, getFallbackBounds, getMode, getMeta, log, rtc, sleep, setViewSize } = {}) {
     super();
     this._getMode = getMode || (() => 'view');
     this._getMeta = getMeta || (() => ({ title: '', url: '' }));
@@ -21,6 +22,7 @@ class TabStreamer extends EventEmitter {
     this._rtc = rtc || null;
     this._grabber = new TabFrameGrabber({ getWebContents, getView, getFallbackBounds });
     this._input = new TabInputSink({ getWebContents, log: this._log, sleep });
+    this._fit = new TabViewFit({ setViewSize });
     this._viewers = new Map();
     this._destroyed = false;
     this._timer = null;
@@ -55,6 +57,7 @@ class TabStreamer extends EventEmitter {
     if (!viewer) return;
     this._viewers.delete(ws);
     viewer.closePeer();
+    if (this._fit.release(viewer)) this._onViewResized();
     this.emit('viewers', this._viewers.size);
     if (!this._viewers.size) this.stopLoop();
   }
@@ -65,6 +68,7 @@ class TabStreamer extends EventEmitter {
 
   broadcastMode() {
     this._broadcast({ t: 'mode', mode: this._getMode() });
+    if (this._getMode() !== 'interact') this._changeFit(() => this._fit.clear());
   }
 
   broadcastMeta() {
@@ -77,6 +81,7 @@ class TabStreamer extends EventEmitter {
     if (this._destroyed) return;
     this._destroyed = true;
     this.stopLoop();
+    this._fit.clear();
     for (const viewer of this._viewers.values()) TabStreamer._end(viewer, reason);
     this._viewers.clear();
     this._lastJpeg = null;
@@ -220,6 +225,7 @@ class TabStreamer extends EventEmitter {
     if (msg.t === 'rtc') { this._onRtc(viewer, msg); return; }
     if (!this._acceptsInputFrom(viewer)) return;
     if (msg.t === 'nav') { this._input.navigate(msg.a); this.kick(); return; }
+    if (msg.t === 'size') { this._onSize(viewer, msg); return; }
     this._applyInput(msg);
   }
 
@@ -237,7 +243,36 @@ class TabStreamer extends EventEmitter {
   }
 
   _inputViewSize() {
-    return this._lastMeta ? { width: this._lastMeta.vw, height: this._lastMeta.vh } : this._grabber.viewSize();
+    return this._syncViewSize() || (this._lastMeta ? { width: this._lastMeta.vw, height: this._lastMeta.vh } : null);
+  }
+
+
+  _onSize(viewer, msg) {
+    this._changeFit(() => (msg.off ? this._fit.release(viewer) : this._fit.claim(viewer, { width: msg.w, height: msg.h })));
+  }
+
+  _changeFit(change) {
+    const before = this._fit.holder();
+    const resized = change();
+    const after = this._fit.holder();
+    if (before && before !== after) before.sendJson({ t: 'fit', on: false });
+    if (after && after !== before) after.sendJson({ t: 'fit', on: true });
+    if (resized) this._onViewResized();
+  }
+
+  _onViewResized() {
+    this._syncViewSize();
+    this.kick();
+  }
+
+  _syncViewSize() {
+    const size = this._grabber.viewSize();
+    if (!size || !this._lastMeta) return size;
+    if (size.width !== this._lastMeta.vw || size.height !== this._lastMeta.vh) {
+      this._lastMeta = { ...this._lastMeta, vw: size.width, vh: size.height };
+      this._broadcast({ t: 'frame', ...this._lastMeta });
+    }
+    return size;
   }
 
 

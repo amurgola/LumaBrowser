@@ -43,6 +43,9 @@ export default class AcceleratorTable {
     'f12': 'devtools',
     'f11': 'fullscreen',
     'ctrl+shift+i': 'devtools',
+    'ctrl+`': 'toggle-terminal',
+    'ctrl+shift+`': 'new-terminal',
+    'ctrl+shift+~': 'new-terminal',
   };
 
   static forEvent(e) {

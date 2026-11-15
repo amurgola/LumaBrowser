@@ -7,7 +7,8 @@ live capture of the window, keeps the window's accessible text in the page (so
 the chat's "ask about a tab" and the browser tools read the window like a page),
 can pass clicks, keys and scrolling through to the window, and, being a plain
 tab, can be shared with Tab Share (a `view` link watches the window, an
-`interact` link works in it). Windows only.
+`interact` link works in it, and a guest that presses Fit has the window
+sized to its screen until it gives that up or leaves). Windows only.
 
 Opened from:
 
@@ -34,4 +35,5 @@ feature with its real parts and starts it.
 
 - [WindowTabsFeature](WindowTabsFeature.md): the wiring.
 - [WindowTabInput](WindowTabInput.md): input passed through to the window.
+- [WindowTabFit](WindowTabFit.md): the window sized to a remote viewer's screen.
 - [ui/window-tab](ui/window-tab.md): the page; [ui/preload](ui/preload.md): its bridge.

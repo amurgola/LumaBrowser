@@ -17,6 +17,8 @@ import ChromeKeyboard from '../keyboard/ChromeKeyboard.js';
 import DebugTools from '../debug/DebugTools.js';
 import ViewBoundsReporter from '../layout/ViewBoundsReporter.js';
 import PanelResizer from '../layout/PanelResizer.js';
+import TerminalDock from '../terminal/TerminalDock.js';
+import XtermLoader from '../terminal/XtermLoader.js';
 import WindowControls from '../window/WindowControls.js';
 import WindowMode from '../window/WindowMode.js';
 import NavButtons from '../nav/NavButtons.js';
@@ -198,6 +200,8 @@ export default class ShellApp {
   _installChrome() {
     const logClose = document.getElementById('logCloseBtn');
     if (logClose) logClose.addEventListener('click', () => document.getElementById('notificationLog').classList.remove('active'));
+    this.terminalDock = new TerminalDock({ ipc: window.ipcBridge, store: this.store, loadXterm: XtermLoader.load, tabEvents: window.tabAPI });
+    this.terminalDock.install();
     this.keyboard = this._keyboard();
     new TabStripInput({ strip: this.strip, tabActions: this.tabActions, contextMenu: this.tabMenu, persistedMenu: this.persistedMenu }).install();
     this.keyboard.installShortcuts();
@@ -218,7 +222,7 @@ export default class ShellApp {
     const actions = new AcceleratorActions({
       store: this.store, strip: this.strip, tabActions: this.tabActions, findBar: this.findBar, host: this.host,
       addressBar: this.addressBar, star: this.star, historyModal: this.historyModal, bookmarkManager: this.bookmarkManager,
-      downloads: this.downloads, debugTools: this.debugTools, settings: this.settings,
+      downloads: this.downloads, debugTools: this.debugTools, settings: this.settings, terminalDock: this.terminalDock,
     });
     const reveal = new SettingsReveal({ settings: this.settings, getSlotManager: () => this.slotManager });
     this.palette = new ShellPalette({ host: this.host, reveal, actions, store: this.store, feedback: this.feedback });

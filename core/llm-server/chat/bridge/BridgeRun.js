@@ -48,6 +48,7 @@ class BridgeRun {
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
     approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null,
     approvedTools: null, onRunApproval: null, onRunApprovalUsed: null, userMessageId: null, userText: null,
+    withholdTools: null,
   };
 
   constructor(host, options) {
@@ -71,6 +72,7 @@ class BridgeRun {
     this._toolSet = new RunToolSet({
       router: this._router, deps: o.deps, modelRef: o.modelRef, allowedTools: o.allowedTools, extraTools: o.extraTools,
       refreshAllowedTools: o.refreshAllowedTools, kbScope: o.kbScope, conversationId: o.conversationId,
+      withholdTools: o.withholdTools,
     });
     this._nativePlan = NativeToolPlan.forRun({ router: this._router, modelRef: o.modelRef, override: o.nativeToolsOverride, ctxPerSlot: o.ctxPerSlot });
     this._budget = AgentBudget.resolve(o.agentBudget, { nativeTools: this._nativePlan.enabled });

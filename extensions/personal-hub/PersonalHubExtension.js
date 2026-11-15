@@ -38,6 +38,7 @@ const ActivitySummarizer = require('./summary/ActivitySummarizer');
 const FocusService = require('./focus/FocusService');
 const ContactRepository = require('./contacts/ContactRepository');
 const ContactService = require('./contacts/ContactService');
+const ContactProfiler = require('./contacts/ContactProfiler');
 const SnapshotRepository = require('./snapshot/SnapshotRepository');
 const ConversationReader = require('./snapshot/ConversationReader');
 
@@ -149,16 +150,19 @@ class PersonalHubExtension {
     const connections = { monitor: this._monitor, accounts: new AccountCalendars({ monitor: this._monitor, calendar }), tabs };
     const inbound = new InboundToken(db);
     const contexts = new ContextService({ contexts: new ContextRepository(db), emit });
-    const contacts = new ContactService({ contacts: new ContactRepository(db), db, emit });
+    const contacts = new ContactService({ contacts: new ContactRepository(db), db, emit, now });
     this._people = (threadId, notificationId) => PersonalHubExtension._observe(threadId, notificationId, { inbox, contexts, contacts });
     PersonalHubExtension._seedContacts({ inbox, contexts, contacts });
-    const reader = new ConversationReader({ tabs, browser: context.browser || null, snapshots: new SnapshotRepository(db), sleep: this._overrides.sleep || undefined });
+    const snapshots = new SnapshotRepository(db);
+    const llm = this._overrides.llm || context.llm || null;
+    const reader = new ConversationReader({ tabs, browser: context.browser || null, snapshots, sleep: this._overrides.sleep || undefined });
     this._summarizer = new ActivitySummarizer({
-      inbox, contexts, summaries: new SummaryRepository(db), db, llm: this._overrides.llm || context.llm || null, reader, people: contacts, emit, now,
+      inbox, contexts, summaries: new SummaryRepository(db), db, llm, reader, people: contacts, emit, now,
     });
+    const profiler = new ContactProfiler({ contacts, inbox, snapshots, contexts, llm });
     const focus = new FocusService({ board, calendar, summarizer: this._summarizer, db, emit, now });
     const service = new HubService({
-      calendar, inbox, board, sync: this._scheduler, inbound, connections, contexts, summarizer: this._summarizer, focus, contacts, reader, now,
+      calendar, inbox, board, sync: this._scheduler, inbound, connections, contexts, summarizer: this._summarizer, focus, contacts, profiler, reader, now,
       openUrl: (url) => this._openUrl(context, url),
     });
     return { service, inbox, inbound, tabs, secrets };

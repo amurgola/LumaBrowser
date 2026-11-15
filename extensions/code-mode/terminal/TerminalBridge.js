@@ -10,9 +10,9 @@ class TerminalBridge {
   static MAX_FRAME_BYTES = 4 * 1024 * 1024;
   static UNAUTHORIZED = 'HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n';
 
-  constructor({ getRouter, getAgentManager, getHandshake, getLlmServer, fsOps, WebSocketServer, runGit } = {}) {
+  constructor({ getRouter, getAgentManager, getHandshake, getLlmServer, fsOps, WebSocketServer, runGit, dockedTabs } = {}) {
     this._deps = {
-      getRouter, getAgentManager, getLlmServer,
+      getRouter, getAgentManager, getLlmServer, dockedTabs: dockedTabs || null,
       fso: fsOps || ContainerFs.routed(fs),
       runGit: runGit || GitLog.run,
     };

@@ -12,7 +12,8 @@ class RunToolSet {
   static ACTIVATE_TOOLS = 'activate_tools';
   static TAKEOVER_TOOL = 'ask_user_takeover';
 
-  constructor({ router, deps, modelRef, allowedTools = null, extraTools = null, refreshAllowedTools = null, kbScope = null, conversationId = null }) {
+  constructor({ router, deps, modelRef, allowedTools = null, extraTools = null, refreshAllowedTools = null, kbScope = null, conversationId = null, withholdTools = null }) {
+    this._withheld = typeof withholdTools === 'function' ? withholdTools : null;
     this.visionActive = !!(router && router.modelVisionActive && router.modelVisionActive(modelRef));
     this.mcpAggregator = (deps && deps.mcpAggregator) || null;
     this._allowList = Array.isArray(allowedTools) ? [...allowedTools] : null;
@@ -37,9 +38,9 @@ class RunToolSet {
 
   runToolList({ allowTakeover = false } = {}) {
     let names = this._allowList ? [...this._allowList] : undefined;
-    if (!this.visionActive) {
+    if (!this.visionActive || this._withheld) {
       names = (names || [...new Set([...AgentToolCatalog.getAllToolNames(this.mcpAggregator), ...this.allExtTools.map((t) => t.name)])])
-        .filter((n) => !RunToolSet.VISION_ONLY_TOOLS.has(n));
+        .filter((n) => (this.visionActive || !RunToolSet.VISION_ONLY_TOOLS.has(n)) && !(this._withheld && this._withheld(n)));
     }
     if (names) names = [...new Set([...names, RunToolSet.ACTIVATE_TOOLS, ...(allowTakeover ? [RunToolSet.TAKEOVER_TOOL] : [])])];
     this._liveRunTools = names || null;
@@ -63,6 +64,7 @@ class RunToolSet {
   }
 
   _allows(name) {
+    if (this._withheld && this._withheld(name)) return false;
     if (RunToolSet.VISION_ONLY_TOOLS.has(name) && !this.visionActive) return false;
     if (name === 'locate' && !BridgeGlobals.groundingAvailable()) return false;
     return !this._allowList || this._allowList.includes(name);

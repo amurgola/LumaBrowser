@@ -29,3 +29,7 @@ the host's [FamilySampler](../../../llm-server/chat/router/FamilySampler.md)
 keeps the caller's temperature, as it does for a local side call.
 
 The client half is [RemoteStream](../../../llm-server/chat/router/RemoteStream.md) (`_peerOptions`).
+
+## Changes (2026-11-14, what kind of request it is)
+
+`of` also reads `luma_agent_turn: true` as `agentTurn`, `luma_complexity` (`heavy` or `light`) as `complexity`, and `luma_call_type` (`side`, `title`, `compact`) as `clientCallType`; other values are ignored. They do not override anything on the host: they tell it what the client's request is, so the host's own rules apply to it (the agent thinking default, the expert-cache hint, which calls keep their temperature).

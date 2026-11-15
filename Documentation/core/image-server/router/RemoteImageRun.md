@@ -29,3 +29,7 @@ VRAM all live there; this only relays. Local model ids mean nothing on the host,
 so the model is the one picked for that server. There is no local idle hold:
 pasting one in here once made every remote render throw before a request was sent.
 LoRAs, sigma nodes, cache options and refArea are not relayed (as in legacy).
+
+## Changes (2026-11-14, exact size crosses)
+
+`snapNative` is one of `REQUEST_FIELDS`. A caller's "render exactly this size" used to be dropped between a client and its host, so the host snapped an edit to the model's native size; the roleplay turns that snap off on purpose for figure renders. A side-by-side of the same request on a host and through a paired client now shows every generation parameter equal; the client's request differs only in `slot` (always named) and `forceLocal`.

@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="ui/shell/css/general-settings.css">
     <link rel="stylesheet" href="ui/shell/css/ai-activity.css">
     <link rel="stylesheet" href="ui/shell/css/ai-chat-panel.css">
+    <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css">
+    <link rel="stylesheet" href="ui/shell/css/terminal-dock.css">
     <link rel="stylesheet" href="ui/shell/css/responsive.css">
     <link rel="stylesheet" href="ui/shell/css/titlebar.css">
     <link rel="stylesheet" href="ui/shell/css/url-bar.css">
@@ -47,6 +49,7 @@
         <symbol id="i-squares" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="13" height="13" rx="1"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></symbol>
         <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
         <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+        <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><polyline points="7 9 10.5 12 7 15"/><line x1="12.5" y1="15" x2="17" y2="15"/></symbol>
         <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
         <symbol id="i-panel-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></symbol>
         <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
@@ -110,6 +113,7 @@
         <div class="chrome-ext-buttons" id="chromeExtButtons" hidden></div>
         <button class="ai-chat-toggle icon-btn" id="aiChatToggle" title="AI Chat" aria-label="AI Chat"><svg class="icon"><use href="#i-chat"/></svg><span class="luma-dot ai-chat-state-dot" id="aiChatStateDot" aria-hidden="true"></span></button>
         <button class="dashboard-toggle icon-btn" id="dashboardBtn" title="Dashboard" aria-label="Dashboard"><svg class="icon"><use href="#i-grid"/></svg></button>
+        <button class="terminal-dock-toggle icon-btn" id="terminalDockToggle" title="Terminal (Ctrl+`)" aria-label="Terminal"><svg class="icon"><use href="#i-terminal"/></svg></button>
         <div data-slot="toolbar-button" id="extensionToolbarButtons" class="toolbar-slot-inline"></div>
         <button class="ai-activity-toggle icon-btn" id="aiActivityToggle" title="AI Activity Queue" aria-label="AI Activity">
             <svg class="icon"><use href="#i-zap"/></svg>
@@ -652,6 +656,23 @@
                             </div>
                             <label class="luma-switch" aria-label="Add the luma command to your terminal">
                                 <input type="checkbox" id="gsCliShim">
+                                <span class="luma-switch-track"></span>
+                            </label>
+                        </div>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Default terminal</span>
+                                <span class="gs-row-help">The shell a new terminal tab and the terminal panel under the page start with.</span>
+                            </div>
+                            <select class="form-select gs-input-select" id="gsTerminalProfile" aria-label="Default terminal"></select>
+                        </div>
+                        <div class="gs-row">
+                            <div class="gs-row-text">
+                                <span class="gs-row-label">Let AI use the terminal</span>
+                                <span class="gs-row-help">The assistant, and AI tools connected through MCP or the local API, can open terminals and run commands on this computer. The assistant asks before it types; you can watch in the terminal's tab and take over at any time. Never offered to people you share your models with.</span>
+                            </div>
+                            <label class="luma-switch" aria-label="Let AI use the terminal">
+                                <input type="checkbox" id="gsTerminalAgent">
                                 <span class="luma-switch-track"></span>
                             </label>
                         </div>

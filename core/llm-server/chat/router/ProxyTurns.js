@@ -1,5 +1,6 @@
 const ChatModelRef = require('./ChatModelRef');
 const AgentTurnDispatch = require('./AgentTurnDispatch');
+const HostOnlyTools = require('./HostOnlyTools');
 
 class ProxyTurns {
   constructor({ llmServerService, dispatch, agentBridge, getAgentDeps, reclaimer }) {
@@ -18,7 +19,7 @@ class ProxyTurns {
   }
 
   static _callType(extra) {
-    return extra && extra.pinTemperature === true ? 'side' : 'sharing';
+    return (extra && extra.clientCallType) || 'sharing';
   }
 
   agent({ modelRef, messages, temperature, hooks, images = [], priorArtifacts = [], allowedTools = null, extra = null,
@@ -36,6 +37,7 @@ class ProxyTurns {
       priorMessages: ProxyTurns._priorMessages(priorArtifacts),
       images,
       allowedTools,
+      withholdTools: HostOnlyTools.isHostOnly,
       llmExtra: extra,
       modeSystemPrompt,
       kbScope,

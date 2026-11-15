@@ -7,6 +7,7 @@
   const frame = $('frame');
   const video = $('video');
   const kbd = $('kbd');
+  const btnFit = $('btnFit');
   const titleEl = $('title');
   const statusText = $('statusText');
   const modeBadge = $('modeBadge');
@@ -20,7 +21,7 @@
 
   const state = {
     ws: null, mode: 'view', ended: false, retry: 0, timer: null, ping: null,
-    meta: { w: 0, h: 0, vw: 0, vh: 0 }, lastUrl: null, frames: 0,
+    meta: { w: 0, h: 0, vw: 0, vh: 0 }, lastUrl: null, frames: 0, sizeTimer: null, fit: false,
     rtc: { pc: null, up: false, attempts: 0, offered: false, retryTimer: null },
   };
   const canRtc = typeof RTCPeerConnection === 'function';
@@ -53,8 +54,28 @@
     fitEl(frame, state.meta.w, state.meta.h);
     if (state.rtc.up) fitEl(video, video.videoWidth, video.videoHeight);
   }
-  window.addEventListener('resize', fit);
+  window.addEventListener('resize', () => { fit(); if (state.fit) queueSize(); });
   video.addEventListener('resize', fit);
+
+  function sendSize() {
+    if (state.mode !== 'interact') return;
+    const w = stage.clientWidth; const h = stage.clientHeight;
+    if (w && h) send({ t: 'size', w, h });
+  }
+  function queueSize() {
+    if (state.sizeTimer) clearTimeout(state.sizeTimer);
+    state.sizeTimer = setTimeout(() => { if (state.fit && !body.classList.contains('kbd-open')) sendSize(); }, 200);
+  }
+  function setFit(on) {
+    state.fit = !!on;
+    body.classList.toggle('fit-on', state.fit);
+    btnFit.setAttribute('aria-pressed', state.fit ? 'true' : 'false');
+    btnFit.title = state.fit ? 'Give the shared tab its own size back' : 'Size the shared tab to this window, for everyone watching';
+  }
+  function toggleFit() {
+    if (state.fit) send({ t: 'size', off: true });
+    else sendSize();
+  }
   const surface = () => (state.rtc.up ? video : frame);
 
   function paint(blob) {
@@ -98,6 +119,7 @@
           state.rtc.offered = !!msg.rtc;
           state.rtc.attempts = 0;
           if (msg.rtc && canRtc) rtcWant();
+          setFit(false);
           break;
         case 'rtc': onRtcMessage(msg); break;
         case 'frame':
@@ -106,6 +128,7 @@
           break;
         case 'meta': setTitle(msg.title); state.lastUrl = msg.url || null; break;
         case 'mode': setMode(msg.mode); break;
+        case 'fit': setFit(msg.on); break;
         case 'ended':
           state.ended = true;
           rtcTeardown();
@@ -347,6 +370,7 @@
   $('btnBack').addEventListener('click', () => send({ t: 'nav', a: 'back' }));
   $('btnForward').addEventListener('click', () => send({ t: 'nav', a: 'forward' }));
   $('btnReload').addEventListener('click', () => send({ t: 'nav', a: 'reload' }));
+  btnFit.addEventListener('click', () => { toggleFit(); btnFit.blur(); });
 
   if (!token) {
     setStatus('Invalid link', 'is-error');

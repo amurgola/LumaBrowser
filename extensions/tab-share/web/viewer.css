@@ -98,6 +98,10 @@ body.is-interact .ts-tools { display: flex; }
 .ts-btn-kbd { display: none; }
 body.is-touch .ts-btn-kbd { display: inline-flex; }
 body.kbd-open #btnKeyboard { border-color: var(--accent); background: var(--accent-dim); }
+.ts-fit { display: none; flex: 0 0 auto; min-width: 28px; height: 28px; padding: 0 8px; font-size: var(--text-sm); white-space: nowrap; }
+body.is-interact .ts-fit { display: inline-flex; }
+body.fit-on .ts-fit { border-color: var(--accent); background: var(--accent-dim); }
+body.is-touch .ts-fit span { display: none; }
 
 .ts-kbd {
   position: fixed; left: 0; bottom: 0; width: 1px; height: 1px;

@@ -6,7 +6,7 @@ import WidgetDom from './WidgetDom.js';
 
 export default class HubInboxWidget extends HubWidgetBase {
   static ATTENTION_AREA = 'queue';
-  static REFRESH_EVENTS = ['thread.changed', 'summary.changed', 'context.changed'];
+  static REFRESH_EVENTS = ['thread.changed', 'summary.changed', 'context.changed', 'contact.changed'];
   static SUMMARY = 'summary';
   static DETAIL = 'detail';
   static MODE_STORAGE_KEY = 'hub.activity.mode';
@@ -287,13 +287,36 @@ export default class HubInboxWidget extends HubWidgetBase {
           thread.count > 1 ? WidgetDom.el('span', { class: 'hub-count', text: String(thread.count), title: `${thread.count} notifications` }) : null,
           WidgetDom.el('span', { class: 'hub-thread-time', text: HubInboxWidget._when(thread.lastAt), title: HubInboxWidget._fullTime(thread.lastAt) }),
         ]),
-        people && people !== thread.title ? WidgetDom.el('div', { class: 'hub-thread-people', text: people }) : null,
+        this._peopleEl(thread, people),
         text ? WidgetDom.el('div', { class: 'hub-thread-text', text }) : null,
         thread.taskId ? WidgetDom.el('span', { class: 'hub-task-mark', text: 'On the board' }) : null,
         this._snapshotEl(thread.id),
         forming ? this._taskFormEl(thread) : this._actions(thread, dismissed),
       ]),
     ]);
+  }
+
+  _peopleEl(thread, people) {
+    const known = thread.people || [];
+    if (!known.length) return people && people !== thread.title ? WidgetDom.el('div', { class: 'hub-thread-people', text: people }) : null;
+    const shown = new Set();
+    const parts = [];
+    for (const participant of thread.participants || []) {
+      const person = known.find((k) => k.participant === participant);
+      if (person && shown.has(person.contactId)) continue;
+      if (person) shown.add(person.contactId);
+      if (parts.length) parts.push(', ');
+      parts.push(person ? this._personLink(person) : participant);
+    }
+    return WidgetDom.el('div', { class: 'hub-thread-people' }, parts);
+  }
+
+  _personLink(person) {
+    const link = WidgetDom.el('button', {
+      class: 'hub-link hub-person-link', text: person.name, title: person.about || 'What is known about this contact',
+      on: { click: (e) => HubSettingsPanel.openPerson(this.host, { contactId: person.contactId, name: person.name }, e.currentTarget.ownerDocument) },
+    });
+    return person.role ? WidgetDom.el('span', {}, [link, WidgetDom.el('span', { class: 'hub-person-role', text: ` (${person.role})` })]) : link;
   }
 
   _actions(thread, dismissed) {

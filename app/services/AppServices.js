@@ -1,5 +1,6 @@
 const SettingsBoot = require('./SettingsBoot');
 const FoundationServices = require('./FoundationServices');
+const TerminalServices = require('./TerminalServices');
 const ModelServers = require('./ModelServers');
 const GatewayServices = require('./GatewayServices');
 const ChatTaskServices = require('./ChatTaskServices');
@@ -28,6 +29,7 @@ class AppServices {
 
   _buildCore() {
     new FoundationServices(this._ctx).build();
+    new TerminalServices(this._ctx).build();
     new ModelServers(this._ctx).build();
     new ModelStatusNotifier((message, type) => this._ctx.notifyModelStatus(message, type)).watchAll(this._ctx.services);
     new GatewayServices(this._ctx).build();

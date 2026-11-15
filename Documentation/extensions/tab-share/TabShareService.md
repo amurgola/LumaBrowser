@@ -37,6 +37,12 @@ tab link at once, and turning them back on revives the same URLs.
   mode (same link).
 - `resolve` checks the token shape first, then availability; a dormant share
   resolves (the viewer page waits), but has no streamer.
+- An interact guest that asks for the tab at its window's size (the viewer's
+  Fit button) gets it through `TabViewManager.setTabViewSize(tabId, size)`
+  (the streamer's `setViewSize`; see [TabViewFit](TabViewFit.md)). That guest
+  giving it back or leaving, stopping the share or leaving interact mode
+  passes null. An app without that method (older than this add-on) keeps the
+  host's size.
 - `stop` un-persists the tab only if sharing persisted it and it is still in
   the strip: un-persisting a hidden tab would destroy it.
 - A closed tab leaves its share dormant. A kept-alive tab created later binds

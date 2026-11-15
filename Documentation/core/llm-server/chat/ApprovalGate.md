@@ -77,3 +77,5 @@ a recoverable result, never an exception.
 `vault_fill` is a mutating tool in the family `family:vault` ("password manager use", carried for the chat). The
 family is marked `insist`: ApprovalCheck asks whenever someone can answer, even when the approval setting says never
 ask. A run nobody can answer is refused by the tool itself unless the user allowed outside callers.
+
+Grant family `family:terminal` covers every `terminal_*` tool for one run; it is not carried to later runs.

@@ -30,6 +30,7 @@
   let wheel = { dx: 0, dy: 0, nx: 0, ny: 0, timer: null };
   let toastTimer = null;
   let iconDone = false;
+  let resizeTimer = null;
 
   function toast(message) {
     els.toast.textContent = message;
@@ -56,7 +57,7 @@
 
   async function refreshState() {
     let s;
-    try { s = await api.call('state'); } catch (err) { s = { success: false, error: String(err && err.message || err) }; }
+    try { s = await api.call('state', { stage: { width: els.stage.clientWidth, height: els.stage.clientHeight } }); } catch (err) { s = { success: false, error: String(err && err.message || err) }; }
     if (!s || !s.success) { setStatus('error', 'Unavailable'); overlay('This tab cannot reach LumaBrowser', s && s.error ? s.error : '', { retry: true }); return;
     }
     const wasAlive = state && state.alive;
@@ -305,6 +306,7 @@
   els.stage.addEventListener('wheel', onWheel, { passive: false });
   els.stage.addEventListener('keydown', onKey);
   els.stage.addEventListener('mousedown', () => { if (control) els.stage.focus(); });
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(refreshState, 150); });
   document.addEventListener('visibilitychange', () => { scheduleState(); scheduleText(document.visibilityState === 'visible' ? 0 : HIDDEN_TEXT_MS); });
   window.addEventListener('beforeunload', () => { stopCapture(); clearTimeout(stateTimer); clearTimeout(textTimer); });
 

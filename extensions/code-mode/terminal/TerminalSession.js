@@ -4,6 +4,7 @@ const TerminalAgents = require('./TerminalAgents');
 const TerminalConversations = require('./TerminalConversations');
 const FollowupSuggester = require('./FollowupSuggester');
 const CommitMessageDrafter = require('./CommitMessageDrafter');
+const BrowserTabContext = require('./BrowserTabContext');
 
 const IdeContextFormatter = CoreRequire.require('llm-server/chat/IdeContextFormatter');
 
@@ -11,11 +12,14 @@ class TerminalSession {
   static MAX_CLIENT_CHARS = 80;
   static BUSY_MESSAGE = 'LumaBrowser is busy with another chat turn. Try again in a moment.';
 
-  constructor(ws, { getRouter, getAgentManager, getLlmServer, fso, runGit }) {
+  constructor(ws, { getRouter, getAgentManager, getLlmServer, fso, runGit, getTerminal, dockedTabs }) {
     this.ws = ws;
     this.getRouter = getRouter;
     this.getAgentManager = getAgentManager;
     this.getLlmServer = getLlmServer || (() => null);
+    this.getTerminal = getTerminal || (() => global.__lumaTerminal || null);
+    this.dockedTabs = dockedTabs || null;
+    this.hostTerminal = null;
     this.fso = fso;
     this.conversationId = null;
     this.cwd = null;
@@ -188,6 +192,7 @@ class TerminalSession {
     this.approval = p.approval === 'never' ? 'never' : 'ask';
     this.suggest = !!p.suggest;
     this.origin = p.origin === 'ide' ? 'ide' : 'terminal';
+    this.hostTerminal = BrowserTabContext.terminalId(p.terminal);
   }
 
   _openConversation(store, p, agent) {
@@ -223,8 +228,10 @@ class TerminalSession {
   }
 
   async _runTurn(router, text, images, ideContext) {
-    const block = IdeContextFormatter.render(ideContext);
-    const messages = [...this._history(router.chatStore), { role: 'user', content: block ? `${text}\n\n${block}` : text }];
+    const tab = BrowserTabContext.tabFor(this.hostTerminal, this.getTerminal());
+    if (this.dockedTabs) this.dockedTabs.set(this.conversationId, tab ? tab.id : null);
+    const blocks = [IdeContextFormatter.render(ideContext), BrowserTabContext.render(tab)].filter(Boolean);
+    const messages = [...this._history(router.chatStore), { role: 'user', content: [text, ...blocks].join('\n\n') }];
     this.turnActive = true;
     this.turnSeq += 1;
     this._suggester.stop();

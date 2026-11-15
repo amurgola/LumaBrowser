@@ -54,7 +54,9 @@ helpers restyled inside the settings panel.
   `.hub-snapshot-from` (the muted line saying where it was read from) and
   `.hub-snapshot-text` (the text with its line breaks kept, long words
   wrapped, scrolling past 220px), `.hub-task-form` (the to-task selects and
-  buttons) and `.hub-task-mark`. Summary cards, one per context: `.hub-sum-note` (the
+  buttons), `.hub-task-mark`, and in `.hub-thread-people` the
+  `.hub-person-link` (a known contact, in the line's own colour and size,
+  the text colour on hover) with `.hub-person-role` (muted). Summary cards, one per context: `.hub-sum-note` (the
   rules note), `.hub-sum-card` (`needs-you` draws an inset warning-colour
   edge on the left), `.hub-sum-top` with `.hub-sum-name` and
   `.hub-sum-updating` (muted italic), `.hub-sum-headline`, `.hub-sum-text`,
@@ -83,6 +85,7 @@ helpers restyled inside the settings panel.
   `.hub-settings-pane[hidden]` and `.hub-settings-foot` (one muted line).
   The shared sections are written for the settings page, so the few of its
   layout helpers they use are defined inside `.hub-settings`:
-  `.ext-form-row-inline` (a flex row whose `.luma-field-input` grows),
+  `.ext-form-row-inline` (a flex row whose `.luma-field-input` grows, and
+  whose `.luma-field-select` grows too),
   `.ext-form-buttons--start`, `.ext-mt-8`, `.ext-mb-8` and the top margin
   of `.luma-section-label`.

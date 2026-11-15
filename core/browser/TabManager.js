@@ -19,8 +19,11 @@ const TabControl = require('./tab-manager/TabControl');
 const TabPage = require('./tab-manager/TabPage');
 const TabScreenshot = require('./tab-manager/TabScreenshot');
 const TableReader = require('./tab-manager/TableReader');
+const TerminalPage = require('../terminal/TerminalPage');
 
 class TabManager {
+  static TERMINAL_TAB = (tabId) => `Tab ${tabId} is a terminal, which page tools cannot read or drive. Use the terminal tools (terminal_list, terminal_read, terminal_run).`;
+
   constructor(tabViewManager, { nativeImage = null } = {}) {
     this.tabViewManager = tabViewManager;
     this._control = new TabControl(tabViewManager);
@@ -66,6 +69,7 @@ class TabManager {
   async _onTab(tabId, action) {
     const entry = this.tabViewManager.getEntry(tabId);
     if (!entry) return TabRegistry.notFound(tabId);
+    if (TerminalPage.isTerminal(entry.url)) return { success: false, error: TabManager.TERMINAL_TAB(tabId) };
     try {
       return await action(new TabPage(entry, tabId, this.tabViewManager));
     } catch (error) {

@@ -9,8 +9,12 @@ on its own and only suggests the rest; the user merges, splits, renames and
 keeps apart in Settings > Hub > People
 ([PeopleSection](../ui/settings/PeopleSection.md)). Summaries use it to name
 a participant as the person the user knows
-([ActivitySummarizer](../summary/ActivitySummarizer.md)). Emits
-`contact.changed` after a change the user or a new person made.
+([ActivitySummarizer](../summary/ActivitySummarizer.md)). Each contact also
+carries what is known about it ([ContactProfile](ContactProfile.md)): a
+person or a general contact, its fields, further details and notes, written
+by the user or a tool, plus what a model proposed and the user has not
+decided on ([ContactProfiler](ContactProfiler.md)). Emits `contact.changed`
+after a change the user or a new person made.
 
 ## Joining
 
@@ -23,10 +27,11 @@ a participant as the person the user knows
 
 ## Methods
 
-- `new ContactService({ contacts, db, emit? })`: `contacts` a
+- `new ContactService({ contacts, db, emit?, now? })`: `contacts` a
   [ContactRepository](ContactRepository.md), `db` the extension's
   DatabaseService (the kept-apart pairs), `emit(type, payload)` the renderer
-  push.
+  push, `now()` a Date that ages and coming birthdays are worded against
+  (default the clock).
 - `observe({ app, sender, contextId?, at? })` -> the contact, or `null` when
   the sender does not read as a person. A known identity (same app, handle
   and context) is touched: its last time moves and its count grows. A new
@@ -39,18 +44,26 @@ a participant as the person the user knows
   sender, contextId, at }]`, oldest first, to seed the memory from the
   notification log already kept.
 - `isEmpty()`: whether there is no contact yet.
-- `list({ query = '', limit = 200 })` -> `[{ id, name, identities: [{ id,
-  app, handle, display, contextId, lastAt, count }], lastAt, count }]`, most
+- `list({ query = '', limit = 200 })` -> `[{ id, name, kind, profile: {
+  fields, details, notes, suggested }, role, about, identities: [{ id, app,
+  handle, display, contextId, lastAt, count }], lastAt, count }]`, most
   recently seen first; `lastAt` and `count` are the newest sighting and the
-  total over the identities. `query` narrows by part of the name, a handle
-  or an app. A contact left with no identity is not listed.
+  total over the identities. `role` is `ContactProfile.role` (a person's
+  relation, what a general contact is) and `about` is
+  `ContactProfile.about`, the one line the assistant reads. The profile's
+  `dismissed` list is not handed out. `query` narrows by part of the name,
+  of `about`, a handle or an app. A contact left with no identity is not
+  listed. Every method below that returns a contact returns this shape.
+- `kinds()` -> `ContactProfile.KINDS`, the form each kind of contact has:
+  `[{ kind, label, fields: [{ key, label, type, hint?, options? }] }]`.
 - `get(id)` -> one contact with its identities, or `null`.
 - `suggestions({ limit = 20 })` -> `[{ a, b, reason }]`: pairs of contacts
   with the same full name, `reason` `Same name in different contexts`. Pairs
   the user said are different people are left out.
 - `merge(intoId, fromId)` -> the merged contact: everything `fromId` goes by
-  now belongs to `intoId`, which keeps its name, and `fromId` is gone.
-  Throws `Name two different contacts to merge.` and `Contact not found.`.
+  now belongs to `intoId`, which keeps its name, and `fromId` is gone. The
+  two profiles are joined (`ContactProfile.merge`: what `intoId` says
+  stays, `fromId` fills the blanks). Throws `Name two different contacts to merge.` and `Contact not found.`.
 - `split(identityId)` -> the new contact: one identity becomes a person of
   its own, named as that identity appears, and the pair is recorded as kept
   apart so it is not suggested straight back. Throws `Identity not found.`
@@ -61,6 +74,20 @@ a participant as the person the user knows
   found.`.
 - `notSame(aId, bId)` -> `true`: the user said these two are different
   people, so the pair is not suggested again.
+- `saveProfile(id, patch = {})` -> the contact: changes what is kept about
+  it. `patch` is `{ kind?, fields?, details?, addDetails?, notes?, addNote?
+  }` as `ContactProfile.apply` reads them; only what is given changes, and
+  a missing or empty `kind` keeps the current one. Throws `Contact not
+  found.` and whatever `ContactProfile.cleanKind` and `apply` throw.
+- `propose(id, proposals)` -> the contact: what a model read out of the
+  conversations (`[{ key, value, why }]`) kept as suggestions through
+  `ContactProfile.propose`; nothing is written into the profile itself.
+  Throws `Contact not found.`.
+- `resolveSuggestion(id, suggestionId, accept)` -> the contact: accepted,
+  the suggestion is written into the profile (`ContactProfile.accept`,
+  which may change the kind); otherwise it is dropped and remembered so it
+  is not proposed again (`ContactProfile.dismiss`). Throws `Contact not
+  found.` and `That suggestion is no longer there.`.
 - `static parse(sender, app = '')` -> `{ handle, display, isEmail }` or
   `null`. A sender carrying an address has the lower-cased address as its
   handle and the rest of the text as its display name (the address itself
@@ -73,16 +100,20 @@ a participant as the person the user knows
 
 ## Storage
 
-Ids are made by RecordId with the prefixes `con` (contact) and `cid`
-(identity). The pairs the user keeps apart are the setting
+Ids are made by RecordId with the prefixes `con` (contact), `cid`
+(identity) and `sug` (a suggestion on a contact's profile). The kind and the
+profile are stored on the contact's row (`saveProfile` of the
+repository). The pairs the user keeps apart are the setting
 `contacts.notSame`, a list of `<id>|<id>` keys with the two ids sorted.
 
 ## Events
 
 `contact.changed` with `{ contactId, reason }`, reason `new` (a first
 sighting made a contact), `identity` (a new way an existing contact
-appears), `merged`, `split` or `renamed`, and `{ reason: 'not-same' }`. A
-repeat sighting of a known identity emits nothing.
+appears), `merged`, `split`, `renamed`, `profile` (`saveProfile`, or a
+suggestion accepted) or `suggested` (`propose`, or a suggestion dismissed),
+and `{ reason: 'not-same' }`. A repeat sighting of a known identity emits
+nothing.
 
 ## Why
 

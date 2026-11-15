@@ -55,7 +55,7 @@ class AnimaCatalogEntries {
       promptPrefix: AnimaCatalogEntries.PROMPT_PREFIX,
       negativePrompt: AnimaCatalogEntries.NEGATIVE_PROMPT,
     },
-    launchArgs: ['--cache-mode', 'easycache', '--cache-option', 'threshold=0.2'],
+    launchArgs: [],
     protocol: 'sd-cpp-http',
     compatibleRuntimes: [...AnimaCatalogEntries.COMPATIBLE_RUNTIMES],
   };

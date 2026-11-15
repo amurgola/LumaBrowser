@@ -1,4 +1,5 @@
 import AcceleratorTable from './AcceleratorTable.js';
+import TerminalDock from '../terminal/TerminalDock.js';
 
 export default class ChromeKeyboard {
   constructor(deps) {
@@ -30,7 +31,7 @@ export default class ChromeKeyboard {
 
   _onShortcutKey(e) {
     const action = AcceleratorTable.forEvent(e);
-    if (!action) return;
+    if (!action || !TerminalDock.keepsKey(e, action)) return;
     if (action === 'stop' && ChromeKeyboard._ownsEscape(e.target, this._d.addressBar.el)) return;
     e.preventDefault();
     this._d.actions.handle(action, this._d.store.activeTabId);

@@ -37,7 +37,22 @@ The host's configuration decides how its model runs: its context window, its mod
 | sampler numbers (DRY, min-p, `reasoning_budget_tokens`) | a chat mode asked for them (the roleplay narrator) | applied; the host's own Tune sampler for the model wins where both name a knob |
 | `luma_pin_temperature` with the temperature | a side call that needs its own temperature (a bookkeeping call at 0.2) | that temperature is kept over the host's family sampler and Tune temperature |
 | `response_format` | a side call's JSON schema | decoded under the grammar |
+| `max_tokens` (the agent loop's cap) | an agent step, when the host advertised the model's window | the same cap its own agent step sends |
+| `luma_agent_turn` | the client's agent loop drives the turn and nothing chose a thinking position | fills in the agent default from its own dial |
+| `luma_complexity` | an agent step (`heavy` or `light`) | its own expert-cache hint for a heavy run |
+| `luma_call_type` | a side call, a title, a compaction | the call keeps its own temperature, as the host's own such call does |
 
 Never sent: this side's Setup defaults for its own local server (context size, the default thinking position, launch settings). An ordinary turn's temperature is sent as always, and the host's family sampler or Tune temperature replaces it.
 
 Also part of the rule (same day): the system prompt is the client's alone. A LumaBrowser client's turn takes the host's plain path, which dispatches the messages exactly as sent (14 of 14 narrator turns byte-identical on both sides of a recorded run, one system message each; `LabSharingHost.test.js`). The host only writes a prompt of its own for a turn that asks for its agent (`agent: true`, what the served web page sends, or a shared host agent's `agentId`), where there is no client prompt to double. Tool calls from a client's own agent loop use the text fence on a paired host ([ModelCapabilities](ModelCapabilities.md)).
+
+## Changes (2026-11-14, a client turn is the host's own turn)
+
+Measured with two real app instances on one machine (a host, and a client paired to it with different local defaults that overrides nothing), recording the body built for the host's model server: the messages were byte-identical from the start (system prompt included), but the host's own chat sent `max_tokens` (the agent loop's cap) and `moe_cache_batch`, and the client's turn neither; the thinking position only matched by coincidence. Now identical in three host configurations. What was added to `_peerOptions` and `_options`:
+
+- The agent loop's cap (`extra.maxTokens`) joins `max_tokens` for a paired host whose model advertises its window (`_hostWindowKnown`: the config's model has `luma_context`). The loop sizes that cap from `ModelContextWindow.forRef`, which for such a model is the host's window; without an advertised window the loop falls back to this side's own, and the cap stays home as before.
+- `luma_agent_turn: true` when the turn is the client's own agent loop and nothing chose a thinking position (`extra.agentTurn`, set by [ThinkingDial](ThinkingDial.md)). The host fills in the agent default from its own dial.
+- `luma_complexity` (`heavy` or `light`, `extra.complexity`): the run's weight, which the host turns into its expert-cache hint as it does for its own runs.
+- `luma_call_type` for a housekeeping call (`side`, `title`, `compact`; `extra.callType`, which [ModelDispatcher](ModelDispatcher.md) now hands the remote path from the trace tag). The host then treats it as the same kind of call, so its Tune temperature leaves that call's temperature alone, while an agent step that pins its temperature still yields to the host's Tune temperature, as the host's own agent step does.
+
+The rule's table gains those three rows; all of them tell the host what kind of request this is, none overrides a host setting.

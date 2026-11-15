@@ -6,6 +6,7 @@ const ImageCatalogRegistry = require('../../image-server/models/ImageCatalogRegi
 const RuntimeCatalogRegistry = require('../../llm-server/runtimes/RuntimeCatalogRegistry');
 const ModelCatalogRegistry = require('../../llm-server/models/ModelCatalogRegistry');
 const TtsEngineRegistry = require('../../tts-server/TtsEngineRegistry');
+const TerminalProfileContributions = require('../../terminal/shells/TerminalProfileContributions');
 
 class ExtensionTeardown {
   static sharedRegistries() {
@@ -16,6 +17,7 @@ class ExtensionTeardown {
       runtimeCatalog: RuntimeCatalogRegistry.shared,
       modelCatalog: ModelCatalogRegistry.shared,
       ttsEngines: TtsEngineRegistry.shared,
+      terminalProfiles: TerminalProfileContributions.shared,
     };
   }
 
@@ -65,6 +67,7 @@ class ExtensionTeardown {
     r.modelCatalog.unregisterByExtension(id);
     if (r.runtimeCatalog.unregisterByExtension(id) > 0) LlmRuntimesView.invalidate(this._coreServices);
     r.ttsEngines.unregisterByExtension(id);
+    if (r.terminalProfiles) r.terminalProfiles.unregisterByExtension(id);
   }
 
   _disableRoutes(id) {

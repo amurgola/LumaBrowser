@@ -40,6 +40,7 @@ class SharedImageJob extends SharedMediaJob {
       strength: body.strength,
       refImages: Array.isArray(body.refImages) ? body.refImages : null,
       mask: body.mask || null,
+      snapNative: body.snapNative === false ? false : undefined,
       slot: this._isEdit() ? 'edit' : 'generate',
       forceLocal: true,
       send: (type, payload) => this._send(type, payload),

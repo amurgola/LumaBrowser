@@ -6,8 +6,9 @@ The new tab page at `luma://newtab/`: a search box for the user's search engine 
 per host over the last 90 days, at most 8, with favicons from the favicon cache), nothing else.
 
 - **Scheme:** `luma:` is registered privileged (standard, secure, fetch) before the app is ready (ProcessSetup) and
-  served on every tab session (SessionSetup). Where the session has `protocol.registerSource` (Electron 45,
-  experimental) the `ui/newtab` folder is served by Chromium with no JavaScript handler (`source()`), so no request
+  served on every tab session by [LumaPages](../LumaPages.md), together with the other `luma:` pages. Where the
+  session has `protocol.registerSource` (Electron 45, experimental) the `ui/newtab` folder is served by Chromium with
+  no JavaScript handler (`routes()`), so no request
   touches the main thread and a new tab opens just as fast while the main process is busy; host `newtab` only, index
   `newtab.html`, and a missing file or a path leaving the folder is not served. An Electron without it gets the old
   `protocol.handle` path (`serve`): only `/`, `/newtab.html`, `/newtab.css` and `/newtab.js` of host `newtab` exist;
@@ -18,9 +19,8 @@ per host over the last 90 days, at most 8, with favicons from the favicon cache)
 
 ## Methods
 
-- Statics: `privilegedScheme()`, `isNewTab(url)`, `resolve(db)`, `attach(session, fetchFile)` (once per session;
-  `registerSource` when available, else `protocol.handle` with `serve`), `source()` (the `registerSource` config:
-  one route matching host `newtab` to a `directory` source rooted at `DIR` with index `INDEX`), `serve(url, fetchFile)`
+- Statics: `privilegedScheme()`, `isNewTab(url)`, `resolve(db)`, `routes()` (the `registerSource` routes: one
+  route matching host `newtab` to a `directory` source rooted at `DIR` with index `INDEX`), `serve(url, fetchFile)`
   (the fallback handler; `fetchFile(fileUrl)` is Electron's `net.fetch`). `INDEX` is `newtab.html`.
 - `new NewTabPage({ db, history, favicons })`, `mode()`, `setMode(mode)`, `url()`, `data()` -> `{ engine: { name },
   sites: [{ url, title, host, icon }] }`, `searchUrl(query)`, `hidden()`, `hide(url)`, `resetHidden()`.

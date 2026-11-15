@@ -4,6 +4,7 @@ const ImageRun = require('./ImageRun');
 class RemoteImageRun extends ImageRun {
   static REQUEST_FIELDS = [
     'prompt', 'negativePrompt', 'width', 'height', 'steps', 'cfgScale', 'seed', 'sampler', 'scheduler', 'strength',
+    'snapNative',
   ];
 
   constructor({ role, send, notify, server, request }) {

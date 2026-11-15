@@ -21,6 +21,7 @@ class ApprovalGate {
   static GRANT_FAMILIES = Object.freeze([
     Object.freeze({ key: 'family:desktop-input', label: 'desktop control', carry: true, test: (n) => n.startsWith('desktop_') && n !== 'desktop_launch' }),
     Object.freeze({ key: 'family:vault', label: 'password manager use', carry: true, insist: true, test: (n) => n === 'vault_fill' }),
+    Object.freeze({ key: 'family:terminal', label: 'terminal use', test: (n) => n.startsWith('terminal_') }),
   ]);
 
   static SCOPE_SEPARATOR = '@';
