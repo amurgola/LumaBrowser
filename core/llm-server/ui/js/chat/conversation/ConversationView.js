@@ -23,6 +23,7 @@ export default class ConversationView {
     this._restoreOptions(conv);
     await this._restoreMode(conv, id);
     await ctx.docs.restore(id);
+    await ctx.mediaModels.restore(id);
     this.render(conv ? conv.title : 'Conversation');
     ConversationView._remember(ctx.api, id, conv);
     if (reattach) this._reattachStream();

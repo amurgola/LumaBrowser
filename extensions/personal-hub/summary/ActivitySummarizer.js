@@ -12,7 +12,8 @@ class ActivitySummarizer {
   static MAX_ITEMS_PER_CARD = 25;
   static RULE_TITLES = 3;
   static DEBOUNCE_MS = 15000;
-  static MAX_TOKENS = 700;
+  static MAX_TOKENS = 3000;
+  static TIMEOUT_MS = 300000;
   static DEEP_PER_CARD = 3;
 
   constructor({ inbox, contexts, summaries, db, llm = null, reader = null, people = null, emit = () => {}, now = () => new Date(), debounceMs = ActivitySummarizer.DEBOUNCE_MS }) {
@@ -159,7 +160,7 @@ class ActivitySummarizer {
     let reply;
     try {
       reply = await this._llm.sendCompletion(ActivitySummarizer.SLOT, SummaryPrompt.messages({ name: group.name }, this._enrich(items), { now: this._now(), who: this._who(items) }), {
-        temperature: 0.2, max_tokens: ActivitySummarizer.MAX_TOKENS, label: `Hub summary: ${group.name}`,
+        temperature: 0.2, max_tokens: ActivitySummarizer.MAX_TOKENS, timeout: ActivitySummarizer.TIMEOUT_MS, label: `Hub summary: ${group.name}`,
       });
     } catch (err) {
       return { error: (err && err.message) || String(err) };

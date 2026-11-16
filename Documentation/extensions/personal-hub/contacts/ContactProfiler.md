@@ -50,9 +50,13 @@ the user accepts or dismisses each one
   (`_contextOf`; none without a context service), so two contacts who share
   a name in two companies each get only their own messages.
 - `_ask(contact, material)`: `llm.sendCompletion(SLOT, messages, {
-  temperature: 0.1, max_tokens: MAX_TOKENS, label: 'Hub contact: <name>'
-  })` with [ContactProfilePrompt](ContactProfilePrompt.md)`.messages`,
-  `MAX_TOKENS` = 600, the reply read through
+  temperature: 0.1, max_tokens: MAX_TOKENS, timeout: TIMEOUT_MS, label:
+  'Hub contact: <name>' })` with
+  [ContactProfilePrompt](ContactProfilePrompt.md)`.messages`,
+  `MAX_TOKENS` = 3000 and `TIMEOUT_MS` = 300000 (thinking is left to the
+  model, so both leave it room to reason first, as in
+  [ActivitySummarizer](../summary/ActivitySummarizer.md)), the reply read
+  through
   [ResponseText](../../../core/llm-service/ResponseText.md) and
   `ContactProfilePrompt.parse`.
 - The proposals are stored through `ContactService.propose`, which leaves

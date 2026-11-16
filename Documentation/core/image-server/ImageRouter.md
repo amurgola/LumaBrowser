@@ -28,9 +28,12 @@ streams the render's events to the caller's `send`.
   every later failure also sends `error`. Local images resolve as
   `{ bytes, mime, width, height, seed }`; remote ones are converted to that shape.
 - `abort()` aborts the render in flight; returns `{ success: true }`.
-- `getModelNativeSize(modelRef?)`, `getFrameSizes(modelRef?)`,
-  `getActivePromptInfo(role?)`: see [ImageModelInfo](router/ImageModelInfo.md).
-- `getEditPromptInfo()`: see [ImageEditPromptInfo](router/ImageEditPromptInfo.md).
+- `getModelNativeSize(modelRef?)`, `getFrameSizes(modelRef?, picks?)`,
+  `getActivePromptInfo(role?, picks?)`: see [ImageModelInfo](router/ImageModelInfo.md).
+- `getEditPromptInfo(picks?)`: see [ImageEditPromptInfo](router/ImageEditPromptInfo.md).
+  `picks` is the caller's own model per job
+  ([ImageModelPicks](router/ImageModelPicks.md)), standing in for the Setup
+  defaults; `generate` itself takes the model as `request.modelRef`.
 
 The service must provide `getDefaults()`, `getModelsDirConfig()`,
 `serverForRole(role)`, `startServerResolved(id, { role })`, and optionally

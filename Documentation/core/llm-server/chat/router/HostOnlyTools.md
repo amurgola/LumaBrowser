@@ -10,3 +10,9 @@ and `RunToolSet` then never allows, offers or lists those tools, whatever the ho
 ## Methods
 
 - Static `isHostOnly(toolName)`. Static `PREFIXES`.
+
+## Named tools
+
+`HostOnlyTools.NAMES` holds the LoRA training tools (`train_lora`, `lora_training_status`,
+`cancel_lora_training`, `apply_lora`): training reads folders on this computer, holds its
+graphics card for hours and rewrites model manifests, so a turn run for someone else never gets them.

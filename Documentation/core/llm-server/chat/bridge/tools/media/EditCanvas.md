@@ -12,6 +12,7 @@ Sizes edit_image's canvas from a named frame.
   is a region's close-up when it has one, and `fill` then asks for the model's
   whole native area however small that close-up is): `{ width, height, frame,
   scaled }`. Remote editor: `EditFrames.resolveFrame` on the generic band (grid
-  64); edit-capable: on `imageRouter.getFrameSizes(editModelId)`; otherwise (or
+  64); edit-capable: on `imageRouter.getFrameSizes(editModelId)` (a unified model
+  the conversation picked: `generatePick`); otherwise (or
   on failure) the source shape rounded down to 64 and clamped to 256..1024
   (512 when unknown).

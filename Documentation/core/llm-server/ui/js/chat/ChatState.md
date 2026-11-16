@@ -20,5 +20,8 @@ frames by message id.
   [ChatEventRouter](stream/ChatEventRouter.md) matches them through this. `null` for an unknown request.
 - `resetChatOptions(toolsOn)`: tools flag, empty denylist, replies on, no
   thinking override, documentation source off (`docsSource`, the
-  "@lumabrowser-documentation" pill, see [DocsSourceContext](composer/DocsSourceContext.md)).
+  "@lumabrowser-documentation" pill, see [DocsSourceContext](composer/DocsSourceContext.md)),
+  and no say on the media models (`mediaModels` null: this chat's image, edit
+  and video model, `{ image?, edit?, video? }` once picked or restored, see
+  [MediaModelChoice](composer/MediaModelChoice.md)).
 - `enterPlainChat()`: mode `'chat'`, no mode descriptor or meta.

@@ -47,7 +47,7 @@ the legacy public API.
 `core:database` tables declared, or null), `sharedServices`, `ipc`, `logger`,
 `extensions` (APIs of declared, active extension deps) plus a `context['<dep>']`
 shortcut for each, `events`, `expose`, and the surfaces `chat`, `setupTab`,
-`imageCatalog`, `llmCatalog`, `voice`, `code`. See
+`imageCatalog`, `imageTraining`, `llmCatalog`, `voice`, `code`. See
 [ExtensionContextFactory](extensions/ExtensionContextFactory.md).
 
 ## Parts

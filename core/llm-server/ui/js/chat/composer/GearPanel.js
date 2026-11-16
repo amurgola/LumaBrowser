@@ -34,6 +34,7 @@ export default class GearPanel {
     if (keep('attach')) this._appendAttach(pop);
     this._appendModel(pop);
     this._appendPlanLine(pop);
+    if (keep('media')) this._appendMedia(pop);
     this._appendMode(pop);
     if (keep('choices')) this._appendChoices(pop);
     if (keep('browser')) this._appendBrowser(pop);
@@ -63,7 +64,15 @@ export default class GearPanel {
     if (!def || typeof def.renderGear !== 'function' || !modeCtx) return;
     const wrap = Dom.el('div', 'cm-gear-mode');
     pop.appendChild(wrap);
-    try { def.renderGear(wrap, modeCtx.forHooks(), { close: () => this.close(), fit: () => this.fit() }); } catch (_) { wrap.remove(); }
+    try { def.renderGear(wrap, modeCtx.forHooks(), this._modePanel()); } catch (_) { wrap.remove(); }
+  }
+
+  _modePanel() {
+    return {
+      close: () => this.close(),
+      fit: () => this.fit(),
+      mediaModels: (holder, binding) => this._fillMedia(holder, binding),
+    };
   }
 
   _docClick(e) {
@@ -126,6 +135,16 @@ export default class GearPanel {
   }
 
   static CLAUSE_SPLIT = new RegExp('\\.\\s|' + String.fromCharCode(0x2014));
+
+  _appendMedia(pop) {
+    const holder = Dom.el('div', 'cm-gear-media');
+    pop.appendChild(holder);
+    this._fillMedia(holder);
+  }
+
+  _fillMedia(holder, binding) {
+    return this._ctx.mediaModels.render(holder, binding).then(() => this.fit()).catch(() => {});
+  }
 
   _appendChoices(pop) {
     const { api, state } = this._ctx;

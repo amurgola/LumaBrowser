@@ -29,7 +29,10 @@ and reaches the main process only through its host's `invoke`.
   again (whether or not summaries are switched on); the button is disabled
   meanwhile, and when there is no LLM service or a pass is already running.
   Cards that failed are reported as an error (`2 cards could not be written;
-  see the status line.`), else `Summaries written.`.
+  see the status line.`), else `Summaries written.`. After a failed pass
+  (cards that failed, or a call that could not be made) the section is
+  loaded again, so the status line names the error (`Last attempt failed:
+  <error>`) and the button is usable again.
 - The status line (`statusText(status)`): `No language model service is
   available to the Hub.`, or the model (`Using <model>.`, or `No model is
   set up yet: pick one above, or set a provider in Settings.`) followed by

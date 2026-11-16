@@ -47,6 +47,7 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `image.setModelLoras(args)` | invoke `core.imageServer.setModelLoras` |
 | `image.getDefaults()` | invoke `core.imageServer.getDefaults` |
 | `image.isRoleReady(role)` | invoke `core.imageServer.isRoleReady` |
+| `image.getServerConfigs()` | invoke `core.imageServer.getServerConfigs` |
 | `image.setDefaults(payload)` | invoke `core.imageServer.setDefaults` |
 | `image.getRamPinStatus()` | invoke `core.imageServer.getRamPinStatus` |
 | `image.getAutoUnloadMs()` | invoke `core.imageServer.getAutoUnloadMs` |

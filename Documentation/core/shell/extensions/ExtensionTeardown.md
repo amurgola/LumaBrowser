@@ -7,7 +7,7 @@ Undoes everything an active extension plugged into the app.
 ## Methods
 
 - `ExtensionTeardown.sharedRegistries()` -> `{ chatModes, setupTabs, imageCatalog,
-  runtimeCatalog, modelCatalog, ttsEngines }`, the process-wide registries (the
+  imageTraining, runtimeCatalog, modelCatalog, ttsEngines }`, the process-wide registries (the
   manager's default; tests pass fresh ones).
 - `new ExtensionTeardown({ coreServices, ipcBridge, mcpAggregator, restGateway, registries })`.
 - `teardown(id, { manifest, instance })`: runs `deactivate()`, then unregisters

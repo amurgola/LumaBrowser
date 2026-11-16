@@ -22,7 +22,7 @@ class EditCanvas {
     if (choice.remoteEdit) return EditFrames.resolveFrame({ frame, srcDims, native: null, grid: EditCanvas.REMOTE_GRID, fill });
     if (!choice.editCapable || !imageRouter || typeof imageRouter.getFrameSizes !== 'function') return null;
     try {
-      const sizes = await imageRouter.getFrameSizes(choice.editModelId || null);
+      const sizes = await imageRouter.getFrameSizes(choice.editModelId || choice.generatePick || null);
       return sizes ? EditFrames.resolveFrame({ frame, srcDims, native: sizes.native, grid: sizes.grid, fill }) : null;
     } catch (_) {
       return null;

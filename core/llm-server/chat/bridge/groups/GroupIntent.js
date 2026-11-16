@@ -6,6 +6,7 @@ class GroupIntent {
     web: /\b(search (?:the )?web|web search|google|look up|latest|current(?:ly)?|today'?s|this (?:week|year)|recent(?:ly)?|news|stock price|weather|https?:\/\/)\b/i,
     knowledge_base: /\b(my (?:docs?|documents?|notes?|files?|pdfs?)|the (?:doc|document|pdf|file|paper|report)\s+i\s+(?:uploaded|added|shared)|in (?:the|my) (?:doc|document|pdf|notes?|knowledge ?base)|knowledge ?base|uploaded (?:doc|document|file|pdf))\b/i,
     tool_forge: /\b(?:create|build|make|write|add|forge)\b[\s\S]{0,30}?\b(?:custom |new |chat |another )?tool\b/i,
+    lora_training: /\blo-?ras?\b/i,
   };
 
   static infer(text, availableKeys) {

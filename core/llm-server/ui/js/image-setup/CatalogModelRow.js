@@ -43,7 +43,13 @@ export default class CatalogModelRow {
       ? `<span class="luma-badge warn" title="NC = non-commercial license. ${HtmlEscaper.escape(m.licenseNote)}">NC</span>` : '';
     const kindPill = `<span class="luma-badge ${m.kind === 'video' ? 'accent' : 'muted'}" title="Image category">${CatalogModelRow.kindLabel(m)}</span>`;
     const installedTag = isInstalled ? '<span class="luma-badge ok">installed</span>' : '';
-    return `${kindPill} ${ncPill} ${installedTag}`;
+    return `${kindPill} ${ncPill} ${CatalogModelRow.trainablePill(m)} ${installedTag}`;
+  }
+
+  static trainablePill(m) {
+    if (!m.loraTrainable) return '';
+    const title = `A LoRA can be trained for this model from your own pictures (${HtmlEscaper.escape(String(m.loraTrainable))}). Ask for it in chat.`;
+    return `<span class="luma-badge accent" title="${title}">LoRA trainable</span>`;
   }
 
   static _action(m, isInstalled, isDownloading, dl) {

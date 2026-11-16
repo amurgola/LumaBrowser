@@ -5,9 +5,11 @@
 Opens and renders a conversation: leaves the current one (mode hook, popovers,
 reading, panel, live modules, parked tab), loads its messages (session timings
 and tab frames re-attached), restores its model, mode, tools, choices,
-thinking position and documentation source pill
+thinking position, documentation source pill
 ([DocsSourceContext](../composer/DocsSourceContext.md), from the conversation
-meta), re-attaches a turn that is still streaming, paints the thread
+meta) and its own image, edit and video model
+([MediaModelChoice](../composer/MediaModelChoice.md), also from the meta),
+re-attaches a turn that is still streaming, paints the thread
 with the reply composer in the bottom bar, and re-applies the mode's theme and
 hooks. Also New chat.
 

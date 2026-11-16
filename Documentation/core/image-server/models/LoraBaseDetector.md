@@ -34,3 +34,9 @@ extension), `wan-video`, `minimax-h3`, `minimax-h3-image`.
   per-step output heads, so its LoRAs are a separate base; its metadata rule
   must run before the generic `minimax` rule.
 - Krea 2 (ai-toolkit LoKrs) is recognised by its `txtfusion` text-refiner branch.
+
+## Anima and MOSS-Image
+
+Bases `anima` and `moss-image` map to the families of the same name, so LoRAs trained
+for them are recognised. The `anima` metadata rule matches the whole word only: SDXL
+finetunes named Animagine or Animation are not taken for the Anima architecture.

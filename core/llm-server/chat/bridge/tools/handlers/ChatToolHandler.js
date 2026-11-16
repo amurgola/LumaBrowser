@@ -7,6 +7,10 @@ class ChatToolHandler {
     throw new Error(`${this.constructor.name} must implement execute()`);
   }
 
+  static async mediaModels(ctx) {
+    return typeof ctx.mediaModels === 'function' ? ctx.mediaModels() : {};
+  }
+
   static publish(ctx, artifact) {
     ctx.artifacts.push(artifact);
     if (ctx.hooks.onArtifact) ctx.hooks.onArtifact(artifact);

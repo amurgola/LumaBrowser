@@ -108,6 +108,7 @@ class ChatTurn {
     const conversation = this._d.conversation;
     conversation.syncTools(this._convId, this._agentMode);
     conversation.rememberDocsSource(this._convId, a.docsSource);
+    conversation.rememberMediaModels(this._convId, a.mediaModels);
     const choicesOn = conversation.resolveChoices(this._convId, a.choicesEnabled);
     const images = MessageImages.imagesOf(a.attachments);
     const userRow = conversation.addUserMessage(this._convId, a.userMessage, this._modelRef, !!a.regenerateMessageId, a.editMessageId);

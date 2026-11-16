@@ -7,7 +7,8 @@ class ContactProfiler {
   static LOG_DEPTH = 3000;
   static MAX_MESSAGES = 40;
   static MAX_CONVERSATIONS = 3;
-  static MAX_TOKENS = 600;
+  static MAX_TOKENS = 3000;
+  static TIMEOUT_MS = 300000;
 
   constructor({ contacts, inbox, snapshots, contexts = null, llm = null }) {
     this._contacts = contacts;
@@ -56,7 +57,7 @@ class ContactProfiler {
 
   async _ask(contact, material) {
     const reply = await this._llm.sendCompletion(ContactProfiler.SLOT, ContactProfilePrompt.messages(contact, material), {
-      temperature: 0.1, max_tokens: ContactProfiler.MAX_TOKENS, label: `Hub contact: ${contact.name}`,
+      temperature: 0.1, max_tokens: ContactProfiler.MAX_TOKENS, timeout: ContactProfiler.TIMEOUT_MS, label: `Hub contact: ${contact.name}`,
     });
     if (!reply || reply.success === false) throw new Error((reply && reply.error) || 'The model did not answer.');
     const proposals = ContactProfilePrompt.parse(ResponseText.extract(reply.response));

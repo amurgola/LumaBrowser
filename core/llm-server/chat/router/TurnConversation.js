@@ -1,4 +1,5 @@
 const ChatModelRef = require('./ChatModelRef');
+const ConversationMediaModels = require('./ConversationMediaModels');
 const ConversationTitle = require('./ConversationTitle');
 const DocsSourceGrant = require('./DocsSourceGrant');
 
@@ -38,6 +39,11 @@ class TurnConversation {
       if (current.join('\n') === next.join('\n')) return;
       this._store.setMeta(convId, { data: { ...data, docsSources: next } });
     } catch (_) {}
+  }
+
+  rememberMediaModels(convId, picks) {
+    if (!picks || typeof picks !== 'object' || !convId) return;
+    try { new ConversationMediaModels(this._store, convId).save(picks); } catch (_) {}
   }
 
   resolveChoices(convId, choicesEnabled) {

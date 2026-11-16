@@ -49,7 +49,8 @@ normalises its output onto the chat router's hooks.
    system prompt carries) and `pendingManualKeys` (minus the manuals the
    prior turns already carry, `ManualDelivery.carriedKeys`), the
    [ImagePromptHint](prompt/ImagePromptHint.md) when the images group is
-   active, [SystemPromptAppend](prompt/SystemPromptAppend.md) (with the frozen
+   active (for the conversation's own image and edit model when it picked
+   them), [SystemPromptAppend](prompt/SystemPromptAppend.md) (with the frozen
    `promptKeys` as its active groups), `RunToolSet#runToolList`, then `agent.run` with the
    catalog, the pending manuals ([ManualDelivery](prompt/ManualDelivery.md))
    and the task, `priorTurns`, the [RunResultSpill](RunResultSpill.md)
@@ -83,7 +84,11 @@ normalises its output onto the chat router's hooks.
 Every built-in handler's `ctx` carries `conversationId`, `assistantMessageId`,
 `deps`, `hooks`, `artifacts`, `trace`, `isAborted`, `ctxPerSlot`,
 `editRegions` (an [EditRegionIndex](prompt/EditRegionIndex.md) of the regions
-the user painted in earlier turns, for `edit_image`), `kbScope`, `webSession`,
+the user painted in earlier turns, for `edit_image`), `mediaModels()` (resolves
+the conversation's own image, edit and video model, read from its meta on
+every call and narrowed to what is still installed,
+[ConversationMediaModels](../router/ConversationMediaModels.md)`.usable`),
+`kbScope`, `webSession`,
 `webTabRender`, `allowTakeover`, `takeoverWait` and `takeoverAttention`.
 
 ## Outside the chat

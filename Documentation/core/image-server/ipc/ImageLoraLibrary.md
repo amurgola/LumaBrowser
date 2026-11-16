@@ -16,3 +16,10 @@ The shared `loras/` library beside the image models folder (what sd-server's `--
 ## Why
 
 A LoRA's `name` is its file name without the extension; the router re-adds it when building the wire entries (sd-server ignores `<lora:>` prompt tags). The user's source file is never repacked, only the library copy; a failed repack keeps the plain copy, which still applies partially.
+
+## Trained LoRAs
+
+`import(event, { path, meta })` writes `meta` (a trainer's family, recipe, source model and
+trigger word) beside the copy as its [LoraSidecar](../models/LoraSidecar.md) and returns it
+as `trained`. `list()` rows of such a LoRA carry `trained` too, and their `families` come
+from the sidecar rather than from the header guess.

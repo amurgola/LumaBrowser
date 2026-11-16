@@ -1,6 +1,7 @@
 const AgentRunner = require('../../agent/AgentRunner');
 const ToolLoopMonitor = require('../ToolLoopMonitor');
 const ApprovalPolicy = require('../approval/ApprovalPolicy');
+const ConversationMediaModels = require('../router/ConversationMediaModels');
 const SilentTab = require('../web-tools/SilentTab');
 const WebSession = require('../web-tools/WebSession');
 const AgentBudget = require('./AgentBudget');
@@ -124,6 +125,7 @@ class BridgeRun {
       isAborted: this.control.isAborted,
       ctxPerSlot: o.ctxPerSlot,
       editRegions: EditRegionIndex.collect(o.priorMessages),
+      mediaModels: () => this._mediaModels(),
       kbScope: this._toolSet.kbScope,
       webSession: new WebSession(),
       webTabRender: (!o.noBrowser && browserService) ? SilentTab.make(browserService, { isAborted: this.control.isAborted }) : null,
@@ -236,10 +238,17 @@ class BridgeRun {
     try { progress.end(this._o.conversationId); } catch (_) {}
   }
 
+  _mediaModels() {
+    const store = this._router && this._router.chatStore;
+    return new ConversationMediaModels(store, this._o.conversationId).usable(BridgeGlobals.imageServerService());
+  }
+
   async _systemPromptAppend() {
     const o = this._o;
     const groups = this._toolSet.groups;
-    const imagePromptHint = groups.active.has(BridgeRun.IMAGES_GROUP) ? await ImagePromptHint.fetch(BridgeGlobals.imageRouter()) : null;
+    const imagePromptHint = groups.active.has(BridgeRun.IMAGES_GROUP)
+      ? await ImagePromptHint.fetch(BridgeGlobals.imageRouter(), await this._mediaModels())
+      : null;
     return SystemPromptAppend.build({
       allows: this._toolSet.allows,
       extTools: this._toolSet.allExtTools,

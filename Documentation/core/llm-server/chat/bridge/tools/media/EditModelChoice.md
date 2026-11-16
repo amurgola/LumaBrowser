@@ -6,10 +6,16 @@ Decides how edit_image will run on this box.
 
 ## Methods
 
-- `EditModelChoice.resolve(imageRouter)`: never throws. Fields: `editModelId`
+- `EditModelChoice.resolve(imageRouter, picks?)`: never throws. Fields: `editModelId`
   (the edit default), `unifiedGenEdit` (no edit default and the generation
   default `supportsEdit`), `editFamily`, `remoteEdit` (the active
-  `image-edit` server is remote).
+  `image-edit` server is remote). `picks` is the conversation's own image and
+  edit model (`{ image?, edit? }`,
+  [ImageModelPicks](../../../../../image-server/router/ImageModelPicks.md)`.over`
+  the defaults): a picked edit model is `editModelId`, a picked image model is
+  the one checked for `supportsEdit`.
+- `generatePick`: the conversation's own image model, or null. The unified and
+  img2img routes run on it instead of the generation default.
 - `editCapable`, `profile` (`EditProfiles.editProfileFor(family)`, null for a
   remote editor), `maxReferences` (the profile's, else `EditReferences.MAX`).
 - `editDefaults`: the resolved record's defaults. `regionSteps`: the step

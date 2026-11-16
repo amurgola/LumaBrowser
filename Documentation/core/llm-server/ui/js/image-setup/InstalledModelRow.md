@@ -7,3 +7,8 @@
 ## Globals
 
 None.
+
+## LoRA trainable badge
+
+An installed model that carries `loraTrainable` shows the badge built by
+[CatalogModelRow](CatalogModelRow.md) `trainablePill`.

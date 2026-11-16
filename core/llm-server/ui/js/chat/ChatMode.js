@@ -12,6 +12,7 @@ import DashboardContext from './composer/DashboardContext.js';
 import DocsSourceContext from './composer/DocsSourceContext.js';
 import GearPanel from './composer/GearPanel.js';
 import GearToolList from './composer/GearToolList.js';
+import MediaModelChoice from './composer/MediaModelChoice.js';
 import ModelPicker from './composer/ModelPicker.js';
 import TabContext from './composer/TabContext.js';
 import ThinkPill from './composer/ThinkPill.js';
@@ -73,7 +74,7 @@ export default class ChatMode {
     panel: ArtifactPanel, panelEditor: PanelEditor,
     composer: ComposerView, availability: Availability, attachments: AttachmentStrip, paste: ClipboardAttach, regions: RegionStaging, tabs: TabContext, dashboard: DashboardContext,
     docs: DocsSourceContext, commands: ComposerCommands, thinkPill: ThinkPill,
-    gear: GearPanel, gearTools: GearToolList, models: ModelPicker, usage: UsageMeter,
+    gear: GearPanel, gearTools: GearToolList, models: ModelPicker, mediaModels: MediaModelChoice, usage: UsageMeter,
     turns: TurnRenderer, userTurns: UserTurnView, chain: ToolChainView, previewSlot: PreviewSlot,
     tabPreview: TabPreviewCard, artifactChips: ArtifactChips, liveArtifacts: LiveArtifacts, thinkPane: ThinkPane, tableSort: TableSort,
     runtimeFix: RuntimeFixCard, settingLink: SettingLink, errorCard: ErrorCard, turnActions: TurnActions, turnEditor: AssistantTurnEditor, userEditor: UserTurnEditor,

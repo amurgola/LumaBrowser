@@ -55,10 +55,6 @@
   display: block;
 }
 
-.rp-scene-btn, .rp-edit-btn { align-self: center; margin-left: var(--space-1); }
-
-.rp-scene-item.active { background: var(--bg-surface-2); color: var(--text-primary); font-weight: var(--weight-medium); }
-
 .rp-roster {
   display: flex;
   align-items: center;

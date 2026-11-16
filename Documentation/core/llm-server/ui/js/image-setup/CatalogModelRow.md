@@ -11,3 +11,9 @@
 ## Globals
 
 None.
+
+## LoRA trainable badge
+
+`CatalogModelRow.trainablePill(m)` returns the "LoRA trainable" badge for a model that
+carries `loraTrainable` (set by ImageModelsView when a trainer add-on registered a recipe
+for it), else an empty string. [InstalledModelRow](InstalledModelRow.md) shows the same badge.

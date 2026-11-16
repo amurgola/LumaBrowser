@@ -1,15 +1,17 @@
 const ImageModelsScanner = require('../ImageModelsScanner');
 const ImageModelCatalog = require('../models/ImageModelCatalog');
+const ImageTrainingRegistry = require('../models/ImageTrainingRegistry');
 const ImageModelManifest = require('./ImageModelManifest');
 const ModelDescriptor = require('../../shared/ModelDescriptor');
 
 class ImageModelsView {
   static KINDS = ['edit', 'generate', 'video'];
 
-  constructor({ imageServerService, scanner = new ImageModelsScanner(), catalog = new ImageModelCatalog() }) {
+  constructor({ imageServerService, scanner = new ImageModelsScanner(), catalog = new ImageModelCatalog(), training = ImageTrainingRegistry.shared }) {
     this._svc = imageServerService;
     this._scanner = scanner;
     this._catalog = catalog;
+    this._training = training;
   }
 
   async view() {
@@ -32,14 +34,20 @@ class ImageModelsView {
   }
 
   catalogView() {
-    const models = this._catalog.list();
+    const models = this._catalog.list().map((m) => this._withTraining(m));
     return { models, descriptors: models.map((m) => ModelDescriptor.toImageCatalogDescriptor(m)) };
   }
 
   async _viewOf(config) {
     const scan = await this._scanner.scan(config.effectivePath);
     for (const model of (scan.models || [])) model.displayName = this._svc.resolveModelDisplayName(model.id);
+    scan.models = (scan.models || []).map((m) => this._withTraining(m));
     return { config, scan, descriptors: ImageModelsView.descriptors(scan) };
+  }
+
+  _withTraining(model) {
+    const recipe = this._training.recipeFor(model);
+    return recipe ? { ...model, loraTrainable: recipe.label || recipe.id } : model;
   }
 
   async _findModel(modelsDir, modelId) {

@@ -88,7 +88,9 @@ as cards are written.
   card is tried again on the next pass.
 - `_ask(group, items)` -> `{ summary }` or `{ error }`: one question about
   one card, `llm.sendCompletion(SLOT, messages, { temperature: 0.2,
-  max_tokens: 700, label: 'Hub summary: <name>' })` with
+  max_tokens: MAX_TOKENS, timeout: TIMEOUT_MS, label: 'Hub summary:
+  <name>' })` (`MAX_TOKENS` = 3000, `TIMEOUT_MS` = 300000; nothing is said
+  about thinking, see "Room to think" below) with
   [SummaryPrompt](SummaryPrompt.md)`.messages` over the enriched items and
   `who: _who(items)`, the reply read through ResponseText and `SummaryPrompt.parse`. A thrown call,
   a refused reply (`The model did not answer.`) or one that does not parse
@@ -159,3 +161,17 @@ conversation would be slow and would open hidden tabs all day, so the Hub
 reads only where the first answer says the user may be needed, a few
 conversations per card, and lets the model look again. Most cards need
 nothing and cost one call.
+
+### Room to think
+
+The call says nothing about thinking, so a thinking model reasons as it
+would in a chat (the user's choice, 2026-11-16: the judgement of who is
+waiting is worth the wait). The reasoning counts against `max_tokens` and
+the clock, so both leave room for it. Measured that day on Qwen 3.8 27B
+(Q6, 14 to 19 tokens a second) with a 25 item card: the reasoning ran from
+about 600 tokens (38 to 40 seconds) to about 1700 (124 seconds) for the
+same prompt, before a 100 token card. The earlier limits (700 tokens, the
+provider's 30 second default) cut that off, and every card failed with
+`timeout of 30000ms exceeded`. 3000 tokens covers the longest reasoning seen
+with room for a card whose items carry conversations; 3000 tokens take about
+210 seconds at the slower speed, so the limit is 300.

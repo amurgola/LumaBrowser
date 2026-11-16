@@ -8,7 +8,9 @@
 ## Methods
 
 - `execute(_, params, ctx)`: needs `BridgeGlobals.imageRouter()` and a
-  non-empty `prompt`; `router.generate({ prompt, send })` with a
+  non-empty `prompt`; `router.generate({ prompt, modelRef, send })` (`modelRef`
+  is the conversation's own image model from `ChatToolHandler.mediaModels`,
+  undefined for the Setup default) with a
   [MediaProgressSink](../media/MediaProgressSink.md); failures through
   [MediaRenderOutcome](../media/MediaRenderOutcome.md)`.images`; stores the
   first image (title from [MediaTitle](../media/MediaTitle.md)) and returns

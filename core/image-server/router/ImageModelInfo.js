@@ -1,5 +1,6 @@
 const EditFrames = require('../EditFrames');
 const ImageFamilyScaffold = require('./ImageFamilyScaffold');
+const ImageModelPicks = require('./ImageModelPicks');
 const ImageModelResolver = require('./ImageModelResolver');
 
 class ImageModelInfo {
@@ -21,9 +22,9 @@ class ImageModelInfo {
     return { modelId: model.id, width: native.width, height: native.height };
   }
 
-  async frameSizes(modelRef = null) {
+  async frameSizes(modelRef = null, picks = null) {
     const model = await this._safeResolve(() => {
-      const defaults = this._svc.getDefaults();
+      const defaults = this._defaults(picks);
       return ImageModelResolver.idFor(modelRef, defaults.editModelId || defaults.modelId);
     });
     if (!model) return null;
@@ -32,9 +33,9 @@ class ImageModelInfo {
     return { modelId: model.id, label: ImageModelInfo.labelOf(model), native, grid, frames: EditFrames.listFrames({ native, grid }) };
   }
 
-  async activePromptInfo(role = 'generate') {
+  async activePromptInfo(role = 'generate', picks = null) {
     const model = await this._safeResolve(() => {
-      const defaults = this._svc.getDefaults();
+      const defaults = this._defaults(picks);
       return role === 'edit' ? (defaults.editModelId || defaults.modelId) : defaults.modelId;
     });
     if (!model) return null;
@@ -46,6 +47,10 @@ class ImageModelInfo {
       promptGuide: md.promptGuide ? String(md.promptGuide) : null,
       negativePrompt: md.negativePrompt ? String(md.negativePrompt) : null,
     };
+  }
+
+  _defaults(picks) {
+    return ImageModelPicks.over(this._svc.getDefaults(), picks);
   }
 
   static labelOf(model) {

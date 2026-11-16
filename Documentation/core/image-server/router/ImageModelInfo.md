@@ -13,14 +13,18 @@ resolves `null` when nothing is configured or anything fails.
 - `nativeSize(modelRef?)` resolves `{ modelId, width, height }` from the model's
   defaults over its family scaffold, 512 per missing side. `modelRef` null is the
   configured generation model.
-- `frameSizes(modelRef?)` resolves `{ modelId, label, native, grid, frames }`:
+- `frameSizes(modelRef?, picks?)` resolves `{ modelId, label, native, grid, frames }`:
   `native` falls back to 1024 per side, `grid` to 64, `frames` is
   [EditFrames](../EditFrames.md)`.listFrames({ native, grid })`. `modelRef` null
   is the edit default, then the generation default (as `edit_image` routes).
-- `activePromptInfo(role = 'generate')` resolves
+- `activePromptInfo(role = 'generate', picks?)` resolves
   `{ modelId, label, family, promptGuide, negativePrompt }` for the generation
   model, or for `'edit'` the edit default then the generation default.
   Missing guide or negative is `null`.
+- `picks` (both methods): the caller's own model per job
+  ([ImageModelPicks](ImageModelPicks.md), a chat conversation's), which stand in
+  for the defaults: a picked image model is the generation default, a picked
+  edit model the edit default. An explicit `modelRef` still wins.
 - `ImageModelInfo.labelOf(model)`: label, displayName, then id.
 - `ImageModelInfo.gridOf(model, fallback)`: `constraints.dimensionMultiple` when above 1.
 

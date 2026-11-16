@@ -9,6 +9,7 @@ export default class TurnFlags {
       reasoningEffort: state.reasoningEffort || undefined,
       voice: voice || undefined,
       docsSource: state.docsSource === true,
+      mediaModels: state.mediaModels || undefined,
     };
   }
 

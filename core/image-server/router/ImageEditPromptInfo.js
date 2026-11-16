@@ -1,6 +1,7 @@
 const EditGuide = require('../prompt/EditGuide');
 const EditProfiles = require('../prompt/EditProfiles');
 const ImageModelInfo = require('./ImageModelInfo');
+const ImageModelPicks = require('./ImageModelPicks');
 
 class ImageEditPromptInfo {
   constructor({ imageServerService, models }) {
@@ -8,10 +9,10 @@ class ImageEditPromptInfo {
     this._models = models;
   }
 
-  async resolve() {
+  async resolve(picks = null) {
     try {
       if (this._editorIsRemote()) return ImageEditPromptInfo._reference(null);
-      const defaults = this._svc.getDefaults();
+      const defaults = ImageModelPicks.over(this._svc.getDefaults(), picks);
       const editModel = await this._editDefault(defaults);
       if (editModel) return ImageEditPromptInfo._reference(editModel);
       return await this._fromGenerationDefault(defaults);

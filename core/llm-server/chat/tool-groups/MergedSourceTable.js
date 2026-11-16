@@ -41,6 +41,13 @@ class MergedSourceTable {
       stub: 'Build a NEW custom chat tool for the user (sandboxed JS that calls an API): '
         + 'create_tool → test_tool → publish_tool. Publishing enables the tool immediately.',
     }),
+    'ext.lora-trainer': Object.freeze({
+      key: 'lora_training',
+      label: 'LoRA training',
+      stub: 'Teach an installed image model a character, object or style from the user\'s own pictures by training '
+        + 'a LoRA: train_lora (starts a background job that takes from minutes to hours) -> lora_training_status -> '
+        + 'apply_lora attaches the finished LoRA to an image model of the matching family.',
+    }),
   });
 
   static forSource(source) {

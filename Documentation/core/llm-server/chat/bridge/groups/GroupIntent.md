@@ -15,3 +15,8 @@ Infers from a user message which lazy tool groups the turn plainly needs.
 
 Recall-leaning: a false positive costs a few prompt lines, a false negative a
 malformed call and a bounce.
+
+## LoRA training
+
+`lora_training` matches the word LoRA (or LoRAs) on its own: "train a lora of these",
+"how is the lora going" and "apply my lora" all load the group.

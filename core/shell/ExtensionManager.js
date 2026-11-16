@@ -16,6 +16,7 @@ const CapabilitiesSnapshot = require('./extensions/CapabilitiesSnapshot');
 const ChatSurface = require('./extensions/ChatSurface');
 const SetupTabSurface = require('./extensions/SetupTabSurface');
 const ImageCatalogSurface = require('./extensions/ImageCatalogSurface');
+const ImageTrainingSurface = require('./extensions/ImageTrainingSurface');
 const LlmCatalogSurface = require('./extensions/LlmCatalogSurface');
 const VoiceSurface = require('./extensions/VoiceSurface');
 const CodeSurface = require('./extensions/CodeSurface');
@@ -190,6 +191,7 @@ class ExtensionManager {
       chat || new ChatSurface({ registry: r.chatModes }),
       new SetupTabSurface({ registry: r.setupTabs }),
       new ImageCatalogSurface({ registry: r.imageCatalog }),
+      new ImageTrainingSurface({ registry: r.imageTraining }),
       new LlmCatalogSurface({ runtimes: r.runtimeCatalog, models: r.modelCatalog, coreServices: this.coreServices }),
       new VoiceSurface({ registry: r.ttsEngines, coreServices: this.coreServices }),
       this._codeSurface,

@@ -3,6 +3,7 @@ const path = require('path');
 const ImageLoraCatalog = require('../models/ImageLoraCatalog');
 const LoraInspector = require('../models/LoraInspector');
 const LoraRepacker = require('../models/LoraRepacker');
+const LoraSidecar = require('../models/LoraSidecar');
 const PathPicker = require('../../shared/ipc/PathPicker');
 const ImageDownloadSlot = require('./ImageDownloadSlot');
 
@@ -39,7 +40,9 @@ class ImageLoraLibrary {
     const dest = this._copyIn(src);
     const repacked = insp.needsFusedMlpRepack ? ImageLoraLibrary._repack(dest) : false;
     const base = path.basename(src);
-    return { name: ImageLoraLibrary.nameOf(base), file: base, base: insp.base, families: insp.families, form: insp.form, repacked };
+    const trained = args && args.meta ? LoraSidecar.write(dest, args.meta) : null;
+    const families = ImageLoraLibrary._familiesOf(insp, trained);
+    return { name: ImageLoraLibrary.nameOf(base), file: base, base: insp.base, families, form: insp.form, repacked, ...(trained ? { trained } : {}) };
   }
 
   catalogView() {
@@ -89,14 +92,21 @@ class ImageLoraLibrary {
     try { bytes = fs.statSync(full).size; } catch (_) {}
     const insp = this._inspectCached(full);
     const ok = !!(insp && insp.ok);
+    const trained = LoraSidecar.read(full);
     return {
       name: ImageLoraLibrary.nameOf(fileName),
       file: fileName,
       bytes,
       base: (ok && insp.base) || null,
-      families: (ok && insp.families) || [],
+      families: ImageLoraLibrary._familiesOf(ok ? insp : null, trained),
       form: (ok && insp.form) || null,
+      ...(trained ? { trained } : {}),
     };
+  }
+
+  static _familiesOf(insp, trained) {
+    if (trained && trained.family) return [trained.family];
+    return (insp && insp.families) || [];
   }
 
   _inspectCached(filePath) {

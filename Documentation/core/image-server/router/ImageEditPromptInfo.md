@@ -9,7 +9,7 @@ with it, for the chat agent's system prompt.
 
 - `new ImageEditPromptInfo({ imageServerService, models })`; `models` is an
   [ImageModelResolver](ImageModelResolver.md).
-- `resolve()` resolves
+- `resolve(picks?)` resolves
   `{ mode: 'reference'|'img2img', modelId, label, family, refTag, maxReferences, guide }`
   or `null`, never rejecting. The route, in order:
   1. a remote edit server: reference rules with `modelId: null`, plain word tags;
@@ -21,6 +21,10 @@ with it, for the chat agent's system prompt.
   [EditProfiles](../prompt/EditProfiles.md) (generic `'word'` and
   `DEFAULT_MAX_REFERENCES` for an unknown family); `guide` is
   [EditGuide](../prompt/EditGuide.md)`.build`.
+  `picks` are the caller's own models ([ImageModelPicks](ImageModelPicks.md), a
+  chat conversation's): they stand in for the edit and generation defaults in
+  steps 2 to 4, so the rules follow the model that conversation's `edit_image`
+  really runs on.
 
 ## Why
 

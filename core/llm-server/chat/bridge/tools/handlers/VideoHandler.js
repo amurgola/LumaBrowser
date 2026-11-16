@@ -24,7 +24,8 @@ class VideoHandler extends ChatToolHandler {
     const sink = new MediaProgressSink({ tool, hooks: ctx.hooks, isAborted: ctx.isAborted });
     let result;
     try {
-      result = await router.generate({ prompt, ...frames, durationSec: VideoHandler._duration(params), send: sink.send });
+      const { video } = await ChatToolHandler.mediaModels(ctx);
+      result = await router.generate({ prompt, ...frames, durationSec: VideoHandler._duration(params), modelRef: video, send: sink.send });
     } catch (err) {
       return { success: false, error: `${tool} failed: ${err.message}` };
     }

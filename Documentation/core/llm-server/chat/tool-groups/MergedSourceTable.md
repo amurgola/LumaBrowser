@@ -24,3 +24,9 @@ lazy group instead of one group per tool.
 As separate groups every step of one job cost an auto-activation bounce:
 building one forge tool took three "auto-activated, re-issue your call" round
 trips. Activating any tool of a merged group loads all of its manuals.
+
+## LoRA training
+
+Source `ext.lora-trainer` merges `train_lora`, `lora_training_status`,
+`cancel_lora_training` and `apply_lora` into one group, key `lora_training`: start, status
+and apply are one job that outlives the turn that started it.

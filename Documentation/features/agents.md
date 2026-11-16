@@ -48,7 +48,8 @@ A narrator with a story memory.
   message, or carrying on from a regenerated reply all continue from the branch on screen: the history, the
   cast, the place and the story record are that branch's.
 - The model picked in the composer's gear is the story's model from the next reply.
-- Reply length, tone and narrator thinking are set from the composer.
+- Reply length, tone, narrator thinking and the story's image models are set from the composer's gear, which
+  also holds the scene switcher, the gallery and Create image.
 
 ## Connecting outside agents
 

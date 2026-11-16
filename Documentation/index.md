@@ -1269,7 +1269,8 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/chat/composer/ContextOptionText.md](core/llm-server/ui/js/chat/composer/ContextOptionText.md): text for the model picker's context chips, keeping a measured fit apart from an estimate and a measured speed apart from a predicted one ("~").
 - [core/llm-server/ui/js/chat/composer/DocsSourceContext.md](core/llm-server/ui/js/chat/composer/DocsSourceContext.md): the "@lumabrowser-documentation" source: a conversation-wide pill (no attachment text) that makes every turn carry `docsSource: true`, kept in the conversation meta and restored on reopen; hidden where the host has no index; has `load`, `available`, `matches`, `set`, `enable`, `disable`, `restore`, `pillHtml`.
 - [core/llm-server/ui/js/chat/composer/DashboardContext.md](core/llm-server/ui/js/chat/composer/DashboardContext.md): ask about the Dashboard: "@dashboard" or "/dashboard" reads every placed widget on the host and stages the text as one chip (a second mention refreshes it; a failed read is a red chip with the reason); has `available`, `attach`, `attachment`.
-- [core/llm-server/ui/js/chat/composer/GearPanel.md](core/llm-server/ui/js/chat/composer/GearPanel.md): the composer's gear panel, this chat's options: Attach a file (desktop), the model row (keeps the `cm-model-pill` class the picker anchors to and the PWA's info intercept reads) with a one-line launch-plan summary, Suggest replies, Watch the browser tab live (a global preference), and the per-chat tool list.
+- [core/llm-server/ui/js/chat/composer/GearPanel.md](core/llm-server/ui/js/chat/composer/GearPanel.md): the composer's gear panel, this chat's options: Attach a file (desktop), the model row (keeps the `cm-model-pill` class the picker anchors to and the PWA's info intercept reads) with a one-line launch-plan summary, this chat's image, image editor and video model, Suggest replies, Watch the browser tab live (a global preference), and the per-chat tool list.
+- [core/llm-server/ui/js/chat/composer/MediaModelChoice.md](core/llm-server/ui/js/chat/composer/MediaModelChoice.md): the gear panel's "Media models" rows: this chat's own image, image editor and video model, shown once the image engine is set up, kept in the conversation meta and carried on every turn; a chat mode can place the same rows bound to its own storage; has `available`, `restore`, `render`.
 - [core/llm-server/ui/js/chat/composer/GearToolList.md](core/llm-server/ui/js/chat/composer/GearToolList.md): the gear panel's per-chat agent tool checklist: collapsible groups (collapsed by default) with a tri-state group box and an on/total count.
 - [core/llm-server/ui/js/chat/composer/ModelPicker.md](core/llm-server/ui/js/chat/composer/ModelPicker.md): the model selection: the listed models, local models with per-context options (fit-measured or estimated), each model's profiles, the pill label ("Local · Qwen3-8B · Precise · 16k"), the picker popover with a Tune button per row, and the context window the usage meter divides by.
 - [core/llm-server/ui/js/chat/composer/LocalModelRows.md](core/llm-server/ui/js/chat/composer/LocalModelRows.md): the picker's Local group: one compact row per model with its context as a small button, sizes opened in place under one model.
@@ -1733,6 +1734,7 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/router/ImageCanvas.md](core/image-server/router/ImageCanvas.md): native-resolution snap, grid alignment and render floor; has `snapToQwenNative`, `alignToGrid`, `raiseToMinArea`.
 - [core/image-server/router/ImageLoraSpecs.md](core/image-server/router/ImageLoraSpecs.md): declared LoRAs to sd-server LoRA entries; has `resolve`.
 - [core/image-server/router/ImageSlotPicker.md](core/image-server/router/ImageSlotPicker.md): which image slot serves a request; has `explicitRole`, `remoteRole`, `requestRole`, `residentSlot`.
+- [core/image-server/router/ImageModelPicks.md](core/image-server/router/ImageModelPicks.md): a caller's own model per job (image, edit, video), such as one chat conversation's, laid over the Setup defaults; has `normalize`, `over`, `installedOnly`.
 - [core/image-server/router/ImageModelResolver.md](core/image-server/router/ImageModelResolver.md): installed image model lookup; has `resolve`, `lorasDir`.
 - [core/image-server/router/ImageModelInfo.md](core/image-server/router/ImageModelInfo.md): native size, edit frames and prompt hint for a model; has `nativeSize`, `frameSizes`, `activePromptInfo`.
 - [core/image-server/router/ImageEditPromptInfo.md](core/image-server/router/ImageEditPromptInfo.md): how edit_image will run and its prompt rules; has `resolve`.
@@ -1805,6 +1807,8 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/service/ImageLaunchLog.md](core/image-server/service/ImageLaunchLog.md): the image launch console line; has `line`.
 - [core/image-server/service/ImageSlotLaunch.md](core/image-server/service/ImageSlotLaunch.md): one model launch on an image slot; has `run`.
 - [core/image-server/VideoIpcHandlers.md](core/image-server/VideoIpcHandlers.md): video generation IPC controller; has `register`.
+- [core/image-server/models/ImageTrainingRegistry.md](core/image-server/models/ImageTrainingRegistry.md): LoRA training recipes contributed by extensions and which models each covers; has `recipeFor`, `matches`, `shared`.
+- [core/image-server/models/LoraSidecar.md](core/image-server/models/LoraSidecar.md): the `<name>.lora.json` record beside a trained LoRA (family, recipe, source model, trigger); has `read`, `write`, `pathFor`.
 
 ## core/music-server
 
@@ -2750,6 +2754,7 @@ dock under the page, and driven by AI through the `terminal_*` tools once the us
 - [core/shell/extensions/ToggleConstraints.md](core/shell/extensions/ToggleConstraints.md): whether each discovered extension can be switched on or off now.
 - [core/shell/extensions/VisionAvailability.md](core/shell/extensions/VisionAvailability.md): whether an image passed to `context.chat.complete` would reach the model.
 - [core/shell/extensions/VoiceSurface.md](core/shell/extensions/VoiceSurface.md): `context.voice`: alternate TTS engines and the app's speech recognizer.
+- [core/shell/extensions/ImageTrainingSurface.md](core/shell/extensions/ImageTrainingSurface.md): `context.imageTraining`: the LoRA training recipes a trainer extension registers.
 
 ## core/llm-server/chat/router
 
@@ -2757,6 +2762,7 @@ dock under the page, and driven by AI through the `terminal_*` tools once the us
 - [core/llm-server/chat/router/AgentCompletion.md](core/llm-server/chat/router/AgentCompletion.md): one non-streaming completion for the agent loop, with retries.
 - [core/llm-server/chat/router/AgentToolPolicy.md](core/llm-server/chat/router/AgentToolPolicy.md): the user's agent-tool policy: the global denylist plus a conversation's gear-panel denylist as an allow-list, the gear panel's catalog, and its opt-in toggle channel.
 - [core/llm-server/chat/router/AgentTurnDispatch.md](core/llm-server/chat/router/AgentTurnDispatch.md): routes a Tools-on chat turn through the agent bridge.
+- [core/llm-server/chat/router/ConversationMediaModels.md](core/llm-server/chat/router/ConversationMediaModels.md): one conversation's own image, edit and video model, kept in its meta (`data.mediaModels`) and read by the media tools of every run in it; has `read`, `save`, `usable`.
 - [core/llm-server/chat/router/DocsSourceGrant.md](core/llm-server/chat/router/DocsSourceGrant.md): what a turn with the "@lumabrowser-documentation" source on gets: the `search_lumabrowser_docs` session tool and prompt note (Tools on) or a retrieval pre-pass into the system head (Tools off); has `forTurn`, `extraTool`, `note`, `allowing`, `prepass`.
 - [core/llm-server/chat/delegation/DelegationTools.md](core/llm-server/chat/delegation/DelegationTools.md): the chat agent's `list_delegates` and `delegate_task` (source `core.delegation`): hand a task to a chat mode or custom agent as a sub-conversation nested under the chat; has `handle`, `handler`.
 - [core/llm-server/chat/delegation/DelegateTargets.md](core/llm-server/chat/delegation/DelegateTargets.md): the targets of every chat mode with a `delegate` block, read live; has `list`, `find`, `start`.
@@ -4405,3 +4411,35 @@ Windhawk mods that are desktop clients of Desktop Integration; install and autho
 - [tools/windhawk/check-mods.md](tools/windhawk/check-mods.md): `npm run windhawk:check [-- <mod>]`, compile-checks the Windhawk mods with the installed Windhawk compiler.
 - [tools/windhawk/WindhawkModChecker.md](tools/windhawk/WindhawkModChecker.md): compiles a mod per `@architecture` with Windhawk's own arguments into a temp DLL and checks its `luma_client` block; has `check`, `args`, `available`, `engineDir`.
 - [tools/windhawk/ModHeader.md](tools/windhawk/ModHeader.md): re-export of core WindhawkModSource for check-mods; has `parse`, `targets`, `splitArgs`, `clientBlock`.
+
+## extensions/lora-trainer
+
+- [extensions/lora-trainer/ImageCaptioner.md](extensions/lora-trainer/ImageCaptioner.md): captions one picture with the chat vision model, trigger first, with a fallback; has `caption`, `visionAvailable`.
+- [extensions/lora-trainer/LoraApplier.md](extensions/lora-trainer/LoraApplier.md): attaches or detaches a library LoRA on a model of the matching family; has `apply`.
+- [extensions/lora-trainer/LoraTrainerExtension.md](extensions/lora-trainer/LoraTrainerExtension.md): the active add-on: registers recipes, builds the training services, binds the tools.
+- [extensions/lora-trainer/LoraTrainerTools.md](extensions/lora-trainer/LoraTrainerTools.md): the four chat tools (train_lora, lora_training_status, cancel_lora_training, apply_lora) and their routing.
+- [extensions/lora-trainer/LoraTrainingFlow.md](extensions/lora-trainer/LoraTrainingFlow.md): the unified training flow as one background job; has `start`, `cancel`, `settled`.
+- [extensions/lora-trainer/ProcessRunner.md](extensions/lora-trainer/ProcessRunner.md): runs a long command without a shell with line streaming, cancel and timeout; has `run`.
+- [extensions/lora-trainer/TrainableModels.md](extensions/lora-trainer/TrainableModels.md): resolves the installed model to train or apply to, with its recipe and base weights; has `find`, `trainingTarget`, `trainable`.
+- [extensions/lora-trainer/TrainedLoraInstaller.md](extensions/lora-trainer/TrainedLoraInstaller.md): moves a finished LoRA into the library with its sidecar under a free name; has `install`, `availableName`, `outputFile`.
+- [extensions/lora-trainer/TrainerEnvironment.md](extensions/lora-trainer/TrainerEnvironment.md): environment variables for uv and for a training run; has `forInstall`, `forTraining`.
+- [extensions/lora-trainer/TrainerImageHost.md](extensions/lora-trainer/TrainerImageHost.md): the add-on's seam onto the image services and chat artifacts; has `installedModels`, `listLoras`, `importLora`, `setModelLoras`, `stopImageServers`, `artifact`.
+- [extensions/lora-trainer/TrainerOverview.md](extensions/lora-trainer/TrainerOverview.md): the status answer: the job, recent jobs, trainer state, trainable models, trained LoRAs; has `describe`.
+- [extensions/lora-trainer/TrainerPaths.md](extensions/lora-trainer/TrainerPaths.md): where the trainer runtime, job folders and weights cache live under the managed base folder.
+- [extensions/lora-trainer/TrainerRequirements.md](extensions/lora-trainer/TrainerRequirements.md): flattens ai-toolkit's requirements and turns git lines into archive URLs; has `resolve`, `withoutGit`.
+- [extensions/lora-trainer/TrainerRuntime.md](extensions/lora-trainer/TrainerRuntime.md): whether the trainer is installed and current, installing it on first use, and the training command; has `status`, `ensureInstalled`, `trainCommand`.
+- [extensions/lora-trainer/TrainerRuntimeInstall.md](extensions/lora-trainer/TrainerRuntimeInstall.md): one install of the trainer runtime: uv, source, venv, PyTorch, requirements, manifest; has `execute`.
+- [extensions/lora-trainer/TrainerRuntimeSpec.md](extensions/lora-trainer/TrainerRuntimeSpec.md): the pinned ai-toolkit commit, Python and PyTorch pins, uv asset and CUDA flavor choice.
+- [extensions/lora-trainer/TrainingConfig.md](extensions/lora-trainer/TrainingConfig.md): builds the ai-toolkit job file from a recipe and a job; has `build`.
+- [extensions/lora-trainer/TrainingDataset.md](extensions/lora-trainer/TrainingDataset.md): writes the numbered picture and caption pairs ai-toolkit reads; has `build`.
+- [extensions/lora-trainer/TrainingGpu.md](extensions/lora-trainer/TrainingGpu.md): claims the strongest graphics card for a run through the VRAM coordinator; has `claim`, `release`.
+- [extensions/lora-trainer/TrainingImageSources.md](extensions/lora-trainer/TrainingImageSources.md): collects pictures from chat artifacts, files and a folder as PNG or JPEG bytes; has `collect`.
+- [extensions/lora-trainer/TrainingJob.md](extensions/lora-trainer/TrainingJob.md): the state of one training job through its phases; has `enter`, `advance`, `finish`, `fail`, `cancel`, `snapshot`.
+- [extensions/lora-trainer/TrainingJobs.md](extensions/lora-trainer/TrainingJobs.md): the job registry: one running job, records kept on disk; has `create`, `active`, `get`, `recent`, `save`, `abandonedIds`.
+- [extensions/lora-trainer/TrainingProgress.md](extensions/lora-trainer/TrainingProgress.md): reads the trainer console output into step counts, loss and time left; has `read`.
+- [extensions/lora-trainer/TrainingRecipes.md](extensions/lora-trainer/TrainingRecipes.md): the per-family training recipes (ai-toolkit arch, base weights, caption style) and the gated families; has `forModel`, `registryEntry`.
+- [extensions/lora-trainer/TrainingRequest.md](extensions/lora-trainer/TrainingRequest.md): checks and normalises train_lora arguments; has `parse`, `slug`, `assertEnoughImages`.
+- [extensions/lora-trainer/TrainingWorkspace.md](extensions/lora-trainer/TrainingWorkspace.md): clears a job's working files when it ends; has `clear`, `clearAbandoned`.
+- [extensions/lora-trainer/main.md](extensions/lora-trainer/main.md): main-process entry: activates one LoraTrainerExtension.
+- [extensions/lora-trainer/manifest.md](extensions/lora-trainer/manifest.md): manifest of the LoRA Trainer add-on (bundled, tools via `mcpTools`).
+- [extensions/lora-trainer/mcp-tools.md](extensions/lora-trainer/mcp-tools.md): the tool set registered with the McpAggregator; has `tools`, `handler`, `bind`.

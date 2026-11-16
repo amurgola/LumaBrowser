@@ -72,6 +72,7 @@ class ImageApi extends PreloadSection {
     return {
       getDefaults: () => ipcRenderer.invoke('core.imageServer.getDefaults'),
       isRoleReady: (role) => ipcRenderer.invoke('core.imageServer.isRoleReady', role),
+      getServerConfigs: () => ipcRenderer.invoke('core.imageServer.getServerConfigs'),
       setDefaults: (payload) => ipcRenderer.invoke('core.imageServer.setDefaults', payload),
       getRamPinStatus: () => ipcRenderer.invoke('core.imageServer.getRamPinStatus'),
       getAutoUnloadMs: () => ipcRenderer.invoke('core.imageServer.getAutoUnloadMs'),

@@ -14,6 +14,8 @@ class LoraBaseDetector {
     'wan-video': { label: 'Wan video', families: ['wan-video'] },
     'minimax-h3': { label: 'MiniMax-H3', families: ['minimax-h3'] },
     'minimax-h3-image': { label: 'MiniMax-H3-Image', families: ['minimax-h3-image'] },
+    anima: { label: 'Anima', families: ['anima'] },
+    'moss-image': { label: 'MOSS-Image', families: ['moss-image'] },
   };
 
   static METADATA_RULES = [
@@ -28,6 +30,8 @@ class LoraBaseDetector {
     ['minimax-h3-image', (v) => v.includes('minimax') && /h3[-_ .]?image/.test(v)],
     ['minimax-h3', (v) => v.includes('minimax')],
     ['sdxl', (v) => v.includes('sdxl') || v.includes('stable-diffusion-xl')],
+    ['anima', (v) => /(?:^|[^a-z])anima(?:[^a-z]|$)/.test(v)],
+    ['moss-image', (v) => /moss[-_ .]?image/.test(v)],
     ['sd-1-5', (v) => /sd_?v?1[-._]?5|stable-diffusion-v1/.test(v)],
   ];
 

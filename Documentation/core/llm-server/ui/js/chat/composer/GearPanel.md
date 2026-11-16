@@ -4,7 +4,8 @@
 
 The composer's gear panel, this chat's options: Attach a file (desktop), the
 model row (keeps the `cm-model-pill` class the picker anchors to and the PWA's
-info intercept reads) with a one-line launch-plan summary, Suggest replies,
+info intercept reads) with a one-line launch-plan summary, this chat's image,
+image editor and video model, Suggest replies,
 Watch the browser tab live (a global preference), and the per-chat tool list.
 
 ## Methods
@@ -29,13 +30,33 @@ A chat mode whose definition has `renderGear(pop, ctx, panel)` owns the panel
 below the model row. The hook is called with a `.cm-gear-mode` wrapper placed
 after the model row and the plan line, the mode context
 (`ModeContext.forHooks()`: the conversation, its meta, `setMeta`) and
-`{ close, fit }` for the panel. A hook that throws has its wrapper removed, so
+`{ close, fit, mediaModels }` for the panel. A hook that throws has its wrapper removed, so
 the panel is left with the model row.
 
-For such a mode the attach, replies, browser and tools rows are hidden: they
-mean nothing to a mode that runs its own turn (a roleplay). The definition's
-`gearKeep` (any of `'attach'`, `'choices'`, `'browser'`, `'tools'`) names the
+For such a mode the attach, media models, replies, browser and tools rows are
+hidden: they mean nothing to a mode that runs its own turn (a roleplay). The
+definition's `gearKeep` (any of `'attach'`, `'media'`, `'choices'`,
+`'browser'`, `'tools'`) names the
 ones it still wants. A mode without `renderGear`, and plain chat, get every
 row as before.
 
 `chat.css` adds `.cm-gear-field` for a mode's labelled row (a label with a select or a text input).
+
+## Media models (2026-11-16)
+
+Under the model row and the plan line sits a `.cm-gear-media` holder that
+[MediaModelChoice](MediaModelChoice.md) fills with a "Media models for this
+chat" section: this chat's image, image editor and video model, each a
+`.cm-gear-field` select. The holder is placed when the panel opens and the
+rows arrive once the host has said what is installed, after which the panel
+is fitted again. It stays empty when the image engine is not set up, when no
+job has a model installed, and on the web client.
+
+A mode with its own gear section does not get that holder (unless its
+`gearKeep` names `'media'`), because a mode that draws its own pictures keeps
+its image models in its own data. It places the same rows itself:
+`panel.mediaModels(holder, binding)` fills a holder the mode put in its
+section, with `binding` saying which jobs to list and where the picks live
+(`{ jobs?, picks(), pick(job, id) }`, see
+[MediaModelChoice](MediaModelChoice.md)). The roleplay mode binds Image and
+Image editor to its story's `baseModel` and `editModel`.

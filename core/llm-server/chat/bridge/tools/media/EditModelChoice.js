@@ -1,12 +1,13 @@
 const EditProfiles = require('../../../../../image-server/prompt/EditProfiles');
+const ImageModelPicks = require('../../../../../image-server/router/ImageModelPicks');
 const ImageModelResolver = require('../../../../../image-server/router/ImageModelResolver');
 const BridgeGlobals = require('../../BridgeGlobals');
 const EditReferences = require('./EditReferences');
 
 class EditModelChoice {
-  static async resolve(imageRouter) {
+  static async resolve(imageRouter, picks = null) {
     const choice = new EditModelChoice();
-    await choice._readLocalDefaults(imageRouter);
+    await choice._readLocalDefaults(imageRouter, picks);
     choice._readRemoteEditor();
     return choice;
   }
@@ -15,6 +16,7 @@ class EditModelChoice {
 
   constructor() {
     this.editModelId = null;
+    this.generatePick = null;
     this.unifiedGenEdit = false;
     this.editFamily = null;
     this.editDefaults = null;
@@ -43,10 +45,11 @@ class EditModelChoice {
     return profile ? profile.maxReferences : EditReferences.MAX;
   }
 
-  async _readLocalDefaults(imageRouter) {
+  async _readLocalDefaults(imageRouter, picks) {
     try {
       const svc = BridgeGlobals.imageServerService();
-      const defaults = (svc && svc.getDefaults) ? svc.getDefaults() : {};
+      const defaults = ImageModelPicks.over((svc && svc.getDefaults) ? svc.getDefaults() : {}, picks);
+      this.generatePick = ImageModelPicks.normalize(picks).image || null;
       this.editModelId = defaults.editModelId || null;
       const lookup = EditModelChoice._recordLookup(imageRouter, svc);
       if (this.editModelId && lookup) {

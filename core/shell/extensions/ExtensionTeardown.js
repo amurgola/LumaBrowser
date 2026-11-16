@@ -3,6 +3,7 @@ const LlmRuntimesView = require('./LlmRuntimesView');
 const ChatModeRegistry = require('../../llm-server/chat/ChatModeRegistry');
 const SetupTabRegistry = require('../../llm-server/chat/SetupTabRegistry');
 const ImageCatalogRegistry = require('../../image-server/models/ImageCatalogRegistry');
+const ImageTrainingRegistry = require('../../image-server/models/ImageTrainingRegistry');
 const RuntimeCatalogRegistry = require('../../llm-server/runtimes/RuntimeCatalogRegistry');
 const ModelCatalogRegistry = require('../../llm-server/models/ModelCatalogRegistry');
 const TtsEngineRegistry = require('../../tts-server/TtsEngineRegistry');
@@ -14,6 +15,7 @@ class ExtensionTeardown {
       chatModes: ChatModeRegistry.shared,
       setupTabs: SetupTabRegistry.shared,
       imageCatalog: ImageCatalogRegistry.shared,
+      imageTraining: ImageTrainingRegistry.shared,
       runtimeCatalog: RuntimeCatalogRegistry.shared,
       modelCatalog: ModelCatalogRegistry.shared,
       ttsEngines: TtsEngineRegistry.shared,
@@ -64,6 +66,7 @@ class ExtensionTeardown {
     r.chatModes.unregisterByExtension(id);
     r.setupTabs.unregisterByExtension(id);
     r.imageCatalog.unregisterByExtension(id);
+    if (r.imageTraining) r.imageTraining.unregisterByExtension(id);
     r.modelCatalog.unregisterByExtension(id);
     if (r.runtimeCatalog.unregisterByExtension(id) > 0) LlmRuntimesView.invalidate(this._coreServices);
     r.ttsEngines.unregisterByExtension(id);

@@ -47,7 +47,7 @@ class EditImageHandler extends ChatToolHandler {
   }
 
   static async _plan({ router, params, prompt, artifactId, src, ctx }) {
-    const choice = await EditModelChoice.resolve(router);
+    const choice = await EditModelChoice.resolve(router, await ChatToolHandler.mediaModels(ctx));
     const references = EditReferences.resolve({ params, artifactStore: ctx.deps.artifactStore, sourceId: artifactId, max: choice.maxReferences });
     if (references.error) return { error: references.error };
     const srcBuf = Buffer.from(src.content, 'base64');
@@ -110,10 +110,11 @@ class EditImageHandler extends ChatToolHandler {
     const steps = plan.regionSteps ? { steps: plan.regionSteps } : {};
     if (choice.remoteEdit) return { prompt: editPrompt, refImages, ...held, ...steps, ...size, slot: 'edit', send };
     if (choice.editModelId) return { prompt: editPrompt, modelRef: choice.editModelId, refImages, ...held, ...steps, ...size, slot: 'edit', send };
-    if (choice.unifiedGenEdit) return { prompt: editPrompt, refImages, ...held, ...steps, ...size, slot: 'generate', send };
+    const onPick = choice.generatePick ? { modelRef: choice.generatePick } : {};
+    if (choice.unifiedGenEdit) return { prompt: editPrompt, ...onPick, refImages, ...held, ...steps, ...size, slot: 'generate', send };
     const mask = region ? { mask: region.inpaintMask() } : {};
     const initImage = region ? region.sourceBytes() : plan.srcBuf;
-    return { prompt: plan.prompt, initImage, strength: plan.strength, ...mask, ...size, slot: 'generate', send };
+    return { prompt: plan.prompt, ...onPick, initImage, strength: plan.strength, ...mask, ...size, slot: 'generate', send };
   }
 
   static _editPrompt({ extraRefs, choice, prompt, region, outpaint }) {

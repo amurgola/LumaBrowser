@@ -42,6 +42,7 @@ export default class ChatState {
     this.choicesEnabled = true;
     this.reasoningEffort = null;
     this.docsSource = false;
+    this.mediaModels = null;
   }
 
   enterPlainChat() {
@@ -106,6 +107,7 @@ export default class ChatState {
     this.tabSuggestion = null;
     this.tabSuggestSkip = new Set();
     this.docsSource = false;
+    this.mediaModels = null;
   }
 
   _initModes() {

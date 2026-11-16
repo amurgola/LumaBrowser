@@ -1,5 +1,6 @@
 import ByteFormatter from '../format/ByteFormatter.js';
 import HtmlEscaper from '../format/HtmlEscaper.js';
+import CatalogModelRow from './CatalogModelRow.js';
 
 export default class InstalledModelRow {
   static KIND_LABEL = { generate: 'generation', edit: 'edit', video: 'video' };
@@ -58,7 +59,7 @@ export default class InstalledModelRow {
       + (f.editPinned ? ' <span class="luma-badge accent">edit default</span>' : '');
     const updatePills = InstalledModelRow._fileUpdates(m).map((u) =>
       `<span class="luma-badge accent" title="${esc(u.note || `Newer ${InstalledModelRow._roleLabel(u)} available: ${u.file}`)}">${esc(InstalledModelRow._roleLabel(u))} update</span>`).join(' ');
-    return `${kindPill} ${defaultBadge} ${updatePills} ${ncPill} ${importedPill}`;
+    return `${kindPill} ${defaultBadge} ${updatePills} ${ncPill} ${importedPill} ${CatalogModelRow.trainablePill(m)}`;
   }
 
   static _actions(m, f, downloading) {

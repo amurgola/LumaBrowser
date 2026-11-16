@@ -78,7 +78,6 @@
     if (!added && !moved) return;
     try { await ctx.setMeta({ data }); } catch (_) {}
     renderRoster(ctx);
-    ensureSceneButton(ctx);
     applySceneBackground(ctx);
     if (idsBefore !== (data.characters || []).map((c) => c && c.id).join('|') && ctx.refresh) ctx.refresh();
   }
@@ -970,6 +969,14 @@
       .filter(Boolean).join('. ');
   }
 
+  function turnElOf(ctx, messageId) {
+    if (ctx && typeof ctx.turnElForMessage === 'function') return ctx.turnElForMessage(messageId);
+    const id = window.CSS && CSS.escape ? CSS.escape(messageId) : String(messageId).replace(/["\\]/g, '');
+    return document.querySelector('.cm-turn[data-msg-id="' + id + '"]');
+  }
+
+  let momentBusy = null;
+
   function clientPaintedPrompt(data, content) {
     const present = clientPresentEntries(data, content).slice(0, 2);
     const people = present.map(({ char, state }) => {
@@ -995,6 +1002,7 @@
   }
 
   async function createMomentImage(ctx, btn) {
+    if (momentBusy) return;
     const gen = window.LumaChatExt && window.LumaChatExt.generateImage;
     if (!gen || !lastAsstMsg || !lastAsstMsg.id) {
       if (btn && !lastAsstMsg) {
@@ -1006,11 +1014,11 @@
     }
     const msg = lastAsstMsg;
     const data = (ctx.meta && ctx.meta.data) || {};
-    const turnEl = ctx.turnElForMessage ? ctx.turnElForMessage(msg.id) : null;
+    const turnEl = turnElOf(ctx, msg.id);
     const asst = turnEl && turnEl.querySelector('.cm-asst');
     const content = (turnEl && turnEl._rpContent) || msg.content || '';
-    const setBusy = (label) => { if (btn) { btn.disabled = true; btn.textContent = label; } };
-    const setIdle = () => { if (btn) { btn.disabled = false; btn.textContent = 'Create image'; } };
+    const setBusy = (label) => { momentBusy = label; if (btn) { btn.disabled = true; btn.textContent = label; } };
+    const setIdle = () => { momentBusy = null; if (btn) { btn.disabled = false; btn.textContent = 'Create image'; } };
 
     const prompt = clientPaintedPrompt(data, content);
     const sceneId = (data.currentState && data.currentState.sceneId) || data.activeSceneId || null;
@@ -1175,60 +1183,13 @@
     if (ctx.refresh) ctx.refresh();
   }
 
-  function showSceneMenu(anchor, ctx) {
-    document.querySelectorAll('.rp-scene-menu').forEach((m) => m.remove());
-    const data = (ctx.meta && ctx.meta.data) || {};
-    const scenes = data.scenes || [];
-    const activeSceneId = (data.currentState && data.currentState.sceneId) || data.activeSceneId;
-    const menu = document.createElement('div');
-    menu.className = 'luma-menu rp-scene-menu';
-    scenes.forEach((s) => {
-      const it = document.createElement('button');
-      it.type = 'button';
-      it.className = 'luma-menu-item rp-scene-item' + (s.id === activeSceneId ? ' active' : '');
-      it.textContent = s.name || '(scene)';
-      it.addEventListener('click', async () => {
-        menu.remove();
-        await changeStored(ctx, 'head', (d) => {
-          d.activeSceneId = s.id;
-          d.currentState = Object.assign({}, d.currentState || {}, { sceneId: s.id });
-        });
-        if (data.options && data.options.sceneBackground && s.bg && s.bg.b64) {
-          ctx.applyBackground(s.bg.b64, s.bg.mime);
-        }
-      });
-      menu.appendChild(it);
+  async function switchScene(ctx, scene) {
+    const options = (ctx.meta && ctx.meta.data && ctx.meta.data.options) || {};
+    await changeStored(ctx, 'head', (d) => {
+      d.activeSceneId = scene.id;
+      d.currentState = Object.assign({}, d.currentState || {}, { sceneId: scene.id });
     });
-    const sep = document.createElement('div');
-    sep.className = 'luma-menu-sep';
-    menu.appendChild(sep);
-    const clr = document.createElement('button');
-    clr.type = 'button';
-    clr.className = 'luma-menu-item rp-scene-item';
-    clr.textContent = 'Clear story state';
-    clr.title = 'Reset outfits, poses, presence and per-turn images to a fresh start (keeps characters, scenes and their art)';
-    let armed = false;
-    clr.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      if (!armed) { armed = true; clr.textContent = 'Click again to confirm'; return; }
-      menu.remove();
-      await clearStoryState(ctx);
-    });
-    menu.appendChild(clr);
-    menu.setAttribute('data-cm-overlay', '');
-    document.body.appendChild(menu);
-    const r = anchor.getBoundingClientRect();
-    menu.style.left = Math.max(8, r.left) + 'px';
-    menu.style.top = Math.max(8, r.top - menu.offsetHeight - 8) + 'px';
-    setTimeout(() => {
-      const onDoc = (e) => {
-        if (!menu.contains(e.target) && e.target !== anchor) {
-          menu.remove();
-          document.removeEventListener('click', onDoc);
-        }
-      };
-      document.addEventListener('click', onDoc);
-    }, 0);
+    if (options.sceneBackground && scene.bg && scene.bg.b64) ctx.applyBackground(scene.bg.b64, scene.bg.mime);
   }
 
   function normalizeProfile(c) {
@@ -1467,15 +1428,86 @@
       pop.appendChild(logRow);
     }
 
-    const edit = gearEl('button', 'cm-gear-row rp-gear-edit', 'Edit everything…');
-    edit.type = 'button';
-    edit.title = 'Premise, who you are, models, characters, scenes and image options';
-    edit.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (panel && panel.close) panel.close();
-      editRoleplaySettings(ctx.api, ctx);
+    appendGearMediaModels(pop, ctx, panel);
+    appendGearStory(pop, ctx, panel);
+  }
+
+  const GEAR_MODEL_KEYS = { image: 'baseModel', edit: 'editModel' };
+
+  function appendGearMediaModels(pop, ctx, panel) {
+    if (!panel || typeof panel.mediaModels !== 'function') return;
+    const holder = gearEl('div', 'rp-gear-media');
+    pop.appendChild(holder);
+    panel.mediaModels(holder, {
+      jobs: Object.keys(GEAR_MODEL_KEYS),
+      picks: () => {
+        const d = (ctx.meta && ctx.meta.data) || {};
+        return { image: d.baseModel || '', edit: d.editModel || '' };
+      },
+      pick: (job, id) => saveGearSetting(ctx, (d) => { d[GEAR_MODEL_KEYS[job]] = id || ''; }),
     });
-    pop.appendChild(edit);
+  }
+
+  function gearAction(cls, label, title, onClick) {
+    const row = gearEl('button', 'cm-gear-row ' + cls, label);
+    row.type = 'button';
+    row.title = title;
+    row.addEventListener('click', (e) => { e.preventDefault(); onClick(row); });
+    return row;
+  }
+
+  function appendGearStory(pop, ctx, panel) {
+    const data = (ctx.meta && ctx.meta.data) || {};
+    const close = () => { if (panel && panel.close) panel.close(); };
+    pop.appendChild(gearEl('div', 'cm-gear-sec', 'Story'));
+
+    const scenes = Array.isArray(data.scenes) ? data.scenes : [];
+    if (scenes.length) {
+      const sceneRow = gearEl('label', 'cm-gear-field');
+      sceneRow.title = 'Move the story to another scene.';
+      sceneRow.appendChild(gearEl('span', null, 'Scene'));
+      const scene = gearEl('select', 'rp-gear-scene');
+      for (const s of scenes) {
+        const opt = gearEl('option', null, s.name || '(scene)');
+        opt.value = s.id;
+        scene.appendChild(opt);
+      }
+      scene.value = (data.currentState && data.currentState.sceneId) || data.activeSceneId || '';
+      scene.addEventListener('change', () => {
+        const picked = scenes.find((s) => s.id === scene.value);
+        if (picked) switchScene(ctx, picked);
+      });
+      sceneRow.appendChild(scene);
+      pop.appendChild(sceneRow);
+    }
+
+    pop.appendChild(gearAction('rp-gear-gallery', 'Gallery', 'All images in this roleplay (remove / manage outfits)', () => {
+      close();
+      openGallery(ctx);
+    }));
+
+    const paint = gearAction('rp-gear-createimg', momentBusy || 'Create image',
+      'Paint the current moment: the scene guides the image loosely, the camera serves the action, and faces are locked from the character references',
+      (row) => {
+        if (lastAsstMsg && lastAsstMsg.id) close();
+        createMomentImage(ctx, row);
+      });
+    paint.disabled = !!momentBusy;
+    pop.appendChild(paint);
+
+    let armed = false;
+    pop.appendChild(gearAction('rp-gear-clear', 'Clear story state',
+      'Reset outfits, poses, presence and per-turn images to a fresh start (keeps characters, scenes and their art)',
+      (row) => {
+        if (!armed) { armed = true; row.textContent = 'Click again to confirm'; return; }
+        close();
+        clearStoryState(ctx);
+      }));
+
+    pop.appendChild(gearAction('rp-gear-edit', 'Edit everything…', 'Premise, who you are, models, characters, scenes and image options', () => {
+      close();
+      editRoleplaySettings(ctx.api, ctx);
+    }));
   }
 
   function rosterTitle(ch) {
@@ -1526,21 +1558,6 @@
       nm.textContent = ch.name;
       chip.appendChild(nm);
       roster.appendChild(chip);
-    }
-  }
-
-  function ensureSceneButton(ctx) {
-    const composer = document.querySelector('.cm-composer');
-    if (!composer) return;
-    const data = (ctx.meta && ctx.meta.data) || {};
-    if ((data.scenes && data.scenes.length) && !composer.querySelector('.rp-scene-btn')) {
-      const sceneBtn = document.createElement('button');
-      sceneBtn.type = 'button';
-      sceneBtn.className = 'luma-btn luma-btn--sm rp-scene-btn';
-      sceneBtn.title = 'Change scene';
-      sceneBtn.textContent = 'Scene';
-      sceneBtn.addEventListener('click', (e) => { e.preventDefault(); showSceneMenu(sceneBtn, ctx); });
-      composer.appendChild(sceneBtn);
     }
   }
 
@@ -1880,34 +1897,6 @@
 
     decorateComposer(els, ctx) {
       if (!els.composer) return;
-      ensureSceneButton(ctx);
-      if (!els.composer.querySelector('.rp-edit-btn')) {
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'luma-btn luma-btn--sm rp-edit-btn';
-        editBtn.title = 'Roleplay settings & characters';
-        editBtn.textContent = 'Edit';
-        editBtn.addEventListener('click', (e) => { e.preventDefault(); editRoleplaySettings(ctx.api, ctx); });
-        els.composer.appendChild(editBtn);
-      }
-      if (!els.composer.querySelector('.rp-gallery-btn')) {
-        const galBtn = document.createElement('button');
-        galBtn.type = 'button';
-        galBtn.className = 'luma-btn luma-btn--sm rp-edit-btn rp-gallery-btn';
-        galBtn.title = 'All images in this roleplay (remove / manage outfits)';
-        galBtn.textContent = 'Gallery';
-        galBtn.addEventListener('click', (e) => { e.preventDefault(); openGallery(ctx); });
-        els.composer.appendChild(galBtn);
-      }
-      if (!els.composer.querySelector('.rp-createimg-btn')) {
-        const imgBtn = document.createElement('button');
-        imgBtn.type = 'button';
-        imgBtn.className = 'luma-btn luma-btn--sm rp-edit-btn rp-createimg-btn';
-        imgBtn.title = 'Paint the current moment: the scene guides the image loosely, the camera serves the action, and faces are locked from the character references';
-        imgBtn.textContent = 'Create image';
-        imgBtn.addEventListener('click', (e) => { e.preventDefault(); createMomentImage(ctx, imgBtn); });
-        els.composer.appendChild(imgBtn);
-      }
       renderRoster(ctx);
     },
 
@@ -2030,7 +2019,6 @@
           if (p.story !== undefined) data.story = p.story;
         }
         renderRoster(ctx);
-        ensureSceneButton(ctx);
         if (p.sceneChanged && data.options && data.options.sceneBackground) {
           const sceneId = (data.currentState && data.currentState.sceneId) || data.activeSceneId;
           const sc = (data.scenes || []).find((s) => s.id === sceneId);

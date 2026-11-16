@@ -1,12 +1,12 @@
 class ImagePromptHint {
   static MAX_NEGATIVE_CHARS = 160;
 
-  static async fetch(imageRouter) {
+  static async fetch(imageRouter, picks = null) {
     if (!imageRouter || !imageRouter.getActivePromptInfo) return null;
     try {
-      const frames = typeof imageRouter.getFrameSizes === 'function' ? await imageRouter.getFrameSizes(null) : null;
-      const editInfo = typeof imageRouter.getEditPromptInfo === 'function' ? await imageRouter.getEditPromptInfo() : null;
-      return ImagePromptHint.build(await imageRouter.getActivePromptInfo('generate'), frames, editInfo);
+      const frames = typeof imageRouter.getFrameSizes === 'function' ? await imageRouter.getFrameSizes(null, picks) : null;
+      const editInfo = typeof imageRouter.getEditPromptInfo === 'function' ? await imageRouter.getEditPromptInfo(picks) : null;
+      return ImagePromptHint.build(await imageRouter.getActivePromptInfo('generate', picks), frames, editInfo);
     } catch (_) {
       return null;
     }

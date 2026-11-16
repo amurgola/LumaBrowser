@@ -16,6 +16,10 @@ the edit ([EditRegion](../media/EditRegion.md)).
   0.8). The request: remote editor -> reference edit on slot `edit`; edit model
   -> its `modelRef` on slot `edit`; unified model -> reference edit on slot
   `generate`; otherwise img2img (`initImage`, `strength`) on slot `generate`.
+  The choice is resolved over the conversation's own image and edit model
+  (`ChatToolHandler.mediaModels`): a picked editor is the edit model, and both
+  generation-slot routes carry a picked image model as `modelRef`
+  (`choice.generatePick`).
   Extra references follow the source with `EditProfiles.referencePreamble` in
   the family's tag style. Failures through
   [MediaRenderOutcome](../media/MediaRenderOutcome.md) (with the stderr tail).

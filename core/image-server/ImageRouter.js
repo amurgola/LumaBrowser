@@ -44,16 +44,16 @@ class ImageRouter {
     return this._info.nativeSize(modelRef);
   }
 
-  async getFrameSizes(modelRef = null) {
-    return this._info.frameSizes(modelRef);
+  async getFrameSizes(modelRef = null, picks = null) {
+    return this._info.frameSizes(modelRef, picks);
   }
 
-  async getEditPromptInfo() {
-    return this._editInfo.resolve();
+  async getEditPromptInfo(picks = null) {
+    return this._editInfo.resolve(picks);
   }
 
-  async getActivePromptInfo(role = 'generate') {
-    return this._info.activePromptInfo(role);
+  async getActivePromptInfo(role = 'generate', picks = null) {
+    return this._info.activePromptInfo(role, picks);
   }
 
   _remoteServerFor(request) {

@@ -20,7 +20,8 @@ class GenerateImageHandler extends ChatToolHandler {
     const sink = new MediaProgressSink({ tool: 'generate_image', hooks: ctx.hooks, isAborted: ctx.isAborted });
     let result;
     try {
-      result = await router.generate({ prompt, send: sink.send });
+      const { image } = await ChatToolHandler.mediaModels(ctx);
+      result = await router.generate({ prompt, modelRef: image, send: sink.send });
     } catch (err) {
       return { success: false, error: `generate_image failed: ${err.message}` };
     }

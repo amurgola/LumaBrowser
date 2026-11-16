@@ -75,9 +75,16 @@ export default class SummarySection extends HubSection {
     const button = this.$('sumRunBtn');
     button.disabled = true;
     this.$('sumStatus').textContent = 'Writing summaries now.';
-    return this.act(async () => {
+    return this.act(() => this._writeAll(), 'Summaries written.');
+  }
+
+  async _writeAll() {
+    try {
       const { result } = await this.call('summarizeNow', { force: true });
       if (result && result.failed) throw new Error(`${result.failed} card${result.failed === 1 ? '' : 's'} could not be written; see the status line.`);
-    }, 'Summaries written.');
+    } catch (err) {
+      await this.load().catch(() => {});
+      throw err;
+    }
   }
 }
