@@ -172,11 +172,13 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/runtime/vram/VramOverride.md](core/shared/runtime/vram/VramOverride.md): per-role explicit CUDA device setting; has `read`, `devices`.
 - [core/shared/runtime/vram/StateChangeHook.md](core/shared/runtime/vram/StateChangeHook.md): safe supervisor state-change subscription; has `on`.
 - [core/shared/net/LoopbackRequestGuard.md](core/shared/net/LoopbackRequestGuard.md): refuses DNS-rebinding and cross-site browser requests to local automation servers (Host must be loopback or the bind host; Origin absent or same-port loopback); has `refusal`, `isAllowed`, `rejectUpgrade`, `hostnameOf`.
+- [core/shared/net/ExposedServerKeyGuard.md](core/shared/net/ExposedServerKeyGuard.md): automation servers bound off loopback refuse to start without an API key and need one on every request (Bearer, X-Api-Key, Basic password or `?token=`), loopback ones keep the Host/Origin check; has `isExposed`, `startRefusal`, `refusal`, `presentedKey`, `queryKeyToCarry`, `routedUrl`.
 - [core/shared/ipc/IpcSubscription.md](core/shared/ipc/IpcSubscription.md): subscribe functions for preload IPC channels; has `of`, `payload`.
 
 ## core/browser
 
 - [core/browser/Accelerators.md](core/browser/Accelerators.md): maps a tab keyDown input to a browser action id; has `match`.
+- [core/browser/AgentTabs.md](core/browser/AgentTabs.md): tabs as MCP, REST and chat tools get them, without inline favicon images and with silent and hidden tabs each on request; has `fetchOptions`, `select`, `shape`.
 - [core/browser/ActionEvidence.md](core/browser/ActionEvidence.md): turns before/after page fingerprints into action evidence; has `compare`, `stateKey`, `isFingerprint`.
 - [core/browser/ActionEvidenceScripts.md](core/browser/ActionEvidenceScripts.md): in-page fingerprint and settle-observer script sources; has `beforeExpr`, `beforeScript`, `pollScript`, `installScript`, `finalScript`.
 - [core/browser/PageSettler.md](core/browser/PageSettler.md): waits for a page to go quiet and runs page scripts with a timeout; has `settle`, `runBounded`.
@@ -186,7 +188,7 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/ChromeOverlay.md](core/browser/ChromeOverlay.md): display-only view layers above the tab views so popups paint over the page; has `show`, `measure`, `setActive`, `hide`, `raiseVisible`, `destroy`.
 - [core/browser/ChromeObjectShim.md](core/browser/ChromeObjectShim.md): page source that fills `window.chrome` like stock Chrome; has `SOURCE`.
 - [core/browser/DataFileRender.md](core/browser/DataFileRender.md): shows CSV/TSV downloads as an inline HTML page; has `isRenderableDataFile`, `buildDataFileHtml`.
-- [core/browser/DownloadManager.md](core/browser/DownloadManager.md): follows Chromium downloads for the downloads shelf and keeps finished ones across restarts; has `track`, `list`, `get`, `cancel`, `open`, `showInFolder`, `clearFinished`.
+- [core/browser/DownloadManager.md](core/browser/DownloadManager.md): follows Chromium downloads for the downloads shelf and the downloads page, and keeps finished ones across restarts; has `track`, `list`, `get`, `cancel`, `open`, `showInFolder`, `copyLink`, `remove`, `clearFinished`.
 - [core/browser/FaviconCache.md](core/browser/FaviconCache.md): LRU cache of one favicon per hostname saved to JSON; has `hostOf`, `get`, `getMany`, `getForUrl`, `record`, `flush`.
 - [core/browser/FaviconFetcher.md](core/browser/FaviconFetcher.md): turns a favicon source into a size-capped data URL; has `toDataUrl`.
 - [core/browser/InputDriver.md](core/browser/InputDriver.md): trusted mouse clicks via sendInputEvent; has `trustedClick`, `toDip`.
@@ -199,8 +201,8 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/TabPreviewManager.md](core/browser/TabPreviewManager.md): shows a live tab inside another tab's renderer rect; has `attach`, `setRect`, `detach`, `focus`, `captureFrame`, `reapply`, `destroy`.
 - [core/browser/TabPreviewGeometry.md](core/browser/TabPreviewGeometry.md): rect mapping and fit-zoom maths for the tab preview; has `toWindowRect`, `clampZoom`, `widthZoom`, `fittedZoom`.
 - [core/browser/TabUrl.md](core/browser/TabUrl.md): the single definition of what a tab can load; has `normalize`, `isNavigable`, `isLoopbackOrPrivateHost`.
-- [core/browser/extraction/ElementDigest.md](core/browser/extraction/ElementDigest.md): page script that lists visible interactive elements and tags them; has `SCRIPT`.
-- [core/browser/extraction/RowExtract.md](core/browser/extraction/RowExtract.md): page source for reading one repeating element into a row; has `TEXT_OF_SRC`, `EXTRACT_ROW_SRC`.
+- [core/browser/extraction/ElementDigest.md](core/browser/extraction/ElementDigest.md): page script that lists visible interactive elements and tags them, whole page or inside a scope selector; has `SCRIPT`, `script`.
+- [core/browser/extraction/RowExtract.md](core/browser/extraction/RowExtract.md): page source for reading one repeating element into a row of texts and `@attribute` values; has `TEXT_OF_SRC`, `FIELD_SPEC_SRC`, `EXTRACT_ROW_SRC`.
 - [core/browser/extraction/SelectorKit.md](core/browser/extraction/SelectorKit.md): spots machine-generated class names and ids; has `isHashedToken`, `HASHED_TOKEN_SRC`.
 - [core/browser/models/ApiResponse.md](core/browser/models/ApiResponse.md): the JSON envelope every browser REST route replies with; has `success`, `error`, `toJSON`.
 - [core/browser/vision/CoordinateSpace.md](core/browser/vision/CoordinateSpace.md): converts points between CSS px, screenshot pixels and model grids; has `frameScale`, `imageToCss`, `cssToImage`, `modelToSent`, `sentToModel`, `smartResize`, `zoomWindow`.
@@ -263,10 +265,13 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/site-info/SiteInfoIpcHandlers.md](core/browser/site-info/SiteInfoIpcHandlers.md): core.siteInfo.* for the chrome.
 - [core/browser/newtab/NewTabPage.md](core/browser/newtab/NewTabPage.md): the luma://newtab page (search box, most visited sites), its scheme and the New tabs open setting.
 - [core/browser/newtab/NewTabIpcHandlers.md](core/browser/newtab/NewTabIpcHandlers.md): new tab IPC, page calls only from luma://newtab, settings only from the chrome.
-- [core/browser/LumaPages.md](core/browser/LumaPages.md): the app's own `luma:` pages (newtab, terminal) registered together on every tab session; has `attach`, `source`, `serve`.
+- [core/browser/LumaPages.md](core/browser/LumaPages.md): the app's own `luma:` pages (newtab, terminal, downloads) registered together on every tab session; has `attach`, `source`, `serve`.
+- [core/browser/downloads/DownloadsPage.md](core/browser/downloads/DownloadsPage.md): the luma://downloads page: its address, the test for its tab, the folder it is served from; has `isDownloads`, `routes`, `serve`.
+- [core/browser/downloads/DownloadsPageViewers.md](core/browser/downloads/DownloadsPageViewers.md): one downloads tab per window, and the list's changes sent to the pages showing it; has `openTab`, `watch`, `downloads`.
+- [core/browser/downloads/DownloadsIpcHandlers.md](core/browser/downloads/DownloadsIpcHandlers.md): `core.downloads.*` IPC: page calls only from luma://downloads, openPage only from the chrome.
 - [core/browser/tab-view/TabKinds.md](core/browser/tab-view/TabKinds.md): automation and internal tab kinds; has `isInternal`, `isAutomation`.
 - [core/browser/tab-view/NavigationGenerations.md](core/browser/tab-view/NavigationGenerations.md): drops load events from an older navigation; has `fresh`, `decide`, `normalizeUrl`.
-- [core/browser/tab-view/TabEntry.md](core/browser/tab-view/TabEntry.md): one tab's live state; has `applyNavEvent`, `isInternal`, `isInStrip`.
+- [core/browser/tab-view/TabEntry.md](core/browser/tab-view/TabEntry.md): one tab's live state; has `applyNavEvent`, `hasShownPage`, `isInternal`, `isInStrip`.
 - [core/browser/tab-view/TabRegistry.md](core/browser/tab-view/TabRegistry.md): tabs, strip order and active tab; has `add`, `remove`, `get`, `list`, `move`, `findIdByWebContents`.
 - [core/browser/tab-view/TabStateChannel.md](core/browser/tab-view/TabStateChannel.md): serializes tabs and sends them to the chrome of the window each is in; has `send`, `sendForTab`, `broadcast`, `serialize`.
 - [core/browser/tab-view/TabHosts.md](core/browser/tab-view/TabHosts.md): the windows tabs can live in (main plus detached), their bounds, and which window an IPC sender is; has `add`, `remove`, `windowOf`, `idForSender`.
@@ -278,8 +283,8 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/tab-view/SessionTabs.md](core/browser/tab-view/SessionTabs.md): records the strip for "Restore tabs on restart" (only pinned tabs when off); has `saved`, `savedPinned`, `schedule`, `save`, `seal`.
 - [core/browser/tab-view/PersistedTabs.md](core/browser/tab-view/PersistedTabs.md): keep-alive tabs, reserved partitions, restore and revive; has `save`, `forget`, `list`, `restore`, `revive`.
 - [core/browser/tab-view/KeepAliveSweep.md](core/browser/tab-view/KeepAliveSweep.md): timed heartbeat, reload and revive of persisted tabs; has `start`, `stop`, `activateAll`.
-- [core/browser/tab-view/TabLayout.md](core/browser/tab-view/TabLayout.md): positions the active tab view; has `setBounds`, `applyTo`.
-- [core/browser/tab-view/TabActivation.md](core/browser/tab-view/TabActivation.md): switches, raises and focuses tabs; has `switchTo`, `cycle`, `selectByIndex`.
+- [core/browser/tab-view/TabLayout.md](core/browser/tab-view/TabLayout.md): positions the active tab view and lends sized and silent tabs a place behind it; has `setBounds`, `applyTo`.
+- [core/browser/tab-view/TabActivation.md](core/browser/tab-view/TabActivation.md): switches, raises and focuses tabs, and moves the keyboard between a window's chrome and its page (held for the address bar while a new tab's first page arrives); has `switchTo`, `cycle`, `selectByIndex`, `focusChrome`, `focusPage`.
 - [core/browser/tab-view/TabLifecycle.md](core/browser/tab-view/TabLifecycle.md): creates, closes, moves and destroys tabs; has `create`, `close`, `reopenClosed`, `move`, `destroyAll`.
 - [core/browser/tab-view/TabTransfer.md](core/browser/tab-view/TabTransfer.md): moves tabs between windows and empties a closing detached window; has `move`, `evacuate`, `resync`.
 - [core/browser/tab-view/TabFullscreen.md](core/browser/tab-view/TabFullscreen.md): page fullscreen covers the window and leaves cleanly (Esc, tab switch, F11-aware).
@@ -310,14 +315,14 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/tab-manager/TabPage.md](core/browser/tab-manager/TabPage.md): one tab for automation; has `run`, `runEnvelope`, `url`, `watchAction`.
 - [core/browser/tab-manager/NavigationReply.md](core/browser/tab-manager/NavigationReply.md): input-action reply with navigation details; has `build`.
 - [core/browser/tab-manager/TabControl.md](core/browser/tab-manager/TabControl.md): tab lifecycle and update actions; has `getAllTabs`, `createTab`, `getConsoleLogs`, `update`.
-- [core/browser/tab-manager/PageSource.md](core/browser/tab-manager/PageSource.md): page source by extraction type; has `read`.
-- [core/browser/tab-manager/PageSourceScripts.md](core/browser/tab-manager/PageSourceScripts.md): in-page source scripts per type; has `forType`.
+- [core/browser/tab-manager/PageSource.md](core/browser/tab-manager/PageSource.md): page source by extraction type, whole or narrowed by a selector; has `read`.
+- [core/browser/tab-manager/PageSourceScripts.md](core/browser/tab-manager/PageSourceScripts.md): in-page source scripts per type, with selector-narrowed variants; has `forType`, `canScope`, `matchCount`.
 - [core/browser/tab-manager/PageAnalysisScript.md](core/browser/tab-manager/PageAnalysisScript.md): framework and selector-stability analysis script; has `SOURCE`.
 - [core/browser/tab-manager/ElementDigestFormatter.md](core/browser/tab-manager/ElementDigestFormatter.md): element digest to budgeted model text; has `format`.
 - [core/browser/tab-manager/PageObserver.md](core/browser/tab-manager/PageObserver.md): observe_page numbered element inventory; has `observe`.
 - [core/browser/tab-manager/PageBlockDetector.md](core/browser/tab-manager/PageBlockDetector.md): names a page only the user can get past (a bot challenge, a CAPTCHA, a sign-in or second-factor form) so observe_page tells the model to hand over; has `detect`, `note`.
-- [core/browser/tab-manager/TabScreenshot.md](core/browser/tab-manager/TabScreenshot.md): full-page or viewport screenshot with geometry and marks; has `capture`.
-- [core/browser/tab-manager/TargetScripts.md](core/browser/tab-manager/TargetScripts.md): target resolve, synthetic click and typing scripts; has `resolve`, `syntheticClick`, `typeValue`.
+- [core/browser/tab-manager/TabScreenshot.md](core/browser/tab-manager/TabScreenshot.md): full-page, single-element or viewport screenshot with geometry and marks; has `capture`, `elementRectScript`.
+- [core/browser/tab-manager/TargetScripts.md](core/browser/tab-manager/TargetScripts.md): target resolve, synthetic click and typing scripts (typing reaches the field inside an editor frame); has `resolve`, `syntheticClick`, `typeValue`, `FRAME_FIELD_SRC`.
 - [core/browser/tab-manager/ElementClicker.md](core/browser/tab-manager/ElementClicker.md): trusted click with fallback and evidence; has `click`.
 - [core/browser/tab-manager/PointClicker.md](core/browser/tab-manager/PointClicker.md): click_at and point_info; has `clickAt`, `pointInfo`.
 - [core/browser/tab-manager/FieldTyper.md](core/browser/tab-manager/FieldTyper.md): focuses a field, sets its value, optionally submits; has `typeInto`.
@@ -347,6 +352,7 @@ Small building blocks shared by more than one subsystem.
 - [core/browser/tab-preload/PreloadBundle.md](core/browser/tab-preload/PreloadBundle.md): joins a preload and its relative requires into one self-contained file, so sandboxed web tabs can load the tab preload; has `write`, `build`.
 - [core/browser/tab-preload/NewTabBridge.md](core/browser/tab-preload/NewTabBridge.md): window.lumaNewTab, exposed only on luma://newtab.
 - [core/browser/tab-preload/TerminalPageBridge.md](core/browser/tab-preload/TerminalPageBridge.md): window.lumaTerminal, exposed only on luma://terminal.
+- [core/browser/tab-preload/DownloadsPageBridge.md](core/browser/tab-preload/DownloadsPageBridge.md): window.lumaDownloads, exposed only on luma://downloads.
 - [core/browser/tab-preload/AddressFormWatcher.md](core/browser/tab-preload/AddressFormWatcher.md): address autofill page side: reports focus in address forms and submitted addresses, fills a picked profile.
 - [core/browser/tab-preload/FieldMenuKeys.md](core/browser/tab-preload/FieldMenuKeys.md): arrow keys, Enter and Escape drive the autofill list from the page's field.
 - [core/browser/tab-preload/FullscreenEscape.md](core/browser/tab-preload/FullscreenEscape.md): Esc always leaves page fullscreen.
@@ -1505,12 +1511,13 @@ Small building blocks shared by more than one subsystem.
 - [core/network-sharing/client/PeerDiscovery.md](core/network-sharing/client/PeerDiscovery.md): mDNS browse of sharing hosts; has `start`, `stop`, `list`.
 - [core/network-sharing/host/SharingHostService.md](core/network-sharing/host/SharingHostService.md): host side of Network Sharing (toggle, PIN pairing, tokens, share links, manifest, listeners); has `setEnabled`, `setPin`, `pair`, `verifyCredential`, `getInfo`, `buildManifest`, `createShareLink`, `resolveShare`, `shutdown`.
 - [core/network-sharing/host/HostSettings.md](core/network-sharing/host/HostSettings.md): the host's saved sharing settings with safe defaults; has `getShareFlags`, `setShareFlag`, `setPin`, `getWebPort`, `getTlsPort`.
-- [core/network-sharing/host/PinPairing.md](core/network-sharing/host/PinPairing.md): PIN-for-token pairing with a growing per-IP lockout; has `pair`, `reset`, `pinMatches`.
+- [core/network-sharing/host/PinPairing.md](core/network-sharing/host/PinPairing.md): PIN-for-token pairing, refusing callers PairingThrottle has locked out; has `pair`, `reset`, `pinMatches`.
+- [core/network-sharing/host/PairingThrottle.md](core/network-sharing/host/PairingThrottle.md): wrong-PIN lockouts, per IP (doubling, capped) and global across all callers; has `lockedFor`, `recordFailure`, `recordSuccess`, `reset`.
 - [core/network-sharing/host/LanAddress.md](core/network-sharing/host/LanAddress.md): picks the LAN-reachable address for share links; has `pick`.
 - [core/network-sharing/host/ShareLinkPublisher.md](core/network-sharing/host/ShareLinkPublisher.md): public share links gated on sharing and the web toggle; has `status`, `create`, `resolve`, `baseUrl`.
 - [core/network-sharing/host/HostAdvertiser.md](core/network-sharing/host/HostAdvertiser.md): mDNS advert of the sharing host; has `start`, `stop`.
 - [core/network-sharing/host/HostListeners.md](core/network-sharing/host/HostListeners.md): TLS listener, web backend and GPU lender lifecycle; has `startOnEnable`, `stopOnDisable`, `shutdown`, `startWeb`.
-- [core/network-sharing/host/WebToolAllowList.md](core/network-sharing/host/WebToolAllowList.md): agent tools a shared client may use; has `get`, `set`, `toolGroups`.
+- [core/network-sharing/host/WebToolAllowList.md](core/network-sharing/host/WebToolAllowList.md): agent tools a shared client may use (built-in chat tools until the host chooses); has `get`, `defaults`, `forSharedTurn`, `set`, `toolGroups`.
 - [core/network-sharing/host/HostManifestBuilder.md](core/network-sharing/host/HostManifestBuilder.md): toggle-aware sharing resource manifest; has `execute`.
 - [core/network-sharing/host/HostModelInventory.md](core/network-sharing/host/HostModelInventory.md): installed models as client-safe lists; has `localLlmModels`, `imageModels`.
 - [core/network-sharing/host/HostDialPosition.md](core/network-sharing/host/HostDialPosition.md): the host's thinking-dial fallback; has `of`.
@@ -2091,10 +2098,12 @@ Small building blocks shared by more than one subsystem.
 - [core/shell/shellClassifier/rules/packages/SchemaTools.md](core/shell/shellClassifier/rules/packages/SchemaTools.md): database utilities and migration tools; a ToolFamily.
 - [core/shell/shellClassifier/rules/packages/CmdletTools.md](core/shell/shellClassifier/rules/packages/CmdletTools.md): PowerShell Gallery publishing and Az / AWS Tools removals; has `tableKey`.
 - [core/shell/AddonClient.md](core/shell/AddonClient.md): signed lumabyte.com add-on catalog client; has `listAddons`, `downloadAddon`.
-- [core/shell/ApiSecurity.md](core/shell/ApiSecurity.md): /api origin policy and API key store; has `middleware`, `isValidKey`, `getConfig`, `setNetworkMode`, `setWhitelist`, `createKey`, `deleteKey`.
+- [core/shell/ApiSecurity.md](core/shell/ApiSecurity.md): /api network, foreign-page, proxy and API key policy, and the key store; has `middleware`, `internalToken`, `isValidKey`, `getConfig`, `setNetworkMode`, `setWhitelist`, `createKey`, `deleteKey`.
 - [core/shell/api-security/ApiSecurityConfig.md](core/shell/api-security/ApiSecurityConfig.md): stored API security policy and defaults; has `normalize`, `defaults`.
 - [core/shell/api-security/IpWhitelist.md](core/shell/api-security/IpWhitelist.md): whitelist IP and CIDR matching; has `matches`, `isValidEntry`.
 - [core/shell/api-security/ApiKeyEntry.md](core/shell/api-security/ApiKeyEntry.md): API key entries and reading keys from headers; has `create`, `refreshed`, `relabeled`, `fromHeaders`.
+- [core/shell/api-security/WebOriginGuard.md](core/shell/api-security/WebOriginGuard.md): tells a request another site's page sent, or one under a DNS rebinding name (Host, Origin, Sec-Fetch-Site); has `refusal`.
+- [core/shell/api-security/OpenAccessMigration.md](core/shell/api-security/OpenAccessMigration.md): once per profile, an old `any` with no key becomes `lan`; has `run`.
 - [core/shell/CodeSearch.md](core/shell/CodeSearch.md): project grep, find and listDir, ripgrep first with a Node fallback; has `grep`, `find`, `listDir`.
 - [core/shell/GlobPattern.md](core/shell/GlobPattern.md): glob to regex, shared by CodeSearch and GitignoreFilter; has `toSource`, `toRegExp`.
 - [core/shell/code-search/ProjectWalker.md](core/shell/code-search/ProjectWalker.md): async project walk honouring skip dirs and .gitignore; has `walk`.
@@ -2156,7 +2165,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shell/settings/OnboardingPersona.md](core/shell/settings/OnboardingPersona.md): first-run persona; has `get`, `set`.
 - [core/shell/settings/AppPreferences.md](core/shell/settings/AppPreferences.md): update checks, bookmarks bar and DNS provider; has getters and setters.
 - [core/shell/settings/StartupSettings.md](core/shell/settings/StartupSettings.md): run on startup, start hidden and restore tabs; has `getRunOnStartup`, `setRunOnStartup`, `setStartHidden`, `setRestoreTabs`.
-- [core/shell/settings/McpServerEntry.md](core/shell/settings/McpServerEntry.md): MCP server entry and config export; has `build`, `clientConfig`, `exportConfig`.
+- [core/shell/settings/McpServerEntry.md](core/shell/settings/McpServerEntry.md): MCP server entry (with the API key while one is required) and config export; has `build`, `clientConfig`, `exportConfig`.
 - [core/shell/settings/AcpAgentEntry.md](core/shell/settings/AcpAgentEntry.md): the `luma acp` command an editor runs (app binary in Node mode on the installed or bundled CLI); has `build`.
 - [core/shell/settings/AgentHarnessSettings.md](core/shell/settings/AgentHarnessSettings.md): connect your coding agent settings; has `list`, `connect`, `disconnect`, `preview`, `writeSkills`.
 - [core/shell/settings/EndpointSettings.md](core/shell/settings/EndpointSettings.md): disabled API groups and tools; has `getAvailable`, `setConfig`.
@@ -2285,14 +2294,17 @@ Small building blocks shared by more than one subsystem.
 - [core/chrome-extensions/store/CrxArchive.md](core/chrome-extensions/store/CrxArchive.md): splits a .crx into zip payload and publisher key; has `parse`, `idFromPublicKey`.
 - [core/chrome-extensions/store/ProtobufFields.md](core/chrome-extensions/store/ProtobufFields.md): minimal protobuf field reader for CRX3 headers; has `read`, `bytesOf`.
 - [core/chrome-extensions/shim/ChromeApiShim.md](core/chrome-extensions/shim/ChromeApiShim.md): loads the chrome.* shim first in an installed extension's background and pages; has `apply`, `pagesOf`.
-- [core/chrome-extensions/shim/chrome-api-shim.md](core/chrome-extensions/shim/chrome-api-shim.md): the plain script that fills in the chrome.* APIs Electron lacks; real webNavigation and contextMenus over the bridge, inert stubs for the rest.
+- [core/chrome-extensions/shim/chrome-api-shim.md](core/chrome-extensions/shim/chrome-api-shim.md): the plain script that fills in the chrome.* APIs Electron lacks; real webNavigation, contextMenus, tab queries and events and the action badge over the bridge, inert stubs for the rest.
 - [core/chrome-extensions/shim/WorkerRegistrations.md](core/chrome-extensions/shim/WorkerRegistrations.md): re-registers an extension's service worker when it was registered with an older chrome.* shim, so shim fixes reach existing installs.
-- [core/chrome-extensions/shim/shim-worker-preload.md](core/chrome-extensions/shim/shim-worker-preload.md): service-worker preload exposing `lumaShim` (call, onEvent) to extension workers.
-- [core/chrome-extensions/bridge/ShimBridge.md](core/chrome-extensions/bridge/ShimBridge.md): main-process end of the worker shim; has `attach`, `installNavigation`, `forgetExtension`, `broadcast`, `broadcastAll`, `sendAwake`.
+- [core/chrome-extensions/shim/shim-worker-preload.md](core/chrome-extensions/shim/shim-worker-preload.md): preload exposing `lumaShim` (call, onEvent) to extension workers and extension page windows.
+- [core/chrome-extensions/bridge/ShimBridge.md](core/chrome-extensions/bridge/ShimBridge.md): main-process end of the chrome.* shim for extension workers and page windows; has `attach`, `installNavigation`, `attachTabs`, `attachPage`, `forgetExtension`, `broadcastAll`, `sendAwake`.
+- [core/chrome-extensions/bridge/ChromeTabs.md](core/chrome-extensions/bridge/ChromeTabs.md): chrome.tabs queries and tab events from the tab manager (the active tab is the one on screen); has `watch`, `query`, `get`, `tabOf`, `activeTabs`.
+- [core/chrome-extensions/bridge/ChromeActionBadges.md](core/chrome-extensions/bridge/ChromeActionBadges.md): toolbar badges extensions set with chrome.action, per tab; has `setText`, `setColor`, `badgesFor`, `badgesForWindow`, `clearTab`, `forgetExtension`, `publish`.
+- [core/chrome-extensions/bridge/ExtensionTabAccess.md](core/chrome-extensions/bridge/ExtensionTabAccess.md): whether an extension may read a tab's address (tabs or host permission); has `canRead`, `hostPatterns`.
 - [core/chrome-extensions/bridge/ChromeContextMenus.md](core/chrome-extensions/bridge/ChromeContextMenus.md): chrome.contextMenus registry and right-click menu items; has `create`, `update`, `remove`, `removeAll`, `templateFor`.
 - [core/chrome-extensions/bridge/ChromeWebNavigation.md](core/chrome-extensions/bridge/ChromeWebNavigation.md): chrome.webNavigation events from tab webContents; has `install`, `attach`, `getFrame`, `getAllFrames`.
 - [core/chrome-extensions/bridge/MatchPattern.md](core/chrome-extensions/bridge/MatchPattern.md): Chrome match patterns against URLs; has `matches`, `anyMatch`.
-- [core/chrome-extensions/bridge/ChromeTab.md](core/chrome-extensions/bridge/ChromeTab.md): chrome.tabs.Tab objects for a webContents; has `fromWebContents`.
+- [core/chrome-extensions/bridge/ChromeTab.md](core/chrome-extensions/bridge/ChromeTab.md): chrome.tabs.Tab objects for a webContents; has `fromWebContents`, `withoutPrivateFields`.
 
 ## core/dashboard
 
@@ -2635,6 +2647,7 @@ dock under the page, and driven by AI through the `terminal_*` tools once the us
 - [core/llm-server/chat/bridge/tools/ToolProgress.md](core/llm-server/chat/bridge/tools/ToolProgress.md): how a running tool reports on itself to its card; has `reporter`, `messenger`.
 - [core/llm-server/chat/bridge/tools/ToolCallPipeline.md](core/llm-server/chat/bridge/tools/ToolCallPipeline.md): the checks one tool call passes on its way to running, then the notes that ride back on its result.
 - [core/llm-server/chat/bridge/tools/ToolDispatch.md](core/llm-server/chat/bridge/tools/ToolDispatch.md): runs one admitted tool call on whatever owns it.
+- [core/llm-server/chat/bridge/tools/GuestTargetGuard.md](core/llm-server/chat/bridge/tools/GuestTargetGuard.md): keeps a paired client's agent off the host's own addresses, files and internal pages; has `refusal`, `isHostPrivate`.
 - [core/llm-server/chat/bridge/tools/TruncationGuard.md](core/llm-server/chat/bridge/tools/TruncationGuard.md): the outermost check on a tool call.
 - [core/llm-server/chat/bridge/tools/artifacts/ArtifactId.md](core/llm-server/chat/bridge/tools/artifacts/ArtifactId.md): reads the artifact id every artifact-taking tool needs.
 - [core/llm-server/chat/bridge/tools/artifacts/ArtifactRetryContent.md](core/llm-server/chat/bridge/tools/artifacts/ArtifactRetryContent.md): the ground truth handed back when an artifact edit's `find` missed.
@@ -3757,7 +3770,7 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [app/ready/DeferredServices.md](app/ready/DeferredServices.md): the deferred startup phase, run once per process.
 - [app/ready/GatewayBinder.md](app/ready/GatewayBinder.md): binds the REST gateway to its configured port and retries (2 s x 30, then every 30 s) when the bind fails; the port is never swapped; the first failure is reported once.
 - [app/ready/HeavyServices.md](app/ready/HeavyServices.md): the heavy half of startup, exposed by [WindowServices](app/browser/WindowServices.md) and run by [DeferredServices](app/ready/DeferredServices.md).
-- [app/ready/InternalBearerInjector.md](app/ready/InternalBearerInjector.md): the one `onBeforeSendHeaders` listener each session gets.
+- [app/ready/InternalBearerInjector.md](app/ready/InternalBearerInjector.md): the one `onBeforeSendHeaders` listener each session gets; gives gateway pages, and only them, the per-launch token.
 - [app/ready/PortConflict.md](app/ready/PortConflict.md): explains a port the gateway could not bind: another LumaBrowser (its /api/health says so) or another program, named from the OS listener table where possible.
 - [app/ready/ReadyPhase.md](app/ready/ReadyPhase.md): everything that waits for Electron's ready event.
 - [app/ready/SessionSetup.md](app/ready/SessionSetup.md): session-wide browser policy once the app is ready.
@@ -3800,22 +3813,26 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [extensions/desktop-integration/ClientRegistry.md](extensions/desktop-integration/ClientRegistry.md): desktop clients seen since launch by `X-Luma-Client`; has `record`, `list`, `clear`.
 - [extensions/desktop-integration/FeatureCatalog.md](extensions/desktop-integration/FeatureCatalog.md): discovers and validates `features/<id>/index.js` modules; has `discover`, `validate`.
 - [extensions/desktop-integration/FeatureRegistry.md](extensions/desktop-integration/FeatureRegistry.md): persisted feature toggles, create/mount/dispose, the per-feature routers; has `load`, `setEnabled`, `routerFor`, `enabledIds`, `list`.
-- [extensions/desktop-integration/FeatureDeps.md](extensions/desktop-integration/FeatureDeps.md): builds each feature's `deps` (db, settings, scoped IPC, broadcast, extensions, handoff, speech, windows, log, appInfo); has `build`, `scopedIpc`, `logger`.
+- [extensions/desktop-integration/FeatureDeps.md](extensions/desktop-integration/FeatureDeps.md): builds each feature's `deps` (db, settings, scoped IPC, broadcast, extensions, handoff, speech, dictation, windows, log, appInfo); has `build`, `scopedIpc`, `logger`.
 - [extensions/desktop-integration/FeatureSettings.md](extensions/desktop-integration/FeatureSettings.md): one feature's namespaced key-value settings; has `get`, `set`, `delete`, `all`.
 - [extensions/desktop-integration/FeatureSettingsSchema.md](extensions/desktop-integration/FeatureSettingsSchema.md): normalizes a feature's declarative `settingsSchema` and coerces values the settings tab sends; has `normalize`, `withValues`, `coerce`.
 - [extensions/desktop-integration/DesktopBroadcast.md](extensions/desktop-integration/DesktopBroadcast.md): feature-tagged events to the Dashboard channel and the settings tab; has `emit`, `forFeature`.
 - [extensions/desktop-integration/DesktopIpcHandlers.md](extensions/desktop-integration/DesktopIpcHandlers.md): IPC controller of the settings tab; has `register`.
 - [extensions/desktop-integration/shared/ChatHandoff.md](extensions/desktop-integration/shared/ChatHandoff.md): raises Luma and opens a new chat seeded with a prompt and attachments, sent when asked; has `open`, `readAttachments`.
 - [extensions/desktop-integration/shared/Speech.md](extensions/desktop-integration/shared/Speech.md): speaks text through the app's TTS, played in the main window; has `speak`, `stop`, `available`.
+- [extensions/desktop-integration/shared/Dictation.md](extensions/desktop-integration/shared/Dictation.md): the microphone to text through the app's speech recognizer, recorded in the main window; what "speech recognition is set up" means; has `available`, `refresh`, `begin`, `finish`, `cancel`, `report`, `clean`.
 - [extensions/desktop-integration/shared/ActivityOverlay.md](extensions/desktop-integration/shared/ActivityOverlay.md): the desktop activity ring and island (click-through light around the active monitor, a focus-free pill with quick actions, a peek layer for the shortcut hint); has `show`, `update`, `close`, `peek`, `unpeek`, `dispose`.
 - [extensions/desktop-integration/shared/KWinPlacement.md](extensions/desktop-integration/shared/KWinPlacement.md): moves the activity island to the top centre on KDE Wayland through KWin's scripting D-Bus interface (a client cannot place its own windows there); has `forSession`, `move`, `script`.
 - [extensions/desktop-integration/shared/KWinScripting.md](extensions/desktop-integration/shared/KWinScripting.md): KWin's scripting interface on the session bus (load, run, stop a script through qdbus), shared by placement and the window watcher; has `forSession`, `shared`, `load`, `runOnce`.
 - [extensions/desktop-integration/shared/KWinWindows.md](extensions/desktop-integration/shared/KWinWindows.md): the window the user activates on KDE Wayland, from a KWin script's journal prints, with each window's frame; has `watch`, `stop`, `frameOf`, `titleOf`, `script`, `parse`.
 - [extensions/desktop-integration/shared/ActivityPages.md](extensions/desktop-integration/shared/ActivityPages.md): the ring and island pages with Luma's tokens inlined; has `ringHtml`, `islandHtml`, `dataUrl`.
 - [extensions/desktop-integration/shared/AppWindows.md](extensions/desktop-integration/shared/AppWindows.md): finds and raises the main window; has `getMainWindow`, `focusMainWindow`.
-- [extensions/desktop-integration/ui/DesktopRenderer.md](extensions/desktop-integration/ui/DesktopRenderer.md): the extension in the main window: settings tab and speech player.
+- [extensions/desktop-integration/ui/DesktopRenderer.md](extensions/desktop-integration/ui/DesktopRenderer.md): the extension in the main window: settings tab, speech player, dictation recorder and the dictation shortcut row.
 - [extensions/desktop-integration/ui/DesktopSettingsTab.md](extensions/desktop-integration/ui/DesktopSettingsTab.md): token (masked, copy, rotate), handshake path, generated feature switches, connected clients.
 - [extensions/desktop-integration/ui/SpeechPlayer.md](extensions/desktop-integration/ui/SpeechPlayer.md): plays the PCM Speech pushes through the chat's PcmScheduler; has `play`, `stop`.
+- [extensions/desktop-integration/ui/DictationRecorder.md](extensions/desktop-integration/ui/DictationRecorder.md): records the microphone for Dictation and hands back one WAV; has `start`, `stop`, `cancel`.
+- [extensions/desktop-integration/ui/DictationShortcutRow.md](extensions/desktop-integration/ui/DictationShortcutRow.md): the Dictation section of Settings > General, shown once speech recognition is set up: press a key or combination to bind dictation, or clear it; has `activate`, `refresh`, `deactivate`.
+- [extensions/desktop-integration/ui/ShortcutCapture.md](extensions/desktop-integration/ui/ShortcutCapture.md): a key press as shortcut text, and which keys may stand alone; has `read`, `display`.
 
 ### extensions/desktop-integration/features
 
@@ -3865,10 +3882,11 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [extensions/desktop-integration/features/lumabyte/WinEvents.md](extensions/desktop-integration/features/lumabyte/WinEvents.md): WinEvent hooks that keep Lumabyte on its window as it moves, and z-order placement right above it; has `watchLocation`, `watchSystem`, `placeAbove`.
 - [extensions/desktop-integration/shared/HintContributions.md](extensions/desktop-integration/shared/HintContributions.md): keys other desktop features add to the Ctrl+Alt+Shift hint (`deps.hints`); has `add`, `entries`, `setHost`, `dismiss`, `target`.
 - [extensions/desktop-integration/shared/GlobalShortcuts.md](extensions/desktop-integration/shared/GlobalShortcuts.md): one global-shortcut backend for every desktop feature (`deps.shortcuts`): Electron, or the X11 bridge while it runs on Wayland, with every binding following the bridge up and down; has `register`, `unregister`, `isRegistered`, `rehome`, `dispose`.
-- [extensions/desktop-integration/features/hotkeys/index.md](extensions/desktop-integration/features/hotkeys/index.md): the hotkeys feature: global shortcuts plus `GET /api/desktop/hotkeys/` and `POST /run { action }` for read-selection, rewrite-selection, clipboard-to-chat, screenshot-to-chat; bindings and settings.
-- [extensions/desktop-integration/features/hotkeys/HotkeysFeature.md](extensions/desktop-integration/features/hotkeys/HotkeysFeature.md): wiring, routes, re-binding, failure notifications; has `start`, `run`, `fire`, `describe`, `mount`, `onSettingsChanged`, `dispose`, `settingsSchema`.
-- [extensions/desktop-integration/features/hotkeys/HotkeyActions.md](extensions/desktop-integration/features/hotkeys/HotkeyActions.md): the four actions; has `run`, `readSelection`, `stopSpeaking`, `rewriteSelection`, `clipboardToChat`, `screenshotToChat`.
-- [extensions/desktop-integration/features/hotkeys/HotkeyActivity.md](extensions/desktop-integration/features/hotkeys/HotkeyActivity.md): what the hotkey actions show on the activity island (reading with Pause, Stop, Continue in LumaBrowser; rewrite progress; confirmations; failures); has `reading`, `working`, `flash`.
+- [extensions/desktop-integration/features/hotkeys/index.md](extensions/desktop-integration/features/hotkeys/index.md): the hotkeys feature: global shortcuts plus `GET /api/desktop/hotkeys/` and `POST /run { action }` for read-selection, rewrite-selection, clipboard-to-chat, screenshot-to-chat, dictate; bindings and settings.
+- [extensions/desktop-integration/features/hotkeys/HotkeysFeature.md](extensions/desktop-integration/features/hotkeys/HotkeysFeature.md): wiring, routes, re-binding, failure notifications, the dictation status the General settings row reads; has `start`, `run`, `fire`, `describe`, `dictationStatus`, `mount`, `onSettingsChanged`, `dispose`, `settingsSchema`.
+- [extensions/desktop-integration/features/hotkeys/HotkeyActions.md](extensions/desktop-integration/features/hotkeys/HotkeyActions.md): the actions; has `run`, `readSelection`, `stopSpeaking`, `rewriteSelection`, `clipboardToChat`, `screenshotToChat`, `dictating`.
+- [extensions/desktop-integration/features/hotkeys/DictateAction.md](extensions/desktop-integration/features/hotkeys/DictateAction.md): the dictate action: press, speak, press again, and the words are pasted into the text box in front of any app; has `toggle`, `start`, `finish`, `cancel`, `listening`, `readiness`.
+- [extensions/desktop-integration/features/hotkeys/HotkeyActivity.md](extensions/desktop-integration/features/hotkeys/HotkeyActivity.md): what the hotkey actions show on the activity island (reading with Pause, Stop, Continue in LumaBrowser; rewrite progress; the dictation Listening island; confirmations; failures); has `reading`, `working`, `listening`, `flash`.
 - [extensions/desktop-integration/features/hotkeys/ChordHint.md](extensions/desktop-integration/features/hotkeys/ChordHint.md): the shortcut hint: holding the shortcuts' modifiers peeks the next keys on the activity island and sweeps the ring on; has `start`, `stop`, `suppress`, `tick`, `comboOf`, `split`.
 - [extensions/desktop-integration/features/hotkeys/HintTarget.md](extensions/desktop-integration/features/hotkeys/HintTarget.md): a click on a window while the shortcut hint is up aims the hint and the next action at that window; has `begin`, `end`, `poll`, `framed`.
 - [extensions/desktop-integration/features/hotkeys/KWinHintTarget.md](extensions/desktop-integration/features/hotkeys/KWinHintTarget.md): the hint's window pick on KDE Wayland: the window KWin activates after the click, the desktop for the whole monitor; has `begin`, `end`, `poll`, `frameOf`, `titleOf`.
@@ -3934,6 +3952,12 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/DesignSystem.md](ui/DesignSystem.md): the design rules every surface follows (neutral first, one accent, three surface levels, five type sizes, radius by role, no template chrome) and the tells checklist; tokens in `core/llm-server/ui/css/tokens.css`.
 - [ui/newtab/newtab.md](ui/newtab/newtab.md): the new tab page's HTML, CSS and script.
 - [ui/terminal/terminal.md](ui/terminal/terminal.md): the terminal page's HTML, CSS, script and icon.
+- [ui/downloads/downloads.md](ui/downloads/downloads.md): the downloads page's HTML (with its icon sprite), CSS, script and icon.
+- [ui/downloads/DownloadsView.md](ui/downloads/DownloadsView.md): the downloads page: the list by day, search, live updates, and open / copy link / show in folder / cancel / remove / Clear all; has `start`, `reload`, `render`.
+- [ui/downloads/DownloadGroups.md](ui/downloads/DownloadGroups.md): the downloads that match the search, newest first, under the day each started; has `build`, `matches`, `dayLabel`.
+- [ui/downloads/DownloadRowView.md](ui/downloads/DownloadRowView.md): one download's row (kind icon, name, status, source, progress, actions by state), updated in place while it runs; has `build`, `refresh`.
+- [ui/downloads/FileKind.md](ui/downloads/FileKind.md): the kind of file a name's extension says it is, for the row icon; has `of`.
+- [ui/downloads/DownloadText.md](ui/downloads/DownloadText.md): sizes, statuses, percentages, saved name and source site the downloads UI shows.
 - [ui/terminal/TerminalView.md](ui/terminal/TerminalView.md): one xterm.js terminal wired to a session through a transport; shared by the tab page and the dock.
 - [ui/shell/MainWindowShell.md](ui/shell/MainWindowShell.md): `index.html`, `ui/shell/`, `ui/shell/css/`, `preload.js`.
 - [ui/shell/activity/AiActivityHtml.md](ui/shell/activity/AiActivityHtml.md): markup of the AI Activity body: background runs first, then each model's tasks with timers.
@@ -3955,9 +3979,8 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/boot/BootLog.md](ui/shell/boot/BootLog.md): boot timing lines (`[luma-boot +Nms] renderer: ...`) offset from main's epoch, which MainWindow forwards to main's terminal.
 - [ui/shell/boot/PlatformClass.md](ui/shell/boot/PlatformClass.md): adds `platform-darwin|linux|win32|other` to `<body>` so CSS follows each OS's window chrome (Linux rounds its corners in CSS).
 - [ui/shell/debug/DebugTools.md](ui/shell/debug/DebugTools.md): ctrl+Shift+Y dumps the native view stack and Ctrl+Shift+U traces the UI thread for 15 s; results go to the console and the notification log.
-- [ui/shell/downloads/DownloadText.md](ui/shell/downloads/DownloadText.md): sizes, statuses and percentages the downloads UI shows.
-- [ui/shell/downloads/Downloads.md](ui/shell/downloads/Downloads.md): downloads: the toolbar button (appears with this session's first download, progress ring), the popup list (earlier sessions included) and its Open / Folder / Cancel / Clear actions; finishes and failures are logged.
-- [ui/shell/downloads/DownloadsMenuHtml.md](ui/shell/downloads/DownloadsMenuHtml.md): markup of the downloads popup (newest first, escaped names, per-state actions, Deleted for removed files, Clear).
+- [ui/shell/downloads/Downloads.md](ui/shell/downloads/Downloads.md): downloads in the chrome: the toolbar button (appears with this session's first download, progress ring), the popup list and its Open / Folder / Cancel / Clear actions, and `openPage` for the downloads page (gear menu, Ctrl+J, Show all downloads); finishes and failures are logged.
+- [ui/shell/downloads/DownloadsMenuHtml.md](ui/shell/downloads/DownloadsMenuHtml.md): markup of the downloads popup (the newest few and any still running, escaped names, per-state actions, Deleted for removed files, Clear, Show all downloads); has `render`, `shown`.
 - [ui/shell/entry.md](ui/shell/entry.md): entry module of the main browser window.
 - [ui/shell/favicons/FaviconCache.md](ui/shell/favicons/FaviconCache.md): favicons by hostname, learned from visited pages (never a third-party icon service), with letter badges as the fallback.
 - [ui/shell/find/FindBar.md](ui/shell/find/FindBar.md): find in page: an in-flow bar beneath the toolbar driving `findInPage` for regular web tabs, with match count, next/previous and Escape.
@@ -3974,7 +3997,7 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/layout/PanelSizeStore.md](ui/shell/layout/PanelSizeStore.md): persists dragged panel sizes in localStorage (`lumabrowser.panelSizes.v1`) and re-applies them as CSS variables.
 - [ui/shell/layout/ViewBoundsMath.md](ui/shell/layout/ViewBoundsMath.md): pure geometry: the rect the native page view may occupy, the container minus every visible overlay (full cover collapses, full-height or full-width overlays trim one edge, corner popovers trim the cheapest edge).
 - [ui/shell/layout/ViewBoundsReporter.md](ui/shell/layout/ViewBoundsReporter.md): tells main where to draw the active tab's native view.
-- [ui/shell/nav/ChromeExtensionButtons.md](ui/shell/nav/ChromeExtensionButtons.md): toolbar buttons beside the star for Chrome extensions with a popup; a click hangs the popup under the button.
+- [ui/shell/nav/ChromeExtensionButtons.md](ui/shell/nav/ChromeExtensionButtons.md): toolbar buttons beside the star for Chrome extensions with a popup, with the extension's badge for the tab on screen; a click hangs the popup under the button.
 - [ui/shell/nav/ChromeKind.md](ui/shell/nav/ChromeKind.md): internal tabs (LLM, Dashboard) hide the whole toolbar via `body.is-llm-tab` and close the address-bar popups.
 - [ui/shell/nav/NavButtons.md](ui/shell/nav/NavButtons.md): back, forward and reload.
 - [ui/shell/nav/SessionHistoryMenu.md](ui/shell/nav/SessionHistoryMenu.md): the back/forward history flyout: the active tab's session entries newest first, the current one checked.
@@ -3984,14 +4007,14 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/notifications/NotificationLog.md](ui/shell/notifications/NotificationLog.md): the floating notification log (`window.addLogEntry`) in the overlay's 'notif' layer: last ten entries, auto-close 5 s after the newest, paused while hovered, lifted above the On Demand tile.
 - [ui/shell/notifications/NotificationLogHtml.md](ui/shell/notifications/NotificationLogHtml.md): markup of the floating log: countdown ring, title with dismiss, escaped entries.
 - [ui/shell/notifications/WebhookNotifier.md](ui/shell/notifications/WebhookNotifier.md): the fallback `window.handleNotification` (log, then forward when a webhook URL is known) and `window.updateWebhookStatus`, until notification-interceptor takes over.
-- [ui/shell/omnibox/AddressBar.md](ui/shell/omnibox/AddressBar.md): the address input: shows the active URL (not while the user edits), reverts, focuses with select-all, carries the placeholder and the popup anchor rect.
+- [ui/shell/omnibox/AddressBar.md](ui/shell/omnibox/AddressBar.md): the address input: shows the active URL (not while the user edits), reverts, takes the keyboard from the page with select-all, hands it back, carries the placeholder and the popup anchor rect.
 - [ui/shell/omnibox/OmniboxMatches.md](ui/shell/omnibox/OmniboxMatches.md): bookmark and open-tab matches for the address bar (every word in title or address, host-prefix first).
 - [ui/shell/omnibox/OmniboxResolver.md](ui/shell/omnibox/OmniboxResolver.md): address-bar text to URL: known schemes pass, URL-shaped text gets https (http for loopback, private ranges and bare hosts), anything else is a search.
 - [ui/shell/omnibox/SearchEngineChoice.md](ui/shell/omnibox/SearchEngineChoice.md): the omnibox search engine (ids match main's `searchEngine` setting; unknown ids fall back to DuckDuckGo).
 - [ui/shell/omnibox/SuggestionsHtml.md](ui/shell/omnibox/SuggestionsHtml.md): markup of the suggestion list for the chrome overlay (tab and bookmark rows tagged); every title, URL and query is escaped.
 - [ui/shell/omnibox/UrlAutocomplete.md](ui/shell/omnibox/UrlAutocomplete.md): address-bar behaviour: debounced suggestions in the chrome overlay (a go-to row for URL-shaped text, then open tabs (Switch to this tab), bookmarks and history without repeated addresses, the search fallback last), arrows/Enter/Escape, Chrome's select-all on first click, revert on blur, and navigation.
 - [ui/shell/overlay/ChromeOverlayHost.md](ui/shell/overlay/ChromeOverlayHost.md): the shell side of main's ChromeOverlay (a transparent native view above the page): which popup is open in the 'popup' layer, placement, and dismissal on outside clicks (with exemptions for self-toggling buttons), window blur (deferred so an overlay click's action still arrives) and resize.
-- [ui/shell/overlay/MenuHtml.md](ui/shell/overlay/MenuHtml.md): popup menu markup and the extra overlay CSS (hints, checks, disabled rows, the downloads list).
+- [ui/shell/overlay/MenuHtml.md](ui/shell/overlay/MenuHtml.md): popup menu markup (items, separators, section headings, two-line rows) and the extra overlay CSS (hints, checks, disabled rows, the downloads list).
 - [ui/shell/overlay/OverlayActionRouter.md](ui/shell/overlay/OverlayActionRouter.md): routes overlay clicks and hovers to the permission prompt, the notification log or the open popup (suggestions, folder, context/gear menu, downloads list).
 - [ui/shell/overlay/PopupMenu.md](ui/shell/overlay/PopupMenu.md): every popup menu (context menus, gear menu, bookmark folders): one open path, one action dispatch, and arrow/Home/End/Enter/Space/Escape keys.
 - [ui/shell/permissions/PermissionPrompts.md](ui/shell/permissions/PermissionPrompts.md): camera / microphone / notification prompts in the overlay's 'perm' layer, anchored under the address bar, only for the active tab; answers go back through `permissionPromptAPI.respond`.
@@ -3999,7 +4022,7 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/settings/BrowsingDataCleaner.md](ui/shell/settings/BrowsingDataCleaner.md): confirm-then-clear browsing history and browser cache, shared by the gear menu, General and History.
 - [ui/shell/settings/CopyButton.md](ui/shell/settings/CopyButton.md): copies a value and flashes the button label (third use of the pattern, extracted).
 - [ui/shell/settings/SettingsFeedback.md](ui/shell/settings/SettingsFeedback.md): saved/Failed ticks beside autosaving controls with a row error line, and the modal toast (falls back to the notification log when Settings is not on screen).
-- [ui/shell/settings/SettingsMenu.md](ui/shell/settings/SettingsMenu.md): the gear dropdown in the overlay (its own 'settings-menu' mode, so window blur never drops a click): new tab, history, bookmarks, downloads, find, print, zoom, clearing data, Settings, Extensions, About, Exit.
+- [ui/shell/settings/SettingsMenu.md](ui/shell/settings/SettingsMenu.md): the gear dropdown in the overlay (its own 'settings-menu' mode, so window blur never drops a click): new tab, history, bookmarks, downloads (the downloads page), find, print, zoom, clearing data, Settings, Extensions, About, Exit.
 - [ui/shell/settings/SettingsModal.md](ui/shell/settings/SettingsModal.md): the Settings control panel: open on a tab (raising `settings:open`), close from X, backdrop or Escape (raising `settings:close` once), inline `data-gs-goto` links.
 - [ui/shell/settings/SettingsJumpButton.md](ui/shell/settings/SettingsJumpButton.md): the "Jump to a setting" button at the top of the Settings sidebar; opens the search palette and shows the Shift Shift hint while it is on.
 - [ui/shell/settings/SettingsReveal.md](ui/shell/settings/SettingsReveal.md): takes the user to one setting in the Settings modal (tab, sub-tab or extension page, collapsed sections opened) and highlights it; has `reveal`, `expandAround`, `visibleRow`, `highlight`.
@@ -4048,9 +4071,9 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/settings/sharing/SharingFirewall.md](ui/shell/settings/sharing/SharingFirewall.md): the firewall status badge and the elevated "Allow through firewall" button.
 - [ui/shell/settings/sharing/SharingPeersList.md](ui/shell/settings/sharing/SharingPeersList.md): already-paired peers: enable, attach GPUs, refresh, remove; follows `sharing:peers-changed`.
 - [ui/shell/settings/sharing/SharingTokensList.md](ui/shell/settings/sharing/SharingTokensList.md): paired web clients with usage, last use, Revoke / Remove and Revoke all.
-- [ui/shell/settings/sharing/SharingWebTools.md](ui/shell/settings/sharing/SharingWebTools.md): chat tools web-backend clients may use (globally disabled tools excluded; all-on saves null).
+- [ui/shell/settings/sharing/SharingWebTools.md](ui/shell/settings/sharing/SharingWebTools.md): chat tools web-backend clients may use (globally disabled tools excluded; shows the defaults until the host ticks, saves the ticked names).
 - [ui/shell/tabs/ClosedTabStack.md](ui/shell/tabs/ClosedTabStack.md): recently closed regular web tabs (newest last, at most 25) for Ctrl+Shift+T.
-- [ui/shell/tabs/PersistedTabsMenu.md](ui/shell/tabs/PersistedTabsMenu.md): the persisted-tabs strip button (visible only while persisted tabs exist) and its quick view, which shows a hidden tab or switches to a visible one.
+- [ui/shell/tabs/PersistedTabsMenu.md](ui/shell/tabs/PersistedTabsMenu.md): the persisted-tabs strip button (visible only while persisted tabs exist) and its quick view (background tabs and open tabs in two headed sections; icon, title and host per row), which shows a hidden tab or switches to a visible one.
 - [ui/shell/tabs/TabActions.md](ui/shell/tabs/TabActions.md): the shell's tab commands over `tabAPI`: open (start page by default, optional caret in the address bar), close (replacing the last tab with a fresh one), switch, navigate the active tab, zoom, sync zoom from main, reopen closed.
 - [ui/shell/tabs/TabContextMenu.md](ui/shell/tabs/TabContextMenu.md): the tab right-click menu: reload, duplicate, copy URL, mute, zoom, persist, extension items, close / close others / close to the right (never the pinned tab).
 - [ui/shell/tabs/TabEventSync.md](ui/shell/tabs/TabEventSync.md): applies main's tab events: `tab:state` (mirror, strip, toolbar for the active tab, BrowserRenderer events), `tab:switched`, `tab:closed`, `tab:hidden`, `tab:moved`, and intercepted notifications to `window.handleNotification`.

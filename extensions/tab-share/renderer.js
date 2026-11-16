@@ -9,24 +9,39 @@
   const STYLE = `
 .tab-strip .tab .tab-flag-share { display: none; }
 .tab-strip .tab.ext-ts-shared .tab-flag-share { display: inline; color: var(--accent); }
-.ext-ts-modal { max-width: 520px; width: min(520px, calc(100vw - 32px)); }
-.ext-ts-sub { font-size: 12px; color: var(--text-muted, #a8aebd); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -8px; }
-.ext-ts-modes { display: flex; flex-direction: column; gap: 8px; }
-.ext-ts-mode { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 10px; cursor: pointer; }
-.ext-ts-mode:hover { border-color: var(--accent, #f59034); }
-.ext-ts-mode.is-on { border-color: var(--accent, #f59034); background: rgba(245, 144, 52, 0.06); }
-.ext-ts-mode input { margin-top: 3px; accent-color: var(--accent, #f59034); }
-.ext-ts-mode-name { font-size: 13px; font-weight: 600; }
-.ext-ts-mode-help { font-size: 12px; color: var(--text-muted, #a8aebd); line-height: 1.45; margin-top: 2px; }
-.ext-ts-linkrow { display: flex; gap: 8px; align-items: center; }
-.ext-ts-linkrow .lm-input { flex: 1 1 auto; min-width: 0; font-size: 12px; }
-.ext-ts-meta { font-size: 12px; color: var(--text-muted, #a8aebd); display: flex; align-items: center; gap: 8px; }
+.ext-ts-modal { max-width: 480px; width: min(480px, calc(100vw - 32px)); gap: var(--space-4); }
+.ext-ts-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ext-ts-head .lm-title { margin-bottom: 2px; }
+.ext-ts-tab-title, .ext-ts-tab-url { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ext-ts-tab-title { font-size: var(--text-sm); color: var(--text-secondary); }
+.ext-ts-tab-url { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); }
+.ext-ts-modes { display: flex; flex-direction: column; gap: var(--space-2); }
+.ext-ts-mode {
+  position: relative; display: flex; flex-direction: column; gap: 2px;
+  padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 22px);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-lg); cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.ext-ts-mode:hover { background: var(--surface-hover); }
+.ext-ts-mode.is-on { background: var(--bg-surface-2); border-color: var(--border-strong); }
+.ext-ts-mode:has(input:focus-visible) { box-shadow: var(--focus-ring); }
+.ext-ts-mode input { position: absolute; top: calc(var(--space-3) + 1px); left: var(--space-3); width: 14px; height: 14px; margin: 0; outline: none; cursor: pointer; accent-color: var(--accent); }
+.ext-ts-mode-name { font-size: var(--text-md); font-weight: var(--weight-medium); line-height: var(--leading-tight); color: var(--text-primary); }
+.ext-ts-mode-help { font-size: var(--text-sm); line-height: var(--leading); color: var(--text-secondary); text-wrap: pretty; }
+.ext-ts-link { display: flex; flex-direction: column; gap: var(--space-2); }
+.ext-ts-link[hidden] { display: none; }
+.ext-ts-linkrow { display: flex; gap: var(--space-2); align-items: center; }
+.ext-ts-linkrow .lm-input { flex: 1 1 auto; min-width: 0; font-size: var(--text-sm); }
+.ext-ts-meta { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading); display: flex; align-items: center; gap: var(--space-2); }
 .ext-ts-meta .luma-dot { flex: 0 0 auto; }
-.ext-ts-warn { font-size: 12px; color: var(--warn, #fbbf24); line-height: 1.45; }
-.ext-ts-row-title { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ext-ts-row-url { font-size: 11.5px; color: var(--text-muted, #a8aebd); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ext-ts-row { display: flex; flex-direction: column; gap: 8px; }
-.ext-ts-row-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ext-ts-link .ext-ts-meta { align-items: flex-start; }
+.ext-ts-link .ext-ts-meta .luma-dot { margin-top: 5px; }
+.ext-ts-modal .lm-actions { margin-top: 0; }
+.ext-ts-modal .lm-actions .luma-btn { min-width: 80px; }
+.ext-ts-row-title { font-weight: var(--weight-medium); font-size: var(--text-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ext-ts-row-url { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ext-ts-row { display: flex; flex-direction: column; gap: var(--space-2); }
+.ext-ts-row-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
 .ext-ts-row-actions .luma-field-select { width: auto; }
 `;
 
@@ -152,34 +167,38 @@
       root.className = 'lm-overlay';
       root.innerHTML = `
         <div class="lm-modal ext-ts-modal" role="dialog" aria-modal="true" aria-labelledby="ext-ts-dlg-title">
-          <div class="lm-title" id="ext-ts-dlg-title">Share tab</div>
-          <div class="ext-ts-sub" id="ext-ts-dlg-sub"></div>
+          <div class="ext-ts-head">
+            <div class="lm-title" id="ext-ts-dlg-title">Share tab</div>
+            <div class="ext-ts-tab-title" id="ext-ts-dlg-tab-title" hidden></div>
+            <div class="ext-ts-tab-url" id="ext-ts-dlg-tab-url" hidden></div>
+          </div>
           <div class="ext-ts-modes" id="ext-ts-dlg-modes">
             <label class="ext-ts-mode" data-mode="view">
               <input type="radio" name="ext-ts-mode" value="view">
-              <span><span class="ext-ts-mode-name">View only</span><span class="ext-ts-mode-help">They watch the tab live. Nothing they do reaches the page.</span></span>
+              <span class="ext-ts-mode-name">View only</span>
+              <span class="ext-ts-mode-help">They watch the tab live. Nothing they do reaches the page.</span>
             </label>
             <label class="ext-ts-mode" data-mode="interact">
               <input type="radio" name="ext-ts-mode" value="interact">
-              <span><span class="ext-ts-mode-name">View and interact</span><span class="ext-ts-mode-help">They can click, scroll and type in the tab, including on sites where you are signed in.</span></span>
+              <span class="ext-ts-mode-name">View and interact</span>
+              <span class="ext-ts-mode-help">They can click, scroll and type in the tab, including on sites where you are signed in.</span>
             </label>
           </div>
-          <div id="ext-ts-dlg-link" hidden>
+          <div class="ext-ts-link" id="ext-ts-dlg-link" hidden>
             <div class="ext-ts-linkrow">
-              <input class="lm-input" id="ext-ts-dlg-url" readonly spellcheck="false">
-              <button type="button" class="lm-btn is-primary" id="ext-ts-dlg-copy">Copy</button>
+              <input class="lm-input" id="ext-ts-dlg-url" readonly spellcheck="false" aria-label="Share link">
+              <button type="button" class="luma-btn" id="ext-ts-dlg-copy">Copy</button>
             </div>
-            <div class="ext-ts-meta ext-mt-8"><span class="luma-dot ok" id="ext-ts-dlg-dot"></span><span id="ext-ts-dlg-viewers"></span></div>
+            <div class="ext-ts-meta"><span class="luma-dot ok" id="ext-ts-dlg-dot"></span><span id="ext-ts-dlg-viewers"></span></div>
           </div>
-          <div class="ext-ts-warn" id="ext-ts-dlg-warn" hidden></div>
+          <div class="luma-callout warn" id="ext-ts-dlg-warn" hidden></div>
           <div class="lm-actions" id="ext-ts-dlg-actions"></div>
         </div>`;
       const q = (sel) => root.querySelector(sel);
       const dlg = { root, tabId, mode: 'view', update: () => this._updateDialog(dlg) };
       this.dialog = dlg;
 
-      q('#ext-ts-dlg-sub').textContent = tab && (tab.title || tab.url) ? `${tab.title || ''}${tab.title && tab.url ? '  ' : ''}${tab.url || ''}` : '';
-      q('#ext-ts-dlg-sub').title = tab && tab.url ? tab.url : '';
+      this._showSharedTab(root, tab);
 
       q('#ext-ts-dlg-modes').addEventListener('change', async (e) => {
         if (!e.target || e.target.name !== 'ext-ts-mode') return;
@@ -211,6 +230,16 @@
       dlg.update();
     }
 
+    _showSharedTab(root, tab) {
+      const lines = { '#ext-ts-dlg-tab-title': tab && tab.title, '#ext-ts-dlg-tab-url': tab && tab.url };
+      for (const [selector, text] of Object.entries(lines)) {
+        const line = root.querySelector(selector);
+        line.textContent = text || '';
+        line.title = text || '';
+        line.hidden = !text;
+      }
+    }
+
     _updateDialog(dlg) {
       const root = dlg.root;
       const q = (sel) => root.querySelector(sel);
@@ -226,7 +255,7 @@
       actions.innerHTML = '';
       const btn = (label, cls, fn) => {
         const b = document.createElement('button');
-        b.type = 'button'; b.className = `lm-btn ${cls || ''}`.trim(); b.textContent = label;
+        b.type = 'button'; b.className = `luma-btn ${cls || ''}`.trim(); b.textContent = label;
         b.addEventListener('click', fn);
         actions.appendChild(b);
         return b;
@@ -240,14 +269,14 @@
         q('#ext-ts-dlg-dot').className = `luma-dot ${share.live ? (share.viewers ? 'ok' : 'warn') : 'bad'}`;
         if (!this.status.available) this._warn(dlg, this.status.reason || 'Sharing is currently unavailable.');
         if (dlg.offeredCreate) { dlg.offeredCreate = false; dlg.doneArmedAt = Date.now() + DONE_GUARD_MS; }
-        btn('Stop sharing', 'is-danger', async () => { await this.stop(share.id); this._closeDialog(); });
-        btn('Done', 'is-primary', () => { if (Date.now() >= (dlg.doneArmedAt || 0)) this._closeDialog(); });
+        btn('Stop sharing', 'danger', async () => { await this.stop(share.id); this._closeDialog(); });
+        btn('Done', 'primary', () => { if (Date.now() >= (dlg.doneArmedAt || 0)) this._closeDialog(); });
       } else {
         link.hidden = true;
         dlg.offeredCreate = true;
         if (!this.status.available) this._warn(dlg, this.status.reason || 'Sharing is currently unavailable.');
         btn('Cancel', '', () => this._closeDialog());
-        const create = btn('Create link', 'is-primary', async () => {
+        const create = btn('Create link', 'primary', async () => {
           create.disabled = true;
           const r = await this.ipc.invoke(CH('share'), dlg.tabId, dlg.mode).catch((err) => ({ success: false, error: err && err.message }));
           create.disabled = false;

@@ -1,3 +1,5 @@
+const AgentTabs = require('../../browser/AgentTabs');
+
 class BrowserToolExecutor {
   static DEFAULT_WAIT_TIMEOUT_MS = 5000;
 
@@ -5,14 +7,14 @@ class BrowserToolExecutor {
     navigate: (bs, tabId, p) => bs.navigate(tabId, p.url),
     create_tab: (bs, tabId, p) => bs.createTab(p.url, { silent: !!p.silent, activate: p.activate === true }),
     get_tabs: (bs, tabId, p) => BrowserToolExecutor._getTabs(bs, p),
-    observe_page: (bs, tabId) => BrowserToolExecutor._observePage(bs, tabId),
+    observe_page: (bs, tabId, p) => BrowserToolExecutor._observePage(bs, tabId, p),
     click: (bs, tabId, p) => bs.click(tabId, { selector: p.selector, text: p.text, ref: p.ref }),
     type: (bs, tabId, p) => bs.typeInto(tabId, { ref: p.ref, selector: p.selector, text: p.text, submit: p.submit, clear: p.clear }),
     fill_form: (bs, tabId, p) => bs.fill(tabId, { fields: p.fields, llmFallback: p.llmFallback }),
     press_key: (bs, tabId, p) => bs.pressKey(tabId, { key: p.key, selector: p.selector, ref: p.ref }),
     scroll: (bs, tabId, p) => bs.scroll(tabId, { selector: p.selector, direction: p.direction, amount: p.amount }),
-    get_source: (bs, tabId, p) => bs.getSource(tabId, { type: p.type || 'text' }),
-    screenshot: (bs, tabId, p) => bs.screenshot(tabId, { fullPage: p.fullPage, cssScale: !p.fullPage, marks: !p.fullPage && p.marks === true }),
+    get_source: (bs, tabId, p) => bs.getSource(tabId, { type: p.type || 'text', selector: p.selector }),
+    screenshot: (bs, tabId, p) => bs.screenshot(tabId, { selector: p.selector, fullPage: p.fullPage, cssScale: !p.fullPage, marks: !p.fullPage && p.marks === true }),
     locate: (bs, tabId, p) => bs.locate(tabId, { description: p.description, click: p.click === true, zoom: p.zoom === true }),
     click_at: (bs, tabId, p) => bs.clickAt(tabId, { x: p.x, y: p.y, button: p.button, clickCount: BrowserToolExecutor._clickCount(p) }),
     wait_for: (bs, tabId, p) => bs.waitFor(tabId, { selector: p.selector, timeout: p.timeout || BrowserToolExecutor.DEFAULT_WAIT_TIMEOUT_MS }),
@@ -41,13 +43,13 @@ class BrowserToolExecutor {
   }
 
   static async _getTabs(browserService, params) {
-    const result = await browserService.getTabs({ includeSilent: params.includeSilent });
-    if (result.tabs && !result.data) result.data = result.tabs;
+    const result = await browserService.getTabs(AgentTabs.fetchOptions(params));
+    if (result.tabs && !result.data) result.data = AgentTabs.select(result.tabs, params);
     return result;
   }
 
-  static async _observePage(browserService, tabId) {
-    const result = await browserService.observePage(tabId);
+  static async _observePage(browserService, tabId, params) {
+    const result = await browserService.observePage(tabId, { selector: params.selector });
     if (result.success && result.data && result.data.text) return { success: true, message: result.data.text, count: result.data.count };
     return result;
   }
@@ -58,7 +60,7 @@ class BrowserToolExecutor {
 
   static _normalize(result) {
     if (!result || typeof result !== 'object') return { success: true, data: result };
-    if (result.tab && !result.data) result.data = typeof result.tab.toJSON === 'function' ? result.tab.toJSON() : result.tab;
+    if (result.tab && !result.data) result.data = AgentTabs.shape(typeof result.tab.toJSON === 'function' ? result.tab.toJSON() : result.tab);
     return result;
   }
 }

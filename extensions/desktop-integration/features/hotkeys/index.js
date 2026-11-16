@@ -3,7 +3,7 @@ const HotkeysFeature = require('./HotkeysFeature');
 module.exports = {
   id: 'hotkeys',
   label: 'Hotkeys',
-  description: 'System-wide shortcuts (and POST /api/desktop/hotkeys/run) to read or rewrite the selected text, or send the clipboard or a screen region to a new chat.',
+  description: 'System-wide shortcuts (and POST /api/desktop/hotkeys/run) to read or rewrite the selected text, send the clipboard or a screen region to a new chat, or dictate into any text box.',
   defaultEnabled: true,
   settingsSchema: HotkeysFeature.settingsSchema(),
 

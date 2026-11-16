@@ -21,6 +21,7 @@ class BrowserRequestParser {
     if (query.fullPage === 'true') options.fullPage = true;
     if (query.cssScale === 'true') options.cssScale = true;
     if (query.marks === 'true') options.marks = true;
+    if (query.selector) options.selector = String(query.selector);
     return options;
   }
 

@@ -27,7 +27,11 @@ Built from `mcp-stdio/`: [StdioJsonRpc](mcp-stdio/StdioJsonRpc.md) (transport),
 - `handleRequest(method, params)`: `initialize` (echoes a supported protocol
   version, else the newest), `ping`, `tools/list`, `tools/call`; `undefined`
   for anything else (becomes Method not found).
-- `listTools()`: `{ tools }`, or `{ tools: [] }` on any failure.
+- `listTools()`: `{ tools }`. An app that cannot be reached, or any other
+  failure, gives `{ tools: [] }`. A refusal (401 or 403) throws instead, so the
+  client shows why rather than a LumaBrowser with no tools: `KEY_MISSING` (a
+  key is required and `LUMA_API_KEY` is not set), `KEY_REFUSED` (the key is no
+  longer accepted), or the app's own reason for a 403.
 - `callTool(name, args)`: the app's result verbatim; any failure becomes a tool
   result `{ success: false, error }` rather than a protocol error.
 - `isElectronRunning()`: `GET /api/health` answered 2xx within 2 s.

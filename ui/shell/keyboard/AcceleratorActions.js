@@ -85,7 +85,7 @@ export default class AcceleratorActions {
       case 'bookmark': d.star.clicked(); break;
       case 'history': d.historyModal.toggle(); break;
       case 'bookmarks': d.bookmarkManager.open(); break;
-      case 'downloads': d.downloads.toggleMenu(); break;
+      case 'downloads': d.downloads.openPage(); break;
       case 'toggle-terminal': if (d.terminalDock) d.terminalDock.toggle(); break;
       case 'new-terminal': if (window.ipcBridge) window.ipcBridge.invoke('core.terminal.openTab', {}); break;
       default: break;

@@ -1,4 +1,4 @@
-import DownloadText from './DownloadText.js';
+import DownloadText from '../../downloads/DownloadText.js';
 import DownloadsMenuHtml from './DownloadsMenuHtml.js';
 
 export default class Downloads {
@@ -29,11 +29,22 @@ export default class Downloads {
     }
     if (!Downloads.supported()) return;
     window.tabAPI.onDownload((p) => this.onEvent(p));
-    if (typeof window.tabAPI.listDownloads === 'function') {
-      window.tabAPI.listDownloads().then((list) => {
-        for (const d of (Array.isArray(list) ? list : [])) this._remember(d);
-      }).catch(() => {});
-    }
+    if (typeof window.tabAPI.onDownloadsChanged === 'function') window.tabAPI.onDownloadsChanged(() => this._loadList());
+    this._loadList();
+  }
+
+  openPage() {
+    if (this.menuOpen) this._host.hide();
+    if (window.tabAPI && typeof window.tabAPI.openDownloadsPage === 'function') window.tabAPI.openDownloadsPage();
+  }
+
+  _loadList() {
+    if (typeof window.tabAPI.listDownloads !== 'function') return;
+    window.tabAPI.listDownloads().then((list) => {
+      this._items.clear();
+      for (const d of (Array.isArray(list) ? list : [])) this._remember(d);
+      this._repaint();
+    }).catch(() => {});
   }
 
   onEvent(p) {
@@ -50,9 +61,14 @@ export default class Downloads {
     const prev = this._items.get(id) || { id, startedAt: Date.now() };
     const next = Object.assign({}, prev, p, { id });
     this._items.set(id, next);
-    this.refreshButton();
-    if (this.menuOpen) this.showMenu();
+    this._repaint();
     return { prev, next };
+  }
+
+  _repaint() {
+    this.refreshButton();
+    if (!this.menuOpen) return;
+    if (this._items.size) this.showMenu(); else this._host.hide();
   }
 
   refreshButton() {
@@ -81,12 +97,13 @@ export default class Downloads {
     this._host.hide();
     const width = Downloads.MENU_WIDTH;
     const r = btn.getBoundingClientRect();
+    const list = [...this._items.values()];
     this._host.show('settings-menu', {
-      html: DownloadsMenuHtml.render([...this._items.values()]),
+      html: DownloadsMenuHtml.render(list),
       x: r.right - width,
       y: r.bottom + 6,
       width,
-      estHeight: Math.max(60, this._items.size * 58 + 40),
+      estHeight: Math.max(60, DownloadsMenuHtml.shown(list).length * 58 + 80),
     });
     this.menuOpen = true;
     this._host.armDismiss();
@@ -95,6 +112,7 @@ export default class Downloads {
   handleAction(payload) {
     const api = window.tabAPI || {};
     if (payload && payload.action === 'clear') { this._clearFinished(api); return; }
+    if (payload && payload.action === 'all') { this.openPage(); return; }
     const id = payload && payload.id;
     const d = id != null ? this._items.get(String(id)) : null;
     if (!d) return;
@@ -106,8 +124,7 @@ export default class Downloads {
   _clearFinished(api) {
     for (const [id, d] of this._items) if (d.state !== 'progress') this._items.delete(id);
     if (typeof api.clearDownloads === 'function') api.clearDownloads();
-    this.refreshButton();
-    if (this._items.size) this.showMenu(); else this._host.hide();
+    this._repaint();
   }
 
   static _button() {

@@ -1,4 +1,6 @@
+const crypto = require('crypto');
 const IpClass = require('../shared/net/IpClass');
+const WebOriginGuard = require('./api-security/WebOriginGuard');
 const ApiSecurityConfig = require('./api-security/ApiSecurityConfig');
 const IpWhitelist = require('./api-security/IpWhitelist');
 const ApiKeyEntry = require('./api-security/ApiKeyEntry');
@@ -7,8 +9,15 @@ class ApiSecurity {
   static STORAGE_KEY = ApiSecurityConfig.STORAGE_KEY;
   static VALID_MODES = ApiSecurityConfig.VALID_MODES;
 
+  static NETWORK_REFUSED = 'Origin not allowed by API security policy';
+  static KEY_REFUSED = 'Invalid or missing API key';
+  static PROXY_REFUSED = 'This request came through a proxy, so the network rule cannot be checked: send an API key';
+
+  static FORWARDING_HEADERS = ['forwarded', 'x-forwarded-for', 'x-forwarded-host', 'x-real-ip', 'via', 'cf-connecting-ip'];
+
   constructor(db) {
     this._db = db;
+    this._internalToken = `luma_internal_${crypto.randomBytes(32).toString('hex')}`;
     this.reload();
   }
 
@@ -18,16 +27,16 @@ class ApiSecurity {
     this._whitelist = new IpWhitelist(this._cfg.ipWhitelist);
   }
 
-  middleware() {
+  middleware({ allowNavigation = false } = {}) {
     return (req, res, next) => {
-      if (!this._originAllowed(IpClass.clientIp(req))) {
-        return res.status(403).json({ error: 'Origin not allowed by API security policy' });
-      }
-      if (this._keyRequiredFor(req) && !this.isValidKey(ApiKeyEntry.fromHeaders(req.headers))) {
-        return res.status(401).json({ error: 'Invalid or missing API key' });
-      }
+      const refusal = this._refusalFor(req, { allowNavigation });
+      if (refusal) return res.status(refusal.status).json({ error: refusal.error });
       return next();
     };
+  }
+
+  internalToken() {
+    return this._internalToken;
   }
 
   isValidKey(key) {
@@ -84,6 +93,29 @@ class ApiSecurity {
     cfg.apiKeys = kept;
     this._writeConfig(cfg);
     return { success: true };
+  }
+
+  _refusalFor(req, guardOptions) {
+    if (!this._originAllowed(IpClass.clientIp(req))) return { status: 403, error: ApiSecurity.NETWORK_REFUSED };
+    const presented = ApiKeyEntry.fromHeaders(req.headers);
+    if (this.isValidKey(presented)) return null;
+    const foreign = WebOriginGuard.refusal(req, guardOptions);
+    if (foreign) return { status: 403, error: foreign };
+    if (this._proxiedPastNetworkRule(req)) return { status: 401, error: ApiSecurity.PROXY_REFUSED };
+    if (this._keyRequiredFor(req) && !this._isInternalToken(presented)) return { status: 401, error: ApiSecurity.KEY_REFUSED };
+    return null;
+  }
+
+  _proxiedPastNetworkRule(req) {
+    if (this._cfg.networkMode === 'any') return false;
+    const headers = req.headers || {};
+    return ApiSecurity.FORWARDING_HEADERS.some((name) => headers[name] !== undefined);
+  }
+
+  _isInternalToken(key) {
+    const given = Buffer.from(String(key || ''), 'utf8');
+    const expected = Buffer.from(this._internalToken, 'utf8');
+    return given.length === expected.length && crypto.timingSafeEqual(given, expected);
   }
 
   _originAllowed(ip) {

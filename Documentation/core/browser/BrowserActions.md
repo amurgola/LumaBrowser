@@ -30,6 +30,21 @@ Some actions have no dedicated route: navigate, refresh and execute_js all
 arrive through `PATCH /tabs/:id` (`update_tab`). `activate_tab` and
 `update_tab` are REST-only.
 
+## Options an agent would otherwise miss
+
+The MCP descriptions carry these, because each one answers a way agents got stuck:
+
+- `browser_get_tabs`: the tab strip by default; `includeSilent` adds tabs an agent opened with
+  `silent=true`, `includeHidden` adds the persisted tabs the user keeps off the strip (mail, chat).
+- `browser_create_tab`: a silent tab has a normal-sized viewport, and tabs its links open are silent too.
+- `browser_observe_page`: `selector` lists one part of a long page (a form, a dialog, a results list) in full.
+- `browser_get_source`: `markdown` and `text` for reading, `clean`, `minimal` and `full` for structure;
+  `selector` reads only the elements it matches.
+- `browser_screenshot`: `selector` captures one element whole, for small text on a long page.
+- `browser_extract_data` and `browser_collect_list`: a child selector ending in `@attribute`
+  (`a.title@href`, `img@src`, `input@value`) reads the attribute instead of the text.
+- `browser_type`: a rich-text editor in an iframe is typed into by targeting the iframe.
+
 The prose the local models read for chat tools lives elsewhere (BrowserTools
 `TOOL_DEFINITIONS` and the chat tool schemas) and keys on the same `id`; a
 cross-surface test must keep those sets equal to `chatActionIds()` once those

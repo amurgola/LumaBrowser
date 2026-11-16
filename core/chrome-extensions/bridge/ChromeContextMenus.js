@@ -1,4 +1,3 @@
-const ChromeTab = require('./ChromeTab');
 const MatchPattern = require('./MatchPattern');
 
 class ChromeContextMenus {
@@ -6,8 +5,9 @@ class ChromeContextMenus {
   static SELECTION_MAX = 32;
   static MEDIA_CONTEXTS = { image: 'image', video: 'video', audio: 'audio' };
 
-  constructor({ onClick }) {
+  constructor({ onClick, tabOf }) {
     this._onClick = onClick;
+    this._tabOf = tabOf;
     this._bySession = new WeakMap();
   }
 
@@ -47,12 +47,12 @@ class ChromeContextMenus {
     return [...this._entry(sess, extId).items.values()];
   }
 
-  templateFor({ webContents, params, entry = null, order = null }) {
+  templateFor({ webContents, params }) {
     const sess = webContents && webContents.session;
     const byExt = sess && this._bySession.get(sess);
     if (!byExt) return [];
     const context = ChromeContextMenus.contextOf(params || {});
-    const tab = ChromeTab.fromWebContents(webContents, entry, order);
+    const tab = this._tabOf(webContents);
     const template = [];
     for (const [extId, ext] of byExt) {
       const items = this._visible(ext, null, context);

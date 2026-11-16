@@ -23,6 +23,7 @@ Watches one input action on a tab and turns what happened into evidence.
 - `watcher.cancel(before)` detaches listeners (idempotent). When `before` is a
   fingerprint, the action script already installed the in-page observer, so it
   is torn down in the background.
-- `watcher.state` is `{ started, committed, inPage, newTabs }`.
+- `watcher.state` is `{ started, committed, inPage, newTabs }`; each new tab is `{ id, url, silent }`,
+  so the evidence can say whether the user sees it.
 - Constants: `NAV_GRACE_MS` (3000), `NO_ANSWER_GRACE_MS` (1000, the extra wait
   when the after-snapshot did not answer, in case the page is navigating).

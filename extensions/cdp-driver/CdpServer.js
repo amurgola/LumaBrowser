@@ -12,6 +12,7 @@ const CdpTargetRegistry = require('./CdpTargetRegistry');
 const CdpTargetTracker = require('./CdpTargetTracker');
 const DebuggerProxy = require('./DebuggerProxy');
 const FallbackConfig = require('./FallbackConfig');
+const ExposedServerKeyGuard = require('../../core/shared/net/ExposedServerKeyGuard');
 const LoopbackRequestGuard = require('../../core/shared/net/LoopbackRequestGuard');
 
 class CdpServer {
@@ -23,6 +24,7 @@ class CdpServer {
 
   constructor(options) {
     this.browser = options.browser;
+    this.apiSecurity = options.apiSecurity || null;
     this.fallback = options.fallback || null;
     this.fallbackDefaults = options.fallbackDefaults || {};
     this.browserUuid = CdpIds.newUuid();
@@ -41,6 +43,8 @@ class CdpServer {
   }
 
   async start(port, host = '127.0.0.1') {
+    const refused = ExposedServerKeyGuard.startRefusal(host, this.apiSecurity);
+    if (refused) throw new Error(refused);
     this.host = host;
     this.httpServer = http.createServer((req, res) => this._http.handle(req, res));
     this.wss = new WebSocketServer({ noServer: true });
@@ -126,9 +130,9 @@ class CdpServer {
   }
 
   _onUpgrade(req, socket, head) {
-    const refused = LoopbackRequestGuard.refusal(req, this.host);
-    if (refused) return LoopbackRequestGuard.rejectUpgrade(socket, refused);
-    const url = req.url || '';
+    const refused = ExposedServerKeyGuard.refusal(req, this.host, this.apiSecurity);
+    if (refused) return LoopbackRequestGuard.rejectUpgrade(socket, refused.reason, refused.status);
+    const url = ExposedServerKeyGuard.routedUrl(req, this.host);
     if (url === `/devtools/browser/${this.browserUuid}`) return this._accept(req, socket, head, { scope: 'browser' });
     const match = CdpServer.PAGE_PATH.exec(url);
     if (match && this.targets.get(match[1])) return this._accept(req, socket, head, { scope: 'page', targetId: match[1] });

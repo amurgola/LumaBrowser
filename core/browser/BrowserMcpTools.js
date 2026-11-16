@@ -1,3 +1,4 @@
+const AgentTabs = require('./AgentTabs');
 const BrowserActions = require('./BrowserActions');
 const McpResult = require('../shell/McpResult');
 const BrowserRequestParser = require('./controller/BrowserRequestParser');
@@ -73,15 +74,15 @@ class BrowserMcpTools {
   }
 
   async _getTabs(args) {
-    const result = await this._service.getTabs({ includeSilent: args.includeSilent });
-    return this._reply(result, 'Failed to get tabs', result.tabs || []);
+    const result = await this._service.getTabs(AgentTabs.fetchOptions(args));
+    return this._reply(result, 'Failed to get tabs', AgentTabs.select(result.tabs, args));
   }
 
   async _createTab(args) {
     if (!args.url) return McpResult.error('URL is required');
     const result = await this._service.createTab(args.url, { silent: !!args.silent });
     if (!result.success) return McpResult.error(result.error || 'Failed to create tab');
-    const data = await SettledTab.read(this._service, result.tab);
+    const data = AgentTabs.shape(await SettledTab.read(this._service, result.tab));
     return McpResult.text({ success: true, data });
   }
 
@@ -112,13 +113,14 @@ class BrowserMcpTools {
   }
 
   _getSource(args) {
-    return this._withTab(args, async (tabId) => this._reply(await this._service.getSource(tabId, { type: args.type || 'clean' }), 'Failed to get source'));
+    return this._withTab(args, async (tabId) => this._reply(await this._service.getSource(tabId, { type: args.type || 'clean', selector: args.selector }), 'Failed to get source'));
   }
 
   _screenshot(args) {
     return this._withTab(args, async (tabId) => {
       const fullPage = !!args.fullPage;
       const result = await this._service.screenshot(tabId, {
+        selector: args.selector,
         fullPage: args.fullPage,
         cssScale: !args.fullPage && args.fullResolution !== true,
         marks: !args.fullPage && args.marks === true,
@@ -150,7 +152,7 @@ class BrowserMcpTools {
   }
 
   _observePage(args) {
-    return this._withTab(args, async (tabId) => this._reply(await this._service.observePage(tabId), 'Failed to observe page'));
+    return this._withTab(args, async (tabId) => this._reply(await this._service.observePage(tabId, { selector: args.selector }), 'Failed to observe page'));
   }
 
   _click(args) {

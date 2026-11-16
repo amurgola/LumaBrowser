@@ -15,7 +15,10 @@ and run by [DeferredServices](DeferredServices.md).
      (not awaited): the configured port is retried until it binds, never
      replaced. Once listening:
      log `REST API server running on http://localhost:<port>`, write the CLI
-     handshake, refresh an installed `luma` launcher, JetBrains plugin and VS
+     handshake, show the one notice "Local API now answers your network only"
+     when [OpenAccessMigration](../../core/shell/api-security/OpenAccessMigration.md)
+     narrowed an old profile on this launch (a click opens Settings > API & MCP),
+     refresh an installed `luma` launcher, JetBrains plugin and VS
      Code extension (never a fresh install, except that the JetBrains plugin's
      "install automatically" switch makes its refresh cover every IDE found;
      each best-effort; skipped entirely

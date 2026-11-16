@@ -15,7 +15,9 @@ Builds the window's tab layer and the views stacked over it.
     web tabs are sandboxed and a sandboxed preload can require only `electron`; an
     edit to any preload module applies on the next start), the network interceptor, Chrome
     extensions, adblocker, db and favicon cache; `tabManager` over it; `vaultService.attachTabs` so the
-    password manager hears each tab's preload;
+    password manager hears each tab's preload; `chromeExtensionService.bridge.attachTabs` so Chrome
+    extensions get tab queries, tab events and toolbar badges
+    ([ShimBridge](../../core/chrome-extensions/bridge/ShimBridge.md));
   - favicon updates relayed to the shell as `tab-view:favicon`;
   - `chromeOverlay` ([ChromeOverlay](../../core/browser/ChromeOverlay.md)), re-raised
     on `tabSwitched` and when the tab preview raises; it accepts popup requests from

@@ -11,9 +11,10 @@ agent driving it.
   base64 }` for each `kind: 'image'` attachment with base64; `[]` for a non-array.
 - `ChatTurnInputs.wantsAgent(body, agentTurn)`: the agent's `agent` flag when
   an agent drives the turn, else `body.agent === true || body.tools === true`.
-- `ChatTurnInputs.allowedTools(agentTurn, hostAllowList)`: without an agent
-  grant, the host list (null = unrestricted); with one, the grant filtered by
-  the host list when that is set.
+- `ChatTurnInputs.allowedTools(agentTurn, hostAllowList, sharedTools)`: without
+  an agent grant, `sharedTools` (the host's choice or the built-in defaults,
+  see [WebToolAllowList](../WebToolAllowList.md)), never everything; with one,
+  the grant, filtered by the host list when the host chose one.
 - `ChatTurnInputs.streamMessages(agentTurn, wantAgent, messages)`: prepends
   `{ role: 'system', content: systemPrompt }` for a tool-less persona agent on
   the plain path; otherwise the messages unchanged.

@@ -81,7 +81,7 @@ class ChatCompletionTurn extends SharedLlmTurn {
       ...common,
       messages: this._body.messages,
       priorArtifacts: this._priorArtifacts,
-      allowedTools: ChatTurnInputs.allowedTools(this._agentTurn, this._service.getWebAllowedTools()),
+      allowedTools: ChatTurnInputs.allowedTools(this._agentTurn, this._service.getWebAllowedTools(), this._service.getSharedTurnTools()),
       modeSystemPrompt: this._agentTurn ? this._agentTurn.systemPrompt : null,
       kbScope: this._agentTurn ? this._agentTurn.kbScope : null,
     });

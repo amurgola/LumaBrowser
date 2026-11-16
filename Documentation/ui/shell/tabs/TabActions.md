@@ -10,6 +10,8 @@ The shell's tab commands over `tabAPI`: open (start page by default, optional ca
 - `startPageUrl` (set by BrowserDataSettings).
 - `TabActions.nextZoom(current, delta, reset)`.
 
+`create(url, { focusUrl: true })` (the + button, Ctrl+T, the menu) ends with [AddressBar](../omnibox/AddressBar.md) `focusAndSelect()`, which takes the keyboard from the new page.
+
 ## Globals
 
 Reads `window.tabAPI`.

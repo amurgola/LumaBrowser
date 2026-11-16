@@ -29,6 +29,10 @@ IPC controller for the Settings Chrome Extensions panel.
     (`{ id, installedVersion, latestVersion, updateAvailable }`).
   - `core.chromeExtensions.openPage(id, kind)` -> `{ success: true, reused }`
     or `{ success: false, error }`.
+  - `core.chromeExtensions.badges` -> raw `{ extId: { text, color } }`: the
+    badges the calling window's toolbar shows for its active tab
+    ([ChromeActionBadges.badgesForWindow](bridge/ChromeActionBadges.md)); `{}`
+    without a bridge or a window.
 
 ## openPage anchor
 

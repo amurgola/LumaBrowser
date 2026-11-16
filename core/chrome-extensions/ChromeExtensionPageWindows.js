@@ -1,5 +1,6 @@
 const { app, BrowserWindow, screen, session } = require('electron');
 const TabKinds = require('../browser/tab-view/TabKinds');
+const ShimBridge = require('./bridge/ShimBridge');
 
 class ChromeExtensionPageWindows {
   static KINDS = Object.freeze({
@@ -73,6 +74,7 @@ class ChromeExtensionPageWindows {
       backgroundColor: '#ffffff',
       webPreferences: {
         session: sess, contextIsolation: true, sandbox: true, nodeIntegration: false, enablePreferredSizeMode: true,
+        preload: ShimBridge.PRELOAD,
       },
     });
     const origin = anchor.parent.getContentBounds();
@@ -104,7 +106,7 @@ class ChromeExtensionPageWindows {
       ...size,
       title: ext.name,
       autoHideMenuBar: true,
-      webPreferences: { session: sess, contextIsolation: true, sandbox: true, nodeIntegration: false },
+      webPreferences: { session: sess, contextIsolation: true, sandbox: true, nodeIntegration: false, preload: ShimBridge.PRELOAD },
     });
     this._wire(win, ext, key);
     win.loadURL(ChromeExtensionPageWindows.pageUrl(ext.id, page));
@@ -129,6 +131,14 @@ class ChromeExtensionPageWindows {
   _wire(win, ext, key) {
     win.on('closed', () => this._windows.delete(key));
     win.webContents.setWindowOpenHandler(({ url }) => this._routeWindowOpen(ext.id, url));
+    this._bridge(win.webContents);
+  }
+
+  _bridge(wc) {
+    const bridge = this._service.bridge;
+    if (!bridge) return;
+    bridge.attachPage(wc);
+    wc.on('did-create-window', (child) => this._bridge(child.webContents));
   }
 
   _routeWindowOpen(id, url) {

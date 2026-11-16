@@ -2,8 +2,9 @@
 
 `core/browser/LumaPages.js`
 
-The app's own pages on the `luma:` scheme: `luma://newtab` ([NewTabPage](newtab/NewTabPage.md)) and `luma://terminal`
-([TerminalPage](../terminal/TerminalPage.md)). A scheme has one registration per session, so the pages' routes are
+The app's own pages on the `luma:` scheme: `luma://newtab` ([NewTabPage](newtab/NewTabPage.md)), `luma://terminal`
+([TerminalPage](../terminal/TerminalPage.md)) and `luma://downloads`
+([DownloadsPage](downloads/DownloadsPage.md)). A scheme has one registration per session, so the pages' routes are
 gathered here and registered together on every tab session (SessionSetup).
 
 Where the session has `protocol.registerSource` (Electron 45) the folders are served by Chromium with no JavaScript

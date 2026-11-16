@@ -9,6 +9,9 @@ class RestGateway {
   static JSON_LIMIT = '50mb';
   static HOST = '0.0.0.0';
 
+  static GUARDED_PREFIXES = ['/api', '/llm-ui', '/dashboard-ui', '/artifacts'];
+  static CREDENTIAL_HEADERS = ['authorization', 'x-api-key'];
+
   constructor(port = 3000, options = {}) {
     this.port = port;
     this.app = express();
@@ -131,9 +134,26 @@ class RestGateway {
   }
 
   _setupMiddleware() {
-    this.app.use(cors());
-    this._installBodyParsers();
+    this.app.use(cors((req, done) => done(null, { origin: RestGateway._corsOriginFor(req) })));
     if (this._apiSecurity) this.app.use('/api', this._apiSecurity.middleware());
+    this._installBodyParsers();
+  }
+
+  static _corsOriginFor(req) {
+    if (!RestGateway._isGuardedPath(req.path)) return '*';
+    return RestGateway._isPreflight(req) || RestGateway._showsCredential(req);
+  }
+
+  static _isGuardedPath(path) {
+    return RestGateway.GUARDED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+  }
+
+  static _isPreflight(req) {
+    return req.method === 'OPTIONS' && req.headers['access-control-request-method'] !== undefined;
+  }
+
+  static _showsCredential(req) {
+    return RestGateway.CREDENTIAL_HEADERS.some((name) => req.headers[name] !== undefined);
   }
 
   _installBodyParsers() {

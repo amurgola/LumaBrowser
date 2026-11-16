@@ -8,6 +8,8 @@ class SeleniumDriverExtension {
     this._settings = null;
     this._fallback = null;
     this._server = null;
+    this._apiSecurity = null;
+    this._startError = null;
   }
 
   async activate(context) {
@@ -25,6 +27,8 @@ class SeleniumDriverExtension {
     this._settings = null;
     this._fallback = null;
     this._server = null;
+    this._apiSecurity = null;
+    this._startError = null;
   }
 
   async start() {
@@ -33,10 +37,10 @@ class SeleniumDriverExtension {
     this._server = this._createServer(settings);
     try {
       const port = await this._server.start(settings.port, settings.host);
+      this._startError = null;
       return { success: true, port, host: settings.host, prefix: settings.prefix };
     } catch (err) {
-      this._server = null;
-      return { success: false, error: err.message || 'failed to start' };
+      return this._startFailed(err);
     }
   }
 
@@ -56,6 +60,7 @@ class SeleniumDriverExtension {
       host: settings.host,
       prefix: settings.prefix,
       sessions: server ? server.activeSessions() : [],
+      lastError: this._startError,
       settings,
     };
   }
@@ -73,6 +78,7 @@ class SeleniumDriverExtension {
     this._context = context;
     this._settings = new SeleniumDriverSettings(context.db.getRawDb());
     this._fallback = LlmSelectorFallback.createService(context);
+    this._apiSecurity = (context.sharedServices && context.sharedServices.apiSecurity) || null;
   }
 
   _buildApi() {
@@ -96,10 +102,18 @@ class SeleniumDriverExtension {
   _createServer(settings) {
     return new WebDriverServer({
       browser: this._context.browser,
+      apiSecurity: this._apiSecurity,
       fallback: this._fallback,
       fallbackDefaults: settings.fallback,
       prefix: settings.prefix,
     });
+  }
+
+  _startFailed(err) {
+    this._server = null;
+    this._startError = err.message || 'failed to start';
+    console.warn(`selenium-driver: start failed: ${this._startError}`);
+    return { success: false, error: this._startError };
   }
 
   async _autostart() {
@@ -107,8 +121,7 @@ class SeleniumDriverExtension {
       console.log('selenium-driver: autostart disabled (selenium.enabled=false)');
       return;
     }
-    const result = await this.start();
-    if (!result.success) console.warn(`selenium-driver: autostart failed: ${result.error}`);
+    await this.start();
   }
 
   static _bindMcpTools(api) {

@@ -1,7 +1,15 @@
 class ElementDigest {
-  static SCRIPT = `(function() {
+  static CAP_IN_VIEW = 60;
+  static CAP_BELOW = 30;
+  static CAP_BELOW_SCOPED = 150;
+
+  static SCRIPT = ElementDigest.script();
+
+  static script({ selector = null } = {}) {
+    return `(function() {
   'use strict';
   try {
+    var SCOPE = ${JSON.stringify(selector || null)};
     // Refs are per-observation: clear every stale tag before renumbering.
     document.querySelectorAll('[data-luma-ref]').forEach(function(el) {
       el.removeAttribute('data-luma-ref');
@@ -12,8 +20,26 @@ class ElementDigest {
       '[role="button"]', '[role="link"]', '[role="tab"]', '[role="menuitem"]',
       '[role="checkbox"]', '[role="radio"]', '[role="switch"]',
       '[role="combobox"]', '[role="searchbox"]', '[role="textbox"]',
-      '[role="option"]', '[onclick]', '[contenteditable="true"]', '[contenteditable=""]',
+      '[role="option"]', '[onclick]', '[contenteditable="true"]', '[contenteditable=""]', 'iframe',
     ].join(', ');
+
+    // A rich-text editor is often a frame whose whole document is the editable area; type reaches into it.
+    function isEditorFrame(el) {
+      try {
+        var doc = el.contentDocument;
+        return !!doc && (doc.designMode === 'on' || !!(doc.body && doc.body.isContentEditable));
+      } catch (_) { return false; }
+    }
+
+    function candidatesIn(scopes) {
+      var found = [];
+      for (var s = 0; s < scopes.length; s++) {
+        if (scopes[s].matches(SELECTOR)) found.push(scopes[s]);
+        var inner = scopes[s].querySelectorAll(SELECTOR);
+        for (var c = 0; c < inner.length; c++) found.push(inner[c]);
+      }
+      return found;
+    }
 
     var vw = window.innerWidth, vh = window.innerHeight;
 
@@ -35,6 +61,7 @@ class ElementDigest {
       if (explicit) return explicit;
       var tag = el.tagName.toLowerCase();
       if (tag === 'a') return 'link';
+      if (tag === 'iframe') return 'input:richtext';
       if (tag === 'input') {
         var t = (el.type || 'text').toLowerCase();
         if (t === 'submit' || t === 'button' || t === 'image') return 'button';
@@ -46,10 +73,17 @@ class ElementDigest {
     }
 
     var candidates = document.querySelectorAll(SELECTOR);
+    if (SCOPE) {
+      var scopes = document.querySelectorAll(SCOPE);
+      if (!scopes.length) return { success: false, error: 'No elements found for selector "' + SCOPE + '"' };
+      candidates = candidatesIn(scopes);
+    }
     var picked = [];
     var pickedSet = new Set();
     for (var i = 0; i < candidates.length; i++) {
       var el = candidates[i];
+      if (pickedSet.has(el)) continue;
+      if (el.tagName === 'IFRAME' && !isEditorFrame(el)) continue;
       if (el.disabled) continue;
       if (el.closest('[aria-hidden="true"]')) continue;
       var style = getComputedStyle(el);
@@ -82,7 +116,7 @@ class ElementDigest {
       (visible ? inVp : below).push(rows[k]);
     }
 
-    var CAP_VP = 60, CAP_BELOW = 30;
+    var CAP_VP = ${ElementDigest.CAP_IN_VIEW}, CAP_BELOW = SCOPE ? ${ElementDigest.CAP_BELOW_SCOPED} : ${ElementDigest.CAP_BELOW};
     var n = 0;
     function tag(row) {
       n += 1;
@@ -99,7 +133,7 @@ class ElementDigest {
     var belowOut = below.slice(0, CAP_BELOW).map(tag);
     var dropped = Math.max(0, inVp.length - CAP_VP) + Math.max(0, below.length - CAP_BELOW);
 
-    return {
+    var digest = {
       success: true,
       title: String(document.title || '').slice(0, 120),
       url: location.href,
@@ -107,10 +141,13 @@ class ElementDigest {
       below: belowOut,
       dropped: dropped,
     };
+    if (SCOPE) digest.scope = SCOPE;
+    return digest;
   } catch (e) {
     return { success: false, error: e.message };
   }
 })();`;
+  }
 }
 
 module.exports = ElementDigest;

@@ -29,7 +29,12 @@ export default class SeleniumSettingsTab {
     <div class="luma-field">
       <label class="luma-field-label">Host</label>
       <input type="text" class="luma-field-input" id="ext-sd-host" placeholder="127.0.0.1">
-      <div class="luma-field-help">Bind address. Use 127.0.0.1 for local only, or 0.0.0.0 to expose on the network. Restart the server to apply.</div>
+      <div class="luma-field-help">
+        Bind address. Use 127.0.0.1 for local only, or 0.0.0.0 to expose on the network. Restart the server to apply.
+        Any address other than 127.0.0.1 needs an API key from Settings &gt; API &amp; MCP: put it in the URL as
+        <code>http://luma:&lt;key&gt;@host:port</code> (sent as Basic auth), or send
+        <code>Authorization: Bearer &lt;key&gt;</code> or <code>X-Api-Key</code>.
+      </div>
     </div>
 
     <div class="luma-field">
@@ -182,7 +187,9 @@ export default class SeleniumSettingsTab {
     const endpoint = this._q('ext-sd-endpoint');
     this._q('ext-sd-status').classList.toggle('ok', running);
     this._q('ext-sd-statusText').textContent = 'WebDriver: ' + (running ? 'running' : 'stopped');
-    endpoint.classList.toggle('ext-hidden', !running);
+    const failure = !running && status.lastError ? status.lastError : '';
+    endpoint.classList.toggle('ext-hidden', !running && !failure);
+    endpoint.textContent = failure ? `Could not start: ${failure}` : '';
     if (running) {
       endpoint.textContent = `http://${status.host}:${status.port}${status.prefix || ''}, ${status.sessions.length} active session(s)`;
     }

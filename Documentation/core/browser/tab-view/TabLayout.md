@@ -4,7 +4,7 @@
 
 Places each window's active tab view over the content area that window's renderer reports. A tab a
 remote viewer has sized (Tab Share) takes that size instead, on screen or lent a place behind the tab
-on screen.
+on screen. A silent tab is lent the same place, so the page an agent drives has a real viewport.
 
 ## Methods
 
@@ -16,12 +16,12 @@ on screen.
 - `applyTo(entry)`: zero width or height hides the view (an overlay such as
   Settings has the window; some GPU paths paint a 0x0 rect as a 1px artifact);
   otherwise shows it only if active and sets its window's bounds. A sized tab
-  is placed by the rules below.
+  and a silent tab are placed by the rules below.
 - `setViewSize(entry, size)`: `{ width, height }` (rounded) sizes the tab's view
   for a remote viewer's window, null or an empty size fills the content area
   again. Kept on `entry.viewSize`.
-- `refitBackground()`: places every background tab that is sized (or still lent
-  a place) again. Runs on `setBounds` and, through
+- `refitBackground()`: places every background tab that is sized, silent (or
+  still lent a place) again. Runs on `setBounds` and, through
   [TabViewManager](../TabViewManager.md), on every tab switch.
 
 ## A view sized for a remote viewer (2026-11-15)
@@ -48,3 +48,16 @@ button) so the site lays out for its screen. The window is never resized, only t
 
 So the page can shrink to a smaller guest window but never grows past the
 host's content area; a larger guest window keeps bars on that axis.
+
+## A silent tab
+
+A silent tab is never activated, and a page whose view was never shown stays
+0x0: `innerWidth` and `innerHeight` are 0, nothing is "in view" for
+observe_page, scrolling does nothing, every click falls back to a synthetic
+one, and the site sees a zero-size window. So `applyTo` lends a silent tab the
+same place a sized background tab gets, with no size of its own: it takes
+everything the tab on screen covers, from the bottom of the stack, and follows
+the window through `refitBackground`. With nothing to hide behind it waits, as
+above. A lent view already below the tab on screen stays where it is in the
+stack, so several silent tabs do not trade places on every re-fit. [TabViewManager](../TabViewManager.md) calls `applyTo` for a silent tab
+as it is created, before its first load.

@@ -9,9 +9,10 @@ inside the page area, in window-content CSS pixels.
 
 - `OnDemandGeometry.defaultPosition(rect, iconSize?)` is the bottom-right resting
   spot, `MARGIN` px in from both edges, never negative.
-- `OnDemandGeometry.clampPosition(pos, rect, iconSize?)` keeps the icon fully
-  inside the rect, rounded. Non-finite input lands top-left; a rect smaller than
-  the icon pins it top-left.
+- `OnDemandGeometry.clampPosition(pos, rect, iconSize?)` keeps the icon inside the
+  rect and `EDGE_PADDING` px clear of every edge, rounded. Non-finite input lands
+  in the padded top-left corner. A rect too small for the icon plus both paddings
+  centres it in the room there is; one smaller than the icon pins it top-left.
 - `OnDemandGeometry.iconBounds(pos, rect, iconSize?)` is the collapsed icon's
   window-content bounds (rect offset applied).
 - `OnDemandGeometry.panelBounds(pos, rect, { iconSize, width, height }?)` is the
@@ -22,9 +23,15 @@ inside the page area, in window-content CSS pixels.
 - `OnDemandGeometry.rectUsable(rect)` is false for a missing or 0x0 rect (a shell
   modal collapses the page area).
 - Statics: `ICON_SIZE` (56), `PANEL_WIDTH` (380), `PANEL_HEIGHT` (520),
-  `MARGIN` (16), `MIN_PANEL_HEIGHT` (240).
+  `MARGIN` (16), `EDGE_PADDING` (10), `MIN_PANEL_HEIGHT` (240).
 
 ## Why
+
+The edge padding exists because the position is saved as an offset from the
+top-left: a tile parked bottom-right in a large window is past the end of a
+smaller page area, and plain clamping left it flush against the edge. Dragging
+and a restored position both go through `clampPosition`, so neither can put the
+tile in the strip.
 
 Positions are stored relative to the page rect's top-left corner, so a resized
 window or a toggled side panel keeps the icon where the user put it rather than

@@ -11,13 +11,16 @@ clients connect with `RemoteWebDriver('http://127.0.0.1:9515' + prefix)`.
 
 - `activate(context)` reads settings from `context.db.getRawDb()`, builds the fallback
   service, registers the IPC handlers, binds `mcp-tools.js`, autostarts when
-  `selenium.enabled` is true (a failed autostart is only warned), and resolves the API
-  `{ start, stop, status, getSettings, setSettings }`.
+  `selenium.enabled` is true (a failed autostart is only logged), and resolves the API
+  `{ start, stop, status, getSettings, setSettings }`. ApiSecurity comes from
+  `context.sharedServices.apiSecurity` (null when absent) and is handed to each server.
 - `deactivate()` stops the server (errors swallowed) and drops all state.
 - `start()` -> `{ success: true, port, host, prefix }`, `{ success: true, already: true, port }`,
-  or `{ success: false, error }` (never throws). A fresh server is built per start.
+  or `{ success: false, error }` (never throws). A fresh server is built per start. A
+  failure is logged (`selenium-driver: start failed: <error>`) and kept as `lastError`
+  until a start succeeds.
 - `stop()` -> `{ success: true }` or `{ success: true, already: true }`.
-- `status()` -> `{ running, port, host, prefix, sessions, settings }`.
+- `status()` -> `{ running, port, host, prefix, sessions, lastError, settings }`.
 - `getSettings()`, `setSettings(patch)`.
 
 ## Entry files
@@ -40,6 +43,10 @@ clients connect with `RemoteWebDriver('http://127.0.0.1:9515' + prefix)`.
 
 ## Security
 
-The server binds to `selenium.host` (default `127.0.0.1`) with no authentication or
-Origin check, exactly as legacy. It can run script and raw CDP commands in any
-listed tab, including user tabs.
+The server binds to `selenium.host` (default `127.0.0.1`). It can run script and raw
+CDP commands in any listed tab, including user tabs. Bound to a loopback name it needs
+no key and refuses foreign Host and cross-site Origin headers. Bound to anything else
+(`0.0.0.0`, a LAN address) it will not start until an API key exists in
+Settings > API & MCP, and then every request must carry a valid key, for example as
+`http://luma:<key>@host:port` ([ExposedServerKeyGuard](../../core/shared/net/ExposedServerKeyGuard.md)).
+The error reaches the settings tab, the `/api/selenium/start` reply and the log.

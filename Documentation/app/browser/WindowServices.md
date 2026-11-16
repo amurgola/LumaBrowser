@@ -15,7 +15,8 @@ Wires everything that needs the main window, once per window.
      browser/health routes, BrowserService, grounding, desktop);
   4. the gateway pages: [StaticUiRoutes](../gateway/StaticUiRoutes.md) then
      [ArtifactRoutes](../gateway/ArtifactRoutes.md), both behind
-     `apiSecurity.middleware()`;
+     `apiSecurity.middleware({ allowNavigation: true })` (a link or a typed
+     address may open a page; `/api` itself stays strict);
   5. [CoreMcpTools](CoreMcpTools.md) (and the MCP proxy, disabled API groups);
   6. `extensionManager.coreServices.browser = browserService`, `discover()`,
      `resolve()` (so the setup wizard can list extensions);

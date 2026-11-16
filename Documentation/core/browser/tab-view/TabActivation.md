@@ -2,7 +2,8 @@
 
 `core/browser/tab-view/TabActivation.js`
 
-Makes a tab the visible, focused one in its window, and walks a window's strip for tab cycling.
+Makes a tab the visible, focused one in its window, walks a window's strip for tab cycling, and moves the
+keyboard between a window's chrome and its page.
 
 ## Methods
 
@@ -16,3 +17,12 @@ Makes a tab the visible, focused one in its window, and walks a window's strip f
   tab's window and the state broadcast.
 - `cycle(delta, hostId = 0)`: the window's strip tab `delta` places from its active one, wrapping.
 - `selectByIndex(n, hostId = 0)`: the window's nth strip tab, 1-based; `n <= 0` is the last one.
+- `focusChrome(hostId = 0)` -> `{ success }`: gives the window's chrome the keyboard (its address bar). A DOM
+  `focus()` in the chrome only moves the caret; the keys keep going to the page view until main moves them.
+  Refuses a window the user is not in.
+- `focusPage(hostId = 0)` -> `{ success }`: gives the window's active page the keyboard and ends the hold below.
+- `wire(entry)`: the keyboard hold. A tab's first page takes the keyboard as it commits, whoever holds it (even a
+  tab that never had it, even while its view is invisible). When the chrome asked for the keyboard before that
+  first page arrived (`entry.chromeHoldsKeyboard`), it is handed back on `did-navigate`, one tick later because a
+  focus change made during the commit is ignored, and only if that page took it and is still the one on screen.
+  A page that has already loaded is never held: a click into it keeps the keyboard.

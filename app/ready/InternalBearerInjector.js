@@ -1,6 +1,8 @@
 const ClientHintHeaders = require('../../core/browser/identity/ClientHintHeaders');
 
 class InternalBearerInjector {
+  static NAVIGATION = 'mainFrame';
+
   constructor({ apiSecurity, port }) {
     this._apiSecurity = apiSecurity;
     this._localPrefix = `http://127.0.0.1:${port}/`;
@@ -17,7 +19,7 @@ class InternalBearerInjector {
   headersFor(details) {
     const headers = ClientHintHeaders.rewrite((details && details.requestHeaders) || {});
     try {
-      if (this._isLocalApi(details.url)) this._addBearer(headers);
+      if (this._isLocalApi(details.url) && this._isOurs(details)) this._addBearer(headers);
     } catch (_) {}
     return headers;
   }
@@ -26,11 +28,25 @@ class InternalBearerInjector {
     return typeof url === 'string' && url.startsWith(this._localPrefix);
   }
 
+  _isOurs(details) {
+    if (details.resourceType === InternalBearerInjector.NAVIGATION) return true;
+    return InternalBearerInjector._askingPages(details).some((url) => this._isLocalApi(url));
+  }
+
   _addBearer(headers) {
-    const cfg = this._apiSecurity.getConfig();
-    if (!cfg.requireApiKey || !Array.isArray(cfg.apiKeys) || cfg.apiKeys.length === 0) return;
+    if (!this._apiSecurity.getConfig().requireApiKey) return;
     const hasAuth = Object.keys(headers).some((k) => k.toLowerCase() === 'authorization');
-    if (!hasAuth) headers.Authorization = `Bearer ${cfg.apiKeys[0].key}`;
+    if (!hasAuth) headers.Authorization = `Bearer ${this._apiSecurity.internalToken()}`;
+  }
+
+  static _askingPages(details) {
+    const frame = details.frame || null;
+    const frames = frame ? [frame, InternalBearerInjector._read(frame, 'parent'), InternalBearerInjector._read(frame, 'top')] : [];
+    return [...frames.map((each) => InternalBearerInjector._read(each, 'url')), details.referrer].filter((url) => typeof url === 'string');
+  }
+
+  static _read(frame, property) {
+    try { return frame ? frame[property] : null; } catch (_) { return null; }
   }
 }
 

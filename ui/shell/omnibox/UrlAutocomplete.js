@@ -24,6 +24,7 @@ export default class UrlAutocomplete {
     this._seq = 0;
     this._debounce = null;
     this._selectOnMouseUp = false;
+    this._leaveTimer = null;
     this._down = { x: 0, y: 0 };
     host.onHide(() => { this.items = []; this.active = -1; });
   }
@@ -76,7 +77,7 @@ export default class UrlAutocomplete {
     if (item.kind === 'search') this.navigateTo(item.query);
     else if (item.kind === 'tab') this._tabActions.switchTo(item.tabId);
     else this._tabActions.navigate(item.url);
-    this._bar.el.blur();
+    this._bar.handToPage();
   }
 
   setActive(index) {
@@ -153,7 +154,7 @@ export default class UrlAutocomplete {
     if (open && this.active >= 0) { this.commit(this.active); return; }
     this.hide();
     this.navigateTo(this._bar.el.value);
-    this._bar.el.blur();
+    this._bar.handToPage();
   }
 
   _escape(open) {
@@ -161,7 +162,7 @@ export default class UrlAutocomplete {
     const alreadyReverted = !open && this._bar.el.value === tabUrl;
     if (open) this.hide();
     this._bar.revert();
-    if (alreadyReverted) this._bar.el.blur();
+    if (alreadyReverted) this._bar.handToPage();
   }
 
   _onMouseDown(e) {
@@ -179,12 +180,31 @@ export default class UrlAutocomplete {
   }
 
   _onFocus() {
+    if (this._cancelLeave()) return;
     if (!this._selectOnMouseUp) this._bar.el.select();
     if (this._bar.el.value.trim()) this.update(this._bar.el.value);
   }
 
   _onBlur() {
-    setTimeout(() => this.hide(), UrlAutocomplete.BLUR_HIDE_MS);
+    if (!this._bar.isFocused()) this._revertUncommitted();
+    clearTimeout(this._leaveTimer);
+    this._leaveTimer = setTimeout(() => this._leave(), UrlAutocomplete.BLUR_HIDE_MS);
+  }
+
+  _leave() {
+    this._leaveTimer = null;
+    this.hide();
+    this._revertUncommitted();
+  }
+
+  _cancelLeave() {
+    if (!this._leaveTimer) return false;
+    clearTimeout(this._leaveTimer);
+    this._leaveTimer = null;
+    return true;
+  }
+
+  _revertUncommitted() {
     const tab = this._store.active();
     if (tab && this._bar.el.value !== AddressBar.displayUrl(tab.url)) this._bar.revert();
   }

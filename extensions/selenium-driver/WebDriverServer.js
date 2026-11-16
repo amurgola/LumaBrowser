@@ -3,23 +3,28 @@ const WebDriverError = require('./WebDriverError');
 const WebDriverSessionRegistry = require('./WebDriverSessionRegistry');
 const WebDriverRouteTable = require('./WebDriverRouteTable');
 const WebDriverCommandTable = require('./WebDriverCommandTable');
-const LoopbackRequestGuard = require('../../core/shared/net/LoopbackRequestGuard');
+const ExposedServerKeyGuard = require('../../core/shared/net/ExposedServerKeyGuard');
 
 class WebDriverServer {
   static BODY_LIMIT = '32mb';
 
+  static DEFAULT_HOST = '127.0.0.1';
+
   constructor(options) {
     this.browser = options.browser;
+    this.apiSecurity = options.apiSecurity || null;
     this.fallback = options.fallback || null;
     this.fallbackDefaults = options.fallbackDefaults || {};
     this.prefix = (options.prefix || '').replace(/\/$/, '');
     this.registry = new WebDriverSessionRegistry();
-    this.host = null;
+    this.host = WebDriverServer.DEFAULT_HOST;
     this.httpServer = null;
     this.app = this._buildApp();
   }
 
-  start(port, host = '127.0.0.1') {
+  start(port, host = WebDriverServer.DEFAULT_HOST) {
+    const refused = ExposedServerKeyGuard.startRefusal(host, this.apiSecurity);
+    if (refused) return Promise.reject(new Error(refused));
     this.host = host;
     return new Promise((resolve, reject) => {
       const fail = (err) => {
@@ -72,10 +77,10 @@ class WebDriverServer {
   }
 
   _guard(req, res, next) {
-    const refused = LoopbackRequestGuard.refusal(req, this.host);
+    const refused = ExposedServerKeyGuard.refusal(req, this.host, this.apiSecurity);
     if (!refused) return next();
     WebDriverServer._setHeaders(res);
-    return res.status(403).json({ value: { error: 'unknown error', message: refused, stacktrace: '' } });
+    return res.status(refused.status).json({ value: { error: 'unknown error', message: refused.reason, stacktrace: '' } });
   }
 
   _commandContext() {

@@ -35,7 +35,9 @@ class ExtractDataScript {
     const results = [];
     // Track fields that resolve to the SAME element within a row: a child-
     // selector defect (e.g. link/home/buy_new all hitting one anchor). Groups
-    // are only reported when duplicated in every row, i.e. structural.
+    // are only reported when duplicated in every row, i.e. structural. Reading
+    // an element's text and its attribute (title: "a", url: "a@href") is two
+    // fields on purpose, not a defect.
     const groupCounts = {};
     const nullCounts = {};
     rows.forEach(function(row) {
@@ -46,11 +48,12 @@ class ExtractDataScript {
         var el = extracted.els[key];
         if (!el) nullCounts[key] = (nullCounts[key] || 0) + 1;
         if (el) {
+          var attr = extracted.attrs[key];
           var hit = null;
           for (var i = 0; i < byElement.length; i++) {
-            if (byElement[i].el === el) { hit = byElement[i]; break; }
+            if (byElement[i].el === el && byElement[i].attr === attr) { hit = byElement[i]; break; }
           }
-          if (hit) hit.keys.push(key); else byElement.push({ el: el, keys: [key] });
+          if (hit) hit.keys.push(key); else byElement.push({ el: el, attr: attr, keys: [key] });
         }
       }
       byElement.forEach(function(g) {

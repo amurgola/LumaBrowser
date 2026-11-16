@@ -15,12 +15,14 @@ requests act on the sender's window (`windowIdForSender`). Controller only.
 `go-back`, `go-forward`, `get-history`, `go-to-index`, `set-zoom`, `get-zoom`,
 `get-all`, `get-order` (all tabs including silent, hidden and internal),
 `clear-cache`, `set-persist`, `show`, `get-persisted`, `stop`, `hard-reload`,
-`move`, `cycle` (delta, default 1), `select-index`, `reopen-closed`, `find`,
+`move`, `cycle` (delta, default 1), `select-index`, `reopen-closed`, `focus-chrome`, `focus-page`, `find`,
 `stop-find`, `print`, `toggle-devtools`, and the downloads shelf
-`download-list`, `download-open`, `download-show`, `download-cancel`, `download-clear`.
+`download-list`, `download-open`, `download-show`, `download-cancel`, `download-clear`
+(the chrome's popup; the downloads page has its own channels, see
+[DownloadsIpcHandlers](../downloads/DownloadsIpcHandlers.md)).
 
 `ipcMain.on`: `tab-view:set-bounds` and `notification-intercepted`
 ([TabNotificationRelay](TabNotificationRelay.md)).
 
-`create` (opens in the sender's window), `cycle`, `select-index`, `reopen-closed`
-and `set-bounds` act on the sender's window; the rest take a tab id.
+`create` (opens in the sender's window), `cycle`, `select-index`, `reopen-closed`, `focus-chrome`,
+`focus-page` and `set-bounds` act on the sender's window; the rest take a tab id.

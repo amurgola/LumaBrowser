@@ -187,6 +187,7 @@ Built per feature by [FeatureDeps](FeatureDeps.md):
 | `extensions` | other extensions' public APIs, read live (getter). Declared as optional dependencies, so any may be missing: always check. See section 7 |
 | `handoff` | [ChatHandoff](shared/ChatHandoff.md) |
 | `speech` | [Speech](shared/Speech.md): also `pause()`, `resume()`, `playback()`, `onState(fn)` |
+| `dictation` | [Dictation](shared/Dictation.md): the microphone to text through the app's speech recognizer (`available()`, `begin()`, `finish()`, `cancel()`) |
 | `overlay` | [ActivityOverlay](shared/ActivityOverlay.md): the desktop ring and island (`show(state, onAction)`) |
 | `hints` | [HintContributions](shared/HintContributions.md): add keys to the Ctrl+Alt+Shift shortcut hint (`add(featureId, provider)`) |
 | `shortcuts` | [GlobalShortcuts](shared/GlobalShortcuts.md): the global-shortcut backend to register on (`register(accelerator, callback)`, `unregister`): Electron, or the X11 bridge while it runs on Wayland; pass it to [HotkeyBindings](features/hotkeys/HotkeyBindings.md) as its `globalShortcut` |
@@ -267,14 +268,28 @@ Declared optional in the manifest, so present only while installed and enabled:
 - `deps.speech.stop() -> { success, stopped }`.
 - It does not coordinate with the chat's read-aloud or voice mode.
 
+### Dictation
+
+- `deps.dictation.available() -> boolean`: a speech recognition runtime and a
+  model are installed (the last known answer; `refresh()` resolves a fresh one).
+- `deps.dictation.begin() -> Promise<{ success, sessionId } | { success: false, error, code }>`:
+  opens the microphone in the main window and resolves once it is listening.
+  Codes: `BUSY`, `NO_STT`, `NO_STT_MODEL`, `NO_MICROPHONE`, `MIC_FAILED`.
+- `deps.dictation.finish() -> Promise<{ success, text, durationMs } | { success: false, error, code }>`:
+  closes the microphone and transcribes with the app's recognizer (`sttServer`:
+  Parakeet, Qwen3-ASR or whisper.cpp, whichever model is the default). `EMPTY`
+  when nothing was heard.
+- `deps.dictation.cancel()`: drops the recording. One session at a time.
+
 ## 9. Files
 
 - [DesktopIntegrationExtension](DesktopIntegrationExtension.md) (also `manifest.js`, `main.js`, `routes.js`, `renderer.js`)
 - [DesktopRoutes](DesktopRoutes.md), [DesktopToken](DesktopToken.md), [DesktopHandshake](DesktopHandshake.md), [ClientRegistry](ClientRegistry.md)
 - [FeatureCatalog](FeatureCatalog.md), [FeatureRegistry](FeatureRegistry.md), [FeatureDeps](FeatureDeps.md), [FeatureSettings](FeatureSettings.md)
 - [DesktopBroadcast](DesktopBroadcast.md), [DesktopIpcHandlers](DesktopIpcHandlers.md)
-- [shared/ChatHandoff](shared/ChatHandoff.md), [shared/Speech](shared/Speech.md), [shared/AppWindows](shared/AppWindows.md)
+- [shared/ChatHandoff](shared/ChatHandoff.md), [shared/Speech](shared/Speech.md), [shared/Dictation](shared/Dictation.md), [shared/AppWindows](shared/AppWindows.md)
 - [ui/DesktopRenderer](ui/DesktopRenderer.md), [ui/DesktopSettingsTab](ui/DesktopSettingsTab.md), [ui/SpeechPlayer](ui/SpeechPlayer.md)
+- [ui/DictationRecorder](ui/DictationRecorder.md), [ui/DictationShortcutRow](ui/DictationShortcutRow.md), [ui/ShortcutCapture](ui/ShortcutCapture.md)
 - [features/ping](features/ping/index.md)
 - [features/lumabyte](features/lumabyte/index.md): attach Luma to any window, a docked button and a grounded panel
 - [features/window-tabs](features/window-tabs/index.md): any window as a live tab the chat reads, Tab Share streams and your input passes through

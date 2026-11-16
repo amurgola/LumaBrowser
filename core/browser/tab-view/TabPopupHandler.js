@@ -51,7 +51,8 @@ class TabPopupHandler {
 
   _openAsTab(entry, url, disposition) {
     this._createTab(url, {
-      activate: disposition !== 'background-tab',
+      activate: disposition !== 'background-tab' && !entry.silent,
+      silent: !!entry.silent,
       partition: entry.partition,
       index: this._registry.indexOf(entry.id) + 1,
       openerTabId: entry.id,

@@ -49,7 +49,7 @@ class TabLayout {
   refitBackground() {
     for (const entry of this._registry.entries()) {
       if (this._registry.isActive(entry.id)) continue;
-      if (entry.viewSize || this._lent.has(entry)) this.applyTo(entry);
+      if (entry.viewSize || entry.silent || this._lent.has(entry)) this.applyTo(entry);
     }
   }
 
@@ -66,7 +66,7 @@ class TabLayout {
   }
 
   _placeInBackground(entry) {
-    if (entry.viewSize) { this._lend(entry, entry.viewSize); return; }
+    if (entry.viewSize || entry.silent) { this._lend(entry, entry.viewSize); return; }
     this._unlend(entry);
     const area = this._areaOf(entry.hostId);
     if (!area.width || !area.height) {
@@ -116,9 +116,16 @@ class TabLayout {
     const win = this._hosts.liveWindowOf(entry.hostId);
     if (!win) return;
     const children = win.contentView.children;
-    if (Array.isArray(children) && children[0] === entry.view) return;
+    if (Array.isArray(children) && this._isUnderActive(children, entry)) return;
     win.contentView.removeChildView(entry.view);
     win.contentView.addChildView(entry.view, 0);
+  }
+
+  _isUnderActive(children, entry) {
+    const activeId = this._registry.activeIn(entry.hostId);
+    const active = activeId === null ? null : this._registry.get(activeId);
+    const at = children.indexOf(entry.view);
+    return !!active && at >= 0 && at < children.indexOf(active.view);
   }
 
   _areaOf(hostId) {

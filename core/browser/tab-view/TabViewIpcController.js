@@ -35,6 +35,8 @@ class TabViewIpcController {
     handle('tab-view:cycle', (e, delta) => m.cycleTab(Number(delta) || 1, windowOf(e)));
     handle('tab-view:select-index', (e, n) => m.selectTabByIndex(Number(n) || 0, windowOf(e)));
     handle('tab-view:reopen-closed', (e) => m.reopenClosedTab(windowOf(e)));
+    handle('tab-view:focus-chrome', (e) => m.focusChrome(windowOf(e)));
+    handle('tab-view:focus-page', (e) => m.focusPage(windowOf(e)));
     handle('tab-view:find', (_e, tabId, text, opts) => m.findInPage(tabId, text, opts || {}));
     handle('tab-view:stop-find', (_e, tabId, action) => m.stopFindInPage(tabId, action));
     handle('tab-view:print', (_e, tabId) => m.print(tabId));

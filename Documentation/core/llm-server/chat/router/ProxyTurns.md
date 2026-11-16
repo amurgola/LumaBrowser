@@ -25,3 +25,5 @@ The client owns its history. The sharing route fires abort from both its socket-
 `_callType` reads `extra.clientCallType` (`side`, `title`, `compact`, sent by the client as `luma_call_type`) and is `'sharing'` otherwise. The first version inferred a side call from a pinned temperature, but the client's agent loop pins its temperature too, and such a step then escaped the host's Tune temperature, which the host's own agent step does not.
 
 `agent` runs with `withholdTools: HostOnlyTools.isHostOnly`: a turn run for someone else never gets the terminal tools.
+It also runs with `forGuest: true`, so [GuestTargetGuard](../bridge/tools/GuestTargetGuard.md) refuses any call that
+names, or targets a tab showing, the host computer's own addresses, local files or internal pages.

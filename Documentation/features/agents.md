@@ -70,6 +70,12 @@ config to a file. By hand it looks like this:
 }
 ```
 
+If you require an API key (**Settings > API & MCP**), the entry LumaBrowser
+writes also carries `"LUMA_API_KEY": "<your key>"` in `env`. An entry written
+before you turned the requirement on does not have it: connect that agent again
+from **Settings > Editors & agents**, or add the line by hand. Until then the
+client reports that LumaBrowser needs a key.
+
 The server starts LumaBrowser if it is not running. Tools cover browsing, tabs,
 page reading and extraction, agents, timed tasks, page monitors, and any MCP
 servers you have connected to LumaBrowser.
@@ -107,6 +113,12 @@ const browser = await puppeteer.connect({ browserURL: 'http://127.0.0.1:9222' })
 
 Clients only see the tabs automation created, never your own. Either driver can
 ask the LLM to resolve a selector that stopped matching.
+
+Bound to 127.0.0.1 they need no key. Bound to anything else, such as 0.0.0.0 to
+reach them from another machine, they will not start until you create an API key
+in Settings > API & MCP, and every client must then send it: Selenium as
+`http://luma:<key>@host:9515`, CDP clients as an `Authorization: Bearer <key>`
+header or `?token=<key>` on the URL.
 
 ### REST and local model APIs
 

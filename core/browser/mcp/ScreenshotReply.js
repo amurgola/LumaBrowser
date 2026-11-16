@@ -11,6 +11,7 @@ class ScreenshotReply {
 
   static note(data, fullPage) {
     const parts = [];
+    if (data.element) parts.push(`Screenshot of the element matching "${data.element.selector}" only; its pixels are not browser_click_at coordinates.`);
     if (data.frame && !fullPage) parts.push(ScreenshotReply._geometry(data.frame));
     if (data.marks && data.marks.text) parts.push(data.marks.text);
     return parts.join('\n');

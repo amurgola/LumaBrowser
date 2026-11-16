@@ -34,3 +34,20 @@ window is resized to fit and put back afterwards.
 Keep the API, WebDriver and CDP ports on localhost (the default) unless you
 mean to share them, and set an API key in **Settings > API & MCP** before you
 expose the REST API beyond localhost.
+
+- Without an API key, the REST API answers local programs and LumaBrowser's own
+  pages only. A web page on any other origin, another port on this computer
+  included, needs a key, and so does anything that reaches the API through a
+  reverse proxy or tunnel.
+- WebDriver and CDP need an API key as soon as they listen on anything but
+  localhost.
+- A device paired through Network Sharing gets the built-in chat tools
+  (browsing, artifacts, images, video, music, web search, your knowledge base).
+  Extension tools, connected MCP servers and outbound webhooks are off for
+  shared chats until you tick them under **Settings > Sharing**, and a tool you
+  switched off for your own chat is never shared. The terminal is never shared.
+- An agent working for a paired device can browse the web and other machines on
+  your network, but not this computer itself: no local files, no LumaBrowser
+  internal pages, and nothing on this computer's own addresses.
+- New pairing PINs are 6 to 8 digits, and repeated wrong PINs lock pairing for
+  everyone for a while.

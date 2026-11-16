@@ -15,13 +15,17 @@ Runs one chat browser tool against BrowserService directly (no HTTP).
 ## Mapping notes
 
 - `create_tab` opens in the background unless `activate: true`; `silent` is
-  passed through (silent tabs cannot be activated or screenshotted).
-- `get_tabs` copies `tabs` onto `data`; `create_tab`'s `tab` becomes `data`
-  (via `toJSON()` when present). A non-object reply is wrapped as `data`.
+  passed through (a silent tab can never be activated).
+- `get_tabs` puts the tabs on `data` as [AgentTabs](../../browser/AgentTabs.md)
+  selects them (`includeSilent`, `includeHidden`, no inline favicon image);
+  `create_tab`'s `tab` becomes `data` (via `toJSON()` when present, shaped the
+  same way). A non-object reply is wrapped as `data`.
 - `observe_page` returns `{ success, message: digestText, count }`, since the
-  digest is what the model reads.
+  digest is what the model reads; `selector` scopes it to one part of the page.
 - `screenshot` asks for CSS-pixel images (`cssScale` unless `fullPage`) so
-  screenshot coordinates are `click_at` coordinates; `marks` only when asked.
+  screenshot coordinates are `click_at` coordinates; `marks` only when asked;
+  `selector` captures one element instead.
 - `click_at` sends `clickCount: 2` for `double: true` or `clickCount: 2`.
 - `collect_list` accepts `baseSelector` as an alias for `itemSelector`.
-- `get_source` defaults to `type: 'text'`; `wait_for` to a 5000 ms timeout.
+- `get_source` defaults to `type: 'text'` and passes `selector` on; `wait_for`
+  defaults to a 5000 ms timeout.

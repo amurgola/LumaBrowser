@@ -38,6 +38,7 @@ class ProxyTurns {
       images,
       allowedTools,
       withholdTools: HostOnlyTools.isHostOnly,
+      forGuest: true,
       llmExtra: extra,
       modeSystemPrompt,
       kbScope,

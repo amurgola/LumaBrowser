@@ -15,6 +15,9 @@ is missing or both `overlayIsland` and `overlayRing` are off.
   a text file (in the composer, not sent); reading carries on.
 - **Rewrite** shows a busy "Rewriting selection" island with Stop; then
   "Rewritten", or the failure.
+- **Dictation** shows "Listening" (the speech bars, the ring live) with Done
+  and Cancel; once the words are being written it turns into a busy "Writing
+  what you said" island with Cancel; then "Typed", or the failure.
 - **Clipboard / screenshot to chat** confirm with "Sent to LumaBrowser"
   (island only, no ring).
 - **Failures** show the action's "Couldn't ..." title and the reason, with
@@ -28,6 +31,9 @@ is missing or both `overlayIsland` and `overlayRing` are off.
 - `reading({ text, hwnd })`: call right after `speech.speak()` started; the
   island tracks that utterance only. A new reading replaces the old one.
 - `working({ action, title, hwnd, onStop })` -> `{ canceled(), finish(result, doneTitle) }`.
+- `listening({ action, hwnd, onDone, onCancel })` -> `{ canceled(), transcribing(), finish(result, doneTitle) }`:
+  `onDone` and `onCancel` run on the island's buttons; after Cancel,
+  `transcribing()` and `finish()` do nothing.
 - `flash({ action, result, title, hwnd })` -> whether it showed anything.
 - `dispose()`. Static `snippet(text)` (one line, at most `DETAIL_CHARS`).
 - `concealed(fn)`: hides the overlay at once (`overlay.conceal()`), waits

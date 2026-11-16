@@ -20,9 +20,11 @@ const TabPage = require('./tab-manager/TabPage');
 const TabScreenshot = require('./tab-manager/TabScreenshot');
 const TableReader = require('./tab-manager/TableReader');
 const TerminalPage = require('../terminal/TerminalPage');
+const DownloadsPage = require('./downloads/DownloadsPage');
 
 class TabManager {
   static TERMINAL_TAB = (tabId) => `Tab ${tabId} is a terminal, which page tools cannot read or drive. Use the terminal tools (terminal_list, terminal_read, terminal_run).`;
+  static DOWNLOADS_TAB = (tabId) => `Tab ${tabId} is the downloads page, which page tools cannot read or drive: its buttons open downloaded files on this computer.`;
 
   constructor(tabViewManager, { nativeImage = null } = {}) {
     this.tabViewManager = tabViewManager;
@@ -39,7 +41,7 @@ class TabManager {
 
   async getTabSource(tabId, options = {}) { return this._onTab(tabId, (page) => PageSource.read(page, options)); }
   async screenshotTab(tabId, options = {}) { return this._onTab(tabId, (page) => this._screenshot.capture(page, options)); }
-  async observePage(tabId) { return this._onTab(tabId, (page) => PageObserver.observe(page)); }
+  async observePage(tabId, options = {}) { return this._onTab(tabId, (page) => PageObserver.observe(page, options)); }
   async waitForSettle(tabId, options = {}) { return this._onTab(tabId, (page) => SettleWaiter.wait(page, options)); }
 
   async clickElement(tabId, options = {}) { return this._onTab(tabId, (page) => ElementClicker.click(page, options)); }
@@ -70,6 +72,7 @@ class TabManager {
     const entry = this.tabViewManager.getEntry(tabId);
     if (!entry) return TabRegistry.notFound(tabId);
     if (TerminalPage.isTerminal(entry.url)) return { success: false, error: TabManager.TERMINAL_TAB(tabId) };
+    if (DownloadsPage.isDownloads(entry.url)) return { success: false, error: TabManager.DOWNLOADS_TAB(tabId) };
     try {
       return await action(new TabPage(entry, tabId, this.tabViewManager));
     } catch (error) {

@@ -18,6 +18,10 @@ Behaviour: Start and Stop disable themselves, show `Starting` / `Stopping`,
 invoke the channel, restore the label and refresh. The status line reads
 `CDP server: running|stopped|unavailable`; when running, the endpoint line
 shows `http://host:port, N session(s), N target(s)` and only Stop is enabled.
+When stopped with a `lastError` from the last start (such as the missing API
+key), the endpoint line shows `Could not start: <error>`. The host help says
+any address but 127.0.0.1 needs an API key from Settings > API & MCP, sent as
+`Authorization: Bearer`, `X-Api-Key` or `?token=<key>`.
 Host and port save 500 ms after typing stops and at once on change; the
 checkboxes save on change. Each save sends the full patch
 `{ host (default 127.0.0.1), port (default 9222), enabled, fallback:

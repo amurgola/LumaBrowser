@@ -6,7 +6,7 @@ observe_page: the numbered inventory of visible interactive elements, tagged `da
 
 ## Methods
 
-- `PageObserver.observe(page)` -> `{ success, data: { text, count, dropped, title, url } }` or `{ success: false, error }` (`digest failed` when the page answered nothing).
+- `PageObserver.observe(page, { selector })` -> `{ success, data: { text, count, dropped, title, url } }` or `{ success: false, error }` (`digest failed` when the page answered nothing). `selector` lists only the elements inside one part of the page (a form, a dialog, a results list), with the larger caps and budget of a scoped digest ([ElementDigest](../extraction/ElementDigest.md), [ElementDigestFormatter](ElementDigestFormatter.md)); a selector that matches nothing is an error.
 
 ## Why
 

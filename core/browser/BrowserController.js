@@ -1,3 +1,4 @@
+const AgentTabs = require('./AgentTabs');
 const ApiResponse = require('./models/ApiResponse');
 const TabUrl = require('./TabUrl');
 const BrowserRequestParser = require('./controller/BrowserRequestParser');
@@ -29,18 +30,19 @@ class BrowserController {
 
   getAllTabs(req, res) {
     return this._guard(res, async () => {
-      const result = await this.tabManager.getAllTabs({ includeSilent: req.query.includeSilent === 'true' });
+      const result = await this.tabManager.getAllTabs(AgentTabs.fetchOptions(req.query));
       if (!result.success) return this._fail(res, 500, result.error, 'Failed to retrieve tabs');
-      this._ok(res, result.tabs.map(PlainTab.from), 'Tabs retrieved successfully');
+      this._ok(res, AgentTabs.select(result.tabs.map(PlainTab.from), req.query), 'Tabs retrieved successfully');
     });
   }
 
   getTabSource(req, res) {
     return this._withTab(req, res, async (tabId) => {
-      const result = await this.tabManager.getTabSource(tabId, { type: req.query.type || 'clean' });
+      const result = await this.tabManager.getTabSource(tabId, { type: req.query.type || 'clean', selector: req.query.selector });
       if (!result.success) return this._fail(res, 404, result.error, 'Failed to retrieve tab source');
       const data = { source: result.source };
       if (result.extractionType) data.extractionType = result.extractionType;
+      if (result.selector) Object.assign(data, { selector: result.selector, matched: result.matched });
       this._ok(res, data, 'Tab source retrieved successfully');
     });
   }
@@ -52,7 +54,7 @@ class BrowserController {
       if (!TabUrl.isNavigable(url)) return this._fail(res, 400, 'Invalid URL format', 'Please provide a valid URL');
       const result = await this.tabManager.createTab(url, { silent: !!silent });
       if (!result.success) return this._fail(res, 500, result.error, 'Failed to create tab');
-      this._ok(res, PlainTab.from(result.tab), 'Tab created successfully', 201);
+      this._ok(res, AgentTabs.shape(PlainTab.from(result.tab)), 'Tab created successfully', 201);
     });
   }
 

@@ -36,6 +36,44 @@ class TabActivation {
     return this.switchTo(target.id);
   }
 
+  wire(entry) {
+    entry.webContents.on('did-navigate', () => this._endKeyboardHold(entry));
+  }
+
+  focusChrome(hostId = TabHosts.MAIN_ID) {
+    const win = this._hosts.liveWindowOf(hostId);
+    if (!win || !win.isFocused()) return { success: false };
+    const active = this._registry.get(this._registry.activeIn(hostId));
+    if (active) active.chromeHoldsKeyboard = !active.hasShownPage();
+    try { win.webContents.focus(); } catch (_) { return { success: false }; }
+    return { success: true };
+  }
+
+  focusPage(hostId = TabHosts.MAIN_ID) {
+    const win = this._hosts.liveWindowOf(hostId);
+    const active = this._registry.get(this._registry.activeIn(hostId));
+    if (!active || !win || !win.isFocused()) return { success: false };
+    this._giveKeyboardTo(active);
+    return { success: true };
+  }
+
+  _endKeyboardHold(entry) {
+    if (!entry.chromeHoldsKeyboard) return;
+    entry.chromeHoldsKeyboard = false;
+    setImmediate(() => this._returnKeyboardFrom(entry));
+  }
+
+  _returnKeyboardFrom(entry) {
+    if (this._registry.activeIn(entry.hostId) !== entry.id) return;
+    try { if (entry.webContents.isDestroyed() || !entry.webContents.isFocused()) return; } catch (_) { return; }
+    this.focusChrome(entry.hostId);
+  }
+
+  _giveKeyboardTo(entry) {
+    entry.chromeHoldsKeyboard = false;
+    try { if (!entry.webContents.isDestroyed()) entry.webContents.focus(); } catch (_) {}
+  }
+
   _unhide(entry) {
     if (!entry.hidden) return;
     entry.hidden = false;
@@ -56,7 +94,7 @@ class TabActivation {
     entry.view.setVisible(true);
     this._raise(entry);
     this._layout.applyTo(entry);
-    try { if (!entry.webContents.isDestroyed()) entry.webContents.focus(); } catch (_) {}
+    this._giveKeyboardTo(entry);
   }
 
   _raise(entry) {

@@ -4,6 +4,7 @@ const PortConflict = require('./PortConflict');
 
 class HeavyServices {
   static PORT_NOTICE_TITLE = 'Local API server could not start';
+  static NARROWED_NOTICE_TITLE = 'Local API now answers your network only';
   static SETTINGS_TAB = 'apimcp';
 
   constructor(ctx, { browserService, log = console, inspectConflict = PortConflict.inspect, timers = {} }) {
@@ -83,6 +84,18 @@ class HeavyServices {
     });
   }
 
+  _notifyAccessNarrowed() {
+    if (!this._s.apiAccessNarrowed) return;
+    this._log.log('API security: "any address" with no API key was narrowed to the local network (Settings > API & MCP).');
+    const notice = this._ctx.desktopNotice;
+    if (!notice || typeof notice.show !== 'function') return;
+    notice.show({
+      title: HeavyServices.NARROWED_NOTICE_TITLE,
+      body: 'It was open to any address with no API key. Devices on your network still work. To allow others, require an API key in Settings > API & MCP.',
+      onClick: () => this._openApiSettings(),
+    });
+  }
+
   _canPrompt() {
     return !this._ctx.env.LUMA_DOCKER && Boolean(this._ctx.liveWindow());
   }
@@ -103,6 +116,7 @@ class HeavyServices {
     const port = this._ctx.apiPort;
     this._log.log(`REST API server running on http://localhost:${port}`);
     try { this._s.cliHandshake.write(port); } catch (_) {}
+    this._notifyAccessNarrowed();
     this._refreshInstalledBridges();
     try { this._s.llmServerService.notifyGatewayReady(); } catch (_) {}
     try { this._s.dashboardService.notifyGatewayReady(); } catch (_) {}

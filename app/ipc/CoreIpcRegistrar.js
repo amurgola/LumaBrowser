@@ -14,6 +14,8 @@ const BrowserDataIpcHandlers = require('../../core/browser-data/BrowserDataIpcHa
 const VaultIpcHandlers = require('../../core/vault/VaultIpcHandlers');
 const DefaultBrowserIpcHandlers = require('../../core/shell/default-browser/DefaultBrowserIpcHandlers');
 const NewTabIpcHandlers = require('../../core/browser/newtab/NewTabIpcHandlers');
+const DownloadsIpcHandlers = require('../../core/browser/downloads/DownloadsIpcHandlers');
+const DownloadsPageViewers = require('../../core/browser/downloads/DownloadsPageViewers');
 const TerminalIpcHandlers = require('../../core/terminal/TerminalIpcHandlers');
 const SiteInfo = require('../../core/browser/site-info/SiteInfo');
 const SiteInfoIpcHandlers = require('../../core/browser/site-info/SiteInfoIpcHandlers');
@@ -130,6 +132,8 @@ class CoreIpcRegistrar {
     new VaultIpcHandlers({ vault: s.vaultService, getTabViewManager: () => this._ctx.tabViewManager }).register();
     new DefaultBrowserIpcHandlers({ getTabViewManager: () => this._ctx.tabViewManager }).register();
     new NewTabIpcHandlers({ page: s.newTabPage, getTabViewManager: () => this._ctx.tabViewManager }).register();
+    const downloadsViewers = new DownloadsPageViewers({ getTabViewManager: () => this._ctx.tabViewManager });
+    new DownloadsIpcHandlers({ viewers: downloadsViewers, getTabViewManager: () => this._ctx.tabViewManager }).register();
     new TerminalIpcHandlers({ viewers: s.terminalViewers, service: s.terminalService, settings: s.terminalSettings, getTabViewManager: () => this._ctx.tabViewManager }).register();
     const siteInfo = new SiteInfo({ db: s.db, getTabViewManager: () => this._ctx.tabViewManager, adblocker: s.adblockerService });
     new SiteInfoIpcHandlers({ siteInfo, getTabViewManager: () => this._ctx.tabViewManager }).register();

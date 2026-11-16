@@ -18,6 +18,16 @@ Opens an installed extension's popup or options page in its own window.
   extension, or one without that page.
 - `ChromeExtensionPageWindows.pageUrl(id, page)`.
 
+## The chrome.* bridge
+
+Both kinds of window load
+[shim-worker-preload.js](shim/shim-worker-preload.md) as their preload and are
+handed to `service.bridge.attachPage` ([ShimBridge](bridge/ShimBridge.md)), as
+is any window the page pops out (`did-create-window`; the child inherits the
+preload). The page then asks the main process which tab is active instead of
+Electron, which answers "the one with keyboard focus": the popup itself. That
+is how Bitwarden's popup lists the logins for the page behind it.
+
 ## Window opens from the page
 
 - The extension's own `chrome-extension://<id>/` pages are allowed (Bitwarden's

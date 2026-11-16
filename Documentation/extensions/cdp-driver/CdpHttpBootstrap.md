@@ -7,9 +7,20 @@ Every reply has `Content-Type: application/json; charset=utf-8` and `Cache-Contr
 
 ## Routes
 
-Before routing, every request goes through [LoopbackRequestGuard](../../core/shared/net/LoopbackRequestGuard.md) with the server's bind host; a
-foreign `Host` or a present non-loopback/other-port `Origin` gets 403
-`{ error: <reason> }` and the route never runs (so a refused `PUT /json/new` opens no tab).
+Before routing, every request goes through
+[ExposedServerKeyGuard](../../core/shared/net/ExposedServerKeyGuard.md) with the server's
+bind host and `apiSecurity`. Bound to a loopback name, a foreign `Host` or a present
+non-loopback/other-port `Origin` gets 403
+([LoopbackRequestGuard](../../core/shared/net/LoopbackRequestGuard.md)); bound anywhere
+else, a request without a valid API key gets 401 and a keyed one skips the Host/Origin
+check. A refusal answers `{ error: <reason> }` and the route never runs (so a refused
+`PUT /json/new` opens no tab).
+
+On an exposed server, routes match without the `token` query parameter. When the key
+came as `?token=<key>`, every `webSocketDebuggerUrl` returned (version, list, new tab)
+ends in `?token=<key>` (URL-encoded), so a client that found the server by
+`http://host:port?token=<key>` connects with the same key. A header or Basic key is
+never written into a URL.
 
 - `GET /json/version` -> `{ Browser: 'LumaBrowser/1.0', 'Protocol-Version': '1.3', 'User-Agent', 'V8-Version', 'WebKit-Version', webSocketDebuggerUrl }`.
 - `GET /json`, `GET /json/list` -> one descriptor per target

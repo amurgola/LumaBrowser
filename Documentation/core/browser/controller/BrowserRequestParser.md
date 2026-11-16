@@ -12,6 +12,7 @@ Reads `/api/browser` request shapes into tab manager arguments.
   `payload`, and `script`. A URL (or `navigate`) wins, then `refresh`, `activate`/`focus`, then
   `executeJs` (or a bare `script`). Returns `{ action: { type, payload? } }` or `{ error, message }`
   (`URL is required for navigation`, `Script is required for JavaScript execution`, `Invalid action`).
-- `screenshotOptions(query)`: `fullPage`, `cssScale`, `marks` set only when the query says `'true'`.
+- `screenshotOptions(query)`: `fullPage`, `cssScale`, `marks` set only when the query says `'true'`;
+  `selector` (capture one element) as a string when given.
 - `consoleOptions(query)`: `{ level }` when given.
 - `tableOptions(query)`: `selector`, `rowSelector`, `cellSelector` when given.

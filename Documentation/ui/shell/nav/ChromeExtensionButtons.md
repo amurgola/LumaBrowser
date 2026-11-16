@@ -20,6 +20,18 @@ right after the bookmark star, as in Chrome.
   (install, update, enable, disable, remove), and refreshed on window focus.
   An unchanged list does no DOM work.
 
+## Badge
+
+A `.chrome-ext-btn-badge` label on the button's lower right corner shows the
+text an extension set with `chrome.action.setBadgeText` for the tab this
+window has on screen (Bitwarden's count of logins for the page), on the
+background color it set, or the stylesheet's grey. The set
+`{ extId: { text, color } }` is read from `core.chromeExtensions.badges` on
+every refresh, and main pushes a fresh one on `chrome-extensions:badges`
+(`BADGES_CHANNEL`) whenever a badge changes or the window switches tabs
+([ChromeActionBadges](../../../core/chrome-extensions/bridge/ChromeActionBadges.md)).
+No text, no badge; a rebuilt button is painted again.
+
 ## Methods
 
 - `install()` finds the container, subscribes and loads the list.

@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const os = require('os');
+const AgentToolCatalog = require('../../llm-service/AgentToolCatalog');
 
 class HostSettings {
   static ENABLED_KEY = 'core.sharing.enabled';
@@ -15,7 +16,7 @@ class HostSettings {
   static DEFAULT_WEB_PORT = 80;
   static DEFAULT_TLS_PORT = 3443;
   static MAX_NAME_LENGTH = 63;
-  static PIN_PATTERN = /^\d{4,8}$/;
+  static PIN_PATTERN = /^\d{6,8}$/;
   static PUBLIC_URL_PATTERN = /^https?:\/\/[^\s/]+/i;
 
   static SHARE_FLAGS = {
@@ -148,6 +149,11 @@ class HostSettings {
   setWebAllowedTools(tools) {
     if (tools == null) this._db.delete(HostSettings.WEB_TOOLS_KEY);
     else this._db.set(HostSettings.WEB_TOOLS_KEY, tools);
+  }
+
+  getGloballyDisabledTools() {
+    const disabled = this._db.get(AgentToolCatalog.DISABLED_TOOLS_KEY, []);
+    return Array.isArray(disabled) ? disabled : [];
   }
 
   static validPort(value) {

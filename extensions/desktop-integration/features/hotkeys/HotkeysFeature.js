@@ -1,3 +1,5 @@
+const IpcEnvelope = require('../../../../core/shared/ipc/IpcEnvelope');
+const DictateAction = require('./DictateAction');
 const HotkeyActions = require('./HotkeyActions');
 const HotkeyActivity = require('./HotkeyActivity');
 const ChordHint = require('./ChordHint');
@@ -19,16 +21,18 @@ class HotkeysFeature {
     { id: 'rewrite-selection', label: 'Rewrite selection', defaultBinding: 'Ctrl+Alt+Shift+E', description: 'Rewrites the selected text with the model and pastes it over the selection.' },
     { id: 'clipboard-to-chat', label: 'Clipboard to chat', defaultBinding: 'Ctrl+Alt+Shift+V', description: 'Opens a new chat with the clipboard text or image.' },
     { id: 'screenshot-to-chat', label: 'Screen region to chat', defaultBinding: 'Ctrl+Alt+Shift+S', description: 'Drag a rectangle on screen; it opens in a new chat as an image.' },
+    { id: 'dictate', label: 'Dictate', defaultBinding: 'Ctrl+Alt+Shift+D', description: 'Types what you say into the text box you are in, in any app; press again when you are done. Needs speech recognition (click the microphone in the chat once to install it).' },
   ];
 
   static BINDING_PREFIX = 'binding.';
-  static HINT_LABELS = { 'read-selection': 'Read aloud', 'rewrite-selection': 'Rewrite', 'clipboard-to-chat': 'Clipboard to chat', 'screenshot-to-chat': 'Screen region' };
+  static HINT_LABELS = { 'read-selection': 'Read aloud', 'rewrite-selection': 'Rewrite', 'clipboard-to-chat': 'Clipboard to chat', 'screenshot-to-chat': 'Screen region', dictate: 'Dictate' };
+  static DICTATION_CHANNEL = 'dictation';
   static HINT_CAPTION = 'Press a key. To work on one window only, click it first.';
   static TITLE_CHARS = 40;
   static REPEAT_MS = 400;
   static INTRO_KEY = 'hintIntroduced';
   static INTRO_TITLE = 'Luma is one chord away in every app';
-  static STATUS = { UNKNOWN_ACTION: 400, UNSUPPORTED: 501, BUSY: 409, CANCELED: 409, NO_SELECTION: 422, EMPTY_CLIPBOARD: 422, EMPTY: 422, TOO_LONG: 422, NO_TTS: 503, NO_MODEL: 503, TIMEOUT: 504, FOCUS_LOST: 409, NO_PERMISSION: 403 };
+  static STATUS = { UNKNOWN_ACTION: 400, UNSUPPORTED: 501, BUSY: 409, CANCELED: 409, NO_SELECTION: 422, EMPTY_CLIPBOARD: 422, EMPTY: 422, TOO_LONG: 422, NO_TTS: 503, NO_MODEL: 503, TIMEOUT: 504, FOCUS_LOST: 409, NO_PERMISSION: 403, NO_STT: 503, NO_STT_MODEL: 503, STT_RUNTIME_MISSING: 503, NO_MICROPHONE: 503, MIC_FAILED: 503 };
   static QUIET = new Set(['CANCELED', 'BUSY']);
 
   static settingsSchema() {
@@ -100,6 +104,7 @@ class HotkeysFeature {
       onError: (id, message, shown) => this._report(id, { success: false, error: message, shown: !!shown }),
       now: parts.now,
       activity: this._activity,
+      dictate: this._newDictate(selection),
     });
     this._bindings = this._newBindings();
     if (parts.bridge && typeof parts.bridge.onStateChange === 'function') parts.bridge.onStateChange(() => this._bridgeChanged());
@@ -128,6 +133,32 @@ class HotkeysFeature {
     this._applyBridge();
     this.applyBindings();
     if (this._applyHint()) this._introduceHint();
+    if (this._deps.ipc) this._deps.ipc.handle(HotkeysFeature.DICTATION_CHANNEL, IpcEnvelope.enveloped(() => this.dictationStatus()));
+  }
+
+  _newDictate(selection) {
+    const { dictation } = this._deps;
+    if (!dictation) return null;
+    return new DictateAction({
+      dictation,
+      selection,
+      clipboard: this._parts.clipboard,
+      activity: this._activity,
+      foreground: () => (this._parts.keys && this._parts.keys.foregroundWindow ? this._parts.keys.foregroundWindow() : 0),
+      onError: (id, message, shown) => this._report(id, { success: false, error: message, shown: !!shown }),
+    });
+  }
+
+  async dictationStatus() {
+    const bound = this._bindings.status()[DictateAction.ID] || { accelerator: '', registered: false, error: null };
+    const dictation = this._deps.dictation;
+    return {
+      supported: this._actions.supported(DictateAction.ID),
+      ready: dictation ? await dictation.refresh() : false,
+      binding: bound.accelerator,
+      registered: bound.registered,
+      conflict: bound.error,
+    };
   }
 
   _bridgeWanted() {
@@ -211,6 +242,7 @@ class HotkeysFeature {
       if (!split) continue;
       let label = HotkeysFeature.HINT_LABELS[a.id];
       if (a.id === 'read-selection' && this._actions.speaking()) label = 'Stop reading';
+      if (a.id === 'dictate' && this._actions.dictating()) label = 'Type it';
       if (a.id === 'screenshot-to-chat' && framed) label = 'Capture window';
       const { disabled, note } = this._actions.readiness(a.id, { framed });
       (groups[split.modifiers] = groups[split.modifiers] || []).push({ id: a.id, key: split.key, label, disabled, note });
@@ -335,6 +367,7 @@ class HotkeysFeature {
       }),
       busy: this._actions.busy(),
       speaking: this._actions.speaking(),
+      dictating: this._actions.dictating(),
       hint: { on: this._chord.running, reason: this.hintUnavailableReason() },
       bridge: this.bridgeStatus(),
     };

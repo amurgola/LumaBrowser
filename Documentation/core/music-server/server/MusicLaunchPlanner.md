@@ -29,7 +29,9 @@ flags come from the catalog row's `launchProfiles`.
     GPUs with the core.musicServer.cudaDevice setting.`
   - Profile `dual` when `model.dualGpuOk` and two or more devices are reserved,
     else `single`; its `launchProfiles` args follow the serve args, then `extraServeArgs`.
-  - Serve args: `serve --model-path <runtime path> --host 0.0.0.0 --port <port> ...profile ...extra`.
+  - Serve args: `serve --model-path <runtime path> --host <host> --port <port> ...profile ...extra`.
+    `<host>` is `127.0.0.1` for a native launch (the server has no key, so it must not listen on the
+    network) and `0.0.0.0` inside WSL, where the Windows side has to reach the VM.
   - Native: `binaryPath` is the entrypoint, `cudaDevice` is the reservation's.
   - WSL: `binaryPath` is `C:\Windows\System32\wsl.exe`, args are
     `[-d <distro>]? -- bash -lc "exec env PATH='<venv bin>':"$PATH" CUDA_VISIBLE_DEVICES=<pin> '<entrypoint>' '<arg>'..."`
@@ -41,7 +43,7 @@ flags come from the catalog row's `launchProfiles`.
   - `healthTimeoutMs` is 20 min when the runtime model path starts with `/mnt/`,
     else 8 min.
 - Statics: `SERVER_ID`, `ROLE`, `WSL_EXE`, `HEALTH_TIMEOUT_MNT_MS`,
-  `HEALTH_TIMEOUT_NATIVE_MS`, `SERVE_HOST`, `CLIENT_HOST`,
+  `HEALTH_TIMEOUT_NATIVE_MS`, `WSL_SERVE_HOST`, `CLIENT_HOST`,
   `NOT_INSTALLED_MESSAGE`, `NO_ROOM_MESSAGE`, `NO_ROOM_ADVICE`.
 
 ## Why

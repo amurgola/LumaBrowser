@@ -12,17 +12,26 @@ WebSocket paths:
   target is unknown. It gets an implicit session, so commands without a `sessionId`
   go to that page and its events carry no `sessionId`, as Chrome does.
 
-Every upgrade is first checked by [LoopbackRequestGuard](../../core/shared/net/LoopbackRequestGuard.md) against the configured bind host
-(`this.host`); a foreign `Host` or a cross-site `Origin` gets a raw 403 with
-`{ error: <reason> }` before any handshake. Any other upgrade path is destroyed. Wire format (flat mode): in
+Every upgrade is first checked by
+[ExposedServerKeyGuard](../../core/shared/net/ExposedServerKeyGuard.md) against the bind
+host (`this.host`) and `apiSecurity`. Bound to a loopback name, a foreign `Host` or a
+cross-site `Origin` gets a raw 403
+([LoopbackRequestGuard](../../core/shared/net/LoopbackRequestGuard.md)); bound anywhere
+else, an upgrade without a valid API key (header, Basic password or `?token=`) gets a
+raw 401, and a keyed one skips the Host/Origin check. Either way `{ error: <reason> }`
+is written before any handshake and the socket closed. Paths are matched without the
+`token` parameter on an exposed server. Any other upgrade path is destroyed. Wire format (flat mode): in
 `{ id, sessionId?, method, params }`, out `{ id, sessionId?, result | error }`, events
 `{ sessionId?, method, params }` ([CdpFrameHandler](CdpFrameHandler.md)).
 
 ## Methods
 
-- `new CdpServer({ browser, fallback, fallbackDefaults })` subscribes the
-  [CdpTargetTracker](CdpTargetTracker.md) to the browser's tab events.
-- `start(port, host = '127.0.0.1')` resolves the bound port.
+- `new CdpServer({ browser, apiSecurity, fallback, fallbackDefaults })` subscribes the
+  [CdpTargetTracker](CdpTargetTracker.md) to the browser's tab events. `apiSecurity`
+  (ApiSecurity or null) supplies the keys an exposed server accepts.
+- `start(port, host = '127.0.0.1')` resolves the bound port; rejects before listening
+  with `ExposedServerKeyGuard.NO_KEY_CONFIGURED` when `host` is not a loopback name
+  and no API key exists.
 - `stop()` terminates sockets, closes the listener, detaches every debugger, closes
   automation tabs, clears registries and unsubscribes from tab events.
 - `isRunning()`, `port()` (null when stopped), `activeSessions()`, `activeTargets()`.
@@ -33,7 +42,7 @@ Every upgrade is first checked by [LoopbackRequestGuard](../../core/shared/net/L
   `FallbackConfig.normalize(null, fallbackDefaults)`.
 - `createAutomationTab(url, options)` -> the tab (throws on `{ success: false }`).
 - `closeAutomationTabs()`, `closeTab(tabId)` (errors swallowed), `activateTab(tabId)`.
-- Public state for the domains: `browser`, `fallback`, `fallbackDefaults`,
+- Public state for the domains: `browser`, `apiSecurity`, `fallback`, `fallbackDefaults`,
   `browserUuid`, `targets`, `sessions`, `debugger`, `connections`, `browserContexts`
   (starts as `{'DEFAULT'}`), `host`, `httpServer`, `wss`.
 - `CdpServer.AUTOMATION_TAB_KIND` (`'cdp'`) and `DEFAULT_BROWSER_CONTEXT_ID`

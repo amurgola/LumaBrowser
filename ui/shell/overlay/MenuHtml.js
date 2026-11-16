@@ -28,6 +28,7 @@ export default class MenuHtml {
     const actions = [];
     const html = items.map((it) => {
       if (it.sep) return '<div class="bd-menu-sep"></div>';
+      if (it.heading) return `<div class="bd-menu-heading">${HtmlEscaper.escape(it.heading)}</div>`;
       const idx = actions.length;
       actions.push(it.action);
       return MenuHtml._button(it, idx);
@@ -37,10 +38,16 @@ export default class MenuHtml {
 
   static _button(it, idx) {
     const esc = HtmlEscaper.escape;
-    const cls = [it.danger ? 'bd-danger' : '', it.check ? 'is-checked' : ''].filter(Boolean).join(' ');
+    const cls = [it.danger ? 'bd-danger' : '', it.check ? 'is-checked' : '', it.sub ? 'bd-two-line' : ''].filter(Boolean).join(' ');
     const hint = it.hint ? `<span class="bd-menu-hint">${esc(it.hint)}</span>` : '';
     const check = it.check ? `<span class="bd-menu-check">${esc(it.checkLabel || 'On')}</span>` : '';
     return `<button data-bd-action="${esc(it.action)}" data-bd-index="${idx}"${cls ? ` class="${cls}"` : ''}${it.disabled ? ' disabled' : ''}>`
-      + `${it.icon || ''}<span class="bd-menu-label">${esc(it.label)}</span>${hint}${check}</button>`;
+      + `${it.icon || ''}${MenuHtml._text(it)}${hint}${check}</button>`;
+  }
+
+  static _text(it) {
+    const esc = HtmlEscaper.escape;
+    const label = `<span class="bd-menu-label">${esc(it.label)}</span>`;
+    return it.sub ? `<span class="bd-menu-text">${label}<span class="bd-menu-sub">${esc(it.sub)}</span></span>` : label;
   }
 }

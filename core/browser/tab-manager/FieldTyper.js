@@ -44,6 +44,7 @@ class FieldTyper {
     const legacyWaitMs = request.submit ? FieldTyper.SUBMIT_WAIT_MS : 0;
     const { evidence } = await watch.finish({ before: resolved.fp, legacyWaitMs });
     const data = { tagName: resolved.tagName, value: String(request.text), submitted: !!typed.submitted, method };
+    if (typed.field) data.frameField = typed.field;
     if (evidence) data.evidence = evidence;
     const reply = NavigationReply.build(data, preUrl, page.url());
     if (!reply.urlChanged && request.submit) data.note = 'URL did not change after submit';

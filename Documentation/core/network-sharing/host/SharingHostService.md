@@ -37,7 +37,8 @@ Config and lifecycle:
   `Set a PIN before enabling Network Sharing.`), then advertises over mDNS and
   starts TLS and (if on) the web backend; a failed bind only warns. Disabling
   stops the advert, both listeners and every GPU lend.
-- `setPin(pin)` (4 to 8 digits; forgives lockouts, re-advertises),
+- `setPin(pin)` (6 to 8 digits, else `PIN must be 6 to 8 digits.`; forgives
+  lockouts, re-advertises),
   `clearPin()` (also disables), `setInstanceName(name)`, `setBindMode(mode)`,
   `setShareFlag(flag, value)` (unknown flag fails; turning `shareGpus` off
   releases a live lend immediately).
@@ -50,7 +51,7 @@ Config and lifecycle:
   host is off; a failed bind reverts the toggle), `setWebPort(port)`,
   `getWebPublicUrl()`, `setWebPublicUrl(url)`, `checkPublicUrlReachable({ fetch, timeoutMs })`
   (`{ skipped: true }`, or `{ ok, publicUrl, error? }` via [PublicUrlProbe](PublicUrlProbe.md)).
-- `getWebAllowedTools()`, `setWebAllowedTools(tools)` ([WebToolAllowList](WebToolAllowList.md)).
+- `getWebAllowedTools()`, `setWebAllowedTools(tools)`, `getSharedTurnTools()` ([WebToolAllowList](WebToolAllowList.md)); `getWebConfig()` also carries `webDefaultTools`, what applies while nothing was chosen.
 
 Tokens, pairing and usage:
 - `listTokens()` (usage joined), `revokeToken(id)`, `removeToken(id)` (drops
@@ -88,5 +89,6 @@ Manifest and proxy targets:
 ## Why
 
 The router stays mounted and every handler checks `isEnabled()`, so toggling
-sharing never rebinds a port. Sharing with no PIN is never allowed; the PIN
-lockout is what makes a 4-digit PIN safe on a LAN.
+sharing never rebinds a port. Sharing with no PIN is never allowed; the
+[PairingThrottle](PairingThrottle.md) lockouts are what keep a short PIN from
+being guessed, even behind a proxy that hides callers' addresses.

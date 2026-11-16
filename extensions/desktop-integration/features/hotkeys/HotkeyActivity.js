@@ -8,6 +8,7 @@ class HotkeyActivity {
     'rewrite-selection': 'Couldn\'t rewrite the selection',
     'clipboard-to-chat': 'Couldn\'t send the clipboard',
     'screenshot-to-chat': 'Couldn\'t send the screenshot',
+    dictate: 'Couldn\'t type what you said',
   };
 
   constructor({ overlay, speech, handoff, options = () => ({ island: true, ring: true }), stopSpeaking = () => {}, log = null }) {
@@ -47,17 +48,30 @@ class HotkeyActivity {
         session.close();
       })
       : null;
+    return { canceled: () => canceled, finish: (result, doneTitle) => { if (!canceled) this._finishInto(session, action, result, doneTitle); } };
+  }
+
+  listening({ action, hwnd = 0, onDone = () => {}, onCancel = () => {} }) {
+    let canceled = false;
+    const cancel = { id: 'cancel', label: 'Cancel', icon: 'close' };
+    const session = this.enabled()
+      ? this._overlay.show({
+        ...this._surfaces(), kind: 'speech', title: 'Listening', detail: 'Press the shortcut again to type it', hwnd,
+        actions: [{ id: 'done', label: 'Done', icon: 'check', primary: true }, cancel],
+      }, (id) => {
+        if (id === 'done') {
+          try { onDone(); } catch (_) {}
+        } else if (id === 'cancel') {
+          canceled = true;
+          try { onCancel(); } catch (_) {}
+          session.close();
+        }
+      })
+      : null;
     return {
       canceled: () => canceled,
-      finish: (result, doneTitle) => {
-        if (!session || canceled) return;
-        if (result && result.success) {
-          session.update({ kind: 'done', title: doneTitle, detail: '', actions: [], progress: null });
-          session.close({ after: HotkeyActivity.DONE_MS });
-        } else {
-          this._failInto(session, action, result);
-        }
-      },
+      transcribing: () => { if (session && !canceled) session.update({ kind: 'busy', title: 'Writing what you said', detail: '', actions: [cancel] }); },
+      finish: (result, doneTitle) => { if (!canceled) this._finishInto(session, action, result, doneTitle); },
     };
   }
 
@@ -87,6 +101,16 @@ class HotkeyActivity {
 
   dispose() {
     this._endReading();
+  }
+
+  _finishInto(session, action, result, doneTitle) {
+    if (!session) return;
+    if (result && result.success) {
+      session.update({ kind: 'done', title: doneTitle, detail: '', actions: [], progress: null });
+      session.close({ after: HotkeyActivity.DONE_MS });
+    } else {
+      this._failInto(session, action, result);
+    }
   }
 
   _failInto(session, action, result) {

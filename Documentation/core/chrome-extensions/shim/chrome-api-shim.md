@@ -15,9 +15,10 @@ into plain objects (so a real `chrome.storage.local` stays and a missing
 `chrome.storage.session` is added). It marks the context with
 `chrome.__lumaShim` and runs once.
 
-In a background service worker, where [shim-worker-preload.js](shim-worker-preload.md)
-has exposed `globalThis.lumaShim`, two namespaces are real and the context is
-marked `chrome.__lumaBridge`:
+In a background service worker and in an extension page window (the popup,
+options), where [shim-worker-preload.js](shim-worker-preload.md) has exposed
+`globalThis.lumaShim`, these are real and the context is marked
+`chrome.__lumaBridge`:
 
 - `chrome.webNavigation`: every event is fired by the main process
   ([ChromeWebNavigation](../bridge/ChromeWebNavigation.md)); `getFrame` and
@@ -27,6 +28,24 @@ marked `chrome.__lumaBridge`:
   `update`, `remove`, `removeAll` go there too, and `onClicked` fires with
   Chrome's `(info, tab)` when the user picks the item in the app's right-click
   menu. The extension's display name is sent as `bridge.hello`.
+- `chrome.tabs.query` and `chrome.tabs.get`, and the events `onCreated`,
+  `onUpdated`, `onActivated` and `onRemoved`
+  ([ChromeTabs](../bridge/ChromeTabs.md)).
+- `chrome.windows.onFocusChanged`.
+- `chrome.action.setBadgeText` and `setBadgeBackgroundColor`, also on
+  `chrome.browserAction` ([ChromeActionBadges](../bridge/ChromeActionBadges.md)).
+
+The last three replace members Electron already has (`replaceWithBridged`),
+the one place the shim overwrites instead of filling in: Electron's
+`tabs.query` calls a tab active only while its page holds keyboard focus, its
+tab events never fire, and its badge calls are dropped. The rest of
+`chrome.tabs` and `chrome.action` stays Electron's (`sendMessage`, `reload`,
+`update`, `setIcon`, ...).
+
+The first listener added to a bridged event is reported once as
+`bridge.listen` with the event's key (`tabs.onActivated`), so the main process
+knows which sleeping workers an event should wake
+([ShimBridge](../bridge/ShimBridge.md)).
 
 If the bridge object is present but unusable the script warns and falls back
 to the stubs below.
@@ -59,6 +78,12 @@ for a background that never answered. With the shim the background boots,
 autofill-on-load and the right-click autofill menu work through the bridge,
 and the features behind the stubbed APIs (window popouts, native messaging,
 notifications) simply do nothing.
+
+Bitwarden also follows the active tab: it lists the logins for the page in its
+popup, counts them on its toolbar badge, names them in the right-click menu
+and offers them in the inline menu of a login field, all from
+`tabs.query({ active: true, ... })` and the tab events. With Electron's own
+`chrome.tabs` none of that knew which page was on screen.
 
 ## storage.sync
 

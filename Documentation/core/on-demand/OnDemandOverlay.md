@@ -17,7 +17,8 @@ Extends `EventEmitter` (`expanded`, `collapsed`).
 - `isEnabled()`, `setEnabled(enabled)` (persists `core.onDemand.enabled`, folds the panel when off).
 - `setExpanded(expanded)`: expanding focuses the panel; collapsing gives the
   shell window and the tab's webContents the keyboard back. Emits `expanded` or `collapsed`.
-- `drag(dx, dy)` moves the tile, clamped to the page rect (no-op while hidden);
+- `drag(dx, dy)` moves the tile, clamped to the page rect less a 10 px strip along
+  every edge (`OnDemandGeometry.EDGE_PADDING`; no-op while hidden);
   `dragEnd()` persists `core.onDemand.pos`.
 - `markReady()` marks the panel page loaded and pushes state.
 - `state()` returns `{ enabled, visible, expanded, platform, pad, tab: { id, url, title } | null,

@@ -22,7 +22,7 @@ class BrowserService {
   async click(tabId, options = {}) { return this._tabManager.clickElement(tabId, options); }
   async clickAt(tabId, options = {}) { return this._tabManager.clickAt(tabId, options); }
   async fill(tabId, options = {}) { return this._tabManager.fillForm(tabId, options); }
-  async observePage(tabId) { return this._tabManager.observePage(tabId); }
+  async observePage(tabId, options = {}) { return this._tabManager.observePage(tabId, options); }
   async typeInto(tabId, options = {}) { return this._tabManager.typeInto(tabId, options); }
   async waitFor(tabId, options = {}) { return this._tabManager.waitForElement(tabId, options); }
   async scroll(tabId, options = {}) { return this._tabManager.scrollPage(tabId, options); }

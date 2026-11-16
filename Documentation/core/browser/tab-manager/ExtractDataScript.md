@@ -9,10 +9,13 @@ The in-page script behind extract_data.
 - `ExtractDataScript.build({ baseSelector, childSelectors, preferTableStructure })`: one object per row.
   Rows that are `<tr>` with `preferTableStructure` are keyed by the table's own headers
   (`extractionMode: 'table-structure'`). Otherwise fields use [RowExtract](../extraction/RowExtract.md) and the
-  script reports `duplicateFieldGroups` (fields hitting the same element in every row), `nullFields`
-  (matching nothing in any row) and `constantFields` (same non-empty value in 3+ rows while others vary,
-  cut at 60 chars).
+  script reports `duplicateFieldGroups` (fields reading the same thing off the same element in every
+  row), `nullFields` (matching nothing in any row) and `constantFields` (same non-empty value in 3+ rows
+  while others vary, cut at 60 chars). A child selector may end in `@attribute` to read an attribute
+  instead of the text.
 
 ## Why
 
 Child selectors misalign on tables (`:nth-of-type` counts tag position, not class position) and sometimes point at static labels; the diagnostics let the MCP layer warn about the selectors.
+
+Duplicates are grouped by element and attribute: an element's text and its attribute (`title: "a"`, `url: "a@href"`) are two fields on purpose, not a selector defect.

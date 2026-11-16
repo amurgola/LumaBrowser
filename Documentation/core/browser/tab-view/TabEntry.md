@@ -11,7 +11,8 @@ callers (TabManager, TabPreviewManager, On Demand, the dashboard) read its field
 `hidden`, `hostId` (the window the view is drawn in, [TabHosts](TabHosts.md); 0 is the main window), `viewSize` (`{ width, height }` while a remote viewer has sized the view, [TabLayout](TabLayout.md); else null), `url`, `title`, `loading`, `canGoBack`, `canGoForward`, `zoomLevel`,
 `createdAt`, `openerTabId` (the tab whose page opened this one, else null),
 `lastNavigatedAt`, `lastActivatedAt` (set when the tab is brought to the front;
-the AI chat offers the page the user was just on), `lastHttpStatus`, `favicon`,
+the AI chat offers the page the user was just on), `chromeHoldsKeyboard` (the chrome asked for the keyboard
+before the tab's first page arrived, [TabActivation](TabActivation.md)), `lastHttpStatus`, `favicon`,
 `history` (last 50 visits),
 `consoleLogs`, `dialogHandler` (set by TabManager's dialog handling).
 
@@ -24,6 +25,7 @@ generations), `_errorPageFor` (the failed URL while the error page shows),
 - `new TabEntry({ id, view, partition, url, title, kind, silent, pinned, keepAlive, hidden, openerTabId, hostId })`.
 - `applyNavEvent(kind, payload)` runs [NavigationGenerations](NavigationGenerations.md)`.decide`
   against `_nav`, stores the next state and returns the decision.
+- `hasShownPage()`: false until the tab's first page, or the error page standing in for it, has committed.
 - `isInternal()`, `isAutomation()` (see [TabKinds](TabKinds.md)).
 - `isInStrip()`: not silent and not hidden.
 - `isRegularBrowsing()`: not silent, not internal, not automation.

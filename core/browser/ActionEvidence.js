@@ -43,7 +43,12 @@ class ActionEvidence {
 
   static _newTabChanges(newTabs) {
     return newTabs.slice(0, ActionEvidence.MAX_REPORTED_TABS)
-      .map((t) => `a new tab opened (tab ${t.id})${t.url ? `: ${ActionEvidence._clip(t.url, 120)}` : ''}`);
+      .map((t) => `a new tab opened (tab ${t.id}${ActionEvidence._tabVisibility(t)})${t.url ? `: ${ActionEvidence._clip(t.url, 120)}` : ''}`);
+  }
+
+  static _tabVisibility(tab) {
+    if (typeof tab.silent !== 'boolean') return '';
+    return tab.silent ? ', silent' : ', visible to the user';
   }
 
   static _navigationChanges(a, ctx, urlChanged) {

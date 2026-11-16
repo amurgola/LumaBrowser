@@ -1067,7 +1067,7 @@ const ENTRIES = [
   {
     id: 'sharing.pin',
     label: 'PIN',
-    description: 'The 4 to 8 digit PIN clients need to pair with this computer. Set PIN saves it; Clear removes it.',
+    description: 'The 6 to 8 digit PIN clients need to pair with this computer. Set PIN saves it; Clear removes it.',
     keywords: ['pairing pin', 'password', 'pin code', 'pair', 'sharing password'],
     path: ['Network Sharing', 'Share my resources (host)'],
     kind: 'text',

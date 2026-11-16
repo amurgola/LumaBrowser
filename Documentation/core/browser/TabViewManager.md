@@ -55,11 +55,15 @@ Lifecycle and strip ([TabLifecycle](tab-view/TabLifecycle.md), [TabActivation](t
 - `reopenClosedTab(windowId = 0)`, `moveTab(tabId, toIndex)` (clamped to the tab's pin block), `switchToTab(tabId)`,
   `showTab(tabId)`, `cycleTab(delta, windowId = 0)`, `selectTabByIndex(n, windowId = 0)`
   (n <= 0 is the last tab), `setBounds(bounds, windowId = 0)`, `destroyAll()`.
+- `focusChrome(windowId = 0)`, `focusPage(windowId = 0)`: move the keyboard to the window's chrome (its address
+  bar) or back to its active page. The chrome keeps it while a new tab's first page arrives
+  ([TabActivation](tab-view/TabActivation.md)).
 - `setTabViewSize(tabId, size)`: sizes one tab's view to a remote viewer's window
   (`{ width, height }`, Tab Share's interact guests) without resizing the window; null gives the tab
   the content area back. The view never grows past the content area
   ([TabLayout](tab-view/TabLayout.md)). `{ success }` or not found. Every tab switch
-  (`windowTabSwitched`) runs `TabLayout.refitBackground()`.
+  (`windowTabSwitched`) runs `TabLayout.refitBackground()`, and a silent tab is laid out as it is
+  created (`tabCreated`), since it is never activated and nothing else would size its page.
 - `layoutTab(tabId)`: puts a tab's view back where the layout wants it, for a caller that moved it
   ([TabPreviewManager](TabPreviewManager.md)).
 
@@ -115,7 +119,8 @@ window), `windowTabSwitched(windowId, id)` (any window), `tabTransferred(id, fro
 
 Renderer channels sent: `tab:state`, `tab:switched`, `tab:hidden`, `tab:closed`,
 `tab:moved`, `tab:transferred`, `tab-view:accelerator`, `tab-view:found-in-page`
-(each to the window the tab is drawn in), `tab-view:download`,
+(each to the window the tab is drawn in), `tab-view:download`, `tab-view:downloads-changed` (entries left the
+downloads list),
 `notification-intercepted` (main window).
 
 ## How the pieces fit
@@ -129,6 +134,7 @@ Renderer channels sent: `tab:state`, `tab:switched`, `tab:hidden`, `tab:closed`,
 - Each new tab's webContents is wired by [TabLoadEvents](tab-view/TabLoadEvents.md)
   (navigation state, guarded by [NavigationGenerations](tab-view/NavigationGenerations.md)),
   [TabPageEvents](tab-view/TabPageEvents.md) (crash, shortcuts, favicon, console),
+  [TabActivation](tab-view/TabActivation.md) (the keyboard hold for the address bar),
   [TabPermissionHook](tab-view/TabPermissionHook.md), [TabPopupHandler](tab-view/TabPopupHandler.md)
   and [DataFileDownloadHook](tab-view/DataFileDownloadHook.md).
 - [HiddenTabState](tab-view/HiddenTabState.md) mutes and deprioritizes hidden

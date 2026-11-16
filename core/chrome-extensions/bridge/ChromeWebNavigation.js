@@ -1,13 +1,14 @@
-const { webContents: webContentsModule } = require('electron');
+const { webContents: webContentsModule, webFrameMain: webFrameMainModule } = require('electron');
 
 class ChromeWebNavigation {
   static BOUND_FLAG = '_lumaWebNavigationBound';
   static MAIN_FRAME = 0;
   static NO_PARENT = -1;
 
-  constructor({ broadcast, webContents = webContentsModule } = {}) {
+  constructor({ broadcast, webContents = webContentsModule, webFrameMain = webFrameMainModule } = {}) {
     this._broadcast = broadcast;
     this._webContents = webContents;
+    this._webFrameMain = webFrameMain;
     this._getTabViewManager = () => null;
   }
 
@@ -19,24 +20,26 @@ class ChromeWebNavigation {
   attach(wc) {
     if (!wc || wc[ChromeWebNavigation.BOUND_FLAG]) return;
     wc[ChromeWebNavigation.BOUND_FLAG] = true;
-    const frameOf = (isMainFrame, routingId) => ChromeWebNavigation.frameIds(isMainFrame, routingId);
-    wc.on('did-start-navigation', (event, url, isInPlace, isMainFrame, _pid, routingId) => {
-      const d = ChromeWebNavigation._details(event, { url, isMainFrame, isSameDocument: isInPlace, routingId });
-      if (!d.isSameDocument) this._emit(wc, 'onBeforeNavigate', { url: d.url, ...frameOf(d.isMainFrame, d.routingId) });
+    const frameOf = (isMainFrame, processId, routingId) => ChromeWebNavigation.frameIds(isMainFrame, this._frame(processId, routingId));
+    wc.on('did-start-navigation', (event, url, isInPlace, isMainFrame, processId, routingId) => {
+      const d = ChromeWebNavigation._details(event, { url, isMainFrame, isSameDocument: isInPlace });
+      const frame = (event && event.frame) || this._frame(processId, routingId);
+      if (!d.isSameDocument) this._emit(wc, 'onBeforeNavigate', { url: d.url, ...ChromeWebNavigation.frameIds(d.isMainFrame, frame) });
     });
-    wc.on('did-frame-navigate', (_event, url, _code, _status, isMainFrame, _pid, routingId) => {
-      this._emit(wc, 'onCommitted', { url, ...frameOf(isMainFrame, routingId), transitionType: 'link', transitionQualifiers: [] });
+    wc.on('did-frame-navigate', (_event, url, _code, _status, isMainFrame, processId, routingId) => {
+      this._emit(wc, 'onCommitted', { url, ...frameOf(isMainFrame, processId, routingId), transitionType: 'link', transitionQualifiers: [] });
     });
-    wc.on('did-navigate-in-page', (_event, url, isMainFrame, _pid, routingId) => {
+    wc.on('did-navigate-in-page', (_event, url, isMainFrame, processId, routingId) => {
       const name = ChromeWebNavigation.isFragmentChange(wc, url) ? 'onReferenceFragmentUpdated' : 'onHistoryStateUpdated';
-      this._emit(wc, name, { url, ...frameOf(isMainFrame, routingId), transitionType: 'link', transitionQualifiers: [] });
+      this._emit(wc, name, { url, ...frameOf(isMainFrame, processId, routingId), transitionType: 'link', transitionQualifiers: [] });
     });
-    wc.on('dom-ready', () => this._emit(wc, 'onDOMContentLoaded', { url: ChromeWebNavigation._url(wc), ...frameOf(true, 0) }));
-    wc.on('did-frame-finish-load', (_event, isMainFrame, _pid, routingId) => {
-      this._emit(wc, 'onCompleted', { url: ChromeWebNavigation._frameUrl(wc, isMainFrame, routingId), ...frameOf(isMainFrame, routingId) });
+    wc.on('dom-ready', () => this._emit(wc, 'onDOMContentLoaded', { url: ChromeWebNavigation._url(wc), ...ChromeWebNavigation.frameIds(true) }));
+    wc.on('did-frame-finish-load', (_event, isMainFrame, processId, routingId) => {
+      const frame = this._frame(processId, routingId);
+      this._emit(wc, 'onCompleted', { url: isMainFrame ? ChromeWebNavigation._url(wc) : ((frame && frame.url) || ''), ...ChromeWebNavigation.frameIds(isMainFrame, frame) });
     });
-    wc.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame, _pid, routingId) => {
-      this._emit(wc, 'onErrorOccurred', { url: validatedURL, ...frameOf(isMainFrame, routingId), error: errorDescription || `net error ${errorCode}` });
+    wc.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame, processId, routingId) => {
+      this._emit(wc, 'onErrorOccurred', { url: validatedURL, ...frameOf(isMainFrame, processId, routingId), error: errorDescription || `net error ${errorCode}` });
     });
   }
 
@@ -55,16 +58,18 @@ class ChromeWebNavigation {
     const frames = [];
     const walk = (frame, frameId, parentFrameId) => {
       frames.push(ChromeWebNavigation._frameInfo(frameId, parentFrameId, frame.url));
-      for (const child of frame.frames || []) walk(child, child.routingId, frameId);
+      for (const child of frame.frames || []) walk(child, child.frameTreeNodeId, frameId);
     };
     walk(main, ChromeWebNavigation.MAIN_FRAME, ChromeWebNavigation.NO_PARENT);
     return frames;
   }
 
-  static frameIds(isMainFrame, routingId) {
-    return isMainFrame
-      ? { frameId: ChromeWebNavigation.MAIN_FRAME, parentFrameId: ChromeWebNavigation.NO_PARENT }
-      : { frameId: routingId || 0, parentFrameId: ChromeWebNavigation.MAIN_FRAME };
+  static frameIds(isMainFrame, frame = null) {
+    if (isMainFrame) return { frameId: ChromeWebNavigation.MAIN_FRAME, parentFrameId: ChromeWebNavigation.NO_PARENT };
+    if (!frame || !Number.isInteger(frame.frameTreeNodeId)) return { frameId: null, parentFrameId: null };
+    const parent = frame.parent;
+    const parentIsMain = !parent || !parent.parent;
+    return { frameId: frame.frameTreeNodeId, parentFrameId: parentIsMain ? ChromeWebNavigation.MAIN_FRAME : parent.frameTreeNodeId };
   }
 
   static isFragmentChange(wc, url) {
@@ -78,7 +83,7 @@ class ChromeWebNavigation {
   }
 
   _emit(wc, name, fields) {
-    if (!this._isTab(wc)) return;
+    if (fields.frameId === null || !this._isTab(wc)) return;
     this._broadcast(wc.session, name, { tabId: wc.id, timeStamp: Date.now(), processId: -1, ...fields });
   }
 
@@ -102,13 +107,16 @@ class ChromeWebNavigation {
     }
   }
 
+  _frame(processId, routingId) {
+    try { return this._webFrameMain.fromId(processId, routingId) || null; } catch (_) { return null; }
+  }
+
   static _details(event, fallback) {
     const e = event || {};
     return {
       url: typeof e.url === 'string' ? e.url : fallback.url,
       isMainFrame: typeof e.isMainFrame === 'boolean' ? e.isMainFrame : !!fallback.isMainFrame,
       isSameDocument: typeof e.isSameDocument === 'boolean' ? e.isSameDocument : !!fallback.isSameDocument,
-      routingId: e.frame && Number.isInteger(e.frame.routingId) ? e.frame.routingId : fallback.routingId,
     };
   }
 
@@ -118,16 +126,6 @@ class ChromeWebNavigation {
 
   static _url(wc) {
     try { return wc.getURL(); } catch (_) { return ''; }
-  }
-
-  static _frameUrl(wc, isMainFrame, routingId) {
-    if (isMainFrame) return ChromeWebNavigation._url(wc);
-    try {
-      const frame = (wc.mainFrame.framesInSubtree || []).find((f) => f.routingId === routingId);
-      return frame ? frame.url : '';
-    } catch (_) {
-      return '';
-    }
   }
 }
 

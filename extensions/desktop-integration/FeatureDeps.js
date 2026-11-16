@@ -19,6 +19,7 @@ class FeatureDeps {
       broadcast: this._shared.broadcast.forFeature(id),
       handoff: this._shared.handoff,
       speech: this._shared.speech,
+      dictation: this._shared.dictation || null,
       overlay: this._shared.overlay || null,
       hints: this._shared.hints || null,
       shortcuts: this._shared.shortcuts || null,

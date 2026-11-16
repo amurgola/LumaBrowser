@@ -39,7 +39,13 @@ export default class CdpSettingsTab {
     <div class="luma-field">
       <label class="luma-field-label">Host</label>
       <input type="text" class="luma-field-input" id="ext-cdp-host" placeholder="127.0.0.1">
-      <div class="luma-field-help">Bind address. Use 127.0.0.1 for local only, or 0.0.0.0 to expose on the network. Restart the server to apply.</div>
+      <div class="luma-field-help">
+        Bind address. Use 127.0.0.1 for local only, or 0.0.0.0 to expose on the network. Restart the server to apply.
+        Any address other than 127.0.0.1 needs an API key from Settings &gt; API &amp; MCP: clients send it as
+        <code>Authorization: Bearer &lt;key&gt;</code> or <code>X-Api-Key</code>, or add <code>?token=&lt;key&gt;</code>
+        to the URL (for example <code>http://host:port?token=&lt;key&gt;</code>); the WebSocket URLs that discovery
+        returns then carry the same token.
+      </div>
     </div>
 
     <div class="luma-field">
@@ -186,7 +192,9 @@ export default class CdpSettingsTab {
     const endpoint = this._q('ext-cdp-endpoint');
     this._q('ext-cdp-status').classList.toggle('ok', running);
     this._q('ext-cdp-statusText').textContent = 'CDP server: ' + (running ? 'running' : 'stopped');
-    endpoint.classList.toggle('ext-hidden', !running);
+    const failure = !running && status.lastError ? status.lastError : '';
+    endpoint.classList.toggle('ext-hidden', !running && !failure);
+    endpoint.textContent = failure ? `Could not start: ${failure}` : '';
     if (running) {
       endpoint.textContent = `http://${status.host}:${status.port}, ${status.sessions.length} session(s), ${status.targets.length} target(s)`;
     }

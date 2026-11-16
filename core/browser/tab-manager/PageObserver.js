@@ -3,8 +3,8 @@ const ElementDigestFormatter = require('./ElementDigestFormatter');
 const PageBlockDetector = require('./PageBlockDetector');
 
 class PageObserver {
-  static async observe(page) {
-    const result = await page.run(ElementDigest.SCRIPT);
+  static async observe(page, options = {}) {
+    const result = await page.run(ElementDigest.script({ selector: options.selector }));
     if (!result || !result.success) return { success: false, error: (result && result.error) || 'digest failed' };
     return { success: true, data: PageObserver._summary(result) };
   }

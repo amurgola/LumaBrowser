@@ -2,7 +2,7 @@
 
 `extensions/desktop-integration/features/hotkeys/HotkeyActions.js`
 
-The four actions of the [hotkeys feature](index.md). Every method resolves
+The actions of the [hotkeys feature](index.md). Every method resolves
 `{ success, ... }` or `{ success: false, error, code }` and never throws.
 
 - `constructor({ speech, handoff, selection, rewriter, region, clipboard, screenText?, options(), onError(id, message)?, now? })`.
@@ -49,4 +49,9 @@ The four actions of the [hotkeys feature](index.md). Every method resolves
 - `screenshotToChat(source)`: [RegionCapture](RegionCapture.md) (a drag, or
   `source.frame` captured whole as `window.png`) with the overlay hidden, then
   the handoff.
-- `supported(id)`, `busy()`, `speaking()`, `dispose()`.
+- `dictate` (constructor): a [DictateAction](DictateAction.md), or null where
+  dictation cannot run. `run('dictate')` calls its `toggle()`: the first press
+  listens, the next one types what was said. `dictating()` says whether the
+  microphone is open; `supported('dictate')` and `readiness('dictate')` come
+  from the action.
+- `supported(id)`, `busy()`, `speaking()`, `dispose()` (also cancels a dictation in progress).

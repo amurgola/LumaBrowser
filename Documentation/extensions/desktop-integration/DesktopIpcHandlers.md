@@ -14,6 +14,7 @@ IPC controller of the Desktop Integration settings tab. Every channel is
 - `setFeatureEnabled(id, enabled)` -> `{ feature }`.
 - `setFeatureSetting(id, key, value)` -> `{ feature }`.
 - `speechState(update)` -> `{ accepted }`: the renderer's SpeechPlayer reporting playback to `speech.report`.
+- `dictationReport(update)` -> `{ accepted }`: the renderer's DictationRecorder reporting the open microphone or handing back the recording to `dictation.report`.
 - `listClients` -> `{ clients }`.
 - `clearClients` -> `{ cleared }`.
 

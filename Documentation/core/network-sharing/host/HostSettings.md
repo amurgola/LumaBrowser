@@ -10,8 +10,9 @@ back to safe defaults; setters validate.
 - `new HostSettings(db)`.
 - `readEnabled()`, `writeEnabled(enabled)`.
 - `instanceId()`: the stored id, minting and storing a UUID the first time.
-- `getPin()`, `hasPin()`, `setPin(pin)` (false unless 4 to 8 digits after
-  trimming), `clearPin()`.
+- `getPin()`, `hasPin()`, `setPin(pin)` (false unless 6 to 8 digits after
+  trimming), `clearPin()`. Only `setPin` checks the floor: a 4 or 5 digit PIN
+  stored before it rose still reads back and pairs.
 - `getInstanceName()` (stored name, else `os.hostname()`, else `LumaBrowser`),
   `setInstanceName(name)` (capped at 63 characters, trimmed; empty clears).
 - `getBindMode()` / `setBindMode(mode)`: `'any'` or `'lan'` (anything else).
@@ -28,6 +29,7 @@ back to safe defaults; setters validate.
   trims, drops trailing slashes, empty clears; anything not starting with
   `http(s)://host` fails with the legacy message.
 - `getWebAllowedTools()` / `setWebAllowedTools(tools|null)` (raw; validation is in [WebToolAllowList](WebToolAllowList.md)).
+- `getGloballyDisabledTools()`: the tools the host switched off for its own chat (`core.chat.disabledAgentTools`); a shared turn never gets them.
 - `HostSettings.validPort(value)`: the integer 1 to 65535, else null.
 - Statics: every key (`ENABLED_KEY` ... `WEB_PUBLIC_URL_KEY`),
   `SHARE_FLAGS` (`{ key, fallback }` per flag), `DEFAULT_WEB_PORT`, `DEFAULT_TLS_PORT`.

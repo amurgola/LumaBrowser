@@ -96,6 +96,10 @@ class TabViewManager extends EventEmitter {
 
   selectTabByIndex(n, windowId = TabHosts.MAIN_ID) { return this._activation.selectByIndex(n, this._hosts.resolve(windowId)); }
 
+  focusChrome(windowId = TabHosts.MAIN_ID) { return this._activation.focusChrome(this._hosts.resolve(windowId)); }
+
+  focusPage(windowId = TabHosts.MAIN_ID) { return this._activation.focusPage(this._hosts.resolve(windowId)); }
+
   setBounds(bounds, windowId = TabHosts.MAIN_ID) { this._layout.setBounds(bounds, this._hosts.resolve(windowId)); }
 
   setTabViewSize(tabId, size) {
@@ -298,6 +302,7 @@ class TabViewManager extends EventEmitter {
     this.on('windowTabSwitched', (hostId) => this._fullscreen.onSwitched(hostId));
     this.on('tabSwitched', () => this._fullscreen.onSwitched(TabHosts.MAIN_ID));
     this.on('windowTabSwitched', () => this._layout.refitBackground());
+    this.on('tabCreated', (tab) => { if (tab.silent) this.layoutTab(tab.id); });
     this._pinning = new TabPinning({ registry: this._registry, channel: this._channel, lifecycle: this._lifecycle, emitter: this });
     this._keepAlive = new KeepAliveSweep({ registry: this._registry, revive: (entry) => this._persisted.revive(entry) });
     this._zoom = new TabZoom({ db: this.db, registry: this._registry, channel: this._channel });
@@ -323,11 +328,13 @@ class TabViewManager extends EventEmitter {
 
   _relayDownloads() {
     this.downloads.on('download', (info) => this._channel.send('tab-view:download', info));
+    this.downloads.on('changed', () => this._channel.send('tab-view:downloads-changed'));
   }
 
   _wireEvents(entry) {
     this._loadEvents.wire(entry);
     this._pageEvents.wire(entry);
+    this._activation.wire(entry);
     TabPermissionHook.install(entry);
     this._popups.wire(entry);
     this._fullscreen.wire(entry);

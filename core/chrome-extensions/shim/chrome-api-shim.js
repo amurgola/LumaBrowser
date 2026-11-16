@@ -72,13 +72,21 @@
   const CONTEXT_TYPE = { ALL: 'all', PAGE: 'page', FRAME: 'frame', SELECTION: 'selection', LINK: 'link', EDITABLE: 'editable', IMAGE: 'image', VIDEO: 'video', AUDIO: 'audio', LAUNCHER: 'launcher', BROWSER_ACTION: 'browser_action', PAGE_ACTION: 'page_action', ACTION: 'action' };
   const ITEM_TYPE = { NORMAL: 'normal', CHECKBOX: 'checkbox', RADIO: 'radio', SEPARATOR: 'separator' };
   const WEB_NAVIGATION_EVENTS = ['onBeforeNavigate', 'onCommitted', 'onDOMContentLoaded', 'onCompleted', 'onErrorOccurred', 'onCreatedNavigationTarget', 'onReferenceFragmentUpdated', 'onTabReplaced', 'onHistoryStateUpdated'];
+  const TAB_EVENTS = ['onCreated', 'onUpdated', 'onActivated', 'onRemoved'];
 
   function bridged(bridge) {
     const live = new Map();
     const liveEvent = (key) => {
       const listeners = new Set();
       live.set(key, listeners);
-      return makeEvent(listeners);
+      const event = makeEvent(listeners);
+      const addListener = event.addListener;
+      event.addListener = (fn) => {
+        const wasEmpty = listeners.size === 0;
+        addListener(fn);
+        if (wasEmpty && listeners.size) bridge.call('bridge', 'listen', [key]).catch(() => {});
+      };
+      return event;
     };
     bridge.onEvent((message) => {
       const listeners = message && live.get(`${message.ns}.${message.name}`);
@@ -106,7 +114,22 @@
       remove: remote(bridge, 'contextMenus', 'remove'),
       removeAll: remote(bridge, 'contextMenus', 'removeAll'),
     };
-    return { webNavigation, contextMenus };
+    const tabs = Object.fromEntries(TAB_EVENTS.map((name) => [name, liveEvent(`tabs.${name}`)]));
+    tabs.query = remote(bridge, 'tabs', 'query');
+    tabs.get = remote(bridge, 'tabs', 'get');
+    const action = {
+      setBadgeText: remote(bridge, 'action', 'setBadgeText'),
+      setBadgeBackgroundColor: remote(bridge, 'action', 'setBadgeBackgroundColor'),
+    };
+    const windows = { onFocusChanged: liveEvent('windows.onFocusChanged') };
+    return { webNavigation, contextMenus, tabs, action, windows };
+  }
+
+  function replaceWithBridged(real) {
+    if (chrome.tabs) Object.assign(chrome.tabs, real.tabs);
+    if (chrome.action) Object.assign(chrome.action, real.action);
+    chrome.browserAction = Object.assign(chrome.browserAction || {}, real.action);
+    chrome.windows = Object.assign(chrome.windows || {}, real.windows);
   }
 
   function sayHello(bridge) {
@@ -236,6 +259,7 @@
       const real = bridged(bridge);
       if (!chrome.webNavigation) chrome.webNavigation = real.webNavigation;
       if (!chrome.contextMenus) chrome.contextMenus = real.contextMenus;
+      replaceWithBridged(real);
       chrome.__lumaBridge = true;
       sayHello(bridge);
     } catch (err) {

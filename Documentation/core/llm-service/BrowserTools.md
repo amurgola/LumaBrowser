@@ -11,7 +11,9 @@ AgentChatBridge), so every member is static and none uses `this`.
 - `TOOL_DEFINITIONS`: `[{ name, description, params: { name: 'type (doc)' }, required? }]`,
   the prose docs local models read. Names must equal
   `BrowserActions.chatActionIds()` (tested). `required` is also enforced at
-  the agent's dispatch point; `tabId` is never required.
+  the agent's dispatch point; `tabId` is never required. `observe_page`,
+  `get_source` and `screenshot` document an optional `selector` (one part of the
+  page), and `extract_data` the `@attribute` ending of a child selector.
 - `getToolPrompt(toolNames?)`: the fenced ```` ```tool ```` instructions plus
   one line per (filtered) tool.
 - `executeTool(toolName, params, browserService, defaults = {})`: see

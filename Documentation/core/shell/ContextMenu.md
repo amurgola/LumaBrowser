@@ -27,7 +27,7 @@ up in the hosting window. No items means no menu. Any error is logged as
 ## Chrome extension items
 
 `new ContextMenu({ extensionItems })`: an optional
-`extensionItems({ webContents, params, entry, order })` returning Electron
+`extensionItems({ webContents, params })` returning Electron
 menu items (ReadyPhase passes `ShimBridge.contextMenus.templateFor`). The
 template adds them in their own block above Inspect on browsing pages; a
 provider that throws is logged and the menu is built without it.

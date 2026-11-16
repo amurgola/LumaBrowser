@@ -7,6 +7,14 @@ Wires the [hotkeys feature](index.md): reads bindings and options from
 runs [HotkeyActions](HotkeyActions.md) from a shortcut or REST, and reports.
 
 - `static ACTIONS`: `{ id, label, description, defaultBinding }` per action.
+- Dictation: with `deps.dictation` the feature builds a
+  [DictateAction](DictateAction.md) for the `dictate` action (without it the
+  action is unsupported). `dictationStatus()` resolves `{ supported, ready,
+  binding, registered, conflict }` for the Settings > General row
+  ([DictationShortcutRow](../../ui/DictationShortcutRow.md)): whether dictation
+  can run here, whether speech recognition is set up, and the shortcut with its
+  registration state. `start()` serves it on the feature's IPC channel
+  `dictation` (`ext.desktop-integration.hotkeys.dictation`).
 - `static settingsSchema()`: the declarative fields `index.js` exports.
 - `static defaultParts()`: the real parts (Electron `globalShortcut`,
   `BrowserWindow`, `Notification`; a
@@ -43,7 +51,7 @@ runs [HotkeyActions](HotkeyActions.md) from a shortcut or REST, and reports.
   `shortcutHints` or `overlayIsland` start or stop the poll (Windows, an
   overlay, `keys.heldModifiers`, both settings on). The hint lists the
   registered shortcuts grouped by modifiers with short labels (`HINT_LABELS`;
-  "Stop reading" while speaking, "Capture window" with a window picked), each
+  "Stop reading" while speaking, "Type it" while dictating, "Capture window" with a window picked), each
   with its `HotkeyActions.readiness` note (shown under the island when pointed
   at) and greyed out when it cannot work now (no voice, the AI chat down, an
   empty clipboard, already running). The clipboard answers asynchronously, so

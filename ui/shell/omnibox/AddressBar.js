@@ -31,8 +31,15 @@ export default class AddressBar {
 
   focusAndSelect() {
     if (!this.el) return;
+    if (window.tabAPI && typeof window.tabAPI.focusChrome === 'function') window.tabAPI.focusChrome();
     this.el.focus();
     this.el.select();
+  }
+
+  handToPage() {
+    if (!this.el) return;
+    this.el.blur();
+    if (window.tabAPI && typeof window.tabAPI.focusPage === 'function') window.tabAPI.focusPage();
   }
 
   setPlaceholder(text) {

@@ -6,6 +6,9 @@ Refuses DNS-rebinding and cross-site browser requests to a local automation
 server (cdp-driver's CDP endpoint, selenium-driver's WebDriver endpoint), while
 stock Puppeteer, Playwright, chrome-remote-interface, chromedriver-style and
 Selenium clients keep working with no extra setup. All methods are static.
+The servers reach it through [ExposedServerKeyGuard](ExposedServerKeyGuard.md),
+which runs this check only while the server is bound to a loopback name; a
+server bound anywhere else requires an API key instead.
 
 ## The rule
 
@@ -31,28 +34,33 @@ hostname in `Host`, and every browser request (fetch, XHR, WebSocket) carries an
 `Origin`, while automation clients send none. Same idea as Chrome's own
 `--remote-allow-origins` gate on DevTools WebSockets.
 
-Consequence: with a wildcard or LAN bind host, remote clients must address the
-server by the configured bind host name, not some other address of the machine.
+Consequence: with a wildcard or LAN bind host this check alone would make
+remote clients address the server by the configured bind host name. Such a
+server is exposed, though, so ExposedServerKeyGuard replaces this check with the
+API key and remote clients may send any Host.
 
 ## Methods
 
 - `LoopbackRequestGuard.refusal(req, bindHost)` -> `null` when allowed, else
   `HOST_REFUSED` or `ORIGIN_REFUSED` (the reason strings, also static).
 - `LoopbackRequestGuard.isAllowed(req, bindHost)` -> boolean.
-- `LoopbackRequestGuard.rejectUpgrade(socket, reason)` writes a raw
-  `HTTP/1.1 403 Forbidden` with a `{ error: reason }` JSON body and
+- `LoopbackRequestGuard.rejectUpgrade(socket, reason, status = 403)` writes a
+  raw `HTTP/1.1 403 Forbidden` (or the given status, e.g. `401 Unauthorized`
+  from `STATUS_TEXT`) with a `{ error: reason }` JSON body and
   `Connection: close` before any WebSocket handshake, then ends the socket
   (destroys it if writing throws).
 - `LoopbackRequestGuard.hostnameOf(header)` -> normalised hostname or `null`
   when malformed.
 - Constants: `LOOPBACK_NAMES`, `WILDCARD_HOSTS`, `ORIGIN_SCHEMES`,
-  `HOST_PATTERN`, `HOST_REFUSED`, `ORIGIN_REFUSED`.
+  `HOST_PATTERN`, `HOST_REFUSED`, `ORIGIN_REFUSED`, `STATUS_TEXT`.
 
 ## Callers
 
-- [CdpHttpBootstrap](../../../extensions/cdp-driver/CdpHttpBootstrap.md): every
-  `/json/*` route (403 `{ error }`).
-- [CdpServer](../../../extensions/cdp-driver/CdpServer.md): every WebSocket
-  upgrade (`rejectUpgrade`).
-- [WebDriverServer](../../../extensions/selenium-driver/WebDriverServer.md):
-  first middleware on every route (403 W3C `unknown error` body).
+- [ExposedServerKeyGuard](ExposedServerKeyGuard.md): `refusal` for a
+  loopback-bound server, `LOOPBACK_NAMES` and `hostnameOf` to decide exposure.
+  Through it: [CdpHttpBootstrap](../../../extensions/cdp-driver/CdpHttpBootstrap.md)
+  on every `/json/*` route (403 `{ error }`),
+  [CdpServer](../../../extensions/cdp-driver/CdpServer.md) on every WebSocket
+  upgrade, and [WebDriverServer](../../../extensions/selenium-driver/WebDriverServer.md)
+  as the first middleware on every route (403 W3C `unknown error` body).
+- CdpServer calls `rejectUpgrade` directly with the refusal's status (403 or 401).

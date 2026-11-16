@@ -11,9 +11,17 @@ deactivate, _instance }` (`_instance` is the e2e harness hook). Three surfaces:
    (`window.registerTabMenuContributor`): "Share tab" when sharing is
    available, else for a shared tab "Sharing tab" (checked, with the watcher
    count or mode) and "Stop sharing tab";
-2. the share dialog (`.lm-overlay`): View only / View and interact, Create
-   link, the link with Copy, the watcher line and dot, Stop sharing / Done;
-   changing the mode of a live share calls `setMode`; Escape or a backdrop
+2. the share dialog (`.lm-overlay`): the tab's title and, on its own
+   monospace line, its address; View only / View and interact as radio
+   cards; Create link; the link with Copy, the watcher line and dot; Stop
+   sharing / Done. It follows [the design system](../../ui/DesignSystem.md)
+   and is built on tokens and `.luma-*` components only: the cards look
+   like the Settings radio cards (`.gs-choice`: name over explanation, a
+   neutral fill and stronger border when chosen, accent on the radio dot
+   alone), a problem shows as a `.luma-callout.warn` notice, and the one
+   primary button is Create link, then Done (Copy and Stop sharing are
+   plain `.luma-btn`s).
+   Changing the mode of a live share calls `setMode`; Escape or a backdrop
    click closes. Done takes Create link's place (primary, right) once the
    share exists, often from the `changed` push before the share call
    returns, so it ignores clicks for 400 ms after that swap: a double click

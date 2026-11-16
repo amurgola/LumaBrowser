@@ -154,7 +154,7 @@ class ContextMenuTemplate {
     if (!this._isBrowsingPage || typeof this._extensionItems !== 'function') return;
     let items = [];
     try {
-      items = this._extensionItems({ webContents: this._webContents, params: this._params, entry: this._tab.entry, order: this._tab.order }) || [];
+      items = this._extensionItems({ webContents: this._webContents, params: this._params }) || [];
     } catch (err) {
       console.warn('[ContextMenu] extension items failed:', err && err.message);
     }

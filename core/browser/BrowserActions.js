@@ -10,9 +10,10 @@ class BrowserActions {
       rest: { method: 'get', path: '/tabs', handler: 'getAllTabs' },
       mcp: {
         name: 'browser_get_tabs',
-        description: 'Get all open browser tabs with their URLs, titles, and active status',
+        description: 'Get the open browser tabs with their URLs, titles, and active status. By default only the tabs in the tab strip the user sees are listed.',
         properties: {
-          includeSilent: { type: 'boolean', description: 'If true, include silent/hidden tabs in the results (default: false)' },
+          includeSilent: { type: 'boolean', description: 'Also list silent tabs: background tabs an agent opened with silent=true (default: false)' },
+          includeHidden: { type: 'boolean', description: 'Also list persisted tabs the user keeps hidden off the tab strip, such as mail and chat apps (default: false)' },
         },
         required: [],
       },
@@ -27,7 +28,7 @@ class BrowserActions {
         description: 'Create a new browser tab and navigate to a URL. The URL will be automatically normalized (https:// added if missing).',
         properties: {
           url: { type: 'string', description: 'The URL to open (e.g., "example.com" or "https://example.com")' },
-          silent: { type: 'boolean', description: 'If true, create the tab in the background without showing it in the UI tab bar (default: false)' },
+          silent: { type: 'boolean', description: 'If true, create the tab in the background without showing it in the UI tab bar (default: false). A silent tab has a normal-sized viewport, and tabs its links open are silent too.' },
         },
         required: ['url'],
       },
@@ -95,8 +96,11 @@ class BrowserActions {
       chat: true,
       mcp: {
         name: 'browser_observe_page',
-        description: 'List the page\'s interactive elements as numbered refs ([1] input "Search…", [2] button "Go"). Use the ref numbers with browser_click, browser_type, browser_fill_form and browser_press_key; no CSS selectors needed.',
-        properties: { tabId: BrowserActions.TAB_ID },
+        description: 'List the page\'s interactive elements as numbered refs ([1] input "Search…", [2] button "Go"). Use the ref numbers with browser_click, browser_type, browser_fill_form and browser_press_key; no CSS selectors needed. On a long page the list is cut short: pass selector to list only one part of it (a form, a dialog, a results list) in full.',
+        properties: {
+          tabId: BrowserActions.TAB_ID,
+          selector: { type: 'string', description: 'Optional CSS selector: list only the interactive elements inside the elements it matches, e.g. "form" or "[role=dialog]"' },
+        },
         required: ['tabId'],
       },
     },
@@ -160,7 +164,7 @@ class BrowserActions {
       chat: true,
       mcp: {
         name: 'browser_type',
-        description: 'Type into a field and optionally submit: the whole "search for X" flow in ONE call: focuses the field (ref from browser_observe_page or selector), types the text, and with submit=true presses Enter. Result reports whether the page navigated. The evidence field of the result reports what visibly changed (outcome navigated, new_tab, dialog, changed or no_change, plus a list of changes); no_change means the action did nothing.',
+        description: 'Type into a field and optionally submit: the whole "search for X" flow in ONE call: focuses the field (ref from browser_observe_page or selector), types the text, and with submit=true presses Enter. A rich-text editor that lives in an iframe is typed into by targeting the iframe (its ref, listed as input:richtext, or a selector for it). Result reports whether the page navigated. The evidence field of the result reports what visibly changed (outcome navigated, new_tab, dialog, changed or no_change, plus a list of changes); no_change means the action did nothing.',
         properties: {
           tabId: BrowserActions.TAB_ID,
           ref: BrowserActions.REF,
@@ -331,10 +335,11 @@ class BrowserActions {
       rest: { method: 'get', path: '/tabs/:id/source', handler: 'getTabSource' },
       mcp: {
         name: 'browser_get_source',
-        description: 'Get the HTML source code of a tab. Supports multiple extraction types: full (complete HTML), clean (removes scripts/styles/data:image/empty tags - default), minimal (basic structure), text (text content only)',
+        description: 'Read the page in a tab. To READ content use type markdown (headings, lists, tables and links kept, smallest) or text (the visible text, one line per block); the HTML types are for inspecting structure: clean (scripts, styles and empty tags removed, default), minimal (tags with id and class only) and full (everything). Pass selector to read only part of the page, e.g. "main" to skip the header and footer.',
         properties: {
           tabId: { type: 'number', description: 'The ID of the tab to get source from' },
-          type: { type: 'string', enum: ['full', 'clean', 'minimal', 'text'], description: 'Extraction type (default: clean)', default: 'clean' },
+          type: { type: 'string', enum: ['full', 'clean', 'minimal', 'text', 'markdown'], description: 'Extraction type (default: clean)', default: 'clean' },
+          selector: { type: 'string', description: 'Optional CSS selector: read only the elements it matches (all of them, in page order) instead of the whole page' },
         },
         required: ['tabId'],
       },
@@ -346,11 +351,11 @@ class BrowserActions {
       rest: { method: 'post', path: '/tabs/:id/extract-data', handler: 'extractData' },
       mcp: {
         name: 'browser_extract_data',
-        description: 'Extract structured data from repeating page elements (search results, product cards, table rows): returns one object per row, no JS injection needed. baseSelector matches each repeating item; childSelectors map field names to CSS selectors relative to one item; each value is the matched element\'s text content.',
+        description: 'Extract structured data from repeating page elements (search results, product cards, table rows): returns one object per row, no JS injection needed. baseSelector matches each repeating item; childSelectors map field names to CSS selectors relative to one item; each value is the matched element\'s text (a form field reads as what it holds). End a child selector with @attribute to read an attribute instead: "a.title@href" for a link\'s URL, "img@src", "input@value"; "@href" alone reads it off the item itself.',
         properties: {
           tabId: BrowserActions.TAB_ID,
           baseSelector: { type: 'string', description: 'CSS selector matching each repeating item' },
-          childSelectors: { type: 'object', additionalProperties: { type: 'string' }, description: 'Field name → CSS selector relative to one item' },
+          childSelectors: { type: 'object', additionalProperties: { type: 'string' }, description: 'Field name → CSS selector relative to one item, optionally ending in @attribute (e.g. {"title": "a", "url": "a@href"})' },
         },
         required: ['tabId'],
       },
@@ -365,7 +370,7 @@ class BrowserActions {
         properties: {
           tabId: BrowserActions.TAB_ID,
           itemSelector: { type: 'string', description: 'CSS selector matching each list item' },
-          childSelectors: { type: 'object', additionalProperties: { type: 'string' }, description: 'Field name → CSS selector relative to one item. Without it each item is {text, href}' },
+          childSelectors: { type: 'object', additionalProperties: { type: 'string' }, description: 'Field name → CSS selector relative to one item, optionally ending in @attribute (e.g. "a@href"). Without it each item is {text, href}' },
           maxItems: { type: 'number', description: 'Stop after this many items (default: 200)', default: 200 },
           maxScrolls: { type: 'number', description: 'Stop after this many scrolls or load-more clicks (default: 30)', default: 30 },
         },
@@ -395,9 +400,10 @@ class BrowserActions {
       rest: { method: 'get', path: '/tabs/:id/screenshot', handler: 'screenshotTab' },
       mcp: {
         name: 'browser_screenshot',
-        description: 'Capture a screenshot of a browser tab as a PNG. The viewport image is sized in CSS pixels, so any point on it can be passed straight to browser_click_at. marks=true draws each interactive element\'s ref number on the image (the same refs browser_click takes).',
+        description: 'Capture a screenshot of a browser tab as a PNG. The viewport image is sized in CSS pixels, so any point on it can be passed straight to browser_click_at. marks=true draws each interactive element\'s ref number on the image (the same refs browser_click takes). To read small text on a long page, pass selector and capture just that element: a full-page image of a long page is scaled down until its text is unreadable.',
         properties: {
           tabId: { type: 'number', description: 'The ID of the tab to screenshot' },
+          selector: { type: 'string', description: 'Optional CSS selector: capture only the first element it matches, whole, at full size (the page scrolls to it); fullPage and marks are ignored. Its pixels are not browser_click_at coordinates.' },
           fullPage: { type: 'boolean', description: 'If true, captures the entire scrollable page (not just viewport). Full-page pixels are document coordinates, not browser_click_at coordinates.', default: false },
           marks: { type: 'boolean', description: 'Overlay numbered boxes on the interactive elements (set-of-marks) and return their ref list', default: false },
           fullResolution: { type: 'boolean', description: 'Keep device pixels (e.g. 1.5x on a 150% display) instead of CSS pixels. Coordinates then need dividing by the reported scale before browser_click_at.', default: false },

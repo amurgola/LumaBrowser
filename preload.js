@@ -160,6 +160,8 @@ try {
     cycle: (delta) => ipcRenderer.invoke('tab-view:cycle', delta),
     selectIndex: (n) => ipcRenderer.invoke('tab-view:select-index', n),
     reopenClosed: () => ipcRenderer.invoke('tab-view:reopen-closed'),
+    focusChrome: () => ipcRenderer.invoke('tab-view:focus-chrome'),
+    focusPage: () => ipcRenderer.invoke('tab-view:focus-page'),
     setPinned: (tabId, pinned) => ipcRenderer.invoke('tab-view:set-pinned', tabId, pinned),
     print: (tabId) => ipcRenderer.invoke('tab-view:print', tabId),
     toggleDevTools: (tabId) => ipcRenderer.invoke('tab-view:toggle-devtools', tabId),
@@ -187,6 +189,12 @@ try {
     showDownloadInFolder: (id) => ipcRenderer.invoke('tab-view:download-show', id),
     cancelDownload: (id) => ipcRenderer.invoke('tab-view:download-cancel', id),
     clearDownloads: () => ipcRenderer.invoke('tab-view:download-clear'),
+    onDownloadsChanged: (cb) => {
+      const listener = () => cb();
+      ipcRenderer.on('tab-view:downloads-changed', listener);
+      return () => ipcRenderer.removeListener('tab-view:downloads-changed', listener);
+    },
+    openDownloadsPage: () => ipcRenderer.invoke('core.downloads.openPage'),
     onMoved: (cb) => {
       const listener = (_e, payload) => cb(payload);
       ipcRenderer.on('tab:moved', listener);

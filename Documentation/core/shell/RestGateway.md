@@ -12,10 +12,24 @@ Thin facade over `rest-gateway/`:
 [McpProxyRoutes](rest-gateway/McpProxyRoutes.md),
 [HealthRoutes](rest-gateway/HealthRoutes.md).
 
+## CORS
+
+- Under the guarded prefixes (`RestGateway.GUARDED_PREFIXES`: `/api`, `/llm-ui`,
+  `/dashboard-ui`, `/artifacts`) a page on another origin gets CORS headers,
+  with its own origin echoed, only when the request shows a credential
+  (`Authorization` or `X-Api-Key`) or is a preflight asking to send one.
+  Without them there are no CORS headers, so the page cannot read the reply.
+  [ApiSecurity](ApiSecurity.md) still decides whether the request is served.
+- Everywhere else (`/sharing`, `/hooks`) every reply carries
+  `Access-Control-Allow-Origin: *` as before: paired clients and webhook
+  senders already in the field depend on it, and those routes have their own
+  credentials.
+
 ## Methods
 
 - `new RestGateway(port = 3000, { apiSecurity?, rawBodyPrefixes? })`.
-  `apiSecurity.middleware()` is mounted on `/api` before every route. Paths equal
+  `apiSecurity.middleware()` is mounted on `/api` before every route and before
+  the body parsers, so a refused request never has its body read. Paths equal
   to or under a raw-body prefix skip the JSON (50 MB limit) and urlencoded
   parsers. Public fields: `port`, `app`, `server`, plus the bind state
   `listening`, `lastError` and `conflict` (the last one is written by

@@ -29,7 +29,7 @@ class WindowServices {
 
   _mountGatewayPages() {
     const app = this._s.restGateway.getApp();
-    const guard = this._s.apiSecurity.middleware();
+    const guard = this._s.apiSecurity.middleware({ allowNavigation: true });
     new StaticUiRoutes({ app, guard, rootDir: this._ctx.rootDir, extensionManager: this._s.extensionManager }).mount();
     new ArtifactRoutes({
       app,

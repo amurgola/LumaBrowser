@@ -8,7 +8,10 @@ Runs one admitted tool call on whatever owns it.
 
 - `new ToolDispatch({ table, toolSet, ctx })`: `ctx` is the run's tool context
   (see [ChatToolHandler](handlers/ChatToolHandler.md)).
-- `dispatch(name, params, browserService)`: a built-in handler from the
+- `dispatch(name, params, browserService)`: when `ctx.forGuest` (a run for a
+  paired client), [GuestTargetGuard](GuestTargetGuard.md) is asked first and a
+  refusal comes back as `{ success: false, error }` without running anything.
+  Then: a built-in handler from the
   [ChatToolTable](ChatToolTable.md); else a mode tool's handler called with
   `(params || {}, { conversationId, assistantMessageId, deps, emit, isAborted,
   artifacts, onArtifact, trace })` (`trace` is the turn's live

@@ -62,14 +62,39 @@ class DownloadManager extends EventEmitter {
     }
   }
 
+  async copyLink(id) {
+    const rec = this.downloads.get(Number(id));
+    if (!rec || !rec.info.url) return { success: false, error: 'This download has no link' };
+    try {
+      await DownloadManager._clipboard().writeText(rec.info.url);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  remove(id) {
+    const rec = this.downloads.get(Number(id));
+    if (!rec) return { success: false, error: 'Download not found' };
+    if (rec.info.state === 'progress') return { success: false, error: 'Download is still in progress' };
+    this.downloads.delete(Number(id));
+    this._forget();
+    return { success: true };
+  }
+
   clearFinished(sinceMs = null) {
     for (const [id, rec] of this.downloads) {
       if (rec.info.state === 'progress') continue;
       if (sinceMs != null && (rec.info.startedAt || 0) < sinceMs) continue;
       this.downloads.delete(id);
     }
-    this._save();
+    this._forget();
     return { success: true };
+  }
+
+  _forget() {
+    this._save();
+    this.emit('changed');
   }
 
   _createInfo(id, item) {
@@ -167,6 +192,10 @@ class DownloadManager extends EventEmitter {
 
   static _shell() {
     return require('electron').shell;
+  }
+
+  static _clipboard() {
+    return require('electron').clipboard;
   }
 
   static _safe(fn, fallback) {

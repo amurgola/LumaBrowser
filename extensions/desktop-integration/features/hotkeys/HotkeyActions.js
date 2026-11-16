@@ -1,5 +1,5 @@
 class HotkeyActions {
-  static IDS = ['read-selection', 'rewrite-selection', 'clipboard-to-chat', 'screenshot-to-chat'];
+  static IDS = ['read-selection', 'rewrite-selection', 'clipboard-to-chat', 'screenshot-to-chat', 'dictate'];
   static SPEECH_MS_PER_CHAR = 70;
   static NO_ACTIVITY = {
     enabled: () => false, reading: () => null, flash: () => false, dispose: () => {}, concealed: (fn) => fn(),
@@ -8,8 +8,9 @@ class HotkeyActions {
   static PROMPT_MAX_CHARS = 4000;
   static SPEAK_MAX_CHARS = 4000;
 
-  constructor({ speech, handoff, selection, rewriter, region, clipboard, screenText = null, options = () => ({}), onError = null, now = Date.now, activity = null }) {
+  constructor({ speech, handoff, selection, rewriter, region, clipboard, screenText = null, options = () => ({}), onError = null, now = Date.now, activity = null, dictate = null }) {
     this._screenText = screenText;
+    this._dictate = dictate;
     this._speech = speech;
     this._handoff = handoff;
     this._selection = selection;
@@ -27,7 +28,12 @@ class HotkeyActions {
 
   supported(id) {
     if (id === 'read-selection' || id === 'rewrite-selection') return this._selection.supported;
+    if (id === 'dictate') return !!this._dictate && this._dictate.supported;
     return HotkeyActions.IDS.includes(id);
+  }
+
+  dictating() {
+    return !!this._dictate && this._dictate.listening();
   }
 
   busy() {
@@ -45,6 +51,7 @@ class HotkeyActions {
     if (!this.supported(id)) return { disabled: true, note: 'Not available on this system' };
     if (id === 'read-selection' && this.speaking()) return { disabled: false, note: 'Stops reading aloud' };
     if (this._running.has(id)) return { disabled: true, note: 'Already running' };
+    if (id === 'dictate') return this._dictate.readiness();
     if (id === 'read-selection') {
       if (!this._speech || !this._speech.available()) return { disabled: true, note: 'Install a voice first (Settings > Voice)' };
       if (!this.canReadScreen()) return { disabled: false, note: 'Reads the selected text aloud' };
@@ -83,6 +90,7 @@ class HotkeyActions {
         case 'read-selection': return await this.readSelection(source);
         case 'rewrite-selection': return await this.rewriteSelection();
         case 'clipboard-to-chat': return await this.clipboardToChat(source);
+        case 'dictate': return await this._dictate.toggle();
         default: return await this.screenshotToChat(source);
       }
     } catch (err) {
@@ -191,6 +199,7 @@ class HotkeyActions {
 
   dispose() {
     if (this.speaking()) this.stopSpeaking();
+    if (this._dictate) this._dictate.dispose();
     this._activity.dispose();
   }
 

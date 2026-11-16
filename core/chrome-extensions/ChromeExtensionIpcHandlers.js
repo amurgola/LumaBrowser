@@ -39,6 +39,7 @@ class ChromeExtensionIpcHandlers {
     ipcMain.handle('core.chromeExtensions.checkUpdate', IpcEnvelope.enveloped(async (_event, id) => ({
       update: await this._storeInstaller.checkForUpdate(id),
     })));
+    ipcMain.handle('core.chromeExtensions.badges', IpcEnvelope.raw((event) => this._badgesFor(event)));
     ipcMain.handle('core.chromeExtensions.openPage', IpcEnvelope.enveloped(async (event, id, kind, at) => (
       this._pageWindows.open(id, kind, ChromeExtensionIpcHandlers._anchorFrom(event, at))
     )));
@@ -56,6 +57,12 @@ class ChromeExtensionIpcHandlers {
         enabled: ext ? ext.enabled : false,
       };
     });
+  }
+
+  _badgesFor(event) {
+    const bridge = this._service.bridge;
+    const win = event && event.sender ? BrowserWindow.fromWebContents(event.sender) : null;
+    return bridge && win ? bridge.badges.badgesForWindow(win) : {};
   }
 
   _closePages(id) {

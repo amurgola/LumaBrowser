@@ -6,7 +6,7 @@ Main-process side of Desktop Integration, the local `/api/desktop` API for
 desktop clients (see the [README](README.md) for the client and feature
 contract). Builds the [DesktopToken](DesktopToken.md), the
 [ClientRegistry](ClientRegistry.md), the shared services
-([ChatHandoff](shared/ChatHandoff.md), [Speech](shared/Speech.md),
+([ChatHandoff](shared/ChatHandoff.md), [Speech](shared/Speech.md), [Dictation](shared/Dictation.md),
 [AppWindows](shared/AppWindows.md)), the [DesktopHandshake](DesktopHandshake.md)
 and the [FeatureRegistry](FeatureRegistry.md) over the modules
 [FeatureCatalog](FeatureCatalog.md) finds in `features/`; registers
@@ -15,11 +15,11 @@ and the [FeatureRegistry](FeatureRegistry.md) over the modules
 ## Methods
 
 - `new DesktopIntegrationExtension(overrides?)`: test overrides `{ featuresDir,
-  handshakePath, version, broadcast, handoff, speech, windows, random, now }`.
+  handshakePath, version, broadcast, handoff, speech, dictation, windows, random, now }`.
 - `activate(context)`: builds the parts, discovers and starts the enabled
   features, registers IPC, resolves the public API. The handshake is not
   written yet: the port is only known once `routes.js` runs.
-- `deactivate()`: disposes every feature, stops speech, removes the handshake
+- `deactivate()`: disposes every feature, stops speech, cancels dictation, removes the handshake
   file if it still holds our token.
 - `getApi()`: the public API, or null while inactive.
 
@@ -33,7 +33,7 @@ handshake, emits `features.changed`), `setFeatureSetting(id, key, value)`
 (one settingsSchema value), `listClients()`, `clearClients()`,
 `setGatewayPort(port)` (called by `routes.js`; writes the handshake),
 `handshakePath()`, `desktopToken()`, `clientRegistry()`, `featureRegistry()`,
-and the shared `handoff`, `speech`, `windows` objects.
+and the shared `handoff`, `speech`, `dictation`, `windows` objects.
 
 ## Entry files
 

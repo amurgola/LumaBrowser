@@ -3,6 +3,7 @@ import Dialogs from '../../../core/llm-server/ui/js/dialogs/Dialogs.js';
 export default class ChromeExtensionButtons {
   static CHANGED_EVENT = 'chrome-extensions:changed';
   static MODIFIED_EVENT = 'chrome-extensions:modified';
+  static BADGES_CHANNEL = 'chrome-extensions:badges';
   static POPUP_GAP = 4;
   static MENU_WIDTH = 220;
 
@@ -11,6 +12,7 @@ export default class ChromeExtensionButtons {
     this._menu = popupMenu;
     this._openSettings = openSettings;
     this._signature = '';
+    this._badges = {};
   }
 
   install() {
@@ -18,12 +20,14 @@ export default class ChromeExtensionButtons {
     if (!this._el || !window.ipcBridge) return;
     document.addEventListener(ChromeExtensionButtons.CHANGED_EVENT, (e) => this._render(e.detail));
     window.addEventListener('focus', () => this.refresh());
+    if (typeof window.ipcBridge.on === 'function') window.ipcBridge.on(ChromeExtensionButtons.BADGES_CHANNEL, (badges) => this._showBadges(badges));
     this.refresh();
   }
 
   async refresh() {
     try {
       this._render(await window.ipcBridge.invoke('core.chromeExtensions.list'));
+      this._showBadges(await window.ipcBridge.invoke('core.chromeExtensions.badges'));
     } catch (_) {}
   }
 
@@ -64,7 +68,30 @@ export default class ChromeExtensionButtons {
       e.preventDefault();
       this.showMenu(ext, btn);
     });
+    this._paintBadge(btn);
     return btn;
+  }
+
+  _showBadges(badges) {
+    this._badges = badges && typeof badges === 'object' ? badges : {};
+    if (!this._el) return;
+    for (const btn of this._el.querySelectorAll('.chrome-ext-btn')) this._paintBadge(btn);
+  }
+
+  _paintBadge(btn) {
+    const badge = this._badges[btn.dataset.extId];
+    let label = btn.querySelector('.chrome-ext-btn-badge');
+    if (!badge || !badge.text) {
+      if (label) label.remove();
+      return;
+    }
+    if (!label) {
+      label = document.createElement('span');
+      label.className = 'chrome-ext-btn-badge';
+      btn.appendChild(label);
+    }
+    label.textContent = badge.text;
+    label.style.backgroundColor = badge.color || '';
   }
 
   showMenu(ext, btn) {

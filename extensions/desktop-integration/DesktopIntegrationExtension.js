@@ -12,6 +12,7 @@ const FeatureDeps = require('./FeatureDeps');
 const AppWindows = require('./shared/AppWindows');
 const ChatHandoff = require('./shared/ChatHandoff');
 const Speech = require('./shared/Speech');
+const Dictation = require('./shared/Dictation');
 const ActivityOverlay = require('./shared/ActivityOverlay');
 const GlobalShortcuts = require('./shared/GlobalShortcuts');
 const KWinPlacement = require('./shared/KWinPlacement');
@@ -46,6 +47,7 @@ class DesktopIntegrationExtension {
     if (parts) {
       parts.registry.disposeAll();
       try { parts.speech.stop(); } catch (_) {}
+      try { parts.dictation.cancel(); } catch (_) {}
       try { parts.overlay.dispose(); } catch (_) {}
       try { parts.shortcuts.dispose(); } catch (_) {}
       if (parts.bridge) { try { parts.bridge.stop(); } catch (_) {} }
@@ -76,6 +78,10 @@ class DesktopIntegrationExtension {
       getTts: () => (context.sharedServices && context.sharedServices.ttsServer) || null,
       send: (channel, payload) => RendererBroadcast.send(channel, payload),
     });
+    const dictation = o.dictation || new Dictation({
+      getStt: () => (context.sharedServices && context.sharedServices.sttServer) || null,
+      send: (channel, payload) => RendererBroadcast.send(channel, payload),
+    });
     const overlayLog = FeatureDeps.logger(context.logger, 'overlay');
     const kwin = KWinWindows.shared({ log: overlayLog });
     const overlay = o.overlay || new ActivityOverlay({
@@ -87,7 +93,7 @@ class DesktopIntegrationExtension {
     const hints = o.hints || new HintContributions({ log: FeatureDeps.logger(context.logger, 'hints') });
     const bridge = o.bridge !== undefined ? o.bridge : X11Bridge.forSession({ log: FeatureDeps.logger(context.logger, 'x11-bridge') });
     const shortcuts = o.shortcuts || new GlobalShortcuts({ globalShortcut: DesktopIntegrationExtension._globalShortcut(), bridge, log: FeatureDeps.logger(context.logger, 'shortcuts') });
-    const parts = { token, broadcast, clients, windows, handoff, speech, overlay, hints, bridge, shortcuts, version, now };
+    const parts = { token, broadcast, clients, windows, handoff, speech, dictation, overlay, hints, bridge, shortcuts, version, now };
     parts.handshake = new DesktopHandshake({
       filePath: o.handshakePath, version, now,
       getToken: () => token.get(),
@@ -97,7 +103,7 @@ class DesktopIntegrationExtension {
       enabled: () => (parts.registry ? parts.registry.enabledIds() : []),
       isEnabled: (id) => !!(parts.registry && parts.registry.routerFor(String(id))),
     };
-    const deps = new FeatureDeps(context, { broadcast, handoff, speech, overlay, hints, bridge, shortcuts, windows, clients, features, appInfo: () => this._appInfo(parts) });
+    const deps = new FeatureDeps(context, { broadcast, handoff, speech, dictation, overlay, hints, bridge, shortcuts, windows, clients, features, appInfo: () => this._appInfo(parts) });
     parts.registry = new FeatureRegistry({
       db: context.db,
       buildDeps: (descriptor) => deps.build(descriptor),
@@ -108,7 +114,7 @@ class DesktopIntegrationExtension {
   }
 
   _buildApi(parts) {
-    const { token, clients, registry, handshake, handoff, speech, windows } = parts;
+    const { token, clients, registry, handshake, handoff, speech, dictation, windows } = parts;
     return {
       info: () => this._info(parts),
       hello: () => ({ name: DesktopIntegrationExtension.APP_NAME, apiBase: DesktopIntegrationExtension.API_BASE, version: parts.version }),
@@ -125,6 +131,7 @@ class DesktopIntegrationExtension {
       featureRegistry: () => registry,
       handoff,
       speech,
+      dictation,
       windows,
     };
   }

@@ -76,7 +76,7 @@ class ActionWatcher {
 
   _recordNewTab(tab) {
     if (!tab || this._tabId == null) return;
-    if (Number(tab.openerTabId) === Number(this._tabId)) this.state.newTabs.push({ id: tab.id, url: tab.url || '' });
+    if (Number(tab.openerTabId) === Number(this._tabId)) this.state.newTabs.push({ id: tab.id, url: tab.url || '', silent: !!tab.silent });
   }
 
   _teardownPageObserver() {

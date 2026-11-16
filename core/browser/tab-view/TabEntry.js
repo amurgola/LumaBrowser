@@ -26,6 +26,7 @@ class TabEntry {
     this.openerTabId = Number.isFinite(openerTabId) ? openerTabId : null;
     this.lastNavigatedAt = null;
     this.lastActivatedAt = null;
+    this.chromeHoldsKeyboard = false;
     this.lastHttpStatus = null;
     this.favicon = null;
     this.history = [];
@@ -43,6 +44,10 @@ class TabEntry {
     const decision = NavigationGenerations.decide(this._nav, kind, payload);
     this._nav = decision.nav;
     return decision;
+  }
+
+  hasShownPage() {
+    return this.lastNavigatedAt !== null || this._errorPageFor !== null;
   }
 
   isInternal() {

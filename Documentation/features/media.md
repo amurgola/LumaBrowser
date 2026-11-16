@@ -52,6 +52,7 @@ MiniMax-Music3 (CUDA, Linux or WSL2, about 34 GB of video memory).
 
 ## Voice
 
-- **Speech to text:** Parakeet, Qwen3-ASR and whisper.cpp.
+- **Speech to text:** Parakeet, Qwen3-ASR and whisper.cpp. The same model
+  powers [dictation into any app](computer-use.md#system-wide-hotkeys).
 - **Text to speech:** Kokoro, Pocket TTS, KittenTTS and Piper voices.
 - **Voice cloning:** Chatterbox and KittenTTS 2.

@@ -29,8 +29,13 @@ export default class SharingWebTools {
   render(cfg) {
     if (!this._wrap) return;
     this._groups = Array.isArray(cfg.toolGroups) ? cfg.toolGroups : [];
-    this._allowed = Array.isArray(cfg.webAllowedTools) ? new Set(cfg.webAllowedTools) : new Set(this._allNames());
+    this._allowed = new Set(SharingWebTools.ticked(cfg));
     this.draw();
+  }
+
+  static ticked(cfg) {
+    if (Array.isArray(cfg.webAllowedTools)) return cfg.webAllowedTools;
+    return Array.isArray(cfg.webDefaultTools) ? cfg.webDefaultTools : [];
   }
 
   draw() {
@@ -51,8 +56,7 @@ export default class SharingWebTools {
   }
 
   static payload(names, allowed) {
-    const allOn = names.length > 0 && names.every((n) => allowed.has(n));
-    return allOn ? null : [...allowed];
+    return names.filter((name) => allowed.has(name));
   }
 
   _allNames() {

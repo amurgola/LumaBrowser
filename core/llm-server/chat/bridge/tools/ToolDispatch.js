@@ -1,4 +1,5 @@
 const BrowserTools = require('../../../../llm-service/BrowserTools');
+const GuestTargetGuard = require('./GuestTargetGuard');
 const McpResultUnwrapper = require('./McpResultUnwrapper');
 const ToolProgress = require('./ToolProgress');
 
@@ -10,11 +11,17 @@ class ToolDispatch {
   }
 
   async dispatch(name, params, browserService) {
+    const refused = await this._guestRefusal(params, browserService);
+    if (refused) return { success: false, error: refused };
     const handler = this._table.handlerFor(name);
     if (handler) return handler.execute(name, params, this._ctx);
     if (this._toolSet.injected.handlers.has(name)) return this._runInjected(name, params);
     if (this._toolSet.extToolNames.has(name) && this._toolSet.mcpAggregator) return this._runExtension(name, params);
     return BrowserTools.executeTool(name, params, browserService);
+  }
+
+  _guestRefusal(params, browserService) {
+    return this._ctx.forGuest ? GuestTargetGuard.refusal(params, browserService) : null;
   }
 
   async _runInjected(name, params) {

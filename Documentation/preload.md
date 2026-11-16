@@ -17,6 +17,9 @@ self-contained CommonJS file (an allowed exception to one class per file).
 `on*` methods pass only the payload and return an unsubscribe function.
 `ipcBridge` is the generic `invoke/send/on` passthrough extensions use.
 
+`tabAPI.focusChrome()` (`tab-view:focus-chrome`) and `tabAPI.focusPage()` (`tab-view:focus-page`) move the
+keyboard between this window's chrome and its active page ([TabActivation](core/browser/tab-view/TabActivation.md)).
+
 `electronAPI.getPromptApiStatus()` (`core.promptApi.getStatus`, `{ enabled, running }`) and
 `electronAPI.setPromptApiEnabled(enabled)` (`core.promptApi.setEnabled`) serve the "Local model for web pages"
 switch ([PromptApiSwitch](ui/shell/settings/general/PromptApiSwitch.md)).

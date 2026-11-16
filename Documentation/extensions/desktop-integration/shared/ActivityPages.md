@@ -45,4 +45,4 @@ Variable).
   the id of the next clicked action; `window.__island.release()` resolves
   pending waits with null. The pill opens from a dot (a `clip-path` reveal) and
   closes the same way.
-- `RING_PAD`, `dataUrl(html)`, `ICONS` (inline 16px SVGs: pause, play, stop, open, close).
+- `RING_PAD`, `dataUrl(html)`, `ICONS` (inline 16px SVGs: pause, play, stop, open, close, check).

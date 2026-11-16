@@ -121,3 +121,24 @@
     font-size: var(--text-xs);
     font-weight: 600;
 }
+.chrome-ext-btn { position: relative; }
+.chrome-ext-btn-badge {
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    min-width: 12px;
+    max-width: 28px;
+    padding: 0 3px;
+    box-sizing: border-box;
+    border-radius: var(--radius-sm);
+    background: #5f6368;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 12px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    pointer-events: none;
+}

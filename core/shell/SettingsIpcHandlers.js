@@ -34,6 +34,7 @@ class SettingsIpcHandlers {
     this._setup = new SetupCompletion({ db, onSetupFinalized });
     this._webhook = new WebhookTester();
     this._security = new ApiSecuritySettings(apiSecurity);
+    this._apiSecurity = apiSecurity || null;
   }
 
   register() {
@@ -143,7 +144,7 @@ class SettingsIpcHandlers {
   }
 
   _mcpEntry() {
-    return McpServerEntry.build({ db: this._db, rootDir: this._rootDir, isPackaged: app.isPackaged });
+    return McpServerEntry.build({ db: this._db, rootDir: this._rootDir, isPackaged: app.isPackaged, apiSecurity: this._apiSecurity });
   }
 
   _chooseMcpExportPath() {

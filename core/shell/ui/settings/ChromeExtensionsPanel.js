@@ -18,8 +18,8 @@ export default class ChromeExtensionsPanel {
               <p class="gs-api-list">action, alarms, clipboard, extension, i18n, idle, management, offscreen, runtime, scripting, storage, tabs (subset), webRequest (subset)</p>
 
               <h5 class="gs-group-subtitle">Provided by LumaBrowser</h5>
-              <p class="gs-api-list">webNavigation (events and frame queries), contextMenus (items appear in the page's right-click menu), storage.sync (kept locally)</p>
-              <p>webNavigation and contextMenus work from an extension's background service worker, which is where extensions use them.</p>
+              <p class="gs-api-list">webNavigation (events and frame queries), contextMenus (items appear in the page's right-click menu), tabs (the active tab, queries, and the created, updated, activated and removed events), action badge text and color (shown on the toolbar button), storage.sync (kept locally)</p>
+              <p>These work from an extension's background service worker and from its popup, which is where extensions use them.</p>
 
               <h5 class="gs-group-subtitle">Shimmed with inert stubs</h5>
               <p class="gs-api-list">windows, declarativeNetRequest, cookies, notifications, privacy, permissions, commands, sidePanel, userScripts, native messaging</p>
@@ -31,7 +31,7 @@ export default class ChromeExtensionsPanel {
                 <li><b>Password managers (Bitwarden, Proton Pass)</b>: unlock and manage the vault from the extension's toolbar button next to the address bar (or <b>Open</b> on its card here); autofill runs from the in-page menu and from the page's right-click menu. Pop-out windows and desktop-app biometrics do nothing. Managers that need a desktop app (1Password, KeePassXC) cannot reach it: native messaging is not available.</li>
                 <li><b>Content-script extensions (Dark Reader, Stylus, site helpers)</b>: generally work.</li>
                 <li><b>MV3 extensions</b>: service worker lifecycle and <code>declarativeNetRequest</code> are missing. Prefer MV2 builds where available.</li>
-                <li><b>Toolbar buttons</b>: every enabled extension with a popup gets a button next to the address bar that opens it, as in Chrome. Badge text and icons the extension changes at run time are not shown. <b>Options</b> opens its settings page in its own window.</li>
+                <li><b>Toolbar buttons</b>: every enabled extension with a popup gets a button next to the address bar that opens it, as in Chrome. The badge an extension sets (a password manager's count of logins for the page) shows on the button; icons it changes at run time are not shown. <b>Options</b> opens its settings page in its own window.</li>
                 <li><b>Script managers (Tampermonkey, Violentmonkey)</b>: need the <code>userScripts</code> API and do not run scripts.</li>
               </ul>
 

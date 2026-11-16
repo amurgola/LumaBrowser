@@ -8,11 +8,14 @@ Diffs the page fingerprints taken before and after an input action into evidence
 
 - `ActionEvidence.compare(before, after, ctx)` returns
   `{ outcome, changes, note?, stateKey?, settled?, waitedMs? }`. Pure: every input
-  is a plain value. `ctx` is `{ navigated, inPage, url, newTabs: [{ id, url }], settle }`.
+  is a plain value. `ctx` is `{ navigated, inPage, url, newTabs: [{ id, url, silent? }], settle }`.
   - `outcome` is one of `new_tab`, `navigated`, `dialog`, `changed`, `no_change`, `unknown`,
     in that precedence.
   - `changes` is human-readable (`'url changed to ...'`, `'focus moved to input "Search"'`,
-    `'text grew by 420 chars'`, `'a new tab opened (tab 9): ...'`). At most three new tabs are listed.
+    `'text grew by 420 chars'`, `'a new tab opened (tab 9, silent): ...'`). At most three new tabs are
+    listed. A new tab with a boolean `silent` says whether the user can see it: `(tab 9, silent)` for one
+    opened from a silent tab, `(tab 9, visible to the user)` for one that went into the strip; without
+    the flag it is `(tab 9)`.
   - `note` explains `no_change` and `unknown`.
 - `ActionEvidence.stateKey(fp)` returns a short hash of url, text, interactive
   elements, dialogs and scroll, or `null` for a non-fingerprint.

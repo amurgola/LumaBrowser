@@ -103,4 +103,7 @@ to treat those runs as outside callers.
 
 The ToolCallPipeline also gets `vaultCaller` (`VaultToolsHandler.callerOf` of the run) for key placeholders.
 
-Option `withholdTools` is passed to `RunToolSet`.
+Option `withholdTools` is passed to `RunToolSet`. Option `forGuest` (a turn run
+for a paired Network Sharing client) reaches the tool context, where
+[ToolDispatch](tools/ToolDispatch.md) keeps the run's calls off this computer's
+own addresses, files and internal pages.

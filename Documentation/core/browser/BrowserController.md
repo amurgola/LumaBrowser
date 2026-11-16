@@ -16,13 +16,13 @@ selector fallback is [SelectorFallback](controller/SelectorFallback.md) shaped b
 
 | Handler | Route | Tab manager call | Failure status |
 |---|---|---|---|
-| `getAllTabs` | GET /tabs?includeSilent | `getAllTabs({ includeSilent })` | 500 |
-| `getTabSource` | GET /tabs/:id/source?type | `getTabSource(id, { type = 'clean' })` | 404 |
-| `createTab` | POST /tabs { url, silent } | `createTab(url, { silent })`, 201 | 400 (url), 500 |
+| `getAllTabs` | GET /tabs?includeSilent&includeHidden | `getAllTabs(...)`, shaped by [AgentTabs](AgentTabs.md) | 500 |
+| `getTabSource` | GET /tabs/:id/source?type&selector | `getTabSource(id, { type = 'clean', selector })` | 404 |
+| `createTab` | POST /tabs { url, silent } | `createTab(url, { silent })`, 201, shaped by `AgentTabs.shape` | 400 (url), 500 |
 | `closeTab` | DELETE /tabs/:id | `closeTab(id)` | 404 |
 | `activateTab` | POST /tabs/:id/activate | `updateTab(id, { type: 'activate' })` | 400 |
 | `updateTab` | PATCH /tabs/:id | `updateTab(id, action)` | 400 (body), 404 |
-| `screenshotTab` | GET /tabs/:id/screenshot | `screenshotTab(id, options)` | 404 |
+| `screenshotTab` | GET /tabs/:id/screenshot?fullPage&cssScale&marks&selector | `screenshotTab(id, options)` | 404 |
 | `getConsoleLogs` | GET /tabs/:id/console?level | `getConsoleLogs(id, options)` | 404 |
 | `clickAt` | POST /tabs/:id/click-at | `clickAt(id, { x, y, button, clickCount })` | 400 |
 | `clickElement` | POST /tabs/:id/click | `clickElement(id, { selector, text })` + fallback | 404 |
@@ -40,5 +40,10 @@ A bad tab id is a 400 (`Invalid tab ID`), a throw anywhere a 500 (`Internal serv
 clicks (`clickElement`, `clickAt`) carry `urlChanged` and `newUrl` via
 [NavigationStamp](controller/NavigationStamp.md). Fallback replies say `(resolved by LLM)` when the
 description stood in for a missing selector and `(resolved by LLM fallback)` when it rescued a failed one.
+
+The tab list holds the strip's tabs unless `includeSilent=true` (an agent's silent tabs) or
+`includeHidden=true` (the user's hidden persisted tabs) asks for more, and no tab reply carries the
+favicon as an inline image. A source read narrowed by `selector` answers `selector` and `matched` next to
+`source`; a selector that matches nothing is the 404.
 
 `BrowserController.FALLBACK_REPLIES` holds the per-action wording; `SELECTOR_REQUIRED` the shared 400.

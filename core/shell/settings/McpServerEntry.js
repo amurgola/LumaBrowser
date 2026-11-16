@@ -7,12 +7,18 @@ class McpServerEntry {
   static PORT_KEY = 'core.apiPort';
   static DEFAULT_PORT = 3000;
 
-  static build({ db, rootDir, isPackaged }) {
+  static build({ db, rootDir, isPackaged, apiSecurity = null }) {
     const port = db.get(McpServerEntry.PORT_KEY, McpServerEntry.DEFAULT_PORT);
     const scriptPath = isPackaged
       ? path.join(rootDir, '..', 'app.asar.unpacked', McpServerEntry.SCRIPT)
       : path.join(rootDir, McpServerEntry.SCRIPT);
-    return { command: 'node', args: [scriptPath], env: { LUMA_API_PORT: String(port) } };
+    return { command: 'node', args: [scriptPath], env: { LUMA_API_PORT: String(port), ...McpServerEntry._keyEnv(apiSecurity) } };
+  }
+
+  static _keyEnv(apiSecurity) {
+    const policy = apiSecurity ? apiSecurity.getConfig() : null;
+    if (!policy || !policy.requireApiKey || !policy.apiKeys.length) return {};
+    return { LUMA_API_KEY: policy.apiKeys[0].key };
   }
 
   static clientConfig(entry) {

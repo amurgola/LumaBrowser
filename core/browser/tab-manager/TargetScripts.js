@@ -69,46 +69,67 @@ class TargetScripts {
 
   static typeValue({ text, clear, submit }) {
     return `
-(function() {
+(function() {${TargetScripts.FRAME_FIELD_SRC}
   try {
-    const el = document.querySelector('[data-luma-click-target]');
-    if (!el) return { success: false, error: 'target field vanished before typing' };
-    el.removeAttribute('data-luma-click-target');
+    const marked = document.querySelector('[data-luma-click-target]');
+    if (!marked) return { success: false, error: 'target field vanished before typing' };
+    marked.removeAttribute('data-luma-click-target');
+    if (marked.tagName === 'SELECT') return { success: false, error: 'target is a <select>; use fill_form with a value instead' };
+    const framed = marked.tagName === 'IFRAME' || marked.tagName === 'FRAME';
+    const el = framed ? frameField(marked) : marked;
+    if (!el) return { success: false, error: 'target frame has no text field this page can reach (it is cross-origin or holds nothing editable)' };
     const tag = el.tagName;
-    if (tag === 'SELECT') return { success: false, error: 'target is a <select>; use fill_form with a value instead' };
+    // The frame's own constructors: its page checks events and values against its own window.
+    const view = el.ownerDocument.defaultView || window;
     try { el.focus(); } catch (_) {}
     const value = ${JSON.stringify(String(text))};
     const doClear = ${JSON.stringify(!!clear)};
     if (tag === 'INPUT' || tag === 'TEXTAREA') {
-      const proto = tag === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+      const proto = tag === 'TEXTAREA' ? view.HTMLTextAreaElement.prototype : view.HTMLInputElement.prototype;
       const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
       const next = doClear ? value : (el.value || '') + value;
       if (nativeSetter) nativeSetter.call(el, next); else el.value = next;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    } else if (el.isContentEditable) {
+      el.dispatchEvent(new view.Event('input', { bubbles: true }));
+      el.dispatchEvent(new view.Event('change', { bubbles: true }));
+    } else if (isEditable(el)) {
       el.textContent = doClear ? value : (el.textContent || '') + value;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new view.Event('input', { bubbles: true }));
     } else {
       return { success: false, error: 'target is not a text field (' + tag + ')' };
     }
     let submitted = false;
     if (${JSON.stringify(!!submit)}) {
       const opts = { key: 'Enter', code: 'Enter', bubbles: true, cancelable: true };
-      const down = new KeyboardEvent('keydown', opts);
+      const down = new view.KeyboardEvent('keydown', opts);
       const handledByPage = !el.dispatchEvent(down);
-      el.dispatchEvent(new KeyboardEvent('keypress', opts));
-      el.dispatchEvent(new KeyboardEvent('keyup', opts));
+      el.dispatchEvent(new view.KeyboardEvent('keypress', opts));
+      el.dispatchEvent(new view.KeyboardEvent('keyup', opts));
       if (!handledByPage && el.tagName === 'INPUT' && el.form) {
         if (typeof el.form.requestSubmit === 'function') el.form.requestSubmit();
         else el.form.submit();
         submitted = true;
       }
     }
-    return { success: true, submitted };
+    return framed ? { success: true, submitted, field: tag } : { success: true, submitted };
   } catch (error) { return { success: false, error: error.message }; }
 })();`.trim();
   }
+
+  static FRAME_FIELD_SRC = `
+  function isEditable(node) {
+    return !!node && (node.isContentEditable || (node.ownerDocument && node.ownerDocument.designMode === 'on'));
+  }
+  function isTextField(node) {
+    return !!node && (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || isEditable(node));
+  }
+  function frameField(frame) {
+    let doc = null;
+    try { doc = frame.contentDocument; } catch (_) {}
+    if (!doc) return null;
+    if (isTextField(doc.activeElement) && doc.activeElement !== doc.body) return doc.activeElement;
+    if (isEditable(doc.body)) return doc.body;
+    return doc.querySelector('[contenteditable=""], [contenteditable="true"], textarea, input:not([type="hidden"])');
+  }`;
 
   static refNumber(ref) {
     return ref != null && Number.isFinite(Number(ref)) ? Math.trunc(Number(ref)) : null;

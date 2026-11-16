@@ -3,6 +3,7 @@ class OnDemandGeometry {
   static PANEL_WIDTH = 380;
   static PANEL_HEIGHT = 520;
   static MARGIN = 16;
+  static EDGE_PADDING = 10;
   static MIN_PANEL_HEIGHT = 240;
 
   static defaultPosition(rect, iconSize = OnDemandGeometry.ICON_SIZE) {
@@ -13,13 +14,11 @@ class OnDemandGeometry {
   }
 
   static clampPosition(pos, rect, iconSize = OnDemandGeometry.ICON_SIZE) {
-    const maxX = Math.max(0, (rect.width || 0) - iconSize);
-    const maxY = Math.max(0, (rect.height || 0) - iconSize);
     const x = Number.isFinite(pos && pos.x) ? pos.x : 0;
     const y = Number.isFinite(pos && pos.y) ? pos.y : 0;
     return {
-      x: Math.round(OnDemandGeometry._clamp(x, 0, maxX)),
-      y: Math.round(OnDemandGeometry._clamp(y, 0, maxY)),
+      x: Math.round(OnDemandGeometry._clampInside(x, rect.width || 0, iconSize)),
+      y: Math.round(OnDemandGeometry._clampInside(y, rect.height || 0, iconSize)),
     };
   }
 
@@ -44,6 +43,12 @@ class OnDemandGeometry {
   static _growFrom(start, size, extent, iconSize) {
     const origin = start + size <= extent ? start : start + iconSize - size;
     return Math.max(0, Math.min(origin, Math.max(0, extent - size)));
+  }
+
+  static _clampInside(value, extent, iconSize) {
+    const room = Math.max(0, extent - iconSize);
+    const padding = Math.min(OnDemandGeometry.EDGE_PADDING, room / 2);
+    return OnDemandGeometry._clamp(value, padding, room - padding);
   }
 
   static _clamp(value, min, max) {

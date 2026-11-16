@@ -60,6 +60,12 @@ can act inside that window when desktop control is allowed.
 Read the selection aloud, rewrite it, or send the clipboard or a screen region
 to chat. On Windows, macOS (needs the Accessibility permission) and Linux.
 
+- **Dictate anywhere:** press Ctrl+Alt+Shift+D in any app, speak, and press it
+  again: what you said is typed into the text box you are in, in LumaBrowser
+  or any other program. It uses the speech recognition model on your machine,
+  so nothing you say leaves it. Once speech recognition is set up, the key or
+  combination is yours to choose under Settings > General > Dictation.
+
 ## Desktop Integration API
 
 A token-protected local API at `/api/desktop` for Windhawk mods, AutoHotkey,

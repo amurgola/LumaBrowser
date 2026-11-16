@@ -1,4 +1,5 @@
 const ElementDigest = require('../extraction/ElementDigest');
+const InputDriver = require('../InputDriver');
 const ImageOps = require('../vision/ImageOps');
 const VisionPageScripts = require('../vision/VisionPageScripts');
 const ElementDigestFormatter = require('./ElementDigestFormatter');
@@ -13,8 +14,53 @@ class TabScreenshot {
   }
 
   async capture(page, options = {}) {
+    if (options.selector) return this._captureElement(page, options.selector);
     if (options.fullPage) return this._captureFullPage(page);
     return this._captureViewport(page, options);
+  }
+
+  static elementRectScript(selector) {
+    return `(function() {
+  try {
+    var el = document.querySelector(${JSON.stringify(selector)});
+    if (!el) return { success: false, error: 'No element found for selector "' + ${JSON.stringify(selector)} + '"' };
+    el.scrollIntoView({ block: 'center', inline: 'center' });
+    var r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return { success: false, error: 'The element has no size to capture' };
+    return { success: true, x: r.left, y: r.top, width: r.width, height: r.height, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight };
+  } catch (e) { return { success: false, error: e.message }; }
+})();`;
+  }
+
+  async _captureElement(page, selector) {
+    const script = TabScreenshot.elementRectScript(selector);
+    const measured = await page.run(script);
+    if (!measured || !measured.success) return { success: false, error: (measured && measured.error) || 'Could not measure the element' };
+    const fits = measured.width <= measured.viewportWidth && measured.height <= measured.viewportHeight;
+    const image = fits
+      ? await page.webContents.capturePage(TabScreenshot._clipOf(page, measured))
+      : await TabScreenshot._captureGrown(page, script, measured);
+    if (!image) return { success: false, error: 'The element moved while it was being captured' };
+    return { success: true, data: { screenshot: image.toPNG().toString('base64'), mimeType: 'image/png', element: { selector } } };
+  }
+
+  static async _captureGrown(page, script, measured) {
+    const originalBounds = page.view.getBounds();
+    page.view.setBounds(TabScreenshot._grown(originalBounds, { width: Math.ceil(measured.width), height: Math.ceil(measured.height) }));
+    try {
+      await new Promise((resolve) => setTimeout(resolve, TabScreenshot.FULL_PAGE_LAYOUT_MS));
+      const rect = await page.run(script);
+      if (!rect || !rect.success) return null;
+      return await page.webContents.capturePage(TabScreenshot._clipOf(page, rect));
+    } finally {
+      page.view.setBounds(originalBounds);
+    }
+  }
+
+  static _clipOf(page, rect) {
+    const from = InputDriver.toDip(page.webContents, Math.max(0, rect.x), Math.max(0, rect.y));
+    const to = InputDriver.toDip(page.webContents, rect.x + rect.width, rect.y + rect.height);
+    return { x: from.x, y: from.y, width: Math.max(1, to.x - from.x), height: Math.max(1, to.y - from.y) };
   }
 
   async _captureFullPage(page) {

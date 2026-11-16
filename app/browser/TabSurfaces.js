@@ -41,6 +41,8 @@ class TabSurfaces {
     });
     this._ctx.tabManager = new TabManager(this._ctx.tabViewManager);
     if (s.vaultService) s.vaultService.attachTabs(this._ctx.tabViewManager);
+    const extensionBridge = s.chromeExtensionService && s.chromeExtensionService.bridge;
+    if (extensionBridge) extensionBridge.attachTabs(this._ctx.tabViewManager);
   }
 
   _bundleTabPreload() {

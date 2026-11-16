@@ -15,9 +15,10 @@ mod can fire them with their own keys. On by default. Wiring lives in
 | `read-selection` | `Ctrl+Alt+Shift+R` | Copies the text selected in the app in front and speaks it with `deps.speech`. Pressed again while it is still talking, it stops. With nothing selected and a chat model that can see images, the user drags over text on screen (or the window picked on the shortcut hint is used whole) and the model's transcript is spoken ([ScreenTextReader](ScreenTextReader.md)). |
 | `rewrite-selection` | `Ctrl+Alt+Shift+E` | Copies the selection, rewrites it with the chat's model (configurable instruction) and pastes the answer over the selection. If the source window cannot be brought back, the answer is left on the clipboard. |
 | `clipboard-to-chat` | `Ctrl+Alt+Shift+V` | Opens a new chat (`deps.handoff.open`) with the clipboard: text up to 4000 characters in the composer, longer text as `clipboard.txt`, an image as `clipboard.png`. |
+| `dictate` | `Ctrl+Alt+Shift+D` | Speech to text into the text box in front, in any app ([DictateAction](DictateAction.md)). The first press opens the microphone (in the main window, through `deps.dictation`) and shows a Listening island; the second press, or Done on the island, transcribes with the app's speech recognizer and pastes the text where the cursor is, leaving the clipboard as it was. Cancel on the island drops it. Needs speech recognition to be set up (a runtime and a model: click the microphone in the chat once); until then the action answers `NO_STT_MODEL`. The shortcut can also be set from Settings > General > Dictation, which appears once speech recognition is ready. |
 | `screenshot-to-chat` | `Ctrl+Alt+Shift+S` | Freezes the screen, shows a dimmed overlay on every display, the user drags a rectangle (Esc or right click cancels), and the region opens in a new chat as `screenshot.png`. With a window picked on the shortcut hint, that window is captured whole (`window.png`), no drag. |
 
-The two selection actions send Ctrl+C / Ctrl+V to the app in front, through a
+The two selection actions send Ctrl+C / Ctrl+V to the app in front (dictation sends only the paste), through a
 per-platform backend ([SelectionKeys](SelectionKeys.md)):
 
 | Platform | Copy | Paste | Notes |
@@ -47,19 +48,21 @@ selected (`NO_SELECTION`).
 
 ## Routes
 
-- `GET /api/desktop/hotkeys/` -> `{ success, platform, actions: [{ id, label, description, supported, binding, registered, conflict }], busy: [ids], speaking, hint: { on, reason } }`
+- `GET /api/desktop/hotkeys/` -> `{ success, platform, actions: [{ id, label, description, supported, binding, registered, conflict }], busy: [ids], speaking, dictating, hint: { on, reason } }`
   (`hint.reason` says why the shortcut hint is off: Wayland, no overlay, a setting; null while it runs).
   `binding` is the normalized accelerator (`''` when unbound); `conflict` says
   why a binding is not registered (taken by another program, bound to two
   actions, invalid).
 - `POST /api/desktop/hotkeys/run { action }` runs one action and answers its
   result: `{ success: true, action, ... }` (read-selection: `speaking, chars` or
-  `stopped`; rewrite-selection: `chars, restored`; the chat actions: the
+  `stopped`; rewrite-selection: `chars, restored`; dictate: `listening` on the
+  first call, `text, chars, restored` on the second; the chat actions: the
   handoff's `conversationId, autoSent, attached, rejected`, the screenshot also
   `width, height`). Failures are `{ success: false, error, code }` with status
   400 `UNKNOWN_ACTION` (or a missing action), 409 `BUSY` / `CANCELED` /
   `FOCUS_LOST`, 422 `NO_SELECTION` / `EMPTY_CLIPBOARD` / `EMPTY` / `TOO_LONG`,
-  501 `UNSUPPORTED`, 503 `NO_TTS` / `NO_MODEL`, 504 `TIMEOUT`, 500 otherwise.
+  501 `UNSUPPORTED`, 503 `NO_TTS` / `NO_MODEL` / `NO_STT` / `NO_STT_MODEL` /
+  `STT_RUNTIME_MISSING` / `NO_MICROPHONE` / `MIC_FAILED`, 504 `TIMEOUT`, 500 otherwise.
   The request waits for the action (a screenshot waits for the drag, a rewrite
   for the model), so give the client a longer timeout for those two.
 
@@ -70,7 +73,7 @@ the copying: the modifier wait covers the client's keys too.
 
 | key | type | default |
 | --- | --- | --- |
-| `binding.read-selection`, `binding.rewrite-selection`, `binding.clipboard-to-chat`, `binding.screenshot-to-chat` | hotkey | the shortcuts above; empty = no shortcut |
+| `binding.read-selection`, `binding.rewrite-selection`, `binding.clipboard-to-chat`, `binding.screenshot-to-chat`, `binding.dictate` | hotkey | the shortcuts above; empty = no shortcut |
 | `rewriteInstruction` | textarea | `Rewrite this to be clearer and more concise. Reply with only the rewritten text.` |
 | `rewriteModel` | text | `''` (the chat's current model) |
 | `rewriteTimeoutSec` | number (5 to 600) | 60 |
@@ -88,7 +91,8 @@ Bindings accept Electron accelerator text in any case (`ctrl+alt+shift+r`).
 ## Files
 
 - [HotkeysFeature](HotkeysFeature.md): wiring, routes, settings, notifications.
-- [HotkeyActions](HotkeyActions.md): the four actions.
+- [HotkeyActions](HotkeyActions.md): the actions.
+- [DictateAction](DictateAction.md): dictation into the text box in front.
 - [HotkeyBindings](HotkeyBindings.md): globalShortcut registration and status.
 - [SelectionClipboard](SelectionClipboard.md): copy and paste the selection.
 - [SelectionKeys](SelectionKeys.md): picks [NativeKeys](NativeKeys.md) (Windows), [MacKeys](MacKeys.md) + [MacApi](MacApi.md) (macOS) or [LinuxKeys](LinuxKeys.md) + [X11Api](X11Api.md) (Linux).

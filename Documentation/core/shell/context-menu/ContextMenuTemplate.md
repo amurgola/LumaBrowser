@@ -43,6 +43,5 @@ Builds the Electron menu template for one right click, Chrome style.
 
 `_addExtensions()` runs after search and before inspect, on browsing pages
 only, when the template was given `extensionItems`. It calls it with the
-webContents, params, the MenuTab's `entry` and `order`, and pushes a
-separator plus the returned items. Errors are caught and logged as
+webContents and params, and pushes a separator plus the returned items. Errors are caught and logged as
 `[ContextMenu] extension items failed:`.

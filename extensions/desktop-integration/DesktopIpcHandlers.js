@@ -11,6 +11,7 @@ class DesktopIpcHandlers {
     on('listClients', () => ({ clients: api.listClients() }));
     on('clearClients', () => ({ cleared: api.clearClients() }));
     on('speechState', (_e, update) => ({ accepted: api.speech.report(update) }));
+    on('dictationReport', (_e, update) => ({ accepted: api.dictation.report(update) }));
   }
 }
 

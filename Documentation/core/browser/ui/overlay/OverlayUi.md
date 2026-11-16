@@ -10,5 +10,7 @@ The inline `<style>` became `css/overlay-base.css`,
 the original order), after the shared `core/llm-server/ui/css/tokens.css`,
 which is the page's only palette. The page still does not load base.css (its
 body padding and background would break the edge-to-edge transparent popup).
+`overlay-menus.css` also carries the section label and the two-line row of
+[MenuHtml](../../../../ui/shell/overlay/MenuHtml.md) (the persisted tabs quick view).
 
 Globals: reads `window.overlayAPI`, `getSelection`, animation frames.

@@ -7,6 +7,11 @@ class McpServer {
   static LIST_TIMEOUT_MS = 5000;
   static CALL_TIMEOUT_MS = 300000;
   static HEALTH_TIMEOUT_MS = 2000;
+  static REFUSED_STATUSES = [401, 403];
+  static KEY_MISSING = 'LumaBrowser requires an API key and this MCP server has none. Add LUMA_API_KEY to this '
+    + "server's env (create or copy a key in LumaBrowser under Settings > API & MCP), or connect this agent again "
+    + 'from Settings > Editors & agents.';
+  static KEY_REFUSED = 'LumaBrowser refused the API key in LUMA_API_KEY. Copy a current key from Settings > API & MCP.';
 
   constructor(apiBaseUrl, io = {}) {
     this.apiBase = apiBaseUrl || McpServer._defaultApiBase();
@@ -43,17 +48,14 @@ class McpServer {
   }
 
   async listTools() {
-    try {
-      const response = await JsonHttpClient.request('GET', `${this.apiBase}/mcp/tools`, {
-        timeout: McpServer.LIST_TIMEOUT_MS,
-        headers: this._authHeaders(),
-      });
-      if (!McpServer._isOk(response)) throw new Error(`Request failed with status code ${response.status}`);
-      return { tools: (response.data && response.data.tools) || [] };
-    } catch (error) {
-      console.error('Failed to fetch tool list:', error.message);
+    const response = await this._fetchToolList();
+    if (!response) return { tools: [] };
+    if (McpServer.REFUSED_STATUSES.includes(response.status)) throw new Error(this._refusalMessage(response));
+    if (!McpServer._isOk(response)) {
+      console.error('Failed to fetch tool list:', `Request failed with status code ${response.status}`);
       return { tools: [] };
     }
+    return { tools: (response.data && response.data.tools) || [] };
   }
 
   async callTool(name, args) {
@@ -96,6 +98,24 @@ class McpServer {
       capabilities: { tools: {} },
       serverInfo: this.serverInfo,
     };
+  }
+
+  async _fetchToolList() {
+    try {
+      return await JsonHttpClient.request('GET', `${this.apiBase}/mcp/tools`, {
+        timeout: McpServer.LIST_TIMEOUT_MS,
+        headers: this._authHeaders(),
+      });
+    } catch (error) {
+      console.error('Failed to fetch tool list:', error.message);
+      return null;
+    }
+  }
+
+  _refusalMessage(response) {
+    if (response.status === 401 && !this.apiKey) return McpServer.KEY_MISSING;
+    if (response.status === 401) return McpServer.KEY_REFUSED;
+    return `LumaBrowser refused this connection: ${McpServer._errorFrom(response)}`;
   }
 
   _authHeaders() {

@@ -14,7 +14,8 @@ Decides what a page's window.open or link-to-new-window becomes.
     opener tab's, from `_popupWindowOptions(entry)`), inheriting the opener's session and requested size.
   - anything else: denied and opened as a strip tab right after the opener, in the
     opener's partition, with `openerTabId` set; `background-tab` (ctrl/cmd-click)
-    does not take focus.
+    does not take focus. A tab opened from a silent tab is silent too and is never
+    activated, whatever the disposition.
 
 - `openBlocked(tabId, index)` opens one blocked open as a tab after the opener.
 - `allowSite(tabId)` allows pop-ups for the tab's origin and opens what was blocked as background tabs;
@@ -25,6 +26,10 @@ Decides what a page's window.open or link-to-new-window becomes.
 Without a real window, `window.open()` returns null and the open-then-assign
 pattern (`w = window.open(); w.location = url`), OAuth flows, print dialogs and
 postMessage popups break. Plain link opens belong in the strip.
+
+A silent tab is an agent's background page: a link it opens must not put a tab in the user's strip or take
+the screen, so the new tab inherits `silent` (the action evidence says which, see
+[ActionEvidence](../ActionEvidence.md)).
 
 Since Electron 45 a `window.open()` child whose sandbox state differs from its opener's process is created in a
 process of its own with no opener: `window.open()` returns null and `window.opener` is null in the child, which

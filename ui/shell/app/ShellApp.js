@@ -129,7 +129,7 @@ export default class ShellApp {
     this.historyMenu = new SessionHistoryMenu({ store, popupMenu });
     this.nav = new NavButtons({ store, historyMenu: this.historyMenu });
     this.tabMenu = new TabContextMenu({ store, strip: this.strip, tabActions, contributors: this.contributors, popupMenu, host });
-    this.persistedMenu = new PersistedTabsMenu({ store, popupMenu });
+    this.persistedMenu = new PersistedTabsMenu({ store, popupMenu, favicons: this.favicons });
     this.autocomplete = new UrlAutocomplete({
       addressBar: this.addressBar, store, host, engine: this.engine, favicons: this.favicons, tabActions,
       bookmarks: () => (this.tree ? this.tree.nodes : []),

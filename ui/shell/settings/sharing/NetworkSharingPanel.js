@@ -175,7 +175,7 @@ export default class NetworkSharingPanel {
       this.applyHostConfig(r.config);
       this._feedback.markSaved(pin, true);
     } else {
-      this._feedback.markSaved(pin, false, (r && r.error) || 'Enter 4 to 8 digits.');
+      this._feedback.markSaved(pin, false, (r && r.error) || 'Enter 6 to 8 digits.');
     }
   }
 

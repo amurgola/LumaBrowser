@@ -20,6 +20,7 @@ const ChromeExtensionService = require('../../core/chrome-extensions/ChromeExten
 const ShimBridge = require('../../core/chrome-extensions/bridge/ShimBridge');
 const AdblockerService = require('../../core/adblocker/AdblockerService');
 const ApiSecurity = require('../../core/shell/ApiSecurity');
+const OpenAccessMigration = require('../../core/shell/api-security/OpenAccessMigration');
 const ActivityLogStore = require('../../core/activity-log/ActivityLogStore');
 const ActivityLogService = require('../../core/activity-log/ActivityLogService');
 const PromptApiService = require('../../core/prompt-api/PromptApiService');
@@ -48,6 +49,7 @@ class FoundationServices {
     this._buildNetworkWatching();
     this._buildIdentityAndTelemetry();
     this._buildBrowserAddOns();
+    this._s.apiAccessNarrowed = OpenAccessMigration.run(this._db, this._ctx.env);
     this._s.apiSecurity = new ApiSecurity(this._db);
     this._buildActivityLog();
     this._wireVault();

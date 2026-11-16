@@ -1,9 +1,10 @@
 const NewTabPage = require('./newtab/NewTabPage');
 const TerminalPage = require('../terminal/TerminalPage');
+const DownloadsPage = require('./downloads/DownloadsPage');
 
 class LumaPages {
   static SCHEME = NewTabPage.SCHEME;
-  static PAGES = [NewTabPage, TerminalPage];
+  static PAGES = [NewTabPage, TerminalPage, DownloadsPage];
 
   static _sessions = new WeakSet();
 

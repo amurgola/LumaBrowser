@@ -21,14 +21,19 @@ shapes the reply with [McpResult](../shell/McpResult.md). The reply-building log
 Every tab-scoped tool rejects a non-numeric `tabId` with `Invalid tab ID`. Success replies
 `{ success: true, data }` where `data` is [McpPayload](mcp/McpPayload.md)`.data(result)` unless noted.
 
-- `browser_get_tabs`: `getTabs({ includeSilent })`, data = the tab array.
+- `browser_get_tabs`: `getTabs(...)`, data = the tab array as [AgentTabs](AgentTabs.md) shapes it: the
+  strip's tabs by default, silent tabs with `includeSilent`, the user's hidden persisted tabs with
+  `includeHidden`, and never an inline favicon image.
 - `browser_create_tab`: `createTab(url, { silent })`, then [SettledTab](mcp/SettledTab.md) (waits up to
-  15 s, re-reads, ISO timestamps).
+  15 s, re-reads, ISO timestamps), shaped by `AgentTabs.shape`.
 - `browser_navigate`: `navigate`, data passed through (`finalUrl` tells a redirect).
-- `browser_close_tab` (`{ success: true }`), `browser_refresh`, `browser_execute_js`, `browser_get_source`
-  (`type` default `clean`), `browser_get_console`, `browser_observe_page`, `browser_handle_dialog`.
-- `browser_screenshot`: CSS-pixel image by default (`fullResolution: true` opts out), marks on request;
-  reply from [ScreenshotReply](mcp/ScreenshotReply.md).
+- `browser_close_tab` (`{ success: true }`), `browser_refresh`, `browser_execute_js`,
+  `browser_get_console`, `browser_handle_dialog`.
+- `browser_get_source`: `getSource(tabId, { type, selector })`, `type` default `clean`; with a selector
+  the data adds `selector` and `matched`.
+- `browser_observe_page`: `observePage(tabId, { selector })`; the selector lists one part of the page.
+- `browser_screenshot`: CSS-pixel image by default (`fullResolution: true` opts out), marks on request,
+  one element with `selector`; reply from [ScreenshotReply](mcp/ScreenshotReply.md).
 - `browser_click_at`, `browser_locate`: navigation stamped via [NavigationStamp](controller/NavigationStamp.md).
 - `browser_get_network`: [NetworkLogQuery](controller/NetworkLogQuery.md).
 - `browser_click`, `browser_type`, `browser_fill_form`, `browser_wait_for`, `browser_scroll`,

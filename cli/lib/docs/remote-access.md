@@ -13,10 +13,10 @@ The TLS listener uses an app-managed self-signed certificate. Pin its fingerprin
 
 ```sh
 curl -k -X POST https://HOST:3443/sharing/pair \
-  -H "Content-Type: application/json" -d '{"pin":"1234"}'
+  -H "Content-Type: application/json" -d '{"pin":"482916"}'
 ```
 
-The answer is `{ "token": "...", "name": "<host name>" }`. Keep the token; the host can revoke it in Settings. Repeated wrong PINs are rate limited and answer 429 with `retryAfterMs`.
+The answer is `{ "token": "...", "name": "<host name>" }`. Keep the token; the host can revoke it in Settings. Repeated wrong PINs are rate limited, per address and across all callers, and answer 429 with `retryAfterMs`.
 
 ## Using the shared model
 

@@ -48,7 +48,7 @@ class BridgeRun {
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
     approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null,
     approvedTools: null, onRunApproval: null, onRunApprovalUsed: null, userMessageId: null, userText: null,
-    withholdTools: null,
+    withholdTools: null, forGuest: false,
   };
 
   constructor(host, options) {
@@ -128,6 +128,7 @@ class BridgeRun {
       webSession: new WebSession(),
       webTabRender: (!o.noBrowser && browserService) ? SilentTab.make(browserService, { isAborted: this.control.isAborted }) : null,
       allowTakeover: !!o.allowTakeover,
+      forGuest: !!o.forGuest,
       approvalOverride: o.approvalOverride == null ? null : o.approvalOverride,
       takeoverWait: this._host.takeoverWait,
       takeoverAttention: this._host.takeoverAttention || null,

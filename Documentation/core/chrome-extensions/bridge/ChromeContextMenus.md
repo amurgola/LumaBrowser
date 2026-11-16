@@ -7,8 +7,10 @@ items it contributes to the page's right-click menu.
 
 ## Methods
 
-- `new ChromeContextMenus({ onClick })`: `onClick(session, extId, info, tab)`
-  delivers a click (ShimBridge sends it to the extension's worker).
+- `new ChromeContextMenus({ onClick, tabOf })`: `onClick(session, extId, info, tab)`
+  delivers a click (ShimBridge sends it to the extension's worker);
+  `tabOf(webContents)` gives the `chrome.tabs.Tab` of the clicked page
+  ([ChromeTabs.tabOf](ChromeTabs.md)).
 - `setName(session, extId, name)`: the extension's display name for its
   submenu.
 - `create(session, extId, props)`: stores the item, keyed per session and
@@ -17,7 +19,7 @@ items it contributes to the page's right-click menu.
   ['page']`, `type 'normal'`, enabled and visible.
 - `update(session, extId, id, props)`, `remove(session, extId, id)` (children
   go with their parent), `removeAll(session, extId)`, `list(session, extId)`.
-- `templateFor({ webContents, params, entry, order })`: the items for one
+- `templateFor({ webContents, params })`: the items for one
   right click, from `webContents.session`'s registry. An item shows when its
   `contexts` include `all` or one of the click's contexts (`page`,
   `selection`, `link`, `editable`, `image`, `video`, `audio`, `frame`), it is
@@ -33,7 +35,7 @@ A click toggles checkbox state, makes a radio item the checked one among its
 siblings, and reports `info` in Chrome's shape (`menuItemId`,
 `parentMenuItemId`, `editable`, `frameId`, `frameUrl`, `pageUrl`, `linkUrl`,
 `srcUrl`, `mediaType`, `selectionText`, `checked`, `wasChecked`) with the
-[ChromeTab](ChromeTab.md) built from the webContents and tab entry.
+[ChromeTab](ChromeTab.md) from `tabOf`.
 
 ## Why
 

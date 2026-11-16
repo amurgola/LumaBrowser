@@ -21,7 +21,8 @@ Builds the services everything else leans on, over the one settings database.
     asks first through `access: new PromptApiAccess()` ([PromptApiAccess](../../core/prompt-api/PromptApiAccess.md));
     its router is read per request through `ExtensionGlobals.chatRouter()`, and tab sessions are handed to it by
     [SessionSetup](../ready/SessionSetup.md));
-  - `apiSecurity`;
+  - `apiSecurity`, after [OpenAccessMigration](../../core/shell/api-security/OpenAccessMigration.md)
+    ran once over the stored policy (`apiAccessNarrowed` is true on the launch it changed something);
   - `activityLogService` over its own `<dataDir>/activity-log.db`, with the
     callers `core.browser`, `core.llm`, `core.shell` registered.
 

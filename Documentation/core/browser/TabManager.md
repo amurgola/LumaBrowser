@@ -32,10 +32,11 @@ Tabs ([TabControl](tab-manager/TabControl.md)):
 
 Reading the page:
 
-- `getTabSource(tabId, { type })` -> `{ success, source, extractionType }` ([PageSource](tab-manager/PageSource.md)).
+- `getTabSource(tabId, { type, selector })` -> `{ success, source, extractionType }` ([PageSource](tab-manager/PageSource.md)).
   Types: `clean` (default), `full`, `markdown`, `text`, `minimal`, `analyze`, `structural`, `semanticTree`.
-- `screenshotTab(tabId, { fullPage, marks, cssScale })` -> `data: { screenshot, mimeType, frame?, marks? }` ([TabScreenshot](tab-manager/TabScreenshot.md)).
-- `observePage(tabId)` -> `data: { text, count, dropped, title, url }` ([PageObserver](tab-manager/PageObserver.md)).
+  `selector` narrows the first five to the elements it matches and adds `selector` and `matched` to the reply.
+- `screenshotTab(tabId, { selector, fullPage, marks, cssScale })` -> `data: { screenshot, mimeType, frame?, marks?, element? }` ([TabScreenshot](tab-manager/TabScreenshot.md)); `selector` captures one element whole.
+- `observePage(tabId, { selector })` -> `data: { text, count, dropped, title, url }` ([PageObserver](tab-manager/PageObserver.md)); `selector` lists only the elements inside one part of the page.
 - `getElement(tabId, { selector, text })`, `checkSelectors(tabId, selectors)` -> `{ success, results }` ([ElementInspector](tab-manager/ElementInspector.md)).
 - `getTable(tabId, { selector, rowSelector, cellSelector })` ([TableReader](tab-manager/TableReader.md)).
 - `extractData(tabId, { baseSelector, childSelectors, preferTableStructure })` -> `{ success, data, rowCount, extractionMode?, duplicateFieldGroups?, nullFields?, constantFields? }` ([RowDataExtractor](tab-manager/RowDataExtractor.md)).

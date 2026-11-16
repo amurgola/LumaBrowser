@@ -13,6 +13,8 @@ class LoopbackRequestGuard {
 
   static ORIGIN_REFUSED = 'Origin not allowed: browser pages may not drive the automation server';
 
+  static STATUS_TEXT = { 401: 'Unauthorized', 403: 'Forbidden' };
+
   static refusal(req, bindHost) {
     const headers = (req && req.headers) || {};
     if (!LoopbackRequestGuard._hostAllowed(headers.host, bindHost)) return LoopbackRequestGuard.HOST_REFUSED;
@@ -26,10 +28,10 @@ class LoopbackRequestGuard {
     return LoopbackRequestGuard.refusal(req, bindHost) === null;
   }
 
-  static rejectUpgrade(socket, reason) {
+  static rejectUpgrade(socket, reason, status = 403) {
     const body = JSON.stringify({ error: reason });
     const head = [
-      'HTTP/1.1 403 Forbidden',
+      `HTTP/1.1 ${status} ${LoopbackRequestGuard.STATUS_TEXT[status] || 'Forbidden'}`,
       'Connection: close',
       'Content-Type: application/json; charset=utf-8',
       `Content-Length: ${Buffer.byteLength(body)}`,

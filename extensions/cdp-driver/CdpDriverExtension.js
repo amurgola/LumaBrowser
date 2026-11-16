@@ -8,6 +8,8 @@ class CdpDriverExtension {
     this._settings = null;
     this._fallback = null;
     this._server = null;
+    this._apiSecurity = null;
+    this._startError = null;
   }
 
   async activate(context) {
@@ -25,6 +27,8 @@ class CdpDriverExtension {
     this._settings = null;
     this._fallback = null;
     this._server = null;
+    this._apiSecurity = null;
+    this._startError = null;
   }
 
   async start() {
@@ -33,10 +37,10 @@ class CdpDriverExtension {
     this._server = this._createServer(settings);
     try {
       const port = await this._server.start(settings.port, settings.host);
+      this._startError = null;
       return { success: true, port, host: settings.host };
     } catch (err) {
-      this._server = null;
-      return { success: false, error: err.message || 'failed to start' };
+      return this._startFailed(err);
     }
   }
 
@@ -57,6 +61,7 @@ class CdpDriverExtension {
       browserUuid: server ? server.browserUuid : null,
       sessions: server ? server.activeSessions() : [],
       targets: server ? server.activeTargets() : [],
+      lastError: this._startError,
       settings,
     };
   }
@@ -74,6 +79,7 @@ class CdpDriverExtension {
     this._context = context;
     this._settings = new CdpDriverSettings(context.db.getRawDb());
     this._fallback = LlmSelectorFallback.createService(context);
+    this._apiSecurity = (context.sharedServices && context.sharedServices.apiSecurity) || null;
   }
 
   _buildApi() {
@@ -95,7 +101,19 @@ class CdpDriverExtension {
   }
 
   _createServer(settings) {
-    return new CdpServer({ browser: this._context.browser, fallback: this._fallback, fallbackDefaults: settings.fallback });
+    return new CdpServer({
+      browser: this._context.browser,
+      apiSecurity: this._apiSecurity,
+      fallback: this._fallback,
+      fallbackDefaults: settings.fallback,
+    });
+  }
+
+  _startFailed(err) {
+    this._server = null;
+    this._startError = err.message || 'failed to start';
+    console.warn(`cdp-driver: start failed: ${this._startError}`);
+    return { success: false, error: this._startError };
   }
 
   async _autostart() {
@@ -103,8 +121,7 @@ class CdpDriverExtension {
       console.log('cdp-driver: autostart disabled (cdp.enabled=false)');
       return;
     }
-    const result = await this.start();
-    if (!result.success) console.warn(`cdp-driver: autostart failed: ${result.error}`);
+    await this.start();
   }
 
   static _bindMcpTools(api) {

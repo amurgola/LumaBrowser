@@ -1,15 +1,25 @@
 import HtmlEscaper from '../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 import MenuHtml from '../overlay/MenuHtml.js';
-import DownloadText from './DownloadText.js';
+import DownloadText from '../../downloads/DownloadText.js';
 
 export default class DownloadsMenuHtml {
-  static render(list) {
+  static RECENT = 6;
+
+  static SHOW_ALL = '<button data-bd-action="all" title="Open the downloads page"><span class="bd-menu-label">Show all downloads</span>'
+    + '<span class="bd-menu-hint">Ctrl+J</span></button>';
+
+  static shown(list) {
     const sorted = [...list].sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0));
-    if (!sorted.length) return `${MenuHtml.STYLE}<div class="bd-context-menu"><div class="bd-folder-menu-empty">No downloads yet</div></div>`;
-    const rows = sorted.map((d) => DownloadsMenuHtml._row(d)).join('');
-    const clear = sorted.some((d) => d.state !== 'progress')
+    return sorted.filter((d, index) => index < DownloadsMenuHtml.RECENT || d.state === 'progress');
+  }
+
+  static render(list) {
+    if (!list.length) return `${MenuHtml.STYLE}<div class="bd-context-menu"><div class="bd-folder-menu-empty">No downloads yet</div></div>`;
+    const rows = DownloadsMenuHtml.shown(list).map((d) => DownloadsMenuHtml._row(d)).join('');
+    const clear = list.some((d) => d.state !== 'progress')
       ? '<button data-bd-action="clear" class="bd-dl-act bd-dl-clear" title="Remove finished downloads from the list">Clear</button>' : '';
-    return `${MenuHtml.STYLE}<div class="bd-context-menu bd-dl-menu"><div class="bd-dl-title"><span>Downloads</span>${clear}</div>${rows}</div>`;
+    return `${MenuHtml.STYLE}<div class="bd-context-menu bd-dl-menu"><div class="bd-dl-title"><span>Downloads</span>${clear}</div>${rows}`
+      + `<div class="bd-menu-sep"></div>${DownloadsMenuHtml.SHOW_ALL}</div>`;
   }
 
   static _row(d) {

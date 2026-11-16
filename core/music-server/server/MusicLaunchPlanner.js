@@ -9,7 +9,7 @@ class MusicLaunchPlanner extends MediaLaunchPlanner {
   static WSL_EXE = 'C:\\Windows\\System32\\wsl.exe';
   static HEALTH_TIMEOUT_MNT_MS = 20 * 60 * 1000;
   static HEALTH_TIMEOUT_NATIVE_MS = 8 * 60 * 1000;
-  static SERVE_HOST = '0.0.0.0';
+  static WSL_SERVE_HOST = '0.0.0.0';
   static CLIENT_HOST = '127.0.0.1';
   static NOT_INSTALLED_MESSAGE = 'Music runtime is not installed (no sgl-omni entrypoint).';
   static NO_ROOM_MESSAGE = 'Not enough free GPU memory for music generation right now';
@@ -120,11 +120,15 @@ class MusicLaunchPlanner extends MediaLaunchPlanner {
     return [
       'serve',
       '--model-path', this._runtimeModelPath,
-      '--host', MusicLaunchPlanner.SERVE_HOST,
+      '--host', this._serveHost(),
       '--port', String(this._options.port),
       ...profileArgs,
       ...(this._options.extraServeArgs || []),
     ];
+  }
+
+  _serveHost() {
+    return this._mode === 'wsl' ? MusicLaunchPlanner.WSL_SERVE_HOST : MusicLaunchPlanner.CLIENT_HOST;
   }
 
   _wslArgs() {

@@ -14,14 +14,16 @@ Any CDP client attaches to the running server: `puppeteer.connect({ browserURL:
 
 - `activate(context)` reads settings from `context.db.getRawDb()`, builds the
   fallback service, registers the IPC handlers, binds `mcp-tools.js`, autostarts
-  when `cdp.enabled` is true (a failed autostart is only warned), and resolves the
-  API `{ start, stop, status, getSettings, setSettings }`.
+  when `cdp.enabled` is true (a failed autostart is only logged), and resolves the
+  API `{ start, stop, status, getSettings, setSettings }`. ApiSecurity comes from
+  `context.sharedServices.apiSecurity` (null when absent) and is handed to each server.
 - `deactivate()` stops the server (errors swallowed) and drops all state.
 - `start()` -> `{ success: true, port, host }`, `{ success: true, already: true, port }`
   when running, or `{ success: false, error }` (never throws). A fresh CdpServer is
-  built per start from the current settings.
+  built per start from the current settings. A failure is logged
+  (`cdp-driver: start failed: <error>`) and kept as `lastError` until a start succeeds.
 - `stop()` -> `{ success: true }` or `{ success: true, already: true }`.
-- `status()` -> `{ running, port, host, browserUuid, sessions, targets, settings }`.
+- `status()` -> `{ running, port, host, browserUuid, sessions, targets, lastError, settings }`.
 - `getSettings()`, `setSettings(patch)` (writes then returns the fresh settings).
 
 ## Entry files
@@ -48,6 +50,9 @@ each returning the matching method's result.
 
 ## Security
 
-The server binds to `cdp.host` (default `127.0.0.1`) and has no authentication or
-Origin check, exactly as legacy. Changing the host to a LAN address exposes full
-control of automation tabs.
+The server binds to `cdp.host` (default `127.0.0.1`). Bound to a loopback name it
+needs no key and refuses foreign Host and cross-site Origin headers. Bound to anything
+else (`0.0.0.0`, a LAN address) it will not start until an API key exists in
+Settings > API & MCP, and then every request and upgrade must carry a valid key
+([ExposedServerKeyGuard](../../core/shared/net/ExposedServerKeyGuard.md)). The error
+reaches the settings tab, the `/api/cdp/start` reply and the log.

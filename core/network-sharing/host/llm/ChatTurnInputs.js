@@ -10,8 +10,8 @@ class ChatTurnInputs {
     return body.agent === true || body.tools === true;
   }
 
-  static allowedTools(agentTurn, hostAllowList) {
-    if (!agentTurn || !Array.isArray(agentTurn.allowedTools)) return hostAllowList;
+  static allowedTools(agentTurn, hostAllowList, sharedTools) {
+    if (!agentTurn || !Array.isArray(agentTurn.allowedTools)) return sharedTools;
     if (!hostAllowList) return agentTurn.allowedTools;
     return agentTurn.allowedTools.filter((tool) => hostAllowList.includes(tool));
   }

@@ -146,7 +146,7 @@ class SharingHostService {
   }
 
   setPin(pin) {
-    if (!this._settings.setPin(pin)) return { success: false, error: 'PIN must be 4 to 8 digits.' };
+    if (!this._settings.setPin(pin)) return { success: false, error: 'PIN must be 6 to 8 digits.' };
     this._pairing.reset();
     if (this.isEnabled()) this._startAdvertise();
     return { success: true };
@@ -234,6 +234,7 @@ class SharingHostService {
       webPort: this.getWebPort(),
       webRunning: this.isWebRunning(),
       webAllowedTools: this.getWebAllowedTools(),
+      webDefaultTools: this._allowList.defaults(),
       webPublicUrl: this.getWebPublicUrl(),
       toolGroups: this._allowList.toolGroups(),
     };
@@ -289,6 +290,10 @@ class SharingHostService {
 
   getWebAllowedTools() {
     return this._allowList.get();
+  }
+
+  getSharedTurnTools() {
+    return this._allowList.forSharedTurn();
   }
 
   setWebAllowedTools(tools) {

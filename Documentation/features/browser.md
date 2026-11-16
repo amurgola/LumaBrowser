@@ -6,6 +6,7 @@ logins and files you already have in it.
 ## Everyday browsing
 
 - Tabs, history, bookmarks and downloads that persist across restarts.
+- A downloads page (Ctrl+J, or Downloads in the gear menu): every download by day, with search, open, copy link, show in folder, remove and Clear all.
 - Private windows (Ctrl+Shift+N) on their own throwaway session, left out of
   history and session restore.
 - Pinned tabs, tabs that drag out into their own window, and tab restore on
@@ -26,7 +27,8 @@ logins and files you already have in it.
 - Chrome extensions from three places: a curated store of ones that work in
   Electron (Bitwarden, Dark Reader, SponsorBlock, React DevTools and more),
   any Chrome Web Store link or extension ID, or an unpacked folder.
-- Each extension gets a toolbar button with its popup, plus update checks.
+- Each extension gets a toolbar button with its popup and its badge (a
+  password manager's count of logins for the page), plus update checks.
 
 ## Password manager and autofill
 
