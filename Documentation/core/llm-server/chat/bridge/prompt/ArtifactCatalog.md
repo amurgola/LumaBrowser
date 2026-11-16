@@ -23,7 +23,8 @@ name the right id, with the regions the user painted on each image.
   answering | marked in an earlier message, about 12% of the image)` line per
   region, the `HISTORY_NOTE` when any chain has history, the `REGION_NOTE`
   (what a marked region is, pass its id as `edit_image` `regionId`, the
-  current one applies by itself, `"none"` opts out) when any region is listed,
+  current one always applies whatever is passed, and its share of the image is
+  not its share of the subject) when any region is listed,
   and `]` plus a blank line.
 - `HEADER`, `HISTORY_NOTE`, `REGION_NOTE`.
 

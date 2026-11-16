@@ -9,11 +9,16 @@ the source outside the region once the render is back.
 
 ## Methods
 
-- `EditRegion.resolve({ params, artifactId, index })`: `params.regionId` names
-  a region (an unknown id, or one marked on another image, is an `error` the
-  model can act on); `"none"`, `false` or `null` means the whole image; absent
-  means `index.currentFor(artifactId)` (a region painted on this exact image
-  in the message being answered). Returns `{ region }` or `{ error }`.
+- `EditRegion.resolve({ params, artifactId, index })`: a region painted on
+  this exact image in the message being answered (`index.currentFor(artifactId)`)
+  always applies, whatever `params.regionId` says: the user drew it by hand for
+  this request, and the chat model, which sees only the region's share of the
+  picture, used to drop it with `"none"` when a small figure was painted whole
+  (5 of 8 masked turns in the edit-framing e2e run of 2026-11-15). Without
+  such a region `params.regionId` may name one from an earlier message (an
+  unknown id, or one marked on another image, is an `error` the model can act
+  on), and `"none"`, `false`, `null` or nothing mean the whole image. Returns
+  `{ region }` or `{ error }`.
 - `EditRegion.prepare({ region, srcBuf, srcDims })`: runs
   [RegionMaskPrep](../../../../../image-server/region/RegionMaskPrep.md)
   against the source's header size (else the size the region was painted at),

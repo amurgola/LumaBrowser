@@ -8,17 +8,25 @@ class EditRegion {
   static NONE = 'none';
 
   static resolve({ params, artifactId, index }) {
+    if (!index) return { region: null };
+    const painted = index.currentFor(artifactId);
+    if (painted) return { region: painted };
+    const named = EditRegion._namedId(params);
+    return named ? EditRegion._earlier(named, artifactId, index) : { region: null };
+  }
+
+  static _namedId(params) {
     const raw = params ? params.regionId : undefined;
-    if (raw === false || raw === null || EditRegion._isNone(raw) || !index) return { region: null };
-    if (typeof raw === 'string' && raw.trim()) {
-      const region = index.get(raw.trim());
-      if (!region) return { error: `edit_image: marked region "${raw.trim()}" not found; the artifact catalog lists each marked region's id.` };
-      if (region.artifactId !== artifactId) {
-        return { error: `edit_image: region "${region.id}" was marked on image ${region.artifactId}, not on ${artifactId}; pass that image as artifactId, or "none" as regionId.` };
-      }
-      return { region };
+    return typeof raw === 'string' && raw.trim() && !EditRegion._isNone(raw) ? raw.trim() : '';
+  }
+
+  static _earlier(id, artifactId, index) {
+    const region = index.get(id);
+    if (!region) return { error: `edit_image: marked region "${id}" not found; the artifact catalog lists each marked region's id.` };
+    if (region.artifactId !== artifactId) {
+      return { error: `edit_image: region "${region.id}" was marked on image ${region.artifactId}, not on ${artifactId}; pass that image as artifactId, or leave regionId out.` };
     }
-    return { region: index.currentFor(artifactId) };
+    return { region };
   }
 
   static prepare({ region, srcBuf, srcDims }) {

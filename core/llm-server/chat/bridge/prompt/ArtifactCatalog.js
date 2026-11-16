@@ -10,7 +10,10 @@ class ArtifactCatalog {
   static REGION_NOTE = '\n  A "marked region" is an area the user painted by hand on that image, with their note on what'
     + ' should change there. Pass its id as edit_image `regionId` (with that exact image as `artifactId`): only the'
     + ' painted area is redrawn and the rest of the picture is kept pixel for pixel. A region marked in the'
-    + ' message you are answering is used automatically on its image; pass `regionId: "none"` to edit the whole image.';
+    + ' message you are answering is ALWAYS applied to its image, whatever `regionId` you pass: the user drew it'
+    + ' by hand for this request. Its share of the image says nothing about how much of the subject it covers (a'
+    + ' person standing far away, painted whole, is a few percent), so do not second-guess it: word the prompt'
+    + ' for the change the user asked for.';
 
   static collect(priorMessages) {
     const chains = ArtifactCatalog._chains(priorMessages);

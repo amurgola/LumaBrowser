@@ -76,7 +76,7 @@ class PseudoToolSchemaTable {
         strength: { type: 'number', description: 'img2img only, an edit model ignores it: 0.35-0.5 small recolor, 0.8-0.9 add a feature' },
         regionId: {
           type: 'string',
-          description: 'A region the user painted on the source image (the artifact catalog lists each as "marked region rgn_…" with the user\'s note). Only that area is redrawn; the rest is kept pixel for pixel, and the frame stays "match". A region marked in the message being answered is used on its image automatically; pass "none" to edit the whole image instead.',
+          description: 'A region the user painted on the source image (the artifact catalog lists each as "marked region rgn_…" with the user\'s note). Only that area is redrawn; the rest is kept pixel for pixel, and the frame stays "match". A region marked in the message being answered is always used on its image, whatever is passed here.',
         },
         frame: {
           type: 'string',
