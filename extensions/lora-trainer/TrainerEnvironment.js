@@ -1,3 +1,5 @@
+const CudaPin = require('../../core/shared/runtime/CudaPin');
+
 class TrainerEnvironment {
   static HIJACKERS = [
     'PYTHONPATH', 'PYTHONHOME', 'PYTHONSTARTUP', 'PYTHONUSERBASE', 'PIP_CONFIG_FILE', 'VIRTUAL_ENV',
@@ -27,8 +29,7 @@ class TrainerEnvironment {
       PYTHONUNBUFFERED: '1',
       PYTHONIOENCODING: 'utf-8',
     };
-    if (cudaDevice != null && String(cudaDevice) !== '') env.CUDA_VISIBLE_DEVICES = String(cudaDevice);
-    return env;
+    return CudaPin.applyCudaDeviceEnv(env, cudaDevice);
   }
 
   _clean() {

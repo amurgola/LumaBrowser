@@ -15,7 +15,9 @@ Gives a training run one graphics card.
 ## Notes
 
 ai-toolkit trains on one device, so a second card does not add to the memory available.
-A chat model resident on the chosen card is not unloaded by this class.
+A chat model resident on the chosen card is not unloaded by this class. On the first live
+runs (2026-11-16) the chat model sat on the same 5090 as the trainer: 28.8 GB of 32 GB
+were in use during an Anima run, which fit. A family that wants 24 GB would not.
 
 ## Waiting for freed memory
 

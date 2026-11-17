@@ -1,41 +1,87 @@
 # Changelog
 
+## 2.2.3
+
+### New features
+- **A Downloads page (Ctrl+J).** Every download now has a page of its own. Open it with Ctrl+J, with Downloads in the main menu, or with "Show all downloads" at the bottom of the toolbar's downloads list.
+  - Downloads are grouped by day, newest first, and the search box finds one by its name or its address.
+  - Click a file's name to open it. Each row can also copy the download link, show the file in its folder, or be removed from the list, and a download in progress has a Cancel button.
+  - "Clear all" removes the finished downloads from the list. The files stay on disk.
+  - The toolbar's downloads list now shows the six most recent downloads, plus any that are still running.
+  - The assistant's page tools cannot read or click this page, because its buttons open files on your computer.
+- **Dictate into any app (Ctrl+Alt+Shift+D).** Press the shortcut in any program, speak, and press it again: what you said is typed where the cursor is. It works in LumaBrowser too.
+  - It uses the speech recognition model on your computer, so nothing you say leaves it. Speech recognition has to be set up first: click the microphone in the chat once to install it.
+  - A "Listening" notice shows while it records, with Done and Cancel.
+  - If the text cannot be typed into the app, it is put on the clipboard.
+  - Once speech recognition is set up, you can change the shortcut under Settings > General > Dictation.
+- **Chrome extensions: toolbar badges, and password managers follow the tab you are on.**
+  - The badge an extension sets now shows on its toolbar button, for example a password manager's count of logins for the page.
+  - Extensions are told which tab is in front and when tabs open, load, switch and close, so a password manager offers the logins for the page you are on, also while its popup or the address bar has the keyboard.
+  - An extension's popup and options page can use these too, along with right-click menu items and navigation events. They used to work from its background worker only.
+- **AI agents can read and act on pages more precisely.** These apply to the browser tools in chat, over MCP and in the local API.
+  - **Read one part of a page.** `browser_get_source`, `browser_observe_page` and `browser_screenshot` take a `selector`: read only the article, list only the controls of one form, or capture a single element at full size so small text stays readable.
+  - `browser_get_source` offers `markdown` over MCP as well (headings, lists, tables and links kept), and `text` returns the visible text with the page's title.
+  - `browser_extract_data` and `browser_collect_list` can read an attribute: end a field's selector with `@attribute`, as in `a.title@href` or `img@src`. A form field with no text reads as what it holds.
+  - `browser_type` can type into a rich-text editor that lives in an iframe. `browser_observe_page` lists such an editor as `input:richtext`.
+  - `luma docs tools` has a new "Working with pages" section on choosing a tab, reading and acting.
+
+### Changes
+- **The local API is closed to web pages and proxies that have no API key (Settings > API & MCP).**
+  - Without an API key, the local API answers programs on this computer, devices your network setting allows, and LumaBrowser's own pages. A web page on any other site, or on another port of this computer, now needs a key.
+  - A request that arrives through a reverse proxy or a tunnel needs a key too, unless network access is set to any address.
+  - LumaBrowser's own pages no longer sign in with your first API key, so a web page open in a tab cannot borrow it. "Require an API key" now also works before you have created a key.
+  - **If your API was open to any address with no API key, it now answers your local network only.** This is done once, when you update, and a notice tells you. Devices on your network keep working. To let others in, require an API key.
+  - When a key is required, the MCP entry LumaBrowser writes for editors and agents carries it. An editor you connected before turning the requirement on has to be connected again (Settings > Editors & agents). An MCP client with a missing or wrong key now gets a message that says so, where it used to get an empty tool list.
+- **WebDriver and CDP need an API key when they listen on the network.** Bound to 127.0.0.1 they work as before. On any other address they do not start until you have created an API key, and every client has to send it: Selenium as `http://luma:<key>@host:port`, CDP clients as an `Authorization: Bearer <key>` header or `?token=<key>` on the URL. Each server's settings tab says why it could not start.
+- **Network Sharing:**
+  - A new pairing PIN has to be 6 to 8 digits. A PIN you have already set keeps working.
+  - Wrong PINs lock an address out for longer each time, up to an hour, and many wrong PINs in a short time pause pairing for everyone for a while.
+  - A paired device's chats get the built-in tools: browsing, artifacts, images, video, music, web search and your knowledge base. The password manager, webhooks, extension tools and connected MCP servers are shared only once you tick them under Settings > Sharing, and a tool you switched off for your own chats is never shared.
+  - An agent working for a paired device cannot open this computer's files, LumaBrowser's internal pages, or anything on this computer's own addresses. The web and other machines on your network still work.
+- **The music server no longer listens on the network.** It accepts connections from this computer only. Under WSL it still listens inside the WSL machine, where Windows has to reach it.
+- **Typing after a new tab, Ctrl+L, Alt+D or F6 goes to the address bar.** The cursor moved to the address bar, but the keys could keep going to the page. What you have typed, and the open suggestions, also stay when the new tab's first page finishes loading.
+- **Background tabs opened by AI agents behave like real tabs.**
+  - A silent tab had no size, so its page saw an empty window: nothing counted as in view and scrolling did nothing. It now has a normal-sized viewport.
+  - A tab opened by a link in a silent tab is silent too. It used to appear in your tab strip and come to the front.
+  - `browser_get_tabs` lists the tabs in your tab strip. `includeSilent` adds the agents' silent tabs, and the new `includeHidden` adds the tabs you keep running in the background, which `includeSilent` used to add as well.
+  - The result of an action says whether a tab it opened is silent or visible to you, and tab lists no longer carry inline icon data.
+- **The persisted tabs menu** shows each tab's icon and site under its title, grouped as "In the background" and "Open tabs".
+- **The Luma Live tile keeps clear of the page's edge.** A tile parked in the corner of a large window sat flush against the edge once the window got smaller.
+- **Tab Share:** the Share tab dialog shows the tab's title and its address on separate lines.
+
 ## 2.2.2
 
 ### New features
-- **A terminal in the browser (Ctrl+Shift+backtick for a tab, Ctrl+backtick for a panel under the page):** a real interactive shell: PowerShell, Windows PowerShell, Command Prompt, Git Bash and WSL on Windows, your login shell and the shells listed in `/etc/shells` on macOS and Linux. Run live on Windows with PowerShell 7, Windows PowerShell, Command Prompt and Git Bash; zsh and bash on macOS and Linux are covered by unit tests of how they are launched, not yet by a live run.
-  - **As a tab:** Ctrl+Shift+backtick, "New terminal" in the main menu or "New terminal tab" in the search palette. It sits in the tab strip like any page, its title names the shell and the folder, and a restored tab reopens in the same shell and folder. A shell that exits cleanly closes its tab; one that fails stays, and Enter starts it again.
-  - **As a panel under the page:** Ctrl+backtick or the new toolbar button opens a terminal under the tab in front, the way the chat panel opens. It belongs to that tab: it steps aside when you switch to another tab and is back, still running, when you return, and it closes with the tab. "Open in tab" moves it to a tab of its own with everything in it still running, and the picker in its header starts another shell or app in its place.
-  - **The shell gets its usual keys.** In a terminal, Ctrl+R, Ctrl+W, Ctrl+L, Ctrl+T and the rest go to the shell, so the browser shortcuts on those letters take Shift there: Ctrl+Shift+T new tab, Ctrl+Shift+W close tab, Ctrl+Shift+L address bar, Ctrl+Shift+F find, Ctrl+Shift+N private window. Switching tabs (Ctrl+Tab, Ctrl+1 to 9), zoom, F11 and F12 work as everywhere.
-  - **Programs know which page they sit under.** A panel's terminal carries the id of the tab above it (`LUMA_TAB_ID`, beside `LUMA_TERMINAL` and `LUMA_API_PORT` in every terminal), and `luma` started there gets the browser tools with that tab as its working tab: "go to reddit.com" navigates the page above the terminal.
-  - **Command-line apps as one-click terminals:** Claude Code, Codex CLI, Gemini CLI, opencode, GitHub Copilot CLI, Aider and the Luma agent are offered when they are installed, and extensions can add their own (`terminalProfiles` in the manifest).
-  - **Default terminal** (Settings > Editors & agents > Terminal) picks the shell a new terminal tab and the panel start with.
-  - When LumaBrowser itself was started from an IDE, a shell does not inherit that IDE debugger's Node options, so a Node program run in the terminal does not try to attach to it.
-- **The assistant can use the terminal, once you allow it (Settings > Editors & agents > Terminal > Let AI use the terminal, off by default):** the chat's agent, and AI tools connected through MCP or the local API, get `terminal_open`, `terminal_run`, `terminal_send`, `terminal_read`, `terminal_list` and `terminal_close`. A session stays open between calls and keeps its folder, variables and running programs, so the agent can work a REPL, an ssh session, a dev server, an installer that asks questions or a full-screen program.
-  - **You watch, and can take over.** A terminal the agent opens gets a tab (not brought to the front) with a notice that an AI agent is using it. You can type at any time, and **Take over** stops the agent typing until you press **Hand back**; it can still read the screen.
-  - **It asks before it types.** One "allow for this run" covers the terminal tools for that run only and is not carried to the next. `terminal_run` goes through the command check: a read-only command skips the question, a destructive one always asks, and a forbidden one is refused, also for an MCP client that never passes the chat's approval.
-  - **Never offered to people you share your models with.** A turn this PC runs for a paired PC does not get the terminal tools.
-  - The page tools refuse a terminal tab and name the terminal tools to use in their place.
-- **Tab Share (add-on 1.1.0): "Fit to my window".** With an interact link, a visitor can press Fit to my window to size the shared tab to their own window, so a site opened from a phone lays out for the phone. It used to arrive as a scaled picture of the host's window.
-  - Nothing is resized until someone presses it, since it changes the tab for everyone watching. One visitor holds the size at a time (the last to press it), and the tab then follows that visitor's window. It goes back when they press Fit again or leave, or when the share goes view-only or stops.
-  - Only the page is resized, never the LumaBrowser window, also while the shared tab is in the background. The page can shrink to a smaller screen but does not grow past your own tab area.
-  - **For a window tab (Windows), the app's window is resized to the visitor's screen** and put back as it was afterwards (a maximized window comes back maximized). This follows the "Pass clicks, keys and scrolling on the tab through to the window" setting.
-  - The New Tab page and terminal tabs cannot be shared, and a shared tab that lands on one takes no input from visitors.
-- **Personal Hub: say who each contact is (Hub settings > People > About).** A contact is a Person or a General contact (a business, an organisation, or someone not placed yet; new contacts start General). A person has a relation to you, a birth date (the year is optional) and a sex; a general contact has what it is and a website. Both take further details by label (Phone, Address, Works at) and notes for the assistant.
-  - **"Suggest from conversations"** has the Hub's summary model read what the contact sent you (the newest 40 messages in the notification log, and up to three conversations already read from your tabs) and propose details, each with the message it rests on. Nothing is kept until you press Accept, and a dismissed suggestion is not proposed again.
-  - **The assistant and the summaries read it.** Activity summaries and the Hub context the assistant gets carry a "Who is who" list of the people in the activity, including an age and a birthday that is at most 14 days away. `hub_list_contacts` returns what is recorded, `hub_update_contact` records what you tell the assistant, and `hub_suggest_contact_details` leaves what it inferred as suggestions for you to accept.
-  - In the Activity widget a known person's name opens their contact, with the relation shown beside it. The People search also matches a relation or a note, and merging two contacts joins what is recorded on both.
+- **A terminal in the browser.** LumaBrowser now has a real terminal built in: PowerShell, Command Prompt, Git Bash and WSL on Windows, your login shell on macOS and Linux.
+  - **As a tab:** press Ctrl+Shift+backtick, or choose "New terminal" in the main menu or the search palette. It sits in the tab strip like any page, shows the shell and the folder in its title, and reopens in the same folder when your tabs are restored.
+  - **As a panel under the page:** press Ctrl+backtick or use the new toolbar button. The panel belongs to the tab it was opened under: it steps aside when you switch tabs and is still running when you come back. "Open in tab" moves it to a tab of its own without stopping anything in it.
+  - **The shell keeps its usual keys.** Ctrl+R, Ctrl+W, Ctrl+L and the rest go to the shell. For the browser shortcuts on those keys, add Shift while you are in a terminal: Ctrl+Shift+T opens a tab, Ctrl+Shift+W closes one, Ctrl+Shift+L goes to the address bar, Ctrl+Shift+F finds and Ctrl+Shift+N opens a private window. Switching tabs, zoom and full screen work as usual.
+  - **Command-line apps in one click:** Claude Code, Codex CLI, Gemini CLI, opencode, GitHub Copilot CLI, Aider and the Luma agent are offered as terminals when they are installed, and extensions can add their own.
+  - **`luma` works on the page above it.** Started in a panel, the `luma` command takes the tab above the terminal as its working tab: "go to reddit.com" navigates that page.
+  - **Default terminal** (Settings > Editors & agents > Terminal) picks the shell that new terminals start with.
+- **The assistant can use the terminal, if you allow it (Settings > Editors & agents > Terminal > Let AI use the terminal).** Off by default. When it is on, the assistant, and AI tools connected through MCP or the local API (the `terminal_*` tools), can open a terminal, run commands, answer prompts and drive full-screen programs. The session stays open between steps and keeps its folder, variables and running programs.
+  - **You can watch and take over.** Every terminal the assistant opens gets its own tab. You can type in it at any time, and **Take over** stops the assistant typing until you press **Hand back**.
+  - **It asks first.** The assistant asks before it types. A command that only reads does not need a second question, a command that could delete or change things always asks, and forbidden commands are refused.
+  - **It stays on your computer.** The terminal is never offered to people you share your models with.
+- **Tab Share (add-on 1.1.0): Fit to my window.** A visitor with an interact link can press "Fit to my window" to size the shared tab to their own window, so a site opened from a phone lays out for the phone. Before, the visitor saw a scaled-down picture of your window.
+  - Nothing is resized until a visitor presses the button, because it changes the tab for everyone watching. One visitor holds the size at a time (the last to press it). The tab goes back to its own size when they press the button again, leave, or you stop sharing.
+  - Only the page is resized, never your LumaBrowser window, and the page does not grow past your own tab area.
+  - **For a window tab (Windows), the app's window is resized to fit the visitor's screen** and put back the way it was afterwards.
+  - The New Tab page and terminal tabs cannot be shared.
+- **Personal Hub: tell it who people are (Hub settings > People > About).** Mark a contact as a person or as a general contact (a business or an organisation). For a person you can add how they relate to you and a birth date, with or without the year; for a general contact, what it is and a website. Both take further details such as a phone number or an address, and notes for the assistant.
+  - **"Suggest from conversations"** has the Hub's model read what a contact has sent you and propose details, each shown with the message it comes from. Nothing is kept until you accept it, and a suggestion you dismiss is not made again.
+  - **The assistant and the activity summaries use it.** They know who the people in your activity are, how old they are and when a birthday is coming up. You can also tell the assistant about someone in chat and it records it on the contact; what it only infers waits as a suggestion for you to accept.
+  - In the Activity widget, a known person's name opens their contact and shows how they relate to you. The People search also finds a relation or a note.
 
 ### Changes
-- **Network Sharing: an agent turn on a paired PC's model is built like the host's own turn.** Measured with two app instances on one machine, a host and a client paired to it with different local defaults: the messages were identical, but the client's turn lacked the agent loop's reply cap and the expert-cache hint, and its thinking setting matched only by coincidence. The request the host's model server receives is now the same in three host configurations.
-  - **The agent's thinking default is the host's.** With nothing chosen, the client sent its own agent default (Low), which replaced a host dial set to anything else. The host now fills it in from its own dial, and uses the agent default only when its dial says nothing.
-  - An agent step's reply cap is sent when the host advertises the model's context window, and the run's weight (heavy or light) is sent so the host gives its expert-cache hint as it does for its own runs.
-  - A side call, a title and a compaction are named as such and keep their own temperature. 2.2.1 inferred a side call from a pinned temperature, but an agent step pins its temperature too, so those steps escaped the host's Tune temperature.
-  - **"Render exactly this size" reaches the host's image model.** The flag was dropped between a client and its host, so the host snapped an edit to the model's native size. Roleplay turns that snap off for figure renders.
-- **Anima (add-on 1.0.1): renders are clean again.** The model's default step cache (EasyCache, threshold 0.2) skipped 13 of 25 steps on the current image runtimes (luma-b3 and luma-b4), and the picture came out soft and speckled. The cache is removed, since a threshold that stays clean skips almost nothing. A render at 896x1152 on an RTX 5090 takes 15.2 s, where the cached one took 8.1 s. MOSS-Image keeps its cache: the same check found no speckle there.
-- **"Run on startup" shows its real state (Windows).** With "Start hidden at login" on, which is the default, the switch read off whenever Settings was opened again, while the app still started with the system.
-- **Finished downloads are not announced again at startup.** The downloads of earlier sessions were read back at every start, after a reload and in each new window, and each one raised its "Download finished" or "Download failed" notice again. They are now only listed.
-- **Packaging:** the terminal's native module (`@lydell/node-pty`) ships outside `app.asar`, and the build's layout check fails a build where it does not.
+- **Network Sharing: an agent chat on a paired PC's model now runs the way it does on that PC itself.**
+  - With no thinking level chosen, the host's own setting applies. The client's default used to replace it.
+  - The reply length limit of an agent step now reaches the host.
+  - Background calls (titles, summaries and other side calls) keep their own temperature, and an agent step follows the temperature set for the model on the host.
+  - A picture requested at an exact size is rendered at that size on the host. The host used to change an edit to the model's native size.
+- **Anima (add-on 1.0.1): pictures are clean again.** The step cache that was on by default made pictures soft and speckled on the current image runtimes, so it is now off. A render takes about twice as long.
+- **"Run on startup" shows its real state (Windows).** With "Start hidden at login" on, which is the default, the switch showed off each time Settings was opened, although the app still started with the system.
+- **Finished downloads are not announced again.** Downloads from earlier sessions raised their "Download finished" or "Download failed" notice again at every start and in each new window. They are now only listed.
 
 ## 2.2.1
 
