@@ -31,6 +31,7 @@ class TrainerRuntimeInstall {
     const backend = await this._pickBackend();
     await this._installTorch(uvPath, backend);
     await this._installRequirements(uvPath, sourceDir, backend);
+    this._discard(this._paths.uvCacheDir);
     return this._writeManifest({ uvPath, sourceDir, backend });
   }
 
@@ -130,8 +131,8 @@ class TrainerRuntimeInstall {
     if (result && result.canceled) throw TrainerRuntimeInstall._canceled();
   }
 
-  _discard(file) {
-    try { this._fs.rmSync(file, { force: true }); } catch (_) {}
+  _discard(target) {
+    try { this._fs.rmSync(target, { recursive: true, force: true }); } catch (_) {}
   }
 
   _step(label) {

@@ -7,8 +7,10 @@ const TrainingRequest = require('./TrainingRequest');
 class LoraTrainingFlow {
   static CANCELED = 'CANCELED';
   static SAVE_EVERY_STEPS = 25;
+  static SILENT = Object.freeze({ started() {}, progressed() {}, ended() {} });
 
-  constructor({ jobs, models, sources, dataset, runtime, gpu, runner, installer, applier, workspace, host, paths, log = () => {}, fsOps = fs }) {
+  constructor({ jobs, models, sources, dataset, runtime, gpu, runner, installer, applier, workspace, host, paths, announcer = LoraTrainingFlow.SILENT, log = () => {}, fsOps = fs }) {
+    this._announcer = announcer;
     this._jobs = jobs;
     this._models = models;
     this._sources = sources;
@@ -26,12 +28,14 @@ class LoraTrainingFlow {
     this._running = null;
   }
 
-  async start(args) {
+  async start(args, controls = {}) {
     const request = TrainingRequest.parse(args);
     const target = await this._models.trainingTarget(request.modelRef);
     request.name = this._installer.availableName(request.name);
-    const job = this._jobs.create({ request, model: target.model, recipe: target.recipe });
-    this._running = this._run(job, request, target);
+    const job = this._jobs.create({ request, model: target.model, recipe: target.recipe, conversationId: controls.conversationId || null });
+    await this._prepareDataset(job, request, target.recipe, controls);
+    this._announcer.started(job);
+    this._running = this._run(job, target);
     return job.snapshot();
   }
 
@@ -46,10 +50,19 @@ class LoraTrainingFlow {
     await this._running;
   }
 
-  async _run(job, request, { model, recipe, basePath }) {
+  async _prepareDataset(job, request, recipe, controls) {
     try {
       const images = this._collectPictures(job, request);
-      await this._writeDataset(job, images, recipe);
+      await this._writeDataset(job, images, recipe, controls);
+    } catch (err) {
+      this._conclude(job, err);
+      this._close(job);
+      throw err;
+    }
+  }
+
+  async _run(job, { model, recipe, basePath }) {
+    try {
       await this._ensureTrainer(job);
       await this._train(job, recipe, basePath);
       const lora = await this._addToLibrary(job);
@@ -59,10 +72,15 @@ class LoraTrainingFlow {
     } catch (err) {
       this._conclude(job, err);
     } finally {
-      this._gpu.release();
-      this._workspace.clear(job.id, { succeeded: job.phase === TrainingJob.DONE });
-      this._jobs.save(job);
+      this._close(job);
+      this._announcer.ended(job);
     }
+  }
+
+  _close(job) {
+    this._gpu.release();
+    this._workspace.clear(job.id, { succeeded: job.phase === TrainingJob.DONE });
+    this._jobs.save(job);
   }
 
   _collectPictures(job, request) {
@@ -73,7 +91,7 @@ class LoraTrainingFlow {
     return images;
   }
 
-  async _writeDataset(job, images, recipe) {
+  async _writeDataset(job, images, recipe, controls) {
     this._enter(job, TrainingJob.CAPTIONING, `0 of ${images.length}`);
     const built = await this._dataset.build({
       dir: this._paths.datasetDir(job.id),
@@ -81,8 +99,11 @@ class LoraTrainingFlow {
       recipe,
       trigger: job.trigger,
       subject: job.subject,
-      isCanceled: () => job.cancelRequested,
-      onProgress: (done, total) => job.note(`${done} of ${total}`),
+      isCanceled: () => job.cancelRequested || LoraTrainingFlow._stopped(controls),
+      onProgress: (done, total) => {
+        job.note(`${done} of ${total}`);
+        LoraTrainingFlow._report(controls, { step: done, totalSteps: total, message: `Captioned picture ${done} of ${total}` });
+      },
     });
     job.images.described = built.described;
   }
@@ -92,7 +113,10 @@ class LoraTrainingFlow {
     this._enter(job, TrainingJob.INSTALLING);
     await this._runtime.ensureInstalled({
       isCanceled: () => job.cancelRequested,
-      onStep: (label, detail) => job.note(label || detail),
+      onStep: (label, detail) => {
+        job.note(label || detail);
+        this._announcer.progressed(job, { force: !!label });
+      },
     });
   }
 
@@ -128,12 +152,10 @@ class LoraTrainingFlow {
 
   _onTrainerLine(job, reading) {
     if (!reading) return;
-    if (reading.detail) {
-      job.note(reading.detail);
-      return;
-    }
-    job.advance(reading);
-    if (reading.step % LoraTrainingFlow.SAVE_EVERY_STEPS === 0) this._jobs.save(job);
+    if (reading.detail) job.note(reading.detail);
+    else job.advance(reading);
+    this._announcer.progressed(job);
+    if (!reading.detail && reading.step % LoraTrainingFlow.SAVE_EVERY_STEPS === 0) this._jobs.save(job);
   }
 
   async _addToLibrary(job) {
@@ -166,10 +188,25 @@ class LoraTrainingFlow {
     this._throwIfCanceled(job);
     job.enter(phase, detail);
     this._jobs.save(job);
+    this._announcer.progressed(job, { force: true });
   }
 
   _throwIfCanceled(job) {
     if (job.cancelRequested) throw LoraTrainingFlow._canceled();
+  }
+
+  static _stopped(controls) {
+    try {
+      return !!(controls && typeof controls.isAborted === 'function' && controls.isAborted());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static _report(controls, fields) {
+    try {
+      if (controls && typeof controls.onProgress === 'function') controls.onProgress(fields);
+    } catch (_) {}
   }
 
   static _canceled() {

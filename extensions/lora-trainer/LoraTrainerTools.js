@@ -1,8 +1,9 @@
 class LoraTrainerTools {
   static NOT_READY = 'The LoRA trainer is not active.';
 
-  static STARTED = 'Training has started in the background. Tell the user it is running and roughly how long it takes; '
-    + 'do not wait for it. Use lora_training_status when they ask how it is going.';
+  static STARTED = 'The pictures are captioned and training has started in the background. Tell the user it is running and roughly how long it takes; '
+    + 'do not wait for it. The chat shows its progress above the message box and the result is posted into this conversation when it ends. '
+    + 'Use lora_training_status when they ask how it is going.';
 
   static TOOLS = [
     {
@@ -10,8 +11,9 @@ class LoraTrainerTools {
       mutating: true,
       description:
         'Train a LoRA that teaches an installed image model a character, object or style from the user\'s own '
-        + 'pictures. Starts a background job and returns at once; training takes from about ten minutes to a few '
-        + 'hours and uses the graphics card, so image generation is stopped while it runs. The first run also '
+        + 'pictures. Captions the pictures first (this call waits for that, up to a few minutes), then trains in '
+        + 'the background and returns; training takes from about twenty minutes to a few hours and uses the '
+        + 'graphics card, so image generation is stopped while it runs. The first run also '
         + 'downloads the trainer (several GB) and, for some models, training weights. Needs at least 4 pictures; '
         + '10 to 30 varied ones work best. Check on it with lora_training_status.',
       inputSchema: {
@@ -82,24 +84,32 @@ class LoraTrainerTools {
     this._services = services || null;
   }
 
-  async handle(toolName, args) {
+  async handle(toolName, args, opts = null) {
     if (!this._services) return LoraTrainerTools._error(LoraTrainerTools.NOT_READY);
     try {
-      return LoraTrainerTools._json({ success: true, ...(await this._route(toolName, args || {})) });
+      return LoraTrainerTools._json({ success: true, ...(await this._route(toolName, args || {}, opts || {})) });
     } catch (err) {
       return LoraTrainerTools._error(err.message);
     }
   }
 
-  async _route(toolName, args) {
+  async _route(toolName, args, opts) {
     const { flow, overview, applier } = this._services;
-    if (toolName === 'train_lora') return { job: await flow.start(args), message: LoraTrainerTools.STARTED };
+    if (toolName === 'train_lora') return { job: await flow.start(args, LoraTrainerTools.controls(opts)), message: LoraTrainerTools.STARTED };
     if (toolName === 'lora_training_status') return overview.describe(args.jobId || null);
     if (toolName === 'cancel_lora_training') return { job: flow.cancel(args.jobId || null) };
     if (toolName === 'apply_lora') {
       return applier.apply({ loraName: args.lora, modelRef: args.model || null, weight: args.weight, remove: args.remove === true });
     }
     throw new Error(`Unknown tool: ${toolName}`);
+  }
+
+  static controls(opts) {
+    return {
+      isAborted: opts.chat && typeof opts.chat.isAborted === 'function' ? opts.chat.isAborted : null,
+      onProgress: typeof opts.onProgress === 'function' ? opts.onProgress : null,
+      conversationId: (opts.chat && opts.chat.conversationId) || null,
+    };
   }
 
   static _json(payload) {

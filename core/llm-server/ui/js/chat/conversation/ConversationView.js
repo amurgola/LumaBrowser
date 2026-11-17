@@ -30,6 +30,25 @@ export default class ConversationView {
     this._applyMode();
     ctx.convList.repaintCurrent();
     ctx.codeSurface.report();
+    ctx.jobsStrip.refresh().catch(() => {});
+  }
+
+  async showPosted() {
+    const { state, els } = this._ctx;
+    const id = state.activeId;
+    if (!id || (state.streaming && state.streamConvId === id)) return;
+    if (state.messages.some((m) => !m.id)) { await this.open(id); return; }
+    const stored = await this._loadMessages(id);
+    const thread = els.scroll.querySelector('.cm-thread');
+    if (state.activeId !== id || !thread) return;
+    const known = new Set(state.messages.map((m) => m.id));
+    const foot = thread.querySelector('.cm-thread-foot');
+    for (const row of stored.filter((m) => m.id && !known.has(m.id))) {
+      const message = this._toStateMessage(row);
+      state.messages.push(message);
+      thread.insertBefore(this._ctx.turns.render(message), foot);
+    }
+    this._ctx.main.pinBottom();
   }
 
   static _remember(api, id, conv) {
@@ -50,6 +69,7 @@ export default class ConversationView {
     els.composerBar.style.display = '';
     els.composerBar.innerHTML = ComposerView.html(false);
     this._ctx.composer.wire(els.composerBar);
+    this._ctx.jobsStrip.attach(els.composerBar);
     state.autoScrollPaused = false;
     this._ctx.main.pinBottom();
   }
@@ -77,6 +97,7 @@ export default class ConversationView {
     ctx.panel.close();
     ctx.liveArtifacts.dispose();
     ctx.previewSlot.release();
+    ctx.jobsStrip.reset();
   }
 
   async _loadMessages(id) {

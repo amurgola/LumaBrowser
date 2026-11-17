@@ -36,3 +36,10 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `conv.artifacts(conversationId)` | invoke `core.llmServer.conv.artifacts` |
 | `conv.variants(group)` | invoke `core.llmServer.conv.variants` |
 | `conv.setVariant(messageId)` | invoke `core.llmServer.conv.setVariant` |
+
+## Conversation jobs
+
+- `convJobs.list(conversationId)` -> `{ jobs }`, `convJobs.cancel(jobId)` -> `{ canceled }`
+  (`core.llmServer.convJobs.list` / `.cancel`).
+- `onConvJobsEvent(cb)`: `core.llmServer.convJobs.event`,
+  `{ type: 'changed' | 'finished' | 'posted', payload: { conversationId, job?, messageId? } }`.

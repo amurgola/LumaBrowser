@@ -20,3 +20,12 @@ hooks. Also New chat.
   sub-conversations are skipped).
 - `newChat()`: ignored while streaming; tells the outgoing mode it is left,
   resets to a plain agentic chat, unfolds the New-chat mode tray, shows the landing.
+
+## Background jobs
+
+- `render` re-attaches the [ConversationJobsStrip](../jobs/ConversationJobsStrip.md) to the
+  rebuilt composer bar; `open` resets it on leaving and refreshes it for the new conversation.
+- `showPosted()` adds messages the host wrote into the open conversation outside any turn
+  (a background job's outcome) to the thread on screen. It does nothing while a reply is
+  streaming there, and re-opens the conversation when the thread holds a message without
+  an id, since that one cannot be matched against the stored rows.

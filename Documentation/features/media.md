@@ -15,7 +15,8 @@ Turbo, Z-Image Turbo, Chroma, SDXL and SD 1.5.
   style in chat and ask for a LoRA. Models that can be trained carry a "LoRA trainable"
   tag in Image Setup. Training runs in the background on the graphics card, the finished
   LoRA lands in the library, and it can be attached to any model of the same family. The
-  copies of your pictures are deleted when the job ends.
+  chat shows the job's progress above the message box, with Cancel, and posts the result
+  into the conversation when it ends. The copies of your pictures are deleted then.
 - Some models carry non-commercial or territory-limited licenses. Each row in
   the app has a license note; read it before commercial use.
 - **A model per chat:** the gear in a chat's composer sets that conversation's

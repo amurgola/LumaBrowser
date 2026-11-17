@@ -14,6 +14,11 @@ class ConversationApi extends PreloadSection {
         variants: (group) => ipcRenderer.invoke('core.llmServer.conv.variants', group),
         setVariant: (messageId) => ipcRenderer.invoke('core.llmServer.conv.setVariant', messageId),
       },
+      convJobs: {
+        list: (conversationId) => ipcRenderer.invoke('core.llmServer.convJobs.list', conversationId),
+        cancel: (jobId) => ipcRenderer.invoke('core.llmServer.convJobs.cancel', jobId),
+      },
+      onConvJobsEvent: PreloadSection.subscribe(ipcRenderer, 'core.llmServer.convJobs.event'),
     };
   }
 

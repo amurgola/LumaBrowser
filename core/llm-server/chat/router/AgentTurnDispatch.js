@@ -1,11 +1,14 @@
 const ChatStyleDocs = require('./ChatStyleDocs');
 const DocsSourceGrant = require('./DocsSourceGrant');
 const ConversationGrants = require('../approval/ConversationGrants');
+const ConversationJobReminder = require('../jobs/ConversationJobReminder');
+const ConversationJobs = require('../jobs/ConversationJobs');
 
 class AgentTurnDispatch {
   static NOT_READY = 'Tools aren’t ready yet: the browser is still starting up. Try again in a moment.';
 
-  constructor({ agentBridge, chatStore, getAgentDeps, policy, contextWindow }) {
+  constructor({ agentBridge, chatStore, getAgentDeps, policy, contextWindow, jobs = ConversationJobs.shared }) {
+    this._jobs = jobs;
     this._bridge = agentBridge;
     this._store = chatStore;
     this._getAgentDeps = getAgentDeps;
@@ -31,7 +34,7 @@ class AgentTurnDispatch {
       priorMessages: this._priorMessages(t.convId, t.asstId),
       allowTakeover: !t.evalOverrides,
       modeSystemPrompt: AgentTurnDispatch._promptAppend(t.modeTurn, t.choicesOn, t.voiceOn, t.docsGrant),
-      turnReminder: t.voiceOn ? ChatStyleDocs.VOICE_REMINDER : null,
+      turnReminder: AgentTurnDispatch._turnReminder(t.voiceOn, this._jobs.activeFor(t.convId)),
       images: t.images,
       ...tools,
       ...AgentTurnDispatch._modeSeams(t.modeTurn, t.evalOverrides, t.docsGrant, t.modelBudget || null),
@@ -43,6 +46,11 @@ class AgentTurnDispatch {
       onRunApproval: grants && typeof grants.onGranted === 'function' ? grants.onGranted : null,
       onRunApprovalUsed: grants && typeof grants.onUsed === 'function' ? grants.onUsed : null,
     });
+  }
+
+  static _turnReminder(voiceOn, runningJobs) {
+    const parts = [voiceOn ? ChatStyleDocs.VOICE_REMINDER : null, ConversationJobReminder.build(runningJobs)].filter(Boolean);
+    return parts.length ? parts.join('\n') : null;
   }
 
   static _approvedTools(grants, modeTurn) {

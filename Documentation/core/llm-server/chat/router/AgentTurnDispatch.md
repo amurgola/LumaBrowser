@@ -14,6 +14,13 @@ Routes a Tools-on chat turn through the agent bridge.
 
 The wire history is stripped to role and content, so an edit_image follow-up needs the persisted rows to find artifact ids. Only the user's policy may be refreshed mid-run; a mode's pin and an eval's task list are exact.
 
+## Background work at the prompt tail
+
+`turnReminder` is built by `_turnReminder(voiceOn, runningJobs)`: the voice style note and
+the [ConversationJobReminder](../jobs/ConversationJobReminder.md) line for the jobs
+`ConversationJobs.activeFor(convId)` returns, joined by a newline, or null when neither
+applies. The constructor takes `jobs` as a test seam.
+
 ## Pre-approved tools
 
 A mode turn may carry `preApprovedTools` (tool names). They are added to the grants the run starts with (`approvedTools`), beside any carried in through `runApprovals` or the conversation's family grants, so the approval gate lets those calls through without a card. The one user is the Scheduled Task setup form ([SetupFormConsent](../scheduled-task/SetupFormConsent.md)). With neither source the value stays null.

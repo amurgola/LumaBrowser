@@ -5,14 +5,17 @@ class TrainingGpu {
   static SERVER_ID = 'lora-trainer';
   static GB = 1024 * 1024 * 1024;
   static NO_GPU = 'No NVIDIA graphics card was found. LoRA training needs one.';
+  static SETTLE_READS = 6;
+  static SETTLE_MS = 1500;
 
-  constructor({ queryGpus = () => NvidiaSmi.queryGpus(), coordinator = VramCoordinator.shared } = {}) {
+  constructor({ queryGpus = () => NvidiaSmi.queryGpus(), coordinator = VramCoordinator.shared, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
     this._queryGpus = queryGpus;
     this._coordinator = coordinator;
+    this._sleep = sleep;
   }
 
   async claim(recipe) {
-    const card = TrainingGpu.strongest(await this._cards());
+    const card = await this._settledCard(recipe);
     if (!card) throw new Error(TrainingGpu.NO_GPU);
     this._coordinator.hold(TrainingGpu.SERVER_ID, { devices: [card.index], bytes: card.totalBytes, role: 'image' });
     return {
@@ -28,6 +31,16 @@ class TrainingGpu {
     this._coordinator.release(TrainingGpu.SERVER_ID);
   }
 
+  async _settledCard(recipe) {
+    let card = null;
+    for (let read = 0; read < TrainingGpu.SETTLE_READS; read += 1) {
+      card = TrainingGpu.strongest(await this._cards());
+      if (!card || !TrainingGpu.tooFull(card, recipe)) return card;
+      await this._sleep(TrainingGpu.SETTLE_MS);
+    }
+    return card;
+  }
+
   async _cards() {
     try {
       return (await this._queryGpus()) || [];
@@ -38,6 +51,11 @@ class TrainingGpu {
 
   static strongest(cards) {
     return (cards || []).slice().sort((a, b) => (b.totalBytes - a.totalBytes) || (a.index - b.index))[0] || null;
+  }
+
+  static tooFull(card, recipe) {
+    const needGb = Number(recipe && recipe.minVramGb) || 0;
+    return needGb > 0 && TrainingGpu._gb(card.totalBytes) >= needGb && TrainingGpu._gb(card.freeBytes) < needGb;
   }
 
   static warningFor(card, recipe) {

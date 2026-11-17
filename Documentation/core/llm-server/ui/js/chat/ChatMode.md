@@ -92,3 +92,8 @@ page override of the starter chips). Writes none: legacy `window.LumaChatMode`,
 `apClose`) are gone: the chat uses its own scoped Resonant and registers
 handlers on it. ResonantJs itself still caches array templates on
 `window['cm.visible_template']`.
+
+## Background jobs
+
+Component `jobsStrip` ([ConversationJobsStrip](jobs/ConversationJobsStrip.md)) shows the open
+conversation's running background jobs above the composer.

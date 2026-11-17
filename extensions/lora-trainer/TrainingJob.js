@@ -12,10 +12,11 @@ class TrainingJob {
 
   static END_PHASES = new Set([TrainingJob.DONE, TrainingJob.FAILED, TrainingJob.CANCELED, TrainingJob.INTERRUPTED]);
 
-  constructor({ id, request, model, recipe, now = () => new Date().toISOString(), ownerPid = process.pid }) {
+  constructor({ id, request, model, recipe, conversationId = null, now = () => new Date().toISOString(), ownerPid = process.pid }) {
     this._now = now;
     this.id = id;
     this.ownerPid = ownerPid;
+    this.conversationId = conversationId || null;
     this.name = request.name;
     this.trigger = request.trigger;
     this.subject = request.subject || '';

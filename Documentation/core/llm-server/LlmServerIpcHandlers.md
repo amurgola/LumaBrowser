@@ -103,4 +103,4 @@ stream uses `SenderStream`, which skips a destroyed renderer.
 
 ## Changes (2026-11-09, helper model)
 
-`getHelperModelStatus` -> `{ status: svc.helperModel.getStatus() }` (185 channels).
+`getHelperModelStatus` -> `{ status: svc.helperModel.getStatus() }` (185 channels). `convJobs.list` and `convJobs.cancel` (the background jobs a conversation is waiting on, see [ConversationJobs](chat/jobs/ConversationJobs.md)) bring it to 187.

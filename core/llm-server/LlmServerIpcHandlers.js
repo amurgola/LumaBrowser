@@ -9,6 +9,8 @@ const ChatModeRegistry = require('./chat/ChatModeRegistry');
 const LiveApi = require('./chat/LiveApi');
 const WorkspaceFiles = require('./chat/WorkspaceFiles');
 const WorkspaceFileIpcHandlers = require('./chat/workspace/WorkspaceFileIpcHandlers');
+const ConversationJobPoster = require('./chat/jobs/ConversationJobPoster');
+const ConversationJobs = require('./chat/jobs/ConversationJobs');
 const CuratedModelCatalog = require('./models/CuratedModelCatalog');
 const ServerLauncher = require('./server/ServerLauncher');
 const AddonModelInstaller = require('./ipc/AddonModelInstaller');
@@ -84,6 +86,7 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._registerScheduledTasks(s);
     LlmServerIpcHandlers._registerTriggers(s);
     LlmServerIpcHandlers._registerConversations(router, s);
+    LlmServerIpcHandlers._registerConversationJobs(router);
     LlmServerIpcHandlers._registerChatSettings(router, s);
     WorkspaceFileIpcHandlers.register(ipcMain, s.workspace);
     LlmServerIpcHandlers._registerModesAndSetupTabs(s);
@@ -312,6 +315,13 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('conv.setReasoningEffort', (_e, id, position) => c.setReasoningEffort(id, position));
     LlmServerIpcHandlers._handle('conv.meta.get', (_e, conversationId) => c.getMeta(conversationId));
     LlmServerIpcHandlers._handle('conv.meta.set', (_e, conversationId, patch) => c.setMeta(conversationId, patch));
+  }
+
+  static _registerConversationJobs(router, jobs = ConversationJobs.shared) {
+    LlmServerIpcHandlers._handle('convJobs.list', (_e, conversationId) => ({ jobs: jobs.activeFor(conversationId) }), { jobs: [] });
+    LlmServerIpcHandlers._handle('convJobs.cancel', (_e, id) => ({ canceled: jobs.cancel(id) }));
+    LlmServerBroadcast.relayConversationJobs(jobs);
+    new ConversationJobPoster({ jobs, getRouter: () => router, onPosted: (posted) => LlmServerBroadcast.conversationJobPosted(posted) }).watch();
   }
 
   static _registerChatSettings(router, { approval, viewer }) {

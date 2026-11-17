@@ -19,6 +19,13 @@ Pushes LLM server events to every live renderer.
 Renderers drop artifact-data events whose `rev` is not newer than their cache,
 which also mutes the writer's own echo.
 
+## Conversation jobs
+
+`relayConversationJobs(jobs)` sends every [ConversationJobs](../chat/jobs/ConversationJobs.md)
+event to all renderers on `core.llmServer.convJobs.event` as `{ type: 'changed' | 'finished', payload }`.
+`conversationJobPosted({ conversationId, jobId, messageId })` sends `{ type: 'posted', payload }`
+on the same channel once the outcome message is in the thread.
+
 ## Defaults changes
 
 `LlmServerBroadcast.relayDefaults(llmServerService)` (wired beside `wire` in LlmServerIpcHandlers) sends every change of the launch defaults to all renderers on the server event channel as `{ type: 'defaults-changed', payload: { defaults } }`. The Setup page's Defaults card redraws on it. The other subscribers of the channel act only on the types they know.

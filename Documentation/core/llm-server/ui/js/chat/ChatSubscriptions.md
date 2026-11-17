@@ -22,3 +22,9 @@ Subscribes the chat to the host's pushes. Every push is optional on the API.
     re-probes the thinking dial (forced only on `'ready'`), applies the server
     state to [Availability](composer/Availability.md) and re-lists models;
   - `onServerState` to Availability.
+
+## Background-job events
+
+`api.onConvJobsEvent` goes to [ConversationJobsStrip](jobs/ConversationJobsStrip.md)
+`onEvent`; a `posted` event also refreshes the conversation list, which lifts the
+conversation that received the outcome message.

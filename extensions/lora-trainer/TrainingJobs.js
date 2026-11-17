@@ -14,9 +14,9 @@ class TrainingJobs {
     this._loaded = false;
   }
 
-  create({ request, model, recipe }) {
+  create({ request, model, recipe, conversationId = null }) {
     if (this.active()) throw new Error(TrainingJobs.BUSY);
-    const job = new TrainingJob({ id: `${request.name}-${this._clock().toString(36)}`, request, model, recipe });
+    const job = new TrainingJob({ id: `${request.name}-${this._clock().toString(36)}`, request, model, recipe, conversationId });
     this._jobs.set(job.id, job);
     this.save(job);
     return job;

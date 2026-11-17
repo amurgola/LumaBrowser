@@ -14,3 +14,4 @@ Plain state of one job.
 - `TrainingJob.fromSnapshot(stored)`: a job read back from `job.json`; `wasRunning` tells
   a record written mid-run.
 - `ownerPid`: the app process running the job.
+- `conversationId`: the chat that asked for it, or null for a call from outside a chat.

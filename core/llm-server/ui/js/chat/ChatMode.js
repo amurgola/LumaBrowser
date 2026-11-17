@@ -19,6 +19,7 @@ import ThinkPill from './composer/ThinkPill.js';
 import UsageMeter from './composer/UsageMeter.js';
 import ConversationMenu from './conversation/ConversationMenu.js';
 import ConversationView from './conversation/ConversationView.js';
+import ConversationJobsStrip from './jobs/ConversationJobsStrip.js';
 import LandingView from './conversation/LandingView.js';
 import CodeBlockBar from './main/CodeBlockBar.js';
 import FileDrop from './main/FileDrop.js';
@@ -80,7 +81,7 @@ export default class ChatMode {
     runtimeFix: RuntimeFixCard, settingLink: SettingLink, errorCard: ErrorCard, turnActions: TurnActions, turnEditor: AssistantTurnEditor, userEditor: UserTurnEditor,
     choiceChips: ReplyChoiceChips,
     voice: VoiceBridge, sender: TurnSender, stream: StreamView, events: ChatEventRouter, finisher: StreamFinisher,
-    conversation: ConversationView, landing: LandingView, convMenu: ConversationMenu,
+    conversation: ConversationView, landing: LandingView, convMenu: ConversationMenu, jobsStrip: ConversationJobsStrip,
     tasks: ScheduledTaskView, taskMenu: ScheduledTaskMenu, triggers: TriggerView, triggerMenu: TriggerMenu,
     triggerSections: TriggerSections,
     modeCtx: ModeContext, launcher: ModeLauncher, preflight: ModePreflight, theme: ModeTheme, codeSurface: CodeSurfaceReporter,

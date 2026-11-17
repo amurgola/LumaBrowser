@@ -11,7 +11,8 @@ One install run.
 3. `uv venv <venv> --python 3.12 --managed-python --seed` (the old venv is removed first).
 4. Pick the CUDA flavor from the driver banner and `uv pip install` the torch trio from that index.
 5. Write the resolved requirements and the torch constraints, then `uv pip install -r ... --constraint ...`.
-6. Write `trainer.json`.
+6. Delete uv's cache (it lives in the temp folder, see [TrainerPaths](TrainerPaths.md)) and write `trainer.json`.
+   A failed install keeps the cache, so a retry does not download PyTorch again.
 
 `execute()` resolves the manifest and throws a readable message on failure (code
 `CANCELED` on cancel). `onStep(label, detail)` reports progress.

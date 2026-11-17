@@ -11,5 +11,5 @@ The active add-on.
 - `activate(context)`: registers every recipe of [TrainingRecipes](TrainingRecipes.md) with
   `context.imageTraining` (skipped on a core without that surface), builds the services,
   clears the working files of abandoned jobs ([TrainingJobs](TrainingJobs.md) `abandonedIds`),
-  binds `{ flow, applier, overview }` to the tools. Returns `{ status(jobId), recipes() }`.
+  binds `{ flow, applier, overview }` to the tools. The flow gets a [TrainingAnnouncer](TrainingAnnouncer.md), so a job started from chat shows in that conversation and posts its outcome there. Returns `{ status(jobId), recipes() }`.
 - `deactivate()`: unbinds the tools and asks a running job to stop.

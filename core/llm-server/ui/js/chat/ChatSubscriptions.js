@@ -23,6 +23,7 @@ export default class ChatSubscriptions {
     });
     if (api.onSchedTasksEvent) api.onSchedTasksEvent((ev) => this._onTaskEvent(ev));
     if (api.onTriggersEvent) api.onTriggersEvent((ev) => this._onTriggerEvent(ev));
+    if (api.onConvJobsEvent) api.onConvJobsEvent((ev) => this._onJobEvent(ev));
     if (api.onServerEvent) this._unsubServer = api.onServerEvent((ev) => this._onServerEvent(ev));
     if (api.onServerState) {
       try { api.onServerState((st) => this._ctx.availability.applyServerState(st)); } catch (_) {}
@@ -57,6 +58,11 @@ export default class ChatSubscriptions {
     if (ev && ev.type === 'open' && tid) { ctx.triggers.open(tid).catch(() => {}); return; }
     if (ctx.state.activeTriggerId && (!tid || tid === ctx.state.activeTriggerId)) ctx.triggers.open(ctx.state.activeTriggerId).catch(() => {});
     ctx.main.syncActiveTitle();
+  }
+
+  _onJobEvent(ev) {
+    this._ctx.jobsStrip.onEvent(ev);
+    if (ev && ev.type === 'posted') this._ctx.convList.refresh();
   }
 
   _onServerEvent(ev) {

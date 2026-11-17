@@ -1,17 +1,21 @@
+const os = require('os');
 const path = require('path');
 
 class TrainerPaths {
   static RUNTIME_ID = 'lora-trainer';
-  static WORK_DIR = 'lora-training';
+  static WORK_DIR = 'work';
 
-  constructor({ baseDir, platform = process.platform }) {
+  static UV_CACHE_NAME = 'luma-uv';
+
+  constructor({ baseDir, platform = process.platform, tempDir = os.tmpdir() }) {
     this._baseDir = baseDir;
     this._windows = platform === 'win32';
+    this._tempDir = tempDir;
   }
 
   get runtimeDir() { return path.join(this._baseDir, 'runtimes', TrainerPaths.RUNTIME_ID); }
   get uvDir() { return path.join(this.runtimeDir, 'uv'); }
-  get uvCacheDir() { return path.join(this.runtimeDir, 'uv-cache'); }
+  get uvCacheDir() { return path.join(this._tempDir, TrainerPaths.UV_CACHE_NAME); }
   get pythonInstallDir() { return path.join(this.runtimeDir, 'python'); }
   get sourceRoot() { return path.join(this.runtimeDir, 'src'); }
   get venvDir() { return path.join(this.runtimeDir, 'venv'); }
@@ -27,8 +31,8 @@ class TrainerPaths {
 
   sourceDir(ref) { return path.join(this.sourceRoot, `ai-toolkit-${ref}`); }
 
-  get workDir() { return path.join(this._baseDir, TrainerPaths.WORK_DIR); }
-  get hubCacheDir() { return path.join(this.workDir, 'hf-cache'); }
+  get workDir() { return path.join(this.runtimeDir, TrainerPaths.WORK_DIR); }
+  get hubCacheDir() { return path.join(this.workDir, 'hf'); }
   get jobsDir() { return path.join(this.workDir, 'jobs'); }
 
   jobDir(jobId) { return path.join(this.jobsDir, jobId); }

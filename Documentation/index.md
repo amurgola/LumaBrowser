@@ -1251,6 +1251,8 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/ui/js/chat/ChatMode.md](core/llm-server/ui/js/chat/ChatMode.md): the LLM tab's chat surface, also run by the web PWA: it builds the sidebar, chat column, artifact panel and composer into a root element over ONE injected API object, and exposes the lifecycle other surfaces drive.
 - [core/llm-server/ui/js/chat/ChatState.md](core/llm-server/ui/js/chat/ChatState.md): everything one chat surface remembers between renders: models and the selection, conversations and the open one, the in-flight stream, the composer's per-chat options, staged attachments and editor context, the open panel, the active extension mode, and the session caches of server timings and final tab frames by message id.
 - [core/llm-server/ui/js/chat/ChatSubscriptions.md](core/llm-server/ui/js/chat/ChatSubscriptions.md): subscribes the chat to the host's pushes.
+- [core/llm-server/ui/js/chat/jobs/ConversationJobsHtml.md](core/llm-server/ui/js/chat/jobs/ConversationJobsHtml.md): markup of the background-jobs strip: title, status line, progress bar, Cancel; has `build`, `row`, `line`, `percent`.
+- [core/llm-server/ui/js/chat/jobs/ConversationJobsStrip.md](core/llm-server/ui/js/chat/jobs/ConversationJobsStrip.md): the strip above the composer showing the open conversation's running background jobs, with Cancel.
 - [core/llm-server/ui/js/chat/PaletteDeepLinks.md](core/llm-server/ui/js/chat/PaletteDeepLinks.md): the search palette's deep links into the LLM tab (reveal a Setup or Tune setting, open an artifact in its conversation); has `install`, `handle`, `reveal`, `highlight`.
 - [core/llm-server/ui/js/chat/ChatSurface.md](core/llm-server/ui/js/chat/ChatSurface.md): the LLM tab's chat (and the web PWA's, over its API shim), ported from the legacy `ui/js/chat-mode.js`.
 - [core/llm-server/ui/js/chat/common/ActionButton.md](core/llm-server/ui/js/chat/common/ActionButton.md): runs a host call behind a task or trigger view button: disables it, shows the host's error (escaped, or a fallback) on the button when the call fails, optionally restores it after 2.5 s, and runs `onSuccess` otherwise.
@@ -1614,6 +1616,9 @@ Small building blocks shared by more than one subsystem.
 
 ## core/llm-server/chat
 
+- [core/llm-server/chat/jobs/ConversationJobPoster.md](core/llm-server/chat/jobs/ConversationJobPoster.md): writes a finished job's outcome into its conversation as an assistant message; has `watch`, `post`.
+- [core/llm-server/chat/jobs/ConversationJobReminder.md](core/llm-server/chat/jobs/ConversationJobReminder.md): words a conversation's running jobs as one line for the tail of the model's prompt; has `build`, `describe`.
+- [core/llm-server/chat/jobs/ConversationJobs.md](core/llm-server/chat/jobs/ConversationJobs.md): the background jobs conversations are waiting on (title, progress, outcome) and their change events; has `start`, `update`, `finish`, `cancel`, `activeFor`, `onEvent`, `shared`.
 - [core/llm-server/chat/BackgroundRunGate.md](core/llm-server/chat/BackgroundRunGate.md): one shared lock so only one background agent run is in flight; has `tryAcquire`, `release`, `status`.
 - [core/llm-server/chat/BatchScheduler.md](core/llm-server/chat/BatchScheduler.md): runs sub-tasks with a concurrency limit, never editing one file twice at once; has `run`.
 - [core/llm-server/chat/ChatModeRegistry.md](core/llm-server/chat/ChatModeRegistry.md): registry of extension chat modes; has `shared`, `notifyConversationDeleted` plus registry methods.
@@ -4440,6 +4445,8 @@ Windhawk mods that are desktop clients of Desktop Integration; install and autho
 - [extensions/lora-trainer/TrainingRecipes.md](extensions/lora-trainer/TrainingRecipes.md): the per-family training recipes (ai-toolkit arch, base weights, caption style) and the gated families; has `forModel`, `registryEntry`.
 - [extensions/lora-trainer/TrainingRequest.md](extensions/lora-trainer/TrainingRequest.md): checks and normalises train_lora arguments; has `parse`, `slug`, `assertEnoughImages`.
 - [extensions/lora-trainer/TrainingWorkspace.md](extensions/lora-trainer/TrainingWorkspace.md): clears a job's working files when it ends; has `clear`, `clearAbandoned`.
+- [extensions/lora-trainer/TrainingOutcomeText.md](extensions/lora-trainer/TrainingOutcomeText.md): words how a training job ended for the conversation; has `of`, `duration`.
+- [extensions/lora-trainer/TrainingAnnouncer.md](extensions/lora-trainer/TrainingAnnouncer.md): reports a training job to the conversation that started it through ConversationJobs; has `started`, `progressed`, `ended`.
 - [extensions/lora-trainer/main.md](extensions/lora-trainer/main.md): main-process entry: activates one LoraTrainerExtension.
 - [extensions/lora-trainer/manifest.md](extensions/lora-trainer/manifest.md): manifest of the LoRA Trainer add-on (bundled, tools via `mcpTools`).
 - [extensions/lora-trainer/mcp-tools.md](extensions/lora-trainer/mcp-tools.md): the tool set registered with the McpAggregator; has `tools`, `handler`, `bind`.

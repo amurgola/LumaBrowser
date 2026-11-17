@@ -10,6 +10,7 @@ const TrainerImageHost = require('./TrainerImageHost');
 const TrainerOverview = require('./TrainerOverview');
 const TrainerPaths = require('./TrainerPaths');
 const TrainerRuntime = require('./TrainerRuntime');
+const TrainingAnnouncer = require('./TrainingAnnouncer');
 const TrainingDataset = require('./TrainingDataset');
 const TrainingGpu = require('./TrainingGpu');
 const TrainingImageSources = require('./TrainingImageSources');
@@ -54,8 +55,10 @@ class LoraTrainerExtension {
     const workspace = new TrainingWorkspace({ paths });
     workspace.clearAbandoned(jobs.abandonedIds());
     const applier = new LoraApplier({ host, models });
-    const flow = new LoraTrainingFlow({
-      jobs, models, runtime, runner, applier, workspace, host, paths,
+    let flow = null;
+    const announcer = new TrainingAnnouncer({ cancel: (jobId) => flow.cancel(jobId), logPathOf: (jobId) => paths.logPath(jobId) });
+    flow = new LoraTrainingFlow({
+      jobs, models, runtime, runner, applier, workspace, host, paths, announcer,
       sources: new TrainingImageSources({ host }),
       dataset: new TrainingDataset({ captioner: new ImageCaptioner({ chat: context.chat }) }),
       gpu: new TrainingGpu(),
