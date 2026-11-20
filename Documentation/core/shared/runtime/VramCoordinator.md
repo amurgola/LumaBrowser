@@ -27,7 +27,7 @@ before, in [HotswapCoordinator](HotswapCoordinator.md)`.acquire`.
 
 - `VramCoordinator.shared` the process-wide instance; `new VramCoordinator()` an
   empty ledger (tests).
-- `reserve({ serverId, role, requiredBytes, allowSplit = true, settingsDb, diagnostics })`
+- `reserve({ serverId, role, requiredBytes, allowSplit = true, softSingle = false, settingsDb, diagnostics })`
   returns `{ cudaDevice, offloadToCpu, devices, split }`. Throws
   `VramCoordinator.reserve: serverId is required`.
   - layout tier: the resolver's answer, recorded;
@@ -39,8 +39,13 @@ before, in [HotswapCoordinator](HotswapCoordinator.md)`.acquire`.
   - `allowSplit: false` (image roles' first try) never spans cards; the
     auto-fit rescue retries with `true` so a newer sd-server can place modules
     per card.
+  - `softSingle` (asked for by the LLM launcher) is passed to the layout and
+    automatic tiers: a whole model may stay on one card inside the soft reserve
+    ([CudaDevicePicker](CudaDevicePicker.md)) instead of spreading.
   - An offloaded claim records `PlacementLayout.OFFLOAD_RESIDENT_BYTES` (8 GB),
     else `requiredBytes`.
+- `preview(request)` what `reserve(request)` would return, with the ledger entry
+  for that server restored afterwards (the context fit matrix's card pick).
 - `hold(serverId, { devices, bytes, role = 'llm' })` an external claim (GPUs lent
   to a sharing peer); integer devices >= 0 only, non-positive bytes become 0.
   Throws `VramCoordinator.hold: serverId is required`.

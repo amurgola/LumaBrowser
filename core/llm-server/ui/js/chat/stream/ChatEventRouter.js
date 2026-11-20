@@ -20,6 +20,7 @@ export default class ChatEventRouter {
       done: (p) => this._done(p),
       error: (p) => this._ctx.finisher.error((p && p.message) || 'chat error', p),
       agent: (p) => this._agent(p),
+      plan: (p) => this._ctx.plan.onEvent(p),
     };
   }
 
@@ -27,7 +28,7 @@ export default class ChatEventRouter {
     if (!evt) return;
     const handler = this._handlers[evt.type];
     if (!handler) { this._modeEvent(evt); return; }
-    if (evt.requestId !== this._ctx.state.reqId) return;
+    if (evt.requestId !== this._ctx.state.reqId && !this._ctx.hostTurns.begin(evt.requestId)) return;
     handler(evt.payload);
   }
 
@@ -47,7 +48,7 @@ export default class ChatEventRouter {
     const minted = !state.streamConvId;
     state.streamConvId = cid;
     state.rememberRequest(state.reqId, cid);
-    if (state.activeId == null && !this._ctx.landing.isShowing()) state.activeId = cid;
+    if (minted && state.activeId == null && !this._ctx.landing.isShowing()) state.activeId = cid;
     if (minted && !state.conversations.some((c) => c.id === cid)) this._ctx.convList.refresh();
   }
 

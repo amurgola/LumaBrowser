@@ -40,14 +40,41 @@ export default class ExtCard {
       if (!fold || !container.contains(fold)) return;
       const card = fold.closest('.ext-item');
       if (!card) return;
-      const open = card.classList.toggle(ExtCard.OPEN_CLASS);
-      const chev = card.querySelector('.ext-item-chev');
-      if (chev) {
-        chev.setAttribute('aria-expanded', String(open));
-        chev.title = open ? 'Hide details' : 'Show details';
-      }
+      const open = ExtCard._setOpen(card, !card.classList.contains(ExtCard.OPEN_CLASS));
       if (onToggle) onToggle(card.dataset.cardId, open);
     });
+  }
+
+  static _setOpen(card, open) {
+    card.classList.toggle(ExtCard.OPEN_CLASS, open);
+    const chev = card.querySelector('.ext-item-chev');
+    if (chev) {
+      chev.setAttribute('aria-expanded', String(open));
+      chev.title = open ? 'Hide details' : 'Show details';
+    }
+    return open;
+  }
+
+  static setOutcome(card, outcome) {
+    if (!card) return;
+    card.querySelectorAll('[data-card-outcome]').forEach((el) => el.remove());
+    const own = card.querySelector('.ext-item-status');
+    if (own) own.hidden = !!outcome;
+    if (!outcome) return;
+    const word = ExtCard._outcomeEl(card, 'span', `ext-item-status${outcome.tone ? ` is-${outcome.tone}` : ''}`, outcome.text);
+    card.querySelector('.ext-item-text').after(word);
+    const tray = card.querySelector('.ext-item-tray-inner');
+    if (!outcome.detail || !tray) return;
+    tray.prepend(ExtCard._outcomeEl(card, 'div', outcome.tone === 'bad' ? 'ext-item-error' : 'ext-item-outcome', outcome.detail));
+    ExtCard._setOpen(card, true);
+  }
+
+  static _outcomeEl(card, tag, className, text) {
+    const el = card.ownerDocument.createElement(tag);
+    el.className = className;
+    el.setAttribute('data-card-outcome', '');
+    el.textContent = text;
+    return el;
   }
 
   static listHtml(cards) {

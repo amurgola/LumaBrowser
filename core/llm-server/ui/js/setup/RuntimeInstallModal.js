@@ -1,4 +1,5 @@
 import HtmlEscaper from '../format/HtmlEscaper.js';
+import ChatIcons from '../chat/ChatIcons.js';
 
 export default class RuntimeInstallModal {
   static open(opts) {
@@ -51,7 +52,7 @@ export default class RuntimeInstallModal {
             <div class="luma-modal rt-modal" role="dialog" aria-labelledby="rtModalTitle">
                 <div class="rt-modal-header">
                     <h3 class="luma-modal-title" id="rtModalTitle">${view.verb} ${name}</h3>
-                    <button class="luma-icon-btn luma-icon-btn--sq rt-modal-x" data-choice="cancel" aria-label="Close">×</button>
+                    <button class="luma-icon-btn luma-icon-btn--sq rt-modal-x" data-choice="cancel" aria-label="Close">${ChatIcons.x}</button>
                 </div>
                 <div class="rt-modal-body">
                     <p class="rt-modal-lead">How would you like to ${view.installed ? 'update' : 'set up'} ${name}?</p>

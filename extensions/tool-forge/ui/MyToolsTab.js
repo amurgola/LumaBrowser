@@ -45,7 +45,7 @@ export default class MyToolsTab {
     try {
       full = (await this._inv('get', { name })).tool;
     } catch (e) {
-      this._notice = { kind: 'warn', text: 'Could not open tool: ' + e.message };
+      this._notice = { kind: 'bad', text: 'Could not open tool: ' + e.message };
       this._render();
       return;
     }
@@ -72,7 +72,7 @@ export default class MyToolsTab {
       const res = await this._saveDraft();
       if (res && res.success) this._notice = { kind: 'ok', text: 'Saved as a draft (v' + res.version + '). Test it, then publish.' };
     } catch (e) {
-      this._notice = { kind: 'warn', text: e.message };
+      this._notice = { kind: 'bad', text: e.message };
     }
     await this._rerender();
   }
@@ -87,9 +87,9 @@ export default class MyToolsTab {
       this._canPublish = !!res.success;
       this._notice = res.success
         ? { kind: 'ok', title: 'Test passed', lines: [MyToolsTab._truncate(res.result, MyToolsTab.RESULT_PREVIEW_CHARS)] }
-        : { kind: 'warn', title: 'Test failed', lines: [res.error || 'unknown error'] };
+        : { kind: 'bad', title: 'Test failed', lines: [res.error || 'unknown error'] };
     } catch (e) {
-      this._notice = { kind: 'warn', text: e.message };
+      this._notice = { kind: 'bad', text: e.message };
     }
     await this._rerender();
   }
@@ -101,10 +101,10 @@ export default class MyToolsTab {
         this._editing = { ...this._editing, status: 'published' };
         this._notice = { kind: 'ok', text: 'Published and enabled. The chat can call it now; the gear panel toggles it per chat.' };
       } else {
-        this._notice = { kind: 'warn', text: res.error || 'Publish failed' };
+        this._notice = { kind: 'bad', text: res.error || 'Publish failed' };
       }
     } catch (e) {
-      this._notice = { kind: 'warn', text: e.message };
+      this._notice = { kind: 'bad', text: e.message };
     }
     await this._rerender();
   }
@@ -115,7 +115,7 @@ export default class MyToolsTab {
       this._notice = { kind: 'ok', text: 'Saved configuration.' };
       await this._reloadConfig();
     } catch (e) {
-      this._notice = { kind: 'warn', text: e.message };
+      this._notice = { kind: 'bad', text: e.message };
     }
     await this._rerender();
   }
@@ -127,7 +127,7 @@ export default class MyToolsTab {
       if (r.canceled) return;
       this._notice = { kind: 'ok', text: 'Exported to ' + r.filePath };
     } catch (e) {
-      this._notice = { kind: 'warn', text: 'Export failed: ' + e.message };
+      this._notice = { kind: 'bad', text: 'Export failed: ' + e.message };
     }
     this._render();
   }
@@ -143,7 +143,7 @@ export default class MyToolsTab {
         lines: r.warnings || [],
       };
     } catch (e) {
-      this._notice = { kind: 'warn', text: 'Import failed: ' + e.message };
+      this._notice = { kind: 'bad', text: 'Import failed: ' + e.message };
     }
     await this.refresh();
   }
@@ -155,7 +155,7 @@ export default class MyToolsTab {
       this._notice = { kind: 'ok', text: 'Deleted "' + name + '".' };
       await this.refresh();
     } catch (e) {
-      this._notice = { kind: 'warn', text: 'Delete failed: ' + e.message };
+      this._notice = { kind: 'bad', text: 'Delete failed: ' + e.message };
       this._render();
     }
   }
@@ -172,7 +172,7 @@ export default class MyToolsTab {
     try {
       patch = ToolEditView.collectPatch(this._el, this._editSlots, this._currentCode());
     } catch (e) {
-      this._notice = { kind: 'warn', text: e.message };
+      this._notice = { kind: 'bad', text: e.message };
       return null;
     }
     const res = await this._inv('save', { name: this._editing.name, patch });
@@ -180,7 +180,7 @@ export default class MyToolsTab {
       this._editing = { ...this._editing, ...patch, status: 'draft', version: res.version };
       this._canPublish = false;
     } else {
-      this._notice = { kind: 'warn', text: res.error || 'Save failed', lines: (res.diagnostics || []).map(MyToolsTab._diagnostic) };
+      this._notice = { kind: 'bad', text: res.error || 'Save failed', lines: (res.diagnostics || []).map(MyToolsTab._diagnostic) };
     }
     return res;
   }
@@ -191,7 +191,7 @@ export default class MyToolsTab {
     try {
       return { value: JSON.parse(text) };
     } catch (e) {
-      this._notice = { kind: 'warn', text: 'Test args are not valid JSON: ' + e.message };
+      this._notice = { kind: 'bad', text: 'Test args are not valid JSON: ' + e.message };
       return null;
     }
   }

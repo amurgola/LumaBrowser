@@ -6,7 +6,7 @@ export default class CtxFitMatrix {
     { id: 'q8_0', short: 'q8 KV', help: 'Quantised KV cache (q8_0): roughly half the VRAM of f16' },
   ];
 
-  static SUB_TIP = 'From the launch planner: the same decision Start makes. Rungs the fit test has measured show their recorded numbers; the rest are planner estimates with a predicted speed. Hover a pill for detail. Green = full GPU offload · Yellow = partial GPU/CPU split · Red = CPU-bound · Grey = can\'t estimate';
+  static SUB_TIP = 'From the launch planner: the decision Start would make with the VRAM free right now and your GPU headroom. Rungs the fit test has measured show their recorded numbers while they still fit that way; the rest are planner estimates with a predicted speed. Hover a pill for detail. Green = full GPU offload · Yellow = partial GPU/CPU split · Red = CPU-bound · Grey = can\'t estimate';
 
   static MTP_NOTE = ' <span class="model-ctxfit-mtp" title="MTP draft branch: extra weights, a draft KV cache, and ~256 MB scratch. The matrix includes this cost because the launcher engages MTP automatically for MTP-grafted GGUFs.">+ MTP overhead</span>';
 

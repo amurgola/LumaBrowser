@@ -6,12 +6,19 @@ export default class NotificationLogHtml {
   static render(entries, autoCloseMs) {
     const esc = HtmlEscaper.escape;
     const items = entries.map((e) => (
-      `<div class="log-item ${e.type === 'success' || e.type === 'error' ? e.type : ''}">${esc(e.time)}: ${esc(e.message)}</div>`
+      `<div class="log-item ${e.type === 'success' || e.type === 'error' ? e.type : ''}">${esc(e.time)}: ${esc(e.message)}${NotificationLogHtml._actionButton(e)}</div>`
     )).join('');
-    return `<div class="notification-log" style="--nlog-ms:${autoCloseMs}ms">`
+    const held = entries.some((e) => e.action);
+    return `<div class="notification-log${held ? ' is-held' : ''}" style="--nlog-ms:${autoCloseMs}ms">`
       + '<svg class="nlog-ring" aria-hidden="true"><rect pathLength="100"/></svg>'
       + '<div class="log-title"><span>Notifications</span>'
       + `<button class="log-close-btn" data-bd-action="close-log" title="Dismiss">${NotificationLogHtml.CLOSE_ICON}</button></div>`
       + `<div class="log-items">${items}</div></div>`;
+  }
+
+  static _actionButton(entry) {
+    if (!entry.action) return '';
+    const esc = HtmlEscaper.escape;
+    return `<button class="log-action-btn" data-bd-action="log-action" data-bd-id="${esc(entry.id)}">${esc(entry.action.label)}</button>`;
   }
 }

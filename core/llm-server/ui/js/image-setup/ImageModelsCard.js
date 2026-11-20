@@ -1,6 +1,7 @@
 import ByteFormatter from '../format/ByteFormatter.js';
 import HtmlEscaper from '../format/HtmlEscaper.js';
 import Dom from '../dom/Dom.js';
+import ChatIcons from '../chat/ChatIcons.js';
 import FoldMemory from '../setup/FoldMemory.js';
 import CatalogModelRow from './CatalogModelRow.js';
 import DownloadDetail from './DownloadDetail.js';
@@ -206,10 +207,9 @@ export default class ImageModelsCard {
 
   static _errorBanner(error) {
     if (!error) return '';
-    return `<div class="luma-callout bad img-error">
-           <span class="img-error-ic">!</span>
-           <span class="img-error-msg">${HtmlEscaper.escape(error)}</span>
-           <button class="luma-btn luma-btn--sm img-error-dismiss" data-act="dismiss-err">Dismiss</button>
+    return `<div class="luma-callout luma-notice bad img-error" role="alert">
+           <div class="luma-notice-body"><div class="luma-notice-line img-error-msg">${HtmlEscaper.escape(error)}</div></div>
+           <div class="luma-notice-controls"><button type="button" class="luma-notice-x" data-act="dismiss-err" aria-label="Dismiss" title="Dismiss">${ChatIcons.x}</button></div>
          </div>`;
   }
 

@@ -21,6 +21,7 @@ class BrowserService {
   async screenshot(tabId, options = {}) { return this._tabManager.screenshotTab(tabId, options); }
   async click(tabId, options = {}) { return this._tabManager.clickElement(tabId, options); }
   async clickAt(tabId, options = {}) { return this._tabManager.clickAt(tabId, options); }
+  async clickUntil(tabId, options = {}, run = {}) { return this._tabManager.clickUntil(tabId, options, run); }
   async fill(tabId, options = {}) { return this._tabManager.fillForm(tabId, options); }
   async observePage(tabId, options = {}) { return this._tabManager.observePage(tabId, options); }
   async typeInto(tabId, options = {}) { return this._tabManager.typeInto(tabId, options); }

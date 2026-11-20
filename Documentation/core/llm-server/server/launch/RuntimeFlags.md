@@ -22,18 +22,24 @@ binary's argparser would reject.
     (`--moe-cache-mib` accepted and b11480+, or a luma tag luma-b4+),
     `moeCacheMultiGpu` (b11507+, or luma-b4+), `moeTiers` (luma-b5+ with
     `--moe-ram-mib` and `--moe-profile` accepted: the luma patch stack's expert
-    tiers, never mainline) and `moeRamRegister` (luma-b6+ with
-    `--moe-ram-register-mib` accepted). The luma gates read `lumaTag`: the tag
+    tiers, never mainline), `moeRamRegister` (luma-b6+ with
+    `--moe-ram-register-mib` accepted) and `moeStage` (`moeTiers` with
+    `MOE_STAGE_FLAG`, `--moe-stage-mib`, accepted: the planner may switch the
+    expert upload staging off), `deviceOrder` (a tensor-split runtime and
+    build with all three `DEVICE_ORDER_FLAGS` accepted: the planner may name the
+    device order slowest first). The luma gates read `lumaTag`: the tag
     number from the install manifest (`luma-b6`), else from a tag-shaped version
     label, else null, in which case the build is taken as current and a rejected
     flag is learned after one failed start (a hand-built binary registered with
     Locate, or an install from before manifests). A luma binary's own `--version`
     prints upstream's build count, which says nothing about the patch stack.
-- `accepts(flag)`; `RuntimeFlags.lumaTag(runtime)`.
+- `accepts(flag)`; `RuntimeFlags.lumaTag(runtime)`; `RuntimeFlags.cudaDeviceName(n)`
+  is `CUDA<n>`, the name llama.cpp gives the n-th visible CUDA card.
 - `TENSOR_SPLIT_MIN_BUILD` (9000), `LOAD_MODE_MIN_BUILD` (10105),
   `FIT_OFF_MIN_BUILD` (10621), `MOE_CACHE_MIN_BUILD` (11480), `MOE_CACHE_MULTI_GPU_MIN_BUILD` (11507),
   `LUMA_RUNTIME_ID`, `LUMA_MOE_CACHE_MIN_TAG` (4), `LUMA_MOE_TIERS_MIN_TAG` (5),
-  `LUMA_MOE_REGISTER_MIN_TAG` (6), `MOE_RAM_REGISTER_FLAG`, `TENSOR_SPLIT_RUNTIME_IDS`.
+  `LUMA_MOE_REGISTER_MIN_TAG` (6), `MOE_RAM_REGISTER_FLAG`, `TENSOR_SPLIT_RUNTIME_IDS`,
+  `DEVICE_ORDER_FLAGS` (`--device`, `--spec-draft-device`, `--mmproj-device`).
 
 ## Why
 
@@ -42,4 +48,7 @@ what they lack in `unsupportedFlags`; the launcher's rescue learns more through
 [UnsupportedFlagMemory](../UnsupportedFlagMemory.md). b10875 deleted `--no-mmap`
 for `--load-mode none`, so a learned `--no-mmap` rejection proves the newer
 spelling even when the version is unreadable. The luma fork's tags carry no
-upstream build number, so it is gated by id.
+upstream build number, so it is gated by id. The device-order gate is limited to the
+CUDA runtimes because only they give device names the planner can predict (`CUDA<n>`
+in visible-device order); the three flags are far older than the build floor, and a
+build that rejects one is learned after one failed start.

@@ -41,7 +41,9 @@ class OffloadDecision {
   static _decideFit(decision, { budget, flags, files, overrides }) {
     decision.measuredFullOffload = !!budget.unifiedMemory && overrides.measuredFullOffload === true && decision.measuredVramBytes != null;
     const fitsPinned = budget.totalVram > 0
-      && (decision.modelEstimatedBytes <= budget.vramAvailableBytes || decision.measuredFullOffload);
+      && (decision.modelEstimatedBytes <= budget.fullOffloadRoomBytes || decision.measuredFullOffload);
+    decision.softHeadroom = fitsPinned && !decision.measuredFullOffload
+      && decision.modelEstimatedBytes > budget.vramAvailableBytes;
     decision.unifiedHostBytes = UnifiedShare.hostBytes(budget, files.gguf);
     decision.hostOffPoolBytes = 0;
     if (!fitsPinned && decision.measuredVramBytes == null && decision.unifiedHostBytes > 0

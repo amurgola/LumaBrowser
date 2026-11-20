@@ -57,6 +57,10 @@ class NotificationRepository {
     return this._db.query(sql, ...params, limit, offset).map(NotificationRepository.hydrate);
   }
 
+  setSender(id, sender) {
+    this._db.run('UPDATE hub_notifications SET sender = ? WHERE id = ?', sender || '', id);
+  }
+
   count() {
     const row = this._db.query('SELECT COUNT(*) AS n FROM hub_notifications')[0];
     return (row && row.n) || 0;

@@ -15,6 +15,10 @@ class GpuHeadroom {
     return GpuHeadroom._bytes;
   }
 
+  static softFloorBytes() {
+    return Math.floor(GpuHeadroom._bytes / 2);
+  }
+
   static normalize(value) {
     const n = Math.round(Number(value));
     if (!Number.isFinite(n) || n < GpuHeadroom.MIN_BYTES || n > GpuHeadroom.MAX_BYTES) return GpuHeadroom.DEFAULT_BYTES;

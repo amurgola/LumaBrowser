@@ -20,7 +20,8 @@ classes in [service/](service/); every legacy public method keeps its name.
   (`LlmRuntimeCatalog.shared`), `scanner` (`LlmModelsScanner.shared`),
   `gatherDiagnostics` (`SystemDiagnostics.gather`), `vramCoordinator`
   (`VramCoordinator.shared`), `releasePeers` (`RpcPeers.releaseAll`),
-  `vramWatchdogOptions` (merged into the watchdog options), `modelCaps` (new
+  `vramWatchdogOptions` (merged into the watchdog options), `residentVram` (new
+  [LlmResidentVram](service/LlmResidentVram.md)), `modelCaps` (new
   ModelCapsCache), `chatStore` (new ChatStore), `groupRouter` (new
   GroupRouterService), `ramPin` (the RamPinService below).
 - Construction order: stores, then the supervisor (idle timeout from settings,
@@ -29,7 +30,8 @@ classes in [service/](service/); every legacy public method keeps its name.
   ChatStore, then the one-time [LegacyChatMigration](LegacyChatMigration.md)
   (a failure is logged and never blocks boot). Nothing spawns a process.
 - Public fields: `settingsDb`, `apiSecurity`, `queueManager`, `runtimeServer`,
-  `modelCaps`, `vramWatchdog`, `groupRouter`, `ramPin` (RamPinService
+  `modelCaps`, `vramWatchdog`, `residentVram` (the loaded chat model's own VRAM per
+  card, wired by LlmSupervisorHooks), `groupRouter`, `ramPin` (RamPinService
   `luma-llm-ram-pin`, enabled by the `pinModelRam` default, target
   `LlmPinTarget#resolve(this)`), `chatStore`.
 - Read-only pinned-tab getters: `tabViewManager`, `pinnedTabId`, `tabHtmlUrl`,
@@ -53,19 +55,29 @@ Requests and starting ([LocalRequestTracker](service/LocalRequestTracker.md),
 - `ensureRunning({ withVision })`, `whenVisionSettled()`.
 
 VRAM pressure:
-- `getVramPressure()` the watchdog state; `dismissVramPressure(card)`.
+- `getVramPressure()` the watchdog state through [VramWarningSwitch](server/vram-watchdog/VramWarningSwitch.md)`.view`
+  (no cards while the warning is off); `dismissVramPressure(card)`.
+- `getVramWarning()`, `setVramWarning(value)` -> the boolean: the low-VRAM banner switch
+  (`core.llm.vramWarning`, on by default); setting it resyncs the banner at once (rows
+  clear when off, the real bands return when on).
 - `getUnloadOnVramPressure()`, `setUnloadOnVramPressure(value)`.
 - `getGpuHeadroomBytes()`, `setGpuHeadroomBytes(bytes)`: the per-card GPU headroom ([GpuHeadroom](../shared/runtime/GpuHeadroom.md)).
 - The watchdog's `isIdle` is ready, nothing in flight and no idle hold
-  (`runtimeServer.idleHeld`); its unload stops the server; its events go to the
-  pinned tab as `core.llmServer.modelEvent` `{ type, payload }`.
+  (`runtimeServer.idleHeld`); its unload stops the server; its events go through the
+  warning switch to the pinned tab as `core.llmServer.modelEvent` `{ type, payload }`
+  (`vram-pressure` events only while the warning is on). Its per-card reserve is 0 on a
+  unified-memory card, `CudaDevicePicker.SOFT_RESERVE_BYTES` (half the headroom) while the
+  running plan has `softHeadroom`, else `PER_CARD_RESERVE_BYTES`, so a load the planner
+  placed inside the soft headroom does not trip its own warning. While the warning is off
+  the watchdog still samples and bands, so unload on VRAM pressure keeps working.
 
 Queue, provider entry, API key:
 - `setQueueManager(qm)`; `syncQueueConcurrency(slots)` calls
   `qm.ensureConcurrency('<id>::<selectedModel>', max(1, floor(slots)))`, a no-op
   without a queue or local model, swallowing queue errors.
 - `computeLocalProviderEntry()` [LocalProviderEntry](service/LocalProviderEntry.md)
-  with the supervisor's port and the display-name resolver.
+  with the supervisor's port, the display-name resolver and the installed models'
+  `snapshot()`, so its `models` list every installed chat model.
 - `getApiKeyForLaunch()` `{ required, key (first key), keyCount }`; no ApiSecurity is `{ false, null, 0 }`.
 
 UI state ([LlmUiState](service/LlmUiState.md)): `getUiMode`, `setUiMode`,
@@ -93,15 +105,21 @@ with cache key `core.llmServer.runtimesCache` and binaries under
 `setManualRuntimeBinary`, `getAllManualRuntimeBinaries`. The runtimes view gets
 its CUDA and GPU inputs from `ensureDiagnostics()`.
 
+`fitTestRunning`: a plain flag the [FitTestSession](ipc/FitTestSession.md) sets while a fit test runs (it stops
+and restarts the chat server). Anything that needs a steady server reads it and holds off; the Model Testing
+add-on refuses to start a run meanwhile.
+
 Per-model stores: `getAllFitResults`, `getFitResults`, `saveFitResults`
-([FitResultStore](service/FitResultStore.md)); `getAllGambitResults`,
-`getGambitResults`, `saveGambitResults` ([GambitResultStore](service/GambitResultStore.md));
+([FitResultStore](service/FitResultStore.md));
 `getModelDisplayNames`, `setModelDisplayName`, `resolveModelDisplayName`
 ([LlmModelDisplayNames](service/LlmModelDisplayNames.md)); `getModelDrafterChoices`,
 `setModelDrafterChoice` ([LlmDrafterChoices](service/LlmDrafterChoices.md), applied to
 every scan through `LlmModelsScanner.shared.useDrafterChoices`); `getModelLaunchFlags`,
 `setModelLaunchFlags`, `resolveModelLaunchFlags` ([ModelLaunchFlags](service/ModelLaunchFlags.md));
-`listInstalledChatModels()` ([InstalledChatModels](service/InstalledChatModels.md)); the public
+`listInstalledChatModels()`, `freshInstalledChatModels()` (no rescan within a few seconds, what a model
+picker waits on), `installedModelPath(stem)` ([InstalledChatModels](service/InstalledChatModels.md));
+`selectInstalledModel(stem)` makes an installed model the default through
+[LlmDefaultsUpdater](ipc/LlmDefaultsUpdater.md) (a running server stops), resolving false when it is not installed; the public
 `modelSettings` field ([ModelSettings](service/ModelSettings.md) over
 [ModelOverrideStore](service/ModelOverrideStore.md), [ModelProfileStore](service/ModelProfileStore.md)
 and the launch flags store) holds the per-model overrides and model profiles.

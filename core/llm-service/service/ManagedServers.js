@@ -21,6 +21,12 @@ class ManagedServers {
     return ManagedServers._entryFrom(this.llmServerService, 'computeLocalProviderEntry');
   }
 
+  async refreshLocalModels() {
+    const service = this.llmServerService;
+    if (!service || typeof service.freshInstalledChatModels !== 'function') return;
+    try { await service.freshInstalledChatModels(); } catch (_) {}
+  }
+
   groundingEntry() {
     return ManagedServers._entryFrom(this.groundingServerService, 'computeProviderEntry');
   }
@@ -29,7 +35,7 @@ class ManagedServers {
     const provider = config && config.provider;
     if (provider === ManagedServers.GROUNDING_ID) return this._ensureGroundingReady();
     if (provider !== ManagedServers.LOCAL_ID) return { ok: true };
-    return this._ensureLocalReady(withVision);
+    return this._ensureLocalReady(this._localStartOptions(config, withVision));
   }
 
   async track(config, fn) {
@@ -65,11 +71,19 @@ class ManagedServers {
     return { ok: false, error: (result && result.error) || 'Grounding server failed to start.', code: result && result.code };
   }
 
-  async _ensureLocalReady(withVision) {
+  _localStartOptions(config, withVision) {
+    const entry = this.localEntry();
+    const options = {};
+    if (withVision) options.withVision = true;
+    if (config.model && entry && config.model !== entry.selectedModel) options.model = config.model;
+    return Object.keys(options).length ? options : undefined;
+  }
+
+  async _ensureLocalReady(options) {
     const service = this.llmServerService;
     if (!service || typeof service.ensureRunning !== 'function') return { ok: true };
     try {
-      const result = await service.ensureRunning(withVision ? { withVision: true } : undefined);
+      const result = await service.ensureRunning(options);
       return result && result.success ? { ok: true } : ManagedServers._localFailure(result);
     } catch (e) {
       return { ok: false, error: e.message };

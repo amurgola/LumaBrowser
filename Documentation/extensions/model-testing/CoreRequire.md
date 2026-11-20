@@ -1,0 +1,19 @@
+# CoreRequire
+
+`extensions/model-testing/CoreRequire.js`
+
+Loads a LumaBrowser core module from this add-on wherever it is installed.
+
+## Methods
+
+- `CoreRequire.load(relFromCoreRoot)` requires `<repo>/core/<rel>` relative to
+  this file (dev). Only on `MODULE_NOT_FOUND` does it fall back to
+  `<app.getAppPath()>/core/<rel>`; any other load error is rethrown.
+
+## Why
+
+A distributable add-on is sideloaded into the writable userData extensions dir,
+where `../../core/...` points at nothing. `app.getAppPath()` is the app.asar
+path in packaged builds and the project root in dev. The same class as the other
+distributable add-ons carry (for example `extensions/ninfer-runtime/CoreRequire.js`):
+each add-on zip must stand alone, so it is not shared.

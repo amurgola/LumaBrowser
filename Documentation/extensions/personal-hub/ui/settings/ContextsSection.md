@@ -5,8 +5,8 @@
 The Hub's contexts section: the few companies or areas of life
 everything is filed under. Each context has a name and a colour and says
 what belongs to it: signed-in tabs, calendars and task trackers (ticked from
-what the Hub already knows), plus mail or site domains, parts of a link and
-whole apps (typed). The set is saved as one; activity summaries and the
+what the Hub already knows), plus conversations by name, mail or site
+domains, parts of a link and whole apps (typed). The set is saved as one; activity summaries and the
 focus view group by it ([ContextService](../../context/ContextService.md)).
 Shown in Settings > Hub and in the Dashboard's settings panel
 ([HubSettingsPanel](../widgets/HubSettingsPanel.md)), so it imports only
@@ -25,13 +25,19 @@ from the extension's own ui folder (`WidgetDom.esc` for escaping; see
   silently drop it. A row with nothing to tick says so (`No signed-in tabs
   found yet.` and the like); a failed read of the choices leaves the rows
   empty.
-- Three typed rows (`TYPED`), comma separated: `Domains` (`domain`: mail
-  from these domains and notifications from these sites), `Link contains`
-  (`url`: a workspace or team id that shows in the address of its tab) and
-  `Whole apps` (`app`: everything from an app).
-- The help text states the precedence: a link match wins, then the tab, then
-  the domain, then the app; anything that matches no context lands in
-  Other.
+- Five typed rows (`TYPED`), comma separated: `Conversations`
+  (`conversation`: a channel or chat by its name, placeholder
+  `#acme-project, Dana Reyes`; it wins over the tab it is in, so one channel
+  of a shared workspace can belong to this context), `Subject has`
+  (`subject`: mail whose subject has one of these words or phrases, whoever
+  sent it and whichever mailbox it arrives in), `Domains` (`domain`:
+  mail from these domains and notifications from these sites), `Link
+  contains` (`url`: a workspace or team id that shows in the address of its
+  tab) and `Whole apps` (`app`: everything from an app).
+- The help text states the precedence: a named conversation wins, then a
+  word in a mail's subject, then (for mail and direct messages) the context
+  the user gave the sender under People, then a link match, the tab, the
+  domain and the app; anything that matches no context lands in Other.
 - Add, reorder and remove read the blocks back first, so edits survive the
   re-render.
 - `Save contexts` sends `saveContexts([{ id?, name, color, rules }])` in

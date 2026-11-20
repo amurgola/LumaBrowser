@@ -17,10 +17,10 @@ class ModelContextEntry {
       && model.weights && model.weights[0] && model.weights[0].path);
   }
 
-  build({ model, runtime, diagnostics, fitEntry, displayNameFor }) {
+  build({ model, runtime, diagnostics, settingsDb = null, fitEntry, displayNameFor }) {
     const gguf = (model.gguf && model.gguf.parsed) ? model.gguf : null;
     const fitRows = fitEntry && Array.isArray(fitEntry.results) ? fitEntry.results : null;
-    const ctx = { model, runtime, diagnostics, fitRows };
+    const ctx = { model, runtime, diagnostics, settingsDb, fitRows };
     const rungs = ContextLadder.rungsFor(gguf && gguf.contextLength ? gguf.contextLength : null);
     const kvOptions = this._kvOptions(ctx, rungs);
     const contextOptions = AutoContextPick.ladder(kvOptions, KvCacheModes.OFFERED_MODES, rungs.length);
@@ -84,7 +84,7 @@ class ModelContextEntry {
     };
   }
 
-  _measuredAtDepth({ model, runtime, diagnostics, fitRows }) {
+  _measuredAtDepth({ model, runtime, diagnostics, settingsDb, fitRows }) {
     const row = FitRows.depthProbeRow(fitRows);
     if (!row) return null;
     const kv = FitRows.kvOf(row);
@@ -93,7 +93,7 @@ class ModelContextEntry {
       tokensPerSec: row.tokensPerSecAtDepth,
       prefillMs: row.depthPrefillMs != null ? row.depthPrefillMs : null,
       kv,
-      predicted: this._estimator.predictedTpsAtDepth(model, runtime, diagnostics, row.depthTokens, kv),
+      predicted: this._estimator.predictedTpsAtDepth(model, runtime, diagnostics, row.depthTokens, kv, { settingsDb }),
     };
   }
 }

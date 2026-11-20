@@ -18,6 +18,7 @@ export default class MoreSettingsChips {
     if (defaults.groupRouter) chips.push('Tool router');
     if (prefs.autoUnloadMs > 0) chips.push('Auto-unload');
     if (prefs.unloadOnVramPressure === true) chips.push('Unload on VRAM pressure');
+    if (prefs.vramWarning === false) chips.push('Low VRAM warning off');
     if (prefs.gpuHeadroomBytes != null && prefs.gpuHeadroomBytes !== DefaultsOptions.GIB) {
       chips.push(`${Math.round((prefs.gpuHeadroomBytes / DefaultsOptions.GIB) * 10) / 10} GB GPU headroom`);
     }

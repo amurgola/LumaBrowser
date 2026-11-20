@@ -13,4 +13,5 @@ The "Agents" tab: sub-agents with import/export and a create/edit form.
   `closeForm()`, `saveForm(form)` (`update` or `create`; errors inline).
 - `deleteAgent(id)` (alerts "Delete failed: ..."), `exportAgent(agent)`,
   `importAgent()` (title "Imported "X" with N knowledge docs", warnings as lines).
-- `modelLabel(ref)`: "App default", the model label, or the ref.
+- `modelLabel(ref)`: "App default", the model label, or "Unavailable: <ref>" for a pinned
+  model the list no longer has.

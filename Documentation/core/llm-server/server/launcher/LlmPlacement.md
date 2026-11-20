@@ -7,13 +7,17 @@ Picks the GPU(s) for a local start before the real plan.
 ## Methods
 
 - `new LlmPlacement({ vram })` (a `VramCoordinator`).
-- `place(ctx)` plans a probe, reserves `{ serverId: 'llm', role: 'llm', allowSplit: true }`
+- `place(ctx)` plans a probe, reserves `{ serverId: 'llm', role: 'llm', allowSplit: true, softSingle: true }`
   for `placementNeed(ctx, probe.plan)`, and sets `ctx.cudaDevice`, `ctx.tensorSplit` (the
   reservation's `split`) and `ctx.planDiag` (diagnostics narrowed to the reserved
   cards). A user-drawn split over 2+ cards sets `overrides.manualTensorSplitActive`.
   Any failure leaves the start unpinned.
 - `placeForRescue(ctx, headerEstimatedBytes)` reserves again for the header
   estimate and returns `{ cudaDevice, diagnostics }`.
+- `previewCudaDevice({ diagnostics, settingsDb, plan })` the `cudaDevice` that `place`
+  would pin for that probe plan, through `VramCoordinator.preview` (nothing claimed):
+  a `CUDA_VISIBLE_DEVICES` string, or null for every card or on any failure. The
+  Setup context fit matrix ([RungEstimator](../../context/RungEstimator.md)) uses it.
 - `LlmPlacement.placementNeed(ctx, plan)`: the probe plan's `moeCacheSingleCardBytes` when it is
   set and the local cards are of mixed models (two or more, names differ); else
   `modelEstimatedBytes`; undefined without a plan.
@@ -30,6 +34,10 @@ UD-Q4_K_XL, RTX 5090 + RTX 3090): the 5090 alone decoded 63 to 67 tok/s (prompt 
 cards 44 to 61 (prompt 893), a 40/8 split 55 to 59, a hybrid with ten native layers on the 3090
 41 to 52. The slower card serves its share of the layers with slower kernels over a PCIe 4 link,
 and that costs more than the bigger shared cache gains. Equal cards keep the spread.
+
+`softSingle` keeps a model that fits one card only inside half the GPU headroom on that
+card, and the planner then takes the same full offload (`VramBudget` `fullOffloadRoomBytes`);
+see [GpuHeadroom](../../../shared/runtime/GpuHeadroom.md) for the measurement.
 
 Planning against the whole box while the child sees only some cards would
 over-offload and OOM. With borrowed peers, placement is local-first: capping the

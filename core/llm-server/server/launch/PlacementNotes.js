@@ -3,6 +3,7 @@ const ByteLadder = require('../ByteLadder');
 const GpuOverhead = require('./GpuOverhead');
 const HybridAttentionLayout = require('./HybridAttentionLayout');
 const LayerFillSplit = require('./LayerFillSplit');
+const RuntimeFlags = require('./RuntimeFlags');
 
 class PlacementNotes {
   static build(state) {
@@ -115,10 +116,33 @@ class PlacementNotes {
   }
 
   _noteFullOffload() {
+    this._noteFullOffloadPlacement();
+    if (this._s.offload.softHeadroom) this._noteSoftHeadroom();
+  }
+
+  _slowFirstSuffix() {
+    const { splits, budget } = this._s;
+    const fill = splits.layerFill;
+    if (!fill || !fill.order) return '';
+    const main = budget.perGpu[fill.mainDevice];
+    return ` The overflow goes at the front of the model: the devices are listed slowest first (--device ${fill.order.map((device) => RuntimeFlags.cudaDeviceName(device)).join(',')}), `
+      + `so ${main.name} holds the end of the model, and the output layer and with it the draft model stay on the fast card.`;
+  }
+
+  _noteSoftHeadroom() {
+    const card = this._s.budget.perGpu[0];
+    const fmt = ByteLadder.format;
+    this._notes.push(`GPU headroom: reduced to ${fmt(GpuOverhead.SOFT_CARD_RESERVE)} on ${card.name} for this load `
+      + `(setting: ${fmt(GpuOverhead.PER_CARD_RESERVE)}). The whole model fits the card only inside the headroom, and moving `
+      + 'layers to a slower card or the CPU costs far more speed than the other half of the headroom protects. '
+      + 'A smaller context or a lighter quant brings the full headroom back.');
+  }
+
+  _noteFullOffloadPlacement() {
     const { budget, splits, offload } = this._s;
     const cards = budget.perGpu.length;
     if (splits.layerFill) {
-      this._notes.push(`Decision: full GPU offload across ${cards} adapters, filling the fastest card first (--tensor-split ${splits.layerFill.ratio}: ${LayerFillSplit.describe(splits.layerFill)}). llama.cpp's default would split layers by card size instead, leaving the fast card partly empty while the slow card decodes a larger share of every token.`);
+      this._notes.push(`Decision: full GPU offload across ${cards} adapters, filling the fastest card first (--tensor-split ${splits.layerFill.ratio}: ${LayerFillSplit.describe(splits.layerFill)}). llama.cpp's default would split layers by card size instead, leaving the fast card partly empty while the slow card decodes a larger share of every token.${this._slowFirstSuffix()}`);
     } else if (offload.singleGpuFits) {
       const card = budget.perGpu[budget.largestGpuIndex];
       this._notes.push(`Decision: full GPU offload across all ${cards} adapters via llama.cpp's default layer split. The model would fit on ${card.name} alone (${ByteLadder.format(card.totalBytes)}). The launcher normally pins that card via CUDA_VISIBLE_DEVICES, so a multi-card spread here means pinning was disabled (core.llmServer.cudaDevice override) or another server currently holds the card. A cross-card layer split decodes at the slower card's pace; prefer the single-card pin when it fits.`);
@@ -131,7 +155,7 @@ class PlacementNotes {
     const { splits, kv } = this._s;
     const fmt = ByteLadder.format;
     if (partial.ngl > 0) {
-      if (splits.layerFill) this._notes.push(`GPU layers split fastest-card-first (--tensor-split ${splits.layerFill.ratio}: ${LayerFillSplit.describe(splits.layerFill)}).`);
+      if (splits.layerFill) this._notes.push(`GPU layers split fastest-card-first (--tensor-split ${splits.layerFill.ratio}: ${LayerFillSplit.describe(splits.layerFill)}).${this._slowFirstSuffix()}`);
       const reserved = partial.mtpOverheadBytes ? ` (after ${fmt(partial.mtpOverheadBytes)} reserved for the MTP draft branch)` : '';
       this._notes.push(
         `Decision: partial GPU offload, ${partial.ngl}/${partial.layerCount} layers on GPU, `

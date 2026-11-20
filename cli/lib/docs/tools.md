@@ -8,7 +8,7 @@ LumaBrowser exposes its browser and automation features as MCP tools through `mc
 | --- | --- | --- |
 | Tabs | `browser_get_tabs`, `browser_create_tab`, `browser_close_tab`, `browser_navigate`, `browser_refresh` | Open, list, close, and move tabs. Tab ids come from `browser_get_tabs`. |
 | Reading a page | `browser_observe_page`, `browser_get_source`, `browser_get_element`, `browser_get_table`, `browser_extract_data`, `browser_collect_list`, `browser_screenshot`, `browser_locate` | Observe is the cheap first look; source reads the page as Markdown, text or HTML; extract and collect pull structured data; locate finds an element by description. |
-| Acting on a page | `browser_click`, `browser_click_at`, `browser_type`, `browser_fill_form`, `browser_select_option`, `browser_set_date`, `browser_set_slider`, `browser_press_key`, `browser_scroll`, `browser_wait_for`, `browser_handle_dialog`, `browser_execute_js` | Every action returns evidence of what changed so the next step can be trusted. |
+| Acting on a page | `browser_click`, `browser_click_until`, `browser_click_at`, `browser_type`, `browser_fill_form`, `browser_select_option`, `browser_set_date`, `browser_set_slider`, `browser_press_key`, `browser_scroll`, `browser_wait_for`, `browser_handle_dialog`, `browser_execute_js` | Every action returns evidence of what changed so the next step can be trusted. |
 | Diagnostics | `browser_get_console`, `browser_get_network` | Console messages and network log for a tab. |
 | Page monitors | `page_monitor_create`, `page_monitor_check`, `page_monitor_list`, `page_monitor_history`, `page_monitor_set_paused`, `page_monitor_delete` | Watch a page for changes on a schedule. |
 | Timed tasks | `timed_tasks_create`, `timed_tasks_list`, `timed_tasks_trigger`, `timed_tasks_get_runs`, `timed_tasks_set_paused`, `timed_tasks_delete` | Scheduled automations with run history. |
@@ -42,6 +42,7 @@ LumaBrowser exposes its browser and automation features as MCP tools through `mc
 
 - `browser_observe_page` numbers the interactive elements; pass those `ref` numbers to click, type, fill and press-key tools. On a long page the list is cut short: pass `selector` (`"form"`, `"[role=dialog]"`) to list one part of the page in full.
 - A rich-text editor that lives in an iframe is listed as `input:richtext`. Type into it by passing the iframe's ref or selector to `browser_type`.
+- To click something again and again until it goes through (an item that keeps selling out, a queue), call `browser_click_until` once instead of looping click and observe: it finds the link by its visible `text` before every click, stops when `untilText`, `untilSelector` or `untilUrl` holds, loads a stuck page again, and with `alert: true` shows the tab, raises the window and posts a desktop notification. Give it a stop condition that is only true in the state you want; it refuses one that already holds. On `outcome: "timeout"` call it again with the same arguments.
 - Typing leaves the field focused, as a user who has not moved on yet. A page that only saves a field when focus leaves it needs `browser_press_key` with `Tab` afterwards.
 
 ## Reading the live list

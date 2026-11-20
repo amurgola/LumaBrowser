@@ -40,6 +40,7 @@ class CodeTurnBuilder {
       ...AgentOverlay.turnFields(overlay),
       ...(workTabId == null ? { noBrowser: true } : { noBrowser: false, workTabId }),
       agentBudget: plan.tools ? { ...CodeTurnBuilder.AGENT_BUDGET } : null,
+      planning: !!plan.tools,
     };
   }
 

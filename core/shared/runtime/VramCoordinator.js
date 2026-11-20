@@ -15,12 +15,23 @@ class VramCoordinator {
     this._clock = 0;
   }
 
-  reserve({ serverId, role, requiredBytes, allowSplit = true, settingsDb, diagnostics } = {}) {
+  reserve({ serverId, role, requiredBytes, allowSplit = true, softSingle = false, settingsDb, diagnostics } = {}) {
     if (!serverId) throw new Error('VramCoordinator.reserve: serverId is required');
-    const request = { serverId, role, requiredBytes, allowSplit, settingsDb, diagnostics, ts: ++this._clock };
+    const request = { serverId, role, requiredBytes, allowSplit, softSingle, settingsDb, diagnostics, ts: ++this._clock };
     return this._reserveFromLayout(request)
       || this._reserveFromOverride(request)
       || this._reserveAutomatically(request);
+  }
+
+  preview(request) {
+    const serverId = request && request.serverId;
+    const prior = this._ledger.get(serverId);
+    try {
+      return this.reserve(request);
+    } finally {
+      if (prior) this._ledger.set(serverId, prior);
+      else this._ledger.delete(serverId);
+    }
   }
 
   hold(serverId, { devices, bytes, role = 'llm' } = {}) {
@@ -70,8 +81,8 @@ class VramCoordinator {
     return this._ledger.snapshot();
   }
 
-  _reserveFromLayout({ serverId, role, requiredBytes, allowSplit, settingsDb, diagnostics, ts }) {
-    const placed = this._layoutPlacement(serverId, requiredBytes, allowSplit, settingsDb, diagnostics);
+  _reserveFromLayout({ serverId, role, requiredBytes, allowSplit, softSingle, settingsDb, diagnostics, ts }) {
+    const placed = this._layoutPlacement(serverId, { requiredBytes, allowSplit, softSingle }, settingsDb, diagnostics);
     if (!placed) return null;
     this._record(serverId, {
       devices: placed.devices,
@@ -81,13 +92,14 @@ class VramCoordinator {
     return placed;
   }
 
-  _layoutPlacement(serverId, requiredBytes, allowSplit, settingsDb, diagnostics) {
+  _layoutPlacement(serverId, { requiredBytes, allowSplit, softSingle }, settingsDb, diagnostics) {
     try {
       if (!settingsDb || !settingsDb.get) return null;
       return PlacementResolver.resolve(PlacementStore.load(settingsDb), serverId, {
         diagnostics,
         requiredBytes,
         allowSplit,
+        softSingle,
         devices: this.debitedDevices(diagnostics, { excludeServerId: serverId }),
       });
     } catch (_) {
@@ -107,14 +119,14 @@ class VramCoordinator {
     return { cudaDevice: override, offloadToCpu: false, devices, split: null };
   }
 
-  _reserveAutomatically({ serverId, role, requiredBytes, allowSplit, diagnostics, ts }) {
+  _reserveAutomatically({ serverId, role, requiredBytes, allowSplit, softSingle, diagnostics, ts }) {
     const all = CudaDeviceProbe.readDevices(diagnostics);
     if (!all || all.length < 2) {
       this._record(serverId, { devices: all ? all.map((d) => d.index) : [], bytes: Number(requiredBytes) || 0, offloadToCpu: false, role, ts });
       return VramCoordinator._unpinned();
     }
     const debited = VramLedger.applyDebit(all, this._ledger.debitMap(serverId));
-    const placed = AutoVramPlacement.place(debited, { requiredBytes, allowSplit });
+    const placed = AutoVramPlacement.place(debited, { requiredBytes, allowSplit, softSingle });
     const need = Number(requiredBytes) > 0 ? Number(requiredBytes) : 0;
     this._record(serverId, { devices: placed.devices, bytes: VramCoordinator._claimBytes(placed.offloadToCpu, need), offloadToCpu: placed.offloadToCpu, role, ts });
     return {

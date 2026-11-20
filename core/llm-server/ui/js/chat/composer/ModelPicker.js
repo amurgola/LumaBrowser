@@ -177,7 +177,8 @@ export default class ModelPicker {
     const { state } = this._ctx;
     state.models = r.models || [];
     state.defaultRef = r.defaultRef || null;
-    if (!state.modelRef || !state.models.some((m) => m.ref === state.modelRef)) {
+    const standing = state.models.find((m) => m.ref === state.modelRef);
+    if (!standing || (standing.current === false && !standing.isProfile)) {
       state.modelRef = state.defaultRef || (state.models[0] && state.models[0].ref) || null;
     }
     if (state.models.length) this._ctx.availability.set(true, '');

@@ -338,7 +338,7 @@
     transform: translateY(-1px);
 }
 .ai-msg-step.success::before { background: var(--success); }
-.ai-msg-step.running::before { background: var(--accent); }
+.ai-msg-step.running::before { background: var(--text-primary); }
 .ai-msg-step.error { color: var(--danger); }
 .ai-msg-step.error::before { background: var(--danger); }
 

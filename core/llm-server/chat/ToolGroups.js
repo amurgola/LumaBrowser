@@ -26,10 +26,11 @@ class ToolGroups {
     return owner ? owner.key : null;
   }
 
-  static buildInactiveRegistry(inactiveGroups) {
+  static buildInactiveRegistry(inactiveGroups, { nativeTools = false } = {}) {
     if (!inactiveGroups || inactiveGroups.length === 0) return '';
     const lines = inactiveGroups.map((group) => `  - ${group.key}: ${group.stub}`).join('\n');
-    return `${ActivationManual.ACTIVATE}\n\n${ActivationManual.INACTIVE_HEADING}\n${lines}\n\n${ActivationManual.INACTIVE_DIRECTIVE}`;
+    const manual = nativeTools ? ActivationManual.ACTIVATE_NATIVE : ActivationManual.ACTIVATE;
+    return `${manual}\n\n${ActivationManual.INACTIVE_HEADING}\n${lines}\n\n${ActivationManual.INACTIVE_DIRECTIVE}`;
   }
 
   static docWithoutFenceExamples(doc) {

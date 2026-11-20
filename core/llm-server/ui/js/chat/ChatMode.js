@@ -20,6 +20,8 @@ import UsageMeter from './composer/UsageMeter.js';
 import ConversationMenu from './conversation/ConversationMenu.js';
 import ConversationView from './conversation/ConversationView.js';
 import ConversationJobsStrip from './jobs/ConversationJobsStrip.js';
+import PendingMessages from './pending/PendingMessages.js';
+import PlanPanel from './plan/PlanPanel.js';
 import LandingView from './conversation/LandingView.js';
 import CodeBlockBar from './main/CodeBlockBar.js';
 import FileDrop from './main/FileDrop.js';
@@ -39,6 +41,7 @@ import Sidebar from './sidebar/Sidebar.js';
 import SidebarFootAlignment from './sidebar/SidebarFootAlignment.js';
 import SidebarModes from './sidebar/SidebarModes.js';
 import ChatEventRouter from './stream/ChatEventRouter.js';
+import HostTurns from './stream/HostTurns.js';
 import StreamFinisher from './stream/StreamFinisher.js';
 import StreamView from './stream/StreamView.js';
 import TurnSender from './stream/TurnSender.js';
@@ -56,6 +59,7 @@ import ReplyChoiceChips from './turns/ReplyChoiceChips.js';
 import RuntimeFixCard from './turns/RuntimeFixCard.js';
 import SettingLink from './turns/SettingLink.js';
 import TabPreviewCard from './turns/TabPreviewCard.js';
+import TaskNoticeView from './turns/TaskNoticeView.js';
 import TableSort from './turns/TableSort.js';
 import ThinkPane from './turns/ThinkPane.js';
 import ToolChainView from './turns/ToolChainView.js';
@@ -76,12 +80,13 @@ export default class ChatMode {
     composer: ComposerView, availability: Availability, attachments: AttachmentStrip, paste: ClipboardAttach, regions: RegionStaging, tabs: TabContext, dashboard: DashboardContext,
     docs: DocsSourceContext, commands: ComposerCommands, thinkPill: ThinkPill,
     gear: GearPanel, gearTools: GearToolList, models: ModelPicker, mediaModels: MediaModelChoice, usage: UsageMeter,
-    turns: TurnRenderer, userTurns: UserTurnView, chain: ToolChainView, previewSlot: PreviewSlot,
+    turns: TurnRenderer, userTurns: UserTurnView, taskNotices: TaskNoticeView, chain: ToolChainView, previewSlot: PreviewSlot,
     tabPreview: TabPreviewCard, artifactChips: ArtifactChips, liveArtifacts: LiveArtifacts, thinkPane: ThinkPane, tableSort: TableSort,
     runtimeFix: RuntimeFixCard, settingLink: SettingLink, errorCard: ErrorCard, turnActions: TurnActions, turnEditor: AssistantTurnEditor, userEditor: UserTurnEditor,
     choiceChips: ReplyChoiceChips,
-    voice: VoiceBridge, sender: TurnSender, stream: StreamView, events: ChatEventRouter, finisher: StreamFinisher,
+    voice: VoiceBridge, sender: TurnSender, hostTurns: HostTurns, stream: StreamView, events: ChatEventRouter, finisher: StreamFinisher,
     conversation: ConversationView, landing: LandingView, convMenu: ConversationMenu, jobsStrip: ConversationJobsStrip,
+    plan: PlanPanel, pending: PendingMessages,
     tasks: ScheduledTaskView, taskMenu: ScheduledTaskMenu, triggers: TriggerView, triggerMenu: TriggerMenu,
     triggerSections: TriggerSections,
     modeCtx: ModeContext, launcher: ModeLauncher, preflight: ModePreflight, theme: ModeTheme, codeSurface: CodeSurfaceReporter,

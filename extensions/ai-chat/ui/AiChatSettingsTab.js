@@ -1,8 +1,8 @@
 import ConversationExport from './ConversationExport.js';
+import SlotModelOptions from '../../../core/llm-server/ui/js/models/SlotModelOptions.js';
 
 export default class AiChatSettingsTab {
   static SLOT_ID = 'ai-chat.navigator';
-  static DEFAULT_OPTION = '<option value="">Use active provider (default)</option>';
 
   constructor({ container, ipc, getChatApi }) {
     this._ipc = ipc;
@@ -42,14 +42,10 @@ export default class AiChatSettingsTab {
   async saveModelSlot() {
     const slots = window.llmSlotAPI;
     if (!slots) return;
-    const val = this._modelSelect.value;
+    const picked = SlotModelOptions.parse(this._modelSelect.value);
     try {
-      if (val) {
-        const [provider, model] = val.split('::');
-        await slots.setSlotConfig(AiChatSettingsTab.SLOT_ID, provider, model);
-      } else {
-        await slots.clearSlotConfig(AiChatSettingsTab.SLOT_ID);
-      }
+      if (picked) await slots.setSlotConfig(AiChatSettingsTab.SLOT_ID, picked.provider, picked.model);
+      else await slots.clearSlotConfig(AiChatSettingsTab.SLOT_ID);
     } catch (e) {
       console.error('ai-chat: failed to save model slot:', e);
     }
@@ -72,24 +68,15 @@ export default class AiChatSettingsTab {
   async _populateModels() {
     const slots = window.llmSlotAPI;
     if (!this._modelSelect || !slots) return;
-    this._modelSelect.innerHTML = AiChatSettingsTab.DEFAULT_OPTION;
+    SlotModelOptions.fill(this._modelSelect, [], null);
     try {
       const [models, slotConfig] = await Promise.all([
         slots.getAllAvailableModels(),
         slots.getSlotConfig(AiChatSettingsTab.SLOT_ID),
       ]);
-      const current = { provider: (slotConfig && slotConfig.provider) || '', model: (slotConfig && slotConfig.model) || '' };
-      for (const model of models) this._modelSelect.appendChild(AiChatSettingsTab._option(model, current));
+      SlotModelOptions.fill(this._modelSelect, models, slotConfig);
     } catch (e) {
       console.error('ai-chat: failed to populate models:', e);
     }
-  }
-
-  static _option(model, current) {
-    const option = document.createElement('option');
-    option.value = `${model.providerId}::${model.modelId}`;
-    option.textContent = model.label;
-    if (model.providerId === current.provider && model.modelId === current.model) option.selected = true;
-    return option;
   }
 }

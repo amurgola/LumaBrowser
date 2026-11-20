@@ -44,6 +44,9 @@ The MCP descriptions carry these, because each one answers a way agents got stuc
 - `browser_extract_data` and `browser_collect_list`: a child selector ending in `@attribute`
   (`a.title@href`, `img@src`, `input@value`) reads the attribute instead of the text.
 - `browser_type`: a rich-text editor in an iframe is typed into by targeting the iframe.
+- `browser_click_until` (chat `click_until`): keeps clicking one link or button, found by its label, until
+  `untilText`, `untilSelector` or `untilUrl` holds; `alert` puts the tab in front of the user at the end.
+  The loop is [RepeatClicker](tab-manager/RepeatClicker.md).
 
 The prose the local models read for chat tools lives elsewhere (BrowserTools
 `TOOL_DEFINITIONS` and the chat tool schemas) and keys on the same `id`; a

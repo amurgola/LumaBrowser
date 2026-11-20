@@ -12,7 +12,7 @@ terminal and the IDE webviews (JetBrains and VS Code copy this file in at build 
 - `toolStyle(name)`: `{ verb, ing, glyph, mutating? }`; an unknown tool falls back to its own name
   (`mcp__x__y` -> `calling mcp  x  y`).
 - `toolDetail(name, params)` (alias `summarizeParams`): `npm test`, `src/a.js :10-29`,
-  `/foo/ in src (*.js)`, `a.js · 2 edits`, `a.js · 3 lines`, `"query"`, `agent · "message"`; other tools
+  `/foo/ in src (*.js)`, `a.js · 2 edits`, `a.js · 3 lines`, `"query"`, `agent · "message"`, `"label" · until "text"` (click_until); other tools
   show `path`, `url`, `query`, `pattern`, or up to three scalar `key=value` pairs.
 - `pendingText({ tool, target, chars })`: what the model is doing while a call streams out
   (`writing src/a.js · 1.2k chars`).

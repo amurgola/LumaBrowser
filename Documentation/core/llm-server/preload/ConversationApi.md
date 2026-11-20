@@ -41,5 +41,9 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 
 - `convJobs.list(conversationId)` -> `{ jobs }`, `convJobs.cancel(jobId)` -> `{ canceled }`
   (`core.llmServer.convJobs.list` / `.cancel`).
+- `convJobs.followTurn(requestId)` -> `{ success, conversationId, notice }`
+  (`core.llmServer.convJobs.followTurn`): asks for the stream of a turn the app announced
+  with a `turn` event; the turn's chat events then arrive on `onChatEvent` under that
+  request id. See [HostTurnFollowers](../ipc/HostTurnFollowers.md).
 - `onConvJobsEvent(cb)`: `core.llmServer.convJobs.event`,
-  `{ type: 'changed' | 'finished' | 'posted', payload: { conversationId, job?, messageId? } }`.
+  `{ type: 'changed' | 'finished' | 'posted' | 'turn', payload: { conversationId, job?, messageId?, requestId? } }`.

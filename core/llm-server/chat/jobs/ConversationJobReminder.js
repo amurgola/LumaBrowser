@@ -9,11 +9,16 @@ class ConversationJobReminder {
   }
 
   static describe(job) {
+    const progress = ConversationJobReminder.progress(job);
+    return progress ? `${job.title} (${progress})` : job.title;
+  }
+
+  static progress(job) {
     const facts = [];
     if (job.detail) facts.push(job.detail);
     if (job.step != null && job.totalSteps) facts.push(`step ${job.step} of ${job.totalSteps}`);
     if (job.timeLeft) facts.push(`about ${job.timeLeft} left`);
-    return facts.length ? `${job.title} (${facts.join(', ')})` : job.title;
+    return facts.join(', ');
   }
 }
 

@@ -2,12 +2,7 @@
 
 .am-head-actions { display: flex; gap: var(--space-2); align-items: center; flex: 0 0 auto; }
 
-.am-notice { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3); margin-bottom: var(--space-3); border-radius: var(--radius-lg); background: var(--bg-surface-2); }
-.am-notice.warn { background: var(--warning-dim); }
-.am-notice-body { flex: 1 1 auto; min-width: 0; }
-.am-notice-title { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text-primary); overflow-wrap: anywhere; }
-.am-notice-line { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1); overflow-wrap: anywhere; }
-.am-notice.warn .am-notice-line { color: var(--text-primary); }
+.am-notice { margin-bottom: var(--space-3); }
 
 .am-tools { display: flex; flex-direction: column; gap: var(--space-3); max-height: 320px; overflow: auto; padding: var(--space-3); }
 .am-toolgroup-label { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-secondary); margin-bottom: var(--space-1); }

@@ -13,7 +13,10 @@ usage meter divides by.
 ## Methods
 
 - `refresh()`: `api.listModels`; keeps a still-listed selection, else the
-  default, else the first; feeds [Availability](Availability.md).
+  default, else the first; feeds [Availability](Availability.md). A selection
+  left on a local model that is not the configured one (`current: false`, not a
+  profile) follows the default, so a change made in Setup is what the chat uses
+  next (`ChatModelList.canStand`).
 - `loadLocal()`: `api.getLocalModelOptions` (fire and forget), seeding the pinned
   model's context from the live default.
 - `renderPill()` (every selection change ends here, so the thinking dial and

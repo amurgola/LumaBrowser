@@ -6,5 +6,6 @@
 
 - `AgentCard.render(agent, modelLabel, on)`: name, description ("No
   description"), chips for the model, "N tool(s)" and "N knowledge doc(s)"
-  (when any); Edit, Export, Delete (asks "Delete agent "X"?" first).
+  (when any); Edit, Export, Delete (asks "Delete agent "X"?" first). The card carries
+  `data-agent-id`, which is what an alert about that agent's model points at.
 - `AgentCard.plural(n, word)`: "1 tool", "2 tools".

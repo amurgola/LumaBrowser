@@ -55,7 +55,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round
   background: var(--bg-surface-2, #172038); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05); white-space: pre-wrap;
 }
 .msg.bot { align-self: stretch; }
-.msg.bot.err { color: var(--warning, #fbbf24); }
+.msg.bot.err { color: var(--danger, #f87171); }
 .msg.bot > :first-child { margin-top: 0; }
 .msg.bot > :last-child { margin-bottom: 0; }
 .msg.bot p { margin: 0 0 8px; }
@@ -71,10 +71,10 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round
 .msg.bot th, .msg.bot td { border: 1px solid var(--border-soft, rgba(255, 255, 255, .07)); padding: 3px 7px; text-align: left; }
 .steps { display: flex; flex-direction: column; gap: 4px; font-size: var(--text-sm, 12px); color: var(--text-secondary, #8a95ad); }
 .step { display: flex; align-items: center; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
-.step::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--accent, #f59034); animation: blink .9s ease-in-out infinite; }
+.step::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--text-primary, #e6e9f2); animation: blink .9s ease-in-out infinite; }
 .step.done::before { background: var(--text-muted, #76819b); animation: none; }
-.step.fail { color: var(--warning, #fbbf24); }
-.step.fail::before { background: var(--warning, #fbbf24); animation: none; }
+.step.fail { color: var(--danger, #f87171); }
+.step.fail::before { background: var(--danger, #f87171); animation: none; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 .meta { margin-top: 4px; font-size: var(--text-xs, 11px); color: var(--text-muted, #76819b); }
 

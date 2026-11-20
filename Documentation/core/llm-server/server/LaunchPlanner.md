@@ -40,8 +40,9 @@ snapshot. The work is done by small stage classes in [launch/](launch/).
 order into one state object, each a class in `launch/`:
 
 1. Inputs: [ModelFiles](launch/ModelFiles.md), [RuntimeFlags](launch/RuntimeFlags.md), API key, user args.
-2. Model settings: [KvSettings](launch/KvSettings.md), [SlotPlan](launch/SlotPlan.md),
-   [SpeculationPlan](launch/SpeculationPlan.md), [VisionProjectorPlan](launch/VisionProjectorPlan.md).
+2. Model settings: [KvSettings](launch/KvSettings.md), [VisionProjectorPlan](launch/VisionProjectorPlan.md),
+   [SlotPlan](launch/SlotPlan.md) (after the projector, which switches context retention off),
+   [SpeculationPlan](launch/SpeculationPlan.md).
 3. Budget: [VramBudget](launch/VramBudget.md), then [TensorParallelGate](launch/TensorParallelGate.md)
    (which forces f16 KV before anything is priced).
 4. Placement: [MoeExpertPlan](launch/MoeExpertPlan.md), [OffloadDecision](launch/OffloadDecision.md),
@@ -61,12 +62,14 @@ and [ServingNotes](launch/ServingNotes.md), in that order.
 `drafterPath`, `specType`, `mtpDraftNMax`, `draftCacheType`, `cacheTypeK`,
 `cacheTypeV`, `kvQuantForcedF16`, `ngl`, `fullOffload`, `partial`, `gguf`,
 `singleGpu`, `splitMode`, `tensorSplit`, `tensorSplitRequested`, `layerSplit`,
-`flashAttn`, `swaFull`, `cacheReuse`, `cacheReuseRequested`, `cacheReuseMinChunk`,
+`flashAttn`, `swaFull`, `cacheReuse`, `cacheReuseRequested`, `cacheReuseOffReason`, `cacheReuseMinChunk`,
 `promptCache`, `mtp`, `ngramSpec`, `maxConcurrent`, `maxConcurrentRequested`,
 `ctxPerSlot`, `cpuMoe`, `cpuMoeRequested`, `cpuMoeAuto`, `moeSplit`, `rpc`,
 `apiKeyRequired`, `skippedFlags`, `vramAvailableBytes`, `modelEstimatedBytes`,
 `headerEstimatedBytes`, `measuredVramBytes`, `perGpu`, `decodeEstimate`,
 `runtimeId`, `runtimeName`, `modelName`, `port`, `notes`. Identical to legacy.
+Added since (see [PlanSummary](launch/PlanSummary.md)): `softHeadroom`,
+`fullOffloadRoomBytes`, `spawnEnv`, `layerSplit.order` and `ramPinSlowsDecode`.
 
 ## Why
 

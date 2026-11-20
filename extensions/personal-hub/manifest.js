@@ -28,7 +28,7 @@ module.exports = {
     optional: {
       'core:llm-service': {
         slots: [
-          { id: 'summarizer', label: 'Hub Summaries Model', required: false },
+          { id: 'summarizer', label: 'Hub Summaries Model', required: false, picker: '#ext-hub-sumModel' },
         ],
       },
       'core:browser': {
@@ -83,7 +83,7 @@ module.exports = {
       'listEvents', 'listCalendarSources',
       'listThreads', 'getThread', 'setThreadState', 'setThreadsState', 'linkThreadToTask', 'threadToTask',
       'listContexts', 'listSummaries', 'summarizeNow', 'getFocus', 'setFocusTask',
-      'snapshotThread', 'listContacts', 'settingsInvoke',
+      'snapshotThread', 'openThread', 'listContacts', 'settingsInvoke',
       'listColumns', 'listTasks', 'getTask', 'createTask', 'updateTask', 'moveTask', 'listTaskMessages', 'addTaskMessage',
       'listTaskTargets', 'setTasksHidden', 'linkStatus', 'addStatusColumn',
       'listTaskSources', 'syncNow', 'syncStatus', 'openUrl',

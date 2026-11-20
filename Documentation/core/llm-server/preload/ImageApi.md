@@ -44,6 +44,7 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `image.importLora(args)` | invoke `core.imageServer.importLora` |
 | `image.loraCatalog()` | invoke `core.imageServer.loraCatalog` |
 | `image.downloadLora(args)` | invoke `core.imageServer.downloadLora` |
+| `image.importLoraFromCivitai(args)` | invoke `core.imageServer.importLoraFromCivitai` |
 | `image.setModelLoras(args)` | invoke `core.imageServer.setModelLoras` |
 | `image.getDefaults()` | invoke `core.imageServer.getDefaults` |
 | `image.isRoleReady(role)` | invoke `core.imageServer.isRoleReady` |

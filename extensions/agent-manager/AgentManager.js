@@ -3,6 +3,7 @@ const AgentKnowledgeBase = require('./AgentKnowledgeBase');
 const KnowledgeBaseTransfer = require('./KnowledgeBaseTransfer');
 const AgentChatMode = require('./AgentChatMode');
 const AgentBundle = require('./AgentBundle');
+const AgentModels = require('./AgentModels');
 const AgentRuntime = require('./AgentRuntime');
 
 class AgentManager {
@@ -51,6 +52,7 @@ class AgentManager {
 
   publicSurface(chatUiPath) {
     return {
+      agentsWithMissingModel: () => AgentModels.missing(this.store.list()),
       listAgents: () => this.store.list().map((a) => ({
         id: a.id, name: a.name, description: a.description || '', kbDocs: this.knowledge.count(a.id),
       })),

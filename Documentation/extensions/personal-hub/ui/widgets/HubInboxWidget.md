@@ -12,7 +12,8 @@ user (chat messages, mail, calendar and task notices, anything a site or an
 automation raised), rolled up per conversation or subject and grouped by
 day, newest first. Either way it is context about the day, not a queue:
 nothing is counted as unread and nothing needs clearing. An item can be
-opened, read (the conversation behind it, fetched from its signed-in tab and
+opened (in the session that is signed in to it), read (the conversation
+behind it, fetched from its signed-in tab and
 shown under the row), turned into a board task, or dismissed from the feed
 (with undo, and a toggle that shows the dismissed ones so they can be
 restored). A participant the Hub knows as a contact is named with who they
@@ -104,17 +105,26 @@ minute (`TICK_MS` = 60000).
   ([HubSettingsPanel](HubSettingsPanel.md)`.openPerson(host, { contactId,
   name }, doc)`) with the About form open.
 - Actions are quiet text buttons (`.hub-row-action`) that show with the row
-  under the pointer: `Open` (when the item has a url, through
-  `host.openTab`), `Read` (or `Hide` once it was read), `To task` (or the
-  mark `On the board` when the item is already linked), and `Dismiss`, or
-  `Restore` on a dismissed row.
+  under the pointer: `Open`, `Read` (or `Hide` once it was read), `To task`
+  (or the mark `On the board` when the item is already linked), and
+  `Dismiss`, or `Restore` on a dismissed row.
+- Open (`.hub-open-url`, titled `Open it where you are signed in to it`)
+  shows when the item can be opened (`_canOpen`): it has a url, or its last
+  notification has a url or a partition (it came from a signed-in tab that
+  can be brought to the front). `_openThread` calls `openThread(id)` and
+  the Hub opens the item in the session that is signed in to it: its
+  conversation when the address is known, else its own tab
+  ([ConversationOpener](../../snapshot/ConversationOpener.md)). A reply of
+  `success: false` shows its error on the widget's error line (`It could
+  not be opened.` when it carries none), as does a failed call.
 - Read: `snapshotThread(id, {})` asks the Hub to read the conversation
   behind the item from its signed-in tab, without opening it
   ([ConversationReader](../../snapshot/ConversationReader.md)). While it
   runs the row shows `Reading the conversation...`. The text then shows
   under the row (`.hub-snapshot`, scrolling past 220px) beneath a line
   saying where it was read from and when: `Read from the conversation` (the
-  item's own address was opened in a hidden tab) or `Read from what its tab
+  item's own address was read, in a hidden tab or in its tab when that was
+  already there) or `Read from what its tab
   is showing` (the user's tab was read where it stood), then the relative
   time. When nothing was read the row shows a note instead
   (`.hub-snapshot.is-note`): the reason the Hub gave (the tab is showing
@@ -154,5 +164,6 @@ minute (`TICK_MS` = 60000).
 ## Host calls
 
 `listSummaries`, `listThreads`, `setThreadState`, `setThreadsState`,
-`threadToTask`, `snapshotThread`, `listColumns`, `listTaskTargets`;
+`threadToTask`, `snapshotThread`, `openThread`, `listColumns`,
+`listTaskTargets`;
 `settingsInvoke` through the settings panel.

@@ -16,6 +16,16 @@ class BrowserToolExecutor {
     get_source: (bs, tabId, p) => bs.getSource(tabId, { type: p.type || 'text', selector: p.selector }),
     screenshot: (bs, tabId, p) => bs.screenshot(tabId, { selector: p.selector, fullPage: p.fullPage, cssScale: !p.fullPage, marks: !p.fullPage && p.marks === true }),
     locate: (bs, tabId, p) => bs.locate(tabId, { description: p.description, click: p.click === true, zoom: p.zoom === true }),
+    click_until: (bs, tabId, p, run) => bs.clickUntil(tabId, {
+      text: p.text,
+      selector: p.selector,
+      untilText: p.untilText,
+      untilSelector: p.untilSelector,
+      untilUrl: p.untilUrl,
+      intervalSeconds: p.intervalSeconds,
+      timeoutSeconds: p.timeoutSeconds,
+      alert: p.alert === true,
+    }, { shouldStop: run.isAborted }),
     click_at: (bs, tabId, p) => bs.clickAt(tabId, { x: p.x, y: p.y, button: p.button, clickCount: BrowserToolExecutor._clickCount(p) }),
     wait_for: (bs, tabId, p) => bs.waitFor(tabId, { selector: p.selector, timeout: p.timeout || BrowserToolExecutor.DEFAULT_WAIT_TIMEOUT_MS }),
     get_element: (bs, tabId, p) => bs.getElement(tabId, { selector: p.selector, text: p.text }),
@@ -31,12 +41,12 @@ class BrowserToolExecutor {
     }),
   };
 
-  static async execute(toolName, params, browserService, defaults = {}) {
+  static async execute(toolName, params, browserService, defaults = {}, run = {}) {
     const action = Object.hasOwn(BrowserToolExecutor.ACTIONS, toolName) ? BrowserToolExecutor.ACTIONS[toolName] : null;
     if (!action) return { success: false, error: `Unknown tool: ${toolName}` };
     const merged = { ...defaults, ...params };
     try {
-      return BrowserToolExecutor._normalize(await action(browserService, merged.tabId || 0, merged));
+      return BrowserToolExecutor._normalize(await action(browserService, merged.tabId || 0, merged, run || {}));
     } catch (error) {
       return { success: false, error: error.message };
     }

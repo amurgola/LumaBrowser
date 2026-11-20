@@ -171,8 +171,8 @@ body{font-family:var(--font-sans,"Segoe UI Variable Text","Segoe UI",system-ui,s
 .spin{width:14px;height:14px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 25%,currentColor);
   -webkit-mask:radial-gradient(circle,transparent 4.5px,#000 5px);mask:radial-gradient(circle,transparent 4.5px,#000 5px);animation:rot .9s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
-.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}
-.error .mark{color:var(--warning,#fbbf24)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--text-secondary,#8a95ad)}
+.error .mark{color:var(--danger,#f87171)}
 .text{display:flex;flex-direction:column;justify-content:center;min-width:0;max-width:280px;padding-right:4px}
 .title{font-size:var(--text-md,13px);font-weight:600;line-height:17px;white-space:nowrap}
 .detail{font-size:var(--text-sm,12px);line-height:15px;color:var(--text-secondary,#8a95ad);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

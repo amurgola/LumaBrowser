@@ -1,8 +1,26 @@
+import ChatIcons from '../ChatIcons.js';
 import HtmlEscaper from '../../format/HtmlEscaper.js';
 
 export default class ConversationJobsHtml {
-  static build(jobs, stopping = new Set()) {
-    return jobs.map((job) => ConversationJobsHtml.row(job, stopping.has(job.id))).join('');
+  static build(jobs, stopping = new Set(), { collapsed = false } = {}) {
+    if (!jobs.length) return '';
+    return ConversationJobsHtml.head(jobs, stopping, collapsed)
+      + (collapsed ? '' : `<div class="cm-jobs-list">${jobs.map((job) => ConversationJobsHtml.row(job, stopping.has(job.id))).join('')}</div>`);
+  }
+
+  static head(jobs, stopping, collapsed) {
+    const esc = HtmlEscaper.escape;
+    const first = jobs[0];
+    const now = collapsed ? [first.title, ConversationJobsHtml.line(first, stopping.has(first.id))].filter(Boolean).join(' · ') : '';
+    return '<div class="cm-jobs-head">'
+      + `<button class="cm-plan-toggle" type="button" data-jobs-toggle aria-expanded="${collapsed ? 'false' : 'true'}" title="${collapsed ? 'Show the tasks' : 'Hide the tasks'}">${ChatIcons.chevron}</button>`
+      + `<span class="cm-jobs-count">${ConversationJobsHtml.count(jobs.length)}</span>`
+      + `<span class="cm-jobs-now">${esc(now)}</span>`
+      + '</div>';
+  }
+
+  static count(running) {
+    return `${running} task${running === 1 ? '' : 's'} running`;
   }
 
   static row(job, isStopping) {

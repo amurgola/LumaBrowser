@@ -31,6 +31,6 @@ module.exports = {
     id: 'agent-manager',
     label: 'Agents',
     file: './setup-ui.js',
-    assets: ['./setup-ui.css', './ui/AgentsTab.js', './ui/AgentCard.js', './ui/AgentForm.js', './ui/AgentKnowledgeSection.js', './ui/AgentNotice.js'],
+    assets: ['./setup-ui.css', './ui/AgentsTab.js', './ui/AgentCard.js', './ui/AgentForm.js', './ui/AgentKnowledgeSection.js'],
   },
 };

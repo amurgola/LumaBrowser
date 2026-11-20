@@ -5,14 +5,15 @@
 The Hub's people section: who the Hub has seen in the activity
 feed, each with every way they appear (app and context) and what is known
 about them. The Hub joins the
-same address anywhere and the same full name inside one context on its own
+same address anywhere, the same name on one app and the same full name
+inside one context on its own
 ([ContactService](../../contacts/ContactService.md)); here the user settles
 the rest: confirm or reject a suggested match across contexts, merge the
 ticked contacts into one, split off an identity that was joined to the wrong
 person, and correct a name. About opens what the assistant knows about a
 contact ([ContactProfileForm](ContactProfileForm.md)): person or general,
-the fields of that kind, further details and notes, and what a model
-proposed from the conversations. Shown in Settings > Hub and in the
+the context it belongs to, the fields of that kind, further details and
+notes, and what a model proposed from the conversations. Shown in Settings > Hub and in the
 Dashboard's settings panel
 ([HubSettingsPanel](../widgets/HubSettingsPanel.md)), so it imports only
 from the extension's own ui folder (`WidgetDom.esc` for escaping and
@@ -20,10 +21,10 @@ from the extension's own ui folder (`WidgetDom.esc` for escaping and
 
 ## Behaviour
 
-- The help text states the rules: the same address, or the same full name
-  within one context, is one person; the same name in two contexts is only
-  suggested, because people share names and work with several companies;
-  summaries use this to know that a Slack name and a mail sender are the
+- The help text states the rules: the same address, the same name on one
+  app, or the same full name within one context is one person; the same
+  name on different apps in two contexts is only suggested, because people
+  share names; summaries use this to know that a Slack name and a mail sender are the
   same person, and what is recorded under About tells the assistant who
   each one is to the user.
 - Suggestions sit above the list, one row per pair: `Same person?` with
@@ -42,8 +43,11 @@ from the extension's own ui folder (`WidgetDom.esc` for escaping and
 - Under the name, an about line (`data-role="about"`): the kind's label and
   the contact's `about`, `Person: ex-wife; born 31 October 1992 (age 34)`,
   followed by `Suggestions to look at under About.` when a model's
-  suggestions wait. A general contact with nothing recorded and nothing
-  waiting has no line.
+  suggestions wait. A contact that belongs to a context (`homeContextId`)
+  has the context's name after the kind: `Person, Vendera: Vendera
+  Employee`, or `General, Artella` with nothing else recorded. A general
+  contact with nothing recorded, no context and nothing waiting has no
+  line.
 - Under it, one badge per identity (`data-identity`, the handle as tooltip):
   `<app>, <context name>: <display name or handle>`, the context left out
   when the identity has none. A person with two or more identities has a
@@ -51,10 +55,12 @@ from the extension's own ui folder (`WidgetDom.esc` for escaping and
   it becomes a person of its own.
 - About opens the contact's form under its block; one form is open at a
   time, so opening another closes the first. The open form is scrolled into
-  view. Inside it, the kind buttons redraw the fields for that kind, `Add a
+  view. The form is given the contexts the section read (`[{ id, name }]`),
+  which is what its `Belongs to` select offers. Inside it, the kind buttons redraw the fields for that kind, `Add a
   detail` adds a row and `Remove` drops one (nothing is saved until Save).
 - `Save` sends what the form says (`ContactProfileForm.read`) through
-  `saveContactProfile(id, { kind, fields, details, notes })` and reports
+  `saveContactProfile(id, { kind, fields, details, notes, contextId? })`
+  (the context only when the form has the select) and reports
   `Saved.`; the reload shows the profile as the Hub stored it (a birth date
   in its one form).
 - `Suggest from conversations` saves what is typed and unsaved first, then
@@ -92,8 +98,9 @@ from the extension's own ui folder (`WidgetDom.esc` for escaping and
   person is clicked in the Activity widget
   ([HubSettingsPanel](../widgets/HubSettingsPanel.md)`.openPerson`).
 - `load()`: reads the people for the current search (with `suggestions`
-  and `kinds`) and the contexts (for their names; a failed read of the
-  contexts leaves the badges without one).
+  and `kinds`) and the contexts (for their names in the badges and the
+  about line, and for the form's `Belongs to` choices; a failed read of the
+  contexts leaves the badges without one and the form without the select).
 - `unbind()` also clears the pending search timer.
 
 ## IPC

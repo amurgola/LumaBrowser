@@ -28,10 +28,12 @@ export default class ImageDefaultRows {
   }
 
   static _modelRow(server, label) {
-    if (!server || server.location !== 'remote' || !Array.isArray(server.models) || !server.models.length) return '';
+    if (!server || !Array.isArray(server.models) || !server.models.length) return '';
+    const remote = server.location === 'remote';
+    if (!remote && !server.modelField) return '';
     const esc = HtmlEscaper.escape;
-    const hostDefault = server.modelLabel ? `Host default (${server.modelLabel})` : 'Host default';
-    const modelOpts = [`<option value=""${!server.selectedModel ? ' selected' : ''}>${esc(hostDefault)}</option>`]
+    const target = remote ? `data-image-model-server="${esc(server.id)}"` : `data-image-local-model="${esc(server.modelField)}"`;
+    const modelOpts = [ImageDefaultRows._firstOption(server, remote)]
       .concat(server.models.map((m) => `<option value="${esc(m.id)}"${m.id === server.selectedModel ? ' selected' : ''}>${esc(m.label || m.id)}</option>`))
       .join('');
     return `
@@ -39,7 +41,16 @@ export default class ImageDefaultRows {
         <div class="gs-row-text">
           <span class="gs-row-label">${label} model</span>
         </div>
-        <select class="form-select gs-input-select" data-image-model-server="${esc(server.id)}" aria-label="${esc(label)} model">${modelOpts}</select>
+        <select class="form-select gs-input-select" ${target} aria-label="${esc(label)} model">${modelOpts}</select>
       </div>`;
+  }
+
+  static _firstOption(server, remote) {
+    const esc = HtmlEscaper.escape;
+    if (remote) {
+      const hostDefault = server.modelLabel ? `Host default (${server.modelLabel})` : 'Host default';
+      return `<option value=""${!server.selectedModel ? ' selected' : ''}>${esc(hostDefault)}</option>`;
+    }
+    return server.models.some((m) => m.id === server.selectedModel) ? '' : '<option value="" selected disabled>Choose a model</option>';
   }
 }

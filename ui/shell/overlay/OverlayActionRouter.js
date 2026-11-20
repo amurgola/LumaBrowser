@@ -17,6 +17,7 @@ export default class OverlayActionRouter {
     if (payload.layer === 'vault') { if (d.vaultPrompt) d.vaultPrompt.handleAction(payload); return; }
     if ((payload.layer || payload.id) === 'notif') {
       if (payload.action === 'close-log') d.log.hide();
+      else if (payload.action === 'log-action') d.log.runAction(payload.id);
       return;
     }
     this._popupAction(payload);

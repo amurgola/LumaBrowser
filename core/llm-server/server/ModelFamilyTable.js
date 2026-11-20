@@ -78,6 +78,18 @@ class ModelFamilyTable {
         + 'parses only through the jinja path with tools registered on the request, so tool calls are native. '
         + 'No sampler is set: DeepSeek publishes none for the 1017 release.',
     },
+    gemma4: {
+      label: 'Gemma 4',
+      architectures: ['gemma4'],
+      namePattern: /(?:^|[^a-z0-9])gemma[-_ ]?4(?![0-9])/i,
+      samplerDefaults: { temperature: 1.0, top_p: 0.95, top_k: 64 },
+      flags: ['--jinja'],
+      nativeToolCalls: true,
+      note:
+        'Google publishes temperature 1.0 / top_p 0.95 / top_k 64 for Gemma 4. Tool calls are native: on the text '
+        + 'fence Gemma 4 E4B sometimes wrote its own tool-call tokens as plain text or pasted the result into the '
+        + 'reply (27 of 30 long tool calls worked), against 30 of 30 with tools registered through the jinja path.',
+    },
     ricursive: {
       label: 'Ripple',
       architectures: ['ricursive'],

@@ -30,7 +30,7 @@ class HubTools {
     },
     {
       name: 'hub_list_contexts',
-      description: 'The user\'s contexts (companies or areas of life) with the rules that file accounts, tabs, calendars and trackers under each.',
+      description: 'The user\'s contexts (companies or areas of life) with the rules that file activity under each: a conversation by name, a word in a mail\'s subject, a link, a signed-in tab, a domain, an app, a calendar, a task tracker. Mail and direct messages also follow the context a contact belongs to (contextId in hub_list_contacts).',
       inputSchema: { type: 'object', properties: {} },
     },
     {
@@ -47,6 +47,7 @@ class HubTools {
         properties: {
           id: { type: 'string', description: 'Contact id (con_...)' },
           kind: { type: 'string', enum: ['person', 'general'], description: 'person, or general for a business, an organisation or a contact not placed yet' },
+          contextId: { type: 'string', description: 'The context this contact belongs to (a ctx_... id or a context name from hub_list_contexts), for example the company a person works for. Mail and direct messages from them are then filed there, whichever account they arrive in. Empty clears it.' },
           fields: { type: 'object', description: 'A person has relation (who they are to the user), birthday (YYYY-MM-DD, or MM-DD without a year) and sex (female, male, other); a general contact has what (what it is) and website. An empty value clears a field.' },
           addDetails: { type: 'array', items: { type: 'object', properties: { label: { type: 'string' }, value: { type: 'string' } }, required: ['label', 'value'] }, description: 'Further contact details by label (Phone, Address, Works at): added, or updated when the label exists; an empty value removes it' },
           addNote: { type: 'string', description: 'One more line of notes for the assistant' },
@@ -356,6 +357,11 @@ class HubTools {
     const run = HubTools.HANDLERS[toolName];
     if (!run) throw new Error(`Unknown hub tool: ${toolName}`);
     return run(api, args || {});
+  }
+
+  static envelope(result) {
+    const failed = !!result && result.success === false;
+    return { content: [{ type: 'text', text: JSON.stringify(result) }], ...(failed ? { isError: true } : {}) };
   }
 
   static _overview(api) {

@@ -16,7 +16,7 @@ class ChatStyleDocs {
 
   static WIDGETS = [
     '<visual_answers>',
-    'The chat can draw two widgets from a fenced JSON block. Use one only when it clearly helps: the user asks for a chart, or the answer compares several numbers. Never for one or two values.',
+    'The chat draws two widgets from fenced blocks labelled `chart` and `stats`. The label is what makes a block a widget: the same JSON in a block labelled `json` is shown as plain code. Use one only when it clearly helps: the user asks for a chart, or the answer compares several numbers. Never for one or two values.',
     '```chart',
     '{"type": "bar", "title": "Revenue by quarter", "unit": "$", "labels": ["Q1", "Q2", "Q3"], "series": [{"name": "2025", "data": [12, 18, 15]}]}',
     '```',

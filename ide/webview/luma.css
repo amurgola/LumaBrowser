@@ -81,7 +81,7 @@ button { font: inherit; color: inherit; }
 #whoMeta { font-size: 11.5px; color: var(--ide-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #conn { width: 8px; height: 8px; border-radius: 50%; background: var(--ide-muted); flex: 0 0 8px; }
 #conn.ready { background: var(--good); }
-#conn.busy { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+#conn.busy { background: var(--ide-fg); }
 #conn.error { background: var(--bad); }
 #conn.starting { background: var(--warn); }
 

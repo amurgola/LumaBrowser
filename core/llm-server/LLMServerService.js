@@ -8,6 +8,7 @@ const RamPinService = require('../shared/runtime/rampin/RamPinService');
 const LlmRuntimeServer = require('./server/LlmRuntimeServer');
 const ServerLauncher = require('./server/ServerLauncher');
 const VramWatchdog = require('./server/VramWatchdog');
+const VramWarningSwitch = require('./server/vram-watchdog/VramWarningSwitch');
 const CudaDevicePicker = require('../shared/runtime/CudaDevicePicker');
 const NvidiaUnifiedMemory = require('./diagnostics/NvidiaUnifiedMemory');
 const ModelCapsCache = require('./server/ModelCapsCache');
@@ -32,7 +33,6 @@ const ModelSettings = require('./service/ModelSettings');
 const LlmModelDisplayNames = require('./service/LlmModelDisplayNames');
 const LlmDrafterChoices = require('./service/LlmDrafterChoices');
 const FitResultStore = require('./service/FitResultStore');
-const GambitResultStore = require('./service/GambitResultStore');
 const NvidiaSmiPathSettings = require('./service/NvidiaSmiPathSettings');
 const LlmDiagnosticsCache = require('./service/LlmDiagnosticsCache');
 const LocalRequestTracker = require('./service/LocalRequestTracker');
@@ -40,8 +40,10 @@ const LocalServerStarter = require('./service/LocalServerStarter');
 const RunningModelCaps = require('./service/RunningModelCaps');
 const LocalProviderEntry = require('./service/LocalProviderEntry');
 const InstalledChatModels = require('./service/InstalledChatModels');
+const LlmDefaultsUpdater = require('./ipc/LlmDefaultsUpdater');
 const PinnedLlmTab = require('./service/PinnedLlmTab');
 const LlmSupervisorHooks = require('./service/LlmSupervisorHooks');
+const LlmResidentVram = require('./service/LlmResidentVram');
 
 class LLMServerService {
   static DEFAULT_AUTO_UNLOAD_MS = LlmServerSettings.DEFAULT_AUTO_UNLOAD_MS;
@@ -60,6 +62,7 @@ class LLMServerService {
     if (!settingsDb) throw new Error('LLMServerService requires a SettingsDatabase');
     this.settingsDb = settingsDb;
     this._defaultsListeners = [];
+    this.fitTestRunning = false;
     this.apiSecurity = options.apiSecurity || null;
     this.queueManager = null;
     this._deps = LLMServerService._resolveDeps(options);
@@ -100,8 +103,14 @@ class LLMServerService {
   whenVisionSettled() { return this._starter.whenVisionSettled(); }
 
 
-  getVramPressure() { return this.vramWatchdog.getState(); }
+  getVramPressure() { return this._vramWarning.view(this.vramWatchdog.getState()); }
   dismissVramPressure(card) { return this.vramWatchdog.dismiss(card); }
+  getVramWarning() { return this._settings.getVramWarning(); }
+  setVramWarning(value) {
+    const on = this._settings.setVramWarning(value);
+    this._vramWarning.resync(this.vramWatchdog.getState());
+    return on;
+  }
   getUnloadOnVramPressure() { return this._settings.getUnloadOnVramPressure(); }
   setUnloadOnVramPressure(value) { return this._settings.setUnloadOnVramPressure(value); }
   getGpuHeadroomBytes() { return this._settings.getGpuHeadroomBytes(); }
@@ -122,6 +131,7 @@ class LLMServerService {
       defaults: this.getDefaults(),
       port: this.runtimeServer.port,
       resolveDisplayName: (stem) => this.resolveModelDisplayName(stem),
+      installed: this._installedModels.snapshot(),
     });
   }
 
@@ -198,9 +208,6 @@ class LLMServerService {
   getAllFitResults() { return this._fitResults.all(); }
   getFitResults(modelPath) { return this._fitResults.get(modelPath); }
   saveFitResults(modelPath, entry) { return this._fitResults.save(modelPath, entry); }
-  getAllGambitResults() { return this._gambitResults.all(); }
-  getGambitResults(modelPath) { return this._gambitResults.get(modelPath); }
-  saveGambitResults(modelPath, entry) { return this._gambitResults.save(modelPath, entry); }
   getModelDisplayNames() { return this._displayNames.all(); }
   setModelDisplayName(key, name) { return this._displayNames.set(key, name); }
   resolveModelDisplayName(stem) { return this._displayNames.resolve(stem); }
@@ -210,6 +217,15 @@ class LLMServerService {
   setModelLaunchFlags(key, text) { return this._launchFlags.set(key, text); }
   resolveModelLaunchFlags(modelPathOrStem) { return this._launchFlags.resolve(modelPathOrStem); }
   listInstalledChatModels() { return this._installedModels.list(); }
+  freshInstalledChatModels() { return this._installedModels.fresh(); }
+  installedModelPath(stem) { return this._installedModels.pathOf(stem); }
+
+  async selectInstalledModel(stem) {
+    const modelPath = await this.installedModelPath(stem);
+    if (!modelPath) return false;
+    await new LlmDefaultsUpdater(this).update({ modelPath });
+    return true;
+  }
 
 
   attach(tabViewManager) { this._tab.attach(tabViewManager); }
@@ -332,7 +348,6 @@ class LLMServerService {
     this._drafterChoices = new LlmDrafterChoices(this.settingsDb);
     LlmModelsScanner.shared.useDrafterChoices(() => this._drafterChoices.all());
     this._fitResults = new FitResultStore(this.settingsDb);
-    this._gambitResults = new GambitResultStore(this.settingsDb);
     this._smiPath = new NvidiaSmiPathSettings(this.settingsDb);
     this._runtimeSettings = this._createRuntimeSettings();
     this._diagnostics = new LlmDiagnosticsCache({
@@ -377,7 +392,9 @@ class LLMServerService {
       runtimeServer: this.runtimeServer, capsCache: this.modelCaps, getDefaultModelPath: () => this.getDefaults().modelPath,
     });
     this.vramWatchdog = this._createVramWatchdog();
+    this.residentVram = this._deps.residentVram || new LlmResidentVram();
     LlmSupervisorHooks.wire({
+      residentVram: this.residentVram,
       runtimeServer: this.runtimeServer,
       vramCoordinator: this._deps.vramCoordinator,
       releasePeers: this._deps.releasePeers,
@@ -389,18 +406,24 @@ class LLMServerService {
   _createVramWatchdog() {
     const rs = this.runtimeServer;
     try { this._deps.nvidiaSmiStream.start(); } catch (err) { console.warn('[llm-server] nvidia-smi stream failed to start:', err && err.message); }
+    this._vramWarning = new VramWarningSwitch({
+      isOn: () => this.getVramWarning(),
+      emit: (type, payload) => this._tab.send(LLMServerService.CHANNELS.modelEvent, { type, payload }),
+    });
     return new VramWatchdog({
       stream: this._deps.nvidiaSmiStream,
       isLoaded: () => rs.state === 'ready',
       isIdle: () => rs.state === 'ready' && this._requests.inFlight() === 0 && !rs.idleHeld,
       unloadEnabled: () => this.getUnloadOnVramPressure(),
-      reserveBytes: (card) => (NvidiaUnifiedMemory.isUnifiedDevice(this._diagnostics.getCached(), card.index)
-        ? 0 : CudaDevicePicker.PER_CARD_RESERVE_BYTES),
+      reserveBytes: (card) => {
+        if (NvidiaUnifiedMemory.isUnifiedDevice(this._diagnostics.getCached(), card.index)) return 0;
+        return rs.plan && rs.plan.softHeadroom ? CudaDevicePicker.SOFT_RESERVE_BYTES : CudaDevicePicker.PER_CARD_RESERVE_BYTES;
+      },
       unload: async () => {
         console.log('[llm-server] unloading: VRAM critically low while idle (core.llm.unloadOnVramPressure)');
         await rs.stop();
       },
-      emit: (type, payload) => this._tab.send(LLMServerService.CHANNELS.modelEvent, { type, payload }),
+      emit: (type, payload) => this._vramWarning.emit(type, payload),
       ...this._deps.vramWatchdogOptions,
     });
   }

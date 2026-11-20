@@ -26,8 +26,8 @@ class ContactService {
       this._contacts.touchIdentity(known.id, at);
       return this._contacts.getContact(known.contactId);
     }
-    const match = this._match(who, contextId);
-    const contact = match || this._contacts.insertContact({ id: RecordId.create(ContactService.CONTACT_PREFIX), name: who.display });
+    const match = this._sameIdentity(who, app, contextId);
+    const contact = match ? this._contacts.getContact(match.contactId) : this._contacts.insertContact({ id: RecordId.create(ContactService.CONTACT_PREFIX), name: who.display });
     this._contacts.insertIdentity({
       id: RecordId.create(ContactService.IDENTITY_PREFIX), contactId: contact.id, app: String(app || ''), handle: who.handle,
       display: who.display, contextId, at,
@@ -39,9 +39,18 @@ class ContactService {
   lookup({ app, sender, contextId = null } = {}) {
     const who = ContactService.parse(sender, app);
     if (!who) return null;
-    const exact = this._contacts.findIdentity(String(app || ''), who.handle, contextId);
-    const any = exact || this._contacts.identitiesByHandle(who.handle).find((i) => who.isEmail || i.contextId === (contextId || null));
-    return any ? this._describe(this._contacts.getContact(any.contactId)) : null;
+    const identity = this._contacts.findIdentity(String(app || ''), who.handle, contextId) || this._sameIdentity(who, app, contextId);
+    return identity ? this._describe(this._contacts.getContact(identity.contactId)) : null;
+  }
+
+  find({ app, sender } = {}) {
+    const who = ContactService.parse(sender, app);
+    if (!who) return null;
+    const same = this._contacts.identitiesByHandle(who.handle);
+    const sameApp = same.find((i) => i.app === String(app || ''));
+    const onlyOne = new Set(same.map((i) => i.contactId)).size === 1;
+    const identity = sameApp || ((who.isEmail || (who.handle.includes(' ') && onlyOne)) ? same[0] : null);
+    return identity ? this._describe(this._contacts.getContact(identity.contactId)) : null;
   }
 
   backfill(rows) {
@@ -104,6 +113,7 @@ class ContactService {
     if (!into || !from) throw new Error('Contact not found.');
     const joined = ContactProfile.merge(into.kind, into.profile, from.kind, from.profile);
     this._contacts.saveProfile(into.id, joined.kind, joined.profile);
+    if (!into.contextId && from.contextId) this._contacts.setContext(into.id, from.contextId);
     this._contacts.moveIdentities(from.id, into.id);
     this._contacts.deleteContact(from.id);
     this._emit('contact.changed', { contactId: into.id, reason: 'merged' });
@@ -141,6 +151,7 @@ class ContactService {
     const contact = this._known(id);
     const kind = patch.kind == null || patch.kind === '' ? contact.kind : ContactProfile.cleanKind(patch.kind);
     this._contacts.saveProfile(id, kind, ContactProfile.apply(kind, contact.profile, patch, { now: this._now() }));
+    if (patch.contextId != null) this._contacts.setContext(id, String(patch.contextId).trim());
     return this._profileChanged(id, 'profile');
   }
 
@@ -176,12 +187,12 @@ class ContactService {
     return { handle: ContactService._nameKey(display), display, isEmail: false };
   }
 
-  _match(who, contextId) {
+  _sameIdentity(who, app, contextId) {
     const same = this._contacts.identitiesByHandle(who.handle);
-    const found = who.isEmail
-      ? same[0]
-      : (who.handle.includes(' ') ? same.find((i) => i.contextId === (contextId || null)) : null);
-    return found ? this._contacts.getContact(found.contactId) : null;
+    if (who.isEmail) return same[0] || null;
+    return same.find((i) => i.app === String(app || ''))
+      || (who.handle.includes(' ') ? same.find((i) => i.contextId === (contextId || null)) : null)
+      || null;
   }
 
   _known(id) {
@@ -220,6 +231,7 @@ class ContactService {
       id: contact.id,
       name: contact.name,
       kind: contact.kind,
+      contextId: contact.contextId || null,
       profile: { fields, details, notes, suggested },
       role: ContactProfile.role(contact.kind, contact.profile),
       about: ContactProfile.about(contact.kind, contact.profile, { now: this._now() }),

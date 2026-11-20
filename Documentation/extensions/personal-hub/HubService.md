@@ -3,21 +3,22 @@
 `extensions/personal-hub/HubService.js`
 
 The Hub's one public API: a facade over the calendar, inbox (the activity
-feed), board, sync, context, summary, focus and contact services and the
-conversation reader. The IPC handlers, REST routes, `hub_*` tools, Dashboard widgets and
+feed), board, sync, context, summary, focus and contact services, the
+conversation reader and the conversation opener. The IPC handlers, REST routes, `hub_*` tools, Dashboard widgets and
 live modules all call these methods, so their names are the contract
 (`manifest.dashboard.api` lists the ones exposed to the Dashboard and modules).
 
 ## Methods
 
-- `new HubService({ calendar, inbox, board, sync, inbound, openUrl, connections?, contexts?, summarizer?, focus?, contacts?, profiler?, reader?, now? })`:
+- `new HubService({ calendar, inbox, board, sync, inbound, openUrl, connections?, contexts?, summarizer?, focus?, contacts?, profiler?, reader?, opener?, now? })`:
   `connections` is `{ monitor, accounts, tabs }`; `contexts` a
   [ContextService](context/ContextService.md), `summarizer` an
   [ActivitySummarizer](summary/ActivitySummarizer.md), `focus` a
   [FocusService](focus/FocusService.md), `contacts` a
   [ContactService](contacts/ContactService.md), `profiler` a
   [ContactProfiler](contacts/ContactProfiler.md), `reader` a
-  [ConversationReader](snapshot/ConversationReader.md) (each optional:
+  [ConversationReader](snapshot/ConversationReader.md), `opener` a
+  [ConversationOpener](snapshot/ConversationOpener.md) (each optional:
   without one its reads answer empty and its writes throw); `now()` returns
   a Date (for the chat context).
 - Calendars: `listCalendarSources()`, `addCalendarSource(input)`,
@@ -75,17 +76,33 @@ live modules all call these methods, so their names are the contract
   found.`; the reader adds its own. The item is built by `_feedItem`: one
   feed item as `listThreads` gives it, with its `lastNotification` (title,
   body, time, sender, partition, host, url) and `contextId`.
+- `async openThread(threadId)` -> `{ success: true, opened: 'conversation'
+  | 'tab' | 'link' }` or `{ success: false, error }`: takes the user to a
+  feed item in the session that is signed in to it, its conversation when
+  the Hub knows the address, else the tab it came from
+  ([ConversationOpener](snapshot/ConversationOpener.md)`.open` over
+  `_feedItem`). Answers `The browser is not available.` without an opener
+  and `Activity item not found.` for an unknown id; the opener adds its
+  own. The activity widget's `Open` calls it.
 - People: `listContacts({ query?, limit? })` -> `{ contacts, suggestions,
   kinds }` (who the Hub has seen, each with its identities and profile, the
   pairs that may be one person, and the form of each kind of contact; all
-  three empty without the contact service), `getContact(id)` -> the
+  three empty without the contact service). Each contact also carries
+  `contextId` (the context picked for it, or `null`) and `homeContextId`:
+  the context its direct mail and messages are filed under, which is the
+  picked one or the one its relation names
+  ([ContextService](context/ContextService.md)`.contextOfContact`; `null`
+  without a context service). The rest: `getContact(id)` -> the
   contact or `null` (also `null` without the service),
   `mergeContacts(intoId, fromId)`, `splitContactIdentity(identityId)`,
   `renameContact(id, name)` (each answers the contact),
   `keepContactsApart(aId, bId)` (the user said two suggested contacts are
   different people), `saveContactProfile(id, patch)` (what is known about
-  the contact: `{ kind?, fields?, details?, addDetails?, notes?, addNote?
-  }`, a missing patch is `{}`), `suggestContactDetails(id, proposals)`
+  the contact: `{ kind?, fields?, details?, addDetails?, notes?, addNote?,
+  contextId? }`, a missing patch is `{}`; a `contextId` may be a context's
+  id or its name, case aside, and is stored as the id (`_withContext`),
+  `''` clears it, and one that matches no context throws `There is no
+  context "<value>".`), `suggestContactDetails(id, proposals)`
   (`[{ key, value, why }]` kept as suggestions on the contact),
   `resolveContactSuggestion(id, suggestionId, accept)` (accepted, it is
   written into the profile; otherwise dismissed), each answering the
@@ -97,7 +114,8 @@ live modules all call these methods, so their names are the contract
   [ContactService](contacts/ContactService.md).
 - Contexts (the companies or areas everything is filed under):
   `listContexts()` -> `[{ id, name, color, sortOrder, rules: [{ kind,
-  value }] }]` (empty without a context service), `saveContexts(contexts)`
+  value }] }]` (`kind` is conversation, subject, url, partition, domain, app,
+  calendar or tasks; empty without a context service), `saveContexts(contexts)`
   (replaces the set, then schedules the summariser at once so the cards are
   grouped again; throws `Contexts are not available.` without the service).
   See [ContextService](context/ContextService.md).

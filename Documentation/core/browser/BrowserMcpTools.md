@@ -34,6 +34,10 @@ Every tab-scoped tool rejects a non-numeric `tabId` with `Invalid tab ID`. Succe
 - `browser_observe_page`: `observePage(tabId, { selector })`; the selector lists one part of the page.
 - `browser_screenshot`: CSS-pixel image by default (`fullResolution: true` opts out), marks on request,
   one element with `selector`; reply from [ScreenshotReply](mcp/ScreenshotReply.md).
+- `browser_click_until`: `clickUntil(tabId, { text, selector, untilText, untilSelector, untilUrl,
+  intervalSeconds, timeoutSeconds, alert })`; the loop's report is the data, and its refusals (no target, no
+  stop condition, a condition that already holds) are the error. An MCP call cannot be stopped midway, so
+  the caller bounds it with `timeoutSeconds`.
 - `browser_click_at`, `browser_locate`: navigation stamped via [NavigationStamp](controller/NavigationStamp.md).
 - `browser_get_network`: [NetworkLogQuery](controller/NetworkLogQuery.md).
 - `browser_click`, `browser_type`, `browser_fill_form`, `browser_wait_for`, `browser_scroll`,

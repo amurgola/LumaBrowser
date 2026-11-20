@@ -13,7 +13,11 @@ All static.
 - `WIDGETS`: the inline widgets document (```` ```chart ```` and ```` ```stats ````
   fences, with the spec shapes), worded as opt-in ("only when it clearly
   helps") because small models given a format tend to use it everywhere. Plain
-  chats only: not in a chat mode or a voice turn.
+  chats only: not in a chat mode or a voice turn. Its first sentence names the
+  fence labels and says the label is what makes a block a widget: told only "a
+  fenced JSON block", Gemma 4 E4B wrote the right JSON in a ```` ```json ````
+  block, which the chat shows as code (7 of 9 trials on the prompt bench,
+  2026-11-18).
 - `VOICE_REMINDER`: a terse restatement appended to every agent iteration (under 300 characters).
 - `appendToSystemHead(messages, doc)`: appends `doc` to a leading system message, or prepends one; never a second system turn; does not mutate.
 

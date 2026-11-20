@@ -12,8 +12,7 @@ h1 { margin: 0; font-size: var(--text-md, 13px); font-weight: 600; line-height: 
 .status { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 11px; font-size: var(--text-sm, 12px);
   color: var(--text-secondary, #8a95ad); background: rgba(255,255,255,.05); }
 .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.status[data-state="live"] { color: var(--accent-2, #ffb06b); }
-.status[data-state="live"]::before { box-shadow: 0 0 8px currentColor; }
+.status[data-state="live"] { color: var(--success, #4ade80); }
 .status[data-state="minimized"] { color: var(--warning, #fbbf24); }
 .status[data-state="closed"], .status[data-state="error"] { color: var(--text-muted, #76819b); }
 
@@ -59,9 +58,9 @@ pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: var(--text
 .windows .w-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .windows .w-app { font-size: var(--text-sm, 12px); color: var(--text-muted, #76819b); }
 
-.toast { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); max-width: 70%; padding: 8px 14px; border-radius: 12px;
-  background: rgba(20,27,44,.96); color: var(--text-primary, #e6e9f2); font-size: var(--text-sm, 12px);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 6px 18px rgba(0,0,0,.35); }
+.toast { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); max-width: 70%; padding: 8px 14px;
+  border-radius: var(--radius-lg, 8px); background: var(--surface-pop, #141b2c); color: var(--text-primary, #e6e9f2);
+  font-size: var(--text-md, 13px); box-shadow: var(--shadow-pop, 0 12px 32px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06)); }
 .toast[hidden] { display: none; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

@@ -20,5 +20,8 @@ belongs to.
 - `listRecent({ limit, offset, app, since })`
   (newest first; `app` narrows to one app, `since` to rows received at or
   after that ISO time), `count()`.
+- `setSender(id, sender)`: stores the sender a notification reads as now
+  (an empty one as `''`), for
+  [InboxService](InboxService.md)`.reclassify`.
 - `pruneBefore(beforeIso)`: drops older rows, returns how many.
 - `static hydrate(row)`.

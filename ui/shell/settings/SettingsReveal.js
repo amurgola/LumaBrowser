@@ -14,22 +14,26 @@ export default class SettingsReveal {
 
   async reveal(target) {
     if (!target || typeof target !== 'object') return null;
-    if (target.surface === 'extension') return this._extension(target.extensionId);
+    if (target.surface === 'extension') return this._extension(target.extensionId, target.selector);
     const tab = target.tab || 'general';
     this._settings.open(tab);
     if (target.subtab) this._subtab(tab, target.subtab);
-    if (!target.selector) return null;
-    const el = await this._find(target.selector);
+    return target.selector ? this._highlightFound(target.selector) : null;
+  }
+
+  async _extension(extensionId, selector) {
+    this._settings.open('extensions');
+    const slots = this._getSlots();
+    if (!slots || typeof slots.showExtensionSettings !== 'function' || !extensionId) return null;
+    await slots.showExtensionSettings(String(extensionId));
+    return selector ? this._highlightFound(selector) : null;
+  }
+
+  async _highlightFound(selector) {
+    const el = await this._find(selector);
     if (!el) return null;
     this.expandAround(el);
     return this.highlight(SettingsReveal.visibleRow(el));
-  }
-
-  _extension(extensionId) {
-    this._settings.open('extensions');
-    const slots = this._getSlots();
-    if (slots && typeof slots.showExtensionSettings === 'function' && extensionId) slots.showExtensionSettings(String(extensionId));
-    return null;
   }
 
   _subtab(tab, subtab) {

@@ -25,8 +25,8 @@ The full contract (attachment kinds, limits, results) is in the
     conversation is created first with that model so its id can be returned.
   - When the tab cannot open, the intent is taken back so none is left stale.
   - Focus goes to the window that draws the chat tab
-    (`tabViewManager.windowOfTab(pinnedTabId)`), else the main window; on
-    Windows it is briefly made topmost.
+    (`tabViewManager.windowOfTab(pinnedTabId)`), else the main window, raised with
+    [WindowRaiser](../../../core/browser/WindowRaiser.md).
 - `readAttachments(list)` -> `{ files, rejected }`: `text` from `text` or base64
   `data`; `image` from base64 `data` (a `data:` prefix is stripped; 8 MB);
   `file` from a `path`, or from base64 `data` written to a temp file under

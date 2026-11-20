@@ -94,6 +94,43 @@ Rules:
 - **Empty states:** one quiet sentence, saying what to do next. No illustrations, greetings or suggestion pills.
 - **Copy:** plain and specific, e.g. "Clear history", "Update", "Model not found". No "Easy", "Supercharge", "Unlock", and no exclamation marks.
 
+## Notices
+
+A message to the user takes one of four forms. Choose by where the message belongs, not by how loud it should be.
+
+| Form | Use it for | Built with |
+|---|---|---|
+| On the thing itself | the result of an action on one row, card or field | a state word (`Installed`, `Install failed`) with the reason under it: `ExtCard.setOutcome`, `.gs-row-error`, `.luma-form-err` |
+| Inline notice | a condition of the page or section in view | `.luma-callout`; [Notice](../core/llm-server/ui/js/notice/Notice.md) when it has a title, an action or a close button |
+| Toast | the result of something the user just did that has no row to sit on | `.luma-toast` ([SettingsFeedback](shell/settings/SettingsFeedback.md) in Settings) |
+| Dialog | a decision that has to be made before going on | `LumaModal` through `Dialogs`, always awaited |
+
+- **Next to its cause first.** A result that has a place is shown in that place. A toast is the fallback for results with no location; it is not where an error with a location goes.
+- **A success that shows itself gets no message.** When the button now reads `Installed`, nothing else announces it.
+- **State is a tint and words.**
+  - Warning is `--warning-dim`, failure is `--danger-dim`, everything else is the neutral `--bg-surface-2`.
+  - A title, when there is one, takes the status color; the text says what happened, so the notice still reads with the color removed.
+  - No status dot, no icon in a tinted circle, no left stripe, and no typed character standing in for an icon (`x`, `!`, a check mark).
+- **Say what happened and what to do next**, in one or two short sentences. No "successfully", no blame, no error code as the title.
+- **At most one action**, a quiet secondary button named for what it does in two or three words.
+  - When the fix lives on another page, the action goes there through the search palette's reveal: `SettingJump.action(id, label)` in the shell, `api.palette.reveal(id)` in the LLM tab, with an id from the settings catalogs (`core/palette/catalog`). The page opens, the folded group unfolds and the row is highlighted.
+  - Do not describe the route in prose ("Settings > API & MCP").
+- **Failures stay.** A warning, a failure, or anything that needs an action does not leave on a timer. A plain success toast leaves after 3.5 s, one with an action after 8 s.
+- **Dismiss is an icon button**: the stroked close icon with the accessible name "Dismiss" (`Notice.closeButton`).
+- **Roles:** a failure is `role="alert"`; every other notice is `role="status"`.
+- **A toast is a level 2 surface**: `--surface-pop` and `--shadow-pop`, no border (the shadow draws the edge). A failure mixes the tint onto the surface so it stays opaque over content.
+
+Where this differs from the large public systems: Primer, Carbon, Fluent and Atlassian pair each severity with an icon. Here the pairing is the tint with a plain statement, as the chat's failed-turn card does it. The rules they agree on are kept: feedback next to its cause, no timed errors, color never alone, one action, an alert role for failures.
+
+## Status dots
+
+- A dot (`.luma-dot`) marks the state of one row in a list (a source, a monitor, a share), beside a word or, on a dense row, with a title. It is never the marker of a notice, a toast or a heading.
+- **Colors:** grey for idle, off or unknown; `--success`, `--warning`, `--danger` for outcomes. The warm hues are hard to tell apart at 8px, which is why the word is required.
+- **Working is neutral.** A running state is `--text-primary` with the slow pulse (`.luma-dot.busy`), or the spinner. Accent means selected or primary and warning means something needs attention, so neither is the color of "running".
+- Accent on a dot only where it marks the current item of a sequence (the step you are on).
+- No glow, halo or ring around a dot.
+- New code uses `.luma-dot` and does not define another dot class.
+
 ## Review checklist
 
 Before merging UI work, screenshot it and count these tells. Two or more is a fail.
@@ -107,3 +144,6 @@ Before merging UI work, screenshot it and count these tells. Two or more is a fa
 7. Nested cards
 8. More than five font sizes
 9. Hardcoded colors
+10. A dot, icon tile or stripe marking a notice
+11. Typed characters used as icons
+12. A failure that times out, or a route written in prose instead of a button

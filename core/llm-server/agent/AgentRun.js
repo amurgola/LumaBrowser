@@ -86,7 +86,10 @@ class AgentRun {
       ? ToolOutputTruncator.forSlotBudget(this._o.ctxPerSlot).maxBytes
       : ToolOutputTruncator.DEFAULT_MAX_BYTES;
     this._verifier = new CompletionVerifier();
-    this._gate = new FinalAnswerGate({ history: this._history, steps: this._steps, emit: (event) => this._emit(event), verifier: this._verifier });
+    this._gate = new FinalAnswerGate({
+      history: this._history, steps: this._steps, emit: (event) => this._emit(event), verifier: this._verifier,
+      finalCheck: this._o.finalCheck, awaitsLaterResult: this._o.awaitsLaterResult, nativeTools: this._o.nativeTools,
+    });
     this._executor = new AgentToolExecutor({ ...this._deps, screenshotVision: this._o.screenshotVision });
     this._batchRunner = new ToolBatchRunner({
       executor: this._executor,
@@ -116,6 +119,8 @@ class AgentRun {
       noBrowser: this._o.noBrowser,
       parallelToolCalls: this._o.maxParallel > 1,
       promptExperiments: this._o.promptExperiments,
+      nativeTools: this._o.nativeTools,
+      systemRole: this._o.systemRole,
     });
     this._history.push('system', this._systemPrompt);
     this._pushPriorTurns();

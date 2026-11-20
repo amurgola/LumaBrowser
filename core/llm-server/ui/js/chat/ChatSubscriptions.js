@@ -61,6 +61,7 @@ export default class ChatSubscriptions {
   }
 
   _onJobEvent(ev) {
+    if (ev && ev.type === 'turn') { this._ctx.hostTurns.follow(ev.payload).catch(() => {}); return; }
     this._ctx.jobsStrip.onEvent(ev);
     if (ev && ev.type === 'posted') this._ctx.convList.refresh();
   }

@@ -19,7 +19,7 @@ class LoraApplier {
       lora: lora.name,
       model: { id: model.id, label: model.label || model.id },
       weight: entry.weight,
-      trigger: (lora.trained && lora.trained.trigger) || null,
+      trigger: lora.trigger || (lora.trained && lora.trained.trigger) || null,
       attached: !remove,
     };
   }

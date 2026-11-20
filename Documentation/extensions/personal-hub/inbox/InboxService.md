@@ -60,6 +60,25 @@ still accepted from automations. Emits `thread.changed` after every write.
 - `listNotifications({ limit, offset, app, since })` (the raw log, newest
   first; `since` an ISO time, received at or after), `counts()` (threads by
   state).
+- `reclassify()` -> `{ threads, changed }`: reads the stored feed again
+  with the classifier as it is now, after its rules changed. For every item
+  (any state, up to `RECLASSIFY_THREADS` = 20000) its intercepted
+  notifications (up to `RECLASSIFY_NOTIFICATIONS` = 2000, those an
+  automation pushed left out) are classified again; a notification whose
+  sender reads differently is updated
+  ([NotificationRepository](NotificationRepository.md)`.setSender`) and
+  reported in `changed` as the notification with its new `sender` and
+  `was`, the old one, oldest first. `threads` is how many items changed.
+  Each item is then brought in line (`_refit`): a participant that was a
+  notification's old sender becomes its new one (an emptied one is
+  dropped; when several notifications of the item shared one old sender but
+  read as different senders now, each of them becomes a participant, in the
+  order they wrote), and the title becomes the newest notification's title as read
+  now, but only when the stored title is one the classifier made (a
+  notification's own title, or the first line of its body). Thread keys
+  stay, so no item is split or joined, and a title or participant an
+  automation set is left alone. Emits nothing. A second call right after
+  changes nothing.
 
 ## Events
 
@@ -75,11 +94,15 @@ In activate, when the notification-interceptor is active:
 `context.extensions['notification-interceptor'].onIngest(({ notification }) => inbox.ingest(notification, tab))`
 and keep the returned unsubscribe for deactivate. `tab` is the persisted tab
 the notification names ([PersonalHubExtension](../PersonalHubExtension.md)`._tabOf`),
-so its partition is stored with the notification.
+so its partition is stored with the notification. `reclassify` is called
+once by `PersonalHubExtension._refit` after the classifier's rules changed,
+and what it reports goes to [ContactTidy](../contacts/ContactTidy.md).
 
 ## Why
 
 The notification-interceptor keeps fifty entries for its settings page; the
 activity feed needs the whole history, grouped the way the user thinks about it
 (per conversation, not per ping), and a place for an automation to hang its
-summary and priority.
+summary and priority. The log keeps each notification's raw title and body,
+which is what lets a better rule be applied to what is already stored
+instead of only to what arrives next.

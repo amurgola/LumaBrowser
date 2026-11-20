@@ -58,7 +58,7 @@ class HostManifestBuilder {
 
   _addListedModel(model, localExpanded, contextWindow) {
     if (model.isLocal) {
-      if (!this._flags.shareLocalLlm || localExpanded) return;
+      if (!this._flags.shareLocalLlm || localExpanded || model.current === false) return;
       this._manifest.llms.push({ ref: model.ref, label: model.label, kind: 'local', current: true, readOnly: true, contextWindow });
       return;
     }

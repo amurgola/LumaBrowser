@@ -6,10 +6,15 @@ The Browse Extensions subtab: the lumabyte.com add-on catalog with Download or R
 
 ## Methods
 
-- `new AddonsBrowser({ pane, hooks })`, `load()`: `core.shell.getAvailableAddons`
+- `new AddonsBrowser({ pane })`, `load()`: `core.shell.getAvailableAddons`
   (`{ ok, extensions, error }`); each row's button calls
-  `core.shell.downloadAndInstallAddon(id)`, reads Installed or "Installed
-  (restart to run)", and toasts; a failure restores the button.
+  `core.shell.downloadAndInstallAddon(id)`.
+- The result is shown on the card, not in a toast
+  ([ExtCard](ExtCard.md)`.setOutcome`): a success turns the button into
+  `Installed` and says nothing more; an add-on that installed but could not be
+  started gets the state word `Restart to run` with the reason in its tray; a
+  failure gets `Install failed` with the error in its tray and its button back,
+  so it can be tried again.
 
 ## Globals
 

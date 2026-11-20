@@ -17,6 +17,7 @@ meant for; a refused call answers `{ success: false, error }`.
 | `core.palette.continueInChat` | a palette view | closes, then hands the query to the chat |
 | `core.palette.toggle` | browser chrome or an internal tab | opens or closes the sender's window's palette (the LLM tab's "Jump to a setting" button uses it); never a website |
 | `core.palette.getDoubleShift` | browser chrome or an internal tab | `{ success, enabled }` |
+| `core.palette.reveal` | browser chrome or an internal tab | `(settingId, selector?)`: opens and highlights one catalog setting where it lives, recording nothing (what an alert's button calls); `selector` names an element on a Settings page whose entry is only the page; never a website |
 | `core.palette.setDoubleShift` | browser chrome | saves the switch |
 | `core.palette.record` | browser chrome or an internal tab | remembers a place; never a website |
 

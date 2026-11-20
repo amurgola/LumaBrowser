@@ -1,9 +1,11 @@
+import ChatIcons from '../chat/ChatIcons.js';
+
 export default class ImportModelMarkup {
   static HTML = `
       <div class="luma-modal img-modal" role="dialog" aria-labelledby="imgImportTitle">
         <div class="img-modal-header">
           <h3 class="luma-modal-title" id="imgImportTitle">Import custom image model</h3>
-          <button class="luma-icon-btn luma-icon-btn--sq img-modal-x" data-act="close" aria-label="Close">×</button>
+          <button class="luma-icon-btn luma-icon-btn--sq img-modal-x" data-act="close" aria-label="Close">${ChatIcons.x}</button>
         </div>
         <div class="img-modal-body">
           <div class="defaults-row">

@@ -322,7 +322,7 @@ export default class HubInboxWidget extends HubWidgetBase {
   _actions(thread, dismissed) {
     const button = (cls, text, fn, title) => WidgetDom.el('button', { class: `hub-row-action ${cls}`, text, title, on: { click: fn } });
     return WidgetDom.el('div', { class: 'hub-thread-actions' }, [
-      thread.url ? button('hub-open-url', 'Open', () => this._openUrl(thread.url), 'Open in the app') : null,
+      HubInboxWidget._canOpen(thread) ? button('hub-open-url', 'Open', () => this._openThread(thread.id), 'Open it where you are signed in to it') : null,
       this._snapshots.has(thread.id)
         ? button('hub-read-hide', 'Hide', () => { this._snapshots.delete(thread.id); this._paint(); }, 'Hide the conversation text')
         : button('hub-read', 'Read', () => this._readConversation(thread.id), 'Read the conversation from its tab, without opening it'),
@@ -331,6 +331,20 @@ export default class HubInboxWidget extends HubWidgetBase {
         ? button('hub-restore', 'Restore', () => this._restore(thread.id), 'Put it back in the feed')
         : button('hub-dismiss', 'Dismiss', () => this._dismiss(thread), 'Take it out of the feed; new activity brings it back'),
     ]);
+  }
+
+  static _canOpen(thread) {
+    const last = thread.lastNotification || {};
+    return !!(thread.url || last.url || last.partition);
+  }
+
+  async _openThread(threadId) {
+    try {
+      const opened = await this.host.call('openThread', threadId);
+      if (opened && opened.success === false) this._showError(opened.error || 'It could not be opened.');
+    } catch (err) {
+      this._showError(err);
+    }
   }
 
 

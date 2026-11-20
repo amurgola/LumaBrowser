@@ -17,6 +17,7 @@ export default class SettingsScreens {
     this._hooks = hooks;
     this._tabs = new SettingsTabs({ onTab: (tab) => this._onTab(tab), onSubtab: (subtab) => this._loadSubtab(subtab) });
     this._screens = null;
+    this._listLoads = Promise.resolve();
   }
 
   init() {
@@ -34,10 +35,11 @@ export default class SettingsScreens {
     this._tabs.switchSubtab(parent, subtab);
   }
 
-  showExtension(extensionId) {
+  async showExtension(extensionId) {
     if (!this._screens) return false;
     this._tabs.switchTab('extensions');
     this._tabs.switchSubtab('extensions', 'extensions');
+    await this._listLoads;
     this._screens.config.show(extensionId);
     return true;
   }
@@ -78,7 +80,7 @@ export default class SettingsScreens {
       pane: panes.extensions, meta: this._meta, settingsEntries: this._entries, hooks: this._hooks, fileActions: s.fileActions, onBack: showList,
       onOpenTab: (tabName) => this.switchTab(tabName),
     });
-    s.addons = new AddonsBrowser({ pane: panes.browse, hooks: this._hooks });
+    s.addons = new AddonsBrowser({ pane: panes.browse });
     s.addMenu = new ExtensionAddMenu({
       host: panes.addMenuHost,
       onNewExtension: () => s.fileActions.createNew(),
@@ -112,7 +114,7 @@ export default class SettingsScreens {
   _loadSubtab(subtab) {
     const s = this._screens;
     if (!s) return;
-    if (subtab === 'extensions' || subtab === 'inactiveExtensions') s.list.show();
+    if (subtab === 'extensions' || subtab === 'inactiveExtensions') this._listLoads = Promise.allSettled([this._listLoads, s.list.show()]);
     else if (subtab === 'browseExtensions') s.addons.load();
     else if (subtab === 'chromeExtensions') s.chrome.load();
     else if (subtab === 'about') { if (window.electronAPI && window.electronAPI.getLicenses) s.about.load(); }

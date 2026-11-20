@@ -5,7 +5,7 @@
 ## Methods
 
 - `ToolEditView.render(el, { tool, slots, canPublish, notice }, on)`: back
-  link "<- My Tools" and the status, the notice, the Settings form (one input
+  link "<- My Tools" and the status, the notice ([ToolListView](ToolListView.md)`.notice`), the Settings form (one input
   per config slot: password for secrets, placeholder "(set)" or "Not set",
   "Save settings"), the Code section with the `[data-tf-editor]` host, the
   collapsible Definition (label, description, allowed hosts, the

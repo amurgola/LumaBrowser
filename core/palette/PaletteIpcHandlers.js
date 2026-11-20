@@ -20,6 +20,7 @@ class PaletteIpcHandlers {
     this._fromPalette('core.palette.continueInChat', (win, _e, q) => { p.close(win, { restoreFocus: false }); return p.continueInChat(q); });
     this._fromAppPage('core.palette.toggle', (e) => p.toggle(this._windowFor(e.sender)));
     this._fromAppPage('core.palette.getDoubleShift', () => ({ success: true, enabled: p.isDoubleShiftEnabled() }));
+    this._fromAppPage('core.palette.reveal', (e, settingId, selector) => p.reveal(this._windowFor(e.sender), settingId, selector));
     this._fromChrome('core.palette.setDoubleShift', (_e, enabled) => p.setDoubleShiftEnabled(enabled));
     this._ipc.handle('core.palette.record', (e, place) => (this._mayRecord(e && e.sender) ? { success: p.record(place) } : { success: false }));
   }

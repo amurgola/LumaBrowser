@@ -121,7 +121,7 @@
 }
 .ai-activity-status-dot.queued { background: var(--text-muted); }
 .ai-activity-status-dot.processing {
-    background: var(--accent);
+    background: var(--text-primary);
     animation: ai-activity-pulse 1.2s var(--ease) infinite;
 }
 @keyframes ai-activity-pulse {

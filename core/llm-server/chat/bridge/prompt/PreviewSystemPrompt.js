@@ -1,6 +1,7 @@
 const AgentToolCatalog = require('../../../../llm-service/AgentToolCatalog');
 const TokenEstimator = require('../../../../shared/text/TokenEstimator');
 const AgentRunner = require('../../../agent/AgentRunner');
+const ChatAssistantText = require('../../ChatAssistantText');
 const AvailableGroups = require('../groups/AvailableGroups');
 const SystemPromptAppend = require('./SystemPromptAppend');
 const VisionHint = require('./VisionHint');
@@ -21,12 +22,14 @@ class PreviewSystemPrompt {
     const extTools = deps.mcpAggregator ? AgentToolCatalog.getDynamicTools(deps.mcpAggregator).filter((t) => allows(t.name)) : [];
     const groups = AvailableGroups.for(allows, extTools, { kbHasDocs: AvailableGroups.knowledgeBaseHasDocs(deps.ragService) });
     const visionHint = VisionHint.forTurn(withImages > 0 ? withImages : 0, this._visionActive(modelRef));
-    const append = SystemPromptAppend.build({ allows, extTools, groups, visionHint, modeSystemPrompt, activeGroups: new Set() });
+    const chatPrompt = modeSystemPrompt || ChatAssistantText.toolsAnswering();
+    const append = SystemPromptAppend.build({ allows, extTools, groups, visionHint, modeSystemPrompt: chatPrompt, activeGroups: new Set() });
     const prompt = PreviewSystemPrompt._agent(deps, db).buildSystemPrompt({
       tabInfo: PreviewSystemPrompt.TAB_INFO,
       defaultTabId: 0,
       allowedTools: allowList,
       systemPromptAppend: append,
+      systemRole: modeSystemPrompt ? null : ChatAssistantText.ROLE_TOOLS,
     });
     return {
       prompt,

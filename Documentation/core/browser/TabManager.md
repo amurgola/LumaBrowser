@@ -13,10 +13,12 @@ beyond delegation and one guard.
 
 ## Construction
 
-`new TabManager(tabViewManager, { nativeImage })`. `tabViewManager` is the
+`new TabManager(tabViewManager, { nativeImage, attention })`. `tabViewManager` is the
 [TabViewManager](TabViewManager.md) (public field `tabViewManager`, read by
 [TabPageAccess](resolution-cache/TabPageAccess.md) and the CDP and Selenium drivers). `nativeImage`
 is Electron's module, optional: it is loaded lazily the first time a screenshot is rescaled.
+`attention` is the [TabAttention](TabAttention.md) an alerting click loop uses (a test seam; one is built
+from the TabViewManager by default).
 
 ## Methods
 
@@ -50,6 +52,10 @@ Acting on the page (input actions add `data.evidence` and, when the URL moved, `
 
 - `clickElement(tabId, { selector, text, ref })` ([ElementClicker](tab-manager/ElementClicker.md)).
 - `clickAt(tabId, { x, y, button, clickCount })` ([PointClicker](tab-manager/PointClicker.md)).
+- `clickUntil(tabId, { text, selector, untilText, untilSelector, untilUrl, intervalSeconds, timeoutSeconds, alert }, { shouldStop })`
+  -> `data: { outcome, reached, matched, clicks, reloads, seconds, url, note, alerted? }` ([RepeatClicker](tab-manager/RepeatClicker.md)).
+  With `alert`, an end worth looking at (`RepeatClicker.alertFor`) puts the tab in front of the user through
+  [TabAttention](TabAttention.md) and `alerted` says whether its window was raised.
 - `typeInto(tabId, { selector, ref, text, submit, clear })` ([FieldTyper](tab-manager/FieldTyper.md)).
 - `pressKey(tabId, { key, selector, ref })` ([KeyPresser](tab-manager/KeyPresser.md)).
 - `scrollPage(tabId, { selector, direction, amount })` ([PageScroller](tab-manager/PageScroller.md)).

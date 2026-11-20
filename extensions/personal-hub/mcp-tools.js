@@ -3,5 +3,5 @@ const HubTools = require('./HubTools');
 
 module.exports = {
   tools: HubTools.TOOLS,
-  handler: (toolName, args = {}) => HubTools.handle(main.getApi(), toolName, args),
+  handler: async (toolName, args = {}) => HubTools.envelope(await HubTools.handle(main.getApi(), toolName, args)),
 };

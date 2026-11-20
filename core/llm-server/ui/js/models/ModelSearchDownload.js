@@ -116,7 +116,7 @@ export default class ModelSearchDownload {
         + HtmlEscaper.escapeKeepingApostrophes(result && result.error ? ': ' + result.error : '') + '</span>';
       return;
     }
-    this._message.innerHTML = '<span class="ms-ok">✓ Downloaded to your models folder.</span>';
+    this._message.innerHTML = '<span class="ms-ok">Downloaded to your models folder.</span>';
     this._go.textContent = 'Downloaded';
     try { window.dispatchEvent(new CustomEvent('luma-models-changed')); } catch (_) {}
   }

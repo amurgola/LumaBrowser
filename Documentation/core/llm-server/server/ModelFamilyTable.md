@@ -110,6 +110,40 @@ an MXFP8 Engram table, 1M native context; runs through the LumaByte runtime
 - Not set: sampler defaults (DeepSeek publishes none for the 1017 release),
   `--reasoning-preserve` (not measured on this template), KV quantisation.
 
+### gemma4 (Google Gemma 4, arch `gemma4`; name fallback `gemma-4`, `Gemma 4`)
+
+Added 2026-11-18. E2B, E4B, 26B A4B and 31B, and finetunes of them (the
+architecture is in the header, so a renamed finetune is matched too).
+
+- Detected by architecture first, else by a Gemma 4 name. The name pattern is
+  not anchored on a word boundary because bartowski's files are named
+  `google_gemma-4-...`; `gemma-3-*` and `gemma-40b` stay unclaimed.
+- `samplerDefaults` temperature 1.0, top_p 0.95, top_k 64: what the model card
+  of `google/gemma-4-E4B-it` recommends (`npm run models:card-settings --
+  --repo bartowski/google_gemma-4-E4B-it-GGUF --model
+  google_gemma-4-E4B-it-Q4_K_M --dry-run` prints it).
+- `nativeToolCalls: true` with `--jinja`: the model is trained on its own
+  tool-call tokens and falls back to them on a long call whatever the text
+  fence asks for. Measured on Gemma 4 E4B Q4_K_M with the prompt bench
+  (`npm run bench:prompt`, the three long tool-call cases, ten trials each):
+  27 of 30 on the text fence (twice `<|tool_call>call:create_live_artifact{...}`
+  arrived in the chat as raw text and nothing ran, once the document was
+  pasted into the reply with no call) against 30 of 30 with tools registered.
+  The cost is the registered schemas: a fresh Tools-on request is about 8,500
+  tokens natively against 6,400 on the fence.
+- How that cost moves through a conversation, measured the same day on an
+  eight-turn chat that brought in the artifacts, web and live-artifacts groups
+  one after another (two runs per route, within 60 tokens of each other): the
+  gap stays at 2,111 tokens while no group joins, and is 2,076, 2,164 and
+  about 2,480 after each group, because a group's schemas join the array while
+  its manual loses the fence examples. The larger effect is on the cache. On
+  both later activations the reused prefix stopped at the same 8,172 tokens,
+  the tool block, so everything after it (the whole conversation) was read
+  again: 6,030 tokens against 3,190 on the fence at the third activation,
+  where the fence route reads only the new tail. It is paid once per group.
+- Not set: `--reasoning-preserve` (not measured on this template), KV
+  quantisation, speculation.
+
 ### ricursive (ricursiveAI Ripple, arch `ricursive`; name fallback `Ripple-NNB`)
 
 Ripple-65B-Preview: dense 65B, 80 layers, four sliding-window layers (window

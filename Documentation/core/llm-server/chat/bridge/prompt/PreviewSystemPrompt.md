@@ -15,7 +15,10 @@ tab's preview. Never runs the model.
   [SystemPromptAppend](SystemPromptAppend.md) with no active groups and the
   knowledge-base filter applied; the prompt from
   `AgentRunner#buildSystemPrompt({ tabInfo, defaultTabId: 0, allowedTools,
-  systemPromptAppend })`.
+  systemPromptAppend, systemRole })`. Without a `modeSystemPrompt` the preview is of a plain
+  Tools-on chat turn, so it carries the chat assistant's role and `<answering>` block
+  ([ChatAssistantText](../../ChatAssistantText.md)), as [AgentTurnDispatch](../../router/AgentTurnDispatch.md)
+  sends them; with one, the stock role and the mode prompt.
   `toolCount` is null for an unrestricted list. `segments` are `{ key, label,
   present }` for base, tabState, browserTools, dateTime, toolRegistry,
   artifactTools, liveArtifactTool, imageTools, validateTool, extTools,

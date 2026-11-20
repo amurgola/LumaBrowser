@@ -8,6 +8,7 @@ class SummaryPrompt {
   static MAX_ASKS = 4;
   static SNAPSHOT_CHARS = 1500;
   static MAX_WHO = 12;
+  static MAX_ATTENDEES = 6;
 
   static SYSTEM = [
     'You keep one person on top of their notifications so they can protect their focus.',
@@ -21,6 +22,7 @@ class SummaryPrompt {
     '- reason: when needsYou is true, one short sentence saying who is waiting and for what. Otherwise "".',
     '- asks: at most 4 items that each need this person, "id" copied exactly from the [id] of the item, "what" the action in a few words. Empty when needsYou is false.',
     'An item may be followed by "Conversation:" lines: that is the conversation itself as read from their own screen. Trust it over the one-line notification, and use it to tell whether a question was already answered.',
+    'An item may be followed by "On their calendar:" lines: meetings already booked with the same subject or with just the person who wrote. When such a meeting answers what the item asks (a time to meet, a choice between days), that ask is settled: do not count it as needing them, and say the meeting is booked and when.',
     'People are named as this person knows them; "(also on ...)" means the same person writes from those apps too.',
     'A "Who is who" list may follow the activity: what this person has recorded about the people in it. Use it to judge how much a message matters to them and to say who someone is; never repeat private details that the activity itself does not call for.',
     'Only use what the items say. If the text of an item is too thin to tell, do not guess that it needs them.',
@@ -69,7 +71,25 @@ class SummaryPrompt {
     const text = ModelText.clip(item.summary || last.body || last.title, SummaryPrompt.ITEM_CHARS);
     const title = item.title || people || '(untitled)';
     const line = `- [${item.id}] ${item.kind || 'other'}/${item.app}: "${title}"${people && people !== title ? ` with ${people}` : ''} (${facts.join('; ')})${text ? `: ${text}` : ''}`;
-    return item.snapshot ? `${line}\n${SummaryPrompt._conversation(item.snapshot)}` : line;
+    return [line, item.snapshot ? SummaryPrompt._conversation(item.snapshot) : '', SummaryPrompt._calendar(item.meetings, now)].filter(Boolean).join('\n');
+  }
+
+  static _calendar(meetings, now) {
+    const booked = (meetings || []).filter((m) => m && m.title && m.startsAt);
+    if (!booked.length) return '';
+    return ['  On their calendar:', ...booked.map((m) => {
+      const who = (m.attendees || []).slice(0, SummaryPrompt.MAX_ATTENDEES).join(', ');
+      return `    - "${ModelText.clip(m.title, SummaryPrompt.HEADLINE_CHARS)}" ${SummaryPrompt._when(m, now)}${who ? `, with ${who}` : ''}${m.organizer ? `, booked by ${m.organizer}` : ''}`;
+    })].join('\n');
+  }
+
+  static _when(meeting, now) {
+    const start = new Date(meeting.startsAt);
+    if (Number.isNaN(start.getTime())) return '';
+    const shape = meeting.allDay ? { weekday: 'short', month: 'short', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+    const hours = Math.round((start.getTime() - now.getTime()) / 3600000);
+    const away = hours < 1 ? 'within the hour' : (hours < 24 ? `in ${hours} h` : `in ${Math.round(hours / 24)} d`);
+    return `${start.toLocaleString('en-US', shape)}${meeting.allDay ? ', all day' : ''} (${away})`;
   }
 
   static _whoLines(who) {

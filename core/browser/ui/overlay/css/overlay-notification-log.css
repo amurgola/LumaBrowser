@@ -22,6 +22,7 @@
 @media (prefers-reduced-motion: reduce) {
   .notification-log .nlog-ring { display: none; }
 }
+.notification-log.is-held .nlog-ring { display: none; }
 .notification-log .log-title {
   display: flex; justify-content: space-between; align-items: center;
   font-size: var(--text-md); font-weight: var(--weight-semibold); margin-bottom: var(--space-2); color: var(--text-primary);
@@ -41,3 +42,9 @@
 .notification-log .log-item:last-child { margin-bottom: 0; }
 .notification-log .log-item.success { color: var(--text-primary); }
 .notification-log .log-item.error { background: var(--danger-dim); color: var(--danger); }
+.notification-log .log-action-btn {
+  display: block; margin-top: var(--space-2); padding: 4px var(--space-3);
+  font: inherit; font-weight: var(--weight-semibold); color: var(--text-primary);
+  background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-md); cursor: pointer;
+}
+.notification-log .log-action-btn:hover { background: var(--bg-elevated); }

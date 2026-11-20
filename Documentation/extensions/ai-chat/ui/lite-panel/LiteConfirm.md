@@ -9,5 +9,6 @@ The side panel's delete confirmation in `#aiChatConfirmModal`.
 - `new LiteConfirm({ modal, message, okBtn, cancelBtn })`: Cancel hides.
 - `show(text, onOk)`: sets the message, adds `active`, and makes OK (one
   handler at a time) hide then run `onOk`. Without the modal it uses
-  `window.confirm`.
+  `window.confirm` and waits for the answer: in the shell that is the themed
+  dialog, which answers with a promise.
 - `hide()`, `isOpen()`.

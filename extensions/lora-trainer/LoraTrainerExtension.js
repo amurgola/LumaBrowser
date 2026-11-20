@@ -60,7 +60,7 @@ class LoraTrainerExtension {
     flow = new LoraTrainingFlow({
       jobs, models, runtime, runner, applier, workspace, host, paths, announcer,
       sources: new TrainingImageSources({ host }),
-      dataset: new TrainingDataset({ captioner: new ImageCaptioner({ chat: context.chat }) }),
+      dataset: new TrainingDataset({ captioner: new ImageCaptioner({ chat: context.chat, localModelRef: () => host.localChatModelRef() }) }),
       gpu: new TrainingGpu(),
       installer: new TrainedLoraInstaller({ host, paths }),
       log: (message) => LoraTrainerExtension._log(context, message),

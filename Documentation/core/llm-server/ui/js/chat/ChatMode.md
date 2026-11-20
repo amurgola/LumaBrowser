@@ -97,3 +97,15 @@ handlers on it. ResonantJs itself still caches array templates on
 
 Component `jobsStrip` ([ConversationJobsStrip](jobs/ConversationJobsStrip.md)) shows the open
 conversation's running background jobs above the composer.
+
+Component `hostTurns` ([HostTurns](stream/HostTurns.md)) follows the turns the host starts
+by itself when a reply's background tasks have ended, and component `taskNotices`
+([TaskNoticeView](turns/TaskNoticeView.md)) draws the message that opens such a turn as a
+slim line in the thread.
+
+## Plan and queued messages
+
+Component `plan` ([PlanPanel](plan/PlanPanel.md)) shows the open conversation's plan and
+the step it is on; component `pending` ([PendingMessages](pending/PendingMessages.md))
+holds the messages written while the model was busy and sends each when it is free.
+Both sit above the composer, under the jobs strip.

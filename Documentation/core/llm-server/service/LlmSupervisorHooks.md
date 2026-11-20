@@ -6,12 +6,14 @@ Wires the chat model's supervisor to the things that follow its state.
 
 ## Methods
 
-- `LlmSupervisorHooks.wire({ runtimeServer, vramCoordinator, releasePeers, vramWatchdog, runningCaps })`:
+- `LlmSupervisorHooks.wire({ runtimeServer, vramCoordinator, releasePeers, vramWatchdog, runningCaps, residentVram = null })`:
   - `vramCoordinator.releaseOnIdle` and `markResidentOnReady` under `'llm'`: free
     the VRAM claim when it stops, stop debiting it once it shows in nvidia-smi;
   - on `idle` or `error`: `releasePeers()` fire-and-forget (errors swallowed);
   - on `ready`: `vramWatchdog.start()`; on `idle`, `error` or `stopping`: `stop()`;
-  - on `ready`: `runningCaps.rememberRunning()`.
+  - on `ready`: `runningCaps.rememberRunning()`;
+  - with a `residentVram` ([LlmResidentVram](LlmResidentVram.md)): on `starting`
+    `noteLoadStarting()`, on `ready` `noteReady()`, on `idle` or `error` `clear()`.
   Each concern is its own `state-change` listener, so one failing never starves the others.
 - Statics: `SERVER_ID`, `WATCHDOG_STOP_STATES`, `RELEASE_PEER_STATES`.
 

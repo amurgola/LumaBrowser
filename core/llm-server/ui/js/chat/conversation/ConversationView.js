@@ -31,6 +31,8 @@ export default class ConversationView {
     ctx.convList.repaintCurrent();
     ctx.codeSurface.report();
     ctx.jobsStrip.refresh().catch(() => {});
+    ctx.plan.refresh().catch(() => {});
+    ctx.pending.sendNext();
   }
 
   async showPosted() {
@@ -70,6 +72,8 @@ export default class ConversationView {
     els.composerBar.innerHTML = ComposerView.html(false);
     this._ctx.composer.wire(els.composerBar);
     this._ctx.jobsStrip.attach(els.composerBar);
+    this._ctx.plan.attach(els.composerBar);
+    this._ctx.pending.attach(els.composerBar);
     state.autoScrollPaused = false;
     this._ctx.main.pinBottom();
   }
@@ -98,6 +102,7 @@ export default class ConversationView {
     ctx.liveArtifacts.dispose();
     ctx.previewSlot.release();
     ctx.jobsStrip.reset();
+    ctx.plan.reset();
   }
 
   async _loadMessages(id) {
@@ -113,6 +118,7 @@ export default class ConversationView {
     const { state } = this._ctx;
     return {
       role: m.role, content: m.content || '', reasoning: m.reasoning || '', error: m.error || '',
+      provider: m.provider || null,
       toolCalls: m.toolCalls || null,
       id: m.id || null,
       variantGroup: m.variantGroup || null,

@@ -107,6 +107,7 @@ class CoreIpcRegistrar {
       getHookBaseUrls: s.getHookBaseUrls,
       imageServerService: s.imageServerService,
       musicServerService: s.musicServerService,
+      llmService: s.llmService,
       dashboardService: s.dashboardService,
       liveApi: s.liveApi,
       docsKnowledgeBase: s.docsKnowledgeBase,

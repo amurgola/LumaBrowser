@@ -2,7 +2,7 @@
 
 `core/llm-server/ui/js/image-setup/ImageModal.js`
 
-Base for the Image Setup's hand-rolled modals: one overlay at a time, closed by Escape, the surround or `[data-act="close"]`, with the footer error line.
+Base for the Image Setup's hand-rolled modals: an overlay closed by Escape, the surround or `[data-act="close"]`, with the footer error line. One modal may open another over itself (the LoRA dialog opens Browse CivitAI); Escape then closes only the top one (the last `.img-modal-wrap` in the document).
 
 ## Methods
 

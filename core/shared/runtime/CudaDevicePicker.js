@@ -12,12 +12,23 @@ class CudaDevicePicker {
     return Math.max(0, Number(device.freeBytes) - reserveBytes);
   }
 
-  static pick(devices, requiredBytes) {
+  static get SOFT_RESERVE_BYTES() {
+    return GpuHeadroom.softFloorBytes();
+  }
+
+  static pick(devices, requiredBytes, { softSingle = false } = {}) {
     if (!devices || devices.length === 0) return [];
     const ranked = CudaDevicePicker._rankByFreeThenPower(devices);
     const need = Number(requiredBytes) > 0 ? Number(requiredBytes) : null;
     if (need == null) return [CudaDevicePicker._pickUnsized(devices, ranked)];
-    return CudaDevicePicker._pickSized(ranked, need);
+    return CudaDevicePicker._pickSized(ranked, need, softSingle);
+  }
+
+  static holds(picked, requiredBytes, { softSingle = false } = {}) {
+    const need = Number(requiredBytes) || 0;
+    const room = picked.reduce((sum, device) => sum + CudaDevicePicker.cardRoomBytes(device), 0);
+    if (room >= need) return true;
+    return softSingle && picked.length === 1 && CudaDevicePicker._softRoom(picked[0]) >= need;
   }
 
   static _rankByFreeThenPower(devices) {
@@ -37,10 +48,16 @@ class CudaDevicePicker {
     return devices.slice().sort((a, b) => (b.totalBytes - a.totalBytes) || (a.index - b.index))[0];
   }
 
-  static _pickSized(ranked, need) {
+  static _softRoom(device) {
+    return CudaDevicePicker.cardRoomBytes(device, { reserveBytes: CudaDevicePicker.SOFT_RESERVE_BYTES });
+  }
+
+  static _pickSized(ranked, need, softSingle) {
     const room = (d) => CudaDevicePicker.cardRoomBytes(d);
     const single = ranked.find((d) => room(d) >= need);
     if (single) return [single];
+    const softFit = softSingle ? ranked.find((d) => CudaDevicePicker._softRoom(d) >= need) : null;
+    if (softFit) return [softFit];
     const candidates = ranked.filter((d) => room(d) > 0);
     const split = CudaDevicePicker._fewestThatFit(candidates, need, room);
     if (split) return split;

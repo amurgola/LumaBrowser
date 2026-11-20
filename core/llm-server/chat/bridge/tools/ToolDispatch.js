@@ -17,7 +17,7 @@ class ToolDispatch {
     if (handler) return handler.execute(name, params, this._ctx);
     if (this._toolSet.injected.handlers.has(name)) return this._runInjected(name, params);
     if (this._toolSet.extToolNames.has(name) && this._toolSet.mcpAggregator) return this._runExtension(name, params);
-    return BrowserTools.executeTool(name, params, browserService);
+    return BrowserTools.executeTool(name, params, browserService, {}, { isAborted: this._ctx.isAborted });
   }
 
   _guestRefusal(params, browserService) {
@@ -36,6 +36,7 @@ class ToolDispatch {
         artifacts: ctx.artifacts,
         onArtifact: ctx.hooks.onArtifact,
         trace: ctx.trace || null,
+        detached: ctx.detached || null,
       });
       return res || { success: true };
     } catch (err) {

@@ -10,7 +10,13 @@ Every model-facing line the agent loop writes into the conversation. Data only
 - Screenshot notes: `SCREENSHOT_ATTACHED` (matched verbatim when it goes
   stale), `SCREENSHOT_STALE`, `SCREENSHOT_HIDDEN` (non-vision handler),
   `SCREENSHOT_STRIPPED` (compactor fallback), `screenshotSize(w, h)`.
-- Nudges: `EMPTY_TURN_NUDGE`, `STALL_NUDGE`, `verifyNudge(tool)`, `lastSteps(remaining)`.
+- Nudges: `emptyTurnNudge(nativeTools)`, `stallNudge(nativeTools)` (each asks for the next
+  call in the words of the run's tool-call route: `FENCE_CALL` "emit the ```tool call" or
+  `NATIVE_CALL` "call the tool"), `verifyNudge(tool)`, `lastSteps(remaining)`.
+- Held-back answers: `heldBack(nudge)` is the nudge followed by `HELD_ANSWER`, which
+  tells the model the user never saw the answer it just wrote, so the next one must be
+  the whole answer and must not refer to it
+  ([FinalAnswerGate](FinalAnswerGate.md) uses it for both nudges that retract).
 - Carried notes: `carriedNotes(tail)`, `emptyReplyNotes(tail)`.
 - Results: `toolResult(tool, body)` (the `[Tool Result for X]: ` prefix that
   Compaction relies on), `notAllowed(tool, allowed)`, `evicted(tool, chars)`,

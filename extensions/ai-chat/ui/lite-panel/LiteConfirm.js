@@ -12,7 +12,7 @@ export default class LiteConfirm {
 
   show(text, onOk) {
     if (!this._modal) {
-      if (window.confirm(text)) onOk();
+      Promise.resolve(window.confirm(text)).then((ok) => { if (ok) onOk(); });
       return;
     }
     this._message.textContent = text;

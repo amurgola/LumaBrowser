@@ -6,12 +6,15 @@ The layer-offload decision for one launch.
 
 ## Methods
 
-- `OffloadDecision.resolve(state)` returns `{ swaLayout, headerEstimatedBytesSwaFull, headerEstimatedBytesIswa, swaFullAffordable, headerEstimatedBytes, measuredVramBytes, modelEstimatedBytes, fullOffload, singleGpuFits, swaFull, partial, ngl }`.
+- `OffloadDecision.resolve(state)` returns `{ swaLayout, headerEstimatedBytesSwaFull, headerEstimatedBytesIswa, swaFullAffordable, headerEstimatedBytes, measuredVramBytes, modelEstimatedBytes, fullOffload, softHeadroom, singleGpuFits, swaFull, partial, ngl }`.
   1. Price the full offload with `--swa-full` and, for an SWA model, without it
      (the no-header 1.2x fallback otherwise); `--swa-full` is affordable only when
      its own price fits the budget.
   2. A positive `overrides.measuredVramBytes` replaces the estimate.
-  3. `fullOffload` when VRAM exists and the estimate fits; `singleGpuFits` when
+  3. `fullOffload` when VRAM exists and the estimate fits the budget's
+     `fullOffloadRoomBytes` (on one card, down to the soft reserve); `softHeadroom`
+     when that fit needed more than `vramAvailableBytes` (never for a measured
+     unified-memory fit; `--swa-full` stays priced against the strict room); `singleGpuFits` when
      it also fits the largest card on a multi-card box; `swaFull` when it is
      affordable, accepted and the model has a window layout.
   4. `ngl`: `ALL_LAYERS` (999) on a full offload, a [PartialOffloadSizer](PartialOffloadSizer.md)
@@ -25,4 +28,7 @@ reuse works, which on a Gemma-class model at 128k alone is tens of GB: a speed
 flag must never be what pushes layers off the GPU. A fit test's measured peak sees
 quantization padding and allocator behaviour the header cannot, so it drives the
 fit call; the partial split keeps the header estimate. Without a header there is
-no safe way to size a partial split, so the plan goes all-or-nothing.
+no safe way to size a partial split, so the plan goes all-or-nothing. A whole model
+on one card may use half the GPU headroom before any layer leaves it, because layers on
+the CPU cost far more speed than the missing margin
+([GpuHeadroom](../../../shared/runtime/GpuHeadroom.md)).

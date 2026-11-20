@@ -3,7 +3,9 @@
 `core/llm-server/ui/js/chat/composer/ComposerView.js`
 
 The composer: the textarea (grows to 220 px; Enter sends, Shift+Enter is a new
-line, ignored while streaming; "/" and "@" open
+line; while a reply is being written Enter in the reply box queues the message
+through [PendingMessages](../pending/PendingMessages.md)`.add` and the box's
+placeholder says so; "/" and "@" open
 [ComposerCommands](ComposerCommands.md), which takes Enter, Tab, arrows and
 Escape while its menu is open; Up in an empty box edits the last prompt through
 [ChatShortcuts](../common/ChatShortcuts.md); a paste with files goes to
@@ -33,4 +35,5 @@ AI disclaimer under the reply composer.
   `setupNav.go(page)`; the no-model notice and an
   [ErrorCard](../turns/ErrorCard.md)'s [SettingLink](../turns/SettingLink.md)
   use it.
-- `ComposerView.NO_MODEL`, `SEND_TITLE`.
+- `ComposerView.NO_MODEL`, `SEND_TITLE`, `REPLY_PLACEHOLDER`, `QUEUE_PLACEHOLDER`
+  (the reply box's placeholder is switched by `setSendStop` and `wire`).

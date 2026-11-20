@@ -1,5 +1,9 @@
+import Dialogs from '../../../core/llm-server/ui/js/dialogs/Dialogs.js';
+
 export default class DesktopSettingsTab {
   static EXTENSION_ID = 'desktop-integration';
+
+  static ROTATE_QUESTION = 'Clients that do not read the handshake file stop working until they get the new token.';
   static CHANGED_CHANNEL = 'ext.desktop-integration.changed';
   static STATUS_CLEAR_MS = 2500;
   static MASK = '•'.repeat(24);
@@ -240,7 +244,7 @@ export default class DesktopSettingsTab {
   }
 
   async _rotate() {
-    const ok = typeof window.confirm === 'function' ? window.confirm('Rotate the desktop token? Clients that do not read the handshake file stop working until they get the new one.') : true;
+    const ok = await Dialogs.confirm(DesktopSettingsTab.ROTATE_QUESTION, { title: 'Rotate the desktop token?', okLabel: 'Rotate' });
     if (!ok) return;
     try {
       const r = await this._invoke('rotateToken');

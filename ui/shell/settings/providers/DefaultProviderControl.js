@@ -19,6 +19,7 @@ export default class DefaultProviderControl {
     this._wireDefaultLlm(wrap, options);
     wrap.querySelectorAll('select[data-image-role]').forEach((sel) => this._wireImageRole(sel));
     wrap.querySelectorAll('select[data-image-model-server]').forEach((sel) => this._wireRemoteModel(sel));
+    wrap.querySelectorAll('select[data-image-local-model]').forEach((sel) => this._wireLocalModel(sel));
   }
 
   static html(options, activeKey, imageCfg) {
@@ -84,6 +85,19 @@ export default class DefaultProviderControl {
         this._feedback.markSaved(sel, true);
       } catch (e) {
         this._feedback.markSaved(sel, false, 'Could not set the shared image model: ' + e.message);
+      }
+    });
+  }
+
+  _wireLocalModel(sel) {
+    sel.addEventListener('change', async () => {
+      try {
+        const r = await window.imageServersAPI.setLocalServerModel(sel.getAttribute('data-image-local-model'), sel.value);
+        if (r && r.success === false) throw new Error(r.error || 'failed');
+        this._log.add(`Local image model set to ${DefaultProviderControl._chosen(sel)}`, 'success');
+        this._feedback.markSaved(sel, true);
+      } catch (e) {
+        this._feedback.markSaved(sel, false, 'Could not set the local image model: ' + e.message);
       }
     });
   }

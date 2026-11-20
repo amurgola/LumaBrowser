@@ -26,6 +26,11 @@ class ContactRepository {
     return this.getContact(id);
   }
 
+  setContext(id, contextId) {
+    this._db.run('UPDATE hub_contacts SET context_id = ?, updated_at = ? WHERE id = ?', contextId || '', new Date().toISOString(), id);
+    return this.getContact(id);
+  }
+
   deleteContact(id) {
     return this._db.run('DELETE FROM hub_contacts WHERE id = ?', id).changes > 0;
   }
@@ -73,6 +78,25 @@ class ContactRepository {
     this._db.run('UPDATE hub_contact_identities SET last_at = ?, count = count + 1 WHERE id = ?', at, id);
   }
 
+  renameIdentity(id, handle, display) {
+    this._db.run('UPDATE hub_contact_identities SET handle = ?, display = ? WHERE id = ?', handle, display || '', id);
+  }
+
+  foldIdentity(fromId, intoId) {
+    const from = this.getIdentity(fromId);
+    const into = this.getIdentity(intoId);
+    if (!from || !into) return;
+    this._db.run(
+      'UPDATE hub_contact_identities SET count = ?, first_at = ?, last_at = ? WHERE id = ?',
+      into.count + from.count, from.firstAt < into.firstAt ? from.firstAt : into.firstAt, from.lastAt > into.lastAt ? from.lastAt : into.lastAt, intoId,
+    );
+    this.deleteIdentity(fromId);
+  }
+
+  deleteIdentity(id) {
+    return this._db.run('DELETE FROM hub_contact_identities WHERE id = ?', id).changes > 0;
+  }
+
   moveIdentity(id, contactId) {
     this._db.run('UPDATE hub_contact_identities SET contact_id = ? WHERE id = ?', contactId, id);
   }
@@ -84,7 +108,7 @@ class ContactRepository {
   static hydrateContact(row) {
     return {
       id: row.id, name: row.name, kind: row.kind || 'general', profile: JsonColumn.parse(row.profile || '{}', {}),
-      createdAt: row.created_at, updatedAt: row.updated_at,
+      contextId: row.context_id || null, createdAt: row.created_at, updatedAt: row.updated_at,
     };
   }
 

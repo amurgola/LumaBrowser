@@ -8,7 +8,7 @@ module.exports = {
     required: {
       'core:llm-service': {
         slots: [
-          { id: 'navigator', label: 'AI Chat Navigator Model', required: true }
+          { id: 'navigator', label: 'AI Chat Navigator Model', required: true, picker: '#ext-ac-modelSelect' }
         ]
       },
       'core:browser': {

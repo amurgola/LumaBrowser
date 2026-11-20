@@ -31,8 +31,8 @@ seeds the default board columns the first time.
 - `hub_contexts`: the user's contexts, the companies or areas of life
   everything is filed under (`name`, `color`, `sort_order`).
 - `hub_context_rules`: what belongs to each context, one row per rule
-  (`context_id`, `kind`: url, partition, domain, app, calendar or tasks,
-  and `value`), indexed by context
+  (`context_id`, `kind`: conversation, url, partition, domain, app,
+  calendar or tasks, and `value`), indexed by context
   ([ContextService](context/ContextService.md)).
 - `hub_summaries`: the last AI summary of each context's activity, keyed by
   `context_key` (a context id, or `other`), with the `signature` of the
@@ -40,9 +40,11 @@ seeds the default board columns the first time.
   it and the last `error`
   ([ActivitySummarizer](summary/ActivitySummarizer.md)).
 - `hub_contacts`: the people the activity feed has seen, one row per person
-  (`name`), with `kind` (`person` or `general`, default `general`) and
+  (`name`), with `kind` (`person` or `general`, default `general`),
   `profile`, what is known about the contact as JSON (default `{}`;
-  [ContactProfile](contacts/ContactProfile.md)).
+  [ContactProfile](contacts/ContactProfile.md)) and `context_id`, the
+  context the contact belongs to (empty for none;
+  [ContextService](context/ContextService.md)`.contextOfContact`).
 - `hub_contact_identities`: every way a contact appears (`contact_id`, the
   `app`, the `handle`: an address or a normalised name, the `display` name,
   the `context_id` it was seen in, empty for none, `first_at`, `last_at` and
@@ -61,8 +63,9 @@ That is fourteen tables.
 
 - `ensure(db)`: runs every `CREATE ... IF NOT EXISTS`, applies `ADDED_COLUMNS`
   (`hub_tasks.hidden`, `remote_status_color`, `list_id` and `sync_error`,
-  and `hub_contacts.kind` (`TEXT NOT NULL DEFAULT 'general'`) and
-  `hub_contacts.profile` (`TEXT NOT NULL DEFAULT '{}'`); each skipped when
+  and `hub_contacts.kind` (`TEXT NOT NULL DEFAULT 'general'`),
+  `hub_contacts.profile` (`TEXT NOT NULL DEFAULT '{}'`) and
+  `hub_contacts.context_id` (`TEXT NOT NULL DEFAULT ''`); each skipped when
   the column exists), then seeds `DEFAULT_COLUMNS`
   (backlog, todo, doing, review, done) when the column table is empty.
 

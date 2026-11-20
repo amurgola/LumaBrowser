@@ -16,6 +16,8 @@ Maps each offloaded block to the GPU that holds it, for the decode estimate.
      with the remainder dealt round-robin from the first card.
 
   Planned counts that do not sum to the offloaded block count fall back to 3.
+  Runs are laid in `layerFill.order` (slowest first) when it has one entry per GPU,
+  else in device order; leftover blocks go to the last device in that order.
 
 ## Why
 

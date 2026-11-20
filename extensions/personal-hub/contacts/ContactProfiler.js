@@ -10,11 +10,10 @@ class ContactProfiler {
   static MAX_TOKENS = 3000;
   static TIMEOUT_MS = 300000;
 
-  constructor({ contacts, inbox, snapshots, contexts = null, llm = null }) {
+  constructor({ contacts, inbox, snapshots, llm = null }) {
     this._contacts = contacts;
     this._inbox = inbox;
     this._snapshots = snapshots;
-    this._contexts = contexts;
     this._llm = llm;
   }
 
@@ -30,9 +29,8 @@ class ContactProfiler {
   }
 
   _material(contact) {
-    const known = this._contexts ? this._contexts.list() : [];
     const messages = this._inbox.listNotifications({ limit: ContactProfiler.LOG_DEPTH })
-      .filter((n) => this._from(n, contact.identities, known))
+      .filter((n) => ContactProfiler._from(n, contact.identities))
       .slice(0, ContactProfiler.MAX_MESSAGES)
       .map((n) => ({ at: n.receivedAt, app: n.app, text: [n.title !== n.sender ? n.title : '', n.body].filter(Boolean).join(': '), threadId: n.threadId }));
     const threadIds = [...new Set(messages.map((m) => m.threadId).filter(Boolean))];
@@ -40,19 +38,9 @@ class ContactProfiler {
     return { messages, conversations };
   }
 
-  _from(notification, identities, known) {
+  static _from(notification, identities) {
     const who = ContactService.parse(notification.sender, notification.app);
-    if (!who) return false;
-    const same = identities.filter((identity) => identity.app === notification.app && identity.handle === who.handle);
-    if (!same.length || who.isEmail) return same.length > 0;
-    const contextId = this._contextOf(notification, known);
-    return same.some((identity) => (identity.contextId || null) === contextId);
-  }
-
-  _contextOf(notification, known) {
-    if (!this._contexts) return null;
-    const { url, partition, host, sender, app } = notification;
-    return this._contexts.resolve({ url, partition, host, sender, app }, known) || null;
+    return !!who && identities.some((identity) => identity.app === notification.app && identity.handle === who.handle);
   }
 
   async _ask(contact, material) {

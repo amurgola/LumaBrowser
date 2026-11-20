@@ -1,7 +1,7 @@
 export default class ToolLabels {
   static LABEL = {
     navigate: 'Navigate', create_tab: 'Open tab', get_tabs: 'List tabs',
-    click: 'Click', fill_form: 'Fill form', press_key: 'Press key',
+    click: 'Click', click_until: 'Click until', fill_form: 'Fill form', press_key: 'Press key',
     observe_page: 'Scan page', type: 'Type',
     scroll: 'Scroll', get_source: 'Read page', screenshot: 'Screenshot',
     wait_for: 'Wait for', get_element: 'Inspect', extract_data: 'Extract data',
@@ -17,6 +17,9 @@ export default class ToolLabels {
     generate_asset: 'Generate asset',
     fetch_gamedev_doc: 'Fetch game-dev doc',
     test_ai_prompt: 'Test in-game AI prompt',
+    run_in_background: 'Run in background',
+    background_task_status: 'Check background tasks',
+    stop_background_task: 'Stop background task',
   };
 
   static RUNNING = {
@@ -31,6 +34,7 @@ export default class ToolLabels {
     navigate: 'Navigating…',
     extract_data: 'Extracting data…',
     collect_list: 'Collecting list items…',
+    click_until: 'Clicking until the page changes…',
     select_option: 'Choosing option…',
     observe_page: 'Scanning page elements…',
     type: 'Typing…',
@@ -51,6 +55,9 @@ export default class ToolLabels {
     create_scheduled_task: 'Creating and testing the scheduled task…',
     update_scheduled_task: 'Changing the scheduled task…',
     run_scheduled_task: 'Running the scheduled task…',
+    run_in_background: 'Starting a background task…',
+    background_task_status: 'Checking background tasks…',
+    stop_background_task: 'Stopping a background task…',
   };
 
   static humanize(name) {

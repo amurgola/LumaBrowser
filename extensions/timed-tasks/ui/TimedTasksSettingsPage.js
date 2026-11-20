@@ -1,4 +1,5 @@
 import TaskRowText from './TaskRowText.js';
+import SlotModelOptions from '../../../core/llm-server/ui/js/models/SlotModelOptions.js';
 
 export default class TimedTasksSettingsPage {
   static EXTENSION_ID = 'timed-tasks';
@@ -30,11 +31,10 @@ export default class TimedTasksSettingsPage {
 
   static async _modelLabel(cfg) {
     try {
-      const models = await window.llmSlotAPI.getAllAvailableModels();
-      const m = (models || []).find((x) => x.providerId === cfg.provider && x.modelId === cfg.model);
-      if (m && m.label) return m.label;
-    } catch (_) {}
-    return cfg.model;
+      return SlotModelOptions.labelFor(await window.llmSlotAPI.getAllAvailableModels(), cfg);
+    } catch (_) {
+      return cfg.model;
+    }
   }
 
   _bindOpenPanel() {

@@ -4,6 +4,7 @@ const SummaryPrompt = require('./SummaryPrompt');
 
 class ActivitySummarizer {
   static SLOT = 'personal-hub.summarizer';
+  static UNAVAILABLE_PREFIX = 'Unavailable: ';
   static ENABLED_KEY = 'summary.enabled';
   static OTHER_KEY = 'other';
   static OTHER_NAME = 'Other';
@@ -16,9 +17,10 @@ class ActivitySummarizer {
   static TIMEOUT_MS = 300000;
   static DEEP_PER_CARD = 3;
 
-  constructor({ inbox, contexts, summaries, db, llm = null, reader = null, people = null, emit = () => {}, now = () => new Date(), debounceMs = ActivitySummarizer.DEBOUNCE_MS }) {
+  constructor({ inbox, contexts, summaries, db, llm = null, reader = null, people = null, meetings = null, emit = () => {}, now = () => new Date(), debounceMs = ActivitySummarizer.DEBOUNCE_MS }) {
     this._reader = reader;
     this._people = people;
+    this._meetings = meetings;
     this._inbox = inbox;
     this._contexts = contexts;
     this._summaries = summaries;
@@ -57,7 +59,11 @@ class ActivitySummarizer {
     const models = (this._llm.getAllAvailableModels() || []).map((m) => ({ value: `${m.providerId}::${m.modelId}`, label: m.label }));
     let slot = null;
     try { slot = this._llm.getSlotConfig(ActivitySummarizer.SLOT); } catch (_) { slot = null; }
-    return { models, chosen: slot && slot.provider && slot.model ? `${slot.provider}::${slot.model}` : '' };
+    const chosen = slot && slot.provider && slot.model ? `${slot.provider}::${slot.model}` : '';
+    if (chosen && slot.explicit === true && !models.some((m) => m.value === chosen)) {
+      models.push({ value: chosen, label: ActivitySummarizer.UNAVAILABLE_PREFIX + slot.model, unavailable: true });
+    }
+    return { models, chosen };
   }
 
   setModel(value) {
@@ -235,12 +241,13 @@ class ActivitySummarizer {
     const contexts = this._contexts.list();
     const since = new Date(this._now().getTime() - ActivitySummarizer.WINDOW_DAYS * 86400000).toISOString();
     const items = this._inbox.listThreads({ state: 'active', since, limit: ActivitySummarizer.MAX_ITEMS });
+    const booked = this._meetings ? this._meetings.forItems(items) : {};
     const byKey = new Map();
     for (const item of items) {
       const contextId = this._contexts.forItem(item, contexts);
       const key = contextId || ActivitySummarizer.OTHER_KEY;
       if (!byKey.has(key)) byKey.set(key, []);
-      byKey.get(key).push({ ...item, contextId });
+      byKey.get(key).push({ ...item, contextId, meetings: booked[item.id] || [] });
     }
     const groups = [];
     for (const context of contexts) {
@@ -254,9 +261,14 @@ class ActivitySummarizer {
 
   static _group(key, contextId, name, color, items) {
     const sorted = items.slice().sort((a, b) => String(b.lastAt || '').localeCompare(String(a.lastAt || '')));
-    const parts = sorted.slice(0, ActivitySummarizer.MAX_ITEMS_PER_CARD).map((i) => `${i.id}:${i.lastAt}:${i.count}:${i.summary || ''}`);
+    const parts = sorted.slice(0, ActivitySummarizer.MAX_ITEMS_PER_CARD).map((i) => `${i.id}:${i.lastAt}:${i.count}:${i.summary || ''}${ActivitySummarizer._booked(i)}`);
     const signature = crypto.createHash('sha1').update(`${name}\n${parts.join('\n')}`).digest('hex');
     return { key, contextId, name, color, items: sorted, signature };
+  }
+
+  static _booked(item) {
+    const meetings = item.meetings || [];
+    return meetings.length ? `:${meetings.map((m) => `${m.id}@${m.startsAt}`).join(',')}` : '';
   }
 
   static _card(group, stored) {

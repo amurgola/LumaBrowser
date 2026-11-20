@@ -13,7 +13,11 @@ The plan notes that explain where a launch runs.
   projector, KV label with the hybrid layer count, GPU scratch, MTP branch), or
   the 20% fallback; the decision (fill-order split, default split with the
   single-card hint, plain default split, partial offload with its per-layer
-  figures, or one of the CPU-only reasons); `Context: <n> tokens[ (model native max)]`.
+  figures, or one of the CPU-only reasons); on a full offload with `softHeadroom`,
+  `GPU headroom: reduced to <soft reserve> on <card> for this load (setting: <headroom>) ...`;
+  `Context: <n> tokens[ (model native max)]`. A fill-order split that names a device
+  order adds a sentence giving the `--device` list (slowest first) and that the fastest
+  card holds the output layer and the draft model.
 
 ## Why
 

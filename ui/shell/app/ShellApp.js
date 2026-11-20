@@ -46,6 +46,7 @@ import PopupMenu from '../overlay/PopupMenu.js';
 import OverlayActionRouter from '../overlay/OverlayActionRouter.js';
 import FaviconCache from '../favicons/FaviconCache.js';
 import NotificationLog from '../notifications/NotificationLog.js';
+import StartupModelAlert from '../notifications/StartupModelAlert.js';
 import WebhookNotifier from '../notifications/WebhookNotifier.js';
 import PermissionPrompts from '../permissions/PermissionPrompts.js';
 import BookmarkTree from '../bookmarks/BookmarkTree.js';
@@ -227,6 +228,7 @@ export default class ShellApp {
     const reveal = new SettingsReveal({ settings: this.settings, getSlotManager: () => this.slotManager });
     this.palette = new ShellPalette({ host: this.host, reveal, actions, store: this.store, feedback: this.feedback });
     this.palette.install();
+    new StartupModelAlert({ log: this.log, reveal, ipc: window.ipcBridge }).install();
     return new ChromeKeyboard({
       actions, store: this.store, tabActions: this.tabActions, addressBar: this.addressBar, host: this.host, settings: this.settings,
       popupMenu: this.popupMenu, debugTools: this.debugTools, historyModal: this.historyModal,

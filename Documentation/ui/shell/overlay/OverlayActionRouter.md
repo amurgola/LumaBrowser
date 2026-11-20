@@ -7,6 +7,7 @@ Routes overlay clicks and hovers to the permission prompt, the save-password bub
 ## Methods
 
 - `install()`, `handleAction(payload)`, `handleHover(payload)`.
+- Notification log actions: `close-log` -> `log.hide()`; `log-action` -> `log.runAction(payload.id)` (an entry's button).
 
 ## Globals
 

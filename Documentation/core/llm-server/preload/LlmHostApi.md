@@ -33,6 +33,8 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `dismissVramPressure(card)` | invoke `core.llmServer.dismissVramPressure` |
 | `getUnloadOnVramPressure()` | invoke `core.llmServer.getUnloadOnVramPressure` |
 | `setUnloadOnVramPressure(v)` | invoke `core.llmServer.setUnloadOnVramPressure` |
+| `getVramWarning()` | invoke `core.llmServer.getVramWarning` |
+| `setVramWarning(v)` | invoke `core.llmServer.setVramWarning` |
 | `getGpuHeadroom()` | invoke `core.llmServer.getGpuHeadroom` |
 | `setGpuHeadroom(bytes)` | invoke `core.llmServer.setGpuHeadroom` |
 | `checkSystemLibraries()` | invoke `core.llmServer.checkSystemLibraries` |

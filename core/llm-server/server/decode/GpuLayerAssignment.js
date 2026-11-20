@@ -4,8 +4,13 @@ class GpuLayerAssignment {
     const offloaded = blocks - firstGpuLayer;
     if (offloaded <= 0 || !Array.isArray(perGpu) || perGpu.length === 0) return owner;
     const counts = GpuLayerAssignment._layerCounts(offloaded, perGpu, layerFill, cpuMoeSplit);
-    GpuLayerAssignment._fillContiguousRuns(owner, firstGpuLayer, counts);
+    GpuLayerAssignment._fillContiguousRuns(owner, firstGpuLayer, counts, GpuLayerAssignment._deviceOrder(layerFill, counts.length));
     return owner;
+  }
+
+  static _deviceOrder(layerFill, deviceCount) {
+    const order = layerFill && Array.isArray(layerFill.order) && layerFill.order.length === deviceCount ? layerFill.order : null;
+    return order || Array.from({ length: deviceCount }, (_, i) => i);
   }
 
   static _layerCounts(offloaded, perGpu, layerFill, cpuMoeSplit) {
@@ -37,12 +42,12 @@ class GpuLayerAssignment {
     return counts;
   }
 
-  static _fillContiguousRuns(owner, firstGpuLayer, counts) {
+  static _fillContiguousRuns(owner, firstGpuLayer, counts, order) {
     let layer = firstGpuLayer;
-    for (let device = 0; device < counts.length; device++) {
+    for (const device of order) {
       for (let k = 0; k < counts[device] && layer < owner.length; k++) owner[layer++] = device;
     }
-    while (layer < owner.length) owner[layer++] = counts.length - 1;
+    while (layer < owner.length) owner[layer++] = order[order.length - 1];
   }
 
   static _wholeCount(value) {

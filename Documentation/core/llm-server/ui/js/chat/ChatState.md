@@ -13,7 +13,9 @@ frames by message id.
 - `streamOnScreen()`: the stream's conversation is the one displayed (the live
   message object is in `messages`). Legacy `streamConvActive`.
 - `isNewestMessage(m)`.
-- `newRequestId()`: sets and returns `reqId` (`req-<ms>-<rand>`).
+- `newRequestId(given?)`: sets and returns `reqId` (`req-<ms>-<rand>`), or `given`, the
+  id of a turn the host started and this surface follows
+  ([HostTurns](stream/HostTurns.md)).
 - `rememberRequest(requestId, conversationId)`, `conversationOfRequest(requestId)`: which conversation a turn ran
   in, for the newest `REQUESTS_REMEMBERED` (16) requests sent from this surface (`requestConversations`). A mode's
   reaction sends events after its turn's stream has ended and after a newer turn has taken `reqId`;

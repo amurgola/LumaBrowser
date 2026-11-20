@@ -17,6 +17,7 @@ class ConversationApi extends PreloadSection {
       convJobs: {
         list: (conversationId) => ipcRenderer.invoke('core.llmServer.convJobs.list', conversationId),
         cancel: (jobId) => ipcRenderer.invoke('core.llmServer.convJobs.cancel', jobId),
+        followTurn: (requestId) => ipcRenderer.invoke('core.llmServer.convJobs.followTurn', requestId),
       },
       onConvJobsEvent: PreloadSection.subscribe(ipcRenderer, 'core.llmServer.convJobs.event'),
     };

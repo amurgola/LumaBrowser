@@ -3,8 +3,9 @@
 `extensions/personal-hub/contacts/ContactRepository.js`
 
 Plain queries over `hub_contacts` and `hub_contact_identities`: the people
-the Hub has seen, what is kept about each (its kind and profile), and the
-names or addresses each one goes by in each app and context. One contact has many identities; an identity is unique per
+the Hub has seen, what is kept about each (its kind, its profile and the
+context it belongs to), and the names or addresses each one goes by in each
+app and context. One contact has many identities; an identity is unique per
 `(app, handle, context)`. The rules that join identities into people live in
 [ContactService](ContactService.md).
 
@@ -16,8 +17,10 @@ names or addresses each one goes by in each app and context. One contact has man
   name)` -> the row, `saveProfile(id, kind, profile)` -> the row (`kind`
   `person` or `general`, `profile` the object
   [ContactProfile](ContactProfile.md) keeps, stored as JSON; stamps
-  `updated_at`), `deleteContact(id)` -> whether a row went,
-  `listContacts()` by name, `countContacts()`.
+  `updated_at`), `setContext(id, contextId)` -> the row (the context the
+  contact belongs to, `''` or nothing for none; stamps `updated_at`),
+  `deleteContact(id)` -> whether a row went, `listContacts()` by name,
+  `countContacts()`.
 - Identities: `getIdentity(id)`, `findIdentity(app, handle, contextId)` (the
   one identity of that key; a missing context is the empty string),
   `identitiesByHandle(handle)` (every identity with this handle, whatever
@@ -28,13 +31,21 @@ names or addresses each one goes by in each app and context. One contact has man
   Returns the row.
 - `touchIdentity(id, at)`: seen again, so `last_at` moves and the count
   grows by one.
+- `renameIdentity(id, handle, display)`: an identity read under a wrong
+  name takes its right one, the same row renamed.
+- `foldIdentity(fromId, intoId)`: folds one identity's sightings into
+  another (the same person seen under two spellings) and drops it: the
+  counts are added, the earlier `first_at` and the later `last_at` are
+  kept. Does nothing when either is missing.
+- `deleteIdentity(id)` -> whether a row went.
 - `moveIdentity(id, contactId)`: one identity to another contact.
   `moveIdentities(fromContactId, toContactId)` -> how many moved.
 - `static hydrateContact(row)`, `static hydrateIdentity(row)`.
 
-Contacts hydrate to `{ id, name, kind, profile, createdAt, updatedAt }`
-(`kind` `general` when the column is empty, `profile` the parsed JSON, `{}`
-when it does not parse), identities to
+Contacts hydrate to `{ id, name, kind, profile, contextId, createdAt,
+updatedAt }` (`kind` `general` when the column is empty, `profile` the
+parsed JSON, `{}` when it does not parse, `contextId` `null` when the
+column is empty), identities to
 `{ id, contactId, app, handle, display, contextId, firstAt, lastAt, count }`.
 `contextId` is stored as an empty string when the sender belongs to no
 context and reads back as `null`.
@@ -43,4 +54,6 @@ context and reads back as `null`.
 
 An identity keeps its context because the same name in two companies may be
 two people: the key `(app, handle, context)` lets each sighting stand on its
-own until the service, or the user, says whose it is.
+own until the service, or the user, says whose it is. Renaming, folding and
+deleting an identity exist for [ContactTidy](ContactTidy.md), which puts
+right the identities an earlier reading of a sender left behind.

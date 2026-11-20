@@ -16,7 +16,7 @@ AgentChatBridge), so every member is static and none uses `this`.
   page), and `extract_data` the `@attribute` ending of a child selector.
 - `getToolPrompt(toolNames?)`: the fenced ```` ```tool ```` instructions plus
   one line per (filtered) tool.
-- `executeTool(toolName, params, browserService, defaults = {})`: see
+- `executeTool(toolName, params, browserService, defaults = {}, run = {})`: see
   [BrowserToolExecutor](tools/BrowserToolExecutor.md).
 - `parseToolCalls(content)`, `parseToolCall(content)`,
   `fixIllegalJsonEscapes(text)`: see [ToolFenceParser](tools/ToolFenceParser.md).

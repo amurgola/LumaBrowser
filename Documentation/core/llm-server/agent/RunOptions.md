@@ -26,9 +26,12 @@ The options of one `AgentRunner.run` call with defaults applied.
 | `onToolResultEvicted` | null | told `{tool, params}` when a result is dropped |
 | `compactionCarry` | null | `(head, recent) => text` a compaction carries out of the messages it summarizes |
 | `compactionCheckpoint` | null | `{ load, save }` for the conversation's [CompactionCheckpoint](CompactionCheckpoint.md) |
+| `finalCheck` | null | `() => text or null`, asked once when the model gives its final answer ([FinalAnswerGate](FinalAnswerGate.md)) |
+| `awaitsLaterResult` | null | `() => boolean`: the run started work that reports back later (a background task), so the gate's "you announced it, now do it" nudge is skipped ([FinalAnswerGate](FinalAnswerGate.md)) |
 | `nativeTools`, `nativeToolsTokens` | false, 0 | schema cost taken out of the budgets |
 | `tools` | | allow-list of tool names |
 | `systemPromptAppend`, `systemPromptOverride` | | see AgentSystemPromptBuilder |
+| `systemRole` | null | the role text that opens the system prompt in place of the stock one |
 | `label` | null | AI Activity panel label |
 | `promptExperiments` | null | eval-only prompt block drops |
 | `onEvent`, `onWorkTab`, `shouldAbort` | | progress sink, tab hook, cooperative cancel |

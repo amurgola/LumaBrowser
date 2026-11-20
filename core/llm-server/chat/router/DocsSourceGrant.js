@@ -45,11 +45,6 @@ class DocsSourceGrant {
     return DocsSourceGrant.NOTE;
   }
 
-  static allowing(allowedTools, grant) {
-    if (!grant || !Array.isArray(allowedTools) || allowedTools.includes(DocsSourceGrant.TOOL)) return allowedTools;
-    return [...allowedTools, DocsSourceGrant.TOOL];
-  }
-
   async prepass(messages) {
     const query = DocsSourceGrant._lastUserText(messages);
     if (!query) return messages;

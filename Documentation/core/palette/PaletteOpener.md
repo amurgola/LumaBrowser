@@ -11,9 +11,7 @@ Carries out a chosen palette row and remembers the place in
 
 - `new PaletteOpener({ settings, actions, recent, getLlm, getTabViewManager, getArtifactStore })`.
 - `open(item, win)`: resolves `{ success, error? }`. By kind:
-  - `setting`: looks the entry up by id. A `shell` or `extension` target sends
-    `{ action: 'palette-reveal', target }` to the chrome; a `setup` or `tune`
-    target calls `LLMServerService.revealSetting(target)`.
+  - `setting`: `reveal(id, win)`, then records the place.
   - `settings` (a Settings tab from Recent): `palette-reveal` with just the tab.
   - `setup`: `LLMServerService.openSetup({ page })`.
   - `conversation`: `LLMServerService.openConversation(id)`.
@@ -23,5 +21,13 @@ Carries out a chosen palette row and remembers the place in
   - `tab`: switches to it, and focuses its window when that is another one.
   - `action`: a `run.shell` command goes to the chrome as
     `{ action: 'palette-run', run }`; `open-chat` and `open-settings` run in main.
+- `reveal(id, win, selector?)`: takes the user to a catalog setting where it
+  lives and highlights it, recording nothing (how an alert leads to a setting).
+  Looks the entry up by id; a `shell` or `extension` target sends
+  `{ action: 'palette-reveal', target }` to the chrome, a `setup` or `tune` target
+  calls `LLMServerService.revealSetting(target)`. `selector` is added only to a
+  page target (`PAGE_SURFACES`: `shell`, `extension` or `setup`, never a Tune field) that has no selector of its own,
+  and only when it is a non-empty string up to `MAX_SELECTOR` (200) characters.
+  Resolves `{ success, label }` or `{ success: false, error }`.
 - Errors are plain sentences for the palette ("The chat is turned off.", "That
   tab is closed.").

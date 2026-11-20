@@ -385,6 +385,7 @@ try {
     removeRemoteServer: (id) => ipcRenderer.invoke('core.imageServer.removeRemoteServer', id),
     setActiveServer: (role, id) => ipcRenderer.invoke('core.imageServer.setActiveServer', role, id),
     setRemoteServerModel: (id, modelId) => ipcRenderer.invoke('core.imageServer.setRemoteServerModel', id, modelId),
+    setLocalServerModel: (field, modelId) => ipcRenderer.invoke('core.imageServer.setDefaults', { [field]: modelId }),
   });
 
   contextBridge.exposeInMainWorld('windowAPI', {

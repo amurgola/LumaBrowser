@@ -13,14 +13,27 @@ class ImageCaptioner {
     + 'Describe what changes from picture to picture: pose, expression, clothing, objects, setting, lighting, framing, art style. '
     + 'Do NOT describe the permanent look of the main subject (face, hair colour, eye colour, body shape, species).';
 
-  constructor({ chat, timeoutMs = ImageCaptioner.TIMEOUT_MS }) {
+  static LOCAL_PREFIX = 'local::';
+
+  constructor({ chat, localModelRef = () => null, timeoutMs = ImageCaptioner.TIMEOUT_MS }) {
     this._chat = chat;
+    this._localModelRef = localModelRef;
     this._timeoutMs = timeoutMs;
   }
 
-  visionAvailable() {
+  captionModelRef() {
     try {
-      return !!(this._chat && typeof this._chat.visionAvailable === 'function' && this._chat.visionAvailable());
+      const ref = this._localModelRef();
+      return typeof ref === 'string' && ref.startsWith(ImageCaptioner.LOCAL_PREFIX) ? ref : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  visionAvailable() {
+    const modelRef = this.captionModelRef();
+    try {
+      return !!(modelRef && this._chat && typeof this._chat.visionAvailable === 'function' && this._chat.visionAvailable(modelRef));
     } catch (_) {
       return false;
     }
@@ -37,6 +50,7 @@ class ImageCaptioner {
     if (!this.visionAvailable() || typeof this._chat.complete !== 'function') return null;
     try {
       const reply = await this._chat.complete({
+        modelRef: this.captionModelRef(),
         messages: ImageCaptioner.messages(style, subject),
         images: [{ kind: 'image', base64: bytes.toString('base64'), mime: ext === 'png' ? 'image/png' : 'image/jpeg' }],
         temperature: 0.2,

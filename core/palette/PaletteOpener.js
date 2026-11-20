@@ -1,4 +1,7 @@
 class PaletteOpener {
+  static MAX_SELECTOR = 200;
+  static PAGE_SURFACES = Object.freeze(['shell', 'extension', 'setup']);
+
   constructor({ settings, actions, recent, getLlm = () => null, getTabViewManager = () => null, getArtifactStore = () => null }) {
     this._settings = settings;
     this._actions = actions;
@@ -22,14 +25,26 @@ class PaletteOpener {
     }
   }
 
-  _setting(id, win) {
-    const entry = this._settings.byId(id);
+  reveal(id, win, selector = null) {
+    const entry = this._settings.byId(String(id || ''));
     if (!entry || !entry.target) return { success: false, error: 'That setting is no longer available.' };
-    const t = entry.target;
+    const t = PaletteOpener._withSelector(entry.target, selector);
     if (t.surface === 'shell' || t.surface === 'extension') PaletteOpener._toShell(win, { action: 'palette-reveal', target: t });
     else if (t.surface === 'setup' || t.surface === 'tune') this._llm().revealSetting(t);
     else return { success: false, error: 'That setting has no place to open.' };
-    this._recent.record({ kind: 'setting', ref: id, title: entry.label });
+    return { success: true, label: entry.label };
+  }
+
+  static _withSelector(target, selector) {
+    const isPage = PaletteOpener.PAGE_SURFACES.includes(target.surface);
+    const usable = typeof selector === 'string' && selector.length > 0 && selector.length <= PaletteOpener.MAX_SELECTOR;
+    return isPage && usable && !target.selector ? { ...target, selector } : target;
+  }
+
+  _setting(id, win) {
+    const shown = this.reveal(id, win);
+    if (!shown.success) return shown;
+    this._recent.record({ kind: 'setting', ref: id, title: shown.label });
     return { success: true };
   }
 

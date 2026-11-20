@@ -14,4 +14,5 @@ Turns discovered extension and MCP tools into lazy tool groups.
   Non-array input gives `[]`.
 - `toolDoc(tool)`: `EXTENSION TOOL (...):\n- name: description Params: { "a": type, "b": type? (desc) }`.
   `?` marks optional params, a missing type is `string`, a missing description
-  is `extension tool`.
+  is `extension tool`. The heading names no tool-call format ("call it like the
+  browser tools, one per message"), so the same text serves the fence and the native route.

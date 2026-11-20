@@ -37,25 +37,29 @@ class CivitaiModelResolver {
   }
 
   async resolve(args = {}) {
+    const read = await this.read(args);
+    if (read.error) return read;
+    const { model, version } = read;
+    if (model.type !== 'Checkpoint') return { error: CivitaiModelResolver.NOT_A_CHECKPOINT(model.type) };
+    const map = CivitaiBaseMap.resolve(version.baseModel);
+    if (!map.supported) return { error: map.note };
+    const file = CivitaiModelResolver.pickFile(version, args.fileId);
+    if (!file) return { error: `CivitAI version ${version.id} has no downloadable model file.` };
+    const built = CivitaiModelResolver.buildEntry({ model, version, file, map, now: this._now() });
+    if (built.error) return { error: built.error };
+    return { model, version, file, map, entry: built.entry };
+  }
+
+  async read(args = {}) {
     const ids = CivitaiModelResolver._ids(args);
     if (ids.error) return { error: ids.error };
     let { modelId, versionId } = ids;
     try {
-      if (!modelId) {
-        const read = await this._client.getVersion(versionId);
-        modelId = read.modelId;
-      }
+      if (!modelId) modelId = (await this._client.getVersion(versionId)).modelId;
       const model = await this._client.getModel(modelId);
       const version = CivitaiModelResolver._version(model, versionId);
       if (!version) return { error: versionId ? `CivitAI model ${modelId} has no version ${versionId}.` : `CivitAI model ${modelId} has no published versions.` };
-      if (model.type !== 'Checkpoint') return { error: CivitaiModelResolver.NOT_A_CHECKPOINT(model.type) };
-      const map = CivitaiBaseMap.resolve(version.baseModel);
-      if (!map.supported) return { error: map.note };
-      const file = CivitaiModelResolver.pickFile(version, args.fileId);
-      if (!file) return { error: `CivitAI version ${version.id} has no downloadable model file.` };
-      const built = CivitaiModelResolver.buildEntry({ model, version, file, map, now: this._now() });
-      if (built.error) return { error: built.error };
-      return { model, version, file, map, entry: built.entry };
+      return { model, version };
     } catch (err) {
       return { error: `Could not read the CivitAI model: ${(err && err.message) || String(err)}` };
     }

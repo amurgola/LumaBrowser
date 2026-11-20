@@ -7,6 +7,7 @@ The "GPU fit by context" block on a model row: pills per KV mode coloured by the
 ## Methods
 
 - `html(model, opts)`: `''` unless parsed weights with ladders; `speedChip(speed)`; `DEFAULT_KV_MODES` for payloads without `kvModes`. Pill labels and row labels are now escaped too.
+- `SUB_TIP`: the block's hover text. The pills show the decision Start would make with the VRAM free right now and the user's GPU headroom; measured rungs keep their recorded numbers only while they still fit that way ([ContextRungBuilder](../../../../context/ContextRungBuilder.md)).
 
 ## Speculation note
 

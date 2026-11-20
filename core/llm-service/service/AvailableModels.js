@@ -31,7 +31,11 @@ class AvailableModels {
   static _rowsForConfig(config) {
     const providerLabel = config.name || AvailableModels.labelFor(config.type);
     const providerId = config.managedByCore ? config.id : config.type;
-    return config.models.map((model) => AvailableModels._row(providerId, providerLabel, model.id));
+    return config.models.map((model) => AvailableModels._row(providerId, providerLabel, model.id, AvailableModels._ownLabel(config, model)));
+  }
+
+  static _ownLabel(config, model) {
+    return config.managedByCore && typeof model.luma_label === 'string' && model.luma_label ? model.luma_label : null;
   }
 
   static _fromSingleProviders(db, providers) {
@@ -46,8 +50,8 @@ class AvailableModels {
     return models;
   }
 
-  static _row(providerId, providerLabel, modelId) {
-    return { providerId, providerLabel, modelId, label: `${providerLabel}: ${modelId}` };
+  static _row(providerId, providerLabel, modelId, ownLabel = null) {
+    return { providerId, providerLabel, modelId, label: ownLabel || `${providerLabel}: ${modelId}` };
   }
 }
 

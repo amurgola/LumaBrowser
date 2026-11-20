@@ -7,6 +7,9 @@ export default class ComposerView {
 
   static SEND_TITLE = 'Send (Enter). Shift+Enter for a new line';
 
+  static REPLY_PLACEHOLDER = 'Reply';
+  static QUEUE_PLACEHOLDER = 'Write the next message. Enter queues it until the model is free';
+
   constructor(ctx) {
     this._ctx = ctx;
   }
@@ -20,7 +23,7 @@ export default class ComposerView {
       + '  </div>'
       + '  <div class="cm-attachments" data-cm-attachments hidden></div>'
       + '  <div class="cm-composer">'
-      + '    <textarea rows="1" placeholder="' + (big ? 'Ask anything, or type / for commands' : 'Reply') + '"></textarea>'
+      + '    <textarea rows="1" placeholder="' + (big ? 'Ask anything, or type / for commands' : ComposerView.REPLY_PLACEHOLDER) + '"></textarea>'
       + '    <div class="cm-composer-row">'
       + '      <div class="cm-composer-left">'
       + '        <button class="cm-gear cm-tool-btn" type="button" title="Chat options: model, tools, attachments">' + ChatIcons.gear + '</button>'
@@ -49,6 +52,7 @@ export default class ComposerView {
     this._ctx.usage.render();
     this._ctx.attachments.render();
     this._ctx.availability.render();
+    this._refreshReplyPlaceholder();
   }
 
   setSendStop(streaming) {
@@ -58,6 +62,13 @@ export default class ComposerView {
       b.title = streaming ? 'Stop (Esc)' : ComposerView.SEND_TITLE;
     });
     this.refreshSendState();
+    this._refreshReplyPlaceholder();
+  }
+
+  _refreshReplyPlaceholder() {
+    const { state, els } = this._ctx;
+    const box = els.composerBar && els.composerBar.querySelector('.cm-composer textarea');
+    if (box) box.placeholder = state.streaming ? ComposerView.QUEUE_PLACEHOLDER : ComposerView.REPLY_PLACEHOLDER;
   }
 
   refreshSendState() {
@@ -99,7 +110,7 @@ export default class ComposerView {
       if (this._ctx.shortcuts.onComposerKey(e, ta)) return;
       if (e.key !== 'Enter' || e.shiftKey) return;
       e.preventDefault();
-      if (this._ctx.state.streaming) return;
+      if (this._ctx.state.streaming) { this._ctx.pending.add(ta.value); return; }
       this._ctx.sender.submit(ta.value);
     });
     setTimeout(() => ta.focus(), 0);

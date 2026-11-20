@@ -7,7 +7,11 @@ The image server config area: the three local slots plus remote servers, with th
 ## Methods
 
 - `new ImageServerConfigs(imageServerService)`.
-- `view()` `{ servers, active: { generate, edit, video } }`.
+- `view()` (async) `{ servers, active: { generate, edit, video } }`. Each local slot
+  gains `models` (`[{ id, label }]`, the installed models of its kind from
+  `listInstalledModels()`), `selectedModel` and `modelField` (the image default
+  that holds the slot's model, from `InstalledImageModels.DEFAULT_FIELDS`), so a
+  picker can offer them as a paired server's models are. A failed scan lists no models.
 - `setActive(role, id)` `{ activeId }`.
 - `ImageServerConfigs.roleOf(role)` `edit` / `image-edit` -> `image-edit`,
   `video` / `image-video` -> `image-video`, anything else `image-generate`.

@@ -20,7 +20,9 @@ normalises its output onto the chat router's hooks.
 
 ## Flow
 
-1. Tools: [RunToolSet](tools/RunToolSet.md), [NativeToolPlan](tools/NativeToolPlan.md),
+1. Tools: [RunToolSet](tools/RunToolSet.md), [NativeToolPlan](tools/NativeToolPlan.md)
+   (its `enabled` is copied onto the tool set's `groups.nativeTools`, so activation results are
+   worded for the route, and passed to the agent run, which renders the base prompt for it),
    [AgentBudget](AgentBudget.md), [RunHealth](turn/RunHealth.md),
    [RunToolCallParser](parsing/RunToolCallParser.md), and the executor chain
    [TruncationGuard](tools/TruncationGuard.md) -> [ToolCallPipeline](tools/ToolCallPipeline.md)
@@ -55,7 +57,7 @@ normalises its output onto the chat router's hooks.
    catalog, the pending manuals ([ManualDelivery](prompt/ManualDelivery.md))
    and the task, `priorTurns`, the [RunResultSpill](RunResultSpill.md)
    writer, `tabId`/`lazyTab` (a pinned tab is used as is), `autoCloseTab:
-   false`, the budget, `tools`, `systemPromptAppend`, `systemPromptOverride`,
+   false`, the budget, `tools`, `systemPromptAppend`, `systemPromptOverride`, `systemRole`,
    `promptExperiments`, `nativeTools`, `nativeToolsTokens`,
    `onToolResultEvicted` (mode tools' eviction hooks), `compactionCarry`
    (`ManualDelivery.carryOver` for the active groups the system prompt does
@@ -112,3 +114,23 @@ Option `withholdTools` is passed to `RunToolSet`. Option `forGuest` (a turn run
 for a paired Network Sharing client) reaches the tool context, where
 [ToolDispatch](tools/ToolDispatch.md) keeps the run's calls off this computer's
 own addresses, files and internal pages.
+
+## Per-step reminder and final check
+
+Two options exist for the conversation's plan ([PlanTool](../plan/PlanTool.md)), both
+null by default: `stepReminder` (a function) goes to
+[CompletionDriver](turn/CompletionDriver.md), which asks it on every request for text
+to put at the prompt's tail beside `turnReminder`; `finalCheck` (a function) goes to the
+agent run ([RunOptions](../../agent/RunOptions.md)) and is asked once when the model
+gives its final answer. A third, `awaitsLaterResult` (a function, null by default), goes
+to the agent run beside `finalCheck`: true once the turn started a background task
+([BackgroundTaskTools](../tasks/BackgroundTaskTools.md)), so a short answer that says
+the result comes later is not nudged.
+
+## Background tasks
+
+`_buildGuard` builds one [ChatToolTable](tools/ChatToolTable.md) and one tool context
+and shares them between the reply's [ToolDispatch](tools/ToolDispatch.md) and a
+[DetachedToolCalls](tools/DetachedToolCalls.md) over the same pipeline and tool set,
+set on the context as `ctx.detached`. A session tool (`run_in_background`) uses it to
+admit and run another of the run's tools apart from the reply.

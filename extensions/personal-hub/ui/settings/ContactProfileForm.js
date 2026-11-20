@@ -3,7 +3,7 @@ import WidgetDom from '../widgets/WidgetDom.js';
 export default class ContactProfileForm {
   static LABEL_WIDTH = '132px';
 
-  static html(contact, kinds) {
+  static html(contact, kinds, contexts = []) {
     const esc = WidgetDom.esc;
     const profile = contact.profile || {};
     return `
@@ -14,6 +14,7 @@ export default class ContactProfileForm {
           </span>
           <span class="luma-field-help" style="margin:0">A business, an organisation or anyone not placed yet is general.</span>
         </div>
+        ${ContactProfileForm._context(contact, contexts)}
         <div data-role="fields">${ContactProfileForm._fields(ContactProfileForm._kind(kinds, contact.kind), profile.fields || {})}</div>
         <div data-role="details">${(profile.details || []).map((d) => ContactProfileForm._detailRow(d)).join('')}</div>
         <div class="ext-mt-8"><button type="button" class="luma-btn luma-btn--sm" data-action="add-detail" title="A phone number, an address, where they work: anything with a label">Add a detail</button></div>
@@ -47,7 +48,8 @@ export default class ContactProfileForm {
     const fields = {};
     for (const [key, value] of Object.entries(typed.fields)) fields[key] = value.trim();
     const details = typed.details.map((d) => ({ label: d.label.trim(), value: d.value.trim() })).filter((d) => d.label && d.value);
-    return { kind: typed.kind, fields, details, notes: typed.notes.trim() };
+    const read = { kind: typed.kind, fields, details, notes: typed.notes.trim() };
+    return typed.contextId == null ? read : { ...read, contextId: typed.contextId };
   }
 
   static capture(root) {
@@ -55,7 +57,8 @@ export default class ContactProfileForm {
     for (const input of root.querySelectorAll('[data-profile-field]')) fields[input.dataset.profileField] = input.value;
     const details = [...root.querySelectorAll('[data-detail]')]
       .map((row) => ({ label: row.querySelector('[data-detail-label]').value, value: row.querySelector('[data-detail-value]').value }));
-    return { kind: root.dataset.kind, fields, details, notes: root.querySelector('[data-profile-notes]').value };
+    const context = root.querySelector('[data-profile-context]');
+    return { kind: root.dataset.kind, fields, details, notes: root.querySelector('[data-profile-notes]').value, contextId: context ? context.value : null };
   }
 
   static restore(root, typed, kinds) {
@@ -65,6 +68,20 @@ export default class ContactProfileForm {
     }
     root.querySelector('[data-role="details"]').innerHTML = typed.details.map((d) => ContactProfileForm._detailRow(d)).join('');
     root.querySelector('[data-profile-notes]').value = typed.notes;
+    const context = root.querySelector('[data-profile-context]');
+    if (context && typed.contextId != null) context.value = typed.contextId;
+  }
+
+  static _context(contact, contexts) {
+    const esc = WidgetDom.esc;
+    if (!contexts.length) return '';
+    const implied = !contact.contextId && contact.homeContextId ? contexts.find((c) => c.id === contact.homeContextId) : null;
+    const options = [{ id: '', name: implied ? `Not set (${implied.name}, from the relation)` : 'Not set' }, ...contexts];
+    return `
+        <label class="ext-form-row-inline ext-mt-8" style="align-items:center" title="Mail and direct messages from this contact are filed under this context, whichever account they arrive in">
+          <span class="luma-field-label" style="margin:0;flex:0 0 ${ContactProfileForm.LABEL_WIDTH}">Belongs to</span>
+          <select class="luma-field-select" data-profile-context aria-label="Context this contact belongs to">${options.map((c) => `<option value="${esc(c.id)}"${c.id === (contact.contextId || '') ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+        </label>`;
   }
 
   static _kind(kinds, kind) {

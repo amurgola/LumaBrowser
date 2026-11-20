@@ -59,15 +59,16 @@ class TurnConversation {
     }
   }
 
-  addUserMessage(convId, userMessage, modelRef, regenerating, editMessageId) {
+  addUserMessage(convId, userMessage, modelRef, regenerating, editMessageId, notice = null) {
     if (regenerating || userMessage == null || String(userMessage).length === 0) return null;
     const row = {
       conversationId: convId,
       role: 'user',
       content: String(userMessage),
       modelRef,
-      provider: this._providerTag(modelRef),
+      provider: (notice && notice.provider) || this._providerTag(modelRef),
     };
+    if (notice && notice.toolCalls) row.toolCalls = notice.toolCalls;
     const v = editMessageId ? this._store.startVariant(editMessageId) : null;
     if (v) Object.assign(row, { variantGroup: v.group, createdAt: v.createdAt, parentId: v.parentId });
     return this._store.addMessage(row);

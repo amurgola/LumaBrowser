@@ -1,5 +1,6 @@
 const ExtensionGlobals = require('../../core/shell/extensions/ExtensionGlobals');
 const AgentKnowledgeGrant = require('./AgentKnowledgeGrant');
+const AgentModels = require('./AgentModels');
 const AgentRunSink = require('./AgentRunSink');
 
 class AgentRuntime {
@@ -15,7 +16,7 @@ class AgentRuntime {
     const router = this._getRouter();
     if (!router) return AgentRuntime._failure('LLM chat router is not available yet');
     const deps = (typeof router.getAgentDeps === 'function' && router.getAgentDeps()) || {};
-    const modelRef = agent.modelRef || AgentRuntime._defaultModel(router);
+    const modelRef = await AgentRuntime._modelFor(agent, router);
     if (!modelRef) return AgentRuntime._failure('No model is configured for this agent');
     const sink = new AgentRunSink(emit);
     let handle;
@@ -58,6 +59,18 @@ class AgentRuntime {
     const abort = () => { try { handle.abort(); } catch (_) {} };
     if (signal.aborted) abort();
     else if (typeof signal.addEventListener === 'function') signal.addEventListener('abort', abort, { once: true });
+  }
+
+  static async _modelFor(agent, router) {
+    if (!agent.modelRef) return AgentRuntime._defaultModel(router);
+    await AgentRuntime._refreshInstalledModels(router);
+    return AgentModels.isGone(agent.modelRef, router) ? AgentRuntime._defaultModel(router) : agent.modelRef;
+  }
+
+  static async _refreshInstalledModels(router) {
+    const service = router.llmServerService;
+    if (!service || typeof service.freshInstalledChatModels !== 'function') return;
+    try { await service.freshInstalledChatModels(); } catch (_) {}
   }
 
   static _defaultModel(router) {

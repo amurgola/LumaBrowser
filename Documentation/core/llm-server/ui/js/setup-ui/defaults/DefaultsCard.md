@@ -7,8 +7,8 @@ The LLM Setup "Defaults" card: the runtime, model and launch settings Start uses
 ## Methods
 
 - `render()`: defaults, the cached scan (fetched only when missing) and [DefaultsPrefs](DefaultsPrefs.md), then `renderView`.
-- `renderView(defaults)`: sets `ctx.lastDefaults` first (the gambit block reads it), paints the pill and body, wires the controls and hints, refreshes fit blocks and the installed handle. A format-bound runtime with one model pins it once (`setDefaults({ modelPath })`) and locks the picker.
-- `onChange()`: `setDefaults(DefaultsForm.read(doc))`, re-render, save note. Auto-unload, unload on VRAM pressure, GPU headroom (`setGpuHeadroom(GiB x 2^30)`) and tool approval save on their own and never restart the server.
+- `renderView(defaults)`: sets `ctx.lastDefaults` first (the cards repainted next read it), paints the pill and body, wires the controls and hints, refreshes fit blocks and the installed handle. A format-bound runtime with one model pins it once (`setDefaults({ modelPath })`) and locks the picker.
+- `onChange()`: `setDefaults(DefaultsForm.read(doc))`, re-render, save note. Auto-unload, the low-VRAM warning (`#defaultVramWarning`, `setVramWarning(checked)`, then a re-render), unload on VRAM pressure, GPU headroom (`setGpuHeadroom(GiB x 2^30)`) and tool approval save on their own and never restart the server.
 - `showSaveNote(serverStopped)`: a stopped notice (`.defaults-save-note.stopped`) is prepended to the body and stays until the next render; a plain "Saved." (`.defaults-saved`) goes in the card head just before `#defaultsPill`, survives a re-render, and is removed after `SAVE_NOTE_MS` (4 s). Either replaces the other (one `#defaultsSaveNote`).
 - The view's `openvino` is `{ options: DefaultsOptions.openvinoDeviceOptions(hostCaps.intelNpuNames()) }` only when the default runtime is OpenVINO, else null; `defaultOpenVinoDevice` is one of `SHARED_CONTROLS`.
 - Fields `rows` ([DefaultsRows](DefaultsRows.md)), `prefs`.

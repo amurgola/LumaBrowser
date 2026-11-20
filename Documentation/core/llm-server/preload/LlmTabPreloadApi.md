@@ -31,7 +31,7 @@ voice, code editor, extension chat and Setup bundles, and e2e helpers read it).
 | [VoiceApi](VoiceApi.md) | `voice` |
 | [GroundingApi](GroundingApi.md) | `grounding` |
 | [ModelSetupApi](ModelSetupApi.md) | catalog, search, recommendation, downloads, add-on models |
-| [ModelTestApi](ModelTestApi.md) | fit test, gambit |
+| [ModelTestApi](ModelTestApi.md) | fit test |
 | [ImageApi](ImageApi.md) | `image` (with `image.video`) |
 | [MusicApi](MusicApi.md) | `music` (with `music.gen`) |
 | [PlacementApi](PlacementApi.md) | `placement` |

@@ -6,6 +6,8 @@ class TrainerEnvironment {
     'CONDA_PREFIX', 'CONDA_DEFAULT_ENV', 'PYENV_ROOT', 'PYENV_VERSION',
   ];
 
+  static ACCOUNT_TOKENS = ['HF_TOKEN', 'HUGGING_FACE_HUB_TOKEN', 'HUGGINGFACE_HUB_TOKEN', 'HF_API_TOKEN', 'WANDB_API_KEY'];
+
   constructor({ paths, base = process.env }) {
     this._paths = paths;
     this._base = base;
@@ -26,9 +28,13 @@ class TrainerEnvironment {
       HF_HOME: this._paths.hubCacheDir,
       HF_HUB_DISABLE_TELEMETRY: '1',
       DISABLE_TELEMETRY: 'YES',
+      DO_NOT_TRACK: '1',
+      NO_ALBUMENTATIONS_UPDATE: '1',
+      WANDB_MODE: 'disabled',
       PYTHONUNBUFFERED: '1',
       PYTHONIOENCODING: 'utf-8',
     };
+    for (const name of TrainerEnvironment.ACCOUNT_TOKENS) delete env[name];
     return CudaPin.applyCudaDeviceEnv(env, cudaDevice);
   }
 

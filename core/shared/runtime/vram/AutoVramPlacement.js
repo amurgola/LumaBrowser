@@ -1,10 +1,10 @@
 const CudaDevicePicker = require('../CudaDevicePicker');
 
 class AutoVramPlacement {
-  static place(devices, { requiredBytes, allowSplit }) {
+  static place(devices, { requiredBytes, allowSplit, softSingle = false }) {
     const need = Number(requiredBytes) > 0 ? Number(requiredBytes) : undefined;
     if (need != null && allowSplit === false) return AutoVramPlacement._placeUnsplittable(devices, need);
-    return AutoVramPlacement._placeSplittable(devices, need);
+    return AutoVramPlacement._placeSplittable(devices, need, softSingle);
   }
 
   static cudaDeviceFor({ devices, offloadToCpu }, cardCount) {
@@ -20,12 +20,11 @@ class AutoVramPlacement {
     return AutoVramPlacement._offloadTo(devices, []);
   }
 
-  static _placeSplittable(devices, need) {
-    const chosen = CudaDevicePicker.pick(devices, need);
+  static _placeSplittable(devices, need, softSingle) {
+    const chosen = CudaDevicePicker.pick(devices, need, { softSingle });
     const indexes = chosen.map((d) => d.index);
     if (need == null) return { devices: indexes, offloadToCpu: false };
-    const room = chosen.reduce((sum, d) => sum + AutoVramPlacement._room(d), 0);
-    if (room >= need) return { devices: indexes, offloadToCpu: false };
+    if (CudaDevicePicker.holds(chosen, need, { softSingle })) return { devices: indexes, offloadToCpu: false };
     return AutoVramPlacement._offloadTo(devices, indexes);
   }
 

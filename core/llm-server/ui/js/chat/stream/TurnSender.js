@@ -17,12 +17,28 @@ export default class TurnSender {
     if ((!v && state.attachments.length === 0) || state.streaming) return;
     if (!state.modelRef) { Dialogs.alert('Pick a model first.'); return; }
     this._ctx.gear.close();
-    const turn = this._takeStaged(v);
+    const staged = this.takeStaged(v);
+    if (state.activeId) this._ctx.composer.clearReplyBox();
+    await this.sendStaged(staged);
+  }
+
+  takeStaged(v) {
+    const { state } = this._ctx;
+    const staged = { text: v, attachments: state.attachments.slice(), context: v ? state.context.slice() : [] };
+    state.attachments = [];
+    if (v) state.context = [];
+    this._ctx.attachments.render();
+    return staged;
+  }
+
+  async sendStaged(staged) {
+    const { state } = this._ctx;
+    const turn = TurnSender._compose(staged);
     const onLanding = !state.activeId;
     if (onLanding) state.firstTurn = true;
     const userMsg = this._userMessage(turn);
     state.messages.push(userMsg);
-    this._showUserTurn(userMsg, onLanding, v, turn.images);
+    this._showUserTurn(userMsg, onLanding, staged.text, turn.images);
     this._startAssistant();
     await this._send({
       userMessage: turn.composed,
@@ -71,6 +87,23 @@ export default class TurnSender {
     await this._send(extra);
   }
 
+  showHostTurn(opening, requestId) {
+    const { state, els } = this._ctx;
+    state.messages.push(opening);
+    const thread = els.scroll.querySelector('.cm-thread');
+    thread.insertBefore(this._ctx.turns.render(opening), thread.querySelector('.cm-thread-foot'));
+    state.firstTurn = false;
+    this._startAssistant(requestId);
+  }
+
+  trackHostTurn(conversationId, requestId) {
+    const { state } = this._ctx;
+    state.streamMsg = { role: 'assistant', content: '', reasoning: '', error: '' };
+    state.streaming = true;
+    state.streamConvId = conversationId;
+    state.rememberRequest(state.newRequestId(requestId), conversationId);
+  }
+
   abort() {
     try { this._ctx.api.chatAbort(); } catch (_) {}
   }
@@ -90,19 +123,14 @@ export default class TurnSender {
       .filter(Boolean);
   }
 
-  _takeStaged(v) {
-    const { state } = this._ctx;
-    const attachments = state.attachments.slice();
-    state.attachments = [];
-    const context = v ? state.context.map(({ id, ...c }) => c) : [];
-    if (v) state.context = [];
-    this._ctx.attachments.render();
+  static _compose(staged) {
+    const { text, attachments } = staged;
     return {
-      composed: UserMessageComposer.compose(v, attachments),
+      composed: UserMessageComposer.compose(text, attachments),
       images: UserMessageComposer.images(attachments),
       regions: UserMessageComposer.regions(attachments),
       areas: UserMessageComposer.markedAreas(attachments),
-      context,
+      context: staged.context.map(({ id, ...chip }) => chip),
     };
   }
 
@@ -130,10 +158,9 @@ export default class TurnSender {
     }
     const thread = this._ctx.els.scroll.querySelector('.cm-thread');
     thread.insertBefore(this._ctx.turns.render(userMsg), thread.querySelector('.cm-thread-foot'));
-    this._ctx.composer.clearReplyBox();
   }
 
-  _startAssistant() {
+  _startAssistant(requestId = null) {
     const { state } = this._ctx;
     const asst = { role: 'assistant', content: '', reasoning: '', error: '' };
     state.messages.push(asst);
@@ -142,9 +169,11 @@ export default class TurnSender {
     state.streamConvId = state.activeId || null;
     this._ctx.stream.append();
     this._ctx.composer.setSendStop(true);
-    state.rememberRequest(state.newRequestId(), state.streamConvId);
+    state.rememberRequest(state.newRequestId(requestId), state.streamConvId);
     state.autoScrollPaused = false;
     this._ctx.main.pinBottom();
+    this._ctx.plan.paint();
+    this._ctx.pending.paint();
   }
 
   async _send(extra) {

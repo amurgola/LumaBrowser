@@ -9,7 +9,10 @@ someone not placed yet) and the fields follow the kind, drawn from the form
 the main process describes (`kinds`, which is
 [ContactProfile](../../contacts/ContactProfile.md)`.KINDS`); further details
 (a phone number, an address) and free notes can be added, and what a model
-proposed from the conversations waits here to be accepted or dismissed.
+proposed from the conversations waits here to be accepted or dismissed. The
+form also says which context the contact belongs to, which is where their
+mail and direct messages are filed
+([ContextService](../../context/ContextService.md)).
 Static functions only; PeopleSection handles the clicks and the calls.
 Imports only `WidgetDom` from the extension's ui folder.
 
@@ -21,6 +24,14 @@ Imports only `WidgetDom` from the extension's ui folder.
   (`data-action="kind"`, `data-kind`, `active` and `aria-pressed` on the
   current one), with the help `A business, an organisation or anyone not
   placed yet is general.`.
+- `Belongs to` (`_context`), a select (`data-profile-context`) of the
+  contexts with `Not set` first, the contact's own `contextId` selected.
+  Its tooltip reads `Mail and direct messages from this contact are filed
+  under this context, whichever account they arrive in`. When nothing is
+  picked but the contact's `homeContextId` names a context (its relation
+  does, as in `Acme employee`), the unset choice reads `Not set (<name>,
+  from the relation)`, because that context already counts. The row is not
+  drawn while there are no contexts.
 - The fields (`data-role="fields"`), one labelled row each
   (`LABEL_WIDTH` = 132px for the label): a text input for `text` and
   `birthday` fields, the hint as placeholder, and a select for a `choice`,
@@ -46,24 +57,28 @@ Imports only `WidgetDom` from the extension's ui folder.
 
 ## Methods (static)
 
-- `html(contact, kinds)` -> the form's HTML. `contact` is as
-  `listContacts` gives it (`{ id, kind, profile: { fields, details, notes,
-  suggested } }`); `kinds` is `[{ kind, label, fields }]`. An unknown kind
-  shows the first kind's fields.
+- `html(contact, kinds, contexts = [])` -> the form's HTML. `contact` is as
+  `listContacts` gives it (`{ id, kind, contextId, homeContextId, profile:
+  { fields, details, notes, suggested } }`); `kinds` is `[{ kind, label,
+  fields }]`; `contexts` is `[{ id, name }]`, the contexts the contact can
+  belong to. An unknown kind shows the first kind's fields.
 - `setKind(root, kind, kinds)`: the user picked another kind; the switch
   and `data-kind` follow and the fields are drawn again, empty, for that
   kind. Nothing is saved until Save.
 - `addDetail(root)`: adds an empty detail row and focuses its label.
 - `read(root)` -> `{ kind, fields: { key: value }, details: [{ label, value
-  }], notes }`, trimmed: what Save sends. Every field of the kind is sent,
-  so an emptied one clears; detail rows without a label or a value are left
-  out.
+  }], notes, contextId? }`, trimmed: what Save sends. Every field of the
+  kind is sent, so an emptied one clears; detail rows without a label or a
+  value are left out. `contextId` is the select's value (`''` for `Not
+  set`, which clears it) and is left out when the form has no context
+  select, so a save then changes no context.
 - `capture(root)` -> the same shape exactly as typed, half-filled detail
-  rows included, so a redraw can put it back.
+  rows included, so a redraw can put it back; `contextId` is the select's
+  value, or `null` without a select.
 - `restore(root, typed, kinds)`: puts back what `capture` took from an
   earlier drawing of the same contact's form: the kind (redrawing the
-  fields when it differs), every field value it holds, the detail rows and
-  the notes.
+  fields when it differs), every field value it holds, the detail rows, the
+  notes and the picked context.
 
 ## Why
 

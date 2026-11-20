@@ -1,5 +1,6 @@
 import AgentRunCards from './AgentRunCards.js';
 import ReplyChoices from './ReplyChoices.js';
+import TaskNoticeView from './TaskNoticeView.js';
 import ThinkPane from './ThinkPane.js';
 import TurnData from './TurnData.js';
 import Dom from '../../dom/Dom.js';
@@ -11,6 +12,7 @@ export default class TurnRenderer {
   }
 
   render(m) {
+    if (TaskNoticeView.isNotice(m)) return this._ctx.taskNotices.render(m);
     if (m.role === 'user') return this._ctx.userTurns.render(m);
     return this._assistant(m);
   }

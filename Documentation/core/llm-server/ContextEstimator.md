@@ -11,13 +11,16 @@ estimate from the same planner that starts the server ([PlanFor](server/PlanFor.
 - `ContextEstimator.shared` the instance over `PlanFor.shared` and
   `LlmRuntimeCatalog.shared`.
 - `new ContextEstimator({ planFor, catalog })` (both optional) for tests.
-- `buildLocalModelOptions({ models, fitResults, runtime, resolveRuntime, diagnostics, displayNameFor })`
+- `buildLocalModelOptions({ models, fitResults, runtime, resolveRuntime, diagnostics, settingsDb, displayNameFor })`
   returns one entry per chattable model ([ModelContextEntry](context/ModelContextEntry.md)):
   - `models`: the scanner's `models`; companion-only entries (`mmproj-only`,
     `mtp-only`, no `weights[0].path`) are skipped.
   - `fitResults`: `{ <weights[0].path>: { ranAt, hardware, results: [row] } }`.
   - `resolveRuntime(model)` wins over `runtime`; a throw means no runtime
     (every estimate reads `unknown`).
+  - `diagnostics` should carry a live VRAM reading (the estimate nets out what occupies
+    each card, as a Start does) and the optional `settingsDb` the placement layout; both
+    reach every rung estimate.
   - `displayNameFor(nameKey, name)` gives `displayName`, else the scan name.
   - Models with a fit run sort first, newest `ranAt` first; the rest keep scan order.
 - `ContextEstimator.measuredComboVram(fitEntry, tokens, kv)` see
@@ -43,7 +46,8 @@ contextOptions, kvOptions, kvModes, recommendedTokens, speed }`.
 
 [ContextRungBuilder](context/ContextRungBuilder.md) builds each rung from
 [FitRows](context/FitRows.md) (measured ok, then measured failure) or
-[RungEstimator](context/RungEstimator.md) (planner estimate), with
+[RungEstimator](context/RungEstimator.md) (planner estimate, which also re-judges a
+measured ok rung against the cards as a Start would find them), with
 [RungTip](context/RungTip.md) for the hover text. The ladder comes from
 [ContextLadder](context/ContextLadder.md).
 

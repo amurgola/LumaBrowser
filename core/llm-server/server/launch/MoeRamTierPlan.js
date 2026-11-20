@@ -43,7 +43,7 @@ class MoeRamTierPlan {
   }
 
   static _fitsRamReason(loading) {
-    if (loading.ramPinned) return 'the expert pool fits RAM and the RAM pin already holds the whole model file there';
+    if (loading.ramPinned && loading.useMmap) return 'the expert pool fits RAM and the RAM pin already holds the whole model file there';
     return 'the expert pool fits RAM and is bulk-read instead';
   }
 

@@ -48,8 +48,8 @@ export default class LoraCuratedList {
       if (!entry) { reset(); return; }
       if (!entry.installed && !(await this._download(entry, reset))) return;
       if (entry.pair) { await this._attachPair(btn, entry, reset); return; }
-      await this._modal.refreshLoras(entry.name);
-      this._modal.checkPreset();
+      await this._modal.refreshLoras(entry.name, entry.weight);
+      if (entry.preset) this._modal.checkPreset();
       await this.render();
     } catch (err) {
       this._modal.setError(err.message);
@@ -68,7 +68,8 @@ export default class LoraCuratedList {
   async _attachPair(btn, entry, reset) {
     btn.textContent = 'Attaching…';
     const weight = (typeof entry.weight === 'number' && entry.weight > 0) ? entry.weight : 1.0;
-    const loras = (entry.attach || []).map((a) => ({ name: a.name, weight, ...(a.highNoise ? { highNoise: true } : {}) }));
+    const pair = (entry.attach || []).map((a) => ({ name: a.name, weight, ...(a.highNoise ? { highNoise: true } : {}) }));
+    const loras = this._modal.lorasWith(pair);
     const result = await this._modal.api().setModelLoras({
       id: this._modal.modelId, loras, distilledPreset: true, preset: entry.preset || null,
     });

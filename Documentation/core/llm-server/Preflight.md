@@ -5,26 +5,40 @@
 Boot-time preflight for the LLM tab: the configuration problems the user is
 guaranteed to hit later (missing system libraries, a chosen runtime that is
 not installed, a vanished default model), so the tab's top banner can show
-them the moment it opens instead of at first use.
+them the moment it opens instead of at first use. An issue marked
+`selection: true` is a saved model choice that is gone; the shell alerts on
+those at startup ([StartupModelAlert](../../ui/shell/notifications/StartupModelAlert.md)).
 
 ## Methods
 
-- `Preflight.collectIssues({ llmServerService, imageServerService?, musicServerService?, fileExists?, sysdeps? })`
+- `Preflight.collectIssues({ llmServerService, imageServerService?, musicServerService?, llmService?, fileExists?, sysdeps? })`
   resolves `{ issues }`. Same as `new Preflight(options).collect()`.
+  - `llmService` is the slot router ([LLMService](../llm-service/LLMService.md)), for
+    slots bound to a model that is gone; optional.
+  - `agentManager` is the Agent Manager's public surface (`global.__lumaAgentManager`), for
+    agents pinned to a model that is gone; optional.
   - `fileExists(path)` defaults to a safe `fs.existsSync`.
   - `sysdeps` is anything with `preflight({ binaries })`; defaults to
     `new SysdepsChecker()`, which is a no-op off Linux.
 
-Issue order: system libraries, then LLM, image, music.
+Issue order: system libraries, then LLM, image, music, then the selection
+issues of [PreflightSelectionIssues](PreflightSelectionIssues.md).
 
 ## Issue shape
 
 ```
-{ id, area: 'system'|'llm'|'image'|'music', severity: 'error'|'warning', title, detail,
+{ id, area: 'system'|'llm'|'image'|'music'|'slots', severity: 'error'|'warning', title, detail, selection?,
   fix: { kind: 'install-runtime', server, runtimeId, runtimeName }
-     | { kind: 'open-view', view: 'settings'|'image'|'music' }
+     | { kind: 'open-view', view: 'settings'|'image'|'music', settingId? }
+     | { kind: 'open-settings', tab, extensionId?, settingId?, selector? }
      | { kind: 'sysdeps', aptLine, packages, missing: [{ soname, pkg }] } }
 ```
+
+Every `selection` issue's fix also carries `settingId`, the search palette's
+catalog entry for the control itself (`llm.model` for `llm-model-missing`,
+`music.model` for `music-model-missing`; the rest in
+[PreflightSelectionIssues](PreflightSelectionIssues.md)), so an alert takes the
+user to that control through `core.palette.reveal` and not just to its page.
 
 The renderer banner (`ui/js/preflight.js`, deferred) acts on `fix`.
 
@@ -34,11 +48,12 @@ The renderer banner (`ui/js/preflight.js`, deferred) acts on `fix`.
 |---|---|
 | `system-libs-missing` | [PreflightSysdepsIssue](PreflightSysdepsIssue.md): Linux libraries missing |
 | `llm-runtime-unknown` / `-missing` / `-hardware` | a default LLM runtime is chosen; see [PreflightRuntimeIssue](PreflightRuntimeIssue.md) |
-| `llm-model-missing` | the default model path no longer exists |
+| `llm-model-missing` | the default model path no longer exists (`selection`) |
 | `image-runtime-*` | image server enabled and a default image runtime chosen |
 | `image-runtime-unset` | image server enabled, a model (generate, edit or video) set, no runtime |
 | `music-runtime-*` | music server enabled (runtime `sglang-omni` is implicit) |
-| `music-model-missing` | music default model set but not fully downloaded |
+| `music-model-missing` | music default model set but not fully downloaded (`selection`) |
+| `llm-helper-model-missing`, `image-model-missing`, `image-edit-model-missing`, `image-video-model-missing`, `slot-model-unavailable:<slotId>` | [PreflightSelectionIssues](PreflightSelectionIssues.md) (all `selection`) |
 
 ## Why it is shaped this way
 

@@ -6,9 +6,11 @@ const ImageRouter = require('./ImageRouter');
 const CivitaiBrowser = require('./civitai/CivitaiBrowser');
 const CivitaiClient = require('./civitai/CivitaiClient');
 const CivitaiDescriptionReader = require('./civitai/CivitaiDescriptionReader');
+const CivitaiLoraResolver = require('./civitai/CivitaiLoraResolver');
 const CivitaiModelResolver = require('./civitai/CivitaiModelResolver');
 const CivitaiRecipe = require('./civitai/CivitaiRecipe');
 const CatalogModelInstaller = require('./ipc/CatalogModelInstaller');
+const CivitaiLoraInstaller = require('./ipc/CivitaiLoraInstaller');
 const ExistingModelAdopter = require('./ipc/ExistingModelAdopter');
 const ImageDefaultsUpdater = require('./ipc/ImageDefaultsUpdater');
 const ImageDownloadSlot = require('./ipc/ImageDownloadSlot');
@@ -48,10 +50,11 @@ class ImageIpcHandlers {
     const loras = new ImageLoraLibrary({ imageServerService: service, slot });
     const attacher = new ModelLoraAttacher({ imageServerService: service });
     const client = civitaiClient || new CivitaiClient();
+    const civitaiModels = new CivitaiModelResolver({ client });
     const importer = new ImageModelImporter({
       imageServerService: service,
       slot,
-      civitai: new CivitaiModelResolver({ client }),
+      civitai: civitaiModels,
       recipes: new CivitaiRecipe({
         client,
         reader: llmService ? new CivitaiDescriptionReader({ llm: llmService }) : null,
@@ -66,6 +69,7 @@ class ImageIpcHandlers {
       slots: new ImageSlots(service),
       installer: new CatalogModelInstaller({ imageServerService: service, slot, loras, attacher }),
       loras,
+      loraInstaller: new CivitaiLoraInstaller({ library: loras, slot, resolver: new CivitaiLoraResolver({ reader: civitaiModels }) }),
       attacher,
       importer,
       civitai: new CivitaiBrowser({ client, imageServerService: service }),
@@ -127,12 +131,13 @@ class ImageIpcHandlers {
     ImageIpcHandlers._handle('updateModelFile', IpcEnvelope.enveloped((event, args) => updater.update(args, events(event))));
   }
 
-  static _registerLoras({ loras, attacher }) {
+  static _registerLoras({ loras, loraInstaller, attacher }) {
     const events = (event) => SenderStream.create(event, ImageIpcHandlers.MODEL_EVENT_CHANNEL);
     ImageIpcHandlers._handle('listLoras', IpcEnvelope.enveloped(() => loras.list()));
     ImageIpcHandlers._handle('importLora', IpcEnvelope.enveloped((event, args) => loras.import(event, args)));
     ImageIpcHandlers._handle('loraCatalog', IpcEnvelope.enveloped(() => loras.catalogView()));
     ImageIpcHandlers._handle('downloadLora', IpcEnvelope.enveloped((event, args) => loras.download(args, events(event))));
+    ImageIpcHandlers._handle('importLoraFromCivitai', IpcEnvelope.enveloped((event, args) => loraInstaller.install(args, events(event))));
     ImageIpcHandlers._handle('setModelLoras', IpcEnvelope.enveloped((_e, args) => attacher.attach(args)));
   }
 

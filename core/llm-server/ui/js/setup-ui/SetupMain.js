@@ -5,7 +5,6 @@ import DriverInstallPanel from './diagnostics/DriverInstallPanel.js';
 import HostFixActions from './diagnostics/HostFixActions.js';
 import SetupExtensionTabs from './extensions/SetupExtensionTabs.js';
 import FitTestController from './fit-test/FitTestController.js';
-import GambitController from './gambit/GambitController.js';
 import ModelRename from './models/ModelRename.js';
 import ModelsCard from './models/ModelsCard.js';
 import SetupNavigator from './nav/SetupNavigator.js';
@@ -39,7 +38,6 @@ export default class SetupMain {
     this._clickRouter.start();
     this._bindLiveEvents();
     this.ctx.cards.fitTest.bindEvents();
-    this.ctx.cards.gambit.bindEvents();
     const reload = this.ctx.doc.getElementById('reloadBtn');
     if (reload) reload.addEventListener('click', () => this.load({ force: true }));
     return this.load();
@@ -55,7 +53,6 @@ export default class SetupMain {
     cards.runtimes = new RuntimesCard(ctx);
     cards.runtimeActions = new RuntimeActions(ctx);
     cards.fitTest = new FitTestController(ctx);
-    cards.gambit = new GambitController(ctx, cards.fitTest.state);
     cards.models = new ModelsCard(ctx, this._modelList);
     cards.defaults = new DefaultsCard(ctx);
     cards.plan = new PlanExplainer(ctx);

@@ -16,7 +16,8 @@ does not fit RAM, for the LumaByte runtime luma-b5 or newer (`--moe-ram-mib`,
   - Off, with `reason` in this order: no expert offload; the runtime has no tier
     (`flags.moeTiers` false: mainline, or luma-b4 and older); `overrides.noMoeRamTier`;
     the pool fits RAM (`loading.moeNeedsMmap` false: the weights are bulk-read
-    instead, or, with the RAM pin on (`loading.ramPinned`), the launch maps the
+    instead, or, with the RAM pin on and the launch mapped (`loading.ramPinned`
+    and `loading.useMmap`: RAM cannot hold the pool twice), the launch maps the
     file the pin already holds in RAM, and the reason says so); RAM size unknown;
     less than `MIN_BYTES` (4 GiB) would be locked.
   - The fits-RAM reason used to say "bulk-read" even with the pin on, where

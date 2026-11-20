@@ -3,6 +3,7 @@ const TabRegistry = require('./TabRegistry');
 
 class TabLoader {
   static LOAD_TIMEOUT_MS = 15000;
+  static FIRST_DOCUMENT_WAIT_MS = 3000;
 
   constructor({ registry, channel }) {
     this._registry = registry;
@@ -13,8 +14,14 @@ class TabLoader {
     const entry = this._registry.get(tabId);
     if (!entry) return TabRegistry.notFound(tabId);
     const normalized = TabUrl.normalize(url);
+    await TabLoader._afterFirstDocument(entry.webContents);
     const load = await TabLoader._loadAndReport(entry, normalized);
     return { success: true, data: { navigatedTo: normalized, ...load } };
+  }
+
+  static async _afterFirstDocument(wc) {
+    if (!wc.isLoading() || wc.getURL()) return;
+    await TabLoader._untilStopped(wc, TabLoader.FIRST_DOCUMENT_WAIT_MS);
   }
 
   async waitForLoad(tabId, timeoutMs = TabLoader.LOAD_TIMEOUT_MS) {
@@ -46,7 +53,9 @@ class TabLoader {
   static async _loadAndReport(entry, normalized, timeoutMs = TabLoader.LOAD_TIMEOUT_MS) {
     const wc = entry.webContents;
     const report = { loaded: true };
+    const started = Date.now();
     await TabLoader._boundedLoad(wc, normalized, timeoutMs, report);
+    await TabLoader._untilArrived(wc, normalized, timeoutMs - (Date.now() - started), report);
     report.finalUrl = wc.getURL();
     report.title = wc.getTitle();
     if (entry.lastHttpStatus) report.httpStatus = entry.lastHttpStatus;
@@ -73,6 +82,14 @@ class TabLoader {
     } finally {
       if (timer) clearTimeout(timer);
     }
+  }
+
+  static async _untilArrived(wc, url, remainingMs, report) {
+    if (report.loaded === false || !wc.isLoading() || wc.getURL() === url) return;
+    if (remainingMs > 0) await TabLoader._untilStopped(wc, remainingMs);
+    if (!wc.isLoading()) return;
+    report.loaded = false;
+    report.loadState = 'still loading';
   }
 
   static _untilStopped(wc, timeoutMs) {

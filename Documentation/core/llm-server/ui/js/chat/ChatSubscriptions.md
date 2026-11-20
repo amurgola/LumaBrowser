@@ -27,4 +27,6 @@ Subscribes the chat to the host's pushes. Every push is optional on the API.
 
 `api.onConvJobsEvent` goes to [ConversationJobsStrip](jobs/ConversationJobsStrip.md)
 `onEvent`; a `posted` event also refreshes the conversation list, which lifts the
-conversation that received the outcome message.
+conversation that received the outcome message. A `turn` event (the host about to answer
+a background task's results by itself) goes to [HostTurns](stream/HostTurns.md)`.follow`
+instead, and not to the strip.

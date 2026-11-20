@@ -52,6 +52,7 @@ export default class LitePanel {
     this.thread = [];
     this.models = [];
     this.modelRef = null;
+    this._pickedRef = null;
     this.disabledTools = [];
     this.serverState = null;
     this.reqId = null;
@@ -137,6 +138,7 @@ export default class LitePanel {
     const ref = this.modelSelect.value || null;
     if (!ref) return;
     this.modelRef = ref;
+    this._pickedRef = ref;
     LitePanel._quietly(() => this.api.setLastModelRef(ref));
   }
 
@@ -172,10 +174,12 @@ export default class LitePanel {
   }
 
   async _pickModelRef(res) {
-    if (this.modelRef && this.models.some((m) => m.ref === this.modelRef)) return;
+    if (this.models.some((m) => m.ref === this._pickedRef && m.current !== false)) this._pickedRef = null;
+    const stands = (ref) => this.models.some((m) => m.ref === ref && (ref === this._pickedRef || !(m.current === false && !m.isProfile)));
+    if (this.modelRef && stands(this.modelRef)) return;
     const last = await Promise.resolve(this.api.getLastModelRef()).catch(() => null);
     const lastRef = last && (last.ref || last.modelRef || (typeof last === 'string' ? last : null));
-    this.modelRef = (lastRef && this.models.some((m) => m.ref === lastRef))
+    this.modelRef = (lastRef && stands(lastRef))
       ? lastRef
       : ((res && res.defaultRef) || (this.models[0] && this.models[0].ref) || null);
   }

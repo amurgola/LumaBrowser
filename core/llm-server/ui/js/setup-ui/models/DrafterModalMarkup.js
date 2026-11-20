@@ -1,5 +1,6 @@
 import ByteFormatter from '../../format/ByteFormatter.js';
 import HtmlEscaper from '../../format/HtmlEscaper.js';
+import ChatIcons from '../../chat/ChatIcons.js';
 
 export default class DrafterModalMarkup {
   static AUTO = 'auto';
@@ -14,7 +15,7 @@ export default class DrafterModalMarkup {
       <div class="luma-modal img-modal" role="dialog" aria-labelledby="drafterTitle">
         <div class="img-modal-header">
           <h3 class="luma-modal-title" id="drafterTitle">Drafter: ${esc(view.label)}</h3>
-          <button class="luma-icon-btn luma-icon-btn--sq img-modal-x" data-act="close" aria-label="Close">×</button>
+          <button class="luma-icon-btn luma-icon-btn--sq img-modal-x" data-act="close" aria-label="Close">${ChatIcons.x}</button>
         </div>
         <div class="img-modal-body">
           <div class="img-row-sub">A <strong>speculative drafter</strong> is a small model that proposes a block of tokens each step for this model to verify: faster replies, same output quality, about 2 to 3 GB more VRAM. Pick one from your library, run without one, or leave it on automatic (the drafter in this model's folder).</div>

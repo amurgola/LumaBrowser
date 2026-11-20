@@ -8,7 +8,7 @@ The Code mode's per-turn config (`buildTurn`).
 
 - `new CodeTurnBuilder({ context, sessions })`.
 - `build({ meta, conversationId, modelRef = null })` ->
-  `{ systemPrompt, temperature: 0.2, agent, tools, allowedTools, kbScope?, modelRef?, noBrowser: true, agentBudget }`.
+  `{ systemPrompt, temperature: 0.2, agent, tools, allowedTools, kbScope?, modelRef?, noBrowser: true, agentBudget, planning }`.
   - With `context.code` and `data.projectPath`: [ProjectTools](../tools/project/ProjectTools.md)
     sized by [ReadBudget](../tools/project/ReadBudget.md), plus
     [BatchDispatchTool](../tools/batch/BatchDispatchTool.md) (a fresh BatchScheduler and a
@@ -17,6 +17,11 @@ The Code mode's per-turn config (`buildTurn`).
     are cleared at the start of each turn.
   - Else with `context.code` and a task: [ExtensionBuildTools](../tools/build/ExtensionBuildTools.md).
   - Else plain chat: `tools`, `allowedTools` and `agentBudget` are null, `agent` false.
+  - `planning` is true whenever the turn has tools (project or build): the core then adds
+    `update_plan`, admits it past the `allowedTools` pin and shows the plan above the composer
+    ([PlanTool](../../../core/llm-server/chat/plan/PlanTool.md)). Building and changing a project
+    is multi-step work by nature. A terminal or IDE session gets the tool too; those surfaces draw
+    no plan panel, but each `update_plan` card reads "Step 2 of 4: ...".
   - `allowedTools` pins the turn to its tools plus `validate_code`; in project
     mode an [AgentOverlay](AgentOverlay.md) adds the agent's grants and its
     `kbScope`/`modelRef`.

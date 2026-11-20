@@ -10,7 +10,7 @@ module.exports = {
     required: {
       'core:llm-service': {
         slots: [
-          { id: 'runner', label: 'Test Harness Runner Model', required: true }
+          { id: 'runner', label: 'Test Harness Runner Model', required: true, picker: '#ext-th-modelSelect' }
         ]
       },
       'core:database': {

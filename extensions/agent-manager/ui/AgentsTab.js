@@ -1,9 +1,9 @@
 import Dialogs from '../../../core/llm-server/ui/js/dialogs/Dialogs.js';
 import HtmlEscaper from '../../../core/llm-server/ui/js/format/HtmlEscaper.js';
+import Notice from '../../../core/llm-server/ui/js/notice/Notice.js';
 import AgentCard from './AgentCard.js';
 import AgentForm from './AgentForm.js';
 import AgentKnowledgeSection from './AgentKnowledgeSection.js';
-import AgentNotice from './AgentNotice.js';
 
 export default class AgentsTab {
   static CSS_ID = 'am-css';
@@ -96,7 +96,7 @@ export default class AgentsTab {
       if (r.canceled) return;
       this._notice = { kind: 'ok', title: 'Exported "' + a.name + '" to ' + r.filePath, lines: [] };
     } catch (e) {
-      this._notice = { kind: 'warn', title: 'Export failed', lines: [e.message] };
+      this._notice = { kind: 'bad', title: 'Export failed', lines: [e.message] };
     }
     this._render();
   }
@@ -115,7 +115,7 @@ export default class AgentsTab {
       };
       await this.refresh();
     } catch (e) {
-      this._notice = { kind: 'warn', title: 'Import failed', lines: [e.message] };
+      this._notice = { kind: 'bad', title: 'Import failed', lines: [e.message] };
       this._render();
     }
   }
@@ -123,7 +123,7 @@ export default class AgentsTab {
   modelLabel(ref) {
     if (!ref) return 'App default';
     const m = this._models.find((x) => x.ref === ref);
-    return m ? m.label : ref;
+    return m ? m.label : AgentForm.UNAVAILABLE_PREFIX + ref;
   }
 
   async _inv(action, payload) {
@@ -140,10 +140,16 @@ export default class AgentsTab {
     }
   }
 
+  _noticeEl() {
+    const box = Notice.render(this._notice, () => { this._notice = null; this._render(); });
+    box.classList.add('am-notice');
+    return box;
+  }
+
   _render() {
     this._el.innerHTML = '';
     this._el.appendChild(this._head());
-    if (this._notice) this._el.appendChild(AgentNotice.render(this._notice, () => { this._notice = null; this._render(); }));
+    if (this._notice) this._el.appendChild(this._noticeEl());
     if (this._formOpen) this._el.appendChild(this._form());
     this._el.appendChild(this._list());
   }

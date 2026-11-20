@@ -11,6 +11,8 @@ class InboxService {
   static AUTOMATION_HOST = 'automation';
   static DEFAULT_SNOOZE_MS = 4 * 60 * 60 * 1000;
   static CHANGED_EVENT = 'thread.changed';
+  static RECLASSIFY_THREADS = 20000;
+  static RECLASSIFY_NOTIFICATIONS = 2000;
 
   constructor({ notifications, threads, emit = () => {}, now = () => new Date(), dedupeWindowMs = 60000, retentionDays = 90, pruneEvery = 100 } = {}) {
     this._notifications = notifications;
@@ -131,6 +133,38 @@ class InboxService {
 
   counts() {
     return this._threads.countByState();
+  }
+
+  reclassify() {
+    const changed = [];
+    let threads = 0;
+    for (const thread of this._threads.list({ state: 'all', limit: InboxService.RECLASSIFY_THREADS })) {
+      const notes = this._notifications.listForThread(thread.id, { limit: InboxService.RECLASSIFY_NOTIFICATIONS })
+        .filter((n) => n.host !== InboxService.AUTOMATION_HOST);
+      if (!notes.length) continue;
+      const read = notes.map((n) => ({ note: n, now: NotificationClassifier.classify(n) }));
+      for (const { note, now } of read) {
+        if (now.sender === note.sender) continue;
+        this._notifications.setSender(note.id, now.sender);
+        changed.push({ ...note, sender: now.sender, was: note.sender });
+      }
+      if (this._refit(thread, read)) threads += 1;
+    }
+    changed.sort((a, b) => String(a.receivedAt).localeCompare(String(b.receivedAt)));
+    return { threads, changed };
+  }
+
+  _refit(thread, read) {
+    const renamed = new Map();
+    for (const { note, now } of read.slice().reverse()) renamed.set(note.sender, [...(renamed.get(note.sender) || []), now.sender]);
+    const participants = [...new Set(thread.participants.flatMap((p) => (renamed.has(p) ? renamed.get(p) : [p])).filter(Boolean))];
+    const columns = {};
+    if (participants.join('\n') !== thread.participants.join('\n')) columns.participants = participants;
+    const made = read.some(({ note }) => thread.title === note.title || thread.title === NotificationClassifier.firstLine(note.body));
+    if (made && read[0].now.threadTitle && read[0].now.threadTitle !== thread.title) columns.title = read[0].now.threadTitle;
+    if (!Object.keys(columns).length) return false;
+    this._threads.update(thread.id, columns);
+    return true;
   }
 
   _touchThread(app, threadKey, { title, participants, url, at }) {

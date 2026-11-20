@@ -51,7 +51,8 @@ class LLMService {
   }
 
   getSlotConfig(slotId) {
-    return this._slotStore.explicitConfig(slotId) || this._resolver.defaultConfig();
+    const own = this._slotStore.explicitConfig(slotId);
+    return own ? { ...own, explicit: true } : this._resolver.defaultConfig();
   }
 
   setSlotConfig(slotId, provider, model) {
@@ -126,6 +127,22 @@ class LLMService {
   getAllAvailableModels() {
     const managedEntries = [this._managed.localEntry(), this._managed.groundingEntry()];
     return AvailableModels.list({ db: this.db, providers: this.providers, managedEntries });
+  }
+
+  async currentAvailableModels() {
+    await this._managed.refreshLocalModels();
+    return this.getAllAvailableModels();
+  }
+
+  async unavailableSlots() {
+    const offered = new Set((await this.currentAvailableModels()).map((row) => `${row.providerId}::${row.modelId}`));
+    const unavailable = [];
+    for (const [slotId, meta] of this.slots) {
+      const config = this._slotStore.explicitConfig(slotId);
+      if (!config || config.provider === ManagedServers.GROUNDING_ID || offered.has(`${config.provider}::${config.model}`)) continue;
+      unavailable.push({ slotId, extensionId: meta.extensionId, label: meta.label, picker: meta.picker || null, provider: config.provider, model: config.model });
+    }
+    return unavailable;
   }
 
   getActiveProviderKey() {

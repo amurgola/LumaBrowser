@@ -8,16 +8,19 @@ class ContextRungBuilder {
     this._estimator = estimator;
   }
 
-  build({ model, runtime, diagnostics, fitRows, tokens, kv }) {
+  build(ctx) {
+    const { fitRows, tokens, kv } = ctx;
     const okRow = FitRows.okRow(fitRows, tokens, kv);
-    if (okRow) return ContextRungBuilder._withTip(ContextRungBuilder._measuredOk(okRow, tokens, kv));
+    if (okRow) return this._measuredOk(ctx, okRow);
     if (FitRows.anyRow(fitRows, tokens, kv)) return ContextRungBuilder._withTip(ContextRungBuilder._measuredFailure(tokens, kv));
-    return this._estimated({ model, runtime, diagnostics, tokens, kv });
+    return this._estimated(ctx);
   }
 
-  static _measuredOk(row, tokens, kv) {
+  _measuredOk(ctx, row) {
+    const { tokens, kv } = ctx;
+    const today = this._estimate(ctx, { vramBytes: row.vramBytes, fullOffload: row.fullOffload === true });
     const measured = row.tokensPerSec != null ? row.tokensPerSec : null;
-    return {
+    const rung = {
       tokens,
       label: ContextLadder.label(tokens),
       source: 'fit',
@@ -27,6 +30,11 @@ class ContextRungBuilder {
       tokensPerSecSource: measured != null ? 'measured' : null,
       vramBytes: row.vramBytes != null ? row.vramBytes : null,
     };
+    if (today.state === 'partial' || today.state === 'no') {
+      const predicted = RungEstimator.predictedTps(today);
+      Object.assign(rung, { state: today.state, tokensPerSec: predicted, tokensPerSecSource: predicted != null ? 'predicted' : null });
+    }
+    return { ...rung, tip: RungTip.for({ ...rung, est: today }) };
   }
 
   static _measuredFailure(tokens, kv) {
@@ -36,8 +44,9 @@ class ContextRungBuilder {
     };
   }
 
-  _estimated({ model, runtime, diagnostics, tokens, kv }) {
-    const est = this._estimator.estimate(model, runtime, diagnostics, tokens, kv);
+  _estimated(ctx) {
+    const { tokens, kv } = ctx;
+    const est = this._estimate(ctx, null);
     const predicted = RungEstimator.predictedTps(est);
     const rung = {
       tokens,
@@ -50,6 +59,10 @@ class ContextRungBuilder {
       vramBytes: est.vramBytes,
     };
     return { ...rung, tip: RungTip.for({ ...rung, est }) };
+  }
+
+  _estimate({ model, runtime, diagnostics, settingsDb, tokens, kv }, measured) {
+    return this._estimator.estimate(model, runtime, diagnostics, tokens, kv, { settingsDb, measured });
   }
 
   static _withTip(rung) {

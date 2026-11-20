@@ -1,6 +1,7 @@
 import PreflightIssues from './PreflightIssues.js';
 import PreflightRow from './PreflightRow.js';
 import PreflightInstall from './PreflightInstall.js';
+import ChatIcons from '../../chat/ChatIcons.js';
 
 export default class PreflightBanner {
   static CHECK_DEBOUNCE_MS = 300;
@@ -104,7 +105,8 @@ export default class PreflightBanner {
   _rowHandlers() {
     return {
       onInstall: (issue, row, btn) => this._install(issue, row, btn),
-      onOpen: (view) => this._openSetupView(view),
+      onOpen: (view, fix) => this._reveal(fix, () => this._openSetupView(view)),
+      onOpenSettings: (fix) => this._reveal(fix, () => this._openAppSettings(fix)),
       onRecheck: () => this.check(),
       onDismissVram: (issue) => this._dismissVram(issue),
     };
@@ -116,7 +118,7 @@ export default class PreflightBanner {
     const onlyLive = issues.every((i) => i.live === 'vram');
     head.innerHTML = `
             <span class="preflight-head-title">${onlyLive ? 'GPU memory is running low' : 'Setup problems found'}</span>
-            <button class="luma-icon-btn luma-icon-btn--sq preflight-x" type="button" aria-label="Dismiss" title="Hide until the tab reloads">×</button>
+            <button class="luma-icon-btn luma-icon-btn--sq preflight-x" type="button" aria-label="Dismiss" title="Hide until the tab reloads">${ChatIcons.x}</button>
         `;
     head.querySelector('.preflight-x').addEventListener('click', () => {
       this._dismissed = true;
@@ -154,10 +156,23 @@ export default class PreflightBanner {
     if (ok) await this.check();
   }
 
+  _reveal(fix, openPage) {
+    const palette = this._api.palette;
+    if (!fix || !fix.settingId || !palette || typeof palette.reveal !== 'function') { openPage(); return; }
+    Promise.resolve(palette.reveal(fix.settingId, fix.selector || null))
+      .then((shown) => { if (!(shown && shown.success)) openPage(); })
+      .catch(() => openPage());
+  }
+
+  _openAppSettings(fix) {
+    if (typeof this._api.openAppSettings !== 'function') return;
+    Promise.resolve(this._api.openAppSettings(fix.tab || 'general')).catch(() => {});
+  }
+
   _openSetupView(view) {
     this._win.dispatchEvent(new this._win.CustomEvent('luma-switch-mode', { detail: 'setup' }));
-    const target = (view === 'image' || view === 'music') ? view : 'settings';
-    const btn = this._doc.querySelector(`#pageNav button[data-view="${target}"]`);
+    const buttons = [...this._doc.querySelectorAll('#pageNav button[data-view]')];
+    const btn = buttons.find((b) => b.dataset.view === view) || buttons.find((b) => b.dataset.view === 'settings');
     if (btn) btn.click();
   }
 }

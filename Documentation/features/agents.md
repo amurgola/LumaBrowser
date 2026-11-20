@@ -11,6 +11,27 @@
 - Connect outside MCP servers over stdio, streamable HTTP or SSE.
 - Text that comes back from tools, web pages and desktop windows is treated
   as content to read, never as commands to follow.
+- A request with several steps gets a plan first, in chat and in Code mode.
+  The plan sits above the reply box, shows which step is being worked on and
+  ticks each one off; fold it to one line, or clear it when it no longer applies.
+- Keep typing while the model works: Enter queues the message, and it is sent
+  by itself when the current reply finishes. Stopping a reply holds the queue.
+
+## Background tasks
+
+Ask for slow work to run in the background ("run this backup in the background
+and tell me what it printed", "queue three pictures so we can keep talking") and
+the model starts it, says what it started and ends its reply, so you can carry on.
+
+- "2 tasks running" sits above the reply box, with what each task is doing and
+  a Cancel button for each. Fold it to one line.
+- When everything a reply started has finished, the results come back by
+  themselves: a slim "Background task finished" line, then the model's report,
+  joined to the reply that started the work. If you went on talking meanwhile,
+  the report arrives after your conversation instead.
+- Image, video and music renders queue and run one at a time, after the reply.
+- Plain chat only for now, not modes, scheduled tasks or shared devices. Tasks
+  do not survive closing the app.
 
 ## Agents
 

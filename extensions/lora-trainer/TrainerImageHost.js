@@ -39,6 +39,13 @@ class TrainerImageHost {
     try { await new ImageSlots(this._service()).stopAll(); } catch (_) {}
   }
 
+  localChatModelRef() {
+    const router = this._globals.chatRouter();
+    const listed = router && typeof router.listModels === 'function' ? router.listModels() : null;
+    const local = ((listed && listed.models) || []).find((model) => model && model.isLocal === true && String(model.ref).startsWith('local::'));
+    return local ? local.ref : null;
+  }
+
   artifact(id) {
     const router = this._globals.chatRouter();
     const deps = router && typeof router.getAgentDeps === 'function' ? router.getAgentDeps() : null;

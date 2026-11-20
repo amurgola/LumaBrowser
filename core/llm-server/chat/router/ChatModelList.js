@@ -22,19 +22,25 @@ class ChatModelList {
   _localModels() {
     const entry = this._service.computeLocalProviderEntry ? this._service.computeLocalProviderEntry() : null;
     if (!entry) return [];
+    const others = (entry.models || []).filter((model) => model && model.id && model.id !== entry.selectedModel);
+    return [this._currentLocal(entry), ...others.map((model) => this._otherLocal(ChatModelRef.LOCAL_PREFIX + model.id, model.luma_label))];
+  }
+
+  _currentLocal(entry) {
     const status = this._service.runtimeServer.getStatus();
     const label = entry.displayName || entry.selectedModel;
-    return [{
+    return {
       ref: ChatModelRef.LOCAL_PREFIX + entry.selectedModel,
       label: `Local · ${label}`,
       displayName: label,
       providerId: 'local',
       providerType: 'openai',
       isLocal: true,
+      current: true,
       runtimeId: entry.managedRuntimeId || null,
       ready: status.state === 'ready',
       serverState: status.state,
-    }];
+    };
   }
 
   _helperModels() {
@@ -74,15 +80,21 @@ class ChatModelList {
     const out = [];
     for (const m of models) out.push(m, ...profiles.filter((p) => p.baseRef === m.ref).map((p) => ChatModelList._profileRow(p, m)));
     for (const p of profiles) {
-      if (ChatModelRef.isLocal(p.baseRef) && !models.some((m) => m.ref === p.baseRef)) out.push(ChatModelList._profileRow(p, this._unlistedLocal(p.baseRef)));
+      if (ChatModelRef.isLocal(p.baseRef) && !models.some((m) => m.ref === p.baseRef)) out.push(ChatModelList._profileRow(p, this._otherLocal(p.baseRef)));
     }
     return out;
   }
 
-  _unlistedLocal(baseRef) {
-    const stem = ChatModelRef.localName(baseRef);
-    const label = (this._service.resolveModelDisplayName && this._service.resolveModelDisplayName(stem)) || stem;
-    return { ref: baseRef, label: `Local · ${label}`, displayName: label, providerId: 'local', providerType: 'openai', isLocal: true, ready: false };
+  _otherLocal(ref, entryLabel = null) {
+    const stem = ChatModelRef.localName(ref);
+    const label = ChatModelList._withoutLocalPrefix(entryLabel)
+      || (this._service.resolveModelDisplayName && this._service.resolveModelDisplayName(stem)) || stem;
+    return { ref, label: `Local · ${label}`, displayName: label, providerId: 'local', providerType: 'openai', isLocal: true, current: false, ready: false };
+  }
+
+  static _withoutLocalPrefix(label) {
+    if (typeof label !== 'string' || !label.trim()) return '';
+    return label.startsWith(ChatModelList.HOST_LOCAL_PREFIX) ? label.slice(ChatModelList.HOST_LOCAL_PREFIX.length) : label;
   }
 
   static _profileRow(profile, base) {
@@ -119,17 +131,19 @@ class ChatModelList {
   }
 
   static _remoteName(model) {
-    const label = typeof model.luma_label === 'string' ? model.luma_label.trim() : '';
-    if (!label) return model.id;
-    return label.startsWith(ChatModelList.HOST_LOCAL_PREFIX) ? label.slice(ChatModelList.HOST_LOCAL_PREFIX.length) : label;
+    return ChatModelList._withoutLocalPrefix(typeof model.luma_label === 'string' ? model.luma_label.trim() : '') || model.id;
   }
 
   _defaultRef(models) {
     const last = this._lastRef();
-    if (last && models.some((m) => m.ref === last)) return last;
+    if (last && models.some((m) => m.ref === last && ChatModelList.canStand(m))) return last;
     const preferred = this._defaultProviderRef(models);
     if (preferred) return preferred;
     return models.length ? models[0].ref : null;
+  }
+
+  static canStand(row) {
+    return !(row.current === false && !row.isProfile);
   }
 
   _defaultProviderRef(models) {

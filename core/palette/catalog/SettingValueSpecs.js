@@ -19,6 +19,7 @@ const SettingValueSpecs = {
   'llm.tool-router-pin': ON_OFF,
   'llm.auto-unload': { format: 'duration', default: 0 },
   'llm.unload-on-vram-pressure': ON_OFF,
+  'llm.vram-warning': { format: 'onoff', default: true },
   'llm.models-dir': { format: 'path', default: null, unsetText: 'Default folder' },
 
   'image.enabled': ON_OFF,

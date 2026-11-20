@@ -6,6 +6,8 @@ Data only: the built-in lazy tool groups, frozen, in canonical prompt order.
 
 ## Members
 
+- Stubs are plain sentences without all-caps emphasis (the `live_artifacts` stub still
+  spells out the call shape, since a model may call it before loading the manual).
 - `StaticGroupTable.GROUPS`: `{ key, label, tools, stub, doc }` for
   `artifacts`, `live_artifacts`, `artifact_data`, `images`, `video`, `music`,
   `web`, `knowledge_base`, `code_validation`, `programmatic`.

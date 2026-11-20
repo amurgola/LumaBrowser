@@ -18,7 +18,9 @@ catalog's `family` strings.
 ## Bases
 
 `sd-1-5`, `sdxl`, `sd-unet` (ambiguous 1.5 or SDXL), `flux`, `flux-line`
-(FLUX.1, Chroma or FLUX.2), `flux2`, `chroma`, `qwen-image` (the 20B line, edit
+(FLUX.1, Chroma or FLUX.2), `flux-kontext` and `flux3` (named by a CivitAI listing through
+[CivitaiLoraBaseMap](../civitai/CivitaiLoraBaseMap.md), never detected: Kontext shares
+FLUX.1's tensor names and FLUX.3 has no fingerprint yet), `flux2`, `chroma`, `qwen-image` (the 20B line, edit
 family), `qwen-image-2-1`, `z-image`, `krea2` (a family contributed by an
 extension), `wan-video`, `minimax-h3`, `minimax-h3-image`.
 

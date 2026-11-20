@@ -12,14 +12,11 @@ the user accepts or dismisses each one
 
 ## Methods
 
-- `new ContactProfiler({ contacts, inbox, snapshots, contexts = null, llm = null })`:
+- `new ContactProfiler({ contacts, inbox, snapshots, llm = null })`:
   `contacts` a [ContactService](ContactService.md), `inbox` an
   [InboxService](../inbox/InboxService.md) (the notification log),
   `snapshots` a [SnapshotRepository](../snapshot/SnapshotRepository.md)
-  (the conversations read so far), `contexts` a
-  [ContextService](../context/ContextService.md) or `null` (files a logged
-  message under a context, as the people memory did when it saw the
-  sender), `llm` the app's
+  (the conversations read so far), `llm` the app's
   [LLMService](../../../core/llm-service/LLMService.md) or `null`.
 - `async learn(contactId)` -> `{ contact, read, added }`: `read` is how many
   messages were looked at, `added` how many new suggestions now wait on the
@@ -42,13 +39,13 @@ the user accepts or dismisses each one
   and body joined by `: `. The conversations are the stored snapshots of
   those messages' activity items (`snapshots.forThreads`), at most
   `MAX_CONVERSATIONS` = 3.
-- `_from(notification, identities, known)`: the sender is read by
+- `static _from(notification, identities)`: the sender is read by
   `ContactService.parse` and must have the app and handle of one of the
-  contact's identities. An address is then enough, in any context. A name
-  must also be in that identity's context, the notification's context being
-  what `contexts.resolve({ url, partition, host, sender, app })` gives
-  (`_contextOf`; none without a context service), so two contacts who share
-  a name in two companies each get only their own messages.
+  contact's identities. The context the conversation was filed under does
+  not matter: one name on one app is one person
+  ([ContactService](ContactService.md)), so a person who writes in two
+  channels filed under two contexts is read from both, while a namesake on
+  another app is a different identity and is left out.
 - `_ask(contact, material)`: `llm.sendCompletion(SLOT, messages, {
   temperature: 0.1, max_tokens: MAX_TOKENS, timeout: TIMEOUT_MS, label:
   'Hub contact: <name>' })` with

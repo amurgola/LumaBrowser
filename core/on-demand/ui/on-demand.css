@@ -113,7 +113,7 @@ body.dragging .od-head { cursor: grabbing; }
 
 .od-steps { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; }
 .od-step { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--text-secondary); }
-.od-step::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: 0 0 auto; animation: od-blink 0.9s ease-in-out infinite; }
+.od-step::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--text-primary); flex: 0 0 auto; animation: od-blink 0.9s ease-in-out infinite; }
 .od-step.done::before { background: var(--success); animation: none; }
 .od-step.fail::before { background: var(--danger); animation: none; }
 .od-step .od-step-arg { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }

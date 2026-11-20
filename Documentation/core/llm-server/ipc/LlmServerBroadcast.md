@@ -25,6 +25,11 @@ which also mutes the writer's own echo.
 event to all renderers on `core.llmServer.convJobs.event` as `{ type: 'changed' | 'finished', payload }`.
 `conversationJobPosted({ conversationId, jobId, messageId })` sends `{ type: 'posted', payload }`
 on the same channel once the outcome message is in the thread.
+`hostTurnStarting({ conversationId, requestId })` sends `{ type: 'turn', payload }` on the
+same channel when the app is about to start a chat turn by itself (a background task's
+results). Ids only: a page that wants the turn asks for its stream
+([HostTurnFollowers](HostTurnFollowers.md)), so the conversation's text goes to the pages
+that follow it and no others.
 
 ## Defaults changes
 

@@ -31,6 +31,8 @@ class AgentSystemPromptBuilder {
       append: [userCustom, systemPromptAppend].filter(Boolean).join('\n'),
       noBrowser: !!options.noBrowser,
       parallelToolCalls: !!options.parallelToolCalls,
+      nativeTools: !!options.nativeTools,
+      role: options.systemRole || null,
       omitExecRules: experiments.has(AgentSystemPromptBuilder.NO_EXEC_RULES),
     };
   }

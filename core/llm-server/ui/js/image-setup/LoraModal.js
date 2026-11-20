@@ -1,15 +1,16 @@
-import ByteFormatter from '../format/ByteFormatter.js';
-import HtmlEscaper from '../format/HtmlEscaper.js';
 import ImageModal from './ImageModal.js';
 import LoraBaseNote from './LoraBaseNote.js';
 import LoraCuratedList from './LoraCuratedList.js';
 import LoraModalMarkup from './LoraModalMarkup.js';
 
 export default class LoraModal extends ImageModal {
+  static DEFAULT_WEIGHT = 1.0;
+
   constructor(panel) {
     super();
     this._panel = panel;
     this._library = [];
+    this._attached = [];
   }
 
   api() {
@@ -19,15 +20,11 @@ export default class LoraModal extends ImageModal {
   async open(modelId) {
     if (this.isOpen()) return;
     this._readModel(modelId);
-    this.show(LoraModalMarkup.html(this._label, this._hasPair));
+    this.show(LoraModalMarkup.html(this._label));
     this._bindElements();
-    this._select.addEventListener('change', () => this._paintBaseNote());
-    await this.refreshLoras();
-    if (this._current && typeof this._current.weight === 'number') this._weight.value = this._current.weight;
     this._preset.checked = !!this._defaults.distilledPreset;
-    await new LoraCuratedList(this, this.wrap.querySelector('.lora-curated')).render();
-    this.wrap.querySelector('[data-act="import-lora"]').addEventListener('click', () => this._importLora());
-    this.wrap.querySelector('[data-act="save"]').addEventListener('click', () => this._save());
+    await this.refreshLoras();
+    if (this.isOpen()) await new LoraCuratedList(this, this.wrap.querySelector('.lora-curated')).render();
   }
 
   _readModel(modelId) {
@@ -35,16 +32,23 @@ export default class LoraModal extends ImageModal {
     this.modelId = modelId;
     this._label = (model && (model.label || model.id)) || modelId;
     this._defaults = (model && model.defaults) || (model && model.manifest && model.manifest.defaults) || {};
-    this._current = (Array.isArray(this._defaults.loras) && this._defaults.loras[0]) || null;
-    this._hasPair = Array.isArray(this._defaults.loras) && this._defaults.loras.length > 1;
+    this._attached = (Array.isArray(this._defaults.loras) ? this._defaults.loras : [])
+      .filter((lora) => lora && lora.name)
+      .map((lora) => ({ name: lora.name, weight: LoraModal.weightOf(lora.weight), ...(lora.highNoise ? { highNoise: true } : {}) }));
     this.family = (model && model.family) || (model && model.manifest && model.manifest.family) || null;
   }
 
   _bindElements() {
-    this._select = this.wrap.querySelector('#loraSel');
-    this._weight = this.wrap.querySelector('#loraWeight');
-    this._preset = this.wrap.querySelector('#loraPreset');
-    this._baseNote = this.wrap.querySelector('.lora-base-note');
+    const q = (selector) => this.wrap.querySelector(selector);
+    this._list = q('.lora-attached');
+    this._add = q('#loraAdd');
+    this._preset = q('#loraPreset');
+    this._add.addEventListener('change', () => this._addPicked());
+    this._list.addEventListener('click', (event) => this._onListClick(event));
+    this._list.addEventListener('change', (event) => this._onWeightChange(event));
+    q('[data-act="import-lora"]').addEventListener('click', () => this._importLora());
+    q('[data-act="browse-civitai"]').addEventListener('click', () => this._browseCivitai());
+    q('[data-act="save"]').addEventListener('click', () => this._save());
   }
 
   checkPreset() {
@@ -56,27 +60,85 @@ export default class LoraModal extends ImageModal {
     await this._panel.refreshModels();
   }
 
-  async refreshLoras(selectName) {
+  async refreshLoras(addName, weight) {
     let loras = [];
     try { const result = await this.api().listLoras(); loras = (result && result.success && result.loras) || []; } catch (_) { loras = []; }
+    if (!this.isOpen()) return;
     this._library = loras;
-    const want = selectName || (this._current && this._current.name) || '';
-    this._select.innerHTML = '<option value="">None</option>' + loras.map((l) => LoraModal._optionHtml(l, want)).join('');
-    this._paintBaseNote();
+    if (addName) this._attach(addName, weight);
+    this._paint();
   }
 
-  static _optionHtml(l, selectedName) {
-    const esc = HtmlEscaper.escape;
-    return `<option value="${esc(l.name)}"${l.name === selectedName ? ' selected' : ''}>${esc(l.name)} · ${ByteFormatter.bytes(l.bytes || 0)}${l.base && l.base.label ? ' · ' + esc(l.base.label) : ''}</option>`;
+  lorasWith(entries) {
+    const names = new Set(entries.map((entry) => entry.name));
+    return [...this._attached.filter((lora) => !names.has(lora.name)), ...entries];
   }
 
-  _paintBaseNote() {
-    if (!this._baseNote) return;
-    const row = this._library.find((l) => l.name === this._select.value) || null;
-    const { text, warn } = LoraBaseNote.describe(row, this.family);
-    this._baseNote.hidden = !text;
-    this._baseNote.textContent = text;
-    this._baseNote.classList.toggle('bad', warn);
+  static weightOf(value) {
+    const weight = parseFloat(value);
+    return (Number.isFinite(weight) && weight > 0) ? weight : LoraModal.DEFAULT_WEIGHT;
+  }
+
+  _attach(name, weight) {
+    this._attached = this.lorasWith([{ name, weight: LoraModal.weightOf(weight) }]);
+  }
+
+  _paint() {
+    this._list.innerHTML = LoraModalMarkup.attachedHtml(this._attached.map((lora) => this._rowView(lora)));
+    this._add.innerHTML = LoraModalMarkup.addOptionsHtml(this._addGroups());
+  }
+
+  _rowView(lora) {
+    const row = this._library.find((entry) => entry.name === lora.name) || null;
+    return {
+      title: (row && row.label) || lora.name,
+      weight: lora.weight,
+      highNoise: !!lora.highNoise,
+      note: LoraModal._noteOf(row, this.family),
+    };
+  }
+
+  static _noteOf(row, family) {
+    if (!row) return { text: 'This LoRA is no longer in the library; it will be skipped until its file is back.', warn: true };
+    const base = LoraBaseNote.describe(row, family);
+    const trigger = row.trigger ? `Trigger words: ${row.trigger}` : '';
+    return { text: [base.text, trigger].filter(Boolean).join(' '), warn: base.warn };
+  }
+
+  _addGroups() {
+    const free = this._library.filter((row) => !this._attached.some((lora) => lora.name === row.name));
+    if (!this.family) return [{ label: '', loras: free }];
+    const fits = (row) => (row.families || []).includes(this.family);
+    const unknown = (row) => !(row.families || []).length;
+    return [
+      { label: 'For this model', loras: free.filter(fits) },
+      { label: 'Base not detected', loras: free.filter(unknown) },
+      { label: 'Other architectures', loras: free.filter((row) => !fits(row) && !unknown(row)) },
+    ];
+  }
+
+  _addPicked() {
+    const name = this._add.value;
+    if (!name) return;
+    this._attach(name);
+    this._paint();
+  }
+
+  _onListClick(event) {
+    const button = event.target.closest && event.target.closest('[data-act="remove-lora"]');
+    if (!button) return;
+    this._attached.splice(LoraModal._indexOf(button), 1);
+    this._paint();
+  }
+
+  _onWeightChange(event) {
+    const input = event.target.closest && event.target.closest('input.lora-weight');
+    const lora = input && this._attached[LoraModal._indexOf(input)];
+    if (lora) lora.weight = LoraModal.weightOf(input.value);
+  }
+
+  static _indexOf(element) {
+    return Number(element.closest('.lora-row').dataset.loraIndex);
   }
 
   async _importLora() {
@@ -88,11 +150,26 @@ export default class LoraModal extends ImageModal {
     } catch (err) { this.setError(err.message); }
   }
 
+  _browseCivitai() {
+    this.setError('');
+    this._panel.civitaiModal.open({
+      type: 'LORA',
+      family: this.family,
+      onClose: (installedNames) => this._attachInstalled(installedNames),
+    });
+  }
+
+  async _attachInstalled(names) {
+    if (!this.isOpen()) return;
+    await this.refreshLoras();
+    if (!this.isOpen()) return;
+    for (const name of names || []) if (this._library.some((row) => row.name === name)) this._attach(name);
+    this._paint();
+  }
+
   async _save() {
     this.setError('');
-    const name = this._select.value || '';
-    const weight = parseFloat(this._weight.value);
-    const loras = name ? [{ name, weight: (Number.isFinite(weight) && weight > 0) ? weight : 1.0 }] : [];
+    const loras = this._attached.map((lora) => ({ ...lora }));
     const button = this.wrap.querySelector('[data-act="save"]');
     button.disabled = true;
     button.textContent = 'Saving…';

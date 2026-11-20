@@ -2,6 +2,7 @@ import HtmlEscaper from '../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 
 export default class AgentForm {
   static BLANK = { name: '', description: '', systemPrompt: '', modelRef: null, tools: [] };
+  static UNAVAILABLE_PREFIX = 'Unavailable: ';
 
   static render(view, on) {
     const form = document.createElement('form');
@@ -58,7 +59,14 @@ export default class AgentForm {
     const esc = HtmlEscaper.escape;
     const first = '<option value="">App default' + (view.defaultRef ? ' (' + esc(view.modelLabel(view.defaultRef)) + ')' : '') + '</option>';
     return [first].concat(view.models.map((m) =>
-      '<option value="' + esc(m.ref) + '"' + (cur.modelRef === m.ref ? ' selected' : '') + '>' + esc(m.label) + '</option>')).join('');
+      '<option value="' + esc(m.ref) + '"' + (cur.modelRef === m.ref ? ' selected' : '') + '>' + esc(m.label) + '</option>'))
+      .concat(AgentForm._missingModelOption(view, cur)).join('');
+  }
+
+  static _missingModelOption(view, cur) {
+    if (!cur.modelRef || view.models.some((m) => m.ref === cur.modelRef)) return [];
+    const esc = HtmlEscaper.escape;
+    return ['<option value="' + esc(cur.modelRef) + '" selected disabled>' + esc(AgentForm.UNAVAILABLE_PREFIX + cur.modelRef) + '</option>'];
   }
 
   static _toolsHtml(groups, selected) {

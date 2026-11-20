@@ -9,9 +9,10 @@ export default class AddonsBrowser {
 
   static INTRO = 'Optional add-ons from lumabyte.com. They install in place and run without a restart.';
 
-  constructor({ pane, hooks }) {
+  static NEEDS_RESTART = { text: 'Restart to run', tone: 'warn', detail: 'Installed, but it could not be started right now. Restart LumaBrowser to run it.' };
+
+  constructor({ pane }) {
     this._pane = pane;
-    this._hooks = hooks;
   }
 
   async load() {
@@ -99,29 +100,28 @@ export default class AddonsBrowser {
   }
 
   async _install(addonId, btn) {
+    const card = btn.closest('.ext-item');
     const originalText = btn.textContent;
+    ExtCard.setOutcome(card, null);
     btn.disabled = true;
     btn.textContent = 'Installing...';
     try {
       const result = await window.ipcBridge.invoke(AddonsBrowser.INSTALL_CHANNEL, addonId);
-      if (result && result.success) this._installed(btn, result, addonId);
-      else this._failed(btn, originalText, (result && result.error) || 'unknown error');
+      if (result && result.success) AddonsBrowser._installed(card, btn, result);
+      else AddonsBrowser._failed(card, btn, originalText, (result && result.error) || 'unknown error');
     } catch (e) {
-      this._failed(btn, originalText, e.message);
+      AddonsBrowser._failed(card, btn, originalText, e.message);
     }
   }
 
-  _installed(btn, result, addonId) {
-    const name = result.name || addonId;
-    btn.textContent = result.activated ? 'Installed' : 'Installed (restart to run)';
-    this._hooks.toast(result.activated
-      ? `"${name}" installed and running.`
-      : `"${name}" installed, but it could not be started right now. Restart the app to activate it.`, result.activated ? 'ok' : 'bad');
+  static _installed(card, btn, result) {
+    btn.textContent = 'Installed';
+    if (!result.activated) ExtCard.setOutcome(card, AddonsBrowser.NEEDS_RESTART);
   }
 
-  _failed(btn, originalText, message) {
+  static _failed(card, btn, originalText, message) {
     btn.disabled = false;
     btn.textContent = originalText;
-    this._hooks.toast(`Could not install the add-on: ${message}`, 'bad');
+    ExtCard.setOutcome(card, { text: 'Install failed', tone: 'bad', detail: message });
   }
 }

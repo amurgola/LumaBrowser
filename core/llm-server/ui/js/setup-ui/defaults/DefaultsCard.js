@@ -105,8 +105,6 @@ export default class DefaultsCard {
         { models: ctx.library.choices(), bound: false, locked: false },
         (defaults.helperModel && defaults.helperModel.modelPath) || '', (path) => ctx.ctxFit.summary(path),
       ),
-      gambitSummary: ctx.cards.gambit.summaryHtml(),
-      gambitBlock: ctx.cards.gambit.blockHtml(),
     };
   }
 
@@ -160,6 +158,14 @@ export default class DefaultsCard {
   _wireOwnSaves() {
     const api = this._ctx.api;
     const doc = this._ctx.doc;
+    const warning = doc.getElementById('defaultVramWarning');
+    if (warning && api.setVramWarning) {
+      warning.addEventListener('change', async () => {
+        this.prefs.vramWarning = !!warning.checked;
+        try { await api.setVramWarning(this.prefs.vramWarning); } catch (_) {}
+        this.renderView(this._ctx.lastDefaults);
+      });
+    }
     const pressure = doc.getElementById('defaultUnloadOnVramPressure');
     if (pressure && api.setUnloadOnVramPressure) {
       pressure.addEventListener('change', async () => {

@@ -39,8 +39,13 @@ const FocusService = require('./focus/FocusService');
 const ContactRepository = require('./contacts/ContactRepository');
 const ContactService = require('./contacts/ContactService');
 const ContactProfiler = require('./contacts/ContactProfiler');
+const ContactTidy = require('./contacts/ContactTidy');
+const CalendarEvidence = require('./summary/CalendarEvidence');
 const SnapshotRepository = require('./snapshot/SnapshotRepository');
+const SlackSidebar = require('./snapshot/SlackSidebar');
+const ConversationLocator = require('./snapshot/ConversationLocator');
 const ConversationReader = require('./snapshot/ConversationReader');
+const ConversationOpener = require('./snapshot/ConversationOpener');
 
 class PersonalHubExtension {
   static OAUTH_CALLBACK_PATH = '/api/hub/oauth/callback';
@@ -48,6 +53,8 @@ class PersonalHubExtension {
   static ENRICH_PATH = '/api/hub/threads/enrich';
   static DEFAULT_BASE_URL = 'http://127.0.0.1:3000';
   static BACKFILL_NOTIFICATIONS = 3000;
+  static FEED_RULES = 2;
+  static FEED_RULES_KEY = 'feed.rules';
 
   constructor(overrides = {}) {
     this._overrides = overrides;
@@ -122,6 +129,7 @@ class PersonalHubExtension {
       emit,
       getRedirectUri: () => this._baseUrl() + PersonalHubExtension.OAUTH_CALLBACK_PATH,
       fetchImpl,
+      now: () => now().getTime(),
     });
     const inbox = new InboxService({
       notifications: new NotificationRepository(db),
@@ -149,20 +157,25 @@ class PersonalHubExtension {
     });
     const connections = { monitor: this._monitor, accounts: new AccountCalendars({ monitor: this._monitor, calendar }), tabs };
     const inbound = new InboundToken(db);
-    const contexts = new ContextService({ contexts: new ContextRepository(db), emit });
-    const contacts = new ContactService({ contacts: new ContactRepository(db), db, emit, now });
+    const contactRows = new ContactRepository(db);
+    const contacts = new ContactService({ contacts: contactRows, db, emit, now });
+    const contexts = new ContextService({ contexts: new ContextRepository(db), emit, people: contacts });
     this._people = (threadId, notificationId) => PersonalHubExtension._observe(threadId, notificationId, { inbox, contexts, contacts });
+    PersonalHubExtension._refit({ db, inbox, contexts, contacts, contactRows });
     PersonalHubExtension._seedContacts({ inbox, contexts, contacts });
     const snapshots = new SnapshotRepository(db);
     const llm = this._overrides.llm || context.llm || null;
-    const reader = new ConversationReader({ tabs, browser: context.browser || null, snapshots, sleep: this._overrides.sleep || undefined });
+    const browser = context.browser || null;
+    const locator = new ConversationLocator({ tabs, slack: new SlackSidebar({ tabs, browser, db }) });
+    const reader = new ConversationReader({ locator, browser, snapshots, sleep: this._overrides.sleep || undefined });
+    const opener = new ConversationOpener({ locator, tabs, browser });
     this._summarizer = new ActivitySummarizer({
-      inbox, contexts, summaries: new SummaryRepository(db), db, llm, reader, people: contacts, emit, now,
+      inbox, contexts, summaries: new SummaryRepository(db), db, llm, reader, people: contacts, meetings: new CalendarEvidence({ calendar, now }), emit, now,
     });
-    const profiler = new ContactProfiler({ contacts, inbox, snapshots, contexts, llm });
+    const profiler = new ContactProfiler({ contacts, inbox, snapshots, llm });
     const focus = new FocusService({ board, calendar, summarizer: this._summarizer, db, emit, now });
     const service = new HubService({
-      calendar, inbox, board, sync: this._scheduler, inbound, connections, contexts, summarizer: this._summarizer, focus, contacts, profiler, reader, now,
+      calendar, inbox, board, sync: this._scheduler, inbound, connections, contexts, summarizer: this._summarizer, focus, contacts, profiler, reader, opener, now,
       openUrl: (url) => this._openUrl(context, url),
     });
     return { service, inbox, inbound, tabs, secrets };
@@ -192,10 +205,24 @@ class PersonalHubExtension {
       const found = inbox.getThread(threadId);
       const last = found && (found.notifications.find((n) => n.id === notificationId) || found.notifications[0]);
       if (!last || !last.sender) return;
-      const contextId = contexts.resolve({ url: last.url, partition: last.partition, host: last.host, sender: last.sender, app: last.app, named: found.thread.context && (found.thread.context.hubContext || found.thread.context.company) });
+      const contextId = contexts.forItem({ ...found.thread, lastNotification: last });
       contacts.observe({ app: last.app, sender: last.sender, contextId, at: last.receivedAt });
     } catch (err) {
       console.error('personal-hub: could not note the sender:', err.message);
+    }
+  }
+
+  static _refit({ db, inbox, contexts, contacts, contactRows }) {
+    try {
+      if (db.get(PersonalHubExtension.FEED_RULES_KEY, 1) >= PersonalHubExtension.FEED_RULES) return;
+      const known = contexts.list();
+      const { changed } = inbox.reclassify();
+      new ContactTidy({ contacts, repository: contactRows }).run(changed, {
+        contextOf: (n) => contexts.resolve({ url: n.url, partition: n.partition, host: n.host, sender: n.sender, app: n.app }, known),
+      });
+      db.set(PersonalHubExtension.FEED_RULES_KEY, PersonalHubExtension.FEED_RULES);
+    } catch (err) {
+      console.error('personal-hub: could not refit the stored feed:', err.message);
     }
   }
 

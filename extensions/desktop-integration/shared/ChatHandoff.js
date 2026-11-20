@@ -2,6 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+const WindowRaiser = require('../../../core/browser/WindowRaiser');
 
 class ChatHandoff {
   static MAX_PROMPT = 100000;
@@ -94,12 +95,7 @@ class ChatHandoff {
     try {
       const tabs = llm.tabViewManager;
       const win = tabs && typeof tabs.windowOfTab === 'function' && llm.pinnedTabId ? tabs.windowOfTab(llm.pinnedTabId) : null;
-      if (win && !win.isDestroyed()) {
-        if (win.isMinimized()) win.restore();
-        win.show();
-        if (process.platform === 'win32') { win.setAlwaysOnTop(true); win.focus(); win.setAlwaysOnTop(false); } else win.focus();
-        return true;
-      }
+      if (WindowRaiser.raise(win)) return true;
     } catch (_) {}
     return this._windows ? this._windows.focusMainWindow() : false;
   }

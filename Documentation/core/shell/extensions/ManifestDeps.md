@@ -17,6 +17,10 @@ All static.
 - `declaredCoreService(manifest, coreServices, depKey)` the service only when declared.
 - `requiredExtIds`, `optionalExtIds`, `extIds`, `requiresExt(manifest, extId)`.
 - `llmSlots(manifest)` the slots of a REQUIRED `core:llm-service` declaration, else `[]`.
+  Each slot is `{ id, label, required?, picker? }`; the optional `picker` is a CSS
+  selector of the slot's model picker on the extension's Settings page (for example
+  `'#ext-ac-modelSelect'`), where a startup alert about the slot's model takes the user
+  ([ExtensionActivator](ExtensionActivator.md) passes it to `registerSlot`).
 - `declaredTables(manifest)` table names declared on `core:database` (strings or `{ name }`).
 
 ## Why

@@ -34,6 +34,12 @@ class ActivityKind {
     return own || ActivityKind.forApp(item && item.app);
   }
 
+  static isDirect(item, sender) {
+    if (ActivityKind.of(item) === ActivityKind.MAIL) return true;
+    const name = String(sender || '').trim().toLowerCase();
+    return !!name && String((item && item.title) || '').trim().toLowerCase() === name;
+  }
+
   static clean(value) {
     const kind = String(value || '').trim().toLowerCase();
     return ActivityKind.ALL.includes(kind) ? kind : '';

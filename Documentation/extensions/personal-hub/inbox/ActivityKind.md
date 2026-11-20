@@ -20,6 +20,16 @@ which is kept in the item's `context`). The activity feed and the chat's
   jira, linear, asana, trello, github, gitlab -> `task`), else `other`.
 - `of(item)`: `item` is `{ app, context? }`; a valid `context.kind` wins over
   the app, anything else falls back to `forApp(item.app)`.
+- `isDirect(item, sender)`: whether an item is one person writing to the
+  user rather than a room many share. True for any mail (`of(item)` is
+  `mail`), and for a conversation whose title is the sender's name (a
+  direct message; compared trimmed, case aside). `item` is `{ app,
+  context?, title }`, `sender` its latest sender; an empty sender is never
+  direct unless the item is a mail.
+  [ContextService](../context/ContextService.md) uses it to let a person's
+  own context file what they send directly, and
+  [CalendarEvidence](../summary/CalendarEvidence.md) to match a meeting to
+  the person who wrote.
 - `clean(value)`: a known kind trimmed and in lower case, or `''` for
   anything else.
 

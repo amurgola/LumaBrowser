@@ -14,8 +14,11 @@ runs use the AI Chat Navigator model.
   showing.
 - `renderSummary(tasks)`: `No tasks yet.` or `3 tasks, 2 active.`
 - `loadModelLabel()`: reads the `ai-chat.navigator` slot through
-  `window.llmSlotAPI`; shows the model list's label, else the model id,
-  `App default (active provider)` with no model set, or `Unavailable` on error.
+  `window.llmSlotAPI`; shows the model list's label
+  ([SlotModelOptions](../../../core/llm-server/ui/js/models/SlotModelOptions.md)`.labelFor`),
+  `Unavailable: <model>` when the slot's own choice is no longer listed, the model
+  id when the list cannot be read, `App default (active provider)` with no model
+  set, or `Unavailable` on error.
 
 ## Globals
 

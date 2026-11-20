@@ -5,13 +5,18 @@ class LoraPresetRecipe {
 
   static cleanLoras(loras) {
     if (!Array.isArray(loras)) return [];
+    const seen = new Set();
     return loras
       .filter((l) => l && l.name)
       .map((l) => ({
         name: String(l.name),
         weight: (typeof l.weight === 'number' && l.weight > 0) ? l.weight : 1.0,
         ...(l.highNoise ? { highNoise: true } : {}),
-      }));
+      }))
+      .filter((l) => {
+        const key = `${l.name}|${l.highNoise ? 'high' : 'low'}`;
+        return seen.has(key) ? false : !!seen.add(key);
+      });
   }
 
   static curatedPreset(loras, loraCatalog) {

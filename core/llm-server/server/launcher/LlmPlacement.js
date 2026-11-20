@@ -29,12 +29,25 @@ class LlmPlacement {
     return { cudaDevice, diagnostics };
   }
 
+  previewCudaDevice({ diagnostics, settingsDb, plan }) {
+    try {
+      const need = LlmPlacement.placementNeed({ diag: diagnostics }, plan);
+      return this._vram.preview(LlmPlacement._request({ settingsDb, diag: diagnostics }, need)).cudaDevice;
+    } catch (_) {
+      return null;
+    }
+  }
+
   _reserve(ctx, requiredBytes) {
-    return this._vram.reserve({
-      serverId: 'llm', role: 'llm', allowSplit: true,
+    return this._vram.reserve(LlmPlacement._request(ctx, requiredBytes));
+  }
+
+  static _request(ctx, requiredBytes) {
+    return {
+      serverId: 'llm', role: 'llm', allowSplit: true, softSingle: true,
       requiredBytes,
       settingsDb: ctx.settingsDb, diagnostics: ctx.diag,
-    });
+    };
   }
 
   static placementNeed(ctx, plan) {

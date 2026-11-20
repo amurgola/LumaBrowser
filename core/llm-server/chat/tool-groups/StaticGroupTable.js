@@ -15,7 +15,7 @@ class StaticGroupTable {
       key: 'live_artifacts',
       label: 'Live modules',
       tools: ['create_live_artifact', 'edit_artifact'],
-      stub: 'Render an INTERACTIVE inline widget: calculator, todo app, game, live chart, toggle/slider, small simulation, or a live lookup fed by a website/JSON API. Call create_live_artifact with { title, html (a FRAGMENT, no <!DOCTYPE>/<html>/<body>), js }, NOT a single "content" string and NOT a full HTML document. Widgets can persist data across restarts via an injected async `store` and pull live web pages/APIs via an injected `luma` bridge (no CORS limits).',
+      stub: 'Render an interactive inline widget: calculator, todo app, game, live chart, toggle/slider, small simulation, or a live lookup fed by a website/JSON API. Call create_live_artifact with { title, html (a fragment, no <!DOCTYPE>/<html>/<body>), js }, not a single "content" string and not a full HTML document. Widgets can persist data across restarts via an injected async `store` and pull live web pages/APIs via an injected `luma` bridge (no CORS limits).',
       doc: ArtifactManuals.LIVE_ARTIFACT,
     },
     {
@@ -57,7 +57,7 @@ class StaticGroupTable {
       key: 'knowledge_base',
       label: 'Knowledge base',
       tools: ['search_knowledge_base'],
-      stub: 'Search the user\'s OWN uploaded documents (PDFs, notes, pages) for relevant passages; use when they ask about "my docs" or a file they added (search_knowledge_base).',
+      stub: 'Search the user\'s own uploaded documents (PDFs, notes, pages) for relevant passages; use when they ask about "my docs" or a file they added (search_knowledge_base).',
       doc: UtilityManuals.KNOWLEDGE_BASE,
     },
     {

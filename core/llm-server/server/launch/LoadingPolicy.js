@@ -24,15 +24,26 @@ class LoadingPolicy {
     return Number(diagnostics && diagnostics.memory && diagnostics.memory.totalBytes) || 0;
   }
 
-  static _decideMmap(policy, { overrides, moe, offload }) {
+  static _decideMmap(policy, { overrides, moe, offload, flags }) {
     policy.moeNeedsMmap = moe.cpuMoeEnabled
       && (policy.ramTotalBytes <= 0 || moe.cpuPoolBytes > policy.ramTotalBytes * LoadingPolicy.MOE_RAM_FIT_FRACTION);
     const pin = overrides.ramPin;
-    const pinNoMmapOk = !!pin && offload.fullOffload && !moe.cpuMoeEnabled
-      && (Number(pin.freeBytes) || 0) >= moe.budgetWeightsBytes + LoadingPolicy.PIN_TRANSIENT_SLACK_BYTES;
+    const absorbs = (bytes) => (Number(pin && pin.freeBytes) || 0) >= bytes + LoadingPolicy.PIN_TRANSIENT_SLACK_BYTES;
+    const pinNoMmapOk = !!pin && offload.fullOffload && !moe.cpuMoeEnabled && absorbs(moe.budgetWeightsBytes);
+    const gpuReadsPool = LoadingPolicy._gpuReadsHostPool(moe);
+    const pinnedPool = !!pin && gpuReadsPool && !policy.moeNeedsMmap && !overrides.useMmap;
+    const pinPoolCopyOk = pinnedPool && absorbs(moe.cpuPoolBytes);
     policy.ramPinned = !!pin;
-    policy.useMmap = !!overrides.useMmap || policy.moeNeedsMmap || (!!pin && !pinNoMmapOk);
+    policy.useMmap = !!overrides.useMmap || policy.moeNeedsMmap || (!!pin && !pinNoMmapOk && !pinPoolCopyOk);
+    policy.ramPinSlowsDecode = pinnedPool && !pinPoolCopyOk;
+    policy.ramPinPoolCopyBytes = pinPoolCopyOk ? moe.cpuPoolBytes : 0;
+    policy.moeStageOff = !!(flags && flags.moeStage) && gpuReadsPool && !policy.moeNeedsMmap;
   }
+
+  static _gpuReadsHostPool(moe) {
+    return moe.cpuMoeEnabled && !!(moe.gpuCache && moe.gpuCache.enabled);
+  }
+
 
   static _spellNoMmap(policy, flags) {
     policy.loadModeArgs = [];

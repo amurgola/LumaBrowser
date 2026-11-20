@@ -11,9 +11,9 @@ source on (the `docsSource: true` flag every chat-UI turn carries, see
   telling the model the documentation is attached and to search it before
   answering anything about LumaBrowser itself. The tool rides
   [AgentTurnDispatch](AgentTurnDispatch.md)'s `extraTools` like a mode's own
-  tools (its own handler, forced active, documented from its schema), and its
-  name is added to a restricted allow-list so a gear-panel denylist cannot drop
-  it;
+  tools (its own handler, forced active, documented from its schema), and
+  AgentTurnDispatch adds its name to a restricted allow-list so a gear-panel
+  denylist cannot drop it;
 - on the plain path (Tools off), a retrieval pre-pass: the passages matching the
   last user message are folded into the system head
   (`ChatStyleDocs.appendToSystemHead`) inside a `<lumabrowser_documentation>`
@@ -36,8 +36,6 @@ untagged chat never pays for it.
 - `note`: the prompt note (`DocsSourceGrant.NOTE`): search before answering about LumaBrowser, cite the page, and
   hand an extension the user wants made to `delegate_task` ([DelegationTools](../delegation/DelegationTools.md))
   rather than writing its files into the answer.
-- `DocsSourceGrant.allowing(allowedTools, grant)`: the allow-list with the tool
-  added when it is an array and a grant exists; `null` stays `null`.
 - `prepass(messages)`: the plain-path messages with the matching passages in the
   system head (`PREPASS_K` = 4 passages, the query being the last user message's
   trailing `MAX_QUERY_CHARS` = 2000 characters); the same array when there is no

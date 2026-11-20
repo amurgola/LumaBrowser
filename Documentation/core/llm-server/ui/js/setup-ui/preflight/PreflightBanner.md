@@ -31,9 +31,17 @@ Helpers: [PreflightIssues](PreflightIssues.md), [VramIssue](VramIssue.md),
 | `issue.fix.kind` | Button | Action |
 |---|---|---|
 | `install-runtime` | Download and install | `installRuntime(runtimeId)` on the `llm` / `image` / `music` surface, progress from that surface's `onRuntimeEvent`, then re-check. The row is kept untouched across re-renders while it installs. |
-| `open-view` | Open Setup | dispatches `luma-switch-mode` with detail `'setup'`, then clicks `#pageNav button[data-view=image|music|settings]` |
+| `open-view` | Open Setup | dispatches `luma-switch-mode` with detail `'setup'`, then clicks the `#pageNav` button whose `data-view` is the fix's view (`image`, `music`, an extension tab such as `ext:agent-manager`), or the `settings` one when there is no such button |
+| `open-settings` | Open Settings | `api.openAppSettings(fix.tab or 'general')`, the browser's Settings modal (skipped when the API lacks it) |
 | `sysdeps` | Check again (+ Copy) | re-check; Copy puts the `aptLine` on the clipboard |
 | `dismiss-vram` | Dismiss | hides the card's row and calls `dismissVramPressure(card)` |
+
+An `open-view` or `open-settings` fix that names `settingId` (the `selection`
+issues) goes through `_reveal(fix, openPage)` first:
+`api.palette.reveal(settingId, selector)` opens the page, opens the folds around
+the control and highlights it. Without a `settingId`, without `api.palette.reveal`
+(the web client), or when the reveal does not answer `success`, the action in the
+table runs instead.
 
 The head's close button hides the banner until the tab reloads. A banner of only
 VRAM rows reads "GPU memory is running low", otherwise "Setup problems found".
@@ -41,6 +49,6 @@ VRAM rows reads "GPU memory is running low", otherwise "Setup problems found".
 ## Globals
 
 Reads `api` (`getPreflight`, `getVramPressure`, `dismissVramPressure`,
-`onModelEvent`, `onRuntimeEvent`, `installRuntime`, `.image`, `.music`).
+`onModelEvent`, `onRuntimeEvent`, `installRuntime`, `openAppSettings`, `.image`, `.music`).
 Listens on `window` `luma-models-changed`; dispatches `luma-switch-mode` on
 `window`; appends to `document.body`.

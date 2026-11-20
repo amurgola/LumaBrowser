@@ -26,7 +26,9 @@ and task board. `mcp-tools.js` exports `{ tools: HubTools.TOOLS, handler }`.
   ([ActivitySummarizer](summary/ActivitySummarizer.md)). The one to read
   before `hub_list_threads` to understand what is going on.
 - `hub_list_contexts`: the user's contexts with the rules that file
-  accounts, tabs, calendars and trackers under each
+  activity under each (a conversation by name, a word in a mail's subject,
+  a link, a signed-in tab, a
+  domain, an app, a calendar, a task tracker)
   ([ContextService](context/ContextService.md)).
 - `hub_list_contacts { query, limit = 50 }`: the people and organisations
   the Hub has seen in the user's activity, `{ contacts, suggestions, kinds
@@ -67,12 +69,16 @@ and task board. `mcp-tools.js` exports `{ tools: HubTools.TOOLS, handler }`.
   replies with the focus view), `hub_merge_contacts { intoId, fromId }`
   (records that two contacts are the same person: everything `fromId` goes
   by moves to `intoId`; only when the user confirms it; replies with the
-  merged `contact`), `hub_update_contact { id, kind?, fields?, addDetails?,
-  addNote?, notes? }` (records what the user told the model about a
+  merged `contact`), `hub_update_contact { id, kind?, contextId?, fields?,
+  addDetails?, addNote?, notes? }` (records what the user told the model about a
   contact; only facts the user stated or confirmed, anything inferred goes
   through `hub_suggest_contact_details`; every argument but `id` is passed
   to `saveContactProfile` as the patch, so only what is given changes;
-  `kind` is `person` or `general`, `fields` holds a person's `relation`,
+  `kind` is `person` or `general`, `contextId` is the context the contact
+  belongs to (a `ctx_...` id or a context name from `hub_list_contexts`,
+  for example the company a person works for; mail and direct messages from
+  them are then filed there, and an empty value clears it), `fields` holds a
+  person's `relation`,
   `birthday` and `sex` or a general contact's `what` and `website`, an
   empty value clearing a field; `addDetails` adds or updates details by
   label, an empty value removing one; `addNote` adds a line, `notes`

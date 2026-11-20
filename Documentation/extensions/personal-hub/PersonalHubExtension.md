@@ -35,18 +35,27 @@ when a one-line notification is not enough. Agents reach it through the
   [AccountCalendars](connections/AccountCalendars.md)), [InboxService](inbox/InboxService.md),
   [BoardService](board/BoardService.md) with the ClickUp provider,
   [HubSyncScheduler](sync/HubSyncScheduler.md), [InboundToken](InboundToken.md),
-  [ContextService](context/ContextService.md),
-  [ContactService](contacts/ContactService.md) (given `now`, seeded by
-  `_seedContacts`), one [SnapshotRepository](snapshot/SnapshotRepository.md)
-  shared by the [ConversationReader](snapshot/ConversationReader.md) (over
-  the session tabs and `context.browser`) and the
+  [ContactService](contacts/ContactService.md) (given `now`),
+  [ContextService](context/ContextService.md) (built after the contact
+  service and given it as `people`, so a person's own context can file what
+  they send directly), then `_refit` and `_seedContacts` over the stored
+  feed, one [SnapshotRepository](snapshot/SnapshotRepository.md)
+  shared by the [ConversationReader](snapshot/ConversationReader.md) and the
   [ContactProfiler](contacts/ContactProfiler.md) (over the contact service,
-  the inbox, the context service and the LLM service),
+  the inbox and the LLM service), one
+  [ConversationLocator](snapshot/ConversationLocator.md) (over the session
+  tabs, with a [SlackSidebar](snapshot/SlackSidebar.md) over the tabs,
+  `context.browser` and the extension's database) shared by the
+  reader and the [ConversationOpener](snapshot/ConversationOpener.md) (both
+  over `context.browser`),
   [ActivitySummarizer](summary/ActivitySummarizer.md) (over `context.llm`,
-  or `null` without one, with the reader as `reader` and the contact service
-  as `people`), [FocusService](focus/FocusService.md)
-  and the [HubService](HubService.md) facade (given `contacts`, `profiler`
-  and `reader` too); awaits `secrets.open()` so the stored tokens are decrypted into memory
+  or `null` without one, with the reader as `reader`, the contact service
+  as `people` and a [CalendarEvidence](summary/CalendarEvidence.md) over the
+  calendar service as `meetings`), [FocusService](focus/FocusService.md)
+  and the [HubService](HubService.md) facade (given `contacts`, `profiler`,
+  `reader` and `opener` too). The calendar service is given the
+  extension's clock (`now`, as milliseconds), so a test's clock reaches the
+  sync window. `activate` awaits `secrets.open()` so the stored tokens are decrypted into memory
   before the schedulers start and the first sync asks for one; subscribes to
   `context.extensions['notification-interceptor'].onIngest` so every
   intercepted notification lands in the activity feed, together with the
@@ -69,12 +78,23 @@ when a one-line notification is not enough. Agents reach it through the
 - `static _observe(threadId, notificationId, { inbox, contexts, contacts })`:
   whoever sent the notification that just reached a feed item is remembered
   as a person. It reads the item, takes the notification of that id (else
-  the newest), resolves its context
-  ([ContextService](context/ContextService.md)`.resolve` over the
-  notification's url, partition, host, sender and app, and the context the
-  item names itself) and calls `contacts.observe({ app, sender, contextId,
-  at })`. A notification with no sender is skipped. Never throws (a failure
-  is logged): the feed must not depend on it.
+  the newest), files the item with that notification as its last one
+  ([ContextService](context/ContextService.md)`.forItem`, so the context is
+  the one the feed shows the item under) and calls `contacts.observe({ app,
+  sender, contextId, at })`. A notification with no sender is skipped.
+  Never throws (a failure is logged): the feed must not depend on it.
+- `static _refit({ db, inbox, contexts, contacts, contactRows })`: once
+  after the rules that read a notification changed, the stored feed is read
+  again with them and the people memory is put right. It runs when the
+  setting `feed.rules` (`FEED_RULES_KEY`, 1 when never set) is below
+  `FEED_RULES` = 2: [InboxService](inbox/InboxService.md)`.reclassify()`,
+  then [ContactTidy](contacts/ContactTidy.md)`.run(changed, { contextOf })`
+  with `contextOf` resolving a notification's url, partition, host, sender
+  and app (`ContextService.resolve`), then the setting is raised to
+  `FEED_RULES`. Never throws: a failure is logged and the setting stays, so
+  the pass is tried again at the next start. `FEED_RULES` is to be raised
+  whenever [NotificationClassifier](inbox/NotificationClassifier.md) reads
+  a sender or a title differently.
 - `static _seedContacts({ inbox, contexts, contacts })`: the first time
   (while there is no contact), the people memory is filled from the
   notification log already kept: the newest `BACKFILL_NOTIFICATIONS` = 3000
@@ -133,7 +153,8 @@ mount, `http://127.0.0.1:3000` is assumed.
   and `addStatusColumn`, the activity feed's `threadToTask` and
   `setThreadsState`, the distilled view's `listContexts`, `listSummaries`,
   `summarizeNow`, `getFocus` and `setFocusTask`, `snapshotThread` (the
-  activity widget's `Read`), `listContacts` and `settingsInvoke` (the
+  activity widget's `Read`), `openThread` (its `Open`), `listContacts` and
+  `settingsInvoke` (the
   settings panel's one call), and
   `listConnections` and `showConnectionTab` for the widgets' signed-out
   strip).

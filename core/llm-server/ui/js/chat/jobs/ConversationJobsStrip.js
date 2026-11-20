@@ -1,23 +1,20 @@
 import ConversationJobsHtml from './ConversationJobsHtml.js';
+import ComposerStrip from '../composer/ComposerStrip.js';
 
-export default class ConversationJobsStrip {
+export default class ConversationJobsStrip extends ComposerStrip {
+  static ORDER = 10;
+
   constructor(ctx) {
-    this._ctx = ctx;
+    super(ctx, 'cm-job-strip', ConversationJobsStrip.ORDER);
     this._jobs = [];
     this._stopping = new Set();
-    this._element = null;
-    this._bar = null;
+    this._collapsed = false;
   }
 
   reset() {
     this._jobs = [];
     this._stopping.clear();
-    this._unmount();
-  }
-
-  attach(bar) {
-    this._bar = bar;
-    this._paint();
+    this.unmount();
   }
 
   async refresh() {
@@ -26,7 +23,7 @@ export default class ConversationJobsStrip {
     const jobs = await ConversationJobsStrip._list(api, conversationId);
     if (state.activeId !== conversationId) return;
     this._jobs = jobs;
-    this._paint();
+    this.paint();
   }
 
   onEvent(ev) {
@@ -37,43 +34,25 @@ export default class ConversationJobsStrip {
     this._jobs = this._jobs.filter((job) => job.id !== payload.job.id);
     if (ev.type === 'changed') this._jobs.push(payload.job);
     else this._stopping.delete(payload.job.id);
-    this._paint();
+    this.paint();
   }
 
-  _paint() {
-    if (!this._bar) return;
-    if (!this._jobs.length) { this._unmount(); return; }
-    if (!this._element) this._createElement();
-    this._element.innerHTML = ConversationJobsHtml.build(this._jobs, this._stopping);
-    this._place();
+  html() {
+    return this._jobs.length ? ConversationJobsHtml.build(this._jobs, this._stopping, { collapsed: this._collapsed }) : '';
   }
 
-  _createElement() {
-    this._element = document.createElement('div');
-    this._element.className = 'cm-job-strip';
-    this._element.addEventListener('click', (e) => this._onClick(e));
-  }
-
-  _place() {
-    const composer = this._bar.querySelector('.cm-composer');
-    const host = composer ? composer.parentNode : this._bar;
-    if (this._element.parentNode === host) return;
-    if (composer) host.insertBefore(this._element, composer);
-    else host.appendChild(this._element);
-  }
-
-  _unmount() {
-    if (this._element && this._element.parentNode) this._element.parentNode.removeChild(this._element);
-    this._element = null;
-  }
-
-  _onClick(e) {
-    const button = e.target && e.target.closest ? e.target.closest('[data-job-cancel]') : null;
+  onClick(event) {
+    if (ComposerStrip.target(event, 'data-jobs-toggle')) {
+      this._collapsed = !this._collapsed;
+      this.paint();
+      return;
+    }
+    const button = ComposerStrip.target(event, 'data-job-cancel');
     const { api } = this._ctx;
     if (!button || !api.convJobs || typeof api.convJobs.cancel !== 'function') return;
     const id = button.getAttribute('data-job-cancel');
     this._stopping.add(id);
-    this._paint();
+    this.paint();
     Promise.resolve(api.convJobs.cancel(id)).catch(() => {});
   }
 

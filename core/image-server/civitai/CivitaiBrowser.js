@@ -2,6 +2,7 @@ const CivitaiAuth = require('../../shared/download/CivitaiAuth');
 const PromiseTtlCache = require('../../shared/cache/PromiseTtlCache');
 const CivitaiBaseMap = require('./CivitaiBaseMap');
 const CivitaiClient = require('./CivitaiClient');
+const CivitaiLoraBaseMap = require('./CivitaiLoraBaseMap');
 const CivitaiModelResolver = require('./CivitaiModelResolver');
 const CivitaiSearchView = require('./CivitaiSearchView');
 
@@ -11,6 +12,12 @@ class CivitaiBrowser {
   static DEFAULT_SORT = 'Most Downloaded';
 
   static DEFAULT_TYPES = Object.freeze(['Checkpoint']);
+
+  static LORA_TYPE = 'LORA';
+
+  static LORA_TYPES = Object.freeze(['LORA', 'LoCon']);
+
+  static FAMILY_FILTER = 'family';
 
   static CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -23,7 +30,7 @@ class CivitaiBrowser {
     { id: 'flux', label: 'Flux / Chroma', baseModels: ['Flux.1 D', 'Flux.1 S', 'Flux.1 Krea', 'Flux.1 Kontext', 'Chroma'] },
     { id: 'qwen', label: 'Qwen-Image', baseModels: ['Qwen', 'Qwen 2.1'] },
     { id: 'anima', label: 'Anima', baseModels: ['Anima'] },
-    { id: 'video', label: 'Video (browse only)', baseModels: ['Wan Video 2.2 T2V-A14B', 'Wan Video 2.2 I2V-A14B', 'Wan Video 2.2 TI2V-5B', 'Wan Video 14B t2v', 'Wan Video 14B i2v 480p', 'Wan Video 14B i2v 720p', 'LTXV', 'LTXV2', 'LTXV 2.3', 'LTXV 2.5', 'MiniMax H3'] },
+    { id: 'video', label: 'Video (browse only)', loraLabel: 'Video', baseModels: ['Wan Video 2.2 T2V-A14B', 'Wan Video 2.2 I2V-A14B', 'Wan Video 2.2 TI2V-5B', 'Wan Video 14B t2v', 'Wan Video 14B i2v 480p', 'Wan Video 14B i2v 720p', 'LTXV', 'LTXV2', 'LTXV 2.3', 'LTXV 2.5', 'MiniMax H3'] },
     { id: 'any', label: 'Any base', baseModels: [] },
   ]);
 
@@ -34,26 +41,45 @@ class CivitaiBrowser {
     this._details = new PromiseTtlCache({ ttlMs: CivitaiBrowser.CACHE_TTL_MS, capacity: 100, now });
   }
 
-  static filters() {
+  static filters({ lora = false, family = null } = {}) {
+    const bases = CivitaiBrowser.BASE_FILTERS.map(({ id, label, loraLabel }) => ({ id, label: (lora && loraLabel) || label }));
+    if (lora && family && CivitaiLoraBaseMap.baseModelsForFamily(family).length) bases.unshift({ id: CivitaiBrowser.FAMILY_FILTER, label: 'Fits this model' });
     return {
-      bases: CivitaiBrowser.BASE_FILTERS.map(({ id, label }) => ({ id, label })),
+      bases,
       sorts: [...CivitaiClient.SORTS],
       periods: [...CivitaiClient.PERIODS],
-      types: [{ id: 'Checkpoint', label: 'Checkpoints' }, { id: 'LORA', label: 'LoRAs (browse only)' }],
+      types: [{ id: 'Checkpoint', label: 'Checkpoints' }, { id: CivitaiBrowser.LORA_TYPE, label: 'LoRAs' }],
     };
   }
 
   search(args = {}) {
-    const filters = this._listFilters(args || {});
-    return this._pages.get(JSON.stringify(filters), async () => ({ ...CivitaiSearchView.page(await this._client.listModels(filters)), filters: CivitaiBrowser.filters() }));
+    const a = args || {};
+    const lora = CivitaiBrowser._isLoraSearch(a.types);
+    const filters = this._listFilters(a, lora);
+    return this._pages.get(JSON.stringify(filters), async () => ({
+      ...CivitaiSearchView.page(await this._client.listModels(filters)),
+      filters: CivitaiBrowser.filters({ lora, family: a.family || null }),
+    }));
   }
 
-  _listFilters(a) {
+  static _isLoraSearch(types) {
+    return Array.isArray(types) && types.includes(CivitaiBrowser.LORA_TYPE);
+  }
+
+  static _baseModels(a, lora) {
+    const forFamily = lora && a.base === CivitaiBrowser.FAMILY_FILTER && a.family ? CivitaiLoraBaseMap.baseModelsForFamily(a.family) : [];
+    if (forFamily.length) return forFamily;
     const base = CivitaiBrowser.BASE_FILTERS.find((b) => b.id === a.base) || CivitaiBrowser.BASE_FILTERS[0];
-    const baseModels = base.baseModels === null ? CivitaiBaseMap.importableBaseModels() : base.baseModels;
+    if (base.baseModels !== null) return base.baseModels;
+    return lora ? CivitaiLoraBaseMap.baseModels() : CivitaiBaseMap.importableBaseModels();
+  }
+
+  _listFilters(a, lora) {
+    const baseModels = CivitaiBrowser._baseModels(a, lora);
+    const types = Array.isArray(a.types) && a.types.length ? a.types : [...CivitaiBrowser.DEFAULT_TYPES];
     return {
       query: a.query ? String(a.query).trim() : undefined,
-      types: Array.isArray(a.types) && a.types.length ? a.types : [...CivitaiBrowser.DEFAULT_TYPES],
+      types: lora ? [...CivitaiBrowser.LORA_TYPES] : types,
       baseModels: baseModels.length ? baseModels : undefined,
       sort: CivitaiClient.SORTS.includes(a.sort) ? a.sort : CivitaiBrowser.DEFAULT_SORT,
       period: CivitaiClient.PERIODS.includes(a.period) ? a.period : undefined,

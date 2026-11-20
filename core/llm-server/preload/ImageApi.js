@@ -64,6 +64,7 @@ class ImageApi extends PreloadSection {
       importLora: (args) => ipcRenderer.invoke('core.imageServer.importLora', args || {}),
       loraCatalog: () => ipcRenderer.invoke('core.imageServer.loraCatalog'),
       downloadLora: (args) => ipcRenderer.invoke('core.imageServer.downloadLora', args),
+      importLoraFromCivitai: (args) => ipcRenderer.invoke('core.imageServer.importLoraFromCivitai', args),
       setModelLoras: (args) => ipcRenderer.invoke('core.imageServer.setModelLoras', args),
     };
   }

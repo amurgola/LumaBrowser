@@ -8,7 +8,8 @@ file list [RamPinService](../../shared/runtime/rampin/RamPinService.md) locks
 
 ## Methods
 
-- `new LlmPinTarget({ scanner })`; `scanner` defaults to `LlmModelsScanner.shared`.
+- `new LlmPinTarget({ scanner, planCheck })`; `scanner` defaults to `LlmModelsScanner.shared`,
+  `planCheck` to a new [LlmPinPlanCheck](LlmPinPlanCheck.md).
 - `resolve(llmServerService)` reads `getDefaults().modelPath` and
   `getModelsDirConfig().effectivePath`, finds the scanned model whose
   `weights[0].path` is the default, and resolves
@@ -16,6 +17,9 @@ file list [RamPinService](../../shared/runtime/rampin/RamPinService.md) locks
   - `files` every entry with a path in `weights`, `mmproj`, `drafter`, `mtp`
     (in that order, `LlmPinTarget.FILE_GROUPS`), missing sizes as 0;
   - `totalBytes` the model's `totalBytes`, else the file sum.
+  Before returning it asks `planCheck.refusal(service, model, { pinBytes: totalBytes, pinnedAlready })`
+  (`pinnedAlready` from `service.ramPin.isActiveFor(modelPath)`); a reason comes back as `{ error: reason }`,
+  so the model is not pinned and the Defaults card's caption shows why.
 - Errors resolve `{ error }`: `No default model is selected.`,
   `Model scan failed: <reason>`,
   `The default model path no longer matches a scanned model.`,

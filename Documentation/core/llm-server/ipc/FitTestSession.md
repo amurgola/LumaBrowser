@@ -9,7 +9,8 @@ Runs the empirical fit test from the LLM tab, one at a time.
 - `new FitTestSession({ llmServerService, gather?, detector?, scanner?, launcher?, fitTester?, resolveCudaDevice?, log? })`
   (defaults `SystemDiagnostics.gather`, `LlmRuntimeDetector.shared`,
   `LlmModelsScanner.shared`, `ServerLauncher.shared`, `FitTester.shared`, `CudaPin.resolveCudaDevice`).
-- `running` getter.
+- `running` getter. The same state is mirrored on `llmServerService.fitTestRunning` (set as a run begins,
+  cleared as it ends), which is how code outside this IPC layer, such as the Model Testing add-on, knows to hold off.
 - `run({ modelPath }, send)`:
   1. refuses `A fit test is already running.` and `modelPath is required.`;
   2. gathers fresh diagnostics (hardware line from `HardwareSummary`), detects

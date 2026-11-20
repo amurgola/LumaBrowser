@@ -42,3 +42,11 @@ drift test renders the real builders so a renamed id breaks the build instead of
 a search result.
 
 Tune entries for Top P, Top K, Min P, Repeat penalty and Presence penalty.
+
+The helper model rows of Chat defaults' More settings (`llm.helper-model`,
+`llm.helper-model-file`, `llm.helper-context`) have entries too; the startup model
+alert reveals `llm.helper-model-file` when the helper's model is gone.
+
+`llm.vram-warning` ("Low VRAM warning", key `core.llm.vramWarning`, path LLM > Chat
+defaults > More settings) targets the `#defaultVramWarning` toggle, next to
+`llm.unload-on-vram-pressure`.

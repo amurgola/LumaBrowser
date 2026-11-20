@@ -56,7 +56,7 @@ class MoeExpertPlan {
     this.fullWeightsEstimatedBytes = this._fullWeightsPrice();
     this.cpuMoeAuto = !this.cpuMoeRequested && !overrides.noAutoCpuMoe && !!this.moeSplit
       && this.cpuMoeFlagSupported && budget.totalVram > 0
-      && this.fullWeightsEstimatedBytes > budget.vramAvailableBytes;
+      && this.fullWeightsEstimatedBytes > budget.fullOffloadRoomBytes;
     this.cpuMoeEnabled = (this.cpuMoeRequested || this.cpuMoeAuto) && this.cpuMoeFlagSupported && !!this.moeSplit;
   }
 

@@ -11,6 +11,11 @@ const WorkspaceFiles = require('./chat/WorkspaceFiles');
 const WorkspaceFileIpcHandlers = require('./chat/workspace/WorkspaceFileIpcHandlers');
 const ConversationJobPoster = require('./chat/jobs/ConversationJobPoster');
 const ConversationJobs = require('./chat/jobs/ConversationJobs');
+const BackgroundTasks = require('./chat/tasks/BackgroundTasks');
+const BackgroundTaskTurn = require('./chat/tasks/BackgroundTaskTurn');
+const BackgroundTaskWake = require('./chat/tasks/BackgroundTaskWake');
+const ChatIdleWait = require('./chat/tasks/ChatIdleWait');
+const HostTurnFollowers = require('./ipc/HostTurnFollowers');
 const CuratedModelCatalog = require('./models/CuratedModelCatalog');
 const ServerLauncher = require('./server/ServerLauncher');
 const AddonModelInstaller = require('./ipc/AddonModelInstaller');
@@ -28,7 +33,6 @@ const ConversationExporter = require('./ipc/ConversationExporter');
 const DebugLogsView = require('./ipc/DebugLogsView');
 const ExistingLlmModels = require('./ipc/ExistingLlmModels');
 const FitTestSession = require('./ipc/FitTestSession');
-const GambitSession = require('./ipc/GambitSession');
 const HfRepoBrowser = require('./ipc/HfRepoBrowser');
 const HiddenRunConversations = require('./ipc/HiddenRunConversations');
 const IntelDriverInstall = require('./ipc/IntelDriverInstall');
@@ -60,7 +64,6 @@ class LlmServerIpcHandlers {
   static DEBUG_LOGS_CHANNEL = 'core.debug.getLogs';
   static RUNTIME_EVENT_CHANNEL = 'core.llmServer.runtimeEvent';
   static FIT_TEST_EVENT_CHANNEL = 'core.llmServer.fitTestEvent';
-  static GAMBIT_EVENT_CHANNEL = 'core.llmServer.gambitEvent';
   static CHAT_EVENT_CHANNEL = 'core.llmServer.chatEvent';
   static MODEL_EVENT_CHANNEL = 'core.llmServer.modelEvent';
   static ADDON_EVENT_CHANNEL = 'core.llmServer.addonEvent';
@@ -81,7 +84,7 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._registerRuntimes(s);
     LlmServerIpcHandlers._registerDefaults(llmServerService, s);
     LlmServerIpcHandlers._registerServer(llmServerService, router, s);
-    LlmServerIpcHandlers._registerFitAndGambit(llmServerService, s);
+    LlmServerIpcHandlers._registerFitTest(llmServerService, s);
     LlmServerIpcHandlers._registerChat(router, s);
     LlmServerIpcHandlers._registerScheduledTasks(s);
     LlmServerIpcHandlers._registerTriggers(s);
@@ -117,7 +120,6 @@ class LlmServerIpcHandlers {
       sysLibs: new SystemLibrariesCheck({ llmServerService: svc, deps }),
       drivers: new IntelDriverInstall({ llmServerService: svc }),
       defaults: new LlmDefaultsUpdater(svc),
-      gambit: new GambitSession({ llmServerService: svc, chatRouter: router, fitTests }),
       localModels: new LocalModelOptions({ llmServerService: svc }),
       quickChat: new QuickChat({ llmServerService: svc, chatRouter: router }),
       side: new SideCompletions(router),
@@ -139,7 +141,10 @@ class LlmServerIpcHandlers {
       downloader: new ModelFileDownloader({ llmServerService: svc, slot, mlxInstall: new MlxRepoInstall({ slot }) }),
       drafters: new DrafterInstaller({ llmServerService: svc, slot }),
       addons: new AddonModelInstaller({ llmServerService: svc, slot }),
-      preflightOptions: () => ({ llmServerService: svc, imageServerService: deps.imageServerService(), musicServerService: deps.get('musicServerService') }),
+      preflightOptions: () => ({
+        llmServerService: svc, imageServerService: deps.imageServerService(), musicServerService: deps.get('musicServerService'), llmService: deps.get('llmService'),
+        agentManager: global.__lumaAgentManager || null,
+      }),
     };
   }
 
@@ -159,6 +164,8 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('dismissVramPressure', (_e, card) => ({ dismissed: !!svc.dismissVramPressure(card) }));
     LlmServerIpcHandlers._handle('getUnloadOnVramPressure', () => ({ enabled: !!svc.getUnloadOnVramPressure() }));
     LlmServerIpcHandlers._handle('setUnloadOnVramPressure', (_e, value) => ({ enabled: svc.setUnloadOnVramPressure(value) }));
+    LlmServerIpcHandlers._handle('getVramWarning', () => ({ enabled: !!svc.getVramWarning() }));
+    LlmServerIpcHandlers._handle('setVramWarning', (_e, value) => ({ enabled: svc.setVramWarning(value) }));
     LlmServerIpcHandlers._handle('getGpuHeadroom', () => ({ bytes: svc.getGpuHeadroomBytes() }));
     LlmServerIpcHandlers._handle('setGpuHeadroom', (_e, bytes) => ({ bytes: svc.setGpuHeadroomBytes(bytes) }));
     LlmServerIpcHandlers._handle('dismissNvidiaSmiPathHint', () => { svc.setNvidiaSmiPathHintDismissed(true); });
@@ -224,18 +231,12 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('getLocalModelOptions', () => localModels.options(), { models: [] });
   }
 
-  static _registerFitAndGambit(svc, { fitTests, gambit }) {
+  static _registerFitTest(svc, { fitTests }) {
     LlmServerIpcHandlers._handle('runFitTest', (event, args) =>
       fitTests.run(args, SenderStream.create(event, LlmServerIpcHandlers.FIT_TEST_EVENT_CHANNEL)));
     LlmServerIpcHandlers._handle('cancelFitTest', () => fitTests.cancel());
     LlmServerIpcHandlers._handle('getFitTestStatus', () => fitTests.status());
     LlmServerIpcHandlers._handle('getFitResults', () => ({ results: svc.getAllFitResults() }), { results: {} });
-    LlmServerIpcHandlers._handle('runGambit', (event, args) =>
-      gambit.run(args, SenderStream.create(event, LlmServerIpcHandlers.GAMBIT_EVENT_CHANNEL)));
-    LlmServerIpcHandlers._handle('cancelGambit', () => gambit.cancel());
-    LlmServerIpcHandlers._handle('getGambitStatus', () => gambit.status());
-    LlmServerIpcHandlers._handle('getGambitResults', () => ({ results: svc.getAllGambitResults() }), { results: {} });
-    LlmServerIpcHandlers._handle('getGambitRaw', () => gambit.raw());
   }
 
   static _registerChat(router, { quickChat, side }) {
@@ -244,7 +245,7 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('chat.takeoverRespond', (_e, action) => ({ success: router.respondTakeover(String(action || 'continue')) }));
     LlmServerIpcHandlers._handle('chat.approvalRespond', (_e, decision) => ({ success: router.respondApproval(String(decision || 'reject')) }));
     LlmServerIpcHandlers._handle('chatAbort', () => quickChat.abortAll());
-    LlmServerIpcHandlers._handle('listModels', () => router.listModels());
+    LlmServerIpcHandlers._handle('listModels', () => LlmServerIpcHandlers._currentModelList(router));
     LlmServerIpcHandlers._registerModelSettings(router.llmServerService.modelSettings);
     LlmServerIpcHandlers._handle('chat.previewSystemPrompt', (_e, opts) => router.previewSystemPrompt(opts || {}));
     LlmServerIpcHandlers._handleChannel(LlmServerIpcHandlers.DEBUG_LOGS_CHANNEL, () => DebugLogsView.read({ app }));
@@ -322,6 +323,16 @@ class LlmServerIpcHandlers {
     LlmServerIpcHandlers._handle('convJobs.cancel', (_e, id) => ({ canceled: jobs.cancel(id) }));
     LlmServerBroadcast.relayConversationJobs(jobs);
     new ConversationJobPoster({ jobs, getRouter: () => router, onPosted: (posted) => LlmServerBroadcast.conversationJobPosted(posted) }).watch();
+    LlmServerIpcHandlers._registerBackgroundTasks(router);
+  }
+
+  static _registerBackgroundTasks(router, tasks = BackgroundTasks.shared) {
+    const idle = new ChatIdleWait({ getRouter: () => router });
+    const followers = new HostTurnFollowers({ announce: (turn) => LlmServerBroadcast.hostTurnStarting(turn) });
+    LlmServerIpcHandlers._handle('convJobs.followTurn', (event, requestId) =>
+      followers.follow(requestId, SenderStream.create(event, LlmServerIpcHandlers.CHAT_EVENT_CHANNEL, { requestId })), HostTurnFollowers.NOT_OPEN);
+    tasks.useChatIdle(() => idle.until());
+    new BackgroundTaskWake({ tasks, idle, turn: new BackgroundTaskTurn({ getRouter: () => router, followers }) }).watch();
   }
 
   static _registerChatSettings(router, { approval, viewer }) {
@@ -424,6 +435,14 @@ class LlmServerIpcHandlers {
   static _handleChannel(channel, fn, failureFields = null) {
     const handler = IpcEnvelope.enveloped(fn);
     ipcMain.handle(channel, failureFields ? async (...args) => ({ ...failureFields, ...(await handler(...args)) }) : handler);
+  }
+
+  static async _currentModelList(router) {
+    const svc = router.llmServerService;
+    if (svc && typeof svc.freshInstalledChatModels === 'function') {
+      try { await svc.freshInstalledChatModels(); } catch (_) {}
+    }
+    return router.listModels();
   }
 
   static async _pickDir(event, dialogOptions) {

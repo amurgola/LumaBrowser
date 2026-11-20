@@ -21,7 +21,7 @@ a meaningful `null`); anything that mutates or can fail is wrapped by
 | `get-lmstudio-config`, `get-anthropic-config` | raw config | `provider.getConfig()` |
 | `fetch-lmstudio-models`, `fetch-anthropic-models` `(endpoint)` | envelope | `probeModels` (never saves) |
 | `test-lmstudio-connection`, `test-anthropic-connection` | envelope | `provider.testConnection()` |
-| `core.llm.getAllSlots`, `getAllAvailableModels`, `getProviders` | raw arrays | LLMService |
+| `core.llm.getAllSlots`, `getAllAvailableModels`, `getProviders` | raw arrays | LLMService (`getAllAvailableModels` answers via `currentAvailableModels()`) |
 | `core.llm.getSlotConfig` `(slotId)` | raw, may be `null` | LLMService |
 | `core.llm.setSlotConfig` / `clearSlotConfig` | envelope | LLMService |
 | `core.llm.sendCompletion` `(slotId, messages, options)` | its own envelope | LLMService |

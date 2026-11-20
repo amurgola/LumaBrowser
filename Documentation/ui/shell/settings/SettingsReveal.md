@@ -14,8 +14,10 @@ through [ShellPalette](../palette/ShellPalette.md).
   [SettingsModal](SettingsModal.md); the slot manager switches sub-tabs and opens
   extension pages.
 - `reveal(target)`: `{ surface: 'shell', tab, subtab?, selector? }` or
-  `{ surface: 'extension', extensionId }`. Resolves the highlighted element, or
-  null (no selector, element not found, or an extension page).
+  `{ surface: 'extension', extensionId, selector? }`. An extension target opens
+  the extension's page and, with a selector, highlights that element once the
+  page is up (how a startup model alert lands on a slot's model picker).
+  Resolves the highlighted element, or null (no selector or element not found).
 - `expandAround(el)`: opens closed `<details>`, and a collapsed Network Sharing
   body through its own header so its remembered state stays right.
 - `SettingsReveal.visibleRow(el)`: the labelled row around the control (a section

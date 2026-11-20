@@ -29,3 +29,14 @@ hooks. Also New chat.
   (a background job's outcome) to the thread on screen. It does nothing while a reply is
   streaming there, and re-opens the conversation when the thread holds a message without
   an id, since that one cannot be matched against the stored rows.
+- The state messages built from the stored rows carry `provider` (null when unset), so a
+  row the app wrote in the user's place (provider `background-task`, a background task's
+  results) is drawn by [TaskNoticeView](../turns/TaskNoticeView.md) and not as a user turn.
+
+## Plan and queued messages
+
+- `render` also re-attaches the [PlanPanel](../plan/PlanPanel.md) and the
+  [PendingMessages](../pending/PendingMessages.md) strip; `open` resets the plan panel
+  on leaving and reads the new conversation's plan from its meta.
+- `open` ends with `pending.sendNext()`: a message queued here may have been waiting
+  for a reply that finished while the user was in another conversation.

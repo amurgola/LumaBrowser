@@ -111,6 +111,7 @@ so deleted things drop out.
 | `core.palette.search`, `open`, `close`, `dig`, `digAbort`, `continueInChat` | the palette page only |
 | `core.palette.toggle`, `getDoubleShift`, `setDoubleShift` | a window's browser chrome only |
 | `core.palette.record` | the browser chrome or an internal tab (the LLM tab), never a website |
+| `core.palette.reveal` | the browser chrome or an internal tab, never a website: shows one catalog setting by id (plus an optional selector on a Settings page) without recording it; the startup model alert and the LLM tab's preflight banner use it |
 | `core.palette.digEvent` | main to the palette page (Dig deeper stream) |
 | `palette:show`, `palette:hidden` | main to the palette page |
 | `core.llmServer.palette` | main to the LLM tab: `{ type: 'reveal', target }` or `{ type: 'artifact', conversationId, artifactId }` |

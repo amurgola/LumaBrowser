@@ -34,7 +34,8 @@ already fill the window, notice relay), `_complete` (first completion gets the w
 recovery), then `_handleReply`: calibrate from `usage.prompt_tokens`, split the reply's
 calls into the batch and (at a pool of one) the dropped rest, push the
 assistant message, and either review a no-tool reply with the
-[FinalAnswerGate](FinalAnswerGate.md) or run the batch with
+[FinalAnswerGate](FinalAnswerGate.md) (given the `finalCheck` and
+`awaitsLaterResult` options) or run the batch with
 [ToolBatchRunner](ToolBatchRunner.md), which answers the dropped calls too. The reasoning tail rides as carried
 notes on the batch's first result.
 

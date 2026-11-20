@@ -22,6 +22,7 @@
       navigate: { verb: 'Open', ing: 'opening', glyph: 'web' },
       take_screenshot: { verb: 'Screenshot', ing: 'taking a screenshot', glyph: 'web' },
       click: { verb: 'Click', ing: 'clicking', glyph: 'web' },
+      click_until: { verb: 'Click until', ing: 'clicking until the page changes', glyph: 'web' },
       type_text: { verb: 'Type', ing: 'typing', glyph: 'web' },
       chat_with_agent: { verb: 'Ask agent', ing: 'asking an agent', glyph: 'agent' },
       list_agents: { verb: 'Agents', ing: 'listing agents', glyph: 'agent' },
@@ -102,6 +103,7 @@
         case 'write_file': case 'write_extension_file': return (p.path || '') + ToolGrammar._lineCount(p.content);
         case 'web_search': return '"' + short(p.query, 60) + '"';
         case 'chat_with_agent': return (p.agent || p.name || '') + (p.message ? ' · "' + short(p.message, 50) + '"' : '');
+        case 'click_until': return ToolGrammar._clickUntilDetail(p);
         default: return ToolGrammar._genericDetail(p);
       }
     }
@@ -129,6 +131,13 @@
       if (ToolGrammar.FILE_TOOLS.indexOf(name) === -1) return null;
       const p = params && typeof params === 'object' ? params : {};
       return p.path ? String(p.path) : null;
+    }
+
+    static _clickUntilDetail(p) {
+      const short = ToolGrammar.short;
+      const target = p.text ? '"' + short(p.text, 40) + '"' : short(p.selector || '', 40);
+      const until = p.untilText ? '"' + short(p.untilText, 40) + '"' : short(p.untilSelector || p.untilUrl || '', 40);
+      return target + (until ? ' · until ' + until : '');
     }
 
     static _readRange(p) {

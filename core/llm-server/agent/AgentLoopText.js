@@ -11,15 +11,26 @@ class AgentLoopText {
 
   static SCREENSHOT_STRIPPED = 'Screenshot captured (pixels not visible to you; read the page with get_source/get_element instead)';
 
-  static EMPTY_TURN_NUDGE = '[System: Your last reply was EMPTY: you produced internal '
-    + 'reasoning but no visible message and no tool call, so the user saw nothing and nothing '
-    + 'happened. Your thinking is not shown to anyone. Respond again NOW, and put your output '
-    + 'in the reply itself: either emit the ```tool call for the action you were about to take, '
-    + 'or write the answer in plain text.]';
+  static FENCE_CALL = 'emit the ```tool call';
+  static NATIVE_CALL = 'call the tool';
 
-  static STALL_NUDGE = '[System: Your reply announced an action but you did not call any tool; nothing has actually '
-    + 'happened, and the user is still waiting. Do it NOW: emit the ```tool call for the action you described. Only '
-    + 'reply without a tool call once you have the answer, or to report that you cannot get it.]';
+  static emptyTurnNudge(nativeTools = false) {
+    return '[System: Your last reply was EMPTY: you produced internal '
+      + 'reasoning but no visible message and no tool call, so the user saw nothing and nothing '
+      + 'happened. Your thinking is not shown to anyone. Respond again NOW, and put your output '
+      + `in the reply itself: either ${AgentLoopText._callPhrase(nativeTools)} for the action you were about to take, `
+      + 'or write the answer in plain text.]';
+  }
+
+  static stallNudge(nativeTools = false) {
+    return '[System: Your reply announced an action but you did not call any tool; nothing has actually '
+      + `happened, and the user is still waiting. Do it NOW: ${AgentLoopText._callPhrase(nativeTools)} for the action you described. Only `
+      + 'reply without a tool call once you have the answer, or to report that you cannot get it.]';
+  }
+
+  static _callPhrase(nativeTools) {
+    return nativeTools ? AgentLoopText.NATIVE_CALL : AgentLoopText.FENCE_CALL;
+  }
 
   static DEFERRED_CALL = 'Not executed. Another call in this same response already changed state, '
     + 'and this one was written before you could see that result. Check what changed, then re-issue this call if you still need it.';
@@ -62,6 +73,14 @@ class AgentLoopText {
       + 'Before you give your final answer, confirm the outcome with page evidence: read the page '
       + '(get_source or observe_page) and cite the URL or confirmation text that proves it. '
       + 'If it did not work, try another way or tell the user plainly that it did not work.]';
+  }
+
+  static HELD_ANSWER = 'The answer you just wrote was held back: the user has not seen it and will not. Your next '
+    + 'answer is the only one they read, so write it out in full, complete on its own, with anything you find from '
+    + 'here on worked in. Do not refer to the held-back answer or say what you added to it.';
+
+  static heldBack(nudge) {
+    return `${nudge}\n\n${AgentLoopText.HELD_ANSWER}`;
   }
 
   static toolResult(tool, body) {

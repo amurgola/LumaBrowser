@@ -7,7 +7,7 @@ The `sendCompletion` the bridge hands AgentRunner.
 ## Methods
 
 - `new CompletionDriver(o)`: `{ router, modelRef, temperature, hooks,
-  llmExtra, conversationId, assistantMessageId, turnReminder, parallel,
+  llmExtra, conversationId, assistantMessageId, turnReminder, stepReminder, parallel,
   control, mirror, reasoning, images, health, replyCap, parser, nativePlan,
   toolSet }`.
 - `sendCompletion(slotId, msgs, opts)` (bound): AgentRunner's run-summary
@@ -15,7 +15,9 @@ The `sendCompletion` the bridge hands AgentRunner.
   returns an empty completion without a model call. Otherwise starts the
   iteration on the mirror and reasoning relay, writes the
   [TurnReminder](TurnReminder.md) into the history (`appendKeeping`, with the
-  clock from `o.now()`, else `new Date()`), reports the run's first task text
+  clock from `o.now()`, else `new Date()`; the caller's part is `turnReminder`,
+  fixed for the turn, then what `stepReminder()` returns for this request, the
+  conversation's plan, and a `stepReminder` that throws is left out), reports the run's first task text
   to `o.onFirstSend(text)` once (text content only), and calls `router._completeOnce(modelRef,
   msgs, temperature (opts, else the run's, else 0.2), onStatus, onToken,
   onReasoning, onUsage, onTimings, images, nativeTools, extra, ctl,

@@ -16,7 +16,6 @@ export default class PersonaSeeds {
       ['Open Code mode', '', 'Open Code mode for a project folder.', 'Work on a project folder with the agent.'],
     ],
     tune: [
-      ['Run the compatibility gambit', '', 'Run the model compatibility gambit on the current model and summarise the result.', 'Test what the current model handles well.'],
       ['Explain my placement', '', 'Explain how the current model is placed across my GPUs and what I could change.', 'How the model is split across your GPUs.'],
     ],
   };

@@ -1,7 +1,7 @@
 import Dom from '../../../core/llm-server/ui/js/dom/Dom.js';
 import HtmlEscaper from '../../../core/llm-server/ui/js/format/HtmlEscaper.js';
 import ToolListView from './ToolListView.js';
-import ToolNotice from './ToolNotice.js';
+import Notice from '../../../core/llm-server/ui/js/notice/Notice.js';
 import ToolSlotEditor from './ToolSlotEditor.js';
 
 export default class ToolEditView {
@@ -10,7 +10,7 @@ export default class ToolEditView {
   static render(el, view, on) {
     const t = view.tool;
     el.appendChild(ToolEditView._head(t, on));
-    ToolNotice.render(el, view.notice, on.dismiss);
+    if (view.notice) el.appendChild(ToolListView.notice(view.notice, on.dismiss));
     if ((t.configSlots || []).length) el.appendChild(ToolEditView._settings(t, on));
     el.appendChild(ToolEditView._codeSection());
     el.appendChild(ToolEditView._definition(t, view.slots));

@@ -57,12 +57,19 @@ class CompletionDriver {
   _reminder() {
     const o = this._o;
     return TurnReminder.compose({
-      turnReminder: o.turnReminder,
+      turnReminder: this._callerReminder(),
       nativeTools: o.nativePlan.enabled,
       offFormat: o.parser.sawOffFormat,
       parallel: o.parallel,
       now: typeof o.now === 'function' ? o.now() : new Date(),
     });
+  }
+
+  _callerReminder() {
+    const o = this._o;
+    let atThisStep = null;
+    try { atThisStep = typeof o.stepReminder === 'function' ? o.stepReminder() : null; } catch (_) {}
+    return [o.turnReminder, atThisStep].filter(Boolean).join('\n\n') || null;
   }
 
   _temperature(opts) {

@@ -1,5 +1,90 @@
 # Changelog
 
+## 2.2.4
+
+### New features
+- **Plans in chat.** When a request takes several steps, the assistant writes a plan first and works through it.
+  - The plan sits above the message box with a progress bar and the state of each step. It can be folded to one line or cleared, and it goes away when the last step is done.
+  - Each step also shows in the thread as a card ("Step 2 of 4: …"), so you can see where each part of the work began.
+  - The plan is kept with the conversation, so it is still there after a restart.
+  - If the assistant answers while steps are still open, it finishes the plan first and then gives its full answer.
+  - A plain question or a single lookup is not planned. Plans work in chat and in Code mode.
+- **Send messages while the assistant is still working.** Press Enter while a reply is being written and your message is queued. It used to be ignored.
+  - Queued messages wait in a strip above the message box, each with Edit and Remove.
+  - They are sent one at a time, in order, each when the reply before it has finished.
+  - If you stop a reply, or one fails, the queue waits until you press "Send next".
+  - The queue belongs to its conversation and is cleared when the app is closed.
+- **Background tasks in chat.** The assistant can start a long job in the background, end its reply, and report back when the job is done.
+  - A strip above the message box shows how many tasks are running and lists them, each with Cancel.
+  - When the tasks finish, the assistant writes its report without being asked, joined to the reply that started them. If you kept chatting in the meantime, the report waits for the current reply and follows as a message of its own.
+  - Pictures, videos and music started this way are made one after another.
+  - A long terminal command is followed until it finishes, past the 10 minutes a command in a reply may take. This needs "Let AI use the terminal" to be on.
+  - Background tasks work in plain chat, and they end when the app is closed.
+- **LoRA Trainer (experimental): train a LoRA from your own pictures.** Give the assistant pictures of a character, an object or a style and ask it for a LoRA. It captions the pictures, trains the LoRA for one of your installed image models and adds it to your LoRA library.
+  - Pictures can be chat attachments, a folder or file paths.
+  - Image models that can be trained carry a "LoRA trainable" badge in Image Setup: SDXL and SD 1.5 models (Pony-style models included), Anima, Z-Image, FLUX.2 klein 4B, Chroma, MOSS-Image, Qwen-Image 2.1 and MiniMax-H3-Image.
+  - While it trains, a strip above the message box shows the step count and the time left, with Cancel. The result is posted in the conversation when it is done, with the LoRA's trigger word.
+  - Ask the assistant to apply the LoRA and it is attached to an image model of the same family.
+  - **Your pictures stay on your computer.** Captions are written by a model running on this computer only, never by a cloud provider or a paired PC. The trainer sends no usage data, and its working files are deleted when the job ends.
+  - It needs Windows or Linux and an NVIDIA GPU. The first run downloads the trainer (several GB) and, for most models, the training weights of the model.
+- **LoRAs from CivitAI, and several LoRAs on one model (Image Setup).**
+  - "Browse CivitAI" now offers "Add to library" for LoRAs. The download is checked against the size and the checksum of its listing.
+  - Each LoRA is filed under the model family it was made for, so a model's LoRA picker lists the ones that fit it first. A LoRA from another family can still be attached and shows a warning.
+  - A model's "LoRAs / speed" dialog is now a list: add as many as you want, each with its own weight. "Browse CivitAI" in that dialog opens on LoRAs that fit the model.
+  - DoRA files, and LoRAs for model families LumaBrowser does not run, are refused.
+- **Each chat can have its own image, image editor and video model.** The gear in the message box has a "Media models" section. A pick applies to that conversation only and is kept with it; "Default" follows Image Setup again.
+  - **Roleplay (add-on 1.2.4):** the gear has the Image and Image editor rows too, and a Story section with Scene, Gallery, Create image, Clear story state and Edit everything. These used to be buttons under the message box.
+  - A picture made with Create image shows under its reply as soon as it is done. It used to show only after the conversation was reopened.
+- **Model pickers list every local model you have installed.** They used to list only the model that was loaded, so a feature could not be set to a different local model.
+  - This covers the pickers in AI Chat, the Hub, agents, the chat side panel, the local provider card (Settings > AI & Providers) and the image, editor and video defaults.
+  - A feature set to another local model than the loaded one loads its own model when it runs.
+  - Two files of the same model are told apart by their file name.
+- **A notice at startup when a chosen model is gone.** If the default chat model, the helper model, an image, editor, video or music default, a feature's model or an agent's model is no longer installed, a notification says so. Its "Choose a model" button opens the setting and highlights it.
+  - The picker shows the missing choice as "Unavailable", so you can pick another model or go back to the default.
+  - An agent whose model is gone runs on the app's default model until you choose another.
+- **Agents can keep clicking until a page changes (`browser_click_until`).** One call clicks a link or button again and again until text or an element you name appears, or the address changes. It is meant for a step that only goes through some of the time, such as a queue or an item that keeps selling out.
+  - The target is found by its visible label before every click, and a stop condition that is already true is refused.
+  - If the page gets stuck and the target disappears, the page is loaded again. The loop ends on its own after 5 minutes unless you set another limit.
+  - With `alert` on, LumaBrowser shows the tab, raises its window and posts a desktop notification when the loop ends.
+- **Personal Hub: activity is filed by person, conversation and subject (Hub settings > Contexts).**
+  - A contact can belong to a context ("Belongs to", under People > About). Their mail and direct messages are filed there, whichever app or mailbox they arrive in.
+  - A context can name a conversation, for example a Slack channel. That channel is filed there even when the rest of its workspace belongs to another context.
+  - A context can claim mail by its subject: list words under "Subject has".
+  - Proton Mail notifications are read with their real sender and subject. They were all filed under one contact named "New email received". Duplicate contacts are merged once when you update, and what you recorded about them is kept.
+  - Read and Open on a Slack item go to the channel the item came from, in the session it came from.
+  - A summary takes your coming meetings into account, so a card asking for a meeting is rewritten once the meeting is booked.
+
+### Changes
+- **GPU headroom and model placement (LLM > Setup):**
+  - A model that fits on one card only by using part of your GPU headroom may take up to half of it. It used to be spread over a second, slower card or moved partly to the CPU, which cost far more speed than the headroom was worth. The launch notes say when this happened.
+  - When a model has to be split over cards of different speeds, the faster card keeps the last layers and the draft model. The split is faster and leaves the headroom you asked for.
+  - The fit table in Setup plans with the free VRAM of the moment, your headroom and the cards a start would use, so it agrees with what Start does.
+  - **A "Low VRAM warning" switch** (Chat defaults > More settings). The warning could only be dismissed per card and came back. Unloading on VRAM pressure keeps working with the warning off.
+  - The launch notes no longer claim context retention for models that cannot use it (Qwen 3.5 and newer, DeepSeek V4 and a few others, and any model while its vision part is loaded). They say it is off and why.
+  - With a RAM pin on, a large mixture-of-experts model loads at full speed when there is room in RAM. When there is not, the model is left unpinned and the RAM pin line says why.
+- **The chat's instructions to the model were reworked.**
+  - A chat with Tools off now knows today's date and follows your custom system prompt. It had neither.
+  - With Tools on, the assistant answers a general question directly, and still uses a tool when you ask for one by name.
+  - Models that call tools natively are no longer also told the text format for tool calls.
+  - **Gemma 4** uses native tool calls and the sampler settings its makers recommend. It used to write some tool calls as plain text.
+  - Charts in replies are drawn more reliably with smaller models.
+- **A page the assistant opens in a new tab loads on the first try.** The tab could crash on its first navigation, and the assistant had to open the page a second time.
+- **Notices in Settings:**
+  - A failure is tinted, stays until you dismiss it, and can carry a button that takes you to the setting to fix.
+  - The result of installing or updating an add-on shows on the add-on's own card. A failed install shows the reason and leaves the button for another try.
+  - A failed JetBrains, VS Code or Windhawk install was shown as a success. It now shows as a failure.
+  - A message raised while Settings is closed goes to the notification log. It used to be lost.
+  - Rotating the desktop token waits for your answer. The token used to change before you had confirmed.
+  - "Running" looks the same everywhere it is shown.
+- **Personal Hub:**
+  - Summaries and contact suggestions give the model more time to think, so they finish on slower models. A "Summarise now" that fails shows the error.
+  - The Hub's tools answered with nothing when called by an agent connected over MCP. They return their results again.
+- **The model compatibility test moved to an add-on, Model Testing.** Once it is installed, Setup has a "Model testing" tab under Developer: pick any downloaded model, pick the tests, and download the transcript of the last run. Your default model is put back after a run. Earlier results are kept. The starter card in chat and the entry in the search palette are gone from the app itself.
+- **Code mode:** the "Editing" panel sits just above the bottom bar and no longer covers the plan or the message box.
+- An add-on's settings page opened from a link or from the search palette stays open. It could close again a moment later.
+- A paired PC's model picked in the AI Chat or Test Harness model picker is saved correctly.
+- "Load more" in the model search dialogs is hidden when there are no more results.
+
 ## 2.2.3
 
 ### New features

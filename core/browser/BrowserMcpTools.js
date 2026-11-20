@@ -23,6 +23,7 @@ class BrowserMcpTools {
     browser_get_source: '_getSource',
     browser_screenshot: '_screenshot',
     browser_click_at: '_clickAt',
+    browser_click_until: '_clickUntil',
     browser_get_console: '_getConsole',
     browser_get_network: '_getNetwork',
     browser_observe_page: '_observePage',
@@ -137,6 +138,19 @@ class BrowserMcpTools {
       if (!result.success) return McpResult.error(result.error || 'Failed to click at point');
       return McpResult.text({ success: true, data: NavigationStamp.apply(McpPayload.data(result), result) });
     });
+  }
+
+  _clickUntil(args) {
+    return this._withTab(args, async (tabId) => this._reply(await this._service.clickUntil(tabId, {
+      text: args.text,
+      selector: args.selector,
+      untilText: args.untilText,
+      untilSelector: args.untilSelector,
+      untilUrl: args.untilUrl,
+      intervalSeconds: args.intervalSeconds,
+      timeoutSeconds: args.timeoutSeconds,
+      alert: args.alert === true,
+    }), 'Failed to run the click loop'));
   }
 
   _getConsole(args) {

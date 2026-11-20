@@ -1,10 +1,12 @@
 const LlmModelsScanner = require('../LlmModelsScanner');
+const LlmPinPlanCheck = require('./LlmPinPlanCheck');
 
 class LlmPinTarget {
   static FILE_GROUPS = Object.freeze(['weights', 'mmproj', 'drafter', 'mtp']);
 
-  constructor({ scanner = LlmModelsScanner.shared } = {}) {
+  constructor({ scanner = LlmModelsScanner.shared, planCheck = new LlmPinPlanCheck() } = {}) {
     this._scanner = scanner;
+    this._planCheck = planCheck;
   }
 
   async resolve(llmServerService) {
@@ -16,7 +18,12 @@ class LlmPinTarget {
     if (model.kind !== 'weights') return { error: `${model.name} is not a GGUF model, so it cannot be pinned.` };
     const files = LlmPinTarget._files(model);
     if (!files.length) return { error: 'The default model has no weight files on disk.' };
-    return LlmPinTarget._target(modelPath, model, files);
+    const target = LlmPinTarget._target(modelPath, model, files);
+    const refusal = await this._planCheck.refusal(llmServerService, model, {
+      pinBytes: target.totalBytes,
+      pinnedAlready: !!(llmServerService.ramPin && llmServerService.ramPin.isActiveFor(modelPath)),
+    });
+    return refusal ? { error: refusal } : target;
   }
 
   async _findModel(llmServerService, modelPath) {

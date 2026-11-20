@@ -4,6 +4,8 @@ import HubSection from './HubSection.js';
 export default class ContextsSection extends HubSection {
   static PALETTE = ['#60a5fa', '#a78bfa', '#34d399', '#f472b6', '#22d3ee', '#facc15', '#fb923c', '#94a3b8'];
   static TYPED = {
+    conversation: { label: 'Conversations', placeholder: '#acme-project, Dana Reyes', help: 'A channel or chat by its name. It wins over the tab it is in, so one channel of a shared workspace can belong here' },
+    subject: { label: 'Subject has', placeholder: 'Acme, purchase order', help: 'Mail whose subject has one of these words or phrases, whoever sent it and whichever mailbox it arrives in' },
     domain: { label: 'Domains', placeholder: 'acme.com, acme.atlassian.net', help: 'Mail from these domains and notifications from these sites' },
     url: { label: 'Link contains', placeholder: 'T024BE7LD, /client/acme', help: 'A workspace or team id that shows in the address of its tab' },
     app: { label: 'Whole apps', placeholder: 'messages, whatsapp', help: 'Everything from an app (slack, teams, gmail, outlook, messages, clickup, ...)' },
@@ -18,7 +20,7 @@ export default class ContextsSection extends HubSection {
   html() {
     return `
     <h4 class="luma-section-label">Contexts</h4>
-    <div class="luma-field-help">Name the companies or areas you work across, and say what belongs to each. Activity, summaries and the focus view are grouped by these instead of by app. Anything that matches no context lands in Other. When two rules could apply, a link match wins, then the tab, then the domain, then the app.</div>
+    <div class="luma-field-help">Name the companies or areas you work across, and say what belongs to each. Activity, summaries and the focus view are grouped by these instead of by app. Anything that matches no context lands in Other. When two rules could apply, a named conversation wins, then a word in a mail's subject, then (for mail and direct messages) the context you gave the sender under People, then a link match, the tab, the domain and the app.</div>
     <div class="ext-mt-8" id="ext-hub-ctxList"></div>
     <div class="luma-form-actions ext-form-buttons--start ext-mt-8">
       <button class="luma-btn luma-btn--sm" id="ext-hub-ctxAddBtn">Add context</button>

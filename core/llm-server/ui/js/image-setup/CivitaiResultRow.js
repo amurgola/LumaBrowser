@@ -44,15 +44,16 @@ export default class CivitaiResultRow {
   static verdictText(v) {
     if (!v) return '';
     if (!v.installable) return v.reason || 'Not installable.';
-    const base = CivitaiResultRow.BASE_LABELS[v.baseType] || v.baseType;
-    const profile = v.profile ? `, ${CivitaiResultRow.PROFILE_LABELS[v.profile] || v.profile}` : '';
     const size = v.file && v.file.bytes ? ` · ${ByteFormatter.bytes(v.file.bytes)}` : '';
     const fmt = v.file && v.file.format ? ` ${v.file.format}` : '';
     const early = v.earlyAccess ? ' · early access (needs an API key)' : '';
+    if (v.loraBase) return `Adds to the LoRA library for ${v.loraBase.label} models${size}${fmt}${early}`;
+    const base = CivitaiResultRow.BASE_LABELS[v.baseType] || v.baseType;
+    const profile = v.profile ? `, ${CivitaiResultRow.PROFILE_LABELS[v.profile] || v.profile}` : '';
     return `Installs as ${base}${profile}${size}${fmt}${early}`;
   }
 
-  static detailHtml(d, { busy = false } = {}) {
+  static detailHtml(d, { busy = false, lora = null } = {}) {
     const esc = HtmlEscaper.escape;
     const v = d.version || {};
     const facts = [
@@ -74,7 +75,7 @@ export default class CivitaiResultRow {
       + '<div class="ms-quants"><div class="luma-section-label ms-quants-title">Version</div>'
       + `<div class="ms-quant-pick">${picker}<span class="ms-quant-badge"><span class="ms-badge${v.installable ? ' green' : ' red'}"></span>`
       + `<span class="ms-quant-fitlabel">${esc(CivitaiResultRow.verdictText(v))}</span></span></div></div>`
-      + `<div class="ms-dl">${CivitaiResultRow.installBarHtml(d, busy)}</div>`
+      + `<div class="ms-dl">${v.loraBase ? CivitaiResultRow.loraBarHtml(d, busy, lora || {}) : CivitaiResultRow.installBarHtml(d, busy)}</div>`
       + (d.trainedWords && d.trainedWords.length ? `<div class="ms-dim ms-civ-line">Trigger words: ${esc(d.trainedWords.join(', '))}</div>` : '')
       + (d.licenseNote ? `<div class="ms-dim ms-civ-line">${esc(d.licenseNote)}</div>` : '')
       + '<div class="ms-card"><div class="luma-section-label ms-card-title">Model page</div><div class="ms-card-md"></div></div>';
@@ -92,6 +93,27 @@ export default class CivitaiResultRow {
       + `<button class="luma-btn primary ms-dl-go" type="button" data-act="install" data-model="${d.modelId}" data-version="${d.versionId}"${d.fileId ? ` data-file="${d.fileId}"` : ''}${busy ? ' disabled' : ''}>Install</button>`
       + '</div>'
       + `<div class="ms-dim ms-civ-line">${busy ? 'Another download is running; install when it finishes.' : 'Settings are refined from the model page and sample images during the install.'}</div>`;
+  }
+
+  static loraBarHtml(d, busy, { inLibrary = false, fits = [] }) {
+    const esc = HtmlEscaper.escape;
+    const v = d.version || {};
+    if (!v.installable) return '';
+    const file = v.file || {};
+    const off = busy || inLibrary;
+    return '<div class="ms-dl-row">'
+      + `<div class="ms-dl-info"><b>${esc(file.name || d.label)}</b>${file.bytes ? ` · ${ByteFormatter.bytes(file.bytes)}` : ''}</div>`
+      + `<button class="luma-btn primary ms-dl-go" type="button" data-act="install" data-kind="lora" data-model="${d.modelId}" data-version="${d.versionId}"${d.fileId ? ` data-file="${d.fileId}"` : ''}${off ? ' disabled' : ''}>${inLibrary ? 'In library' : 'Add to library'}</button>`
+      + '</div>'
+      + `<div class="ms-dim ms-civ-line">${esc(CivitaiResultRow.loraNote(v.loraBase, { busy, inLibrary, fits }))}</div>`;
+  }
+
+  static loraNote(loraBase, { busy, inLibrary, fits }) {
+    if (busy && !inLibrary) return 'Another download is running; add it when that finishes.';
+    const where = fits.length
+      ? `Fits ${fits.slice(0, 3).join(', ')}${fits.length > 3 ? ` and ${fits.length - 3} more` : ''}.`
+      : `No ${loraBase.label} model is installed yet.`;
+    return `${where} Attach it from a model's LoRAs / speed dialog.`;
   }
 
   static settingsText(defaults) {

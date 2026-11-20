@@ -1,10 +1,14 @@
 import CodePanelMarkup from './CodePanelMarkup.js';
 
 export default class CodeBuildPanel {
+  static GAP_PX = 12;
+
   constructor() {
     this._el = null;
     this._build = null;
     this._lanes = null;
+    this._followed = null;
+    this._barObserver = null;
   }
 
   get element() {
@@ -49,5 +53,23 @@ export default class CodeBuildPanel {
   _show(html) {
     this._el.hidden = false;
     this._el.innerHTML = html;
+    this._followComposerBar();
+  }
+
+  _followComposerBar() {
+    const bar = document.querySelector('.cm-composer-bar');
+    if (!bar) return;
+    this._placeAbove(bar);
+    if (this._followed === bar || typeof ResizeObserver !== 'function') return;
+    if (this._barObserver) this._barObserver.disconnect();
+    this._barObserver = new ResizeObserver(() => this._placeAbove(bar));
+    this._barObserver.observe(bar);
+    this._followed = bar;
+  }
+
+  _placeAbove(bar) {
+    const height = bar.getBoundingClientRect().height;
+    if (height > 0) this._el.style.bottom = Math.round(height + CodeBuildPanel.GAP_PX) + 'px';
+    else this._el.style.removeProperty('bottom');
   }
 }

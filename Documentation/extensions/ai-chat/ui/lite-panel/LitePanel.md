@@ -18,7 +18,10 @@ versa.
   `onChatEvent` and `onState`, and lists conversations (`conv.list({ limit: 50 })`).
 - `checkLlmAvailability()`: `listModels`, keeps a still-listed model ref,
   else the last used (`getLastModelRef`, string or `{ ref | modelRef }`), the
-  `defaultRef` or the first; fills the picker; paints `getState()` (or a
+  `defaultRef` or the first (`_pickModelRef`). A ref left on a local model that is not
+  the configured one (`current: false`, not a profile) gives way to the default, as in
+  `ChatModelList.canStand`, except a model just picked here (`_pickedRef`), kept until
+  its first message has made it the configured one. Fills the picker; paints `getState()` (or a
   state derived from the list when it fails). Resolves whether any model is
   listed; a throw paints an error state and resolves false.
 - `destroy()`: unsubscribes.

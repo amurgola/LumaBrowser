@@ -27,6 +27,6 @@ module.exports = {
     id: 'tool-forge',
     label: 'My Tools',
     file: './setup-ui.js',
-    assets: ['./setup-ui.css', './ui/MyToolsTab.js', './ui/ToolCodeEditor.js', './ui/ToolCompletions.js', './ui/ToolEditView.js', './ui/ToolListView.js', './ui/ToolNotice.js', './ui/ToolSlotEditor.js'],
+    assets: ['./setup-ui.css', './ui/MyToolsTab.js', './ui/ToolCodeEditor.js', './ui/ToolCompletions.js', './ui/ToolEditView.js', './ui/ToolListView.js', './ui/ToolSlotEditor.js'],
   },
 };

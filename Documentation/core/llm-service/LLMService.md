@@ -20,9 +20,12 @@ and `sendCompletion` / `createStream` resolve the slot and dispatch, through
   `setLlmServerService(s)` (needs `computeLocalProviderEntry`, optionally
   `ensureRunning`, `noteLocalRequestStart/End`, `runtimeServer.getStatus()`),
   `setGroundingServerService(g)` (needs `computeProviderEntry`, `ensureRunning`).
-- Slots: `registerSlot(slotId, { extensionId, label, required })`,
-  `unregisterSlot(slotId)`, `getSlotConfig(slotId)` (explicit config, else the
-  default's, else `null`), `setSlotConfig(slotId, provider, model)`,
+- Slots: `registerSlot(slotId, { extensionId, label, required, picker? })` (`picker`:
+  the selector of the slot's model picker on the extension's Settings page),
+  `unregisterSlot(slotId)`, `getSlotConfig(slotId)` (the slot's own config marked
+  `explicit: true`, else the default's without the mark, else `null`; the mark lets a
+  picker show a saved choice that is gone, see
+  [SlotModelOptions](../llm-server/ui/js/models/SlotModelOptions.md)), `setSlotConfig(slotId, provider, model)`,
   `clearSlotConfig(slotId)`, `getAllSlots()` (without `default`).
 - Dispatch: `sendCompletion(slotId, messages, options)` returns the provider's
   `{ success, response?, error? }`; `createStream(slotId, messages, options, handlers)`
@@ -33,6 +36,13 @@ and `sendCompletion` / `createStream` resolve the slot and dispatch, through
   `{ ok, vision, error?, code? }`.
 - Providers: `getProvider(key)`, `getProviders()`, `getAllAvailableModels()`,
   `getActiveProviderKey()`, `getActiveProvider()`.
+- `currentAvailableModels()`: `getAllAvailableModels()` once the local server's
+  installed models are current (`ManagedServers.refreshLocalModels`); what a model picker asks for.
+- `unavailableSlots()`: `[{ slotId, extensionId, label, picker, provider, model }]` (`picker`
+  `null` when the slot declared none) for slots
+  explicitly bound to a provider and model nothing offers any more; slots on the
+  default and grounding slots are never listed. Feeds
+  [PreflightSelectionIssues](../llm-server/PreflightSelectionIssues.md).
 - Constants: `LLMService.DEFAULT_SLOT`, `MANAGED_LOCAL_PROVIDER_ID`
   (`core.llmServer.local`), `GROUNDING_PROVIDER_ID` (`core.groundingServer`).
 

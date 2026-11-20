@@ -20,9 +20,11 @@ and reaches the main process only through its host's `invoke`.
 - `Model` (a select): `Use the active provider (default)`, then every
   available model, its value `<providerId>::<modelId>`. The list and the
   current pick come from the main process (`listSummaryModels` ->
-  `{ models: [{ value, label }], chosen }`), so the picker works wherever
+  `{ models: [{ value, label, unavailable? }], chosen }`), so the picker works wherever
   the section is shown; the chosen model is selected when it is in the
-  list, else the default. Changing it calls `setSummaryModel(value)` (the
+  list, else the default. A saved model that is gone (`unavailable`) is a
+  disabled option, `Unavailable: <model>`: shown because it is the saved
+  one, not a choice to make again. Changing it calls `setSummaryModel(value)` (the
   empty value for the default), with the notice `Summary model saved.`. A
   failed read of the models leaves only the default.
 - `Summarise now`: `summarizeNow({ force: true })`, which writes every card

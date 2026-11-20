@@ -11,6 +11,8 @@ Extends [LoopCheck](LoopCheck.md).
   `TOLERATED` (3) identical calls already precede it. Any different call in
   between resets the streak.
 - `PATTERN` = `identical-streak`.
+- `REPEATED_ON_PURPOSE`: tools never held (`click_until`). A call that waits on the page is called again
+  with the same arguments after its timeout, and time passed in between, so the world did move.
 
 ## Why
 

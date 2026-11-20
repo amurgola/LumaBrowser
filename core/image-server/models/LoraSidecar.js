@@ -3,8 +3,11 @@ const fs = require('fs');
 class LoraSidecar {
   static SUFFIX = '.lora.json';
   static LORA_EXT = /\.safetensors$/i;
-  static FIELDS = ['family', 'recipeId', 'trainedFor', 'trigger', 'trainer', 'steps', 'createdAt'];
-  static TEXT_MAX = 200;
+  static TRAINED_FIELDS = ['family', 'recipeId', 'trainedFor', 'trigger', 'trainer', 'steps', 'createdAt'];
+  static LISTING_FIELDS = ['source', 'base', 'baseModel', 'label', 'modelId', 'versionId', 'fileId', 'sha256', 'pageUrl', 'creator', 'licenseNote'];
+  static FIELDS = [...LoraSidecar.TRAINED_FIELDS, ...LoraSidecar.LISTING_FIELDS];
+
+  static TEXT_MAX = 500;
 
   static pathFor(loraPath) {
     return String(loraPath).replace(LoraSidecar.LORA_EXT, '') + LoraSidecar.SUFFIX;

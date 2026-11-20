@@ -2,6 +2,7 @@ const fs = require('fs');
 const SysdepsChecker = require('../shared/runtime/SysdepsChecker');
 const PreflightRuntimeIssue = require('./PreflightRuntimeIssue');
 const PreflightSysdepsIssue = require('./PreflightSysdepsIssue');
+const PreflightSelectionIssues = require('./PreflightSelectionIssues');
 
 class Preflight {
   static MUSIC_RUNTIME_ID = 'sglang-omni';
@@ -10,8 +11,10 @@ class Preflight {
     return new Preflight(options).collect();
   }
 
-  constructor({ llmServerService, imageServerService, musicServerService, fileExists, sysdeps } = {}) {
+  constructor({ llmServerService, imageServerService, musicServerService, llmService = null, agentManager = null, fileExists, sysdeps } = {}) {
     this._llm = llmServerService;
+    this._slots = llmService;
+    this._agents = agentManager;
     this._image = imageServerService;
     this._music = musicServerService;
     this._fileExists = fileExists || Preflight._fileExistsSafely;
@@ -25,7 +28,19 @@ class Preflight {
     if (this._llm) await this._collectLlm();
     if (Preflight._isEnabled(this._image)) await this._collectImage();
     if (Preflight._isEnabled(this._music)) await this._collectMusic();
+    await this._collectSelections();
     return { issues: this._issues };
+  }
+
+  async _collectSelections() {
+    const issues = await PreflightSelectionIssues.collect({
+      llm: this._llm,
+      image: Preflight._isEnabled(this._image) ? this._image : null,
+      llmService: this._slots,
+      agentManager: this._agents,
+      fileExists: this._fileExists,
+    });
+    for (const issue of issues) this._push(issue);
   }
 
   async _collectSysdeps() {
@@ -101,9 +116,10 @@ class Preflight {
       id: 'llm-model-missing',
       area: 'llm',
       severity: 'error',
+      selection: true,
       title: 'Default chat model file is missing',
       detail: `The configured model no longer exists at ${modelPath}. Pick another model or download one in Setup.`,
-      fix: { kind: 'open-view', view: 'settings' },
+      fix: { kind: 'open-view', view: 'settings', settingId: 'llm.model' },
     };
   }
 
@@ -123,9 +139,10 @@ class Preflight {
       id: 'music-model-missing',
       area: 'music',
       severity: 'error',
+      selection: true,
       title: 'Default music model is not downloaded',
       detail: `Music generation is set to use "${modelId}", but its snapshot is not (fully) downloaded. Download it in Setup, in the Music view.`,
-      fix: { kind: 'open-view', view: 'music' },
+      fix: { kind: 'open-view', view: 'music', settingId: 'music.model' },
     };
   }
 }

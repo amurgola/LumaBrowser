@@ -26,6 +26,16 @@ class ToolCallPipeline {
     return outcome.result;
   }
 
+  async admitDetached(name, params) {
+    const activation = AutoActivation.check(name, params, this._toolSet.groups);
+    if (activation && activation.bounce) return { refusal: activation.bounce };
+    const args = new BareArgumentRepair(this._toolSet.requiredArgs).repair(name, params);
+    const refusal = await this._refusal(name, args);
+    if (refusal) return { refusal };
+    const resolved = VaultPlaceholders.resolveFor(name, args, this._vaultCaller);
+    return resolved.error ? { refusal: { success: false, error: resolved.error } } : { params: resolved.params };
+  }
+
   async _admitAndRun(name, params, browserService) {
     const refusal = await this._refusal(name, params);
     if (refusal) return { result: refusal, ran: false };

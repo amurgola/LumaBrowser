@@ -24,6 +24,9 @@ browser window, the query engine ([PaletteSearch](PaletteSearch.md)), the
 - `query(win, text)`: searches with that window's tabs.
 - `open(win, item)`: hides the palette first so whatever the row opens gets focus,
   then runs the opener; a throw becomes `{ success: false, error }`.
+- `reveal(win, settingId, selector)`: shows one catalog setting to that window's
+  user ([PaletteOpener](PaletteOpener.md)`.reveal`), recording nothing; resolves
+  `{ success }` or `{ success: false, error }` (a throw included).
 - `continueInChat(query)`: sets a compose chat intent (prompt, documentation pill
   on, not sent; see [ComposeIntent](../llm-server/ui/js/chat/modes/ComposeIntent.md))
   and opens the chat.

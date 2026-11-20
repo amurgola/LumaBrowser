@@ -20,7 +20,7 @@ export default class SetupClickRouter {
     if (this._driverInstall(target)) return;
     if (this._tune(target)) return;
     if (await this._directory(target)) return;
-    if (this._fitOrGambit(target)) return;
+    if (this._fitTest(target)) return;
     const runtimeBtn = target.closest('[data-runtime-action]');
     if (runtimeBtn) {
       this._parts.runtimeActions.trigger(runtimeBtn.dataset.runtimeAction, runtimeBtn.dataset.runtimeId, runtimeBtn.dataset.runtimeUrl);
@@ -110,16 +110,11 @@ export default class SetupClickRouter {
     this._ctx.cards.models.applyDirChange(res.dir);
   }
 
-  _fitOrGambit(target) {
-    const { fitTest, gambit } = this._ctx.cards;
+  _fitTest(target) {
+    const { fitTest } = this._ctx.cards;
     const fitBtn = target.closest('[data-fit-test]');
     if (fitBtn) { if (!fitBtn.disabled) fitTest.start(fitBtn.dataset.fitPath); return true; }
     if (target.closest('[data-fit-cancel]')) { fitTest.cancel(); return true; }
-    const gamBtn = target.closest('[data-gam-test]');
-    if (gamBtn) { if (!gamBtn.disabled) gambit.start(gamBtn.dataset.gamPath); return true; }
-    if (target.closest('[data-gam-cancel]')) { gambit.cancel(); return true; }
-    const gamDl = target.closest('[data-gam-download]');
-    if (gamDl) { gambit.downloadRaw(gamDl.dataset.gamPath); return true; }
     const use = target.closest('[data-fit-use]');
     if (use) { fitTest.use(use.dataset.fitPath, Number(use.dataset.fitCtx), use.dataset.fitKv); return true; }
     return false;

@@ -21,6 +21,9 @@ class NotificationClassifier {
   ];
 
   static MAX_NAME_LENGTH = 40;
+  static SLACK_TITLE_RE = /^new (?:message|reply|mention)s? (in|from) (.+)$/i;
+  static PROTON_BODY_RE = /^From:\s*(.+?)\s+-(?:\s+([\s\S]*))?$/;
+  static NEW_COUNT_RE = /\s*•\s*\d+\s+new$/i;
   static CLICKUP_ACTION_RE = /^(.+?)\s+(commented on|assigned you|assigned|mentioned you in|mentioned|changed|updated|created)\s+(.*)$/i;
 
   static RULES = {
@@ -28,7 +31,7 @@ class NotificationClassifier {
     teams: (n) => NotificationClassifier._teams(n),
     gmail: (n) => NotificationClassifier._mail(n),
     outlook: (n) => NotificationClassifier._mail(n),
-    proton: (n) => NotificationClassifier._mail(n),
+    proton: (n) => NotificationClassifier._proton(n),
     messages: (n) => NotificationClassifier._contact(n),
     whatsapp: (n) => NotificationClassifier._contact(n),
     telegram: (n) => NotificationClassifier._contact(n),
@@ -58,13 +61,20 @@ class NotificationClassifier {
   }
 
   static _slack(n) {
-    const lead = NotificationClassifier._leadingName(n.body);
+    const where = NotificationClassifier.slackConversation(n.title);
     const channelId = n.data && (n.data.channel_id || n.data.channel);
     return {
-      sender: lead || n.title,
+      sender: where.direct ? where.name : NotificationClassifier._leadingName(n.body),
       threadKey: channelId ? `channel:${String(channelId)}` : ThreadKey.normalize(n.title),
-      threadTitle: n.title,
+      threadTitle: where.name,
     };
+  }
+
+  static slackConversation(title) {
+    const text = String(title || '').trim();
+    const match = text.match(NotificationClassifier.SLACK_TITLE_RE);
+    if (!match) return { name: text, direct: !text.startsWith('#') };
+    return { name: match[2].trim(), direct: match[1].toLowerCase() === 'from' };
   }
 
   static _teams(n) {
@@ -79,7 +89,7 @@ class NotificationClassifier {
   }
 
   static _mail(n) {
-    const subject = NotificationClassifier._firstLine(n.body);
+    const subject = NotificationClassifier.firstLine(n.body);
     return {
       sender: n.title,
       threadKey: subject ? ThreadKey.normalize(subject) : ThreadKey.normalize(n.title),
@@ -87,8 +97,17 @@ class NotificationClassifier {
     };
   }
 
+  static _proton(n) {
+    const match = n.body.match(NotificationClassifier.PROTON_BODY_RE);
+    if (!match) return NotificationClassifier._mail(n);
+    const sender = match[1].trim();
+    const subject = NotificationClassifier.firstLine(match[2]);
+    return { sender, threadKey: ThreadKey.normalize(subject) || ThreadKey.normalize(sender), threadTitle: subject || sender };
+  }
+
   static _contact(n) {
-    return { sender: n.title, threadKey: ThreadKey.normalize(n.title), threadTitle: n.title };
+    const name = n.title.replace(NotificationClassifier.NEW_COUNT_RE, '').trim() || n.title;
+    return { sender: name, threadKey: ThreadKey.normalize(name), threadTitle: name };
   }
 
   static _clickup(n) {
@@ -113,7 +132,7 @@ class NotificationClassifier {
     return name.trim();
   }
 
-  static _firstLine(text) {
+  static firstLine(text) {
     return String(text || '').split(/\r?\n/)[0].trim();
   }
 

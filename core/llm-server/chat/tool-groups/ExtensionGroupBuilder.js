@@ -15,7 +15,7 @@ class ExtensionGroupBuilder {
 
   static toolDoc(tool) {
     return 'EXTENSION TOOL (provided by an installed extension; call it like the '
-      + 'browser tools, one per message, via a ```tool JSON block):\n'
+      + 'browser tools, one per message):\n'
       + `- ${tool.name}: ${tool.description || 'extension tool'} Params: { ${ExtensionGroupBuilder._paramList(tool)} }`;
   }
 

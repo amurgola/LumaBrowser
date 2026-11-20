@@ -123,6 +123,27 @@ class BrowserActions {
       },
     },
     {
+      id: 'click_until',
+      label: 'Click until the page changes',
+      chat: true,
+      mcp: {
+        name: 'browser_click_until',
+        description: 'Keep clicking one link or button until the page reaches a state you name, in ONE call: for a step that only goes through some of the time (an item that keeps selling out, a queue, a flaky "Continue"). The target is found again by its visible label before every click, so refs going stale do not matter. Pass at least one stop condition that is ONLY true in the state you want; the call refuses a condition that already holds. A page that stops showing the target (a spinner that never ends) is loaded again from its starting address. Returns {outcome: reached | navigated | timeout | target_gone, clicks, reloads, seconds, url}; on timeout call it again with the same arguments. alert=true shows the tab, raises the window and posts a desktop notification when the loop ends on something to look at.',
+        properties: {
+          tabId: BrowserActions.TAB_ID,
+          text: { type: 'string', description: 'Visible label of the link or button to click each round, e.g. "Ship items to one address"' },
+          selector: { type: 'string', description: 'Optional CSS selector of the element to click, instead of text or to narrow where text is looked for' },
+          untilText: { type: 'string', description: 'Stop when this text is visible on the page' },
+          untilSelector: { type: 'string', description: 'Stop when a visible element matches this CSS selector' },
+          untilUrl: { type: 'string', description: 'Stop when the tab address contains this text' },
+          intervalSeconds: { type: 'number', description: 'Least time between two clicks (default: 3, minimum 1)', default: 3 },
+          timeoutSeconds: { type: 'number', description: 'Give up after this long (default: 300, at most 3600). Keep it under the time your client waits for a tool call.', default: 300 },
+          alert: { type: 'boolean', description: 'Show the tab, raise the window and notify the user when the loop ends on something to look at (default: false)', default: false },
+        },
+        required: ['tabId'],
+      },
+    },
+    {
       id: 'click_at',
       label: 'Click at screen point',
       chat: true,

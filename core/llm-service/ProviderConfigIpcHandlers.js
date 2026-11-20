@@ -8,8 +8,8 @@ class ProviderConfigIpcHandlers {
   }
 
   register() {
-    ipcMain.handle('core.llm.getProviderConfigs', IpcEnvelope.raw(() => this._configs.listProviderConfigs()));
-    ipcMain.handle('core.llm.saveProviderConfigs', IpcEnvelope.enveloped((_e, configs) => { this._configs.saveProviderConfigs(configs); }));
+    ipcMain.handle('core.llm.getProviderConfigs', IpcEnvelope.raw(() => this._configs.currentProviderConfigs()));
+    ipcMain.handle('core.llm.saveProviderConfigs', IpcEnvelope.enveloped(async (_e, configs) => { await this._configs.saveEditedConfigs(configs); }));
     ipcMain.handle('core.llm.fetchModelsForEndpoint', IpcEnvelope.enveloped((_e, type, endpoint, apiKey) => (
       this._configs.probeModelsForType(type, endpoint, apiKey)
     )));

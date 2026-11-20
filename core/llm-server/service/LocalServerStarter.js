@@ -1,8 +1,11 @@
+const path = require('path');
+
 class LocalServerStarter {
   static SETTLE_TIMEOUT_MS = 5 * 60 * 1000;
   static SETTLED_STATES = Object.freeze(['ready', 'idle', 'error']);
   static NO_MODEL_ERROR = 'No local model selected. Choose a default runtime + model in the LLM tab.';
   static BUSY_ERROR = 'The local model is answering another request; its vision projector can load once that finishes. Try again in a moment.';
+  static SWITCH_BUSY_ERROR = 'The local server is answering another request on a different model; this one can load once that finishes. Try again in a moment.';
 
   constructor({ service, runtimeServer, launcher, tracker, settleTimeoutMs = LocalServerStarter.SETTLE_TIMEOUT_MS }) {
     this._service = service;
@@ -23,12 +26,31 @@ class LocalServerStarter {
     return this._visionRestart ? this._visionRestart.then(() => {}, () => {}) : Promise.resolve();
   }
 
-  async ensureRunning({ withVision = false } = {}) {
+  async ensureRunning({ withVision = false, model = null } = {}) {
+    const refusal = model ? await this._switchModel(model) : null;
+    if (refusal) return refusal;
     if (this._visionRestart) await this.whenVisionSettled();
     const status = this._rs.getStatus();
     if (status.state === 'ready') return this._useReady(status, withVision);
     const result = await this._sharedStart(withVision);
     return this._afterStart(result, withVision);
+  }
+
+  async _switchModel(stem) {
+    if (stem === this._defaultStem() || typeof this._service.installedModelPath !== 'function') return null;
+    if (this._visionRestart) await this.whenVisionSettled();
+    if (this._starting) await this._starting.catch(() => {});
+    const modelPath = await this._service.installedModelPath(stem);
+    if (!modelPath || stem === this._defaultStem()) return null;
+    if (this._tracker.isBusy()) return { success: false, code: 'LOCAL_BUSY', error: LocalServerStarter.SWITCH_BUSY_ERROR };
+    this._service.setDefaults({ modelPath });
+    try { await this._rs.ensureStopped(); } catch (_) {}
+    return null;
+  }
+
+  _defaultStem() {
+    const modelPath = this._service.getDefaults().modelPath;
+    return modelPath ? path.basename(modelPath, path.extname(modelPath)) : null;
   }
 
   _useReady(status, withVision) {

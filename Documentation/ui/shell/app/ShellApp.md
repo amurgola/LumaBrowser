@@ -10,6 +10,7 @@ Composition root of a browser window: builds every shell part with its collabora
 - `start()` runs the whole boot (was `initializeApp`).
 - Public fields after start: `detached`, `store`, `log`, `bounds`, `host`, `popupMenu`, `tabActions`, `settings`, `feedback`, `providers`, `slotManager`, `browserRenderer`, `wizard`, `extensionLoader`, `palette` and the other parts.
 - The search palette's chrome side, [ShellPalette](../palette/ShellPalette.md) (with a [SettingsReveal](../settings/SettingsReveal.md) over the Settings modal and slot manager), is built and installed just before ChromeKeyboard, which receives it as `palette`.
+- Right after it, a [StartupModelAlert](../notifications/StartupModelAlert.md) (over the log, that SettingsReveal and `window.ipcBridge`) is installed.
 
 ## Globals
 

@@ -144,7 +144,7 @@
 .luma-dot.ok { background: var(--success); }
 .luma-dot.warn { background: var(--warning); }
 .luma-dot.bad { background: var(--danger); }
-.luma-dot.busy { background: var(--accent); animation: luma-pulse 1.2s ease-in-out infinite; }
+.luma-dot.busy { background: var(--text-primary); animation: luma-pulse 1.2s ease-in-out infinite; }
 @keyframes luma-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 .luma-form {
@@ -233,6 +233,26 @@
 .luma-callout.ok { background: var(--bg-surface-2); }
 .luma-callout.warn { background: var(--warning-dim); }
 .luma-callout.bad { background: var(--danger-dim); }
+.luma-notice { display: flex; align-items: flex-start; gap: var(--space-3); }
+.luma-notice-body { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.luma-notice-title { font-size: var(--text-md); font-weight: var(--weight-medium); }
+.luma-callout.warn .luma-notice-title { color: var(--warning); }
+.luma-callout.bad .luma-notice-title { color: var(--danger); }
+.luma-notice-line { white-space: pre-wrap; }
+.luma-notice-line + .luma-notice-line { margin-top: 2px; }
+.luma-notice-title + .luma-notice-line { margin-top: var(--space-1); }
+.luma-notice-title ~ .luma-notice-line { color: var(--text-secondary); }
+.luma-callout.warn .luma-notice-title ~ .luma-notice-line,
+.luma-callout.bad .luma-notice-title ~ .luma-notice-line { color: var(--text-primary); }
+.luma-notice-controls { display: flex; align-items: center; gap: var(--space-1); flex: 0 0 auto; margin: -3px 0; }
+.luma-notice-x {
+  display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0;
+  border: 0; border-radius: var(--radius-md); background: transparent; color: var(--text-secondary); cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.luma-notice-x:hover { background: var(--surface-hover); color: var(--text-primary); }
+.luma-notice-x:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.luma-notice-x svg { width: 14px; height: 14px; }
 
 .luma-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
 .luma-table th { text-align: left; font-size: var(--text-xs); color: var(--text-secondary); font-weight: var(--weight-medium); padding: 6px var(--space-2); border-bottom: 1px solid var(--border-soft); }
@@ -332,8 +352,15 @@ details[open] > summary .luma-caret::before, .luma-caret.open::before { transfor
 .luma-caret-btn svg { width: 12px; height: 12px; transition: transform var(--dur-fast) var(--ease); }
 .luma-caret-btn.expanded svg { transform: rotate(180deg); }
 
-.luma-toast { position: fixed; z-index: var(--z-toast); background: var(--surface-pop); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop); padding: 10px var(--space-4); font-size: var(--text-md); color: var(--text-primary); }
-.luma-toast.bad { color: var(--danger); }
+.luma-toast {
+  position: fixed; z-index: var(--z-toast); display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  background: var(--surface-pop); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop);
+  font-size: var(--text-md); line-height: var(--leading); color: var(--text-primary);
+}
+.luma-toast.warn { background: color-mix(in srgb, var(--warning) 12%, var(--surface-pop)); }
+.luma-toast.bad { background: color-mix(in srgb, var(--danger) 12%, var(--surface-pop)); }
+.luma-toast-text { flex: 1 1 auto; min-width: 0; padding: var(--space-1) 0; overflow-wrap: anywhere; }
 
 @media (prefers-reduced-motion: reduce) {
   .luma-dot.busy, .luma-spinner, .luma-progress.indeterminate .luma-progress-fill { animation-duration: 2.4s; }

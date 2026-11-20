@@ -10,7 +10,9 @@ Builds the picker entry for one local model (shape in
 - `new ModelContextEntry({ estimator, rungBuilder })`.
 - `ModelContextEntry.isChattable(model)` false for `mmproj-only`, `mtp-only` and
   models without `weights[0].path`.
-- `build({ model, runtime, diagnostics, fitEntry, displayNameFor })`:
+- `build({ model, runtime, diagnostics, settingsDb = null, fitEntry, displayNameFor })`:
+  `settingsDb` reaches every rung and the depth prediction so the estimate follows the
+  user's placement layout, as a Start does;
   - reads the GGUF header only when `gguf.parsed`;
   - the `quant` (and the summary's first fact) is [ModelGrouping](../models/ModelGrouping.md)'s: the file name's
     quant (`UD-Q6_K_M`) before the header's coarser file type (`Q6_K`), as every model list shows it;

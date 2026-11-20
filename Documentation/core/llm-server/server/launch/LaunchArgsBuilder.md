@@ -17,9 +17,13 @@ Assembles the llama-server argv for a resolved launch.
      [`-md <head> [-ngld 99]`] `--spec-ngram-mod-n-match 40 --spec-ngram-mod-n-min 0 --spec-ngram-mod-n-max 16`;
      or standalone `--spec-type ngram-mod --spec-ngram-mod-n-max 4`; then `--cache-type-k-draft/-v-draft`
   6. splits: `--split-mode tensor [--tensor-split r]`; `--rpc <addrs> [--tensor-split r]`;
+     `[--moe-stage-mib 0]` (when `loading.moeStageOff`, see [LoadingPolicy](LoadingPolicy.md)), then
      `--n-cpu-moe N [--tensor-split r]` or `--cpu-moe [--moe-cache-mib N -b 4096 -ub 4096] [--moe-ram-mib N] [--moe-ram-register-mib N] [--moe-profile PATH]`
      (the last three from [MoeRamTierPlan](MoeRamTierPlan.md): luma-b5+ for the tier and profile, luma-b6+ for the
-     register budget); fill-order `--tensor-split r`
+     register budget); fill-order `[--device CUDAa,CUDAb [--spec-draft-device CUDAm] [--mmproj-device CUDAm]] --tensor-split r`:
+     the `--device` list only when the fill names a slowest-first `order`, with the
+     draft model (a family drafter or a detached MTP head, which load their own file)
+     and a loaded projector pinned to the main card `CUDAm` (the fastest, last)
   7. family tuning args, the family drafter args, the runtime's `extraArgs`, then the user's flags
 - `HOST` (`127.0.0.1`).
 
@@ -32,5 +36,7 @@ because newer builds default to automatic slot counts. `--no-context-shift`
 makes a full cache fail the request instead of silently dropping the oldest
 tokens, which on an agent run are the system prompt and tool contract. The
 detached MTP head goes to the GPU whenever the model does: a CPU draft step is
-slower than the decode it saves. User flags come last so they win by
+slower than the decode it saves. With a slowest-first order the draft model and the
+projector go to the last device, which holds the output layer a drafter shares, so the
+drafter stays a one-card context ([LayerFillSplit](LayerFillSplit.md)). User flags come last so they win by
 llama-server's last-occurrence parsing, and are never filtered.

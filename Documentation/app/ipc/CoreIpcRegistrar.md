@@ -17,7 +17,8 @@ Registers every core IPC controller once, at boot. Wiring only.
   3. `LlmServerIpcHandlers.register(llmServerService, deps)` with the same deps
      as legacy (db, getAgentDeps, the artifact, scheduled-task and trigger
      stores, runners and emitters, getHookBaseUrls, image, music, dashboard,
-     liveApi) plus `docsKnowledgeBase` (the shipped documentation index); its
+     liveApi) plus `docsKnowledgeBase` (the shipped documentation index) and
+     `llmService` (the slot router, for the preflight's slot checks); its
      router is `global.__lumaChatRouter`;
   4. DashboardIpcHandlers (with `getExtensionManager` for extension widgets), RagIpcHandlers, BrowserDataIpcHandlers, [VaultIpcHandlers](../../core/vault/VaultIpcHandlers.md);
   5. `ImageIpcHandlers.register`, `VideoIpcHandlers.register`,

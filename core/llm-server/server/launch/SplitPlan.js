@@ -41,6 +41,7 @@ class SplitPlan {
       perCardExtraBytes: moe.perCardHoldBytes || 0,
       flashAttnSupported: flags.flashAttn,
       layersOnGpu: offload.fullOffload ? files.gguf.blockCount : (offload.partial ? offload.partial.ngl : 0),
+      slowFirst: flags.deviceOrder,
     });
   }
 }

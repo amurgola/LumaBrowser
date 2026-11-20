@@ -9,8 +9,9 @@ export default class StreamFinisher {
     const { state } = this._ctx;
     if (!state.streaming) return;
     if (aborted && state.streamMsg && !state.streamMsg.content) state.streamMsg.error = 'stopped';
-    this._end();
+    const conversationId = this._end();
     this._ctx.voice.onTurnDone(aborted);
+    this._ctx.pending.onTurnEnd(conversationId, !aborted);
   }
 
   error(msg, meta) {
@@ -21,7 +22,7 @@ export default class StreamFinisher {
       state.streamMsg.error = msg;
       state.streamMsg.errorMeta = (meta && meta.code) ? meta : null;
     }
-    this._end();
+    this._ctx.pending.onTurnEnd(this._end(), false);
   }
 
   _end() {
@@ -42,6 +43,8 @@ export default class StreamFinisher {
     this._reloadAfterRegenerate(streamCid);
     this._autoTitle(streamCid, finished);
     this._ctx.codeSurface.report();
+    this._ctx.plan.paint();
+    return streamCid;
   }
 
   _dropStaleLiveTab(finished) {

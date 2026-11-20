@@ -28,7 +28,7 @@ class ContextEstimator {
     return FitRows.measuredFullOffload(fitEntry, tokens, kv);
   }
 
-  buildLocalModelOptions({ models, fitResults, runtime, resolveRuntime, diagnostics, displayNameFor } = {}) {
+  buildLocalModelOptions({ models, fitResults, runtime, resolveRuntime, diagnostics, settingsDb, displayNameFor } = {}) {
     const fit = fitResults || {};
     const entries = (models || [])
       .filter((model) => ModelContextEntry.isChattable(model))
@@ -36,6 +36,7 @@ class ContextEstimator {
         model,
         runtime: ContextEstimator._runtimeFor(model, runtime, resolveRuntime),
         diagnostics,
+        settingsDb,
         fitEntry: fit[model.weights[0].path] || null,
         displayNameFor,
       }));

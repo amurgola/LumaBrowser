@@ -17,8 +17,10 @@ The Agent Manager service: the agent store plus everything that changes with it.
 - `listWithKnowledge()` -> agents with `kbDocs`.
 - `api()` -> the extension API: `{ getStore, runTurn, createAgent, deleteAgent, exportAgentBundle, importAgentBundle }`.
 - `publicSurface(chatUiPath)` -> what main.js publishes on `global.__lumaAgentManager`:
-  `{ listAgents() -> [{ id, name, description, kbDocs }], buildTurn(agentIdOrName) -> turn | null, chatUiPath }`.
-  Read by network sharing, the code-mode terminal bridge and triggers.
+  `{ listAgents() -> [{ id, name, description, kbDocs }], buildTurn(agentIdOrName) -> turn | null,
+  agentsWithMissingModel() -> [{ id, name, modelRef }], chatUiPath }`.
+  Read by network sharing, the code-mode terminal bridge, triggers and the boot preflight
+  (`agentsWithMissingModel` is [AgentModels](AgentModels.md)`.missing` over the stored agents).
 
 ## Entry files
 

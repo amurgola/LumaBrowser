@@ -37,6 +37,12 @@ version is known, as the folded primary; Reinstall otherwise, in the tray.
 - `ExtCard.wireFolding(container, { onToggle })` adds one delegated click
   listener (idempotent): the chevron or the name/summary folds a card;
   `onToggle(id, open)` lets a pane keep cards open across re-renders.
+- `ExtCard.setOutcome(card, outcome)` puts the result of an action on the card
+  it belongs to. `outcome`: `{ text, tone?: 'warn' | 'bad' | 'ok', detail? }`.
+  `text` is a state word on the folded line (the card's own state word hides
+  while it shows); `detail` is a line at the top of the tray (`.ext-item-error`
+  for `bad`, `.ext-item-outcome` otherwise), and the card opens so the reason
+  is in view. `null` removes what an earlier call put there.
 
 Styles: `ui/shell/css/settings-content.css` (`.ext-item*`, plus the
 `.ext-pane-*` scaffolding: intro line, head with title and controls, group

@@ -23,6 +23,7 @@ const DesktopCallRisk = require('../approval/DesktopCallRisk');
 const ApprovalCheck = require('./tools/ApprovalCheck');
 const BridgeToolbox = require('./tools/BridgeToolbox');
 const ChatToolTable = require('./tools/ChatToolTable');
+const DetachedToolCalls = require('./tools/DetachedToolCalls');
 const NativeToolPlan = require('./tools/NativeToolPlan');
 const RunToolSet = require('./tools/RunToolSet');
 const ToolCallPipeline = require('./tools/ToolCallPipeline');
@@ -44,10 +45,10 @@ class BridgeRun {
   static IMAGES_GROUP = 'images';
 
   static DEFAULTS = {
-    turnReminder: null, images: null, allowedTools: null, refreshAllowedTools: null, systemPromptOverride: null,
+    turnReminder: null, stepReminder: null, finalCheck: null, awaitsLaterResult: null, images: null, allowedTools: null, refreshAllowedTools: null, systemPromptOverride: null,
     extraTools: null, llmExtra: null, noBrowser: false, ctxPerSlot: null, kbScope: null, allowTakeover: false,
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
-    approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null,
+    approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null, systemRole: null,
     approvedTools: null, onRunApproval: null, onRunApprovalUsed: null, userMessageId: null, userText: null,
     withholdTools: null, forGuest: false,
   };
@@ -76,6 +77,7 @@ class BridgeRun {
       withholdTools: o.withholdTools,
     });
     this._nativePlan = NativeToolPlan.forRun({ router: this._router, modelRef: o.modelRef, override: o.nativeToolsOverride, ctxPerSlot: o.ctxPerSlot });
+    this._toolSet.groups.nativeTools = this._nativePlan.enabled;
     this._budget = AgentBudget.resolve(o.agentBudget, { nativeTools: this._nativePlan.enabled });
     this._health = new RunHealth();
     this._parser = new RunToolCallParser({ health: this._health, maxMalformedReprompts: AgentBudget.maxMalformedReprompts(this._budget) });
@@ -86,7 +88,9 @@ class BridgeRun {
 
   _buildGuard() {
     const o = this._o;
-    const dispatch = new ToolDispatch({ table: new ChatToolTable(), toolSet: this._toolSet, ctx: this._toolContext() });
+    const table = new ChatToolTable();
+    const ctx = this._toolContext();
+    const dispatch = new ToolDispatch({ table, toolSet: this._toolSet, ctx });
     const approval = new ApprovalCheck({
       db: this._host.db,
       policy: ApprovalPolicy.resolveRun({
@@ -109,6 +113,7 @@ class BridgeRun {
     this._health.watchToolLoop(loopMonitor);
     const vaultCaller = VaultToolsHandler.callerOf({ allowTakeover: this._o.allowTakeover, approvalOverride: this._o.approvalOverride });
     const pipeline = new ToolCallPipeline({ toolSet: this._toolSet, loopMonitor, health: this._health, approval, dispatch, vaultCaller });
+    ctx.detached = new DetachedToolCalls({ pipeline, table, toolSet: this._toolSet, ctx });
     return new TruncationGuard({ pipeline, parser: this._parser, toolSet: this._toolSet, router: this._router });
   }
 
@@ -144,6 +149,7 @@ class BridgeRun {
     this._driver = new CompletionDriver({
       router: this._router, modelRef: o.modelRef, temperature: o.temperature, hooks: this._hooks, llmExtra: o.llmExtra,
       conversationId: o.conversationId, assistantMessageId: o.assistantMessageId, turnReminder: o.turnReminder,
+      stepReminder: o.stepReminder,
       parallel: this._budget.maxParallelToolCalls > 1, control: this.control, mirror: this._mirror,
       reasoning: new ReasoningRelay(this._hooks), images: this._images, health: this._health,
       replyCap: new ReplyCap(o.ctxPerSlot), parser: this._parser, nativePlan: this._nativePlan, toolSet: this._toolSet,
@@ -215,6 +221,7 @@ class BridgeRun {
       tools,
       systemPromptAppend,
       systemPromptOverride: o.systemPromptOverride || undefined,
+      systemRole: o.systemRole,
       promptExperiments: o.promptExperiments,
       nativeTools: this._nativePlan.enabled,
       nativeToolsTokens: this._nativePlan.estimateTokens(this._toolSet),
@@ -225,6 +232,8 @@ class BridgeRun {
       compactionCheckpoint: o.nativeHistory ? ConversationCheckpoint.storeFor(this._router && this._router.chatStore, o.conversationId) : null,
       noBrowser: o.noBrowser,
       ctxPerSlot: o.ctxPerSlot,
+      finalCheck: o.finalCheck,
+      awaitsLaterResult: o.awaitsLaterResult,
       screenshotVision: this._toolSet.visionActive,
       onEvent: this._relay.handle,
       onWorkTab: o.pinnedTabId != null ? null : (tabId) => preview.start(tabId),

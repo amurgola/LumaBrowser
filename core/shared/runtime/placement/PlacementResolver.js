@@ -4,7 +4,7 @@ const CudaDeviceProbe = require('../CudaDeviceProbe');
 const CudaDevicePicker = require('../CudaDevicePicker');
 
 class PlacementResolver {
-  static resolve(layout, serverId, { diagnostics, requiredBytes, allowSplit = true, devices: debited } = {}) {
+  static resolve(layout, serverId, { diagnostics, requiredBytes, allowSplit = true, softSingle = false, devices: debited } = {}) {
     const res = PlacementResolver._resourceFor(layout, serverId);
     if (!res) return null;
     if (res.kind === 'ram') return PlacementResolver._ramOffload();
@@ -14,7 +14,8 @@ class PlacementResolver {
     const need = Number(requiredBytes) > 0 ? Number(requiredBytes) : null;
     const roomOf = (idx) => PlacementResolver._roomOf(room, idx);
     if (allowSplit === false) return PlacementResolver._placeUnsplittable(devices, need, roomOf);
-    return PlacementResolver._placeSplittable(layout, serverId, devices, need, roomOf);
+    const softRoomOf = softSingle ? (idx) => PlacementResolver._softRoomOf(room, idx) : null;
+    return PlacementResolver._placeSplittable(layout, serverId, devices, need, roomOf, softRoomOf);
   }
 
   static deviceRoomMap(diagnostics, devices) {
@@ -22,7 +23,8 @@ class PlacementResolver {
     const map = new Map();
     for (const d of list) {
       const room = d.freeBytes != null ? Math.max(0, d.freeBytes - CudaDevicePicker.PER_CARD_RESERVE_BYTES) : null;
-      map.set(d.index, { total: d.totalBytes, free: d.freeBytes, room });
+      const softRoom = d.freeBytes != null ? Math.max(0, d.freeBytes - CudaDevicePicker.SOFT_RESERVE_BYTES) : null;
+      map.set(d.index, { total: d.totalBytes, free: d.freeBytes, room, softRoom });
     }
     return map;
   }
@@ -46,6 +48,11 @@ class PlacementResolver {
     return entry && entry.room != null ? entry.room : 0;
   }
 
+  static _softRoomOf(room, idx) {
+    const entry = room.get(idx);
+    return entry && entry.softRoom != null ? entry.softRoom : 0;
+  }
+
   static _single(idx, offloadToCpu = false) {
     return { cudaDevice: String(idx), offloadToCpu, devices: [idx], split: null };
   }
@@ -59,10 +66,11 @@ class PlacementResolver {
     return PlacementResolver._single(devices[0]);
   }
 
-  static _placeSplittable(layout, serverId, devices, need, roomOf) {
+  static _placeSplittable(layout, serverId, devices, need, roomOf, softRoomOf) {
     const explicit = PlacementResolver._explicitSplit(layout, serverId, devices);
     if (explicit) return { cudaDevice: devices.join(','), offloadToCpu: false, devices: devices.slice(), split: explicit };
     if (need == null) return PlacementResolver._single(devices[0]);
+    if (softRoomOf && softRoomOf(devices[0]) >= need) return PlacementResolver._single(devices[0]);
     const used = PlacementResolver._smallestFittingPrefix(devices, need, roomOf);
     if (used.length === 1) return PlacementResolver._single(used[0]);
     return { cudaDevice: used.join(','), offloadToCpu: false, devices: used, split: PlacementResolver._roomSplit(used, roomOf) };

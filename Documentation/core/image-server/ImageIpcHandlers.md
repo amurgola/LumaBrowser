@@ -7,7 +7,7 @@ lives in the services under [ipc/](ipc/) and in [ImageRouter](ImageRouter.md).
 
 ## Methods
 
-- `ImageIpcHandlers.register(service, { notify, llmService?, civitaiClient? })` registers the 53 channels below
+- `ImageIpcHandlers.register(service, { notify, llmService?, civitaiClient? })` registers the 54 channels below
   on `ipcMain`, wires [ImageServerBroadcast](ipc/ImageServerBroadcast.md) to
   `service.runtimeServer`, and returns `{ router }` (the ImageRouter the chat agent
   bridge shares, one queue and one abort). `service` is the ImageServerService;
@@ -41,7 +41,8 @@ check throws) and `getServerStatus`.
 | `removeInstalledModel` | [InstalledModelRemover](ipc/InstalledModelRemover.md) |
 | `updateModelFile` | [ModelFileUpdater](ipc/ModelFileUpdater.md) |
 | `listLoras`, `importLora`, `loraCatalog`, `downloadLora` | [ImageLoraLibrary](ipc/ImageLoraLibrary.md) |
-| `setModelLoras` | [ModelLoraAttacher](ipc/ModelLoraAttacher.md) |
+| `importLoraFromCivitai` | [CivitaiLoraInstaller](ipc/CivitaiLoraInstaller.md), over the same library, download slot and CivitAI client |
+| `setModelLoras` | [ModelLoraAttacher](ipc/ModelLoraAttacher.md) (a list: any number of LoRAs per model) |
 | `getPromptProfiles`, `pickImportFile`, `importModelFromUrl`, `importModelFromRepo`, `importModelFromFile`, `importModelFromCivitai` | [ImageModelImporter](ipc/ImageModelImporter.md) |
 | `civitaiSearch`, `civitaiPreview`, `getCivitaiSettings`, `setCivitaiSettings` | [CivitaiBrowser](civitai/CivitaiBrowser.md) (`civitaiClient` is its test seam) |
 | `scanExistingLibraries`, `importExistingModel` | [ExistingModelAdopter](ipc/ExistingModelAdopter.md) |

@@ -5,6 +5,7 @@ export default class AgentCard {
   static render(a, modelLabel, on) {
     const card = document.createElement('div');
     card.className = 'luma-card luma-card--center';
+    card.dataset.agentId = String(a.id);
     card.innerHTML = AgentCard._mainHtml(a, modelLabel);
     card.appendChild(AgentCard._actions(a, on));
     return card;

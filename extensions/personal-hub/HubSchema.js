@@ -190,6 +190,7 @@ class HubSchema {
     'ALTER TABLE hub_tasks ADD COLUMN sync_error TEXT',
     "ALTER TABLE hub_contacts ADD COLUMN kind TEXT NOT NULL DEFAULT 'general'",
     "ALTER TABLE hub_contacts ADD COLUMN profile TEXT NOT NULL DEFAULT '{}'",
+    "ALTER TABLE hub_contacts ADD COLUMN context_id TEXT NOT NULL DEFAULT ''",
   ];
 
   static DEFAULT_COLUMNS = [

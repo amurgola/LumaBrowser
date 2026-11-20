@@ -40,7 +40,12 @@ shows an Update button only when a newer release exists.
 - Sizes each model and its KV cache to your video memory and chooses full,
   partial or CPU offload.
 - Planning starts from a live reading of what other apps already hold, with a
-  "GPU headroom" setting per card.
+  "GPU headroom" setting per card. A model that fits whole on one card only by
+  using half of that headroom still loads there, because a slower second card
+  or the CPU costs far more speed; the plan notes say when that happened.
+- A banner warns when a card the model sits on runs short of free video memory.
+  It can be turned off under Chat defaults, More settings (Low VRAM warning);
+  unload on VRAM pressure keeps working either way.
 - Moves MoE experts to the CPU when that is faster. A MoE model too large for
   video memory keeps its experts in RAM and uses spare video memory as an
   expert cache.
@@ -65,6 +70,19 @@ shows an Update button only when a newer release exists.
 - Each model has its own Tune panel: thinking, temperature and samplers, reply
   limit, context, extra llama.cpp flags, run timeout and run steps.
 - Named profiles save a set of those and switch between them.
+
+## Testing a model (add-on)
+
+The Model Testing add-on adds a "Model testing" tab to Setup.
+
+- Pick any downloaded model and the tests to run against it. A model other
+  than your default is loaded for the run and your default is put back after.
+- The compatibility gambit grades a model on the work the app gives it:
+  following instructions, holding a conversation, driving the browser, picking
+  tools, answering correctly, building an artifact and finishing a turn
+  without looping. It takes 30 to 60 minutes.
+- Each test keeps its latest result per model, and the full transcripts of the
+  last run can be downloaded.
 
 ## Other providers and the local API
 

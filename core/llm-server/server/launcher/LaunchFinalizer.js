@@ -48,11 +48,17 @@ class LaunchFinalizer {
 
   _weightLedgerBySplit(launch) {
     try {
-      const i = Array.isArray(launch.args) ? launch.args.indexOf('--tensor-split') : -1;
-      if (i >= 0 && launch.args[i + 1]) {
-        this._vram.setSplit('llm', String(launch.args[i + 1]).split(',').map((x) => Number(x.trim())));
-      }
+      const weights = LaunchFinalizer._splitWeights(launch);
+      if (weights) this._vram.setSplit('llm', weights);
     } catch (_) {}
+  }
+
+  static _splitWeights(launch) {
+    const layerSplit = launch.plan && launch.plan.layerSplit;
+    if (layerSplit && Array.isArray(layerSplit.perDevice)) return layerSplit.perDevice.map((device) => Number(device.layers) || 0);
+    const i = Array.isArray(launch.args) ? launch.args.indexOf('--tensor-split') : -1;
+    if (i < 0 || !launch.args[i + 1]) return null;
+    return String(launch.args[i + 1]).split(',').map((x) => Number(x.trim()));
   }
 }
 

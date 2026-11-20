@@ -49,7 +49,6 @@ export default class ModelsCard {
     this._setRows(scan && scan.available ? (scan.models || []) : []);
     this.addons.render(body);
     this._ctx.cards.fitTest.hydrate();
-    this._ctx.cards.gambit.hydrate();
   }
 
   updateInstalledSummary() {

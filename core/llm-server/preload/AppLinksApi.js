@@ -18,6 +18,7 @@ class AppLinksApi extends PreloadSection {
       palette: {
         record: (place) => ipcRenderer.invoke('core.palette.record', place),
         toggle: () => ipcRenderer.invoke('core.palette.toggle'),
+        reveal: (settingId, selector) => ipcRenderer.invoke('core.palette.reveal', settingId, selector),
         doubleShift: () => ipcRenderer.invoke('core.palette.getDoubleShift'),
       },
     };

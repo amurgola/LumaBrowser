@@ -14,7 +14,11 @@ The AI Chat settings tab controller.
 - `load()`: `ext.ai-chat.getPreferences` fills the prompt, then fills the
   model select from
   `llmSlotAPI.getAllAvailableModels()` with `getSlotConfig('ai-chat.navigator')`
-  selected (value `providerId::modelId`).
+  selected (value `providerId::modelId`) through
+  [SlotModelOptions](../../../core/llm-server/ui/js/models/SlotModelOptions.md)`.fill`;
+  a saved model that is gone shows as a selected, disabled "Unavailable: <model>".
+  On save `SlotModelOptions.parse` splits at the first `::` only, since a paired
+  computer's model id has one of its own (`local::Qwen3-8B`).
 - `savePreferences()`: `ext.ai-chat.savePreferences({ systemPrompt })`.
 - `saveModelSlot()`: `setSlotConfig(SLOT_ID, provider, model)`, or
   `clearSlotConfig(SLOT_ID)` for the default option.

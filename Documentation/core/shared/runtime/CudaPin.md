@@ -21,8 +21,11 @@ applies the choice to a spawn environment. Device reads are in
      commas, except that a pick of every card returns `null` (identical to no
      pin, and it keeps the planner budgeting the whole box).
 - `CudaPin.filterDiagnosticsToDevices(diagnostics, deviceStr)` returns a copy
-  whose `cuda.devices` holds only the cards at the listed positions, so the
-  launch planner sizes against the cards the child will actually see. Returns
+  whose `cuda.devices` holds only the cards at the listed positions, in the
+  order the string lists them (each once), so the launch planner sizes against
+  the cards the child will actually see and its n-th card is the child's n-th
+  device: `CUDA_VISIBLE_DEVICES=1,0`, which an ordered layout group can produce,
+  makes card 1 the child's first device. Returns
   the original snapshot when there is no device string, no device list, no
   integer index, or the filter would leave no card.
 - `CudaPin.applyCudaDeviceEnv(env, device)` sets `CUDA_VISIBLE_DEVICES` and,

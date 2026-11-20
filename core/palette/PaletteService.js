@@ -105,6 +105,15 @@ class PaletteService {
     }
   }
 
+  reveal(win, settingId, selector = null) {
+    try {
+      const shown = this.opener.reveal(settingId, win, selector);
+      return shown.success ? { success: true } : shown;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
   continueInChat(query) {
     const llm = this._d.getLlm();
     if (!llm) return { success: false, error: 'The chat is turned off.' };

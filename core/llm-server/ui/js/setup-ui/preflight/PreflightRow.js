@@ -2,7 +2,7 @@ import HtmlEscaper from '../../format/HtmlEscaper.js';
 import Clipboard from '../../dom/Clipboard.js';
 
 export default class PreflightRow {
-  static ACTION_SELECTOR = '[data-pf-action="install"], [data-pf-action="open"], [data-pf-action="recheck"], [data-pf-action="dismiss-vram"]';
+  static ACTION_SELECTOR = '[data-pf-action="install"], [data-pf-action="open"], [data-pf-action="open-settings"], [data-pf-action="recheck"], [data-pf-action="dismiss-vram"]';
 
   static COPIED_MS = 1500;
 
@@ -45,6 +45,9 @@ export default class PreflightRow {
     if (fix.kind === 'open-view') {
       return { actionHtml: '<button class="luma-btn luma-btn--sm" data-pf-action="open" type="button">Open Setup</button>', extraHtml: '' };
     }
+    if (fix.kind === 'open-settings') {
+      return { actionHtml: '<button class="luma-btn luma-btn--sm" data-pf-action="open-settings" type="button">Open Settings</button>', extraHtml: '' };
+    }
     if (fix.kind === 'dismiss-vram') {
       return { actionHtml: '<button class="luma-btn luma-btn--sm" data-pf-action="dismiss-vram" type="button" title="Hide until the pressure changes">Dismiss</button>', extraHtml: '' };
     }
@@ -74,7 +77,8 @@ export default class PreflightRow {
     if (!btn) return;
     if (fix.kind === 'dismiss-vram') btn.addEventListener('click', () => handlers.onDismissVram(issue));
     else if (fix.kind === 'install-runtime') btn.addEventListener('click', () => handlers.onInstall(issue, row, btn));
-    else if (fix.kind === 'open-view') btn.addEventListener('click', () => handlers.onOpen(fix.view));
+    else if (fix.kind === 'open-view') btn.addEventListener('click', () => handlers.onOpen(fix.view, fix));
+    else if (fix.kind === 'open-settings') btn.addEventListener('click', () => handlers.onOpenSettings(fix));
     else if (fix.kind === 'sysdeps') PreflightRow._wireSysdeps(row, btn, handlers);
   }
 

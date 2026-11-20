@@ -8,7 +8,10 @@ one card that says what is going on and whether anything is being asked of
 the user. A card is written by the model the user chose for the Hub's
 summariser slot (`SLOT` = `personal-hub.summarizer`), and only written again
 when its own items changed, so a new notification updates one card and
-leaves the rest alone. Without a model, or with summaries switched off,
+leaves the rest alone. Each item also carries the coming meetings that bear
+on it ([CalendarEvidence](CalendarEvidence.md): the same subject, or a
+meeting with just the person who wrote), so booking a meeting rewrites the
+card that was asking for one. Without a model, or with summaries switched off,
 every card still shows, filled in by plain rules. When a card may need the
 user, the conversations behind what is asked are read from the user's own
 tabs and the card is written once more with them. The model only proposes:
@@ -17,7 +20,7 @@ as cards are written.
 
 ## Methods
 
-- `new ActivitySummarizer({ inbox, contexts, summaries, db, llm?, reader?, people?, emit?, now?, debounceMs = 15000 })`:
+- `new ActivitySummarizer({ inbox, contexts, summaries, db, llm?, reader?, people?, meetings?, emit?, now?, debounceMs = 15000 })`:
   `inbox` an [InboxService](../inbox/InboxService.md), `contexts` a
   ContextService, `summaries` a [SummaryRepository](SummaryRepository.md),
   `db` the extension's DatabaseService (the on/off setting), `llm` the app's
@@ -25,7 +28,9 @@ as cards are written.
   a [ConversationReader](../snapshot/ConversationReader.md) or `null` (reads
   the conversation behind what may need the user), `people` a
   [ContactService](../contacts/ContactService.md) or `null` (names
-  participants as known contacts).
+  participants as known contacts), `meetings` a
+  [CalendarEvidence](CalendarEvidence.md) or `null` (the coming meetings
+  that bear on an item; without one no item has any).
 - `status()` -> `{ enabled, available, provider, model, running, lastRunAt,
   lastError }`: `available` is whether the app has an LLM service at all;
   `provider` and `model` are what the slot resolves to right now (the user's
@@ -33,12 +38,15 @@ as cards are written.
 - `enabled()`, `setEnabled(enabled)`: the setting `summary.enabled` (off by
   default). Switching it emits `summary.changed`, and switching it on
   schedules a pass at once. Returns `status()`.
-- `models()` -> `{ models: [{ value, label }], chosen }`: what the model
+- `models()` -> `{ models: [{ value, label, unavailable? }], chosen }`: what the model
   picker shows. Every model the LLM service lists
   (`getAllAvailableModels`), each `value` as `<providerId>::<modelId>`;
   `chosen` is the slot's current model in the same form
-  (`getSlotConfig(SLOT)`), or `''` when nothing resolves. Without an LLM
-  service it answers `{ models: [], chosen: '' }`.
+  (`getSlotConfig(SLOT)`), or `''` when nothing resolves. A model picked for
+  the Hub (`explicit`) that nothing offers any more is still listed, with
+  `unavailable: true` and the label `Unavailable: <model>`
+  (`UNAVAILABLE_PREFIX`). Without an LLM service it answers
+  `{ models: [], chosen: '' }`.
 - `setModel(value)`: `value` is `<provider>::<model>`
   (`setSlotConfig(SLOT, provider, model)`), or `''` to go back to the app's
   active provider (`clearSlotConfig(SLOT)`). Emits `summary.changed` and
@@ -47,7 +55,10 @@ as cards are written.
 - `cards()` -> `[{ key, contextId, name, color, count, lastAt, items,
   headline, summary, needsYou, reason, asks, source, stale, updatedAt,
   error }]`, contexts in the user's order and "Other" last; a context with
-  no recent activity has no card. `source` is `ai` when a stored summary
+  no recent activity has no card. Each of a card's `items` carries
+  `contextId` and `meetings` (`[{ id, title, startsAt, endsAt, allDay,
+  attendees, organizer }]`, empty when none bears on it). `source` is `ai`
+  when a stored summary
   exists, else `rules`; `stale` says the items changed since the AI text was
   written; `asks` (`[{ threadId, what }]`) naming an item that has since
   left the card are dropped; `error` is the last failed attempt, kept beside
@@ -71,9 +82,15 @@ as cards are written.
   `MAX_ITEMS` = 300, each filed by `ContextService.forItem`. Unfiled items
   share the key `other`, named `Other`, or `Everything` while the user has
   no contexts yet.
+- Meetings: one `meetings.forItems(items)` call over all of those items
+  gives each its coming meetings, attached as `item.meetings`.
 - Signature: a sha1 over the card's name and, for its newest
   `MAX_ITEMS_PER_CARD` = 25 items, each one's id, last activity time, count
-  and summary. Those same 25 items are what the model is sent.
+  and summary, followed for an item with meetings by each meeting's id and
+  start (`_booked`). An item without a meeting adds nothing, so a card with
+  no meetings keeps the signature it had; a meeting booked, moved or
+  dropped changes the signature and the card is written again. Those same
+  25 items are what the model is sent.
 - Each pass first drops the stored summaries of contexts that no longer have
   any activity or no longer exist.
 - Rule cards (no stored summary): the headline is the item count, the
@@ -98,7 +115,9 @@ as cards are written.
 - `_enrich(items)`: the items as the prompt wants them. Each gets `people`
   (`_names`) and `snapshot`: the conversation text when the reader holds a
   snapshot of the item's latest activity (its `sourceAt` equals the item's
-  `lastAt`), else empty, so an outdated conversation is never sent.
+  `lastAt`), else empty, so an outdated conversation is never sent. The
+  item's `meetings` pass through as they are, and the prompt lists them
+  under the item.
 - `_names(item)`: each participant looked up as a contact (`_contact`). A
   known one is named as the contact, with `(also on slack, gmail)` listing
   the other apps that person appears in; an unknown one, or any when there
@@ -139,7 +158,8 @@ the end of a pass.
 every `thread.changed` calls `schedule()`, and
 [HubService](../HubService.md)`.saveContexts` calls `schedule(0)` so the
 cards are grouped again. The extension hands it the Hub's one
-ConversationReader as `reader` and its ContactService as `people`. The slot
+ConversationReader as `reader`, its ContactService as `people` and a
+CalendarEvidence over its CalendarService as `meetings`. The slot
 is declared in `manifest.js` (optional
 `core:llm-service` slot `summarizer`) and picked in Settings > Hub or the
 Dashboard's settings panel, both through
@@ -161,6 +181,12 @@ conversation would be slow and would open hidden tabs all day, so the Hub
 reads only where the first answer says the user may be needed, a few
 conversations per card, and lets the model look again. Most cards need
 nothing and cost one call.
+
+A question about when to meet is settled by the meeting, not by a reply the
+Hub may never see. The calendar is already synced, so the meetings that
+bear on an item ride along with it, and being part of the signature they
+rewrite the card the moment one is booked, which is when "someone is
+waiting" stops being true.
 
 ### Room to think
 

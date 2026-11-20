@@ -1,14 +1,18 @@
+const ChatAssistantText = require('../ChatAssistantText');
 const ChatStyleDocs = require('./ChatStyleDocs');
-const DocsSourceGrant = require('./DocsSourceGrant');
 const ConversationGrants = require('../approval/ConversationGrants');
 const ConversationJobReminder = require('../jobs/ConversationJobReminder');
 const ConversationJobs = require('../jobs/ConversationJobs');
+const PlanTool = require('../plan/PlanTool');
+const BackgroundTasks = require('../tasks/BackgroundTasks');
+const BackgroundTaskTools = require('../tasks/BackgroundTaskTools');
 
 class AgentTurnDispatch {
   static NOT_READY = 'Tools aren’t ready yet: the browser is still starting up. Try again in a moment.';
 
-  constructor({ agentBridge, chatStore, getAgentDeps, policy, contextWindow, jobs = ConversationJobs.shared }) {
+  constructor({ agentBridge, chatStore, getAgentDeps, policy, contextWindow, jobs = ConversationJobs.shared, tasks = BackgroundTasks.shared }) {
     this._jobs = jobs;
+    this._tasks = tasks;
     this._bridge = agentBridge;
     this._store = chatStore;
     this._getAgentDeps = getAgentDeps;
@@ -20,7 +24,14 @@ class AgentTurnDispatch {
     const deps = AgentTurnDispatch.requireDeps(this._getAgentDeps);
     const t = AgentTurnDispatch._withDefaults(turn);
     const grants = t.runApprovals || this._conversationGrants(t);
-    const tools = AgentTurnDispatch._withDocs(this._toolAccess(t.modeTurn, t.evalOverrides, t.convId, deps), t.docsGrant);
+    const planTool = PlanTool.forTurn(this._store, t);
+    if (planTool) planTool.beginTurn(t.hooks);
+    const taskTools = BackgroundTaskTools.forTurn(t, { tasks: this._tasks, jobs: this._jobs });
+    const sessionTools = [
+      ...[t.docsGrant, planTool].filter(Boolean).map((source) => source.extraTool),
+      ...(taskTools ? taskTools.extraTools : []),
+    ];
+    const tools = AgentTurnDispatch._admitting(this._toolAccess(t.modeTurn, t.evalOverrides, t.convId, deps), sessionTools);
     return this._bridge.run({
       modelRef: t.modelRef,
       messages: t.messages,
@@ -30,14 +41,18 @@ class AgentTurnDispatch {
       userMessageId: t.userMessageId || null,
       userText: t.userText || null,
       deps,
-      hooks: t.hooks,
+      hooks: planTool ? planTool.watching(t.hooks) : t.hooks,
       priorMessages: this._priorMessages(t.convId, t.asstId),
       allowTakeover: !t.evalOverrides,
-      modeSystemPrompt: AgentTurnDispatch._promptAppend(t.modeTurn, t.choicesOn, t.voiceOn, t.docsGrant),
-      turnReminder: AgentTurnDispatch._turnReminder(t.voiceOn, this._jobs.activeFor(t.convId)),
+      systemRole: t.modeTurn ? null : ChatAssistantText.ROLE_TOOLS,
+      modeSystemPrompt: AgentTurnDispatch._promptAppend(t.modeTurn, t.choicesOn, t.voiceOn, t.docsGrant, planTool, taskTools),
+      turnReminder: AgentTurnDispatch._turnReminder(t.voiceOn, this._otherJobs(t.convId)),
+      stepReminder: AgentTurnDispatch._stepReminder(planTool, taskTools),
+      finalCheck: planTool ? () => planTool.beforeFinalAnswer() : null,
+      awaitsLaterResult: taskTools ? () => taskTools.awaitsLaterResult : null,
       images: t.images,
       ...tools,
-      ...AgentTurnDispatch._modeSeams(t.modeTurn, t.evalOverrides, t.docsGrant, t.modelBudget || null),
+      ...AgentTurnDispatch._modeSeams(t.modeTurn, t.evalOverrides, sessionTools, t.modelBudget || null),
       ctxPerSlot: this._window.forRef(t.modelRef) || this._window.localPerSlot(),
       llmExtra: t.llmExtra,
       ...AgentTurnDispatch._evalExtras(t.evalOverrides),
@@ -46,6 +61,16 @@ class AgentTurnDispatch {
       onRunApproval: grants && typeof grants.onGranted === 'function' ? grants.onGranted : null,
       onRunApprovalUsed: grants && typeof grants.onUsed === 'function' ? grants.onUsed : null,
     });
+  }
+
+  _otherJobs(convId) {
+    return this._jobs.activeFor(convId).filter((job) => job.kind !== BackgroundTasks.JOB_KIND);
+  }
+
+  static _stepReminder(planTool, taskTools) {
+    const sources = [planTool ? () => planTool.reminder() : null, taskTools ? () => taskTools.tail() : null].filter(Boolean);
+    if (!sources.length) return null;
+    return () => sources.map((source) => source()).filter(Boolean).join('\n\n') || null;
   }
 
   static _turnReminder(voiceOn, runningJobs) {
@@ -101,28 +126,33 @@ class AgentTurnDispatch {
     };
   }
 
-  static _withDocs(tools, docsGrant) {
-    if (!docsGrant) return tools;
+  static _admitting(tools, sessionTools) {
+    if (!sessionTools.length) return tools;
+    const names = sessionTools.map((tool) => tool.name);
+    const admit = (allowed) => (Array.isArray(allowed) ? [...new Set([...allowed, ...names])] : allowed);
     const refresh = tools.refreshAllowedTools;
     return {
-      allowedTools: DocsSourceGrant.allowing(tools.allowedTools, docsGrant),
-      refreshAllowedTools: refresh ? () => DocsSourceGrant.allowing(refresh(), docsGrant) : null,
+      allowedTools: admit(tools.allowedTools),
+      refreshAllowedTools: refresh ? () => admit(refresh()) : null,
     };
   }
 
-  static _promptAppend(modeTurn, choicesOn, voiceOn, docsGrant = null) {
+  static _promptAppend(modeTurn, choicesOn, voiceOn, docsGrant = null, planTool = null, taskTools = null) {
     return [
       modeTurn && modeTurn.systemPrompt ? String(modeTurn.systemPrompt) : null,
       docsGrant ? docsGrant.note : null,
+      planTool ? planTool.note : null,
+      taskTools ? taskTools.note : null,
+      !modeTurn ? ChatAssistantText.toolsAnswering() : null,
       !modeTurn && !voiceOn ? ChatStyleDocs.WIDGETS : null,
       choicesOn ? ChatStyleDocs.CHOICES : null,
       voiceOn ? ChatStyleDocs.VOICE : null,
     ].filter(Boolean).join('\n\n') || null;
   }
 
-  static _modeSeams(modeTurn, evalOverrides, docsGrant = null, modelBudget = null) {
+  static _modeSeams(modeTurn, evalOverrides, sessionTools = [], modelBudget = null) {
     const modeTools = modeTurn && Array.isArray(modeTurn.tools) ? modeTurn.tools : [];
-    const extraTools = docsGrant ? [...modeTools, docsGrant.extraTool] : modeTools;
+    const extraTools = sessionTools.length ? [...modeTools, ...sessionTools] : modeTools;
     return {
       extraTools: extraTools.length ? extraTools : null,
       noBrowser: !!(modeTurn && modeTurn.noBrowser),

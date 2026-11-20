@@ -5,12 +5,15 @@ export default class NotificationLog {
 
   static MAX_ENTRIES = 10;
 
+  static ACTION_ENTRY_ROWS = 3;
+
   constructor() {
     this.entries = [];
     this.visible = false;
     this._hovered = false;
     this._timer = null;
     this._tile = null;
+    this._nextId = 0;
   }
 
   install() {
@@ -19,8 +22,9 @@ export default class NotificationLog {
     }
   }
 
-  add(message, type = 'info') {
-    this.entries.unshift({ message, type, time: new Date().toLocaleTimeString() });
+  add(message, type = 'info', opts = {}) {
+    this._nextId += 1;
+    this.entries.unshift({ id: String(this._nextId), message, type, time: new Date().toLocaleTimeString(), action: NotificationLog._action(opts) });
     if (this.entries.length > NotificationLog.MAX_ENTRIES) this.entries.length = NotificationLog.MAX_ENTRIES;
     this.visible = true;
     this.render();
@@ -32,8 +36,18 @@ export default class NotificationLog {
     window.chromeOverlayAPI.show({
       id: 'notif',
       html: NotificationLogHtml.render(this.entries, NotificationLog.AUTOCLOSE_MS),
-      ...NotificationLog.place(window.innerWidth, window.innerHeight, this._tile, this.entries.length),
+      ...NotificationLog.place(window.innerWidth, window.innerHeight, this._tile, this._rows()),
     });
+  }
+
+  runAction(entryId) {
+    const entry = this.entries.find((e) => e.id === entryId && e.action);
+    if (!entry) return;
+    const { run } = entry.action;
+    entry.action = null;
+    try { run(); } catch (_) {}
+    if (this._holdsOpen()) this.render();
+    else this.hide();
   }
 
   static place(innerWidth, innerHeight, tile, count) {
@@ -48,6 +62,7 @@ export default class NotificationLog {
   }
 
   hide() {
+    for (const entry of this.entries) entry.action = null;
     this.visible = false;
     this._hovered = false;
     this._clearTimer();
@@ -66,8 +81,22 @@ export default class NotificationLog {
 
   _scheduleAutoClose() {
     this._clearTimer();
-    if (this._hovered) return;
+    if (this._hovered || this._holdsOpen()) return;
     this._timer = setTimeout(() => { this._timer = null; this.hide(); }, NotificationLog.AUTOCLOSE_MS);
+  }
+
+  _holdsOpen() {
+    return this.entries.some((entry) => entry.action);
+  }
+
+  _rows() {
+    return this.entries.reduce((rows, entry) => rows + (entry.action ? NotificationLog.ACTION_ENTRY_ROWS : 1), 0);
+  }
+
+  static _action(opts) {
+    const action = opts && opts.action;
+    if (!action || typeof action.run !== 'function') return null;
+    return { label: String(action.label || 'Open'), run: action.run };
   }
 
   _clearTimer() {

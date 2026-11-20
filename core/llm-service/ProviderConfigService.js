@@ -49,6 +49,16 @@ class ProviderConfigService {
     return local ? [...stored, local] : stored;
   }
 
+  async currentProviderConfigs() {
+    await this._refreshLocalModels();
+    return this.listProviderConfigs();
+  }
+
+  async saveEditedConfigs(configs) {
+    await this._applyLocalModelPick(configs);
+    this.saveProviderConfigs(configs);
+  }
+
   saveProviderConfigs(configs) {
     const persisted = ProviderConfigService._userConfigs(configs);
     this._db.set(ProviderConfigService.PROVIDER_CONFIGS_KEY, persisted);
@@ -63,6 +73,20 @@ class ProviderConfigService {
   _localProviderEntry() {
     const service = this._llmServerService;
     return service && service.computeLocalProviderEntry ? service.computeLocalProviderEntry() : null;
+  }
+
+  async _refreshLocalModels() {
+    const service = this._llmServerService;
+    if (!service || typeof service.freshInstalledChatModels !== 'function') return;
+    try { await service.freshInstalledChatModels(); } catch (_) {}
+  }
+
+  async _applyLocalModelPick(configs) {
+    const service = this._llmServerService;
+    const current = this._localProviderEntry();
+    const edited = (Array.isArray(configs) ? configs : []).find((config) => config && config.id === ProviderConfigService.MANAGED_LOCAL_ID);
+    if (!edited || !current || !edited.selectedModel || edited.selectedModel === current.selectedModel) return;
+    if (typeof service.selectInstalledModel === 'function') await service.selectInstalledModel(edited.selectedModel);
   }
 
   _syncSingleProviderConfigs(configs) {

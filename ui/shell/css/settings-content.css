@@ -783,6 +783,7 @@ details[open] > summary .gs-chevron { transform: rotate(90deg); }
 .ext-item-detail-value { min-width: 0; overflow-wrap: anywhere; color: var(--text-secondary); }
 .ext-item-detail-value.is-mono { font-family: var(--font-mono); font-size: var(--text-xs); }
 .ext-item-error { margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--danger); overflow-wrap: anywhere; }
+.ext-item-outcome { margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--text-primary); overflow-wrap: anywhere; }
 .ext-item-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .ext-item-tray-inner > :last-child { margin-bottom: 0; }
 .ext-list-item-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-3); }

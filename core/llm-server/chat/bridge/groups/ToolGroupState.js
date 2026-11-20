@@ -8,6 +8,7 @@ class ToolGroupState {
     this._conversationId = conversationId;
     this.available = AvailableGroups.for(allows, extTools, { kbHasDocs });
     this.availableKeys = new Set(this.available.map((g) => g.key));
+    this.nativeTools = false;
     this._forced = new Set(forcedActive);
     this.active = new Set(this._persistedKeys());
     for (const name of this._forced) this.active.add(name);
@@ -48,7 +49,9 @@ class ToolGroupState {
   }
 
   docsFor(keys) {
-    return this.available.filter((g) => keys.includes(g.key)).map((g) => g.doc).join('\n\n');
+    return this.available.filter((g) => keys.includes(g.key))
+      .map((g) => (this.nativeTools ? ToolGroups.docWithoutFenceExamples(g.doc) : g.doc))
+      .join('\n\n');
   }
 
   owningGroups(name) {

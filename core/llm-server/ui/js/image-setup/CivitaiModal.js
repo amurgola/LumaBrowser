@@ -10,10 +10,12 @@ export default class CivitaiModal extends ImageModal {
   static CIVITAI_URL = /^https?:\/\/(?:www\.)?civitai\.com\//i;
 
   static DEFAULT_FILTERS = {
-    types: [{ id: 'Checkpoint', label: 'Checkpoints' }, { id: 'LORA', label: 'LoRAs (browse only)' }],
+    types: [{ id: 'Checkpoint', label: 'Checkpoints' }, { id: 'LORA', label: 'LoRAs' }],
     bases: [{ id: 'importable', label: 'Installable bases' }],
     sorts: ['Most Downloaded', 'Highest Rated', 'Newest'],
   };
+
+  static FAMILY_BASE = { id: 'family', label: 'Fits this model' };
 
   constructor(panel) {
     super();
@@ -27,24 +29,38 @@ export default class CivitaiModal extends ImageModal {
     this._searchTimer = null;
     this._searchSeq = 0;
     this._detailSeq = 0;
+    this._family = null;
+    this._onClose = null;
+    this._libraryVersions = new Set();
+    this._addedLoras = [];
   }
 
-  open() {
+  open(opts = {}) {
     if (this.isOpen()) return;
     this.show(CivitaiModalMarkup.HTML);
     this._items = [];
     this._cursor = null;
     this._selected = null;
+    this._filters = null;
     this._details.clear();
+    this._family = opts.family || null;
+    this._onClose = opts.onClose || null;
+    this._libraryVersions = new Set();
+    this._addedLoras = [];
     this._bind();
     this._paintFilters();
+    if (opts.type) { this._type.value = opts.type; this._paintSubtitle(this._defaultFilters().types); }
     setTimeout(() => { if (this._query) this._query.focus(); }, 30);
-    this._loadSettings().then(() => this.search());
+    Promise.all([this._loadSettings(), this._loadLibrary()]).then(() => this.search());
   }
 
   close() {
     if (this._searchTimer) { clearTimeout(this._searchTimer); this._searchTimer = null; }
+    const wasOpen = this.isOpen();
     super.close();
+    const onClose = this._onClose;
+    this._onClose = null;
+    if (wasOpen && onClose) onClose(this._addedLoras.slice());
   }
 
   _bind() {
@@ -73,14 +89,35 @@ export default class CivitaiModal extends ImageModal {
 
   _paintFilters() {
     const esc = HtmlEscaper.escape;
-    const f = this._filters || CivitaiModal.DEFAULT_FILTERS;
+    const f = this._filters || this._defaultFilters();
     const keep = (el, options, fallback) => {
       const current = el.value || fallback;
       el.innerHTML = options.map((o) => `<option value="${esc(o.id)}"${o.id === current ? ' selected' : ''}>${esc(o.label)}</option>`).join('');
     };
     keep(this._type, f.types, 'Checkpoint');
-    keep(this._base, f.bases, 'importable');
+    keep(this._base, f.bases, this._family ? CivitaiModal.FAMILY_BASE.id : 'importable');
     keep(this._sort, f.sorts.map((s) => ({ id: s, label: s })), 'Most Downloaded');
+    this._paintSubtitle(f.types);
+  }
+
+  _defaultFilters() {
+    const defaults = CivitaiModal.DEFAULT_FILTERS;
+    return this._family ? { ...defaults, bases: [CivitaiModal.FAMILY_BASE, ...defaults.bases] } : defaults;
+  }
+
+  _paintSubtitle(types) {
+    const sub = this.wrap.querySelector('.ms-sub');
+    const type = types.find((t) => t.id === this._type.value);
+    if (sub && type) sub.textContent = `CivitAI · ${type.label}`;
+  }
+
+  async _loadLibrary() {
+    try {
+      const api = this._panel.api();
+      const r = api.listLoras ? await api.listLoras() : null;
+      const loras = (r && r.success && r.loras) || [];
+      this._libraryVersions = new Set(loras.map((l) => l.listing && l.listing.versionId).filter(Boolean));
+    } catch (_) {}
   }
 
   async _loadSettings() {
@@ -124,6 +161,7 @@ export default class CivitaiModal extends ImageModal {
     try {
       r = await this._panel.api().civitaiSearch({
         query: query || undefined, types: [this._type.value], base: this._base.value, sort: this._sort.value, cursor: more ? this._cursor : undefined,
+        ...(this._family ? { family: this._family } : {}),
       });
     } catch (err) { r = { success: false, error: err.message || 'CivitAI search failed.' }; }
     if (!this.isOpen() || seq !== this._searchSeq) return;
@@ -182,10 +220,21 @@ export default class CivitaiModal extends ImageModal {
   _paintDetail(d) {
     const detail = document.createElement('div');
     detail.className = 'ms-detail';
-    detail.innerHTML = CivitaiResultRow.detailHtml(d, { busy: !!this._panel.store.activeDl });
+    detail.innerHTML = CivitaiResultRow.detailHtml(d, { busy: !!this._panel.store.activeDl, lora: this._loraState(d) });
     detail.querySelector('.ms-card-md').innerHTML = ReadmeRenderer.render(d.description);
     this._detail.innerHTML = '';
     this._detail.appendChild(detail);
+  }
+
+  _loraState(d) {
+    const base = d.version && d.version.loraBase;
+    if (!base) return null;
+    const store = this._panel.store;
+    const installed = store.installedModels ? store.installedModels() : [];
+    return {
+      inLibrary: this._libraryVersions.has(d.versionId),
+      fits: installed.filter((m) => base.families.includes(m.family)).map((m) => m.displayName || m.label || m.id),
+    };
   }
 
   _loadDetail(args) {
@@ -219,7 +268,8 @@ export default class CivitaiModal extends ImageModal {
     if (link) { e.preventDefault(); this._panel.openExternal(link.dataset.href); return; }
     const btn = e.target.closest && e.target.closest('button[data-act="install"]');
     if (btn) {
-      this.install({ modelId: Number(btn.dataset.model), versionId: Number(btn.dataset.version), fileId: btn.dataset.file ? Number(btn.dataset.file) : undefined }, btn);
+      const args = { modelId: Number(btn.dataset.model), versionId: Number(btn.dataset.version), fileId: btn.dataset.file ? Number(btn.dataset.file) : undefined };
+      if (btn.dataset.kind === 'lora') this.installLora(args, btn); else this.install(args, btn);
       return;
     }
     const row = e.target.closest && e.target.closest('.ms-row');
@@ -239,5 +289,26 @@ export default class CivitaiModal extends ImageModal {
       this.setError(err.message || 'Install request failed.');
       if (button) ImageModal.resetButton(button, 'Install');
     }
+  }
+
+  async installLora(args, button) {
+    this.setError('');
+    if (this._panel.store.activeDl) { this.setError('Another download is still running.'); return; }
+    if (button) { button.disabled = true; button.textContent = 'Downloading…'; }
+    this._panel.store.downloadError = null;
+    let r;
+    try {
+      r = await this._panel.api().importLoraFromCivitai(args);
+    } catch (err) { r = { success: false, error: err.message || 'Download request failed.' }; }
+    if (!this.isOpen()) return;
+    if (!r || !r.success) {
+      if (!r || !r.canceled) this.setError((r && r.error) || 'Download failed.');
+      if (button) ImageModal.resetButton(button, 'Add to library');
+      return;
+    }
+    this._libraryVersions.add(args.versionId);
+    if (r.lora && r.lora.name) this._addedLoras.push(r.lora.name);
+    if (this._selected) await this.select(this._selected.modelId, this._selected.versionId);
+    if (r.baseNote) this.setError(r.baseNote);
   }
 }

@@ -10,10 +10,12 @@ The fixed VRAM costs every llama.cpp GPU launch pays besides weights and KV.
   attention, `FIXED_NO_FLASH_ATTN` (1 GiB) without.
 - `PER_CARD_RESERVE` (getter) = [CudaDevicePicker](../../../shared/runtime/CudaDevicePicker.md)`.PER_CARD_RESERVE_BYTES`,
   the user's [GpuHeadroom](../../../shared/runtime/GpuHeadroom.md) (default 1 GiB), read at call time.
-- `GpuOverhead.cardRoom(card, { cachedResident = 0 })`: the bytes a launch may plan
-  into on one card. With `card.occupiedBytes` (a live reading) it is
-  `total - occupied - headroom`; without, `total - max(headroom, cachedResident)`.
-  Never negative.
+- `SOFT_CARD_RESERVE` (getter) = `CudaDevicePicker.SOFT_RESERVE_BYTES`, half the
+  headroom: what a full offload that stays on one card may shrink the reserve to.
+- `GpuOverhead.cardRoom(card, { cachedResident = 0, reserveBytes = PER_CARD_RESERVE })`:
+  the bytes a launch may plan into on one card. With `card.occupiedBytes` (a live
+  reading) it is `total - occupied - reserveBytes`; without,
+  `total - max(reserveBytes, cachedResident)`. Never negative.
 - `NO_HEADER_FACTOR` (1.2): weights x 1.2 when the header could not be read.
 
 ## Why

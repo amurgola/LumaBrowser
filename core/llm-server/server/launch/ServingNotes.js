@@ -3,6 +3,7 @@ const ByteLadder = require('../ByteLadder');
 const DrafterCatalog = require('../../models/DrafterCatalog');
 const SlotPlan = require('./SlotPlan');
 const PromptCacheRam = require('./PromptCacheRam');
+const RuntimeFlags = require('./RuntimeFlags');
 
 class ServingNotes {
   static LAZY_TABLE_BYTES = 4 * 1024 * 1024 * 1024;
@@ -28,6 +29,7 @@ class ServingNotes {
     this._noteMeasuredBasis();
     this._noteDistributed();
     this._noteExpertOffload();
+    this._noteRamPinnedPool();
     this._noteLoadModeFallback();
     this._notePinnedHost();
     return this._notes;
@@ -63,8 +65,16 @@ class ServingNotes {
         + `The server keeps each conversation's processed context in its KV cache and reuses matching chunks of ${chunk}+ tokens even after earlier history changes, so follow-up replies skip most prompt re-processing.`,
       );
     } else if (slots.cacheReuseRequested) {
-      this._notes.push(`Context retention: requested but OFF, ${this._runtime} doesn't accept --cache-reuse in this build. Exact-prefix prompt caching still applies.`);
+      this._notes.push(`Context retention: requested but OFF, ${this._cacheReuseOffText(slots.cacheReuseOffReason)}. Exact-prefix prompt caching still applies.`);
     }
+  }
+
+  _cacheReuseOffText(reason) {
+    if (reason === 'architecture') {
+      return `llama.cpp cannot shift the cached positions of a ${this._s.files.gguf.architecture} model, so the server would switch --cache-reuse off at load`;
+    }
+    if (reason === 'projector') return 'llama-server switches --cache-reuse off while a vision projector is loaded';
+    return `${this._runtime} doesn't accept --cache-reuse in this build`;
   }
 
   _notePromptCache() {
@@ -193,6 +203,23 @@ class ServingNotes {
     const idle = ratio.split(',').slice(0, remoteCount).filter((p) => p === '0').length;
     if (idle <= 0) return '';
     return `${idle} remote GPU${idle === 1 ? '' : 's'} left idle: the model doesn't need the capacity, and every extra pipeline stage costs generation speed. `;
+  }
+
+  _noteRamPinnedPool() {
+    const { loading, moe } = this._s;
+    const fmt = ByteLadder.format;
+    if (loading.ramPinSlowsDecode) {
+      this._notes.push(`RAM pin: this launch reads its ${fmt(moe.cpuPoolBytes)} of CPU-side experts from the pinned file's mapped pages, `
+        + 'which upload to the GPU at about half the speed of a bulk read, because free RAM cannot hold them a second time. '
+        + 'Turn the RAM pin off for this model to get full generation speed.');
+    } else if (loading.ramPinPoolCopyBytes > 0) {
+      this._notes.push(`RAM pin: the ${fmt(loading.ramPinPoolCopyBytes)} of CPU-side experts are bulk-read into RAM beside the pinned file, `
+        + 'a second copy that keeps their uploads to the GPU at full speed (mapped pages upload at about half of it).');
+    }
+    if (loading.moeStageOff) {
+      this._notes.push(`Expert upload staging: OFF (${RuntimeFlags.MOE_STAGE_FLAG} 0). The expert pool sits in RAM, where the staging copy `
+        + 'only slows the GPU reading it; staging is kept for a pool too big for RAM, whose pages come from disk.');
+    }
   }
 
   _noteExpertOffload() {

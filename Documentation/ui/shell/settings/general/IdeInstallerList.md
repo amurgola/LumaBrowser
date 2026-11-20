@@ -8,7 +8,9 @@ Each list sits in a fold group ([FoldGroups](FoldGroups.md) keys `jetbrains`, `v
 
 ## Methods
 
-- `install()`, `load()`, `run(op, ids)`.
+- `install()`, `load()`, `run(op, ids)`. A failed install or removal is a failure toast (`bad`) that stays, with a
+  "Show IDEs" / "Show editors" / "Show mods" action that reveals the list ([SettingJump](../SettingJump.md),
+  catalog id `general.<fold>.list`), since the group may be folded away.
 - `JETBRAINS`, `VSCODE`, `WINDHAWK`, `outcome(op, r, copy)`, `stateText(ide, sourceVersion, copy)`,
   `summary(s, copy)` -> `{ text, attention, action }`,
   `split(ides)` -> `{ newest, older }`, `olderLabel(count, shown)` (static).

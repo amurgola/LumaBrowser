@@ -24,4 +24,5 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `rpLab.onEvent(cb)` | subscribe `core.rpLab.event` |
 | `palette.record(place)` | invoke `core.palette.record` (the search palette's recent places: conversations, artifacts and Setup pages opened here) |
 | `palette.toggle()` | invoke `core.palette.toggle` (opens the search palette over this window) |
+| `palette.reveal(settingId, selector)` | invoke `core.palette.reveal` (opens and highlights one catalog setting: a Setup row, a Settings row, an extension's page; `selector` names an element on that Settings page) |
 | `palette.doubleShift()` | invoke `core.palette.getDoubleShift` (whether the double-Shift shortcut is on) |

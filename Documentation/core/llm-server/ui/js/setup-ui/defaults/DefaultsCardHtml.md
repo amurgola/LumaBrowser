@@ -8,6 +8,7 @@ The Defaults card body and all its help copy.
 
 - `html(rows, view)`; `HELP` (every "?" explanation). When `view.openvino` is set, an "OpenVINO device" segmented row (`defaultOpenVinoDevice`, help `HELP.openvinoDevice`) follows the runtime select.
 - The switch grid leads with "MoE GPU cache" (`defaultMoeGpuCache`, checked unless `noMoeGpuCache`, help `HELP.moeGpuCache`). The fold's segmented rows include "GPU headroom" (`defaultGpuHeadroom`, 1 to 4 GB, help `HELP.gpuHeadroom`) when the preload reads it.
+- The switch rows after "Auto-unload" are "Low VRAM warning" (`defaultVramWarning`, checked from `prefs.vramWarning`, help `HELP.vramWarning`) and "Unload on VRAM pressure" (`defaultUnloadOnVramPressure`, help `HELP.vramPressure`), each only when the preload reads it (the pref is not null). `HELP.gpuHeadroom` explains that a model that fits whole on one card only inside half the headroom still loads there; `HELP.vramPressure` that the warning starts under the headroom and the unload under half of it.
 - With a default model, the "More settings" fold ends with a "This model only" row: a "Tune this model…" button (`data-tune-model="local::<stem>"`, help `HELP.tune`) that opens the per-model Tune dialog. Extra llama.cpp flags are edited there now, not in the card.
 
 ## Globals

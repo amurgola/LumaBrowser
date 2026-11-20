@@ -22,6 +22,11 @@ The logic behind the LLM provider settings UI. Used by
   else `{ success: false, error: 'Unknown provider type' }`.
 - `listProviderConfigs()`: stored `llm.providerConfigs` minus any
   `managedByCore` entry, plus the LLM Server's computed local entry.
+- `currentProviderConfigs()`: the same list once the local entry's installed models
+  are current (`freshInstalledChatModels()`; a failed scan keeps the last list).
+- `saveEditedConfigs(configs)`: what the Settings cards save. A different
+  `selectedModel` on the local entry becomes the local server's default
+  (`selectInstalledModel(stem)`), then `saveProviderConfigs(configs)`.
 - `saveProviderConfigs(configs)`: persists the user configs (managed entries
   stripped), syncs the first complete config (endpoint and model) of each
   type into the single-provider keys, and re-resolves the default.

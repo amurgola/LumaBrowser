@@ -1,3 +1,5 @@
+import Notice from '../../../core/llm-server/ui/js/notice/Notice.js';
+
 export default class SettingsFeedback {
   static SAVED_MS = 1400;
 
@@ -5,7 +7,9 @@ export default class SettingsFeedback {
 
   static TOAST_OK_MS = 3500;
 
-  static TOAST_BAD_MS = 7000;
+  static TOAST_ACTION_MS = 8000;
+
+  static BAD_KINDS = ['bad', 'error'];
 
   constructor({ log }) {
     this._log = log;
@@ -28,18 +32,30 @@ export default class SettingsFeedback {
   }
 
   toast(message, kind = 'ok', opts = {}) {
+    const bad = SettingsFeedback.isBad(kind);
+    const action = SettingsFeedback._action(opts);
     const el = document.getElementById('settingsToast');
-    if (!el) {
-      this._log.add(message, kind === 'bad' ? 'error' : 'success');
+    if (!SettingsFeedback._onScreen(el)) {
+      this._log.add(message, bad ? 'error' : 'success', ...(action ? [{ action }] : []));
       return;
     }
-    el.className = `settings-toast ${kind}`;
-    el.innerHTML = '';
-    el.append(SettingsFeedback._dot(kind), SettingsFeedback._text(message), this._dismissButton());
+    el.className = `settings-toast luma-toast ${bad ? 'bad' : 'ok'}`;
+    el.setAttribute('role', bad ? 'alert' : 'status');
+    el.setAttribute('aria-live', bad ? 'assertive' : 'polite');
+    el.replaceChildren(SettingsFeedback._text(message), this._controls(action));
     el.hidden = false;
     clearTimeout(el._t);
-    const ttl = opts.sticky ? 0 : (kind === 'bad' ? SettingsFeedback.TOAST_BAD_MS : SettingsFeedback.TOAST_OK_MS);
+    const ttl = SettingsFeedback.ttl(bad, !!action, !!opts.sticky);
     if (ttl) el._t = setTimeout(() => this.hideToast(), ttl);
+  }
+
+  static isBad(kind) {
+    return SettingsFeedback.BAD_KINDS.includes(kind);
+  }
+
+  static ttl(bad, hasAction, sticky) {
+    if (bad || sticky) return 0;
+    return hasAction ? SettingsFeedback.TOAST_ACTION_MS : SettingsFeedback.TOAST_OK_MS;
   }
 
   hideToast() {
@@ -75,26 +91,26 @@ export default class SettingsFeedback {
     }
   }
 
-  static _dot(kind) {
-    const dot = document.createElement('span');
-    dot.className = `luma-dot ${kind === 'bad' ? 'bad' : 'ok'}`;
-    return dot;
+  static _onScreen(el) {
+    if (!el) return false;
+    const modal = el.closest('#settingsModal');
+    return !modal || modal.classList.contains('active');
+  }
+
+  static _action(opts) {
+    const action = opts && opts.action;
+    return action && typeof action.run === 'function' ? action : null;
   }
 
   static _text(message) {
     const text = document.createElement('span');
-    text.className = 'settings-toast-text';
+    text.className = 'settings-toast-text luma-toast-text';
     text.textContent = message;
     return text;
   }
 
-  _dismissButton() {
-    const x = document.createElement('button');
-    x.className = 'settings-toast-x';
-    x.type = 'button';
-    x.setAttribute('aria-label', 'Dismiss');
-    x.textContent = 'x';
-    x.addEventListener('click', () => this.hideToast());
-    return x;
+  _controls(action) {
+    const used = action ? { label: action.label, run: () => { this.hideToast(); action.run(); } } : null;
+    return Notice.controls(used, () => this.hideToast());
   }
 }

@@ -18,8 +18,8 @@ export default class ChatState {
     return this.messages.length > 0 && this.messages[this.messages.length - 1] === m;
   }
 
-  newRequestId() {
-    this.reqId = 'req-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+  newRequestId(given = null) {
+    this.reqId = given || ('req-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7));
     return this.reqId;
   }
 

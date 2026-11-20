@@ -25,6 +25,10 @@ One run's lazy tool-group state.
 - `refresh(allows, extTools)`: re-derives `available` after admission; keys only grow.
 - `docsFor(keys)`, `owningGroups(name)`, `groupFor(name)`
   (`ToolGroups.groupForTool`), `keysOwning(names)`.
+- `nativeTools` (boolean, false until [BridgeRun](../BridgeRun.md) sets it from the run's
+  NativeToolPlan): when true `docsFor` returns the manuals without their text-fence call
+  examples (`ToolGroups.docWithoutFenceExamples`), so the manual an `activate_tools` call
+  or an auto-activation hands back matches the ones the system prompt carries on that route.
 
 Persistence (`setMeta(id, { data: { ...data, activeToolGroups,
 promptToolGroups? } })`, the last only once frozen) is best-effort and skipped for a conversation `getConversation`

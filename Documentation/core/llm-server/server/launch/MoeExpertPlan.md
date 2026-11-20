@@ -23,7 +23,8 @@ MoE expert offload (`--cpu-moe` / `--n-cpu-moe`) for one launch.
 
 1. Engage on request, or automatically when the model is MoE, the flag is
    accepted, there is VRAM, `noAutoCpuMoe` is not set, and the whole file (less
-   host-side embeddings, priced without `--swa-full`) exceeds the budget.
+   host-side embeddings, priced without `--swa-full`) exceeds the budget's full-offload
+   room (`VramBudget` `fullOffloadRoomBytes`: on one local card, down to the soft reserve).
 2. Fill: spare VRAM after the resident share, KV and the prompt-batch staging buffer
    (`stagingBytes`, the heaviest layer's experts), times the safety, goes to
    whole layers' experts from the last block backwards. If every expert fits,

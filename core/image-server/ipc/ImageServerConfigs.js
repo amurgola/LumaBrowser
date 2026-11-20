@@ -1,3 +1,5 @@
+const InstalledImageModels = require('../service/InstalledImageModels');
+
 class ImageServerConfigs {
   static GENERATE = 'image-generate';
   static EDIT = 'image-edit';
@@ -7,15 +9,33 @@ class ImageServerConfigs {
     this._svc = imageServerService;
   }
 
-  view() {
+  async view() {
     return {
-      servers: this._svc.getServerConfigs(),
+      servers: await this._withLocalModels(this._svc.getServerConfigs()),
       active: {
         generate: this._svc.getActiveServerId(ImageServerConfigs.GENERATE),
         edit: this._svc.getActiveServerId(ImageServerConfigs.EDIT),
         video: this._svc.getActiveServerId(ImageServerConfigs.VIDEO),
       },
     };
+  }
+
+  async _withLocalModels(servers) {
+    const installed = await this._installedModels();
+    return servers.map((server) => {
+      if (!server || server.location !== 'local') return server;
+      return {
+        ...server,
+        models: installed.filter((model) => model.kind === server.kind).map((model) => ({ id: model.id, label: model.label })),
+        selectedModel: server.selectedModelId || null,
+        modelField: InstalledImageModels.DEFAULT_FIELDS[server.kind] || null,
+      };
+    });
+  }
+
+  async _installedModels() {
+    if (typeof this._svc.listInstalledModels !== 'function') return [];
+    try { return (await this._svc.listInstalledModels()) || []; } catch (_) { return []; }
   }
 
   setActive(role, id) {

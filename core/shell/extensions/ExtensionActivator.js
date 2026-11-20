@@ -33,7 +33,8 @@ class ExtensionActivator {
   static _registerLlmSlots(id, manifest, context) {
     if (!context.llm) return;
     for (const slot of ManifestDeps.llmSlots(manifest)) {
-      context.llm.registerSlot(`${id}.${slot.id}`, { extensionId: id, label: slot.label, required: slot.required !== false });
+      const picker = typeof slot.picker === 'string' && slot.picker ? { picker: slot.picker } : {};
+      context.llm.registerSlot(`${id}.${slot.id}`, { extensionId: id, label: slot.label, required: slot.required !== false, ...picker });
     }
   }
 

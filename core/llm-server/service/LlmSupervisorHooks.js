@@ -3,12 +3,20 @@ class LlmSupervisorHooks {
   static WATCHDOG_STOP_STATES = Object.freeze(['idle', 'error', 'stopping']);
   static RELEASE_PEER_STATES = Object.freeze(['idle', 'error']);
 
-  static wire({ runtimeServer, vramCoordinator, releasePeers, vramWatchdog, runningCaps }) {
+  static wire({ runtimeServer, vramCoordinator, releasePeers, vramWatchdog, runningCaps, residentVram = null }) {
     vramCoordinator.releaseOnIdle(runtimeServer, LlmSupervisorHooks.SERVER_ID);
     vramCoordinator.markResidentOnReady(runtimeServer, LlmSupervisorHooks.SERVER_ID);
     runtimeServer.on('state-change', (e) => LlmSupervisorHooks._releasePeers(e, releasePeers));
     runtimeServer.on('state-change', (e) => LlmSupervisorHooks._followWithWatchdog(e, vramWatchdog));
     runtimeServer.on('state-change', (e) => LlmSupervisorHooks._rememberCaps(e, runningCaps));
+    if (residentVram) runtimeServer.on('state-change', (e) => LlmSupervisorHooks._measureResidentVram(e, residentVram));
+  }
+
+  static _measureResidentVram(e, residentVram) {
+    if (!e) return;
+    if (e.state === 'starting') residentVram.noteLoadStarting();
+    else if (e.state === 'ready') residentVram.noteReady();
+    else if (LlmSupervisorHooks.RELEASE_PEER_STATES.includes(e.state)) residentVram.clear();
   }
 
   static _releasePeers(e, releasePeers) {

@@ -17,7 +17,8 @@ mutates the host. One instance per build.
     model, every installed local model as `{ ref: 'local::<stem>', label:
     'Local · <display>', kind: 'local', current, contextWindow }` (current
     first); if the service cannot list them, the router's local entry with
-    `readOnly: true`. Remote models (when shared) as `{ ref, label, kind:
+    `readOnly: true` (only the row that is not `current: false`, the model in
+    use, since it is the one known to load). Remote models (when shared) as `{ ref, label, kind:
     'remote', providerType }`, skipping `peer:` refs. `contextWindow` is the
     per-request window or null.
   - `gpus` (only when `shareGpus` is on and the lender's `describeShare()` is

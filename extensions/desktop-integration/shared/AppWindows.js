@@ -1,3 +1,5 @@
+const WindowRaiser = require('../../../core/browser/WindowRaiser');
+
 class AppWindows {
   constructor({ browser = null, electron = null } = {}) {
     this._browser = browser;
@@ -13,22 +15,11 @@ class AppWindows {
 
   focusMainWindow() {
     const win = this.getMainWindow();
-    if (!win) return false;
+    if (!WindowRaiser.raise(win)) return false;
     try {
-      if (win.isMinimized()) win.restore();
-      win.show();
-      if (process.platform === 'win32' && typeof win.setAlwaysOnTop === 'function') {
-        win.setAlwaysOnTop(true);
-        win.focus();
-        win.setAlwaysOnTop(false);
-      } else {
-        win.focus();
-      }
       if (win.webContents && typeof win.webContents.focus === 'function') win.webContents.focus();
-      return true;
-    } catch (_) {
-      return false;
-    }
+    } catch (_) {}
+    return true;
   }
 
   _allWindows() {

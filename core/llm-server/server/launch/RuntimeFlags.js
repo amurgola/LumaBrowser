@@ -21,7 +21,11 @@ class RuntimeFlags {
 
   static MOE_RAM_REGISTER_FLAG = '--moe-ram-register-mib';
 
+  static MOE_STAGE_FLAG = '--moe-stage-mib';
+
   static TENSOR_SPLIT_RUNTIME_IDS = ['llama-cpp-cuda12', 'llama-cpp-cuda13', 'llama-cpp-luma'];
+
+  static DEVICE_ORDER_FLAGS = ['--device', '--spec-draft-device', '--mmproj-device'];
 
   constructor(runtime) {
     this.id = runtime.id;
@@ -82,7 +86,17 @@ class RuntimeFlags {
     this.fitOff = this.fit && (this.isLuma || build >= RuntimeFlags.FIT_OFF_MIN_BUILD);
     this.tensorSplitRuntime = RuntimeFlags.TENSOR_SPLIT_RUNTIME_IDS.includes(this.id);
     this.tensorSplitBuild = this.isLuma || build >= RuntimeFlags.TENSOR_SPLIT_MIN_BUILD;
+    this.deviceOrder = this._resolveDeviceOrderGate();
     this._resolveMoeCacheGate(build);
+  }
+
+  _resolveDeviceOrderGate() {
+    return this.tensorSplitRuntime && this.tensorSplitBuild
+      && RuntimeFlags.DEVICE_ORDER_FLAGS.every((flag) => this.accepts(flag));
+  }
+
+  static cudaDeviceName(position) {
+    return `CUDA${position}`;
   }
 
   _resolveMoeCacheGate(build) {
@@ -95,12 +109,14 @@ class RuntimeFlags {
         && this.accepts('--moe-ram-mib') && this.accepts('--moe-profile');
       this.moeRamRegister = this.moeTiers && atLeast(RuntimeFlags.LUMA_MOE_REGISTER_MIN_TAG)
         && this.accepts(RuntimeFlags.MOE_RAM_REGISTER_FLAG);
+      this.moeStage = this.moeTiers && this.accepts(RuntimeFlags.MOE_STAGE_FLAG);
       return;
     }
     this.moeCache = accepted && build >= RuntimeFlags.MOE_CACHE_MIN_BUILD;
     this.moeCacheMultiGpu = accepted && build >= RuntimeFlags.MOE_CACHE_MULTI_GPU_MIN_BUILD;
     this.moeTiers = false;
     this.moeRamRegister = false;
+    this.moeStage = false;
   }
 }
 

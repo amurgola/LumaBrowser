@@ -111,10 +111,11 @@ class ChatTurn {
     conversation.rememberMediaModels(this._convId, a.mediaModels);
     const choicesOn = conversation.resolveChoices(this._convId, a.choicesEnabled);
     const images = MessageImages.imagesOf(a.attachments);
-    const userRow = conversation.addUserMessage(this._convId, a.userMessage, this._modelRef, !!a.regenerateMessageId, a.editMessageId);
+    const userRow = conversation.addUserMessage(this._convId, a.userMessage, this._modelRef, !!a.regenerateMessageId, a.editMessageId, a.userNotice || null);
     const userArtifacts = this._d.attachments.persist(images, this._convId, userRow);
     const userRegions = this._userRegions(a.attachments, images, userArtifacts, userRow);
-    conversation.rememberModel(this._convId, this._selectedRef);
+    if (a.userNotice) conversation.pinModel(this._convId, this._selectedRef);
+    else conversation.rememberModel(this._convId, this._selectedRef);
     return { choicesOn, userRow, userArtifacts, userRegions, images };
   }
 
@@ -204,6 +205,7 @@ class ChatTurn {
   _withStyleDocs(messages, choicesOn) {
     if (this._agentMode) return messages;
     let out = messages;
+    if (!this._mode.turn && this._d.plainPrompt) out = this._d.plainPrompt.applyTo(out);
     if (!this._mode.turn && this._args.voice !== true) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.WIDGETS);
     if (choicesOn) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.CHOICES);
     if (this._args.voice === true) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.VOICE);

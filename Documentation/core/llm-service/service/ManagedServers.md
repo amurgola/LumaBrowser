@@ -16,8 +16,12 @@ the local LLM server (`core.llmServer.local`) and the grounding server
   nothing or throws.
 - `ensureReady(config, { withVision })` returns `{ ok, error?, code?, runtimeId?, runtimeName?, installable? }`.
   Non-managed providers and a local service without `ensureRunning` are `{ ok: true }`.
-  `withVision` is passed as `ensureRunning({ withVision: true })`, else
-  `ensureRunning(undefined)`. A missing grounding service is an error.
+  The local server gets `ensureRunning({ withVision?, model? })`: `withVision: true`
+  when asked, and `model` when the slot's model differs from the entry's
+  `selectedModel` (so it loads that installed model); `undefined` when neither.
+  A missing grounding service is an error.
+- `refreshLocalModels()`: awaits `freshInstalledChatModels()` so the local entry's
+  model list is current before a picker reads it; a failed scan keeps the last list.
 - `track(config, fn)` awaits `fn()` with `noteLocalRequestStart/End` around it
   when the config routes to the local server; the count settles on throw.
 - `localHasVision()`: the local runtime's current plan has an `mmprojPath`.

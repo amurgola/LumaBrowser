@@ -128,7 +128,7 @@
 .db-run-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex: 0 0 auto; }
 .db-run-dot.ok { background: var(--success); }
 .db-run-dot.err { background: var(--danger); }
-.db-run-dot.run { background: var(--warning); }
+.db-run-dot.run { background: var(--text-primary); }
 .db-run-main { min-width: 0; flex: 1; }
 .db-run-main b { display: block; font-size: var(--text-md); font-weight: var(--weight-medium); }
 .db-run-main .db-muted { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

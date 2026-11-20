@@ -3,14 +3,21 @@
 `core/llm-server/service/LocalServerStarter.js`
 
 Makes sure the local llama-server runs for callers outside the chat (extension
-slots, visual grounding), loading the vision projector on request.
+slots, visual grounding), loading the vision projector on request and switching
+to the installed model a slot is bound to.
 
 ## Methods
 
 - `new LocalServerStarter({ service, runtimeServer, launcher, tracker, settleTimeoutMs = 5 min })`;
   `launcher.resolveAndStart(service, { withVision })` is ServerLauncher's;
-  `tracker` is [LocalRequestTracker](LocalRequestTracker.md); `service.getDefaults()` is read.
-- `ensureRunning({ withVision = false })` resolves `{ success, status?, error?, code? }`:
+  `tracker` is [LocalRequestTracker](LocalRequestTracker.md); `service.getDefaults()`,
+  `setDefaults()` and `installedModelPath(stem)` are used.
+- `ensureRunning({ withVision = false, model = null })` resolves `{ success, status?, error?, code? }`:
+  0. with a `model` stem other than the default: waits out a vision restart or start,
+     looks up `installedModelPath(stem)`; an unknown stem leaves the server alone (the
+     request runs on the default); refused with `{ success: false, code: 'LOCAL_BUSY',
+     error: SWITCH_BUSY_ERROR }` while the tracker is busy; else makes it the default
+     (`setDefaults({ modelPath })`) and `ensureStopped()` so the start below loads it;
   1. waits out a vision restart in progress;
   2. `ready`: with `withVision` and an unloaded projector, restart with it;
      otherwise `markActive()` and `{ success: true, status }`;
@@ -26,7 +33,7 @@ slots, visual grounding), loading the vision projector on request.
   `{ success: false, code: 'LOCAL_BUSY', error: BUSY_ERROR }` while the tracker is
   busy; `ensureStopped()` (errors ignored), then launch with `withVision: true`,
   then `markActive()` on success.
-- Statics: `SETTLE_TIMEOUT_MS`, `SETTLED_STATES`, `NO_MODEL_ERROR`, `BUSY_ERROR`.
+- Statics: `SETTLE_TIMEOUT_MS`, `SETTLED_STATES`, `NO_MODEL_ERROR`, `BUSY_ERROR`, `SWITCH_BUSY_ERROR`.
 
 ## Why
 

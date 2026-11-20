@@ -14,7 +14,9 @@ Lists the models an extension slot can pick, for
     skipped; rows dedupe on `providerId::modelId`.
   - `providerId` is the config `type`, except managed entries which keep their
     own `id` so their slots route to them; `providerLabel` is the config
-    `name`, else the type label.
+    `name`, else the type label. `label` is "providerLabel: modelId", except a
+    managed entry's model with a `luma_label` is labelled by it ("Local · Qwen"),
+    since the local entry lists every installed model and its name is only the default's.
   - when that yields nothing, the legacy `<lmStudio|anthropic>.models` lists of
     providers that have an endpoint.
 - `AvailableModels.labelFor(type)` and `TYPE_LABELS`

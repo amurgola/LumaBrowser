@@ -15,11 +15,11 @@ modules own.
 
 - `new SetupMain({ api, doc?, win?, modelList?, modelSearch?, openers? })`.
 - `start()`: wires every listener (nav clicks, the Advanced sub-tabs, extension
-  tabs, the body click router, live events, fit-test and gambit events, the
+  tabs, the body click router, live events, fit-test events, the
   Refresh button) and resolves after the first `load()`.
 - `load({ force }?)`: the [DiagnosticsLoader](diagnostics/DiagnosticsLoader.md)
   pass. Only Refresh and a finished driver install force a host re-probe.
-- Cards built: runtimes, runtimeActions, fitTest, gambit, models, defaults,
+- Cards built: runtimes, runtimeActions, fitTest, models, defaults,
   plan and `drivers` (the [DriverInstallPanel](diagnostics/DriverInstallPanel.md),
   whose reload is a forced `load`).
 - Public fields for the page entry: `systemStrip` ([SystemStatusStrip](system/SystemStatusStrip.md)),
@@ -70,7 +70,7 @@ refreshes the library on it.
 Listens to `window` `luma-models-changed`, and through the preload
 `onRuntimeEvent` (row progress; `finalize` refreshes the library with runtimes),
 `onModelEvent` (`done` refreshes the library), `onServerEvent`, `onAddonEvent`,
-`onFitTestEvent`, `onGambitEvent`.
+`onFitTestEvent`.
 
 ## Globals
 

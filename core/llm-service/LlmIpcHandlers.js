@@ -38,7 +38,7 @@ class LlmIpcHandlers {
     ipcMain.handle('core.llm.getSlotConfig', IpcEnvelope.raw((_e, slotId) => this._llm.getSlotConfig(slotId)));
     ipcMain.handle('core.llm.setSlotConfig', IpcEnvelope.enveloped((_e, slotId, provider, model) => { this._llm.setSlotConfig(slotId, provider, model); }));
     ipcMain.handle('core.llm.clearSlotConfig', IpcEnvelope.enveloped((_e, slotId) => { this._llm.clearSlotConfig(slotId); }));
-    ipcMain.handle('core.llm.getAllAvailableModels', IpcEnvelope.raw(() => this._llm.getAllAvailableModels()));
+    ipcMain.handle('core.llm.getAllAvailableModels', IpcEnvelope.raw(() => this._llm.currentAvailableModels()));
     ipcMain.handle('core.llm.getProviders', IpcEnvelope.raw(() => this._llm.getProviders()));
     ipcMain.handle('core.llm.sendCompletion', IpcEnvelope.enveloped((_e, slotId, messages, options) => this._llm.sendCompletion(slotId, messages, options)));
   }

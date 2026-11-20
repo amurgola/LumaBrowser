@@ -38,7 +38,7 @@ export default class SummarySection extends HubSection {
     if (!select) return;
     const { models = [], chosen = '' } = await this.call('listSummaryModels').catch(() => ({}));
     const esc = WidgetDom.esc;
-    select.innerHTML = SummarySection.DEFAULT_OPTION + models.map((m) => `<option value="${esc(m.value)}">${esc(m.label)}</option>`).join('');
+    select.innerHTML = SummarySection.DEFAULT_OPTION + models.map((m) => `<option value="${esc(m.value)}"${m.unavailable ? ' disabled' : ''}>${esc(m.label)}</option>`).join('');
     select.value = chosen;
     if (select.value !== chosen) select.value = '';
   }

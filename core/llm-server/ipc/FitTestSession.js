@@ -93,6 +93,7 @@ class FitTestSession {
 
   _begin(modelPath) {
     this._running = true;
+    this._svc.fitTestRunning = true;
     this._cancelRequested = false;
     this._restoreAfter = false;
     this._live = new FitTestLive(modelPath);
@@ -100,6 +101,7 @@ class FitTestSession {
 
   _end() {
     this._running = false;
+    this._svc.fitTestRunning = false;
     this._cancelRequested = false;
     this._live = null;
   }

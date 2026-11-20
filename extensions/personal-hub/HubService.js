@@ -3,8 +3,9 @@ const HubContext = require('./HubContext');
 class HubService {
   static SIGN_IN_URLS = { google: 'https://calendar.google.com/calendar/u/0/r', microsoft: 'https://teams.cloud.microsoft/' };
 
-  constructor({ calendar, inbox, board, sync, inbound, openUrl, connections = null, contexts = null, summarizer = null, focus = null, contacts = null, profiler = null, reader = null, now = () => new Date() }) {
+  constructor({ calendar, inbox, board, sync, inbound, openUrl, connections = null, contexts = null, summarizer = null, focus = null, contacts = null, profiler = null, reader = null, opener = null, now = () => new Date() }) {
     this._now = now;
+    this._opener = opener;
     this._contacts = contacts;
     this._profiler = profiler;
     this._reader = reader;
@@ -111,6 +112,13 @@ class HubService {
     return this._reader.read(item, { force: !!(opts && opts.force) });
   }
 
+  async openThread(threadId) {
+    if (!this._opener) return { success: false, error: 'The browser is not available.' };
+    const item = this._feedItem(threadId);
+    if (!item) return { success: false, error: 'Activity item not found.' };
+    return this._opener.open(item);
+  }
+
   _feedItem(threadId) {
     const found = this._inbox.getThread(threadId);
     if (!found) return null;
@@ -121,10 +129,19 @@ class HubService {
 
   listContacts(query) {
     if (!this._contacts) return { contacts: [], suggestions: [], kinds: [] };
-    return { contacts: this._contacts.list(query || {}), suggestions: this._contacts.suggestions(), kinds: this._contacts.kinds() };
+    const contexts = this.listContexts();
+    const contacts = this._contacts.list(query || {}).map((c) => ({ ...c, homeContextId: this._contexts ? this._contexts.contextOfContact(c, contexts) : null }));
+    return { contacts, suggestions: this._contacts.suggestions(), kinds: this._contacts.kinds() };
   }
   getContact(id) { return this._contacts ? this._contacts.get(id) : null; }
-  saveContactProfile(id, patch) { return this._requireContacts().saveProfile(id, patch || {}); }
+  saveContactProfile(id, patch) { return this._requireContacts().saveProfile(id, this._withContext(patch || {})); }
+  _withContext(patch) {
+    if (patch.contextId == null || patch.contextId === '') return patch;
+    const wanted = String(patch.contextId).trim().toLowerCase();
+    const context = this.listContexts().find((c) => c.id.toLowerCase() === wanted || c.name.toLowerCase() === wanted);
+    if (!context) throw new Error(`There is no context "${patch.contextId}".`);
+    return { ...patch, contextId: context.id };
+  }
   suggestContactDetails(id, proposals) { return this._requireContacts().propose(id, proposals || []); }
   learnContact(id) {
     if (!this._profiler) throw new Error('Contacts are not available.');

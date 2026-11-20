@@ -15,7 +15,8 @@ Base for durable per-model run results keyed by model weights path. Extends
 - Subclass hooks (throw when missing): `_isWorthKeeping(entry)`, `_toRecord(entry)`.
 - `ModelResultStore._ranAt(entry)` `entry.ranAt` or now as an ISO string.
 
-Subclasses: [FitResultStore](FitResultStore.md), [GambitResultStore](GambitResultStore.md).
+Subclasses: [FitResultStore](FitResultStore.md), and the Model Testing add-on's
+[GambitResultStore](../../../extensions/model-testing/gambit/GambitResultStore.md).
 
 ## Why
 

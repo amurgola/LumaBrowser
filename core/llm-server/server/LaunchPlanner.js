@@ -83,9 +83,9 @@ class LaunchPlanner extends MediaLaunchPlanner {
   _resolveModelSettings() {
     const s = this._s;
     s.kv = new KvSettings({ overrides: s.overrides, gguf: s.files.gguf, family: s.files.family });
+    s.vision = VisionProjectorPlan.resolve(s);
     s.slots = SlotPlan.resolve(s);
     s.spec = SpeculationPlan.resolve(s);
-    s.vision = VisionProjectorPlan.resolve(s);
   }
 
   _resolveBudget() {

@@ -29,6 +29,10 @@ class LlmServerBroadcast {
     LlmServerBroadcast.toAll(LlmServerBroadcast.CONVERSATION_JOBS_CHANNEL, { type: 'posted', payload });
   }
 
+  static hostTurnStarting(payload) {
+    LlmServerBroadcast.toAll(LlmServerBroadcast.CONVERSATION_JOBS_CHANNEL, { type: 'turn', payload });
+  }
+
   static toAll(channel, message) {
     for (const wc of LlmServerBroadcast._allWebContents()) {
       try {

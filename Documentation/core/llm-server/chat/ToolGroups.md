@@ -25,7 +25,8 @@ Active groups persist per conversation in
 - `extToolDoc(tool)`: the full manual line for one discovered tool.
 - `groupForTool(name, groups)`: key of the first group owning the tool, or
   `null` (browser tools belong to no group).
-- `buildInactiveRegistry(inactiveGroups)`: the activate_tools manual, one
+- `buildInactiveRegistry(inactiveGroups, { nativeTools = false })`: the activate_tools manual
+  (`ACTIVATE_NATIVE`, without the text-fence call shape, when `nativeTools`), one
   `  - key: stub` line per available-but-inactive group, then the "match the
   request and USE it" directive ([ActivationManual](tool-groups/ActivationManual.md)).
   `''` when nothing is left to activate.

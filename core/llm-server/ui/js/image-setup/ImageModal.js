@@ -1,7 +1,14 @@
 export default class ImageModal {
+  static OVERLAY = 'img-modal-wrap';
+
   constructor() {
     this.wrap = null;
-    this._onKey = (event) => { if (event.key === 'Escape') this.close(); };
+    this._onKey = (event) => { if (event.key === 'Escape' && this._isTopmost()) this.close(); };
+  }
+
+  _isTopmost() {
+    const overlays = document.querySelectorAll(`.${ImageModal.OVERLAY}`);
+    return overlays[overlays.length - 1] === this.wrap;
   }
 
   isOpen() {
@@ -10,7 +17,7 @@ export default class ImageModal {
 
   show(innerHtml) {
     const wrap = document.createElement('div');
-    wrap.className = 'luma-modal-overlay img-modal-wrap';
+    wrap.className = `luma-modal-overlay ${ImageModal.OVERLAY}`;
     wrap.innerHTML = innerHtml;
     document.body.appendChild(wrap);
     this.wrap = wrap;

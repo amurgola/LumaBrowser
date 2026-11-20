@@ -7,7 +7,7 @@ The plan notes for the optional serving features of a launch.
 ## Methods
 
 - `ServingNotes.build(state)` returns, in order and only when they apply: slots
-  (`--parallel`, or requested but unsupported); context retention; the RAM prompt
+  (`--parallel`, or requested but unsupported); context retention (on, or requested but off with [SlotPlan](SlotPlan.md)'s `cacheReuseOffReason` in words: the build, the model architecture, or a loaded vision projector); the RAM prompt
   cache (size, off with its reason, or unsupported); tensor parallelism (on, or
   requested but off with the gate's reason or because the model does not fully
   fit); a KV precision forced to f16; family tuning with skipped flags; the family
@@ -15,6 +15,7 @@ The plan notes for the optional serving features of a launch.
   basis; distributed inference (on with the split and idle remote devices,
   unsupported, or skipped because the model fits locally or runs expert offload);
   MoE expert offload (fill, all experts in RAM with or without the MoE GPU cache and why the cache is off, or why offload is off or not needed);
+  the RAM pin over an expert pool the GPU reads (mapped at about half speed, or bulk-read a second time) and expert upload staging switched off (`--moe-stage-mib 0`);
   and the load-mode fallback when both spellings are rejected.
 - On an over-RAM pool the all-experts note ends with the RAM tier ([MoeRamTierPlan](MoeRamTierPlan.md)): the
   bytes locked in RAM (`--moe-ram-mib`), that the most used experts go first once the profile has data, the

@@ -2,16 +2,21 @@ const LlmModelsScanner = require('../LlmModelsScanner');
 const ContextEstimator = require('../ContextEstimator');
 const FitRuntimePicker = require('./FitRuntimePicker');
 const ModelGrouping = require('../models/ModelGrouping');
+const CudaDeviceProbe = require('../../shared/runtime/CudaDeviceProbe');
 
 class LocalModelOptions {
-  constructor({ llmServerService, scanner = LlmModelsScanner.shared, estimator = ContextEstimator.shared }) {
+  constructor({
+    llmServerService, scanner = LlmModelsScanner.shared, estimator = ContextEstimator.shared,
+    liveMemory = (diagnostics) => CudaDeviceProbe.withLiveMemory(diagnostics),
+  }) {
     this._svc = llmServerService;
     this._scanner = scanner;
     this._estimator = estimator;
+    this._liveMemory = liveMemory;
   }
 
   async options() {
-    const diag = await this._svc.ensureDiagnostics();
+    const diag = this._cardsAsStartFindsThem(await this._svc.ensureDiagnostics());
     const runtimesView = await this._svc.ensureRuntimesView();
     const scan = await this._scanner.scan(this._svc.getModelsDirConfig().effectivePath);
     const defaults = this._svc.getDefaults();
@@ -20,6 +25,7 @@ class LocalModelOptions {
       fitResults: this._svc.getAllFitResults(),
       resolveRuntime: (m) => FitRuntimePicker.pick(m, runtimesView, diag),
       diagnostics: diag,
+      settingsDb: this._svc.settingsDb,
       displayNameFor: (stem) => this._svc.resolveModelDisplayName(stem),
     });
     const overrides = typeof this._svc.getModelDisplayNames === 'function' ? this._svc.getModelDisplayNames() || {} : {};
@@ -33,6 +39,16 @@ class LocalModelOptions {
       currentModelPath: defaults.modelPath || null,
       currentContext: defaults.contextSize || null,
     };
+  }
+
+  _cardsAsStartFindsThem(diagnostics) {
+    try {
+      const live = this._liveMemory(diagnostics);
+      const resident = this._svc.residentVram;
+      return resident ? resident.withoutOwn(live) : live;
+    } catch (_) {
+      return diagnostics;
+    }
   }
 }
 

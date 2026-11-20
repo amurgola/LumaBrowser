@@ -1,15 +1,21 @@
 import Dom from '../../../core/llm-server/ui/js/dom/Dom.js';
 import HtmlEscaper from '../../../core/llm-server/ui/js/format/HtmlEscaper.js';
-import ToolNotice from './ToolNotice.js';
+import Notice from '../../../core/llm-server/ui/js/notice/Notice.js';
 
 export default class ToolListView {
+  static notice(notice, onDismiss) {
+    const box = Notice.render(notice, onDismiss);
+    box.classList.add('tf-notice');
+    return box;
+  }
+
   static render(el, view, on) {
     el.appendChild(ToolListView._head(on));
     if (!view.encryptionAvailable) {
       el.appendChild(Dom.el('div', 'luma-callout warn',
         'Secure key storage is unavailable on this system, so secret values are stored unencrypted. Avoid high-value credentials.'));
     }
-    ToolNotice.render(el, view.notice, on.dismiss);
+    if (view.notice) el.appendChild(ToolListView.notice(view.notice, on.dismiss));
     if (!view.tools.length) {
       el.appendChild(Dom.el('div', 'luma-empty',
         'No tools yet. In a chat, ask the AI to build one, for example: '

@@ -1,3 +1,4 @@
+const TabAttention = require('./TabAttention');
 const TabRegistry = require('./tab-view/TabRegistry');
 const WidgetDriver = require('./widgets/WidgetDriver');
 const AccessibleAttributeMatcher = require('./tab-manager/AccessibleAttributeMatcher');
@@ -13,6 +14,7 @@ const PageObserver = require('./tab-manager/PageObserver');
 const PageScroller = require('./tab-manager/PageScroller');
 const PageSource = require('./tab-manager/PageSource');
 const PointClicker = require('./tab-manager/PointClicker');
+const RepeatClicker = require('./tab-manager/RepeatClicker');
 const RowDataExtractor = require('./tab-manager/RowDataExtractor');
 const SettleWaiter = require('./tab-manager/SettleWaiter');
 const TabControl = require('./tab-manager/TabControl');
@@ -26,10 +28,11 @@ class TabManager {
   static TERMINAL_TAB = (tabId) => `Tab ${tabId} is a terminal, which page tools cannot read or drive. Use the terminal tools (terminal_list, terminal_read, terminal_run).`;
   static DOWNLOADS_TAB = (tabId) => `Tab ${tabId} is the downloads page, which page tools cannot read or drive: its buttons open downloaded files on this computer.`;
 
-  constructor(tabViewManager, { nativeImage = null } = {}) {
+  constructor(tabViewManager, { nativeImage = null, attention = null } = {}) {
     this.tabViewManager = tabViewManager;
     this._control = new TabControl(tabViewManager);
     this._screenshot = new TabScreenshot(nativeImage);
+    this._attention = attention || new TabAttention(tabViewManager);
   }
 
   async getAllTabs(options = {}) { return this._control.getAllTabs(options); }
@@ -53,6 +56,13 @@ class TabManager {
   async scrollPage(tabId, options = {}) { return this._onTab(tabId, (page) => PageScroller.scroll(page, options)); }
   async handleDialog(tabId, options = {}) { return this._onTab(tabId, (page) => DialogHandler.install(page, options)); }
   async waitForElement(tabId, options = {}) { return this._onTab(tabId, (page) => ElementWaiter.waitFor(page, options)); }
+
+  async clickUntil(tabId, options = {}, run = {}) {
+    const result = await this._onTab(tabId, (page) => RepeatClicker.run(page, options, run));
+    const notice = options.alert && result.success ? RepeatClicker.alertFor(result.data) : null;
+    if (notice) result.data.alerted = this._attention.alert(tabId, notice);
+    return result;
+  }
 
   async getElement(tabId, options = {}) { return this._onTab(tabId, (page) => ElementInspector.getElement(page, options)); }
   async checkSelectors(tabId, selectors) { return this._onTab(tabId, (page) => ElementInspector.checkSelectors(page, selectors)); }

@@ -7,7 +7,8 @@ Integration), built from the design system's field, card, switch and badge
 classes:
 
 - the base URL of the local API;
-- the desktop token, masked, with Show, Copy and Rotate (after a confirm);
+- the desktop token, masked, with Show, Copy and Rotate (after the themed confirm, which is awaited: Cancel leaves
+  the token alone);
 - the handshake file path and whether it is written;
 - one card per feature module with its label, id, description and an on/off
   switch, generated from the registry, plus a card for every feature folder

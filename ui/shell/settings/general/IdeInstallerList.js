@@ -1,5 +1,6 @@
 import SettingToggle from './SettingToggle.js';
 import FoldGroups from './FoldGroups.js';
+import SettingJump from '../SettingJump.js';
 
 export default class IdeInstallerList {
   static JETBRAINS = {
@@ -95,7 +96,7 @@ export default class IdeInstallerList {
       const r = await window.ipcBridge.invoke(`core.settings.${this._ns}.${op}`, ids || []);
       this._report(op, r);
     } catch (e) {
-      this._feedback.toast((e && e.message) || this._copy.opFailed, 'error');
+      this._toast((e && e.message) || this._copy.opFailed, 'bad');
     } finally {
       this._busy = false;
       this.load();
@@ -105,7 +106,7 @@ export default class IdeInstallerList {
   static outcome(op, r, copy) {
     const failed = (r && r.failed) || [];
     const why = failed.length && failed[0].error ? ` (${failed[0].error})` : '';
-    if (!r || r.success === false) return [(r && r.error) || copy.opFailed, 'error'];
+    if (!r || r.success === false) return [(r && r.error) || copy.opFailed, 'bad'];
     if (op === 'install') {
       const n = (r.installed || []).length;
       const message = n
@@ -113,11 +114,11 @@ export default class IdeInstallerList {
           ? `${n} ${n === 1 ? copy.one : copy.many} installed ${copy.installedVerb}. ${copy.afterInstall}${failed.length ? ` ${failed.length} failed${why}.` : ''}`
           : `${copy.noun} installed in ${n} ${n === 1 ? copy.one : copy.many}. ${copy.afterInstall}${failed.length ? ` ${failed.length} failed${why}.` : ''}`)
         : `Nothing was installed${why}.`;
-      return [message, failed.length || !n ? 'error' : 'ok'];
+      return [message, failed.length || !n ? 'bad' : 'ok'];
     }
     const n = (r.removed || []).length;
     const removed = copy.installedVerb ? `${n} ${n === 1 ? copy.one : copy.many} removed.` : `${copy.noun} removed from ${n} ${n === 1 ? copy.one : copy.many}.`;
-    return [n ? removed : `Nothing was removed${why}.`, failed.length ? 'error' : undefined];
+    return [n ? removed : `Nothing was removed${why}.`, failed.length ? 'bad' : undefined];
   }
 
   static summary(s, copy) {
@@ -150,7 +151,12 @@ export default class IdeInstallerList {
 
   _report(op, r) {
     const [message, kind] = IdeInstallerList.outcome(op, r, this._copy);
-    this._feedback.toast(message, kind);
+    this._toast(message, kind);
+  }
+
+  _toast(message, kind) {
+    if (kind !== 'bad') { this._feedback.toast(message, kind); return; }
+    this._feedback.toast(message, kind, { action: SettingJump.action(`general.${this._fold}.list`, `Show ${this._copy.many}`) });
   }
 
   async _writeAutoInstall(enabled) {

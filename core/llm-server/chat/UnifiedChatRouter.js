@@ -32,6 +32,7 @@ const TurnConversation = require('./router/TurnConversation');
 const AttachmentArtifacts = require('./router/AttachmentArtifacts');
 const EditRegionRecorder = require('./router/EditRegionRecorder');
 const ChatTurn = require('./router/ChatTurn');
+const PlainChatPrompt = require('./router/PlainChatPrompt');
 const ProxyTurns = require('./router/ProxyTurns');
 const ArtifactAccess = require('./router/ArtifactAccess');
 
@@ -218,6 +219,7 @@ class UnifiedChatRouter {
       }),
       dispatcher: this._dispatcher,
       modelSettings: this._modelSettings(),
+      plainPrompt: new PlainChatPrompt({ db: this.db }),
       inFlight: this._inFlight,
       reclaimer: this._reclaimer,
     };

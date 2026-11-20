@@ -14,6 +14,7 @@ Tab operations, each a straight delegation to the TabManager (all async):
   with `{ type: 'navigate' | 'refresh' | 'executeJs', payload }`
 - `waitForLoad(tabId, timeoutMs)`; `getSource` -> `getTabSource`; `screenshot` -> `screenshotTab`
 - `click` -> `clickElement`; `clickAt` (trusted click at a viewport point); `fill` -> `fillForm`
+- `clickUntil(tabId, options, run)` (the click loop; `run.shouldStop()` ends it with the caller's run)
 - `observePage(tabId, options)` (numbered element digest that tags `data-luma-ref`;
   `options.selector` lists only one part of the page)
 - `typeInto`; `waitFor` -> `waitForElement`; `scroll` -> `scrollPage`; `pressKey`

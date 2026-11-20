@@ -6,7 +6,7 @@ Resolves where a server lands from the [placement layout](../PlacementLayout.md)
 
 ## Methods
 
-- `PlacementResolver.resolve(layout, serverId, { diagnostics, requiredBytes, allowSplit = true, devices })`
+- `PlacementResolver.resolve(layout, serverId, { diagnostics, requiredBytes, allowSplit = true, softSingle = false, devices })`
   returns `{ cudaDevice, offloadToCpu, devices, split }` (VramCoordinator's
   reserve shape) or null for "automatic, let first-come-first-serve decide":
   - unknown server, no effective resource, dangling resource: null;
@@ -17,12 +17,15 @@ Resolves where a server lands from the [placement layout](../PlacementLayout.md)
     `requiredBytes`; if every card is measured with some room but none fits,
     the first card with `offloadToCpu: true`; otherwise the first card;
   - splittable (LLM): an explicit split matching the present card count wins;
-    no size hint pins the first card; otherwise the smallest prefix whose room
-    sums to the need, with a split proportional to each card's room in whole
-    percent.
+    no size hint pins the first card; with `softSingle`, a first card whose
+    `softRoom` holds the need is pinned alone; otherwise the smallest prefix
+    whose room sums to the need, with a split proportional to each card's room
+    in whole percent.
 - `PlacementResolver.deviceRoomMap(diagnostics, devices)` card index ->
-  `{ total, free, room }`, with room = free minus
-  `CudaDevicePicker.PER_CARD_RESERVE_BYTES` (1 GB), floored at 0.
+  `{ total, free, room, softRoom }`, with room = free minus
+  `CudaDevicePicker.PER_CARD_RESERVE_BYTES` (1 GB) and softRoom = free minus
+  `CudaDevicePicker.SOFT_RESERVE_BYTES` (half of it), both floored at 0 (null when
+  free is unknown).
 
 ## Why
 

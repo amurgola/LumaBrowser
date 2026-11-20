@@ -31,7 +31,7 @@ Param matchers are documented in [ExpectationMatcher](ExpectationMatcher.md).
 - `contains` and `notContains` are case-insensitive and accept a string or an array.
 - The iteration count falls back to the number of tool calls when the transcript has none.
 - `execution` grades `transcript.execution`, which the gambit runner fills by running the
-  model's code (see [ExecutionCheck](../gambit/ExecutionCheck.md)). The scorer stays pure.
+  model's code (see [ExecutionCheck](../../../extensions/model-testing/gambit/ExecutionCheck.md)). The scorer stays pure.
 
 ## Why `forbiddenTools: ["*"]`
 

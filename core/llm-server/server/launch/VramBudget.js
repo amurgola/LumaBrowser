@@ -10,6 +10,7 @@ class VramBudget {
     budget.totalVram = budget.perGpu.reduce((s, g) => s + g.totalBytes, 0);
     VramBudget._resolveUnified(budget, diagnostics);
     budget.vramAvailableBytes = VramBudget._available(budget, overrides);
+    budget.fullOffloadRoomBytes = VramBudget._fullOffloadRoom(budget, overrides);
     VramBudget._resolveLargestCard(budget);
     return budget;
   }
@@ -31,15 +32,23 @@ class VramBudget {
     }
   }
 
-  static _cardRoom(card) {
-    return GpuOverhead.cardRoom(card) + (Number(card.sharedRoomBytes) || 0);
+  static _cardRoom(card, reserveBytes = GpuOverhead.PER_CARD_RESERVE) {
+    return GpuOverhead.cardRoom(card, { reserveBytes }) + (Number(card.sharedRoomBytes) || 0);
   }
 
   static _available(budget, overrides) {
-    let available = budget.perGpu.reduce((sum, g) => sum + VramBudget._cardRoom(g), 0);
+    return VramBudget._capped(budget.perGpu.reduce((sum, g) => sum + VramBudget._cardRoom(g), 0), overrides);
+  }
+
+  static _fullOffloadRoom(budget, overrides) {
+    const single = budget.perGpu.length === 1 && !budget.perGpu[0].remote ? budget.perGpu[0] : null;
+    if (!single || budget.unifiedMemory) return budget.vramAvailableBytes;
+    return Math.max(budget.vramAvailableBytes, VramBudget._capped(VramBudget._cardRoom(single, GpuOverhead.SOFT_CARD_RESERVE), overrides));
+  }
+
+  static _capped(bytes, overrides) {
     const cap = Number(overrides.vramCapBytes);
-    if (Number.isFinite(cap) && cap > 0) available = Math.min(available, cap);
-    return available;
+    return Number.isFinite(cap) && cap > 0 ? Math.min(bytes, cap) : bytes;
   }
 
   static _resolveLargestCard(budget) {

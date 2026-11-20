@@ -8,6 +8,7 @@ class LlmServerSettings extends KeyedSettings {
     modelsDir: 'core.llmServer.modelsDir',
     autoUnloadMs: 'core.llmServer.defaults.autoUnloadMs',
     unloadOnVramPressure: 'core.llm.unloadOnVramPressure',
+    vramWarning: 'core.llm.vramWarning',
   };
 
   static DEFAULT_AUTO_UNLOAD_MS = 15 * 60 * 1000;
@@ -69,6 +70,16 @@ class LlmServerSettings extends KeyedSettings {
   setUnloadOnVramPressure(value) {
     const on = value === true;
     this._setOrDelete(LlmServerSettings.KEYS.unloadOnVramPressure, on ? true : null);
+    return on;
+  }
+
+  getVramWarning() {
+    return this._db.get(LlmServerSettings.KEYS.vramWarning, true) !== false;
+  }
+
+  setVramWarning(value) {
+    const on = value !== false;
+    this._setOrDelete(LlmServerSettings.KEYS.vramWarning, on ? null : false);
     return on;
   }
 

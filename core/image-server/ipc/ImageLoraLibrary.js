@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const ImageLoraCatalog = require('../models/ImageLoraCatalog');
+const LoraBaseDetector = require('../models/LoraBaseDetector');
 const LoraInspector = require('../models/LoraInspector');
 const LoraRepacker = require('../models/LoraRepacker');
 const LoraSidecar = require('../models/LoraSidecar');
@@ -43,6 +44,22 @@ class ImageLoraLibrary {
     const trained = args && args.meta ? LoraSidecar.write(dest, args.meta) : null;
     const families = ImageLoraLibrary._familiesOf(insp, trained);
     return { name: ImageLoraLibrary.nameOf(base), file: base, base: insp.base, families, form: insp.form, repacked, ...(trained ? { trained } : {}) };
+  }
+
+  adopt(filePath, record = null) {
+    const insp = LoraInspector.inspect(filePath);
+    if (!insp.ok || !insp.isLora) {
+      fs.rmSync(filePath, { force: true });
+      throw new Error(insp.ok ? ImageLoraLibrary.NOT_A_LORA : insp.error);
+    }
+    if (insp.needsFusedMlpRepack) ImageLoraLibrary._repack(filePath);
+    if (record) LoraSidecar.write(filePath, record);
+    return this._describe(path.dirname(filePath), path.basename(filePath));
+  }
+
+  static headerBase(filePath) {
+    const insp = LoraInspector.inspect(filePath);
+    return { base: (insp.ok && insp.base) || null, families: (insp.ok && insp.families) || [] };
   }
 
   catalogView() {
@@ -92,21 +109,43 @@ class ImageLoraLibrary {
     try { bytes = fs.statSync(full).size; } catch (_) {}
     const insp = this._inspectCached(full);
     const ok = !!(insp && insp.ok);
-    const trained = LoraSidecar.read(full);
+    const record = LoraSidecar.read(full);
     return {
       name: ImageLoraLibrary.nameOf(fileName),
       file: fileName,
       bytes,
-      base: (ok && insp.base) || null,
-      families: ImageLoraLibrary._familiesOf(ok ? insp : null, trained),
+      base: ImageLoraLibrary._baseOf(ok ? insp : null, record),
+      families: ImageLoraLibrary._familiesOf(ok ? insp : null, record),
       form: (ok && insp.form) || null,
-      ...(trained ? { trained } : {}),
+      ...ImageLoraLibrary._recordFields(record),
     };
   }
 
-  static _familiesOf(insp, trained) {
-    if (trained && trained.family) return [trained.family];
+  static _familiesOf(insp, record) {
+    if (record && record.family) return [record.family];
+    const listed = ImageLoraLibrary._listedBase(record);
+    if (listed) return listed.families.slice();
     return (insp && insp.families) || [];
+  }
+
+  static _baseOf(insp, record) {
+    const listed = ImageLoraLibrary._listedBase(record);
+    if (!listed) return (insp && insp.base) || null;
+    const named = record.baseModel && record.baseModel !== listed.label ? `${record.baseModel} (${listed.label})` : listed.label;
+    return { id: record.base, label: named };
+  }
+
+  static _listedBase(record) {
+    return (record && record.base && LoraBaseDetector.BASES[record.base]) || null;
+  }
+
+  static _recordFields(record) {
+    if (!record) return {};
+    return {
+      ...(record.label ? { label: record.label } : {}),
+      ...(record.trigger ? { trigger: record.trigger } : {}),
+      [record.source ? 'listing' : 'trained']: record,
+    };
   }
 
   _inspectCached(filePath) {

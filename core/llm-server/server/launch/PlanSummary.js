@@ -20,6 +20,7 @@ class PlanSummary {
       userArgs: userArgs.slice(),
       loadMode: loading.useMmap ? 'mmap' : 'none',
       loadModeFlag: loading.loadModeFlag,
+      ramPinSlowsDecode: !!loading.ramPinSlowsDecode,
       mmprojPath: vision.effectiveMmprojPath,
       mmprojAvailable: vision.mmprojAvailable,
       requestedContextSize: kv.requestedContextSize,
@@ -64,6 +65,7 @@ class PlanSummary {
     return {
       ngl: offload.ngl,
       fullOffload: offload.fullOffload,
+      softHeadroom: !!offload.softHeadroom,
       partial: offload.partial,
       gguf: gguf ? {
         architecture: gguf.architecture, blockCount: gguf.blockCount,
@@ -73,7 +75,9 @@ class PlanSummary {
       splitMode: splits.emitTensorSplit ? 'tensor' : null,
       tensorSplit: splits.emitTensorSplit ? splits.tensorSplitRatio : null,
       tensorSplitRequested: tensorGate.requested,
-      layerSplit: splits.layerFill ? { ratio: splits.layerFill.ratio, perDevice: splits.layerFill.perDevice } : null,
+      layerSplit: splits.layerFill
+        ? { ratio: splits.layerFill.ratio, perDevice: splits.layerFill.perDevice, order: splits.layerFill.order || null }
+        : null,
       flashAttn: flags.flashAttn,
       swaFull: offload.swaFull,
     };
@@ -83,6 +87,7 @@ class PlanSummary {
     return {
       cacheReuse: slots.cacheReuseEnabled,
       cacheReuseRequested: slots.cacheReuseRequested,
+      cacheReuseOffReason: slots.cacheReuseOffReason,
       cacheReuseMinChunk: slots.cacheReuseEnabled ? SlotPlan.CACHE_REUSE_MIN_CHUNK : null,
       promptCache: {
         cacheRamMiB: loading.promptCacheRam.mib,
@@ -125,13 +130,14 @@ class PlanSummary {
     const { budget, splits, apiKey, skippedFlags, offload, decodeEstimate, flags, files, port, notes, loading } = state;
     return {
       rpc: budget.rpcEnabled ? PlanSummary._rpc(budget, splits) : null,
-      spawnEnv: loading.spawnEnv || null,
+      spawnEnv: PlanSummary._spawnEnv(loading, splits),
       unifiedMemory: budget.unifiedMemory
         ? { sharedRoomBytes: budget.sharedRoomBytes, hostOffPoolBytes: offload.hostOffPoolBytes || 0, pinnedHostOff: !!loading.pinnedHostOff }
         : null,
       apiKeyRequired: !!apiKey,
       skippedFlags,
       vramAvailableBytes: budget.vramAvailableBytes,
+      fullOffloadRoomBytes: budget.fullOffloadRoomBytes,
       modelEstimatedBytes: offload.modelEstimatedBytes,
       headerEstimatedBytes: offload.headerEstimatedBytes,
       measuredVramBytes: offload.measuredVramBytes,
@@ -143,6 +149,12 @@ class PlanSummary {
       port,
       notes,
     };
+  }
+
+  static _spawnEnv(loading, splits) {
+    const named = splits.layerFill && splits.layerFill.order ? { CUDA_DEVICE_ORDER: 'PCI_BUS_ID' } : null;
+    if (!named) return loading.spawnEnv || null;
+    return { ...named, ...(loading.spawnEnv || {}) };
   }
 
   static _rpc(budget, splits) {

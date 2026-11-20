@@ -19,9 +19,8 @@ class CudaPin {
     if (!deviceStr || !diagnostics || !diagnostics.cuda || !Array.isArray(diagnostics.cuda.devices)) {
       return diagnostics;
     }
-    const wanted = CudaPin._deviceIndices(deviceStr);
-    if (wanted.size === 0) return diagnostics;
-    const devices = diagnostics.cuda.devices.filter((_, i) => wanted.has(i));
+    const all = diagnostics.cuda.devices;
+    const devices = [...CudaPin._deviceIndices(deviceStr)].filter((i) => i >= 0 && i < all.length).map((i) => all[i]);
     if (devices.length === 0) return diagnostics;
     return { ...diagnostics, cuda: { ...diagnostics.cuda, devices } };
   }

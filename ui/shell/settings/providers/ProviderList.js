@@ -65,7 +65,7 @@ export default class ProviderList {
   }
 
   _card(config, peersById) {
-    if (config.managedByCore) return ManagedProviderCard.build(config);
+    if (config.managedByCore) return ManagedProviderCard.build(config, this._ctx);
     if (config.peerManaged) return PeerProviderCard.build(config, peersById[config.peerId] || null, this._ctx);
     return EditableProviderCard.build(config, this._ctx);
   }

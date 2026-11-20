@@ -1,5 +1,7 @@
 const HtmlToMarkdown = require('../../shared/content/HtmlToMarkdown');
 const CivitaiBaseMap = require('./CivitaiBaseMap');
+const CivitaiLoraBaseMap = require('./CivitaiLoraBaseMap');
+const CivitaiLoraResolver = require('./CivitaiLoraResolver');
 const CivitaiModelResolver = require('./CivitaiModelResolver');
 
 class CivitaiSearchView {
@@ -47,29 +49,51 @@ class CivitaiSearchView {
   }
 
   static version(version, model) {
-    const map = CivitaiBaseMap.resolve(version.baseModel);
-    const file = CivitaiModelResolver.pickFile(version);
-    const checkpoint = (model && model.type) === 'Checkpoint';
-    const installable = checkpoint && map.supported && !!file;
-    let reason = null;
-    if (!checkpoint) reason = CivitaiBaseMap.assetKind(model && model.type) === 'lora' ? 'LoRA: install from the LoRA library (coming next).' : `${(model && model.type) || 'This asset'} is not a checkpoint.`;
-    else if (!map.supported) reason = map.note;
-    else if (!file) reason = 'No downloadable model file.';
+    const lora = CivitaiBaseMap.assetKind(model && model.type) === 'lora';
     return {
       versionId: version.id,
       name: version.name || null,
       baseModel: version.baseModel || null,
       publishedAt: version.publishedAt || null,
       downloads: Number(version.stats && version.stats.downloadCount) || 0,
-      installable,
+      ...(lora ? CivitaiSearchView._loraVerdict(version, model) : CivitaiSearchView._checkpointVerdict(version, model)),
+      earlyAccess: !!(version.availability && version.availability !== 'Public') || !!version.earlyAccessEndsAt,
+      trainedWords: Array.isArray(version.trainedWords) ? version.trainedWords.filter((w) => typeof w === 'string').slice(0, 10) : [],
+    };
+  }
+
+  static _checkpointVerdict(version, model) {
+    const map = CivitaiBaseMap.resolve(version.baseModel);
+    const file = CivitaiModelResolver.pickFile(version);
+    const checkpoint = (model && model.type) === 'Checkpoint';
+    let reason = null;
+    if (!checkpoint) reason = `${(model && model.type) || 'This asset'} is not a checkpoint.`;
+    else if (!map.supported) reason = map.note;
+    else if (!file) reason = 'No downloadable model file.';
+    return {
+      installable: !reason,
       reason,
       baseType: map.baseType,
       profile: map.profile,
       kind: map.kind,
       family: map.family,
-      earlyAccess: !!(version.availability && version.availability !== 'Public') || !!version.earlyAccessEndsAt,
       file: file ? CivitaiSearchView.file(file) : null,
-      trainedWords: Array.isArray(version.trainedWords) ? version.trainedWords.filter((w) => typeof w === 'string').slice(0, 10) : [],
+    };
+  }
+
+  static _loraVerdict(version, model) {
+    const reason = CivitaiLoraResolver.refusal(model, version);
+    const base = CivitaiLoraBaseMap.resolve(version.baseModel);
+    const file = CivitaiLoraResolver.pickFile(version) || CivitaiModelResolver.pickFile(version);
+    return {
+      installable: !reason,
+      reason,
+      baseType: null,
+      profile: null,
+      kind: 'lora',
+      family: base.families[0] || null,
+      loraBase: base.supported ? { id: base.base, label: base.label, families: base.families } : null,
+      file: file ? CivitaiSearchView.file(file) : null,
     };
   }
 
@@ -116,7 +140,7 @@ class CivitaiSearchView {
     if (!row) return null;
     const raw = CivitaiModelResolver.versionOf(model, versionId) || CivitaiModelResolver.versionOf(model, null);
     const version = row.versions.find((v) => v.versionId === raw.id) || CivitaiSearchView.version(raw, model);
-    const entry = version.installable ? CivitaiSearchView._entry(model, raw, fileId, now) : null;
+    const entry = version.installable && row.assetKind === 'checkpoint' ? CivitaiSearchView._entry(model, raw, fileId, now) : null;
     return {
       ...row,
       versionId: version.versionId,
@@ -124,7 +148,7 @@ class CivitaiSearchView {
       fileId: version.file ? version.file.fileId : null,
       label: entry ? entry.label : CivitaiModelResolver.displayName(model, raw),
       defaults: entry ? entry.defaults : null,
-      licenseNote: entry ? entry.licenseNote || null : null,
+      licenseNote: CivitaiSearchView._licenseNote(model, version, entry),
       trainedWords: version.trainedWords,
       images: CivitaiSearchView.images(raw),
       description: CivitaiSearchView.description(model, raw),
@@ -140,6 +164,11 @@ class CivitaiSearchView {
     if (page) parts.push(notes ? `### About this model\n\n${page}` : page);
     const joined = parts.join('\n\n');
     return joined.length > CivitaiSearchView.DESCRIPTION_MAX_CHARS ? `${joined.slice(0, CivitaiSearchView.DESCRIPTION_MAX_CHARS)}\n\n(truncated)` : joined;
+  }
+
+  static _licenseNote(model, version, entry) {
+    if (entry) return entry.licenseNote || null;
+    return version.installable ? CivitaiModelResolver.licenseNote(model) : null;
   }
 
   static _entry(model, version, fileId, now) {

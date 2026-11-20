@@ -2,6 +2,7 @@ const KvCacheType = require('./KvCacheType');
 const SlotPlan = require('./SlotPlan');
 const SpeculationPlan = require('./SpeculationPlan');
 const PromptCacheRam = require('./PromptCacheRam');
+const RuntimeFlags = require('./RuntimeFlags');
 
 class LaunchArgsBuilder {
   static HOST = '127.0.0.1';
@@ -103,10 +104,26 @@ class LaunchArgsBuilder {
       if (splits.rpcSplitRatio) this._push('--tensor-split', splits.rpcSplitRatio);
     }
     if (moe.cpuMoeEnabled) this._addExpertOffload(moe);
-    if (splits.layerFill) this._push('--tensor-split', splits.layerFill.ratio);
+    if (splits.layerFill) this._addLayerFill(splits.layerFill);
+  }
+
+  _addLayerFill(layerFill) {
+    if (layerFill.order) {
+      const main = RuntimeFlags.cudaDeviceName(layerFill.mainDevice);
+      this._push('--device', layerFill.order.map((device) => RuntimeFlags.cudaDeviceName(device)).join(','));
+      if (this._loadsDraftModel()) this._push('--spec-draft-device', main);
+      if (this._s.vision.effectiveMmprojPath) this._push('--mmproj-device', main);
+    }
+    this._push('--tensor-split', layerFill.ratio);
+  }
+
+  _loadsDraftModel() {
+    const { family, spec, flags } = this._s;
+    return !!family.drafterSpec || (spec.mtpEnabled && spec.mtpDetached && flags.specDialect !== 'ik');
   }
 
   _addExpertOffload(moe) {
+    if (this._s.loading.moeStageOff) this._push(RuntimeFlags.MOE_STAGE_FLAG, '0');
     if (moe.gpuExpertLayers <= 0) {
       this._push('--cpu-moe');
       if (moe.gpuCache && moe.gpuCache.enabled) {

@@ -6,7 +6,7 @@ What the collapsed "More settings" handle says: only the values that differ from
 
 ## Methods
 
-- `labels(defaults, prefs)`, `html(defaults, prefs)`.
+- `labels(defaults, prefs)`, `html(defaults, prefs)`. Among the pref chips: `Auto-unload`, `Unload on VRAM pressure`, `Low VRAM warning off` (only when `prefs.vramWarning === false`) and `<n> GB GPU headroom` when not 1 GB.
 
 ## Globals
 

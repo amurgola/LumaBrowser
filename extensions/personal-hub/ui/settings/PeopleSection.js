@@ -21,7 +21,7 @@ export default class PeopleSection extends HubSection {
   html() {
     return `
     <h4 class="luma-section-label">People</h4>
-    <div class="luma-field-help">Everyone who has reached you, however they appear. The same address, or the same full name within one context, is treated as one person. The same name in two contexts is only suggested, because people share names and work with several companies. Summaries use this to know that a Slack name and a mail sender are the same person, and what you record under About tells the assistant who each one is to you.</div>
+    <div class="luma-field-help">Everyone who has reached you, however they appear. The same address, the same name on one app, or the same full name within one context is treated as one person. The same name on different apps in two contexts is only suggested, because people share names. Summaries use this to know that a Slack name and a mail sender are the same person, and what you record under About tells the assistant who each one is to you.</div>
     <div class="ext-mt-8" id="ext-hub-pplSuggestions"></div>
     <div class="ext-form-row-inline ext-mt-8">
       <input type="text" class="luma-field-input" id="ext-hub-pplSearch" placeholder="Find a person, address, app or relation" aria-label="Find a person">
@@ -110,15 +110,16 @@ export default class PeopleSection extends HubSection {
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 0 26px">${c.identities.map((i) => `
           <span class="luma-badge muted" data-identity="${esc(i.id)}" title="${esc(i.handle)}">${esc(this._where(i))}: ${esc(i.display || i.handle)}${c.identities.length > 1 ? ` <button class="luma-btn luma-btn--sm" data-action="split" title="This is someone else: make it a person of its own" style="margin-left:6px">Split</button>` : ''}</span>`).join('')}
         </div>
-        ${open ? ContactProfileForm.html(c, this._kinds) : ''}
+        ${open ? ContactProfileForm.html(c, this._kinds, [...this._contexts].map(([id, name]) => ({ id, name }))) : ''}
       </div>`;
   }
 
   _aboutLine(c) {
     const waiting = c.profile && (c.profile.suggested || []).length ? 'Suggestions to look at under About.' : '';
-    if (!c.about && c.kind !== 'person' && !waiting) return '';
+    if (!c.about && c.kind !== 'person' && !waiting && !c.homeContextId) return '';
     const kind = (this._kinds.find((k) => k.kind === c.kind) || {}).label || '';
-    const text = [[kind, c.about].filter(Boolean).join(': '), waiting].filter(Boolean).join(' ');
+    const home = c.homeContextId ? this._contexts.get(c.homeContextId) || '' : '';
+    const text = [[[kind, home].filter(Boolean).join(', '), c.about].filter(Boolean).join(': '), waiting].filter(Boolean).join(' ');
     return `<div class="luma-field-help" data-role="about" style="margin:4px 0 0 26px">${WidgetDom.esc(text)}</div>`;
   }
 
