@@ -3,6 +3,7 @@ const CallMarkers = require('./CallMarkers');
 const LooseToolCallParser = require('./LooseToolCallParser');
 const OffFormatShape = require('./OffFormatShape');
 const ToolCallSniffer = require('./ToolCallSniffer');
+const CallToolCall = require('../tools/CallToolCall');
 
 class RunToolCallParser {
   constructor({ health, maxMalformedReprompts }) {
@@ -20,7 +21,7 @@ class RunToolCallParser {
 
   parseToolCalls(content) {
     const strict = BrowserTools.parseToolCalls(content);
-    const calls = strict.length ? strict : LooseToolCallParser.parseAll(content);
+    const calls = (strict.length ? strict : LooseToolCallParser.parseAll(content)).map((call) => CallToolCall.unwrap(call));
     this._noteDrift(content, strict, calls);
     if (calls.length) return this._withMarkersMoved(calls);
     return this._malformedReprompt(content);

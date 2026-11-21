@@ -10,12 +10,22 @@ Data only: the texts that teach the model to load a lazy tool group.
   (also exposed as `ToolGroups.ACTIVATE_TOOL_DOC`).
 - `ActivationManual.ACTIVATE_NATIVE`: the same manual for a model that takes tools
   natively. It says to pass the group keys in `groups` and leaves out the text-fence call
-  shape, because `activate_tools` is a registered function there.
+  shape, because `activate_tools` is a registered function there. It also names `call_tool`,
+  the function that runs the tools of a group loaded this way: they are not registered
+  functions, because the registered array is fixed for the conversation
+  ([NativeToolPlan](../bridge/tools/NativeToolPlan.md)). The shortcut it gives is `call_tool`
+  on a tool whose group is not loaded.
+- `ActivationManual.CALL_THROUGH_CALL_TOOL`: the line that closes a manual handed to a
+  native-tool model when its tools are not registered functions
+  ([ToolGroupState](../bridge/groups/ToolGroupState.md)`.callNote`).
 - `ActivationManual.INACTIVE_HEADING`: the line above the stub list.
 - `ActivationManual.INACTIVE_DIRECTIVE`: the closing rule, which steers widgets to
   `live_artifacts`, documents to `artifacts` and pictures to `images`. It gives the reason
   (the chat shows what the tool makes, which a code block in the reply cannot do) and the
   other direction (a short snippet or a quick answer stays in the reply).
+- `ActivationManual.INACTIVE_DIRECTIVE_NATIVE`: the same rule for a native-tool model, with
+  "You can call the tool directly..." replaced by "Load the group with activate_tools, then
+  run its tool with call_tool", since an unloaded tool is not a function it can name.
 
 ## Wording (2026-11-18)
 

@@ -222,6 +222,16 @@ class PseudoToolSchemaTable {
     },
   ]);
 
+  static CALL_TOOL = Object.freeze({
+    name: 'call_tool',
+    description: 'Runs a tool that is not one of your registered functions: a tool of a group you loaded with activate_tools. Give the tool\'s name and its parameters as that group\'s instructions describe them.',
+    properties: {
+      name: { type: 'string', description: 'The tool\'s name, exactly as its instructions give it.' },
+      params: { type: 'object', description: 'The tool\'s parameters.', additionalProperties: true },
+    },
+    required: ['name'],
+  });
+
   static ACTIVATE_TOOLS = Object.freeze({
     name: 'activate_tools',
     description: 'Load the detailed instructions for one or more lazy tool groups (e.g. images, artifacts) listed as inactive in the prompt. Returns their full usage docs and keeps them loaded for the rest of the conversation.',

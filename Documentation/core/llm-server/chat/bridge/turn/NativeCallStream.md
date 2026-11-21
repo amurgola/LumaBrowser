@@ -27,3 +27,11 @@ remote model writing a 30-second `write_file` showed an empty bubble and then
 a finished card. The fence path has had an instant card since the legacy
 `emitPending`; this gives the native path the same one, per slot, because a
 native reply may stream several calls at once.
+
+## call_tool (2026-11-20)
+
+The buffer handed to the pending card is built from
+[CallToolCall](../tools/CallToolCall.md)`.streamed(name, args)`: a streaming
+`call_tool` shows no name until the tool it wraps has arrived, then that
+tool's name and target, so the card never reads `call_tool` and matches the
+card the call runs under.

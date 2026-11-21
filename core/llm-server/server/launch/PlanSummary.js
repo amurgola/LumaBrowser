@@ -14,9 +14,10 @@ class PlanSummary {
     };
   }
 
-  static _context({ kv, userArgs, loading, vision, files, family }) {
+  static _context({ kv, userArgs, loading, vision, files, family, batch }) {
     return {
       contextSize: kv.contextSize,
+      microBatch: batch.reduced ? batch.microBatch : null,
       userArgs: userArgs.slice(),
       loadMode: loading.useMmap ? 'mmap' : 'none',
       loadModeFlag: loading.loadModeFlag,
@@ -141,6 +142,8 @@ class PlanSummary {
       modelEstimatedBytes: offload.modelEstimatedBytes,
       headerEstimatedBytes: offload.headerEstimatedBytes,
       measuredVramBytes: offload.measuredVramBytes,
+      fitShape: offload.fitShape,
+      measuredStale: !!offload.measuredStale,
       perGpu: budget.perGpu,
       decodeEstimate,
       runtimeId: flags.id,

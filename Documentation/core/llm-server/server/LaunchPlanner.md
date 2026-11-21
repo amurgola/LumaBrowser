@@ -45,8 +45,9 @@ order into one state object, each a class in `launch/`:
    [SpeculationPlan](launch/SpeculationPlan.md).
 3. Budget: [VramBudget](launch/VramBudget.md), then [TensorParallelGate](launch/TensorParallelGate.md)
    (which forces f16 KV before anything is priced).
-4. Placement: [MoeExpertPlan](launch/MoeExpertPlan.md), [OffloadDecision](launch/OffloadDecision.md),
-   [SplitPlan](launch/SplitPlan.md).
+4. Placement: [MicroBatchPlan](launch/MicroBatchPlan.md) (first, so every later price counts the
+   per-pass attention masks at the micro-batch it chose), [MoeExpertPlan](launch/MoeExpertPlan.md),
+   [OffloadDecision](launch/OffloadDecision.md), [SplitPlan](launch/SplitPlan.md).
 5. Serving: [LoadingPolicy](launch/LoadingPolicy.md), [FamilyTuning](launch/FamilyTuning.md), skipped flags.
 
 Then [LaunchArgsBuilder](launch/LaunchArgsBuilder.md) assembles argv, and the plan
@@ -57,7 +58,7 @@ and [ServingNotes](launch/ServingNotes.md), in that order.
 
 ## Plan keys
 
-`contextSize`, `userArgs`, `loadMode` (`none`|`mmap`), `loadModeFlag`, `mmprojPath`,
+`contextSize`, `microBatch` (the `-ub` set below 512, else null), `userArgs`, `loadMode` (`none`|`mmap`), `loadModeFlag`, `mmprojPath`,
 `mmprojAvailable`, `requestedContextSize`, `modelFamily`, `familySamplerDefaults`,
 `drafterPath`, `specType`, `mtpDraftNMax`, `draftCacheType`, `cacheTypeK`,
 `cacheTypeV`, `kvQuantForcedF16`, `ngl`, `fullOffload`, `partial`, `gguf`,
@@ -66,7 +67,7 @@ and [ServingNotes](launch/ServingNotes.md), in that order.
 `promptCache`, `mtp`, `ngramSpec`, `maxConcurrent`, `maxConcurrentRequested`,
 `ctxPerSlot`, `cpuMoe`, `cpuMoeRequested`, `cpuMoeAuto`, `moeSplit`, `rpc`,
 `apiKeyRequired`, `skippedFlags`, `vramAvailableBytes`, `modelEstimatedBytes`,
-`headerEstimatedBytes`, `measuredVramBytes`, `perGpu`, `decodeEstimate`,
+`headerEstimatedBytes`, `measuredVramBytes`, `fitShape`, `measuredStale`, `perGpu`, `decodeEstimate`,
 `runtimeId`, `runtimeName`, `modelName`, `port`, `notes`. Identical to legacy.
 Added since (see [PlanSummary](launch/PlanSummary.md)): `softHeadroom`,
 `fullOffloadRoomBytes`, `spawnEnv`, `layerSplit.order` and `ramPinSlowsDecode`.

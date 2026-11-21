@@ -29,3 +29,10 @@ A measured rung is still judged against the VRAM free right now: the matrix used
 show it as fitting whatever was free, so it read "fits" where Start split the model
 over two cards or left layers on the CPU, and the recorded speed belongs to a launch
 that no longer happens.
+
+## Measured shape (2026-11-20)
+
+`_measuredOk` passes the row's `shape` to the estimator with its peak. A
+measured rung keeps its own numbers; whether today's Start would still load it
+that way is decided from the peak only when the shape matches, else from the
+estimate.

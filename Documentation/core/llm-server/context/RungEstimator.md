@@ -41,3 +41,11 @@ snapshot's totals, with no live occupancy and no pick, said "fits" where Start s
 the model over two cards. The projector is left out because a chat Start is text-only
 (it loads for a turn that carries an image), and a fit test's measured peak is trusted
 over the header, as Start does.
+
+## Measured shape (2026-11-20)
+
+A `measured` row is passed as `{ vramBytes, fullOffload, shape }` and
+`_overrides` hands the planner `measuredShape` (null for a shapeless row), so
+a rung's fit-test peak is judged the way a Start judges it: trusted only when
+it was measured under today's launch shape
+([FitShape](../server/launch/FitShape.md)).

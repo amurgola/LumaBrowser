@@ -29,15 +29,24 @@ class FitRows {
   }
 
   static measuredComboVram(fitEntry, tokens, kv) {
+    const row = FitRows._measuredRow(fitEntry, tokens, kv);
+    return row ? Math.round(Number(row.vramBytes)) : null;
+  }
+
+  static measuredComboShape(fitEntry, tokens, kv) {
+    const row = FitRows._measuredRow(fitEntry, tokens, kv);
+    return row && typeof row.shape === 'string' ? row.shape : null;
+  }
+
+  static _measuredRow(fitEntry, tokens, kv) {
     const rows = fitEntry && Array.isArray(fitEntry.results) ? fitEntry.results : null;
     if (!rows) return null;
     const want = kv || FitRows.DEFAULT_KV;
-    const row = rows.find((r) => r && r.status === 'ok'
+    return rows.find((r) => r && r.status === 'ok'
       && r.fullOffload !== false
       && Number(r.contextTokens) === Number(tokens)
       && FitRows.kvOf(r) === want
-      && Number(r.vramBytes) > 0);
-    return row ? Math.round(Number(row.vramBytes)) : null;
+      && Number(r.vramBytes) > 0) || null;
   }
 
   static measuredFullOffload(fitEntry, tokens, kv) {

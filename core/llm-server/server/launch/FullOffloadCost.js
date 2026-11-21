@@ -1,13 +1,17 @@
 const KvCacheSizer = require('./KvCacheSizer');
 const GpuOverhead = require('./GpuOverhead');
 const DraftBranchCost = require('./DraftBranchCost');
+const LayerMaskCost = require('./LayerMaskCost');
+const ContextScratchCost = require('./ContextScratchCost');
 
 class FullOffloadCost {
   static bytes(input) {
     const { modelBytes, mmprojBytes, flashAttnSupported } = input;
     const kvTotal = FullOffloadCost._kvTotal(input);
-    const draftBranch = FullOffloadCost._draftBranch(input);
-    return Math.round(modelBytes + (mmprojBytes || 0) + kvTotal + GpuOverhead.fixed(flashAttnSupported) + draftBranch);
+    const draftBranch = FullOffloadCost.draftBranchBytes(input);
+    const masks = LayerMaskCost.bytes(input.gguf, input.contextSize, input.microBatch);
+    const scratch = input.scratchHeldBack ? 0 : ContextScratchCost.bytes(input);
+    return Math.round(modelBytes + (mmprojBytes || 0) + kvTotal + GpuOverhead.fixed(flashAttnSupported) + scratch + masks + draftBranch);
   }
 
   static noHeaderBytes({ modelBytes, mmprojBytes, drafterBytes, mtpBranchBytes }) {
@@ -18,7 +22,7 @@ class FullOffloadCost {
     return kvOnHost ? 0 : KvCacheSizer.total(gguf, contextSize, cacheTypeK, cacheTypeV, swaFull);
   }
 
-  static _draftBranch({ modelBytes, gguf, contextSize, cacheTypeK, cacheTypeV, mtpEnabled, mtpHeadBytes = 0, drafterBytes = 0, draftN = 0, draftCacheType = null }) {
+  static draftBranchBytes({ modelBytes, gguf, contextSize, cacheTypeK, cacheTypeV, mtpEnabled, mtpHeadBytes = 0, drafterBytes = 0, draftN = 0, draftCacheType = null }) {
     if (!(mtpEnabled || drafterBytes > 0)) return 0;
     const kvPerLayer = KvCacheSizer.perLayer(gguf, contextSize, cacheTypeK, cacheTypeV);
     const draftKvPerLayer = draftCacheType

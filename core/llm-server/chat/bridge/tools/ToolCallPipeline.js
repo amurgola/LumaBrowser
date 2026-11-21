@@ -3,6 +3,7 @@ const ActivateToolsCall = require('../groups/ActivateToolsCall');
 const AutoActivation = require('../groups/AutoActivation');
 const CallMarkers = require('../parsing/CallMarkers');
 const CallRefusalText = require('./CallRefusalText');
+const CallToolCall = require('./CallToolCall');
 const VaultPlaceholders = require('../../../../vault/VaultPlaceholders');
 
 class ToolCallPipeline {
@@ -17,6 +18,7 @@ class ToolCallPipeline {
 
   async execute(name, params, browserService) {
     if (name === CallMarkers.MALFORMED_TOOL) return { success: false, error: CallRefusalText.MALFORMED_CALL };
+    if (name === CallToolCall.NAME) return { ...CallToolCall.REFUSAL };
     if (name === ActivateToolsCall.NAME) return ActivateToolsCall.execute(params, this._toolSet.groups);
     const activation = AutoActivation.check(name, params, this._toolSet.groups);
     if (activation && activation.bounce) return activation.bounce;

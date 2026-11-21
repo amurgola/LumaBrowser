@@ -160,6 +160,76 @@ runtime from luma-b7 (patch 0011), where the GGUF conversion also lives.
 - Not set: sampler defaults (none published), `--reasoning-preserve` (the
   template has no reasoning channel), KV quantisation, speculation.
 
+### inkling2 (Thinking Machines Inkling 2, archs `inkling2_loop`, `inkling2`; name fallback `Inkling-2`)
+
+Added 2026-11-20. Inkling 2 Mini: 26.4B MoE, about 3.4B active (5.4B counting
+the loop), 24 stored blocks of which 6 to 17 run three times (48 visits per
+token, each with its own KV), 128 experts with 8 routed, five 1024-token
+sliding-window layers per global one, no RoPE (learned relative positions),
+1M context, image input through an mmproj, Apache 2.0. `inkling2` is Inkling 2
+Small, same template; it is listed so a renamed file still matches, but only
+the Mini was run here.
+
+- Mainline llama.cpp knows both architectures from PR 32694 (merged
+  2026-11-20 as 29b52d398, build 12600). The LumaByte runtime (luma-b8, pinned
+  at b11721) does not: it fails with "unknown model architecture", which
+  [FailureInterpreter](FailureInterpreter.md) now reports as a runtime that is
+  too old rather than a damaged file.
+- `samplerDefaults` temperature 1.0, top_p 1.0, top_k 0, min_p 0.0, both
+  penalties off: `generation_config.json` samples at temperature 1.0 with no
+  truncation and no penalty, and Unsloth's guide lists the same four values.
+- `--jinja`: llama.cpp detects the template (`<|message_user|>` plus
+  `<|content_image|>`) and uses its own Inkling parser, which splits the turn's
+  `<|content_thinking|>`, `<|content_text|>` and
+  `<|content_invoke_tool_json|>` blocks into reasoning, content and tool calls.
+- Thinking effort rides `reasoning_effort` in the template (none, minimal,
+  low, medium, high by default, xhigh, max, or a number), rendered as a
+  "Thinking effort level: 0.2" system block; the app's template probe finds
+  the levels, nothing is set here. Raw `reasoning_effort: none` still reasons
+  (the model card says so too); the app's Off turn came back with no
+  reasoning.
+- `nativeToolCalls: true`, `nativeToolCallsCapable: true`. The first live run
+  on 2026-11-20 drove the browser on both routes ("open example.com and tell
+  me the heading"): the fence answered right after navigate plus get_source,
+  the native route took five calls and then said the page had no h1, so the
+  fence was the first default. A real turn the same day showed the fence does
+  not hold: with a 21k token prompt (the dashboard attached, tool groups to
+  activate) the model answered with its own block,
+  `activate_tools<|content_invoke_tool_json|>{"name":"activate_tools",...}`,
+  whatever the prompt asked for, and llama.cpp's Inkling parser drops that
+  block when the request declares no tools (also with
+  `parse_tool_calls: false` and `reasoning_format: none`), so the reply came
+  back empty three times running. On the native route the same turn
+  activated the Hub tools, read the contact and the conversation and
+  answered. At first that cost a full prompt re-read (about 50 s) at every
+  group loaded mid-turn, because the schema joined the `tools` array and the
+  template renders tools before the system prompt; the array is now fixed for
+  the conversation and such tools run through `call_tool`
+  ([NativeToolPlan](../chat/bridge/tools/NativeToolPlan.md)). The same turn
+  went from 241 s to 89 s with that and the `--swa-full` change below.
+- No `--swa-full`: the model rewinds by checkpoint, so the full-size window
+  cache brought no reuse while reading a 26k token prompt at 597 tok/s
+  against 1,437 without it and holding 2.6 GiB more at 32k
+  ([LoopCoreLayout](launch/LoopCoreLayout.md)`.rewindsByCheckpoint`).
+- What is left of a step's time is the server's own: it tokenises the whole
+  prompt again on every request (1.9 s for 88k characters, 26.6k tokens, with
+  this vocabulary), and prompt reading still slows with depth.
+- KV is priced once per pass through the loop core; see
+  [LoopCoreLayout](launch/LoopCoreLayout.md). Measured with
+  `npm run bench:llm-launch` on the RTX 5090 (IQ4_NL, 32k, f16 KV,
+  `--swa-full`): about 21.6 GiB in use for an estimate of 22.9 GiB; the
+  per-block count would have said 19.9.
+- The compute buffer holds an attention mask per block pass and grows with
+  the context (3.4 GiB at 32k, 6.7 GiB at 64k with q8 KV, where the card
+  measured 23.0 and 28.9 GiB in all), which the estimate above did not count.
+  [LayerMaskCost](launch/LayerMaskCost.md) prices it and
+  [MicroBatchPlan](launch/MicroBatchPlan.md) steps `-ub` down to keep the
+  model whole on one card: a two-card split of this model decodes at 15 to 26
+  tok/s against 63 to 72 whole.
+- Live numbers on the RTX 5090 (IQ4_NL, 32k, q8 KV): load about 10 s, decode
+  62 to 76 tok/s, prompt about 1,500 tok/s; prefix reuse works (8,752 of 9,215
+  prompt tokens cached on a tool step).
+
 ## Qwen3.8 DFlash2 drafter (2026-11-08)
 
 `qwen38` carries `speculative { specType: draft-dflash, draftNMax: 7, label: DFlash2 }`;

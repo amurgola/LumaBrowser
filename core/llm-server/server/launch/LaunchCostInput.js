@@ -1,6 +1,8 @@
 class LaunchCostInput {
-  static build({ files, kv, flags, spec, vision }, modelBytes, swaFull) {
+  static build({ files, kv, flags, spec, vision, batch }, modelBytes, swaFull, { scratchHeldBack = false } = {}) {
     return {
+      microBatch: batch ? batch.microBatch : undefined,
+      scratchHeldBack,
       modelBytes,
       mmprojBytes: vision.effectiveMmprojBytes,
       gguf: files.gguf,

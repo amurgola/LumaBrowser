@@ -45,3 +45,12 @@ The manuals themselves are data classes: [ArtifactManuals](tool-groups/ArtifactM
 A Tools-on turn used to ship every manual on every turn, even for a one-line
 answer. Lazy groups keep the default prompt small; the manuals are written
 long on purpose because a weak local quant reads nothing else.
+
+## Native route registry (2026-11-20)
+
+`buildInactiveRegistry(inactiveGroups, { nativeTools: true })` closes on
+`ActivationManual.INACTIVE_DIRECTIVE_NATIVE` and opens on the native manual
+that names `call_tool` ([ActivationManual](tool-groups/ActivationManual.md)):
+on that route an unloaded tool is not a registered function, so the model is
+sent to `activate_tools` and then `call_tool`, never told to call the tool by
+its own name.

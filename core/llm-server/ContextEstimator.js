@@ -28,6 +28,10 @@ class ContextEstimator {
     return FitRows.measuredFullOffload(fitEntry, tokens, kv);
   }
 
+  static measuredComboShape(fitEntry, tokens, kv) {
+    return FitRows.measuredComboShape(fitEntry, tokens, kv);
+  }
+
   buildLocalModelOptions({ models, fitResults, runtime, resolveRuntime, diagnostics, settingsDb, displayNameFor } = {}) {
     const fit = fitResults || {};
     const entries = (models || [])

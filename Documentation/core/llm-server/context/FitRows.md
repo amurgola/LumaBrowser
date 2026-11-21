@@ -30,3 +30,10 @@ placement maths applies its own per-card reserve.
 A partial-offload peak is only the layers that made it onto the GPU. Seeding it
 as the full-offload need green-lit an ngl-999 launch that OOMed on load
 (Qwen3.8-27B 256k f16: a 25.8 GB partial row "fit" a ~46 GB full offload).
+
+## measuredComboShape (2026-11-20)
+
+`measuredComboShape(fitEntry, tokens, kv)` returns the `shape` stored on the
+row `measuredComboVram` reads (the launch shape the peak was measured under,
+see [FitShape](../server/launch/FitShape.md)), or null for a row from before
+shapes were recorded. Both go through `_measuredRow`.

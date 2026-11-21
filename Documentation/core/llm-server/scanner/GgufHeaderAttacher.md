@@ -17,7 +17,7 @@ Reads a GGUF model's header into `model.gguf` for the launch planner.
   error` when there is none).
 - `GgufHeaderAttacher.factsOf(result)` `{ parsed: true, ...FIELDS }`.
 - `FIELDS` the copied header fields (`blockSize` included, so a lone drafter keeps its
-  draft block): identity (architecture, name, baseName,
+  draft block; `loopCore` included, so a looped model's KV is priced per pass): identity (architecture, name, baseName,
   generalType), role (`role`, `roleSource`, `roleReason`, `poolingType`,
   `projectorType`), `parameterCount` / `parameterCountSource`, `hasChatTemplate` /
   `chatTemplateLength` / `chatTemplateTruncated` (the template text itself stays
@@ -31,3 +31,7 @@ Reads a GGUF model's header into `model.gguf` for the launch planner.
 `blockCount` lets the planner size a real partial offload instead of the old
 all-or-nothing `-ngl 0/999`; the attention fields price the KV cache. A failed
 read leaves the planner's binary fallback.
+
+## sharedKvLayers (2026-11-20)
+
+`sharedKvLayers` is copied onto `model.gguf` with the other attention fields.

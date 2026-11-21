@@ -35,7 +35,7 @@ class HubTools {
     },
     {
       name: 'hub_list_contacts',
-      description: 'The people and organisations the Hub has seen in the user\'s activity: each contact with every way they appear (app, name or address, context) and what the user recorded about them (kind person or general, relation, birth date, further details, notes; `about` is all of it in one line), plus pairs that may be the same person. Use it to learn who someone is to the user before writing to or about them, and to recognise that a Slack name and a mail sender are one person.',
+      description: 'The people and organisations the Hub has seen in the user\'s activity: each contact with every way they appear (app, name or address, context) and what the user recorded about them (kind person or general, relation, birth date, further details, notes; `about` is all of it in one line; `homeContextName` is the context, such as a company, they belong to), plus pairs that may be the same person. Use it to learn who someone is to the user before writing to or about them, and to recognise that a Slack name and a mail sender are one person. Often little is recorded: then read what they wrote with hub_get_thread on the items they appear in.',
       inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Part of a name, address, app or of what is recorded (a relation, a note)' }, limit: { type: 'number' } } },
     },
     {

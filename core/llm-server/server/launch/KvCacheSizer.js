@@ -1,6 +1,7 @@
 const KvCacheType = require('./KvCacheType');
 const SlidingWindowLayout = require('./SlidingWindowLayout');
 const HybridAttentionLayout = require('./HybridAttentionLayout');
+const LoopCoreLayout = require('./LoopCoreLayout');
 
 class KvCacheSizer {
   static SWA_CACHE_PAD = 512;
@@ -20,8 +21,7 @@ class KvCacheSizer {
   static total(gguf, contextSize, cacheTypeK, cacheTypeV, swaFull) {
     const blocks = gguf.blockCount;
     const hybrid = HybridAttentionLayout.of(gguf);
-    const layout = swaFull ? null : SlidingWindowLayout.of(gguf);
-    if (!layout) {
+    if (KvCacheSizer._sameOnEveryBlock(gguf)) {
       return KvCacheSizer.perLayer(gguf, contextSize, cacheTypeK, cacheTypeV) * (hybrid ? hybrid.kvLayers : blocks);
     }
     let total = 0;
@@ -32,17 +32,29 @@ class KvCacheSizer {
   static atLayer(gguf, index, contextSize, cacheTypeK, cacheTypeV, swaFull) {
     const hybrid = HybridAttentionLayout.of(gguf);
     if (hybrid && !hybrid.hasKvAt(index)) return 0;
-    const layout = swaFull ? null : SlidingWindowLayout.of(gguf);
-    if (!layout) return KvCacheSizer.perLayer(gguf, contextSize, cacheTypeK, cacheTypeV);
-    return KvCacheSizer._windowedLayer(gguf, index, contextSize, cacheTypeK, cacheTypeV, layout);
+    if (index >= KvCacheSizer.ownKvLayers(gguf)) return 0;
+    const visits = LoopCoreLayout.visitsAt(gguf, index);
+    const layout = SlidingWindowLayout.of(gguf);
+    if (!layout) return KvCacheSizer.perLayer(gguf, contextSize, cacheTypeK, cacheTypeV) * visits;
+    return KvCacheSizer._windowedLayer(gguf, index, contextSize, cacheTypeK, cacheTypeV, layout, swaFull) * visits;
   }
 
-  static _windowedLayer(gguf, index, contextSize, cacheTypeK, cacheTypeV, layout) {
+  static ownKvLayers(gguf) {
+    const blocks = Number(gguf && gguf.blockCount) || 0;
+    const shared = Math.max(0, Math.floor(Number(gguf && gguf.sharedKvLayers) || 0));
+    return shared < blocks ? blocks - shared : blocks;
+  }
+
+  static _sameOnEveryBlock(gguf) {
+    return !SlidingWindowLayout.of(gguf) && !LoopCoreLayout.of(gguf) && KvCacheSizer.ownKvLayers(gguf) === gguf.blockCount;
+  }
+
+  static _windowedLayer(gguf, index, contextSize, cacheTypeK, cacheTypeV, layout, swaFull) {
     const fallbackDim = KvCacheSizer._fallbackDim(gguf);
     const swa = layout.isSwaAt(index);
     const kDim = (swa ? gguf.keyLengthSwa : null) || gguf.keyLength || fallbackDim;
     const vDim = (swa ? gguf.valueLengthSwa : null) || gguf.valueLength || fallbackDim;
-    const tokens = swa ? Math.min(contextSize, layout.window + KvCacheSizer.SWA_CACHE_PAD) : contextSize;
+    const tokens = swa && !swaFull ? Math.min(contextSize, layout.window + KvCacheSizer.SWA_CACHE_PAD) : contextSize;
     return (KvCacheType.elementBytes(cacheTypeK) * kDim + KvCacheType.elementBytes(cacheTypeV) * vDim)
       * KvCacheSizer._headsAt(gguf, index) * tokens;
   }

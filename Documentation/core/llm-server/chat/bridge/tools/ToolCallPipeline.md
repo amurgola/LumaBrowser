@@ -36,3 +36,10 @@ ride back on its result.
 ## Vault key placeholders
 
 `vaultCaller` (from BridgeRun: who the run counts as). `_run` passes the call through `VaultPlaceholders.resolveFor` before dispatch, after approval. The dispatched params get the key values; the params the pipeline was given (trace, history) keep the placeholders. A refusal becomes the tool result.
+
+## call_tool (2026-11-20)
+
+`execute` answers [CallToolCall](CallToolCall.md)`.REFUSAL` to a call still
+named `call_tool`, right after the botched-call check and before anything is
+activated, asked or dispatched: the parser unwraps every `call_tool` that
+names a tool, so one that arrives here named nothing to run.

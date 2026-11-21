@@ -2,9 +2,10 @@ const MemoryBandwidth = require('../../MemoryBandwidth');
 const ByteLadder = require('../ByteLadder');
 const KvCacheSizer = require('./KvCacheSizer');
 const GpuOverhead = require('./GpuOverhead');
+const ContextScratchCost = require('./ContextScratchCost');
 
 class LayerFillSplit {
-  static CARD_SAFETY = 0.95;
+  static CARD_SAFETY = 0.98;
 
   static compute(input) {
     const blocks = Number(input.gguf && input.gguf.blockCount) || 0;
@@ -14,20 +15,25 @@ class LayerFillSplit {
     const slowFirst = input.slowFirst ? LayerFillSplit._slowFirstOrder(input.perGpu) : null;
     const order = slowFirst || input.perGpu.map((_, i) => i);
     const mainDevice = slowFirst ? order[order.length - 1] : 0;
-    const budgets = LayerFillSplit._budgets(input.perGpu, input.flashAttnSupported, extraBytes, input.perCardExtraBytes || 0, mainDevice);
+    const overhead = LayerFillSplit._cardOverhead(input);
+    const budgets = LayerFillSplit._budgets(input.perGpu, overhead, extraBytes, input.perCardExtraBytes || 0, mainDevice);
     const costAt = LayerFillSplit._costFunction(input, blocks);
     const packed = LayerFillSplit._pack(input.perGpu, budgets, costAt, blocks - layers, blocks, order);
     if (!packed) return null;
     const result = {
       ratio: LayerFillSplit._ratio(packed.counts, order, layers === blocks),
-      perDevice: LayerFillSplit._perDevice(input.perGpu, packed, budgets, extraBytes, mainDevice),
+      perDevice: LayerFillSplit._perDevice(input.perGpu, packed, budgets, extraBytes, mainDevice, overhead),
     };
     return slowFirst ? { ...result, order, mainDevice } : result;
   }
 
   static budgetTotal(perGpu, flashAttnSupported, perCardExtraBytes = 0) {
     if (!Array.isArray(perGpu) || !perGpu.length) return 0;
-    return LayerFillSplit._budgets(perGpu, flashAttnSupported, 0, perCardExtraBytes, 0).reduce((s, b) => s + b, 0);
+    return LayerFillSplit._budgets(perGpu, GpuOverhead.fixed(flashAttnSupported), 0, perCardExtraBytes, 0).reduce((s, b) => s + b, 0);
+  }
+
+  static _cardOverhead(input) {
+    return GpuOverhead.fixed(input.flashAttnSupported) + ContextScratchCost.bytes({ ...input, split: true });
   }
 
   static describe(layerFill) {
@@ -40,12 +46,11 @@ class LayerFillSplit {
     return !!blocks && layers > 0 && Array.isArray(perGpu) && perGpu.length >= 2 && Number(modelBytes) > 0;
   }
 
-  static _budgets(perGpu, flashAttnSupported, extraBytes, perCardExtraBytes, mainDevice) {
-    const fixed = GpuOverhead.fixed(flashAttnSupported);
+  static _budgets(perGpu, overheadBytes, extraBytes, perCardExtraBytes, mainDevice) {
     return perGpu.map((g, i) => {
       const total = Number(g && g.totalBytes) || 0;
       const cachedResident = g && g.freeBytes != null ? Math.max(0, total - Number(g.freeBytes)) : 0;
-      return Math.max(0, (GpuOverhead.cardRoom(g, { cachedResident }) - fixed) * LayerFillSplit.CARD_SAFETY
+      return Math.max(0, (GpuOverhead.cardRoom(g, { cachedResident }) - overheadBytes) * LayerFillSplit.CARD_SAFETY
         - perCardExtraBytes - (i === mainDevice ? extraBytes : 0));
     });
   }
@@ -110,13 +115,14 @@ class LayerFillSplit {
     return units.join(',');
   }
 
-  static _perDevice(perGpu, { counts, bytes }, budgets, extraBytes, mainDevice) {
+  static _perDevice(perGpu, { counts, bytes }, budgets, extraBytes, mainDevice, overheadBytes) {
     return perGpu.map((g, i) => ({
       index: i,
       name: (g && g.name) || `GPU ${i}`,
       layers: counts[i],
       bytes: Math.round(bytes[i] + (i === mainDevice ? extraBytes : 0)),
       budgetBytes: Math.round(budgets[i] + (i === mainDevice ? extraBytes : 0)),
+      overheadBytes: counts[i] > 0 || i === mainDevice ? Math.round(overheadBytes) : 0,
     }));
   }
 }

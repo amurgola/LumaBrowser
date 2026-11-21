@@ -26,10 +26,16 @@ class ActivationManual {
     '  • It returns the full usage docs for those groups right away (read them,',
     '    then make your call) and keeps them loaded for the rest of this',
     '    conversation, so a group is activated once.',
-    '  • Shortcut: calling a tool whose group is not loaded yet loads the group',
-    '    and returns its docs; then send your original call again, following',
-    '    those docs.',
+    '- call_tool: Runs a tool that is not one of your registered functions, which',
+    '  is how you call the tools of a group loaded with activate_tools: pass the',
+    '  tool\'s name in `name` and its parameters in `params`.',
+    '  • Shortcut: call_tool on a tool whose group is not loaded yet loads the',
+    '    group and returns its docs; then send the call again, following those',
+    '    docs.',
   ].join('\n');
+
+  static CALL_THROUGH_CALL_TOOL = 'These tools are not among your registered functions. Call each of them through '
+    + 'call_tool: `name` is the tool\'s name and `params` its parameters, as described above.';
 
   static INACTIVE_HEADING = 'INACTIVE tool groups you can activate right now:';
 
@@ -43,6 +49,11 @@ class ActivationManual {
     'loads its instructions, and you then send the call again. A short snippet',
     'or a quick answer the user will read in the reply stays in the reply.',
   ].join('\n');
+
+  static INACTIVE_DIRECTIVE_NATIVE = ActivationManual.INACTIVE_DIRECTIVE.replace(
+    'You can call the tool directly: it\nloads its instructions, and you then send the call again.',
+    'Load the group with activate_tools,\nthen run its tool with call_tool.',
+  );
 }
 
 module.exports = ActivationManual;

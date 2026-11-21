@@ -35,11 +35,15 @@ and task board. `mcp-tools.js` exports `{ tools: HubTools.TOOLS, handler }`.
   }`: each contact with every way they appear (app, name or address,
   context) and what the user recorded about them (kind person or general,
   relation, birth date, further details, notes; `about` is all of it in one
-  line), the pairs that may be the same person, and the form of each kind
+  line; `homeContextName` is the context they belong to and each identity
+  carries its `contextName`), the pairs that may be the same person, and
+  the form of each kind
   ([ContactService](contacts/ContactService.md)). `query` also matches what
   is recorded (a relation, a note). It is how the model learns who someone
   is to the user before writing to or about them, and recognises that a
-  Slack name and a mail sender are one person.
+  Slack name and a mail sender are one person. Its description says that
+  often little is recorded and that `hub_get_thread` on the items a person
+  appears in shows what they wrote.
 - `hub_snapshot_thread { id, force? }`: reads the conversation behind an
   activity item from the user's own signed-in tab (more than the
   notification's one line) and keeps it: `{ success: true, snapshot }` with

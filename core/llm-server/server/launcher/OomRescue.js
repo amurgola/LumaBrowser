@@ -28,6 +28,7 @@ class OomRescue {
   async _retryConservative(ctx, launch, { overrides: extra = {}, note = OomRescue.NOTE, flag = 'oomRescue' } = {}) {
     const overrides = { ...ctx.overrides, ...extra };
     delete overrides.measuredVramBytes;
+    delete overrides.measuredShape;
     const placed = this._placement.placeForRescue(ctx, launch.plan.headerEstimatedBytes);
     const rescue = ctx.plan({ diagnostics: placed.diagnostics, overrides });
     rescue.authKey = ctx.launchKey;

@@ -76,7 +76,7 @@ class BridgeRun {
       refreshAllowedTools: o.refreshAllowedTools, kbScope: o.kbScope, conversationId: o.conversationId,
       withholdTools: o.withholdTools,
     });
-    this._nativePlan = NativeToolPlan.forRun({ router: this._router, modelRef: o.modelRef, override: o.nativeToolsOverride, ctxPerSlot: o.ctxPerSlot });
+    this._nativePlan = NativeToolPlan.forRun({ router: this._router, modelRef: o.modelRef, override: o.nativeToolsOverride });
     this._toolSet.groups.nativeTools = this._nativePlan.enabled;
     this._budget = AgentBudget.resolve(o.agentBudget, { nativeTools: this._nativePlan.enabled });
     this._health = new RunHealth();

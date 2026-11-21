@@ -18,7 +18,7 @@ flat header summary the planner reads.
   kvCount, architecture, name, baseName, sizeLabel, generalType, role,
   roleSource, roleReason, poolingType, projectorType, parameterCount,
   parameterCountSource, chatTemplate, hasChatTemplate, chatTemplateLength,
-  chatTemplateTruncated, blockCount,
+  chatTemplateTruncated, blockCount, loopCore,
   contextLength, embeddingLength, feedForwardLength, headCount, headCountKv,
   headCountKvPerLayer, keyLength, valueLength, slidingWindow,
   slidingWindowPattern, slidingWindowPerLayer, keyLengthSwa, valueLengthSwa,
@@ -76,3 +76,17 @@ Since 2026-11-08 the summary keeps `blockSize` from `<arch>.block_size`: the dra
 block a DFlash-style drafter was trained at (DFlash2 8, DSpine 16), null on a chat
 model. The scanner copies it onto the paired drafter file reference and the launch
 planner sizes `--spec-draft-n-max` from it (block minus one anchor).
+
+## Loop core
+
+Since 2026-11-20 the summary keeps `loopCore: { start, end, passes }` from
+`<arch>.loop.start`, `loop.end` and `loop.count` (Inkling 2 Mini writes 6, 18
+and 3), null when any of the three is missing. The KV cache is priced once per
+pass through those blocks; see [LoopCoreLayout](server/launch/LoopCoreLayout.md).
+
+## sharedKvLayers (2026-11-20)
+
+`<arch>.attention.shared_kv_layers` is read as `sharedKvLayers` (null when
+absent): how many of the last blocks reuse an earlier block's KV cache
+instead of keeping one. Gemma 4 E4B says 18 of 42.
+[KvCacheSizer](server/launch/KvCacheSizer.md) prices no cache for them.

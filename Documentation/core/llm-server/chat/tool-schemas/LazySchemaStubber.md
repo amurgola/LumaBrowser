@@ -2,25 +2,27 @@
 
 `core/llm-server/chat/tool-schemas/LazySchemaStubber.js`
 
-Mirrors lazy tool groups on the native-tool path.
+Lazy tool groups on the native-tool path: which schemas stay out of the
+registered array.
 
 ## Methods (all static)
 
-- `apply(fullSchemas, groups, activeGroups)`: each schema whose tool belongs to
-  an inactive group is replaced by its stub; with no groups, or no inactive
-  tools, the input array is returned as is. `activeGroups` may be a Set or an
-  array. A tool in several inactive groups takes the stub of the last one.
-- `dropInactive(fullSchemas, groups, activeGroups)`: the inactive groups' tools
-  left out entirely, for a window too small to carry even their stubs
-  ([NativeToolPlan](../bridge/tools/NativeToolPlan.md)`.MAX_CONTEXT_SHARE`);
-  the registry in the system prompt and `activate_tools` keep them reachable.
-- `stubSchema(name, group)`: a parameterless schema whose description is the
-  group stub on one line followed by `NOT LOADED YET: call this with no
-  arguments to load its instructions, then re-issue your real call with the
-  arguments it describes.`
+- `dropInactive(fullSchemas, groups, registeredGroups)`: `fullSchemas` without
+  the tools owned only by groups outside `registeredGroups` (a Set or an
+  array). A tool several groups own (`edit_artifact` sits in `artifacts` and
+  `live_artifacts`) stays while any of them is registered. With no groups, or
+  nothing to leave out, the input array is returned as is.
 
 ## Why
 
-A stub keeps the tool nameable, so the model can reach for it and hit the
-auto-activate bounce, without paying for parameter docs it cannot use yet.
-Which tools exist never changes, only their cost.
+A tool that is left out is still reachable: the system prompt's registry
+names its group, `activate_tools` loads the manual and `call_tool` runs it
+([NativeToolPlan](../bridge/tools/NativeToolPlan.md),
+[CallToolCall](../bridge/tools/CallToolCall.md)).
+
+Until 2026-11-20 this class also turned inactive tools into parameterless
+stubs (`apply`, `stubSchema`), which kept them nameable for the auto-activate
+bounce. A stub had to become the real schema once its group was loaded, and
+that change to the array made the server read the whole prompt again, so the
+stubs were removed. The earlier rule also left out a tool as soon as one of
+its groups was inactive, even with another one active.

@@ -39,8 +39,12 @@ live modules all call these methods, so their names are the contract
   `contextId` (the context it is filed under by
   `ContextService.forItem`, or `null`), `lastNotification` and, with a
   contact service, `people`: the participants the Hub knows as contacts,
-  `[{ participant, name, contactId, kind, role, about }]`, each found by
-  `ContactService.lookup` over the item's app and context (`_withPeople`);
+  `[{ participant, name, contactId, kind, role, about, homeContextName,
+  count, apps }]`, each found by `ContactService.lookup` over the item's app
+  and context (`_withPeople`, which shapes one with `_asParticipant`:
+  `homeContextName` is the name of the context the contact belongs to or
+  `null`, `count` its notifications over every way it appears, `apps` the
+  apps it has written through);
   newest activity first), `getThread(id)`,
   `setThreadState(id, state, { snoozeUntil })` (`done` dismisses an item from
   the feed, `open` restores it; `reviewed` and `snoozed` are still accepted),
@@ -92,7 +96,10 @@ live modules all call these methods, so their names are the contract
   the context its direct mail and messages are filed under, which is the
   picked one or the one its relation names
   ([ContextService](context/ContextService.md)`.contextOfContact`; `null`
-  without a context service). The rest: `getContact(id)` -> the
+  without a context service). Contexts are also given by name, so a model
+  reading the list need not look ids up: `homeContextName` on the contact
+  and `contextName` on each identity (`null` where there is none), both
+  from `_homeContext` and `_contextName`. The rest: `getContact(id)` -> the
   contact or `null` (also `null` without the service),
   `mergeContacts(intoId, fromId)`, `splitContactIdentity(identityId)`,
   `renameContact(id, name)` (each answers the contact),

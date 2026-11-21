@@ -8,7 +8,7 @@ class GgufHeaderSummary {
     'general.alignment', 'general.parameter_count', 'tokenizer.chat_template',
   ]);
 
-  static WANTED_SUFFIX = /\.(block_count|context_length|embedding_length|feed_forward_length|attention\.head_count|attention\.head_count_kv|attention\.key_length|attention\.value_length|attention\.key_length_swa|attention\.value_length_swa|attention\.sliding_window|attention\.sliding_window_pattern|rope\.freq_base|rope\.dimension_count|expert_count|expert_used_count|expert_feed_forward_length|expert_shared_count|vocab_size|pooling_type|block_size)$/;
+  static WANTED_SUFFIX = /\.(block_count|context_length|embedding_length|feed_forward_length|attention\.head_count|attention\.head_count_kv|attention\.key_length|attention\.value_length|attention\.key_length_swa|attention\.value_length_swa|attention\.sliding_window|attention\.sliding_window_pattern|attention\.shared_kv_layers|rope\.freq_base|rope\.dimension_count|expert_count|expert_used_count|expert_feed_forward_length|expert_shared_count|vocab_size|pooling_type|block_size|loop\.start|loop\.end|loop\.count)$/;
 
   static CLIP_KEY = /^clip\./;
 
@@ -59,6 +59,7 @@ class GgufHeaderSummary {
       ...GgufHeaderSummary._parameterCount(meta, tensorScan),
       ...GgufHeaderSummary._chatTemplate(meta),
       blockCount,
+      loopCore: GgufHeaderSummary._loopCore(pick),
       ...GgufHeaderSummary._attentionShape(pick),
       ...GgufHeaderSummary._tensorFacts(derived, tensorScan, tensorScanError),
       ...GgufHeaderSummary._ropeAndExperts(pick),
@@ -122,6 +123,14 @@ class GgufHeaderSummary {
     };
   }
 
+  static _loopCore(pick) {
+    const num = GgufHeaderSummary.numberOrNull;
+    const start = num(pick('loop.start'));
+    const end = num(pick('loop.end'));
+    const passes = num(pick('loop.count'));
+    return start !== null && end !== null && passes !== null ? { start, end, passes } : null;
+  }
+
   static _attentionShape(pick) {
     const num = GgufHeaderSummary.numberOrNull;
     const headCountKv = pick('attention.head_count_kv');
@@ -140,6 +149,7 @@ class GgufHeaderSummary {
       slidingWindowPerLayer: Array.isArray(slidingPattern) ? slidingPattern.map(Boolean) : null,
       keyLengthSwa: num(pick('attention.key_length_swa')),
       valueLengthSwa: num(pick('attention.value_length_swa')),
+      sharedKvLayers: num(pick('attention.shared_kv_layers')),
     };
   }
 

@@ -14,19 +14,20 @@ Both must change together (see `ToolDocSurfaces.test.js`).
 
 ## Methods (all static)
 
-- `buildHarmonyTools({ allows, extTools, activeGroups = null, groups = null })`:
-  browser tools, pseudo-tools, extension tools, then `activate_tools` (always,
-  in full). With `groups`, tools in inactive groups become parameterless stubs
-  ([LazySchemaStubber](tool-schemas/LazySchemaStubber.md)); `activeGroups` may
-  be a Set or an array. Without `groups` everything is full (harmony behaviour).
+- `buildHarmonyTools({ allows, extTools })`: browser tools, pseudo-tools,
+  extension tools, then `activate_tools`, every one with its real schema.
+  Which of them a run registers is
+  [NativeToolPlan](bridge/tools/NativeToolPlan.md)'s decision.
 - `browserToolSchemas(allows)`: from `BrowserTools.TOOL_DEFINITIONS`
   ([BrowserToolSchemas](tool-schemas/BrowserToolSchemas.md)); `tabId` is
   steered to `-1`.
 - `pseudoToolSchemas(allows)`: the chat pseudo-tools from
   [PseudoToolSchemaTable](tool-schemas/PseudoToolSchemaTable.md), each gated by
   `allows(name)`, in table order.
-- `activateToolSchema()`, `extToolSchemas(extTools)` (description falls back
-  to the name), `stubToolSchema(name, group)`, `paramToSchema(typeStr)`.
+- `activateToolSchema()`, `callToolSchema()` (the function a native model
+  calls unregistered tools through, see
+  [CallToolCall](bridge/tools/CallToolCall.md)), `extToolSchemas(extTools)`
+  (description falls back to the name), `paramToSchema(typeStr)`.
 - `fenceFallbackDoc(names, schemas = null)`: the text-fence contract for tools
   a family keeps out of the native array, or `null` when none
   ([FenceFallbackDoc](tool-schemas/FenceFallbackDoc.md)). Reads every
@@ -40,8 +41,11 @@ deep-copies properties).
 ## Why
 
 The full set is about 4000 tokens, 12% of a 32k window, on every request;
-stubbing inactive groups gives the native path the same saving the prose path
-gets from lazy groups (a native run at 32k once hit "Context size has been
-exceeded"). The pseudo-tool descriptions carry the same teaching as the prose,
+leaving the unregistered groups out gives the native path the same saving the
+prose path gets from lazy groups (a native run at 32k once hit "Context size
+has been exceeded"). Until 2026-11-20 inactive tools were registered as
+parameterless stubs (`stubToolSchema`); see
+[NativeToolPlan](bridge/tools/NativeToolPlan.md) for why they went. The
+pseudo-tool descriptions carry the same teaching as the prose,
 not terse labels: a native-path model reads only these, and llama.cpp's jinja
 templating does not enforce `required`.

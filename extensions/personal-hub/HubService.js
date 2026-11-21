@@ -50,17 +50,36 @@ class HubService {
     const items = this._inbox.listThreads(query || {});
     const contexts = this._contexts ? this._contexts.list() : null;
     const filed = contexts ? items.map((item) => ({ ...item, contextId: this._contexts.forItem(item, contexts) })) : items;
-    return filed.map((item) => this._withPeople(item));
+    return filed.map((item) => this._withPeople(item, contexts || []));
   }
 
-  _withPeople(item) {
+  _withPeople(item, contexts = this.listContexts()) {
     if (!this._contacts) return item;
     const people = [];
     for (const name of item.participants || []) {
       const contact = this._contacts.lookup({ app: item.app, sender: name, contextId: item.contextId || null });
-      if (contact) people.push({ participant: name, name: contact.name, contactId: contact.id, kind: contact.kind, role: contact.role, about: contact.about });
+      if (contact) people.push(this._asParticipant(name, contact, contexts));
     }
     return { ...item, people };
+  }
+
+  _asParticipant(participant, contact, contexts) {
+    return {
+      participant, name: contact.name, contactId: contact.id, kind: contact.kind, role: contact.role, about: contact.about,
+      homeContextName: this._homeContext(contact, contexts).homeContextName,
+      count: contact.count,
+      apps: [...new Set(contact.identities.map((identity) => identity.app))],
+    };
+  }
+
+  _homeContext(contact, contexts) {
+    const id = this._contexts ? this._contexts.contextOfContact(contact, contexts) : null;
+    return { homeContextId: id, homeContextName: id ? HubService._contextName(id, contexts) : null };
+  }
+
+  static _contextName(id, contexts) {
+    const context = id ? contexts.find((c) => c.id === id) : null;
+    return context ? context.name : null;
   }
   getThread(id) { return this._inbox.getThread(id); }
   setThreadState(id, state, opts) { return this._inbox.setThreadState(id, state, opts || {}); }
@@ -130,7 +149,11 @@ class HubService {
   listContacts(query) {
     if (!this._contacts) return { contacts: [], suggestions: [], kinds: [] };
     const contexts = this.listContexts();
-    const contacts = this._contacts.list(query || {}).map((c) => ({ ...c, homeContextId: this._contexts ? this._contexts.contextOfContact(c, contexts) : null }));
+    const contacts = this._contacts.list(query || {}).map((contact) => ({
+      ...contact,
+      ...this._homeContext(contact, contexts),
+      identities: contact.identities.map((identity) => ({ ...identity, contextName: HubService._contextName(identity.contextId, contexts) })),
+    }));
     return { contacts, suggestions: this._contacts.suggestions(), kinds: this._contacts.kinds() };
   }
   getContact(id) { return this._contacts ? this._contacts.get(id) : null; }
@@ -168,7 +191,8 @@ class HubService {
 
   listSummaries() {
     if (!this._summarizer) return { cards: [], status: { enabled: false, available: false } };
-    const cards = this._summarizer.cards().map((card) => ({ ...card, items: card.items.map((item) => this._withPeople(item)) }));
+    const contexts = this.listContexts();
+    const cards = this._summarizer.cards().map((card) => ({ ...card, items: card.items.map((item) => this._withPeople(item, contexts)) }));
     return { cards, status: this._summarizer.status() };
   }
   summaryStatus() { return this._summarizer ? this._summarizer.status() : { enabled: false, available: false }; }

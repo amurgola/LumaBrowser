@@ -4,6 +4,7 @@ const LaunchCostInput = require('./LaunchCostInput');
 const MoeLayerSplit = require('./MoeLayerSplit');
 const LayerFillSplit = require('./LayerFillSplit');
 const MoeGpuCachePlan = require('./MoeGpuCachePlan');
+const UnifiedShare = require('./UnifiedShare');
 
 class MoeExpertPlan {
   static FILL_SAFETY = 0.85;
@@ -49,6 +50,7 @@ class MoeExpertPlan {
     this.gpuCache = { enabled: false, bytes: 0, mib: 0, promptBatch: null, promptBufferBytes: 0, promptReserveBytes: 0, reason: null };
     this.stagingBytes = 0;
     this.perCardHoldBytes = 0;
+    this.heldBackBytes = 0;
   }
 
   _resolveEngagement() {
@@ -79,6 +81,7 @@ class MoeExpertPlan {
     }
     this._resolveGpuCache(fillBudget, blocks);
     this.perCardHoldBytes = this.stagingBytes + this.gpuCache.promptBufferBytes;
+    this.heldBackBytes = this.perCardHoldBytes * Math.max(1, MoeGpuCachePlan._localCards(this._state.budget));
   }
 
   _resolveGpuCache(fillBudget, blocks) {
@@ -129,7 +132,7 @@ class MoeExpertPlan {
   }
 
   _fillBudget() {
-    const residentFull = FullOffloadCost.bytes(LaunchCostInput.build(this._state, this.moeSplit.residentBytes, false));
+    const residentFull = FullOffloadCost.bytes(LaunchCostInput.build(this._state, this.moeSplit.residentBytes, false, { scratchHeldBack: true }));
     this.residentFullBytes = residentFull;
     this.stagingBytes = this._maxLayerExpertBytes(this._gguf.blockCount);
     const spare = this._state.budget.vramAvailableBytes - residentFull - this.stagingBytes;
@@ -176,11 +179,17 @@ class MoeExpertPlan {
   _resolveBudgetWeights() {
     const modelBytes = this._files.modelBytes;
     if (!this.cpuMoeEnabled) {
-      this.budgetWeightsBytes = modelBytes;
+      this.budgetWeightsBytes = Math.max(0, modelBytes - this._hostInputBytes());
       return;
     }
     const gpuExperts = this.gpuCache.enabled ? this.gpuCache.bytes : this.expertBytesRange(this.nCpuMoe, this._gguf.blockCount);
     this.budgetWeightsBytes = Math.min(modelBytes, Math.round(this.moeSplit.residentBytes + gpuExperts));
+  }
+
+  _hostInputBytes() {
+    if (this._state.budget.unifiedMemory) return 0;
+    const layout = this._gguf && this._gguf.tensorLayout;
+    return Math.min(this._files.modelBytes, Math.max(0, Number(layout && layout.hostOnlyBytes) || 0));
   }
 
   _resolveCpuPool() {

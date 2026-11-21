@@ -18,7 +18,7 @@ class ContextRungBuilder {
 
   _measuredOk(ctx, row) {
     const { tokens, kv } = ctx;
-    const today = this._estimate(ctx, { vramBytes: row.vramBytes, fullOffload: row.fullOffload === true });
+    const today = this._estimate(ctx, { vramBytes: row.vramBytes, fullOffload: row.fullOffload === true, shape: row.shape });
     const measured = row.tokensPerSec != null ? row.tokensPerSec : null;
     const rung = {
       tokens,

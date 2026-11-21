@@ -19,3 +19,11 @@ offload, which the full-offload path owns, so this never claims every layer and
 the two estimators cannot disagree into an OOM. Spreading all weights over the
 blocks over-counts slightly, the safe direction. The draft KV is one
 full-attention block regardless of SWA, so it uses the undiscounted rate.
+
+## Context scratch (2026-11-20)
+
+`fixedOverheadBytes` is now the 512 MiB of fixed overhead plus
+[ContextScratchCost](ContextScratchCost.md) for the context, priced as a
+windowed cache on a sliding-window model (partial splits never carry
+`--swa-full`), so the layers that go to the GPU leave room for the compute
+buffer.

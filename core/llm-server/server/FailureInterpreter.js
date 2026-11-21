@@ -26,6 +26,13 @@ class FailureInterpreter {
         + 'or pick CPU as the OpenVINO device in Defaults, or the Vulkan runtime, to get the model up now.',
     },
     {
+      kind: 'unknown-architecture',
+      re: /unknown model architecture/i,
+      title: 'This runtime build does not know the model\'s architecture',
+      advice: 'The model file is fine, but the selected runtime is older than the model. '
+        + 'Update the runtime in the Inference Runtimes card, or pick a newer llama.cpp runtime in Defaults, then start again.',
+    },
+    {
       kind: 'bad-model',
       re: /gguf_init_from_file|invalid magic|failed to load model|error loading model|unknown (?:model )?architecture|failed to read tensor|corrupt/i,
       title: 'The model file failed to load',

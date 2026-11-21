@@ -59,8 +59,9 @@ class LaunchArgsBuilder {
   }
 
   _addSlots() {
-    const { flags, slots, offload } = this._s;
+    const { flags, slots, offload, batch } = this._s;
     if (flags.parallel) this._push('--parallel', String(slots.maxConcurrent));
+    if (batch.reduced) this._push('-ub', String(batch.microBatch));
     if (offload.swaFull) this._push('--swa-full');
     if (flags.contextShift) this._push('--no-context-shift');
     if (slots.cacheReuseEnabled) this._push('--cache-reuse', String(SlotPlan.CACHE_REUSE_MIN_CHUNK));

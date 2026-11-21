@@ -2,8 +2,10 @@ const FullOffloadCost = require('./FullOffloadCost');
 const LaunchCostInput = require('./LaunchCostInput');
 const PartialOffloadSizer = require('./PartialOffloadSizer');
 const SlidingWindowLayout = require('./SlidingWindowLayout');
+const LoopCoreLayout = require('./LoopCoreLayout');
 const GpuOverhead = require('./GpuOverhead');
 const UnifiedShare = require('./UnifiedShare');
+const FitShape = require('./FitShape');
 
 class OffloadDecision {
   static ALL_LAYERS = 999;
@@ -21,19 +23,32 @@ class OffloadDecision {
   static _priceFullOffload(decision, state) {
     const { files, budget, moe } = state;
     decision.swaLayout = files.gguf ? SlidingWindowLayout.of(files.gguf) : null;
+    decision.swaFullUseless = !!decision.swaLayout && LoopCoreLayout.rewindsByCheckpoint(files.gguf);
     decision.headerEstimatedBytesSwaFull = files.gguf
-      ? FullOffloadCost.bytes(LaunchCostInput.build(state, moe.budgetWeightsBytes, true))
+      ? OffloadDecision._price(state, true)
       : FullOffloadCost.noHeaderBytes(LaunchCostInput.noHeader(state));
     decision.headerEstimatedBytesIswa = decision.swaLayout
-      ? FullOffloadCost.bytes(LaunchCostInput.build(state, moe.budgetWeightsBytes, false))
+      ? OffloadDecision._price(state, false)
       : decision.headerEstimatedBytesSwaFull;
-    decision.swaFullAffordable = budget.totalVram > 0 && decision.headerEstimatedBytesSwaFull <= budget.vramAvailableBytes;
+    decision.swaFullAffordable = !decision.swaFullUseless && budget.totalVram > 0
+      && decision.headerEstimatedBytesSwaFull <= budget.vramAvailableBytes;
     decision.headerEstimatedBytes = decision.swaFullAffordable
       ? decision.headerEstimatedBytesSwaFull : decision.headerEstimatedBytesIswa;
   }
 
-  static _applyMeasurement(decision, { overrides }) {
-    decision.measuredVramBytes = Number(overrides.measuredVramBytes) > 0 ? Number(overrides.measuredVramBytes) : null;
+  static _price(state, swaFull) {
+    const held = !!state.moe.cpuMoeEnabled;
+    return FullOffloadCost.bytes(LaunchCostInput.build(state, state.moe.budgetWeightsBytes, swaFull, { scratchHeldBack: held }))
+      + (held ? state.moe.heldBackBytes : 0);
+  }
+
+  static _applyMeasurement(decision, state) {
+    const { overrides } = state;
+    decision.fitShape = FitShape.of(state, decision);
+    const measured = Number(overrides.measuredVramBytes) > 0 ? Number(overrides.measuredVramBytes) : null;
+    decision.measuredStale = measured != null && 'measuredShape' in overrides
+      && !FitShape.matches(overrides.measuredShape, decision.fitShape);
+    decision.measuredVramBytes = decision.measuredStale ? null : measured;
     decision.modelEstimatedBytes = decision.measuredVramBytes != null
       ? decision.measuredVramBytes : decision.headerEstimatedBytes;
   }

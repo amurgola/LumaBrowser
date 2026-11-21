@@ -3,8 +3,11 @@ class HubContext {
   static MAX_EVENTS = 150;
   static MAX_TASKS_PER_COLUMN = 60;
   static MAX_THREADS = 60;
+  static MAX_PEOPLE = 40;
+  static FREQUENT_NOTIFICATIONS = 10;
   static ACTIVITY_DAYS = 7;
   static ACTIVITY_NOTE = 'What reached the user recently: chat messages, mail, calendar and task notices. This is background about their day, not a to-do list: nothing here is unread or waiting to be cleared.';
+  static ACTIVITY_MORE = 'hub_get_thread for every message behind an item (read these before saying who someone is or what they want: an item above shows only its last message); hub_list_contacts for what is recorded about a person and everywhere they appear; hub_list_threads for older or dismissed items; hub_list_notifications for earlier days';
   static MAX_NOTIFICATIONS = 120;
   static DESCRIPTION_CHARS = 200;
   static BODY_CHARS = 240;
@@ -104,11 +107,19 @@ class HubContext {
     if (t.dueAt) bits.push(`due ${HubContext._dueLabel(t.dueAt, now, { done })}`);
     const where = [t.sourceLabel, t.spaceName, t.listName].filter(Boolean).join(' > ');
     if (where) bits.push(where);
-    if (Array.isArray(t.assignees) && t.assignees.length) bits.push(`assigned ${t.assignees.join(', ')}`);
+    const assignees = HubContext._assigneeNames(t.assignees);
+    if (assignees.length) bits.push(`assigned ${assignees.join(', ')}`);
     if (Array.isArray(t.tags) && t.tags.length) bits.push(`tags ${t.tags.join(', ')}`);
     if (t.syncError) bits.push('sync error');
     const desc = HubContext._clip(t.description, HubContext.DESCRIPTION_CHARS);
     return `- [${t.id}] ${t.title || '(untitled)'}${bits.length ? ` (${bits.join('; ')})` : ''}${desc ? `: ${desc}` : ''}`;
+  }
+
+  static _assigneeNames(assignees) {
+    return (Array.isArray(assignees) ? assignees : [])
+      .map((assignee) => (assignee && typeof assignee === 'object' ? assignee.name || assignee.email || assignee.id : assignee))
+      .filter((name) => name != null && String(name).trim())
+      .map(String);
   }
 
   static _pseudoGroups(tasks) {
@@ -136,7 +147,7 @@ class HubContext {
       for (const t of earlier) lines.push(HubContext._threadLine(t, now));
     }
     lines.push('', ...HubContext._todayLog(api, now));
-    lines.push(HubContext._more('hub_list_threads for older or dismissed items; hub_get_thread for the notifications behind an item; hub_list_notifications for earlier days; hub_list_contacts for who someone is'));
+    lines.push(HubContext._more(HubContext.ACTIVITY_MORE));
     return { title: 'Activity', text: HubContext._join(lines) };
   }
 
@@ -153,14 +164,29 @@ class HubContext {
   }
 
   static _whoIsWho(items) {
-    const known = new Map();
+    const named = new Map();
     for (const item of items) {
       for (const person of item.people || []) {
-        if (person.about && !known.has(person.contactId)) known.set(person.contactId, person);
+        if (!named.has(person.contactId) && HubContext._worthNaming(person)) named.set(person.contactId, person);
       }
     }
-    if (!known.size) return [];
-    return [`### Who is who (${known.size})`, ...[...known.values()].map((person) => `- ${person.name}: ${person.about}`), ''];
+    if (!named.size) return [];
+    const lines = [`### Who is who (${named.size})`, ...[...named.values()].slice(0, HubContext.MAX_PEOPLE).map((person) => HubContext._personLine(person))];
+    if (named.size > HubContext.MAX_PEOPLE) lines.push(`- ...and ${named.size - HubContext.MAX_PEOPLE} more`);
+    lines.push('');
+    return lines;
+  }
+
+  static _worthNaming(person) {
+    return !!(person.about || person.kind === 'person' || person.homeContextName || person.count >= HubContext.FREQUENT_NOTIFICATIONS);
+  }
+
+  static _personLine(person) {
+    const bits = [];
+    if (person.kind === 'person') bits.push('person');
+    if (person.homeContextName) bits.push(person.homeContextName);
+    if (person.count) bits.push(`${person.count} notification${person.count === 1 ? '' : 's'}${(person.apps || []).length ? ` on ${person.apps.join(', ')}` : ''}`);
+    return `- ${person.name}${bits.length ? ` (${bits.join('; ')})` : ''}: ${person.about || 'nothing recorded'}`;
   }
 
   static _threadLine(t, now) {

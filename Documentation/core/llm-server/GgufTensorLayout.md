@@ -59,3 +59,17 @@ included in the per-block arrays (legacy behaviour, kept).
 
 **Empty vs null.** Zero tensors is a real shape (unsloth puts the tokenizer in
 a header-only first shard) and yields an empty, mergeable scan.
+
+## Host-only bytes (2026-11-20)
+
+The scan also sums `tokenEmbeddingBytes` (`token_embd.*`) and `outputBytes`
+(`output.weight`), merged across shards, and the byte layout carries
+`hostOnlyBytes`: the host tensors no GPU copy exists of, which is `hostBytes`
+less the token embedding when the file has no output tensor of its own. With
+tied embeddings (the Gemma family) llama.cpp loads the token embedding on
+the GPU as the output matrix as well as keeping it on the host. Measured:
+Gemma-4-31B put its whole 24.0 GiB on the cards beside 1.1 GiB on the host;
+Magidonia-24B, with its own output tensor, 23.2 of 23.9 GiB.
+[MoeExpertPlan](server/launch/MoeExpertPlan.md) takes `hostOnlyBytes` out of a
+full offload's price. `hostBytes` keeps its meaning for the expert offload
+and the unified-memory logic.

@@ -58,3 +58,22 @@ While any experts live in RAM, llama.cpp's scheduler runs a prompt batch on the 
 by copying one layer's experts into its compute pool, so that much VRAM is held back
 before the fill. Unpriced, it left a 5090 under 0.5 GB free with Flash-Next and the
 GPU cache (2026-10-22); priced, about 2.5 GB stayed free at the same decode speed.
+
+## Host-only weights and the held-back total (2026-11-20)
+
+- Without an expert offload `budgetWeightsBytes` is the file less
+  `_hostInputBytes()`: the scanned tensors that stay on the host and have no
+  GPU copy ([GgufTensorLayout](../../GgufTensorLayout.md) `hostOnlyBytes`),
+  0 on a unified-memory box, where they sit in the GPU's own pool until
+  [OffloadDecision](OffloadDecision.md) moves them out. Gemma 4 E4B keeps 2.2
+  of its 5.0 GiB there and was estimated at 8.3 GiB for a 4.7 GiB load;
+  Magidonia-24B keeps 0.7 GiB. A token embedding that doubles as the output
+  matrix (the Gemma family) is on the GPU too and stays in the price.
+- `heldBackBytes`: `perCardHoldBytes` (staged expert tensor plus prompt
+  activations) over every local card. [OffloadDecision](OffloadDecision.md)
+  adds it to an expert offload's price, so the estimate is the footprint the
+  fill was sized to leave room for. Qwen3.8-Flash-Next on a 5090 loaded 26.6
+  GiB against an estimate of 23.9 that left it out; the plan itself was
+  unchanged, only the number it reported.
+- `_fillBudget` prices the resident share with `scratchHeldBack`, so the
+  cache and the expert layers are sized exactly as before.

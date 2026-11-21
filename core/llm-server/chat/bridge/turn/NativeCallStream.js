@@ -1,4 +1,5 @@
 const PendingToolCard = require('./PendingToolCard');
+const CallToolCall = require('../tools/CallToolCall');
 
 class NativeCallStream {
   constructor({ hooks, mirror }, { now = () => Date.now() } = {}) {
@@ -32,8 +33,9 @@ class NativeCallStream {
   }
 
   static _buffer(slot) {
-    const name = slot.name ? `"tool": "${slot.name}", ` : '';
-    return `{${name}"params": ${slot.args}`;
+    const shown = CallToolCall.streamed(slot.name, slot.args);
+    const name = shown.name ? `"tool": "${shown.name}", ` : '';
+    return `{${name}"params": ${shown.args}`;
   }
 }
 

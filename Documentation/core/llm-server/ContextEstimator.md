@@ -59,3 +59,9 @@ Gemma-class model read red at 128k while Start launched it at full offload. The
 payload now carries both KV ladders, the tips and the mode table, so the
 renderer only renders. Bug H12: MLX models go to the MLX planner through
 PlanFor, so they no longer read "doesn't fit" at every rung.
+
+## measuredComboShape (2026-11-20)
+
+`ContextEstimator.measuredComboShape(fitEntry, tokens, kv)` forwards to
+[FitRows](context/FitRows.md), beside `measuredComboVram` and
+`measuredFullOffload`.

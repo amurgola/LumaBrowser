@@ -5,9 +5,9 @@ class GgufHeaderAttacher {
   static FIELDS = [
     'architecture', 'name', 'baseName', 'generalType', 'role', 'roleSource', 'roleReason', 'poolingType',
     'projectorType', 'parameterCount', 'parameterCountSource', 'hasChatTemplate', 'chatTemplateLength', 'chatTemplateTruncated',
-    'blockCount', 'contextLength', 'embeddingLength', 'feedForwardLength',
+    'blockCount', 'loopCore', 'contextLength', 'embeddingLength', 'feedForwardLength',
     'headCount', 'headCountKv', 'headCountKvPerLayer', 'keyLength', 'valueLength', 'keyLengthSwa',
-    'valueLengthSwa', 'slidingWindow', 'slidingWindowPattern', 'slidingWindowPerLayer', 'attnKvPerLayer',
+    'valueLengthSwa', 'slidingWindow', 'slidingWindowPattern', 'slidingWindowPerLayer', 'sharedKvLayers', 'attnKvPerLayer',
     'attnKvLayerCount', 'mtpGrafted', 'attnScanError', 'tensorLayout', 'ropeFreqBase', 'expertCount',
     'expertUsedCount', 'expertFeedForwardLength', 'expertSharedCount', 'vocabSize', 'fileType',
     'fileTypeName', 'fileTypeSource', 'dominantTensorType', 'quantizationVersion', 'blockSize',

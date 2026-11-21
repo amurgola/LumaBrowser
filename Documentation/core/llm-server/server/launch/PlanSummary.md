@@ -8,7 +8,8 @@ The `plan` object a llama.cpp launch returns beside its argv.
 
 - `PlanSummary.build(state)` returns the plan with every key listed in
   [LaunchPlanner](../LaunchPlanner.md#plan-keys), grouped as context
-  (`contextSize`, `requestedContextSize`, `loadMode`, `ramPinSlowsDecode`, projector, family), speculation
+  (`contextSize`, `microBatch` (the `-ub` below 512 a launch sets to shrink per-pass attention masks, else
+  null), `requestedContextSize`, `loadMode`, `ramPinSlowsDecode`, projector, family), speculation
   (`mtp`, `specType`, `draftCacheType`, KV types), placement (`ngl`, `fullOffload`,
   `softHeadroom`, `partial`, `gguf` summary, `singleGpu`, splits, `flashAttn`, `swaFull`), serving
   (`cacheReuse*`, `promptCache`, slots), experts (`cpuMoe*`, `moeSplit`, `moeGpuCacheMib`, `moeGpuCacheOffReason`, `moeCacheSingleCardBytes`,
@@ -41,3 +42,11 @@ without a pin (CUDA's own default is fastest first).
 The speculation part also carries `drafterChoiceKey` (from [ModelFiles](ModelFiles.md);
 the chat router restarts the server when the saved choice differs) and `specDraftNMax`
 (the drafter's tokens per step, null without a drafter).
+
+## fitShape and measuredStale (2026-11-20)
+
+The accounting group carries `fitShape` (the launch shape a fit test of this
+plan measures, see [FitShape](FitShape.md)) and `measuredStale` (a stored peak
+was set aside because it was measured under another shape). `layerSplit`
+entries carry `overheadBytes` per card
+([LayerFillSplit](LayerFillSplit.md)).

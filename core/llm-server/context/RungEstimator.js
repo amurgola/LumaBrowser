@@ -43,6 +43,7 @@ class RungEstimator {
     if (measured && Number(measured.vramBytes) > 0) {
       overrides.measuredVramBytes = Math.round(Number(measured.vramBytes));
       overrides.measuredFullOffload = measured.fullOffload === true;
+      overrides.measuredShape = typeof measured.shape === 'string' ? measured.shape : null;
     }
     return overrides;
   }

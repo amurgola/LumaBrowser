@@ -31,3 +31,7 @@ took VRAM, a driver changed overhead). The header estimate over-counts KV, so th
 replan lands on a partial offload or wider spread that fits. Without a measured
 override the plan was already conservative and an identical replan would waste a
 multi-minute load.
+
+## measuredShape (2026-11-20)
+
+The conservative retry deletes `measuredShape` with `measuredVramBytes`.

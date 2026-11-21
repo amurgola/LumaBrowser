@@ -46,3 +46,11 @@ time); flash attention forced for one measurement basis; seeded with the prior
 measurement so a re-run converges onto the single card a model truly fits instead
 of repeating an estimate-driven 2-GPU split. The card pick is per combo because KV
 grows with context. Resolving VRAM after teardown once blanked every cell.
+
+## Row shape (2026-11-20)
+
+Every row carries `shape`: `plan.fitShape` of the launch it measured
+([FitShape](../launch/FitShape.md)), null when the planner named none.
+`comboOverrides` seeds a prior measurement together with its `measuredShape`,
+so a re-run is not steered by a peak from another runtime build or launch
+shape.

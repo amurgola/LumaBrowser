@@ -1,6 +1,7 @@
 const KvCacheSizer = require('./KvCacheSizer');
 const GpuOverhead = require('./GpuOverhead');
 const DraftBranchCost = require('./DraftBranchCost');
+const ContextScratchCost = require('./ContextScratchCost');
 
 class PartialOffloadSizer {
   static SAFETY = 0.9;
@@ -10,7 +11,7 @@ class PartialOffloadSizer {
     const perLayerWeight = input.modelBytes / blocks;
     const kvPerLayer = PartialOffloadSizer._kvPerLayer(input, blocks);
     const perLayer = perLayerWeight + kvPerLayer;
-    const fixedOverhead = GpuOverhead.fixed(input.flashAttnSupported);
+    const fixedOverhead = GpuOverhead.fixed(input.flashAttnSupported) + ContextScratchCost.bytes({ ...input, swaFull: false });
     const draftOverhead = PartialOffloadSizer._draftOverhead(input);
     const budget = (input.vramAvailableBytes - fixedOverhead - (input.mmprojBytes || 0) - draftOverhead) * PartialOffloadSizer.SAFETY;
     return {

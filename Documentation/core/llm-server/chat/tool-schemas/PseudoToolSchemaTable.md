@@ -41,3 +41,12 @@ injects, as opposed to browser and extension tools).
 `vault_list { tabId? }` and `vault_fill { ref, tabId? }`.
 
 `vault_fill` also takes `part: 'otp'`; `vault_list` describes keys too.
+
+## call_tool (2026-11-20)
+
+`PseudoToolSchemaTable.CALL_TOOL`: `name` (string, required: the tool to run)
+and `params` (any object: that tool's parameters). Registered beside
+`ACTIVATE_TOOLS` on every native run that has lazy groups, so a tool of a group
+loaded after the conversation's first turn can be called without changing the
+registered array ([NativeToolPlan](../bridge/tools/NativeToolPlan.md),
+[CallToolCall](../bridge/tools/CallToolCall.md)).

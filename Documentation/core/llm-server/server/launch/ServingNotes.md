@@ -44,3 +44,11 @@ weights, the OFF note points at the Setup row's download when
 (Qwen3.8: `z-lab/Qwen3.8-27B-DFlash2-GGUF`). The ON note no longer promises the
 same output: the main model still picks every token, but batch-size dependent
 kernels mean a greedy run can diverge from a plain decode after a few hundred tokens.
+
+## Stale fit test note (2026-11-20)
+
+When `offload.measuredStale` is set the VRAM basis note says the stored fit
+test for this context was set aside because it measured a different launch
+(runtime build, window cache, micro-batch, draft model or expert offload),
+that the estimate is used, and that running the fit test again measures this
+one.

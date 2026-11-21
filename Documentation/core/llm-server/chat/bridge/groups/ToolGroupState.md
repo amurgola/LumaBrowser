@@ -53,3 +53,20 @@ stayed active and "delivered" with no manual anywhere (the frozen system
 prompt lists it as inactive), and calling its tools directly no longer
 auto-activated it, so the model called them blind. Conversations still
 holding that list ignore it.
+
+## Registered groups and the call note (2026-11-20)
+
+- `registeredKeys()`: the groups whose tools a native-tool run registers as
+  functions: `promptKeys` once the conversation's first turn froze them,
+  `active` before that. [NativeToolPlan](../tools/NativeToolPlan.md) builds
+  the `tools` array from it, so the array is as byte-identical across requests
+  and turns as the system prompt.
+- `callNote(keys)`: on a native route, `\n\n` plus
+  `ActivationManual.CALL_THROUGH_CALL_TOOL` when any available group in `keys`
+  is outside the registered set; `''` otherwise and on the text fence.
+- `docsFor(keys)` now ends with `callNote(keys)`, so every manual an
+  activation hands back (the `activate_tools` result, the auto-activate
+  bounce, a tool admitted mid-run) tells a native model to run those tools
+  through `call_tool`. The manuals themselves are unchanged, so
+  [ManualDelivery](../prompt/ManualDelivery.md) still finds them in the
+  history.

@@ -22,3 +22,11 @@ The tool-call parser one run hands AgentRunner.
 
 Drift is counted where it happens; counting on the latched flag inflated one
 drift into every later iteration (27 counted for a real 15).
+
+## call_tool (2026-11-20)
+
+`parseToolCalls` passes every parsed call through
+[CallToolCall](../tools/CallToolCall.md)`.unwrap` before the drift count and
+the marker transfer, so a `call_tool` reaches AgentRunner as the tool it names
+with that tool's parameters, markers included. A `call_tool` that names
+nothing stays as it is and the pipeline refuses it.

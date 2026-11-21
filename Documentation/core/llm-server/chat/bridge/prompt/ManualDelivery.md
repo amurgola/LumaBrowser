@@ -37,3 +37,13 @@ rides there once; [BridgeRun](../BridgeRun.md) persists that message's sent form
 and [SentForm](SentForm.md) replays the manual with that turn afterwards, so
 it stays in the model's history at no further cost.
 [ToolGroupState](../groups/ToolGroupState.md) decides what is pending.
+
+## Unregistered tools on a native route (2026-11-20)
+
+`render` ends the block with the group state's `callNote` for the delivered
+keys ([ToolGroupState](../groups/ToolGroupState.md)): a manual delivered at the
+head of a later turn belongs to a group loaded after the registered array was
+fixed, so the model is told to run its tools through `call_tool`. The note
+follows the manuals, so `carriedKeys` and `carryOver`, which look for each
+manual's own text, read a block with or without it the same way. A plain
+object without `callNote` renders as before.

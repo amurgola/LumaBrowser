@@ -9,6 +9,7 @@ const SpeculationPlan = require('./launch/SpeculationPlan');
 const VisionProjectorPlan = require('./launch/VisionProjectorPlan');
 const VramBudget = require('./launch/VramBudget');
 const TensorParallelGate = require('./launch/TensorParallelGate');
+const MicroBatchPlan = require('./launch/MicroBatchPlan');
 const MoeExpertPlan = require('./launch/MoeExpertPlan');
 const OffloadDecision = require('./launch/OffloadDecision');
 const SplitPlan = require('./launch/SplitPlan');
@@ -100,6 +101,7 @@ class LaunchPlanner extends MediaLaunchPlanner {
 
   _resolvePlacement() {
     const s = this._s;
+    s.batch = MicroBatchPlan.resolve(s);
     s.moe = MoeExpertPlan.resolve(s);
     s.offload = OffloadDecision.resolve(s);
     s.splits = SplitPlan.resolve(s);

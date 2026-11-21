@@ -40,6 +40,7 @@ class FitComboRunner {
       fullOffload: null,
       vramBytes: null,
       vramApprox: false,
+      shape: null,
       ramBytes: null,
       tokensPerSec: null,
       promptTokensPerSec: null,
@@ -70,6 +71,7 @@ class FitComboRunner {
     }
     row.ngl = launch.plan.ngl;
     row.fullOffload = launch.plan.fullOffload;
+    row.shape = launch.plan.fitShape || null;
     return this._loadAndMeasure(job, port, launch, row);
   }
 
@@ -80,7 +82,10 @@ class FitComboRunner {
       forceFlashAttn: true, suppressMmprojLoad: true,
     };
     const priorMeasured = ContextEstimator.measuredComboVram(priorFit, combo.contextTokens, combo.kv);
-    if (priorMeasured != null) overrides.measuredVramBytes = priorMeasured;
+    if (priorMeasured != null) {
+      overrides.measuredVramBytes = priorMeasured;
+      overrides.measuredShape = ContextEstimator.measuredComboShape(priorFit, combo.contextTokens, combo.kv);
+    }
     return overrides;
   }
 

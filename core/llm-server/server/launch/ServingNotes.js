@@ -161,6 +161,11 @@ class ServingNotes {
         + 'layer there although the measured peak (which counts pinned host buffers) reads above the unified-memory budget.');
     }
     const { offload, kv } = this._s;
+    if (offload.measuredStale) {
+      this._notes.push('VRAM basis: the stored fit test for this context was set aside, because it measured a different launch '
+        + '(another runtime build, window cache, micro-batch, draft model or expert offload). The estimate is used; '
+        + 'run the fit test again to measure this one.');
+    }
     if (offload.measuredVramBytes == null) return;
     this._notes.push(
       `VRAM basis: MEASURED ${ByteLadder.format(offload.measuredVramBytes)} from a prior fit test for this `

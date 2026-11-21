@@ -7,9 +7,10 @@ class ManualDelivery {
   static render(groups, keys, { nativeTools = false } = {}) {
     if (!groups || !Array.isArray(keys) || !keys.length) return '';
     const wanted = new Set(keys);
-    const docs = ManualDelivery._docs(groups, nativeTools).filter((d) => wanted.has(d.key)).map((d) => d.doc);
-    if (!docs.length) return '';
-    return `${ManualDelivery.HEADER}\n\n${docs.join('\n\n')}\n\n`;
+    const delivered = ManualDelivery._docs(groups, nativeTools).filter((d) => wanted.has(d.key));
+    if (!delivered.length) return '';
+    const callNote = typeof groups.callNote === 'function' ? groups.callNote(delivered.map((d) => d.key)) : '';
+    return `${ManualDelivery.HEADER}\n\n${delivered.map((d) => d.doc).join('\n\n')}${callNote}\n\n`;
   }
 
   static carriedKeys(groups, turns, { nativeTools = false } = {}) {

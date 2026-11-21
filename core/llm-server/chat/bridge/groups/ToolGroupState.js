@@ -1,4 +1,5 @@
 const ToolGroups = require('../../ToolGroups');
+const ActivationManual = require('../../tool-groups/ActivationManual');
 const AvailableGroups = require('./AvailableGroups');
 
 class ToolGroupState {
@@ -48,10 +49,22 @@ class ToolGroupState {
     for (const g of this.available) this.availableKeys.add(g.key);
   }
 
+  registeredKeys() {
+    return this._promptFrozen ? this.promptKeys : this.active;
+  }
+
   docsFor(keys) {
-    return this.available.filter((g) => keys.includes(g.key))
+    const docs = this.available.filter((g) => keys.includes(g.key))
       .map((g) => (this.nativeTools ? ToolGroups.docWithoutFenceExamples(g.doc) : g.doc))
       .join('\n\n');
+    return docs + this.callNote(keys);
+  }
+
+  callNote(keys) {
+    if (!this.nativeTools) return '';
+    const registered = this.registeredKeys();
+    const unregistered = keys.some((key) => this.availableKeys.has(key) && !registered.has(key));
+    return unregistered ? `\n\n${ActivationManual.CALL_THROUGH_CALL_TOOL}` : '';
   }
 
   owningGroups(name) {

@@ -4,6 +4,8 @@ class GgufTensorLayout {
 
   static EXPERT_TENSOR = /^ffn_(gate|up|down)_exps\./;
   static HOST_INPUT_TENSOR = /^(token_embd|per_layer_token_embd)\./;
+  static TOKEN_EMBEDDING_TENSOR = /^token_embd\./;
+  static OUTPUT_TENSOR = /^output\.weight$/;
   static BLOCK_TENSOR = /^blk\.(\d+)\.(.+)$/;
 
   static isPlausibleTensorCount(tensorCount) {
@@ -77,6 +79,7 @@ class GgufTensorLayout {
       blocks: [], kvBlocks: [], mtpBlocks: [], mtpTensors: 0,
       expertBytesByBlock: Object.create(null), residentBytesByBlock: Object.create(null),
       hostBytes: 0, otherBytes: 0, dataBytes: 0, tensorCount: 0,
+      tokenEmbeddingBytes: 0, outputBytes: 0,
       elementCount: 0, bytesByType: Object.create(null),
     };
   }
@@ -86,6 +89,8 @@ class GgufTensorLayout {
     if (!match) {
       if (GgufTensorLayout.HOST_INPUT_TENSOR.test(name)) scan.hostBytes += bytes;
       else scan.otherBytes += bytes;
+      if (GgufTensorLayout.TOKEN_EMBEDDING_TENSOR.test(name)) scan.tokenEmbeddingBytes += bytes;
+      if (GgufTensorLayout.OUTPUT_TENSOR.test(name)) scan.outputBytes += bytes;
       return;
     }
     const block = Number(match[1]);
@@ -116,6 +121,8 @@ class GgufTensorLayout {
     GgufTensorLayout._sumInto(merged.bytesByType, scan.bytesByType);
     merged.hostBytes += Number(scan.hostBytes) || 0;
     merged.otherBytes += Number(scan.otherBytes) || 0;
+    merged.tokenEmbeddingBytes += Number(scan.tokenEmbeddingBytes) || 0;
+    merged.outputBytes += Number(scan.outputBytes) || 0;
     merged.dataBytes += Number(scan.dataBytes) || 0;
     merged.tensorCount += Number(scan.tensorCount) || 0;
     merged.elementCount += Number(scan.elementCount) || 0;
@@ -149,9 +156,16 @@ class GgufTensorLayout {
       expertBytesPerBlock: GgufTensorLayout._perBlock(scan.expertBytesByBlock, blocks),
       residentBytesPerBlock: GgufTensorLayout._perBlock(scan.residentBytesByBlock, blocks),
       hostBytes: Number(scan.hostBytes) || 0,
+      hostOnlyBytes: GgufTensorLayout._hostOnlyBytes(scan),
       otherBytes: Number(scan.otherBytes) || 0,
       totalBytes: Number(scan.dataBytes) || 0,
     };
+  }
+
+  static _hostOnlyBytes(scan) {
+    const host = Number(scan.hostBytes) || 0;
+    const tied = (Number(scan.outputBytes) || 0) > 0 ? 0 : (Number(scan.tokenEmbeddingBytes) || 0);
+    return Math.max(0, host - tied);
   }
 
   static _perBlock(bytesByBlock, blocks) {

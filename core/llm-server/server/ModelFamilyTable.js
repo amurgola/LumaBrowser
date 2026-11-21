@@ -101,6 +101,19 @@ class ModelFamilyTable {
         + 'llama-server renders through the jinja path; it carries no tool markup, so tools go through the text '
         + 'fence. Loads only on the LumaByte runtime (luma-b7 or later, patch 0011). No sampler is published.',
     },
+    inkling2: {
+      label: 'Inkling 2',
+      architectures: ['inkling2_loop', 'inkling2'],
+      namePattern: /\binkling[-_ ]?2\b/i,
+      samplerDefaults: { temperature: 1.0, top_p: 1.0, top_k: 0, min_p: 0.0, repeat_penalty: 1.0, presence_penalty: 0.0 },
+      flags: ['--jinja'],
+      nativeToolCalls: true,
+      nativeToolCallsCapable: true,
+      note:
+        'Thinking Machines samples Inkling 2 at temperature 1.0 with no top-p, top-k or min-p cut and no penalty. '
+        + 'Its block template (thinking, text and JSON tool blocks) is parsed by llama.cpp\'s Inkling chat format, '
+        + 'which needs the jinja path. Mainline llama.cpp knows the architecture from b12600 (PR 32694).',
+    },
   };
 }
 

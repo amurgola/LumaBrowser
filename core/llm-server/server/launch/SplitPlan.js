@@ -1,6 +1,8 @@
 const TensorParallelRatio = require('./TensorParallelRatio');
 const RpcSplitRatio = require('./RpcSplitRatio');
 const LayerFillSplit = require('./LayerFillSplit');
+const FullOffloadCost = require('./FullOffloadCost');
+const LaunchCostInput = require('./LaunchCostInput');
 
 class SplitPlan {
   static resolve(state) {
@@ -27,7 +29,9 @@ class SplitPlan {
       && budget.perGpu.length >= 2 && offload.ngl > 0 && !!files.gguf;
   }
 
-  static _layerFill({ budget, files, kv, flags, spec, vision, moe, offload }) {
+  static _layerFill(state) {
+    const { budget, files, kv, flags, vision, moe, offload, batch } = state;
+    const draftBranchBytes = FullOffloadCost.draftBranchBytes(LaunchCostInput.build(state, moe.budgetWeightsBytes, offload.swaFull));
     return LayerFillSplit.compute({
       perGpu: budget.perGpu,
       gguf: files.gguf,
@@ -37,7 +41,7 @@ class SplitPlan {
       kvOnHost: kv.kvOnHost,
       swaFull: offload.swaFull,
       modelBytes: moe.budgetWeightsBytes,
-      extraBytes: (vision.effectiveMmprojBytes || 0) + spec.mtpBranchBytes + spec.specDrafterBytes,
+      extraBytes: (vision.effectiveMmprojBytes || 0) + draftBranchBytes + batch.maskBytes,
       perCardExtraBytes: moe.perCardHoldBytes || 0,
       flashAttnSupported: flags.flashAttn,
       layersOnGpu: offload.fullOffload ? files.gguf.blockCount : (offload.partial ? offload.partial.ngl : 0),

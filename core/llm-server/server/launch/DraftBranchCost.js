@@ -5,7 +5,7 @@ class DraftBranchCost {
 
   static WEIGHT_FLOOR = Math.round(1.5 * DraftBranchCost.GIB);
 
-  static SCRATCH = 256 * 1024 * 1024;
+  static SCRATCH = 800 * 1024 * 1024;
 
   static MTP_BRANCH_FIXED = Math.round(2.2 * DraftBranchCost.GIB);
 

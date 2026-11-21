@@ -2,6 +2,46 @@
     const PROXY_FLAG = Symbol('resonantProxy');
     const OBJECT_KEY = new WeakMap();
     const _RES_EVENTS = ['click', 'dblclick', 'input', 'change', 'keydown', 'keyup', 'keypress', 'submit', 'blur', 'focus', 'mousedown', 'mouseup'];
+    const _RES_EVENT_SELECTOR = _RES_EVENTS.map(ev => '[res-on' + ev + ']').join(',');
+    const ROW_WRITE = { track: true };
+
+    const COMPILED_EXPRESSIONS = new Map();
+    function compileExpression(params, source) {
+        const key = params.join(',') + '\u0000' + source;
+        let fn = COMPILED_EXPRESSIONS.get(key);
+        if (!fn) {
+            if (COMPILED_EXPRESSIONS.size >= 5000) COMPILED_EXPRESSIONS.clear();
+            fn = new Function(...params, `return (${source});`);
+            COMPILED_EXPRESSIONS.set(key, fn);
+        }
+        return fn;
+    }
+
+    const EXPRESSION_TOKENS = new Map();
+    function tokensOf(source) {
+        let tokens = EXPRESSION_TOKENS.get(source);
+        if (!tokens) {
+            tokens = source.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || [];
+            EXPRESSION_TOKENS.set(source, tokens);
+        }
+        return tokens;
+    }
+
+    const REWRITTEN_EXPRESSIONS = new Map();
+    function rewriteForItem(source, root, instance) {
+        const owned = tokensOf(source).filter(tok =>
+            tok !== 'item' && tok !== 'true' && tok !== 'false' && tok !== 'null' && tok !== 'undefined' &&
+            Object.prototype.hasOwnProperty.call(instance, tok));
+        const key = root + '\u0000' + owned.join(',') + '\u0000' + source;
+        let expr = REWRITTEN_EXPRESSIONS.get(key);
+        if (expr === undefined) {
+            expr = source.replace(new RegExp(`\\b${root}\\b`, 'g'), 'item');
+            owned.forEach(tok => { expr = expr.replace(new RegExp(`\\b${tok}\\b`, 'g'), `item.${tok}`); });
+            if (REWRITTEN_EXPRESSIONS.size >= 5000) REWRITTEN_EXPRESSIONS.clear();
+            REWRITTEN_EXPRESSIONS.set(key, expr);
+        }
+        return expr;
+    }
 
     function isObject(val) {
         return val !== null && typeof val === 'object';
@@ -223,10 +263,12 @@
                         },
                         sort: (cmp) => {
                             Array.prototype.sort.call(t, cmp);
+                            notifyUpdated();
                             return receiver;
                         },
                         reverse: () => {
                             Array.prototype.reverse.call(t);
+                            notifyUpdated();
                             return receiver;
                         },
                         filter: (fn, actuallyFilter = true) => {
@@ -315,6 +357,7 @@
             this._nextKeyId = 1;
             this._changedArrayIndices = {};
             this.cssSelectorBindings = {};
+            this._rootAndPathCache = new Map();
             this._formatters = {};
             this._streams = {};
             this._templates = {};
@@ -327,9 +370,15 @@
             return path.split('.').filter(Boolean);
         }
         _getRootAndPath(variableName) {
-            const parts = this._splitPath(variableName);
-            const root = parts.shift() || variableName;
-            return { root, path: parts.join('.') };
+            let entry = this._rootAndPathCache.get(variableName);
+            if (!entry) {
+                const parts = this._splitPath(variableName);
+                const root = parts.shift() || variableName;
+                entry = { root, path: parts.join('.') };
+                if (this._rootAndPathCache.size >= 2000) this._rootAndPathCache.clear();
+                this._rootAndPathCache.set(variableName, entry);
+            }
+            return entry;
         }
         _getByPath(variableName) {
             const { root, path } = this._getRootAndPath(variableName);
@@ -487,6 +536,22 @@
             });
         }
 
+        bind(variableName, persist) {
+            if (typeof variableName !== 'string') {
+                console.error('Resonant.bind: variableName must be a string');
+                return;
+            }
+
+            if (!(variableName in window)) {
+                console.warn(`Resonant.bind: variable "${variableName}" not found in window scope`);
+                return;
+            }
+
+            const currentValue = window[variableName];
+
+            this.add(variableName, currentValue, persist);
+        }
+
         computed(computedName, computeFunction) {
             this.computedProperties[computedName] = computeFunction;
             this.computedDependencies[computedName] = new Set();
@@ -607,27 +672,15 @@
                 let expr = condition || '';
                 let show = false;
 
-                if (variableName) {
+                if (variableName && instance && isObject(instance)) {
                     const { root } = this._getRootAndPath(variableName);
-                    if (instance && isObject(instance)) {
-                        const rootPattern = new RegExp(`\\b${root}\\b`, 'g');
-                        expr = expr.replace(rootPattern, 'item');
-
-                        const tokens = expr.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || [];
-                        tokens.forEach(tok => {
-                            if (tok === 'item' || tok === 'true' || tok === 'false' || tok === 'null' || tok === 'undefined') return;
-                            if (Object.prototype.hasOwnProperty.call(instance, tok)) {
-                                const rx = new RegExp(`\\b${tok}\\b`, 'g');
-                                expr = expr.replace(rx, `item.${tok}`);
-                            }
-                        });
-                    }
+                    expr = rewriteForItem(expr, root, instance);
                 }
 
                 try {
-                    show = !!(new Function('item', 'state', `return (${expr});`))(instance, this.data);
+                    show = !!compileExpression(['item', 'state'], expr)(instance, this.data);
                 } catch (e) {
-                    show = !!(new Function(`return (${condition});`))();
+                    show = !!compileExpression([], condition)();
                 }
 
                 element.style.display = show ? 'inherit' : 'none';
@@ -656,10 +709,10 @@
                     const keys = (instance && isObject(instance))
                         ? Object.keys(instance).filter(k => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k))
                         : [];
-                    const fn = new Function(...keys, 'item', 'state', `return (${condition});`);
+                    const fn = compileExpression([...keys, 'item', 'state'], condition);
                     styleClass = fn(...keys.map(k => instance[k]), instance, this.data);
                 } catch (e) {
-                    styleClass = (new Function(`return (${condition});`))();
+                    styleClass = compileExpression([], condition)();
                 }
                 if (typeof styleClass === 'string' && styleClass.trim()) {
                     styleClass.split(/\s+/).forEach(cls => styleElement.classList.add(cls));
@@ -678,20 +731,28 @@
         }
 
         _bindEvents(parentElement, instance, arrayValue, overrides) {
-            _RES_EVENTS.forEach(ev => {
-                const attr = 'res-on' + ev;
-                parentElement.querySelectorAll('[' + attr + ']').forEach(elx => {
-                    const name = elx.getAttribute(attr);
-                    elx['on' + ev] = (event) => {
-                        const fn = this._resolveHandler(name, overrides);
-                        if (typeof fn === 'function') {
-                            try { fn(instance, event); }
-                            catch (e) { console.error('Resonant: ' + ev + ' handler error for', name, e); }
-                        } else {
-                            console.warn('Resonant: ' + ev + ' handler not found:', name);
-                        }
-                    };
-                });
+            const candidates = parentElement.querySelectorAll(_RES_EVENT_SELECTOR);
+            const bind = (elx, aName, name) => {
+                if (aName.slice(0, 6) !== 'res-on') return;
+                const ev = aName.slice(6);
+                if (!_RES_EVENTS.includes(ev)) return;
+                elx['on' + ev] = (event) => {
+                    const fn = this._resolveHandler(name, overrides);
+                    if (typeof fn === 'function') {
+                        try { fn(instance, event); }
+                        catch (e) { console.error('Resonant: ' + ev + ' handler error for', name, e); }
+                    } else {
+                        console.warn('Resonant: ' + ev + ' handler not found:', name);
+                    }
+                };
+            };
+            candidates.forEach(elx => {
+                const at = elx.attributes;
+                if (at && typeof at.length === 'number') {
+                    for (let i = 0; i < at.length; i++) bind(elx, at[i].name, at[i].value);
+                } else if (at) {
+                    for (const aName of Object.keys(at)) bind(elx, aName, at[aName]);
+                }
             });
             parentElement.querySelectorAll('[res-onclick-remove]').forEach(elx => {
                 const removeKey = elx.getAttribute('res-onclick-remove');
@@ -730,15 +791,10 @@
                         this.data[variableName] = this._createObject(variableName, newValue, '');
                     } else {
                         this.data[variableName] = newValue;
+                        this._queueUpdate(variableName, 'modified', this.data[variableName]);
+                        return;
                     }
                     this.updateElement(variableName);
-                    this.updateDisplayConditionalsFor(variableName);
-                    this.updateStylesFor(variableName);
-                    this._updateCssSelectorBindings(variableName);
-
-                    if (!Array.isArray(newValue) && !isObject(newValue)) {
-                        this._queueUpdate(variableName, 'modified', this.data[variableName]);
-                    }
                 }
             });
         }
@@ -801,9 +857,6 @@
                     }
 
                     this.updateElement(variableName);
-                    this.updateDisplayConditionalsFor(variableName);
-                    this.updateStylesFor(variableName);
-                    this._updateCssSelectorBindings(variableName);
 
                     if (this._changedArrayIndices[variableName]) {
                         delete this._changedArrayIndices[variableName];
@@ -912,18 +965,15 @@
                 if (aName.slice(0, 7) === 'res-on:') overrides[aName.slice(7)] = aVal;
             }
 
-            let template;
-            const tplKey = variablePath + "_template";
-            if (!window[tplKey]) {
+            let template = el.__res_template;
+            if (!template) {
                 const useName = el.getAttribute('res-use');
                 template = (useName && this._templates[useName])
                     ? this._templates[useName].cloneNode(true)
                     : el.cloneNode(true);
-                window[tplKey] = template;
+                el.__res_template = template;
                 el.style.display = 'none';
                 el.setAttribute('res-template', 'true');
-            } else {
-                template = window[tplKey];
             }
 
             const existingElements = new Map();
@@ -935,18 +985,18 @@
 
             const changedSet = this._changedArrayIndices[variablePath] || this._changedArrayIndices[this._getRootAndPath(variablePath).root];
             const usedElements = new Set();
+            const rendered = [];
 
             arrayValue.forEach((instance, index) => {
                 let elementKey = null;
                 try { elementKey = instance && instance.key; } catch (_) {}
                 if (!elementKey) elementKey = String(index);
 
-                let elementToUse;
-                let shouldReuse = existingElements.has(elementKey) && !(changedSet && changedSet.has(index));
-                if (shouldReuse) {
-                    elementToUse = existingElements.get(elementKey);
+                let elementToUse = existingElements.get(elementKey);
+                if (elementToUse && usedElements.has(elementToUse)) elementToUse = undefined;
+                const shouldReuse = !!elementToUse && !(changedSet && changedSet.has(index));
+                if (elementToUse) {
                     usedElements.add(elementToUse);
-                    elementToUse.setAttribute("res-index", index);
                 } else {
                     elementToUse = template.cloneNode(true);
                     elementToUse.removeAttribute('res-template');
@@ -955,51 +1005,53 @@
                     elementToUse.setAttribute("res-key", elementKey);
                     elementToUse.setAttribute("res", variablePath);
                 }
-                elementToUse.setAttribute("res-index", index);
+                if (elementToUse.getAttribute("res-index") !== String(index)) {
+                    elementToUse.setAttribute("res-index", index);
+                }
 
-                if (!shouldReuse) {
-                    if (!isObject(instance)) {
-                        const anyPlace = elementToUse.querySelector('[res-prop=""]');
-                        this._writeValue(anyPlace || elementToUse, String(instance), null, instance);
-                    } else {
-                        const keys = Object.keys(instance);
-                        keys.forEach(key => {
-                            let overrideInstanceValue = null;
-                            let subEl = elementToUse.querySelector(`[res-prop="${key}"]`);
-                            if (!subEl) {
-                                subEl = elementToUse.querySelector('[res-prop=""]');
-                                overrideInstanceValue = instance;
+                if (!isObject(instance)) {
+                    const anyPlace = elementToUse.querySelector('[res-prop=""]');
+                    this._writeValue(anyPlace || elementToUse, String(instance), null, instance, ROW_WRITE);
+                }
+                else if (!shouldReuse) {
+                    const keys = Object.keys(instance);
+                    keys.forEach(key => {
+                        let overrideInstanceValue = null;
+                        let subEl = elementToUse.querySelector(`[res-prop="${key}"]`);
+                        if (!subEl) {
+                            subEl = elementToUse.querySelector('[res-prop=""]');
+                            overrideInstanceValue = instance;
+                        }
+                        if (subEl) {
+                            const value = this._resolveValue(instance, key, overrideInstanceValue);
+                            const tag = subEl.tagName;
+                            if ((tag === 'INPUT' || tag === 'TEXTAREA') &&
+                                !Array.isArray(value) &&
+                                !isObject(value)) {
+                                const prev = value;
+                                this._handleInputElement(
+                                    subEl,
+                                    value,
+                                    (newValue) => {
+                                        instance[key] = newValue;
+                                        this._queueUpdate(this._getRootAndPath(variablePath).root, 'modified', instance, key, prev, index, `${index}.${key}`);
+                                    }
+                                );
                             }
-                            if (subEl) {
-                                const value = this._resolveValue(instance, key, overrideInstanceValue);
-                                const tag = subEl.tagName;
-                                if ((tag === 'INPUT' || tag === 'TEXTAREA') &&
-                                    !Array.isArray(value) &&
-                                    !isObject(value)) {
-                                    const prev = value;
-                                    this._handleInputElement(
-                                        subEl,
-                                        value,
-                                        (newValue) => {
-                                            instance[key] = newValue;
-                                            this._queueUpdate(this._getRootAndPath(variablePath).root, 'modified', instance, key, prev, index, `${index}.${key}`);
-                                        }
-                                    );
-                                }
-                                else if (!Array.isArray(value) && !isObject(value)) {
-                                    this._writeValue(subEl, value, null, instance);
-                                }
+                            else if (!Array.isArray(value) && !isObject(value)) {
+                                this._writeValue(subEl, value, null, instance, ROW_WRITE);
                             }
-                        });
-                    }
+                        }
+                    });
                 }
 
                 if (isObject(instance)) {
                     const keys = Object.keys(instance);
                     keys.forEach(key => {
+                        const value = this._resolveValue(instance, key, null);
+                        if (!Array.isArray(value) && !isObject(value)) return;
                         let subEl = elementToUse.querySelector(`[res-prop="${key}"]`);
                         if (subEl) {
-                            const value = this._resolveValue(instance, key, null);
                             if (Array.isArray(value)) {
                                 let parentKey = null;
                                 try { parentKey = arrayValue[index]?.key; } catch (_) {}
@@ -1024,7 +1076,7 @@
                     this._bindEvents(elementToUse, instance, arrayValue, overrides);
                 }
 
-                container.appendChild(elementToUse);
+                rendered.push(elementToUse);
             });
 
             existingElementsList.forEach(element => {
@@ -1032,6 +1084,15 @@
                     element.remove();
                 }
             });
+
+            let next = null;
+            for (let i = rendered.length - 1; i >= 0; i--) {
+                const node = rendered[i];
+                if (node.parentElement !== container || node.nextSibling !== next) {
+                    container.insertBefore(node, next);
+                }
+                next = node;
+            }
 
             const emptyName = el.getAttribute('res-empty');
             if (emptyName) {
@@ -1179,7 +1240,7 @@
                         expr = expr.replace(rootPattern, 'item');
                     }
 
-                    const styleClass = (new Function('item', 'state', `return (${expr});`))(ctxItem, this.data);
+                    const styleClass = compileExpression(['item', 'state'], expr)(ctxItem, this.data);
 
                     if (typeof styleClass === 'string' && styleClass.trim()) {
                         styleClass.split(/\s+/).forEach(cls => styleElement.classList.add(cls));
@@ -1236,7 +1297,7 @@
         _writeValue(el, value, variableName, item, meta) {
             const fmtName = el.getAttribute && el.getAttribute('res-format');
             const fmt = fmtName ? this._resolveFormat(fmtName) : null;
-            if (fmt) { el.innerHTML = String(fmt(value, item) ?? ''); return; }
+            if (fmt) { this._setContent(el, String(fmt(value, item) ?? ''), true, meta); return; }
             const named = variableName ? this._formatters[variableName] : null;
             if (named) {
                 const html = named(value ?? '', meta || { done: true });
@@ -1244,8 +1305,15 @@
                 else el.innerHTML = html;
                 return;
             }
-            if (el.hasAttribute('res-html')) el.innerHTML = value ?? '';
-            else el.textContent = value ?? '';
+            this._setContent(el, value ?? '', el.hasAttribute('res-html'), meta);
+        }
+
+        _setContent(el, content, asHtml, meta) {
+            const track = !!(meta && meta.track);
+            if (track && el.__res_written === content) return;
+            if (asHtml) el.innerHTML = content;
+            else el.textContent = content;
+            if (track) el.__res_written = content;
         }
 
         _resolveHandler(attrValue, overrides) {

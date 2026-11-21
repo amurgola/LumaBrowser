@@ -17,6 +17,7 @@ class ModelFeatureNotes {
     this._noteKvPrecision();
     this._noteFlashAttention();
     this._noteSwaCache();
+    this._noteMicroBatch();
     this._noteMtp();
     this._noteNgram();
     this._noteDraftCache();
@@ -41,10 +42,28 @@ class ModelFeatureNotes {
     this._notes.push(`Flash attention: on${kv.forceFlashAttn ? ' (forced; required for the fit test and any quantized KV cache)' : ' (lower attention VRAM, faster prompt eval)'}.`);
   }
 
+  _noteMicroBatch() {
+    const { batch } = this._s;
+    if (!(batch.maskBytes > 0)) return;
+    const masks = `this model keeps an attention mask per block pass in VRAM, ${ByteLadder.format(batch.maskBytes)} at this context`;
+    this._notes.push(batch.reduced
+      ? `Prompt micro-batch: ${batch.microBatch} tokens (-ub) instead of 512: ${masks}, ${ByteLadder.format(batch.savedBytes)} less than at 512, `
+        + 'which keeps more of the model on one card. Prompts process slightly slower; replies are not affected.'
+      : `Prompt micro-batch: 512 tokens (the default): ${masks}.`);
+  }
+
   _noteSwaCache() {
     const { offload } = this._s;
     if (offload.swaFull) {
       this._notes.push('SWA cache: full (--swa-full); multi-turn prompt cache survives across replies on sliding-window models.');
+    } else if (offload.swaFullUseless) {
+      const layout = offload.swaLayout;
+      this._notes.push(
+        `SWA cache: windowed, ${layout.swaLayers}/${layout.swaLayers + layout.globalLayers} layers cache only ~${layout.window} tokens. `
+        + '--swa-full is left out on purpose: this model runs its core in a loop and the server restores context checkpoints for it either way, '
+        + 'so the full-size cache would bring no prompt reuse while reading prompts more than twice as slowly and holding '
+        + `${ByteLadder.format(Math.max(0, offload.headerEstimatedBytesSwaFull - offload.headerEstimatedBytesIswa))} more VRAM.`,
+      );
     } else if (offload.swaLayout) {
       const layout = offload.swaLayout;
       const saved = Math.max(0, offload.headerEstimatedBytesSwaFull - offload.headerEstimatedBytesIswa);

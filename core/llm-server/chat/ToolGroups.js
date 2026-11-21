@@ -30,7 +30,8 @@ class ToolGroups {
     if (!inactiveGroups || inactiveGroups.length === 0) return '';
     const lines = inactiveGroups.map((group) => `  - ${group.key}: ${group.stub}`).join('\n');
     const manual = nativeTools ? ActivationManual.ACTIVATE_NATIVE : ActivationManual.ACTIVATE;
-    return `${manual}\n\n${ActivationManual.INACTIVE_HEADING}\n${lines}\n\n${ActivationManual.INACTIVE_DIRECTIVE}`;
+    const directive = nativeTools ? ActivationManual.INACTIVE_DIRECTIVE_NATIVE : ActivationManual.INACTIVE_DIRECTIVE;
+    return `${manual}\n\n${ActivationManual.INACTIVE_HEADING}\n${lines}\n\n${directive}`;
   }
 
   static docWithoutFenceExamples(doc) {

@@ -34,3 +34,11 @@ start adds the projector bytes, or the placement could pin a card the projector
 does not fit. Forcing f16 for tensor split keeps the fit lookup and the probe
 sizing the same KV the launch will use. The OpenVINO NPU runs stateless with a
 static graph, so llama-server `-np` above 1 is not supported there.
+
+## measuredShape (2026-11-20)
+
+`_applyMeasuredFit` sets `overrides.measuredShape` beside
+`measuredVramBytes`: the launch shape the stored peak was measured under
+([FitRows](../../context/FitRows.md)`.measuredComboShape`, null for an older
+row). The planner sets a peak of another shape aside
+([FitShape](../launch/FitShape.md)).

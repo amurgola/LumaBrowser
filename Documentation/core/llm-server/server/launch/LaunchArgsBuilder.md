@@ -11,7 +11,8 @@ Assembles the llama-server argv for a resolved launch.
   2. `--load-mode none` or `--no-mmap` (none for mmap); `--fit off`; `--api-key <key>`
   3. `--flash-attn on`; `--mmproj`; `--cache-type-k/-v` (quantized only, with
      flash attention); `--no-kv-offload`
-  4. `--parallel <n>`; `--swa-full`; `--no-context-shift`; `--cache-reuse 256`;
+  4. `--parallel <n>`; `-ub <n>` (only when [MicroBatchPlan](MicroBatchPlan.md)
+     stepped the micro-batch below 512); `--swa-full`; `--no-context-shift`; `--cache-reuse 256`;
      `--cache-ram <MiB>`; `--slot-prompt-similarity 0.1`
   5. speculation: ik `--spec-type mtp:n_max=N`; mainline `--spec-type draft-mtp,ngram-mod --spec-draft-n-max N`
      [`-md <head> [-ngld 99]`] `--spec-ngram-mod-n-match 40 --spec-ngram-mod-n-min 0 --spec-ngram-mod-n-max 16`;

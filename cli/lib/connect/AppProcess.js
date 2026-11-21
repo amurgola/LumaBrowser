@@ -1,6 +1,8 @@
 const { spawn } = require('child_process');
 
 class AppProcess {
+  static CALLER_ONLY_VARIABLES = ['ELECTRON_RUN_AS_NODE', '__COMPAT_LAYER'];
+
   static launch(executable, args = [], { platform = process.platform, env = process.env, spawnFn = spawn } = {}) {
     const childEnv = AppProcess._appEnv(env);
     const options = { stdio: 'ignore', detached: true, env: childEnv };
@@ -13,7 +15,7 @@ class AppProcess {
 
   static _appEnv(env) {
     const copy = { ...env };
-    delete copy.ELECTRON_RUN_AS_NODE;
+    for (const name of AppProcess.CALLER_ONLY_VARIABLES) delete copy[name];
     return copy;
   }
 
