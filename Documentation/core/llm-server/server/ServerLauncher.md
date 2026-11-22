@@ -37,12 +37,12 @@ The service needs `getDefaults`, `settingsDb`, `runtimeServer`
 [LaunchRun](launcher/LaunchRun.md) runs one start over a
 [LaunchContext](launcher/LaunchContext.md):
 
-1. Refuse a missing default runtime or model.
+1. Refuse a missing default model.
 2. `ensureStopped()` unless already `ready` (a crashed-but-alive child would
    stack a second model).
 3. Start the hotswap reclaim (`hotswap.acquire('llm')`) in parallel with the preflight.
-4. [LaunchPreflight](launcher/LaunchPreflight.md): diagnostics, runtime row,
-   learned unsupported flags, scanned model, [ModelRuntimeMatch](launcher/ModelRuntimeMatch.md), API key.
+4. [LaunchPreflight](launcher/LaunchPreflight.md): diagnostics, scanned model, the runtime that serves it
+   (`RuntimeChooser.forModel`, with the mismatch and not-installed refusals), learned unsupported flags, API key.
 5. Free port, then [LaunchOverrides](launcher/LaunchOverrides.md) (defaults,
    [LlmLayoutIntent](launcher/LlmLayoutIntent.md), measured fit).
 6. MLX and extension runtimes (`PlanFor#isCustomLaunch`) plan and start here.

@@ -14,3 +14,7 @@ One delegated click, change and keydown listener on the document body for every 
 ## Globals
 
 Listens on `document.body`.
+
+## Changes (2026-11-22, framework refactor)
+
+`parts.rows` is the shared `ctx.rows`, so the help toggles of the Frameworks card's option rows work like those of the Chat defaults card.

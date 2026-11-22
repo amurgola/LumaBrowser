@@ -19,3 +19,7 @@ None.
 ## Changes only
 
 `DefaultsForm.changes(rendered, current)`: the fields of `current` whose value differs from `rendered` (both from `read`), compared by JSON so the helper model block is compared by value and sent whole. A control that appeared since the draw counts as changed; with no draw on record every field is returned. [DefaultsCard](DefaultsCard.md) saves this instead of the whole form.
+
+## Changes (2026-11-22, framework refactor)
+
+`read(doc)` returns only `modelPath`, `contextSize`, `noThink`, `reasoningEffort` and, when rendered, `groupRouter`, `groupRouterPinRam` and `helperModel`. `runtimeId` (now a record of what serves the model) and every framework option are no longer read: the Frameworks card saves those per framework with `setFrameworkOption`.

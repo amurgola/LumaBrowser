@@ -20,6 +20,11 @@ before the user installs it.
 
 ## Statics
 
+- `HUB` (`{ tag: 'basalt', extension: '.basalt' }`): both rows carry it as `hub`, so the model search offers
+  "Basalt packs" once a build is installed and lists the Hub repos tagged `basalt` (core `HubSources`).
+- `FRAMEWORK_ID` (`'basalt'`), `FRAMEWORK_NAME` (`'Basalt'`): both rows carry them as `framework` and
+  `frameworkName`, so core treats them as two builds of one framework and keeps one active
+  (core `RuntimeFrameworks`).
 - `UPSTREAM_RUNTIME_ID` (`'basalt'`), `LUMA_RUNTIME_ID` (`'basalt-luma'`).
 - `BUILDS`: one object per build: `runtimeId`, `name`, `repo`, `description`,
   `requirementNote` and `release` (`tag` and, per host key, the asset `name`,
@@ -71,3 +76,19 @@ instead of refusing them. The hardware pill can only match names (core's
 `RuntimeHardwareCheck` has no compute-capability rule), so the planner and
 installer check the compute capability themselves through
 [BasaltCard](BasaltCard.md).
+
+## Options (2026-11-22)
+
+Each row declares the Setup tab options its planner reads (`options`, see
+[FrameworkOptionDeclarations](../../core/llm-server/runtimes/FrameworkOptionDeclarations.md)): both builds
+`BASE_OPTIONS` (`maxConcurrent`, and `kvCacheType`, which [BasaltKvMode](BasaltKvMode.md) maps). The LumaByte
+build adds `SLEEP_OPTIONS`:
+
+- `idleSleep` ("Sleep when idle"), a choice of `off` (`IDLE_SLEEP_OFF`, the default), `60`, `300` and `900`: the
+  ids are the seconds [BasaltLaunchPlanner](BasaltLaunchPlanner.md) passes as `--idle-sleep`.
+- `keepSleepRam` ("Keep sleep memory"), a toggle, default off: `--keep-sleep-ram`.
+
+Both carry `ramNote: 'sleep'`, so core adds the RAM a sleep would hold against the free RAM
+([SleepRamNote](../../core/llm-server/service/SleepRamNote.md)). The upstream build has no sleep that gives the
+VRAM back on Windows, so it declares neither. `_runtimeEntry` copies `options` so a row never shares the build's
+arrays.

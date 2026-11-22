@@ -23,7 +23,7 @@ class LocalModelOptions {
     const models = this._estimator.buildLocalModelOptions({
       models: scan.models || [],
       fitResults: this._svc.getAllFitResults(),
-      resolveRuntime: (m) => FitRuntimePicker.pick(m, runtimesView, diag),
+      resolveRuntime: (m) => FitRuntimePicker.pick(m, runtimesView, diag, this._svc.runtimeChooser),
       diagnostics: diag,
       settingsDb: this._svc.settingsDb,
       displayNameFor: (stem) => this._svc.resolveModelDisplayName(stem),

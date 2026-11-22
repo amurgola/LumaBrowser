@@ -77,3 +77,7 @@ Listens to `window` `luma-models-changed`, and through the preload
 Reads `window.llmDiagAPI` only through the injected `api`; listens on `window`
 and `document.body`. Writes none itself; [SetupExtensionTabs](extensions/SetupExtensionTabs.md)
 writes `window.LumaSetupExt`.
+
+## Changes (2026-11-22, framework refactor)
+
+The click router gets `ctx.rows`. The Runtimes card is the Frameworks card; see [RuntimesCard](runtimes/RuntimesCard.md).

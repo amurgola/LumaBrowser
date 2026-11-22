@@ -38,7 +38,12 @@ one-place edit.
     ICD), bundles its runtime including the NPU plugin;
     `spawnEnv: { GGML_OPENVINO_DEVICE: 'GPU' }`, which a user's own value overrides.
   - `mlx-lm`: Mac-only (`platforms: ['darwin']`), `acquisition: 'manual-source'`
-    (pip install, detected on PATH), `launchStyle: 'mlx-server'`.
+    (pip install, detected on PATH), `launchStyle: 'mlx-server'`, `options: ['maxConcurrent']` (the one Setup
+    option MlxLaunchPlanner reads). The llama.cpp rows declare no `options` and get the llama.cpp default set
+    ([FrameworkOptionDeclarations](FrameworkOptionDeclarations.md)).
+- Every `llama-cpp-*` row spreads `LLAMA_FRAMEWORK` (`framework: 'llama-cpp'`, `frameworkName: 'llama.cpp'`):
+  they are builds of one framework, of which the user keeps one active
+  ([RuntimeFrameworks](RuntimeFrameworks.md)). `mlx-lm` is the one build of the `mlx` framework.
 - Shared pieces: `LLAMA_BIN_NAMES`, `GGML_ORG`, `LLAMA_MANUAL_SOURCE_NOTE`,
   `WIN_CUDA12_ASSET`, `WIN_CUDA12_CUDART`, `LINUX_CUDA12_ASSET`,
   `LINUX_CUDA12_CUDART`.

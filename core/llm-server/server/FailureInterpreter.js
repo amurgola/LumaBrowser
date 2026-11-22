@@ -5,7 +5,7 @@ class FailureInterpreter {
       re: /out of memory|OutOfMemory|ErrorOutOfDeviceMemory|cudaMalloc|failed to allocate|unable to allocate|allocation failed|not enough (?:memory|space)/i,
       title: 'The GPU ran out of memory while loading',
       advice: 'Another app may be holding VRAM, or the fit estimate was too optimistic for the moment. '
-        + 'Close other GPU-heavy apps and start again, or lower the context length or KV precision in Defaults. '
+        + 'Close other GPU-heavy apps and start again, or lower the context length in Chat defaults or the KV precision in the options of its framework. '
         + 'The fit test finds the largest combination that really fits.',
     },
     {
@@ -23,14 +23,14 @@ class FailureInterpreter {
       title: 'OpenVINO could not open the device it was asked for',
       advice: 'On Linux the Intel GPU needs Intel\'s OpenCL compute runtime (intel-opencl-icd on Ubuntu, intel-compute-runtime on Arch; Mesa\'s rusticl does not work), and the NPU needs the Intel NPU user-space driver (intel-level-zero-npu) plus libze1. '
         + 'Panther Lake needs compute-runtime 26.18 or newer. Check with clinfo -l, then start again; '
-        + 'or pick CPU as the OpenVINO device in Defaults, or the Vulkan runtime, to get the model up now.',
+        + 'or pick CPU as the OpenVINO device in the options of its framework, or make the Vulkan build the active one, to get the model up now.',
     },
     {
       kind: 'unknown-architecture',
       re: /unknown model architecture/i,
       title: 'This runtime build does not know the model\'s architecture',
       advice: 'The model file is fine, but the selected runtime is older than the model. '
-        + 'Update the runtime in the Inference Runtimes card, or pick a newer llama.cpp runtime in Defaults, then start again.',
+        + 'Update the build in the Frameworks card, or make a newer llama.cpp build the active one, then start again.',
     },
     {
       kind: 'bad-model',

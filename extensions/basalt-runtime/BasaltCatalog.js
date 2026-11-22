@@ -1,4 +1,7 @@
 class BasaltCatalog {
+  static FRAMEWORK_ID = 'basalt';
+  static HUB = Object.freeze({ tag: 'basalt', extension: '.basalt' });
+  static FRAMEWORK_NAME = 'Basalt';
   static UPSTREAM_RUNTIME_ID = 'basalt';
   static LUMA_RUNTIME_ID = 'basalt-luma';
 
@@ -9,6 +12,40 @@ class BasaltCatalog {
   static BINARY_NAMES = { win32: ['basalt.exe'], linux: ['basalt'] };
 
   static PLATFORMS = ['win32-x64', 'linux-x64'];
+
+  static BASE_OPTIONS = ['maxConcurrent', 'kvCacheType'];
+
+  static IDLE_SLEEP_OFF = 'off';
+
+  static SLEEP_OPTIONS = [
+    {
+      id: 'idleSleep',
+      label: 'Sleep when idle',
+      caption: 'Gives the VRAM back while no requests come in',
+      help: 'After this long without a request the model goes to sleep: its GPU memory moves to system RAM and the '
+        + 'VRAM is given back to other apps. The next request wakes it in about a second. The RAM it holds while '
+        + 'asleep cannot be paged out. On Windows only the dense Qwen3.8 27B pack can sleep.',
+      kind: 'choice',
+      choices: [
+        { id: BasaltCatalog.IDLE_SLEEP_OFF, label: 'Off' },
+        { id: '60', label: '1 minute' },
+        { id: '300', label: '5 minutes' },
+        { id: '900', label: '15 minutes' },
+      ],
+      default: BasaltCatalog.IDLE_SLEEP_OFF,
+      ramNote: 'sleep',
+    },
+    {
+      id: 'keepSleepRam',
+      label: 'Keep sleep memory',
+      caption: 'Later sleeps are faster; the RAM stays taken while awake',
+      help: 'Holds the RAM a sleep uses even while the model is awake, so later sleeps are faster. That RAM cannot be '
+        + 'paged out and stays taken for as long as the model is loaded. Matters only while Sleep when idle is on.',
+      kind: 'toggle',
+      default: false,
+      ramNote: 'sleep',
+    },
+  ];
 
   static BUILDS = [
     {
@@ -25,6 +62,7 @@ class BasaltCatalog {
       requirementNote:
         'An NVIDIA RTX 50 series main card (an RTX 40 or RTX 30 series card can only be a second card), a driver '
         + 'of the R580 branch or newer, and Python 3.10 to 3.13 for the install.',
+      options: [...BasaltCatalog.BASE_OPTIONS, ...BasaltCatalog.SLEEP_OPTIONS],
       release: {
         tag: 'v0.5.6-luma.1',
         assets: {
@@ -51,6 +89,7 @@ class BasaltCatalog {
         + 'OpenAI-compatible server, native on Windows and Linux. Loads only its own .basalt model packs: see the '
         + 'add-on models in the Models card. Windows output quality is not measured upstream.',
       requirementNote: 'An NVIDIA RTX 50 series card, a driver of the R580 branch or newer, and Python 3.10 to 3.13 for the install.',
+      options: BasaltCatalog.BASE_OPTIONS,
       release: {
         tag: 'v0.5.5',
         assets: {
@@ -96,6 +135,8 @@ class BasaltCatalog {
       id: build.runtimeId,
       name: build.name,
       kind: 'inference',
+      framework: BasaltCatalog.FRAMEWORK_ID,
+      frameworkName: BasaltCatalog.FRAMEWORK_NAME,
       acquisition: 'extension',
       description: build.description,
       platforms: BasaltCatalog.PLATFORMS.slice(),
@@ -106,8 +147,10 @@ class BasaltCatalog {
         gpuNameNote: 'Basalt needs an NVIDIA RTX 50 series card (Blackwell, compute capability 12.0) as its main card; none was detected.',
       },
       requirementNote: build.requirementNote,
+      options: JSON.parse(JSON.stringify(build.options)),
       protocol: 'openai-compat',
       launchStyle: 'basalt',
+      hub: { ...BasaltCatalog.HUB },
       modelKinds: ['basalt'],
       repo: { ...build.repo },
       manualSourceUrl: BasaltCatalog.sourceUrl(build),

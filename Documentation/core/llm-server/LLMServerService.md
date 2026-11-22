@@ -90,8 +90,27 @@ Settings ([LlmServerSettings](service/LlmServerSettings.md)): `isEnabled`,
 `getModelsDirConfig`, `setModelsDir`, `getAutoUnloadMs`, `setAutoUnloadMs(ms)`
 (also applied to the live supervisor).
 
-Defaults and caps: `getDefaults()`, `setDefaults(patch)` ([LlmDefaults](service/LlmDefaults.md));
-`getLaunchDefaults()` (the defaults plus the loaded model's own launch overrides, via `modelSettings.launchDefaults`; what a launch reads);
+Frameworks: `frameworkSelection` ([FrameworkSelection](service/FrameworkSelection.md)), `frameworkOptions`
+([FrameworkOptions](service/FrameworkOptions.md)), `runtimeChooser` ([RuntimeChooser](service/RuntimeChooser.md),
+fed with the stored default runtime id and `FitRuntimePicker.hostOrder`) and `runtimeFollower`
+([DefaultRuntimeFollower](service/DefaultRuntimeFollower.md)), built in `_createFrameworkStores`. Which runtime
+serves a model is asked of `runtimeChooser`; `defaults.runtimeId` is the follower's record of that answer for the
+default model. `getDefaults()` returns the stored defaults with the option values of the framework that serves
+the default model laid over them (`frameworkOptions.overlay`); `setDefaults` hands its listeners that same view.
+`frameworkOptions` is built with the runtime catalog (where builds declare their options), `globalDefaults` (the
+raw `LlmDefaults.get()`) and a [SleepRamNote](service/SleepRamNote.md) over `runtimeServer.getStatus()`, both read
+through closures since the store is built first.
+
+Defaults and caps: `getDefaults()`, `setDefaults(patch)` ([LlmDefaults](service/LlmDefaults.md)). `setDefaults`
+routes the framework fields of a patch (`FrameworkOptions.DEFAULT_FIELDS`: `kvCacheType`, `maxConcurrent`,
+`tensorSplit`, `cacheReuse`, `cpuMoe`, `noMoeGpuCache`, `usePeerGpus`, `pinModelRam`, `openvinoDevice`) to
+`frameworkOptions.set` for the framework that serves the default model after the save (that of `patch.runtimeId`
+when the patch carries one, else of the stored runtime id); everything else goes to `LlmDefaults.set`. With no
+framework known (no runtime id, or one the catalog does not list) the whole patch is written globally, as before.
+`getLaunchDefaults(frameworkId?)` (the defaults plus the loaded model's own launch overrides, via
+`modelSettings.launchDefaults`; what a launch reads): with a framework id, that framework's values lie over the
+global defaults instead of the serving one's ([LaunchOverrides](server/launcher/LaunchOverrides.md) passes the
+framework of the runtime preflight resolved);
 `getModelCaps(modelPath?)`, `getRunningThinking()` ([RunningModelCaps](service/RunningModelCaps.md)).
 
 Diagnostics and runtimes ([LlmDiagnosticsCache](service/LlmDiagnosticsCache.md),

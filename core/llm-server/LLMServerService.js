@@ -26,6 +26,14 @@ const HelperModelService = require('./helper/HelperModelService');
 const LlmServerSettings = require('./service/LlmServerSettings');
 const LlmUiState = require('./service/LlmUiState');
 const LlmDefaults = require('./service/LlmDefaults');
+const FrameworkSelection = require('./service/FrameworkSelection');
+const FrameworkOptions = require('./service/FrameworkOptions');
+const FrameworkOptionValue = require('./service/FrameworkOptionValue');
+const SleepRamNote = require('./service/SleepRamNote');
+const RuntimeChooser = require('./service/RuntimeChooser');
+const DefaultRuntimeFollower = require('./service/DefaultRuntimeFollower');
+const RuntimeFrameworks = require('./runtimes/RuntimeFrameworks');
+const FitRuntimePicker = require('./ipc/FitRuntimePicker');
 const ModelLaunchFlags = require('./service/ModelLaunchFlags');
 const ModelOverrideStore = require('./service/ModelOverrideStore');
 const ModelProfileStore = require('./service/ModelProfileStore');
@@ -170,14 +178,33 @@ class LLMServerService {
   }
 
 
-  getDefaults() { return this._defaults.get(); }
-  getLaunchDefaults() { return this.modelSettings.launchDefaults(this.getDefaults()); }
+  getDefaults() {
+    const defaults = this._defaults.get();
+    return this.frameworkOptions.overlay(defaults, this._frameworkOfRuntime(defaults.runtimeId));
+  }
+  getLaunchDefaults(frameworkId) {
+    const defaults = frameworkId === undefined ? this.getDefaults() : this.frameworkOptions.overlay(this._defaults.get(), frameworkId);
+    return this.modelSettings.launchDefaults(defaults);
+  }
   setDefaults(patch) {
-    const defaults = this._defaults.set(patch);
+    this._writeDefaults(patch || {});
+    const defaults = this.getDefaults();
     for (const listener of this._defaultsListeners) {
       try { listener(defaults); } catch (_) {}
     }
     return defaults;
+  }
+
+  _writeDefaults(patch) {
+    const runtimeId = patch.runtimeId !== undefined ? patch.runtimeId : this._defaults.get().runtimeId;
+    const frameworkId = this._frameworkOfRuntime(runtimeId);
+    if (!frameworkId) return this._defaults.set(patch);
+    const globalPatch = { ...patch };
+    for (const field of FrameworkOptions.DEFAULT_FIELDS.filter((candidate) => globalPatch[candidate] !== undefined)) {
+      this.frameworkOptions.set(frameworkId, field, FrameworkOptionValue.fromDefaultsPatch(field, globalPatch[field]));
+      delete globalPatch[field];
+    }
+    return this._defaults.set(globalPatch);
   }
 
   onDefaultsChanged(listener) {
@@ -337,6 +364,7 @@ class LLMServerService {
     ModelFolderRegistry.register(LlmModelsScanner.FOLDER_KIND, () => this.getModelsDirConfig().effectivePath);
     this._ui = new LlmUiState(this.settingsDb, { isConfigured: () => LLMServerService._isConfigured(this.getDefaults()) });
     this._launchFlags = new ModelLaunchFlags(this.settingsDb);
+    this._createFrameworkStores();
     this.modelSettings = new ModelSettings({
       overrides: new ModelOverrideStore(this.settingsDb),
       profiles: new ModelProfileStore(this.settingsDb),
@@ -364,6 +392,28 @@ class LLMServerService {
       resolveDisplayName: (stem) => this.resolveModelDisplayName(stem),
     });
     this._tab = new PinnedLlmTab({ rootDir, isEnabled: () => this.isEnabled() });
+  }
+
+  _createFrameworkStores() {
+    const catalog = this._deps.runtimeCatalog;
+    this.frameworkSelection = new FrameworkSelection(this.settingsDb);
+    this.frameworkOptions = new FrameworkOptions(this.settingsDb, {
+      catalog,
+      globalDefaults: () => this._defaults.get(),
+      sleepNote: new SleepRamNote({ getStatus: () => (this.runtimeServer ? this.runtimeServer.getStatus() : null) }),
+    });
+    this.runtimeChooser = new RuntimeChooser({
+      selection: this.frameworkSelection,
+      catalog,
+      legacyRuntimeId: () => this._defaults.get().runtimeId,
+      hostOrder: (diagnostics, runtimesView) => FitRuntimePicker.hostOrder(diagnostics, catalog, process.platform, runtimesView),
+    });
+    this.runtimeFollower = new DefaultRuntimeFollower({ service: this, scanner: this._deps.scanner });
+  }
+
+  _frameworkOfRuntime(runtimeId) {
+    const entry = runtimeId ? this._deps.runtimeCatalog.getById(runtimeId) : null;
+    return entry ? RuntimeFrameworks.frameworkIdOf(entry) : null;
   }
 
   _createRuntimeSettings() {

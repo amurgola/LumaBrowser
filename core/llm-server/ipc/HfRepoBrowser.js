@@ -2,6 +2,7 @@ const HfModelSearch = require('../models/HfModelSearch');
 const HfModelFilter = require('../models/HfModelFilter');
 const HfGgufRepo = require('../models/HfGgufRepo');
 const HfMlxRepo = require('../models/HfMlxRepo');
+const HfPackRepo = require('../models/HfPackRepo');
 const HfReadme = require('../models/HfReadme');
 const LiveCatalog = require('../models/LiveCatalog');
 const CuratedModelCatalog = require('../models/CuratedModelCatalog');
@@ -20,14 +21,20 @@ class HfRepoBrowser {
 
   static OVERFETCH = 2;
 
+  static GGUF = 'gguf';
+  static MLX = 'mlx';
+  static UNKNOWN_FORMAT = 'No installed framework finds that kind of model on Hugging Face.';
+
   constructor({
-    wizard, search = HfModelSearch, gguf = HfGgufRepo, mlx = HfMlxRepo, readme = HfReadme, filter = HfModelFilter,
-    liveCatalog = LiveCatalog.shared, curated = CuratedModelCatalog.MODELS, now = Date.now,
+    wizard, hubSource = async () => null, search = HfModelSearch, gguf = HfGgufRepo, mlx = HfMlxRepo, pack = HfPackRepo,
+    readme = HfReadme, filter = HfModelFilter, liveCatalog = LiveCatalog.shared, curated = CuratedModelCatalog.MODELS, now = Date.now,
   }) {
     this._wizard = wizard;
+    this._hubSource = hubSource;
     this._search = search;
     this._gguf = gguf;
     this._mlx = mlx;
+    this._pack = pack;
     this._readme = readme;
     this._filter = filter;
     this._liveCatalog = liveCatalog;
@@ -40,14 +47,22 @@ class HfRepoBrowser {
 
   search(args) {
     const a = args || {};
-    const key = JSON.stringify([a.query || '', a.sort || '', a.limit || 0, !!a.mlx, !!a.fit]);
-    return this._searches.get(key, () => this._searchFresh(a));
+    const format = HfRepoBrowser.formatOf(a);
+    const key = JSON.stringify([a.query || '', a.sort || '', a.limit || 0, format, !!a.fit]);
+    return this._searches.get(key, () => this._searchFresh(a, format));
   }
 
-  async _searchFresh(a) {
+  static formatOf(opts) {
+    const o = opts || {};
+    if (typeof o.format === 'string' && o.format) return o.format;
+    return o.mlx ? HfRepoBrowser.MLX : HfRepoBrowser.GGUF;
+  }
+
+  async _searchFresh(a, format) {
     const limit = Number(a.limit) > 0 ? Number(a.limit) : undefined;
-    if (a.mlx) {
-      const rows = await this._search.search({ query: a.query, sort: a.sort, limit, mlx: true });
+    if (format !== HfRepoBrowser.GGUF) {
+      const mode = format === HfRepoBrowser.MLX ? { mlx: true } : { mlx: false, tag: (await this._requireSource(format)).tag };
+      const rows = await this._search.search({ query: a.query, sort: a.sort, limit, ...mode });
       return { results: rows, hidden: { ...HfModelFilter.HIDDEN_NONE } };
     }
     const fetchLimit = limit ? Math.min(HfModelSearch.MAX_LIMIT, limit * HfRepoBrowser.OVERFETCH) : undefined;
@@ -69,18 +84,35 @@ class HfRepoBrowser {
   }
 
   expand(repoId, opts) {
-    const mlx = !!(opts && opts.mlx);
-    return this._repos.get(`${mlx ? 'mlx' : 'gguf'}:${repoId}`, () => this._expandFresh(repoId, mlx));
+    const format = HfRepoBrowser.formatOf(opts);
+    return this._repos.get(`${format}:${repoId}`, () => this._expandFresh(repoId, format));
   }
 
-  async _expandFresh(repoId, mlx) {
+  async _expandFresh(repoId, format) {
     try {
       const hardware = await this.hardware();
-      const info = mlx ? await this._mlxInfo(repoId, hardware) : await this._ggufInfo(repoId, hardware);
-      return { info, hardware };
+      return { info: await this._infoOf(repoId, format, hardware), hardware };
     } catch (err) {
       throw IpcFailure.withCode(err);
     }
+  }
+
+  _infoOf(repoId, format, hardware) {
+    if (format === HfRepoBrowser.MLX) return this._mlxInfo(repoId, hardware);
+    if (format === HfRepoBrowser.GGUF) return this._ggufInfo(repoId, hardware);
+    return this._packInfo(repoId, format);
+  }
+
+  async _packInfo(repoId, format) {
+    const source = await this._requireSource(format);
+    const info = await this._pack.fetchInfo(repoId, { extension: source.extension });
+    return { ...info, format, extension: source.extension, variants: info.variants.map((variant) => ({ ...variant, fit: null })) };
+  }
+
+  async _requireSource(format) {
+    const source = await this._hubSource(format);
+    if (!source) throw new Error(HfRepoBrowser.UNKNOWN_FORMAT);
+    return source;
   }
 
   readme(repoId) {

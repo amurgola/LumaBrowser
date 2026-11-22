@@ -2,6 +2,7 @@ const LlmModelsScanner = require('../LlmModelsScanner');
 const DrafterCatalog = require('../models/DrafterCatalog');
 const ModelGrouping = require('../models/ModelGrouping');
 const ModelName = require('../models/ModelName');
+const ModelServing = require('../runtimes/ModelServing');
 const ModelDescriptor = require('../../shared/ModelDescriptor');
 const ModelsDirStorage = require('./ModelsDirStorage');
 
@@ -71,7 +72,14 @@ class LlmModelsView {
 
   async _viewOf(config) {
     const scan = await this.scan(config.effectivePath);
+    await this._attachServing(scan);
     return { config, scan, descriptors: LlmModelsView.descriptors(scan) };
+  }
+
+  async _attachServing(scan) {
+    if (!scan || !Array.isArray(scan.models)) return;
+    const context = { runtimesView: await this._svc.ensureRuntimesView(), diagnostics: await this._svc.ensureDiagnostics() };
+    ModelServing.attach(scan.models, { chooser: this._svc.runtimeChooser, selection: this._svc.frameworkSelection, context });
   }
 
   static nameKeyOf(model) {

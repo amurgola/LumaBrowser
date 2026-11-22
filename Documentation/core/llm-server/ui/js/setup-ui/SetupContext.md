@@ -12,3 +12,7 @@ What the LLM Setup cards share: the preload API, the document and window, the ca
 ## Globals
 
 None.
+
+## Changes (2026-11-22, framework refactor)
+
+New fields: `frameworks` ([FrameworkStore](frameworks/FrameworkStore.md)), `prefs` ([DefaultsPrefs](defaults/DefaultsPrefs.md), shared by the Chat defaults and Frameworks cards) and `rows` ([DefaultsRows](defaults/DefaultsRows.md), shared so open help survives both cards' re-renders).

@@ -32,3 +32,16 @@ The editor's Monaco autocomplete and the coding agent's capabilities snapshot
 (`ExtensionManager`, reading `CONTEXT_PROPERTIES` and `MANIFEST_FIELDS`) both
 derive from it, so updating it once teaches both. Extension APIs are merged at
 request time so newly installed or created extensions are always included.
+
+## Runtime entry fields (2026-11-22)
+
+The `llmCatalog` completion documents three more `registerRuntime(entry)` fields: `framework` and
+`frameworkName` (the engine the row is one build of, see
+[RuntimeFrameworks](../llm-server/runtimes/RuntimeFrameworks.md)) and `options` (the Setup options the build
+reads: known ids and custom option objects, see
+[FrameworkOptionDeclarations](../llm-server/runtimes/FrameworkOptionDeclarations.md); custom values reach
+`planLaunch` as `overrides.frameworkOptions`).
+
+It also documents `hub: { tag, extension }`: where the model search finds the runtime's own format on
+Hugging Face (repos with that tag, their files with that extension), offered once a build is installed. See
+[HubSources](../llm-server/runtimes/HubSources.md).

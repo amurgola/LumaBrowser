@@ -38,7 +38,7 @@ class LocalRequest {
   }
 
   _adapterFor(live) {
-    const runtimeId = this._service.getDefaults().runtimeId;
+    const runtimeId = (live.plan && live.plan.runtimeId) || this._service.getDefaults().runtimeId;
     const entry = this._catalog.getById(runtimeId);
     if (!entry) throw new Error(`Catalog entry for ${runtimeId} not found.`);
     const server = this._service.runtimeServer;

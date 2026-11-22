@@ -3,8 +3,8 @@
 `core/llm-server/Preflight.js`
 
 Boot-time preflight for the LLM tab: the configuration problems the user is
-guaranteed to hit later (missing system libraries, a chosen runtime that is
-not installed, a vanished default model), so the tab's top banner can show
+guaranteed to hit later (missing system libraries, no installed runtime for
+the default model, a vanished default model), so the tab's top banner can show
 them the moment it opens instead of at first use. An issue marked
 `selection: true` is a saved model choice that is gone; the shell alerts on
 those at startup ([StartupModelAlert](../../ui/shell/notifications/StartupModelAlert.md)).
@@ -47,7 +47,7 @@ The renderer banner (`ui/js/preflight.js`, deferred) acts on `fix`.
 | id | When |
 |---|---|
 | `system-libs-missing` | [PreflightSysdepsIssue](PreflightSysdepsIssue.md): Linux libraries missing |
-| `llm-runtime-unknown` / `-missing` / `-hardware` | a default LLM runtime is chosen; see [PreflightRuntimeIssue](PreflightRuntimeIssue.md) |
+| `llm-runtime-unknown` / `-missing` / `-hardware` | about the runtime that serves the default model (below); see [PreflightRuntimeIssue](PreflightRuntimeIssue.md) |
 | `llm-model-missing` | the default model path no longer exists (`selection`) |
 | `image-runtime-*` | image server enabled and a default image runtime chosen |
 | `image-runtime-unset` | image server enabled, a model (generate, edit or video) set, no runtime |
@@ -63,7 +63,18 @@ The renderer banner (`ui/js/preflight.js`, deferred) acts on `fix`.
   enabled (`isEnabled()`).
 - **No probes of its own.** Runtime state comes from each service's cached
   `ensureRuntimesView()`, so a pass never spawns `--version` probes; the only
-  fresh I/O is one existence check on the default chat model.
+  fresh I/O is the models scan that finds what serves the default chat model
+  (headers cached) and one existence check on that model.
+- **The runtime that serves the default model.** The LLM check reports on
+  `llmServerService.runtimeFollower.resolve()`
+  ([DefaultRuntimeFollower](service/DefaultRuntimeFollower.md)), not on the stored
+  `defaults.runtimeId`. When no installed build loads the model, the issue is
+  `llm-runtime-missing` for the build to install: that framework's active build
+  (`frameworkSelection.activeBuild`), else the stored id, else its first row
+  (`PreflightRuntimeIssue.frameworkBuild`). A model no framework loads raises no
+  runtime issue (the launch refuses it with its own message). With no default model
+  on disk, no follower on the service, or a resolver failure, the stored id is
+  checked as before.
 - **Fail soft.** A throwing `getDefaults` skips that feature. A runtimes-view
   failure leaves no rows, which reads as `-runtime-unknown` rather than
   pretending the binary is absent. A music models-view failure assumes the

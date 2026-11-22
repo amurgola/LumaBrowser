@@ -8,14 +8,13 @@ class FitRuntimePicker {
   static SYCL = 'llama-cpp-sycl';
   static OPENVINO = 'llama-cpp-openvino';
 
-  static pick(model, runtimesView, diagnostics, catalog = LlmRuntimeCatalog.shared) {
-    const byId = new Map(((runtimesView && runtimesView.runtimes) || []).map((r) => [r.id, r]));
-    const usable = (id) => FitRuntimePicker._usable(byId.get(id));
-    const preferred = (model.preferredRuntimes || []).map(usable).find(Boolean);
-    if (preferred) return preferred;
-    const compatible = new Set(model.compatibleRuntimes || []);
-    const ranked = FitRuntimePicker.hostOrder(diagnostics, catalog, process.platform, runtimesView).filter((id) => compatible.has(id));
-    return ranked.map(usable).find(Boolean) || null;
+  static pick(model, runtimesView, diagnostics, chooser) {
+    const outcome = chooser.forModel(model, {
+      runtimesView,
+      diagnostics,
+      usable: (row) => !!FitRuntimePicker._usable(row),
+    });
+    return outcome.runtime || null;
   }
 
   static hostOrder(diagnostics, catalog = LlmRuntimeCatalog.shared, platform = process.platform, runtimesView = null) {

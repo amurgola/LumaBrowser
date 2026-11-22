@@ -2,6 +2,7 @@ const HelperModelSettings = require('./HelperModelSettings');
 const HelperRuntimeServer = require('./HelperRuntimeServer');
 const HelperLaunchPlan = require('./HelperLaunchPlan');
 const ChatModelRef = require('../chat/router/ChatModelRef');
+const ActiveLlamaBuild = require('../server/launcher/ActiveLlamaBuild');
 
 class HelperModelService {
   static RUNTIME_ID_FALLBACK = 'llama-cpp-luma';
@@ -142,8 +143,7 @@ class HelperModelService {
     const svc = this._llmServerService;
     if (!svc || typeof svc.ensureRuntimesView !== 'function') throw new Error('No runtime view available.');
     const view = await svc.ensureRuntimesView();
-    const defaultId = svc.getDefaults ? svc.getDefaults().runtimeId : undefined;
-    return HelperLaunchPlan.pickRuntime(view.runtimes, defaultId);
+    return HelperLaunchPlan.pickRuntime(view.runtimes, ActiveLlamaBuild.of(svc));
   }
 
   _diagnostics() {

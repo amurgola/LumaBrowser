@@ -12,3 +12,7 @@ The Defaults settings outside the launch payload (auto-unload, unload on VRAM pr
 ## Globals
 
 None.
+
+## Changes (2026-11-22, framework refactor)
+
+`loadRamPin(api)` reads only the RAM pin status; `load` calls it. The Frameworks card calls it before its first paint, since its RAM pin row needs `ramPinSupported()` and it paints before the Chat defaults card. One instance is shared on the context as `ctx.prefs`.

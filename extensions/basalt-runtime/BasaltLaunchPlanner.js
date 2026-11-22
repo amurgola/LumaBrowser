@@ -13,8 +13,9 @@ class BasaltLaunchPlanner {
   static DEFAULT_CONTEXT = 131072;
   static MAX_PARALLEL = 8;
   static HOST = '127.0.0.1';
+  static SLEEP_SIZING_ON_WINDOWS = 'card';
 
-  constructor({ model, runtime, port, overrides, apiKey, diagnostics, userArgs }) {
+  constructor({ model, runtime, port, overrides, apiKey, diagnostics, userArgs, platform = process.platform }) {
     this._model = model;
     this._runtime = runtime;
     this._port = port;
@@ -22,6 +23,7 @@ class BasaltLaunchPlanner {
     this._apiKey = typeof apiKey === 'string' && apiKey.length > 0 ? apiKey : null;
     this._diagnostics = diagnostics;
     this._userArgs = UserArgs.normalize(userArgs);
+    this._platform = platform;
   }
 
   static plan(options) {
@@ -36,6 +38,7 @@ class BasaltLaunchPlanner {
     this._resolveKv();
     this._sizeContext();
     this._resolveVision();
+    this._resolveSleep();
     this._buildServeArgs();
     return this._wrapLaunch(this._buildPlan());
   }
@@ -91,6 +94,18 @@ class BasaltLaunchPlanner {
     this._visionOn = this._visionAvailable && this._overrides.suppressMmprojLoad === false;
   }
 
+  _resolveSleep() {
+    const options = this._overrides.frameworkOptions || {};
+    const seconds = Math.floor(Number(options.idleSleep));
+    this._sleepSeconds = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+    this._keepSleepRam = !!options.keepSleepRam;
+    this._packCanSleep = this._platform !== 'win32' || !!(this._pack && this._pack.sizing === BasaltLaunchPlanner.SLEEP_SIZING_ON_WINDOWS);
+  }
+
+  get _sleepOn() {
+    return this._sleepSeconds > 0 && this._packCanSleep;
+  }
+
   get _apiModelName() {
     const id = (this._model.addon && this._model.addon.modelId) || (this._entry && this._entry.sidecar.modelId) || 'basalt';
     return String(id).replace(/[^A-Za-z0-9._-]/g, '-');
@@ -117,6 +132,8 @@ class BasaltLaunchPlanner {
     if (this._kv.kv) this._serveArgs.push('--kv', this._kv.kv);
     if (this._specOff) this._serveArgs.push('--spec', '0');
     if (this._visionOn) this._serveArgs.push('--vision', 'dynamic');
+    if (this._sleepOn) this._serveArgs.push('--idle-sleep', String(this._sleepSeconds));
+    if (this._sleepOn && this._keepSleepRam) this._serveArgs.push('--keep-sleep-ram');
     if (this._apiKey) this._serveArgs.push('--api-key', this._apiKey);
     this._serveArgs.push(...(Array.isArray(this._runtime.extraArgs) ? this._runtime.extraArgs : []), ...this._userArgs);
   }
@@ -136,9 +153,18 @@ class BasaltLaunchPlanner {
     notes.push(`Context: ${fit.contextSize.toLocaleString()} tokens shared by ${this._slots} slot${this._slots === 1 ? '' : 's'}, KV ${kv.kv || 'engine default'}${this._kvSizeText()}; drafting ${this._specOff ? 'off' : 'on (the pack\'s drafter)'}.`);
     notes.push(this._gpuNote());
     notes.push(this._visionOn ? 'Vision: on (--vision dynamic, the projector inside the pack).' : 'Vision: off for this launch.');
+    const sleep = this._sleepNote();
+    if (sleep) notes.push(sleep);
     if (this._userArgs.length > 0) notes.push(`User flags appended: ${this._userArgs.join(' ')}.`);
     notes.push(this._apiKey ? 'Auth: --api-key set from API security.' : 'Auth: loopback server without an API key.');
     return notes;
+  }
+
+  _sleepNote() {
+    if (this._sleepSeconds === 0) return null;
+    if (!this._packCanSleep) return 'Sleep: off for this launch; on Windows only the dense pack can sleep.';
+    const keep = this._keepSleepRam ? ', and the sleep memory stays held while awake (--keep-sleep-ram)' : '';
+    return `Sleep: on after ${this._sleepSeconds} s idle (--idle-sleep ${this._sleepSeconds}): the VRAM moves to RAM until the next request${keep}.`;
   }
 
   _gpuNote() {

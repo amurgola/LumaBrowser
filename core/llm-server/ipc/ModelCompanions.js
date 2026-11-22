@@ -14,6 +14,7 @@ class ModelCompanions {
 
   async resolve(url, file, { revision } = {}) {
     const repoId = HfModelInput.repoIdFromUrl(url);
+    if (!GgufFileName.isGguf(String(file || ''))) return { repoId, mmproj: null, mtp: null, drafter: null, downloads: [] };
     const { mmproj, mtp } = repoId ? await this._pick(repoId, file, revision) : { mmproj: null, mtp: null };
     const drafter = await this._pickDrafter(repoId, file);
     const downloads = [

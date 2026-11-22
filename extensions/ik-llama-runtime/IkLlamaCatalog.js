@@ -39,6 +39,8 @@ class IkLlamaCatalog {
     const C = IkLlamaCatalog;
     return {
       kind: 'inference',
+      framework: 'ik-llama',
+      frameworkName: 'ik_llama.cpp',
       acquisition: 'github-release',
       repo: C.BUILD_REPO,
       binaryNames: C.LLAMA_BIN_NAMES,

@@ -51,6 +51,7 @@ a check: `getModelCaps` `{ caps: null }`, `getPeerGpus` `{ peers: [], active: fa
 | `getDriverInstallPlan`, `installDrivers` | [IntelDriverInstall](ipc/IntelDriverInstall.md) |
 | `scanExistingLibraries`, `importExistingModel` | [ExistingLlmModels](ipc/ExistingLlmModels.md) |
 | `pickModelsDir`, `pickDirectory` | `PathPicker.pick` -> `{ canceled }` or `{ canceled: false, dir }` |
+| `getFrameworksView`, `setActiveBuild`, `setFormatFramework`, `setModelFramework`, `setFrameworkOption` | [LlmFrameworks](ipc/LlmFrameworks.md); the setters resolve `{ view, serverStopped }` |
 | `getRuntimesView`, `checkRuntimeUpdates`, `getRuntimePrerelease`, `pickRuntimeBinary`, `registerRuntimeBinary`, `locateRuntime`, `installRuntime`, `uninstallRuntime` | [LlmRuntimeSetup](ipc/LlmRuntimeSetup.md); install progress on `core.llmServer.runtimeEvent` `{ id, type, payload }` |
 | `getDefaults`, `getAutoUnloadMs`, `setAutoUnloadMs`, `getRamPinStatus`, `getGroupRouterStatus` | the service (`{ ms }`, `{ status }`) |
 | `setDefaults` | [LlmDefaultsUpdater](ipc/LlmDefaultsUpdater.md) |

@@ -10,6 +10,11 @@ so one rule set serves all three.
 
 - `PreflightRuntimeIssue.findRuntime(view, runtimeId)` returns the row in
   `view.runtimes` with that id, or `null` (also for a missing view).
+- `PreflightRuntimeIssue.frameworkBuild(view, frameworkId, wantedIds)` the row of
+  that framework's builds (`RuntimeFrameworks.frameworkIdOf`) to report on: the
+  first of `wantedIds` among them, else the first (`ModelRuntimeResolver.pickBuild`);
+  `null` for a missing view or a framework with no rows. [Preflight](Preflight.md)
+  uses it to name the build to install when no installed build loads the default model.
 - `PreflightRuntimeIssue.forRow(row, { runtimeId, area, server, featureLabel, view })`
   returns one issue or `null`:
   - no row: `<area>-runtime-unknown` (error, open-view): not offered on this platform.

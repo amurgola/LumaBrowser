@@ -1,6 +1,9 @@
 import ByteFormatter from '../../format/ByteFormatter.js';
 import HtmlEscaper from '../../format/HtmlEscaper.js';
 import CtxFitMatrix from './CtxFitMatrix.js';
+import ModelFrameHead from './ModelFrameHead.js';
+import ModelFrames from './ModelFrames.js';
+import ModelFrameworkPin from './ModelFrameworkPin.js';
 import ModelTree from '../../models/ModelTree.js';
 
 export default class LlmModelRow {
@@ -12,8 +15,7 @@ export default class LlmModelRow {
 
   static NO_TEMPLATE_ROLES = new Set(['embedding', 'reranker', 'mmproj', 'mtp']);
 
-  constructor({ recommender, ctxFit, fitBlock }) {
-    this._recommender = recommender;
+  constructor({ ctxFit, fitBlock }) {
     this._ctxFit = ctxFit;
     this._fitBlock = fitBlock;
   }
@@ -26,12 +28,11 @@ export default class LlmModelRow {
     return m.nameKey || m.name || '';
   }
 
-  views(models) {
-    return ModelTree.flatten(ModelTree.build(models, { bytesOf: (m) => m.weightsTotalBytes || m.totalBytes || 0 }))
-      .map((pos) => this.view(pos.item, pos));
+  views(models, frameworks = null) {
+    return ModelFrames.split(models, frameworks).flatMap((frame) => this._frameViews(frame, frameworks));
   }
 
-  view(m, pos = null) {
+  view(m, pos = null, frameworks = null) {
     const dispName = m.displayName || m.name;
     const nameKey = LlmModelRow.nameKey(m);
     return {
@@ -44,7 +45,8 @@ export default class LlmModelRow {
       tagsHtml: LlmModelRow._headerTags(m, !pos || ModelTree.showsQuant(m)),
       sizeText: ByteFormatter.bytes(m.totalBytes),
       actionsHtml: LlmModelRow.actionsHtml(m),
-      metaHtml: LlmModelRow._pathHtml(m, dispName, nameKey) + LlmModelRow.factsHtml(m) + LlmModelRow.notesHtml(m) + this._footerHtml(m),
+      metaHtml: LlmModelRow._pathHtml(m, dispName, nameKey) + LlmModelRow._pinHtml(m, frameworks)
+        + LlmModelRow.factsHtml(m) + LlmModelRow.notesHtml(m) + LlmModelRow._footerHtml(m),
       ctxFitHtml: CtxFitMatrix.html(m, this._ctxFit.forModel(m)),
       fitHtml: this._fitHtml(m),
       quantHtml: '',
@@ -209,10 +211,20 @@ export default class LlmModelRow {
                 </div>`;
   }
 
-  _footerHtml(m) {
+  _frameViews(frame, frameworks) {
+    const rows = ModelTree.flatten(ModelTree.build(frame.models, { bytesOf: (m) => m.weightsTotalBytes || m.totalBytes || 0 }))
+      .map((pos) => this.view(pos.item, pos, frameworks));
+    if (rows.length) rows[0].groupHtml = ModelFrameHead.html(frame, frameworks) + rows[0].groupHtml;
+    return rows;
+  }
+
+  static _pinHtml(m, frameworks) {
+    return ModelFrameworkPin.html(m, frameworks, { path: LlmModelRow.weightsPath(m), key: LlmModelRow.nameKey(m) });
+  }
+
+  static _footerHtml(m) {
     const tags = LlmModelRow.sidecarTags(m);
-    const runtimeTags = this._recommender.tagsHtml(m);
-    return (tags || runtimeTags) ? `<div class="model-tags">${tags}${runtimeTags}</div>` : '';
+    return tags ? `<div class="model-tags">${tags}</div>` : '';
   }
 
   _fitHtml(m) {

@@ -6,6 +6,7 @@ const GroupRouterSettings = require('./GroupRouterSettings');
 const RouterModelDownloader = require('./RouterModelDownloader');
 const RouterLaunchPlan = require('./RouterLaunchPlan');
 const RouterClient = require('./RouterClient');
+const ActiveLlamaBuild = require('../server/launcher/ActiveLlamaBuild');
 
 class GroupRouterService {
   static DEFAULT_TIMEOUT_MS = 1500;
@@ -148,8 +149,7 @@ class GroupRouterService {
     const svc = this._llmServerService;
     if (!svc || typeof svc.ensureRuntimesView !== 'function') throw new Error('No runtime view available.');
     const view = await svc.ensureRuntimesView();
-    const defaultId = svc.getDefaults ? svc.getDefaults().runtimeId : undefined;
-    return RouterLaunchPlan.pickRuntime(view.runtimes, defaultId);
+    return RouterLaunchPlan.pickRuntime(view.runtimes, ActiveLlamaBuild.of(svc));
   }
 
   static _residentServer() {

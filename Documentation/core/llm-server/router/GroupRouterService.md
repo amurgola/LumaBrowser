@@ -42,7 +42,9 @@ the chat agent which lazy tool groups a message needs before the main model runs
 ## Start
 
 The runtime comes from `llmServerService.ensureRuntimesView()` through
-[RouterLaunchPlan](RouterLaunchPlan.md), the port from
+[RouterLaunchPlan](RouterLaunchPlan.md), with the user's active llama.cpp build
+([ActiveLlamaBuild](../server/launcher/ActiveLlamaBuild.md)) as its fallback hint
+(the stored default runtime id may name Basalt or another engine), the port from
 `RouterRuntimeServer.findFreePort()`, and the launch is CPU-only with GPUs hidden.
 After `ready` one `classify('hello')` primes the prompt cache with the static system block.
 

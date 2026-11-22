@@ -13,3 +13,11 @@ A new keyed setting needs a line here.
 ## Globals
 
 None.
+
+## Framework options (2026-11-22)
+
+The specs of the framework options (`llm.openvino-device`, `llm.kv-cache`, `llm.parallel`, `llm.tensor-split`,
+`llm.moe-gpu-cache`, `llm.context-retention`, `llm.peer-gpus`, `llm.ram-pin`) are unchanged: they format the
+effective value of the framework that serves the default model, which
+[SettingValueReader](../SettingValueReader.md) reads for an entry with a `defaultsField`. `llm.runtime` formats
+the build that serves the default model.

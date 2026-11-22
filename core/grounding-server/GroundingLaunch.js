@@ -1,4 +1,5 @@
 const GroundingModelFiles = require('./GroundingModelFiles');
+const ActiveLlamaBuild = require('../llm-server/server/launcher/ActiveLlamaBuild');
 
 class GroundingLaunch {
   static CONTEXT = 12288;
@@ -37,7 +38,7 @@ class GroundingLaunch {
     const view = await llmServerService.ensureRuntimesView();
     const usable = (view.runtimes || []).filter(GroundingLaunch._isUsableRuntime);
     if (!usable.length) throw new Error('No llama.cpp runtime is installed. Install one in the LLM tab first.');
-    const preferred = llmServerService.getDefaults && llmServerService.getDefaults().runtimeId;
+    const preferred = ActiveLlamaBuild.of(llmServerService);
     return usable.find((r) => r.id === preferred) || usable[0];
   }
 

@@ -13,7 +13,7 @@ installer and planner use.
   x86_64-linux libcudart, so Windows on Arm and Linux arm64 get no row),
   `requiresHw` (CUDA 13, GPU name `RTX 5090` with its note), a platform-specific
   `requirementNote`, `protocol: 'openai-compat'`, the `request` dialect,
-  `launchStyle: 'ninfer'`, `modelKinds: ['ninfer']`, repo, manual source URL,
+  `launchStyle: 'ninfer'`, `modelKinds: ['ninfer']`, `options: ['maxConcurrent']` (the one Setup option NinferLaunchPlanner reads, see [FrameworkOptionDeclarations](../../core/llm-server/runtimes/FrameworkOptionDeclarations.md)), repo, manual source URL,
   `prebuilt`, `source`.
 - `PREBUILT`: `{ url, sha256, version, asset }`; `url` is
   `LUMA_NINFER_PREBUILT` (an http(s) URL or local path) read at load, else null.

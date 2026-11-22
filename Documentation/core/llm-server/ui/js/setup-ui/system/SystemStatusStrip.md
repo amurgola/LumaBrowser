@@ -2,7 +2,7 @@
 
 `core/llm-server/ui/js/setup-ui/system/SystemStatusStrip.js`
 
-The LLM Setup system status line (`#systemStrip`, full width under Chat defaults and the launch plan). It stands in for the Inference runtimes, Models directory and Visual grounding cards once they are healthy: those cards are set up once and rarely revisited, so they should not take most of the page. Each part (Runtime, Models, Vision helper) shows its card's [SystemStatus](SystemStatus.md) in a few words; clicking a part opens or folds that card.
+The LLM Setup system status line (`#systemStrip`, full width under Chat defaults and the launch plan). It stands in for the Frameworks, Models directory and Visual grounding cards once they are healthy: those cards are set up once and rarely revisited, so they should not take most of the page. Each part (Framework, Models, Vision helper) shows its card's [SystemStatus](SystemStatus.md) in a few words; clicking a part opens or folds that card.
 
 Rules:
 
@@ -26,3 +26,7 @@ The LLM tab's line (`#systemStrip`, `ITEMS`, remembered under `luma.setup.sys.op
 ## Globals
 
 None.
+
+## Changes (2026-11-22, framework refactor)
+
+The first part is labelled "Framework" and stands for the Frameworks card (still `#cardRuntimes`).

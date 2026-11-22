@@ -13,7 +13,7 @@ class FitTestSession {
   static ALREADY_RUNNING = 'A fit test is already running.';
   static NO_MODEL_PATH = 'modelPath is required.';
   static MODEL_GONE = 'Model path no longer matches a scanned model.';
-  static NO_RUNTIME = 'No installed llama.cpp runtime can run this test. Install llama.cpp (CUDA/Vulkan/CPU); runtimes that cannot accept --flash-attn are excluded.';
+  static NO_RUNTIME = 'No installed runtime that loads this model can run this test. Install one in Setup (for a GGUF, llama.cpp CUDA, Vulkan or CPU); runtimes that cannot accept --flash-attn are excluded.';
 
   constructor({
     llmServerService, gather = SystemDiagnostics.gather, detector = LlmRuntimeDetector.shared,
@@ -72,7 +72,8 @@ class FitTestSession {
     const runtimesView = await this._detectRuntimes(diag);
     const model = await this._resolveModel(modelPath);
     if (!model) return { success: false, error: FitTestSession.MODEL_GONE };
-    const runtime = UnsupportedFlagMemory.withLearnedFlags(FitRuntimePicker.pick(model, runtimesView, diag), this._svc.settingsDb);
+    const picked = FitRuntimePicker.pick(model, runtimesView, diag, this._svc.runtimeChooser);
+    const runtime = UnsupportedFlagMemory.withLearnedFlags(picked, this._svc.settingsDb);
     if (!runtime) return { success: false, error: FitTestSession.NO_RUNTIME };
     await this._stopChatServer(sink);
     const runtimeRef = { id: runtime.id, name: runtime.name };

@@ -4,7 +4,7 @@ export default class SystemStatusStrip {
   static STORE_KEY = 'luma.setup.sys.open';
 
   static ITEMS = [
-    { key: 'runtimes', label: 'Runtime', card: 'cardRuntimes' },
+    { key: 'runtimes', label: 'Framework', card: 'cardRuntimes' },
     { key: 'models', label: 'Models', card: 'cardModels' },
     { key: 'grounding', label: 'Vision helper', card: 'cardGrounding' },
   ];

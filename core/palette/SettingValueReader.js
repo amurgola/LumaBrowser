@@ -2,8 +2,9 @@ const SettingValueSpecs = require('./catalog/SettingValueSpecs');
 const SettingValueText = require('./SettingValueText');
 
 class SettingValueReader {
-  constructor({ settingsDb, specs = SettingValueSpecs, runtimeName = null }) {
+  constructor({ settingsDb, getLlm = () => global.__lumaLlmServerService || null, specs = SettingValueSpecs, runtimeName = null }) {
     this._db = settingsDb;
+    this._getLlm = getLlm;
     this._specs = specs;
     this._runtimeName = runtimeName || SettingValueReader.runtimeName;
   }
@@ -13,10 +14,16 @@ class SettingValueReader {
     const spec = this._specs[entry.id];
     if (!spec) return null;
     try {
-      return SettingValueText.text(spec, this._db.get(entry.key, null), { runtime: this._runtimeName });
+      return SettingValueText.text(spec, this._rawValue(entry), { runtime: this._runtimeName });
     } catch (_) {
       return null;
     }
+  }
+
+  _rawValue(entry) {
+    const llm = entry.defaultsField ? this._getLlm() : null;
+    if (llm && typeof llm.getDefaults === 'function') return llm.getDefaults()[entry.defaultsField];
+    return this._db.get(entry.key, null);
   }
 
   static runtimeName(id) {

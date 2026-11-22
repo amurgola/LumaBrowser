@@ -51,6 +51,7 @@ class NinferCatalog {
     },
     launchStyle: 'ninfer',
     modelKinds: ['ninfer'],
+    options: ['maxConcurrent'],
     repo: { owner: 'Neroued', repo: 'ninfer' },
     manualSourceUrl: 'https://github.com/Neroued/ninfer',
     prebuilt: NinferCatalog.PREBUILT,

@@ -8,6 +8,8 @@ Stamps a catalog entry's facts and host-derived fields onto its detection row.
 
 - `RuntimeDetailFields.stamp(detail, { entry, catalog, manualBinaryPath, hooks, cuda, gpu })`
   sets and returns `detail`:
+  - `framework` and `frameworkName`: the engine the row is one build of (the entry's, else the row's own id
+    and name), which the Setup tab groups rows by;
   - `manualBinaryPath, id, name, kind, description, requirementNote`; `name`
     and `description` come from `entry.hostLabels[catalog.platformKey()]` when
     present (the macOS arm64 CPU build reads "llama.cpp (Metal)")
@@ -18,7 +20,8 @@ Stamps a catalog entry's facts and host-derived fields onto its detection row.
     `manualSourceUrl`, `manualSourceNote`
   - `installable`: an asset here or an extension `install` hook
   - copies of `unsupportedFlags`, `skipFeatures`, `extraArgs` (default `[]`),
-    `platforms` (default `null`), `modelKinds` (`null` when empty);
+    `platforms` (default `null`), `modelKinds` (`null` when empty), `hub` (a copy of the entry's
+    `{ tag, extension }`, where the model search finds the runtime's own format on the Hub, else `null`);
     `launchStyle`, `specDialect` (default `null`); a copy of `spawnEnv` (or `null`)
   - `hardware` from [RuntimeHardwareCheck](RuntimeHardwareCheck.md)
   - `backend: null` (filled later by `applyBackend`)

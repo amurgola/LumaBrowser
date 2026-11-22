@@ -18,6 +18,8 @@ are folded into the runtime-catalog fingerprint.
   the Thireus repo, llama.cpp binary names, `protocol: 'openai-compat'`,
   `optional: true`, the manual-source URL and note, copies of
   `UNSUPPORTED_FLAGS` and `EXTRA_ARGS`, `skipFeatures: []`,
+  `framework: 'ik-llama'` and `frameworkName: 'ik_llama.cpp'` (the rows are builds of one framework, of which
+  the user keeps one active),
   `nativeQuantPattern`, `specDialect: 'ik'`, `buildVariant: { isa, feed }`, and
   asset/companion regexes from [IkLlamaAssetPatterns](IkLlamaAssetPatterns.md).
 - Statics: `BUILD_REPO` (`Thireus/ik_llama.cpp`), `UPSTREAM_URL`,

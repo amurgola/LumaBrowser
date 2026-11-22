@@ -1,7 +1,16 @@
+const ModelRuntimeResolver = require('./runtimes/ModelRuntimeResolver');
+const RuntimeFrameworks = require('./runtimes/RuntimeFrameworks');
+
 class PreflightRuntimeIssue {
   static findRuntime(view, runtimeId) {
     if (!view || !Array.isArray(view.runtimes)) return null;
     return view.runtimes.find((r) => r && r.id === runtimeId) || null;
+  }
+
+  static frameworkBuild(view, frameworkId, wantedIds) {
+    if (!view || !Array.isArray(view.runtimes)) return null;
+    const builds = view.runtimes.filter((r) => r && RuntimeFrameworks.frameworkIdOf(r) === frameworkId);
+    return ModelRuntimeResolver.pickBuild(builds, wantedIds);
   }
 
   static forRow(row, context) {

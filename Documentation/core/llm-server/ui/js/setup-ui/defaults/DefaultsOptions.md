@@ -11,3 +11,7 @@ The closed option sets of the Defaults card and its option lists.
 ## Globals
 
 None.
+
+## Changes (2026-11-22, framework refactor)
+
+`runtimeOptionsHtml` and `OPENVINO_RUNTIME_ID` are gone. `modelOptionsHtml({ models }, selectedPath, fitSummary)` lists every model (no `bound` or `locked` variants; the empty list reads "No models discovered yet"). `KV`, the parallel ladder and `openvinoDeviceOptions` now serve the Frameworks card's option rows (and the Tune dialog).

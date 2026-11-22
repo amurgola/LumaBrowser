@@ -50,11 +50,34 @@ class Preflight {
   async _collectLlm() {
     const defaults = Preflight._defaultsOf(this._llm);
     if (!defaults) return;
-    if (defaults.runtimeId) {
-      await this._collectRuntime(this._llm, defaults.runtimeId,
+    const runtimeId = await this._llmRuntimeId(defaults);
+    if (runtimeId) {
+      await this._collectRuntime(this._llm, runtimeId,
         { area: 'llm', server: 'llm', featureLabel: 'Local chat', view: 'settings' });
     }
     if (defaults.modelPath && !this._fileExists(defaults.modelPath)) this._push(Preflight._modelMissingIssue(defaults.modelPath));
+  }
+
+  async _llmRuntimeId(defaults) {
+    const served = await this._servedDefaultModel();
+    if (!served) return defaults.runtimeId;
+    if (served.runtimeId) return served.runtimeId;
+    return served.frameworkId ? this._buildToInstall(served.frameworkId, defaults.runtimeId) : null;
+  }
+
+  async _servedDefaultModel() {
+    const follower = this._llm.runtimeFollower;
+    if (!follower) return null;
+    try { return await follower.resolve(); } catch (_) { return null; }
+  }
+
+  async _buildToInstall(frameworkId, storedRuntimeId) {
+    let view = null;
+    try { view = await this._llm.ensureRuntimesView(); } catch (_) {}
+    const selection = this._llm.frameworkSelection;
+    const activeBuildId = selection ? selection.activeBuild(frameworkId) : null;
+    const row = PreflightRuntimeIssue.frameworkBuild(view, frameworkId, [activeBuildId, storedRuntimeId]);
+    return row ? row.id : null;
   }
 
   async _collectImage() {

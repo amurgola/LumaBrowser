@@ -78,7 +78,7 @@ export default class SetupMain {
     });
     this.extensionTabs.attachNavigator(this.navigator);
     this._clickRouter = new SetupClickRouter(ctx, {
-      rows: ctx.cards.defaults.rows,
+      rows: ctx.rows,
       hostFixes: new HostFixActions({ api: ctx.api, reload: () => this.load() }),
       driverInstall: ctx.cards.drivers,
       rename: new ModelRename(ctx),

@@ -6,6 +6,11 @@ import ReadmeRenderer from './ReadmeRenderer.js';
 import SearchText from './SearchText.js';
 
 export default class ModelSearchDetail {
+  static NO_VARIANTS = Object.freeze({
+    gguf: 'No recognised GGUF quants in this repo.',
+    mlx: 'No MLX weights found in this repo.',
+  });
+
   constructor(search) {
     this._search = search;
   }
@@ -20,7 +25,11 @@ export default class ModelSearchDetail {
     detail.querySelector('.ms-card-md').innerHTML = ReadmeRenderer.render(readme);
     right.innerHTML = '';
     right.appendChild(detail);
-    if (variants.length) this.pickQuant(info, QuantVariantPicker.defaultIndex(variants));
+    if (variants.length) this.pickQuant(info, ModelSearchDetail._defaultIndex(info, variants));
+  }
+
+  static _defaultIndex(info, variants) {
+    return info.extension ? 0 : QuantVariantPicker.defaultIndex(variants);
   }
 
   pickQuant(info, index) {
@@ -29,7 +38,7 @@ export default class ModelSearchDetail {
     const variant = (info.variants || [])[index];
     if (!variant) { state.sel = null; this.renderDownloadBar(); return; }
     state.sel = ModelSearchDetail.selection(info, variant);
-    this._paintFitBadge(variant.fit || {});
+    this._paintFitBadge(variant.fit || null);
     this.renderDownloadBar();
   }
 
@@ -58,7 +67,7 @@ export default class ModelSearchDetail {
       option.textContent = `${v.quant} · ${ByteFormatter.gb(v.approxBytes)}${ModelSearchDetail._variantNote(v)}`;
       select.appendChild(option);
     });
-    select.value = String(QuantVariantPicker.defaultIndex(variants));
+    select.value = String(ModelSearchDetail._defaultIndex(info, variants));
     select.addEventListener('change', () => this.pickQuant(info, Number(select.value)));
   }
 
@@ -69,14 +78,15 @@ export default class ModelSearchDetail {
   }
 
   _noVariantsHtml() {
-    const state = this._search.state;
-    return '<div class="ms-dim">' + (state && state.mlx
-      ? 'No MLX weights found in this repo.'
-      : 'No recognised GGUF quants in this repo.') + '</div>';
+    const format = this._search.state ? this._search.state.format : 'gguf';
+    return '<div class="ms-dim">' + (ModelSearchDetail.NO_VARIANTS[format] || 'No packs of this kind found in this repo.') + '</div>';
   }
 
   _paintFitBadge(fit) {
     const overlay = this._search.overlay;
+    const wrap = overlay.querySelector('.ms-quant-badge');
+    if (wrap) wrap.hidden = !fit;
+    if (!fit) return;
     const badge = overlay.querySelector('.ms-quant-badge .ms-badge');
     const label = overlay.querySelector('.ms-quant-fitlabel');
     if (badge) badge.className = 'ms-badge ' + (fit.badge || 'green');
@@ -99,7 +109,7 @@ export default class ModelSearchDetail {
       + ' <button class="ms-open-hf" data-href="https://huggingface.co/' + esc(info.repoId) + '" title="Open on Hugging Face">↗</button></div>'
       + (facts ? '<div class="ms-facts">' + facts + '</div>' : '')
       + '</div>'
-      + '<div class="ms-quants"><div class="luma-section-label ms-quants-title">Quantization</div>'
+      + '<div class="ms-quants"><div class="luma-section-label ms-quants-title">' + (info.extension ? 'Pack' : 'Quantization') + '</div>'
       + '<div class="ms-quant-pick">'
       + '<select class="ms-quant-select"></select>'
       + '<span class="ms-quant-badge"><span class="ms-badge"></span><span class="ms-quant-fitlabel"></span></span>'

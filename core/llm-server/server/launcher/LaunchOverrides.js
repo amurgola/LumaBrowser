@@ -5,17 +5,35 @@ const LaunchPlanner = require('../LaunchPlanner');
 const ContextEstimator = require('../../ContextEstimator');
 const LlmLayoutIntent = require('./LlmLayoutIntent');
 const OpenVinoDevice = require('../../runtimes/OpenVinoDevice');
+const RuntimeFrameworks = require('../../runtimes/RuntimeFrameworks');
 
 class LaunchOverrides {
   static apply(ctx, { freeMemory }) {
+    ctx.defaults = LaunchOverrides._resolvedFrameworkDefaults(ctx);
     ctx.kvMode = ctx.defaults.kvCacheType;
     ctx.userArgs = LaunchOverrides._userArgs(ctx);
     ctx.overrides = LaunchOverrides._fromDefaults(ctx, freeMemory);
+    LaunchOverrides._applyFrameworkOptions(ctx);
     LaunchOverrides._pinTensorSplitKv(ctx.overrides);
     ctx.layout = LlmLayoutIntent.read(ctx.settingsDb);
     LaunchOverrides._applyLayout(ctx.overrides, ctx.layout);
     LaunchOverrides._applyMeasuredFit(ctx);
     LaunchOverrides._applyOpenVinoDevice(ctx);
+  }
+
+  static _resolvedFrameworkDefaults(ctx) {
+    const service = ctx.service;
+    if (!ctx.runtime || typeof service.getLaunchDefaults !== 'function') return ctx.defaults;
+    const defaults = service.getLaunchDefaults(RuntimeFrameworks.frameworkIdOf(ctx.runtime));
+    const options = service.frameworkOptions;
+    return options && typeof options.declaredOnly === 'function' ? options.declaredOnly(defaults, ctx.runtime) : defaults;
+  }
+
+  static _applyFrameworkOptions(ctx) {
+    const options = ctx.service.frameworkOptions;
+    if (!ctx.runtime || !options || typeof options.launchValues !== 'function') return;
+    const values = options.launchValues(ctx.runtime);
+    if (Object.keys(values).length > 0) ctx.overrides.frameworkOptions = values;
   }
 
   static _applyOpenVinoDevice(ctx) {

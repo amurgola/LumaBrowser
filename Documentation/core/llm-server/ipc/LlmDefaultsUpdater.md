@@ -2,16 +2,25 @@
 
 `core/llm-server/ipc/LlmDefaultsUpdater.js`
 
-Saves the LLM launch defaults and stops a running server the change made stale.
+Saves the LLM launch defaults, keeps the stored runtime id equal to the runtime that serves the
+default model, and stops a running server the change made stale.
 
 ## Methods
 
 - `new LlmDefaultsUpdater(llmServerService, log = console)`.
 - `update(payload)` resolves `{ defaults, serverStopped }`. A key counts as changed
   when present in the payload and different after the save.
+  - A `runtimeId` in the payload (wizards, import flows, the fit test's "Use") means
+    "make this the active build of its framework": `runtimeChooser.activate(runtimeId)`
+    runs before the save.
+  - After a save carrying `modelPath` or `runtimeId`, `await runtimeFollower.follow()`
+    ([DefaultRuntimeFollower](../service/DefaultRuntimeFollower.md)) stores the runtime
+    that serves the default model and the defaults are read again; a failing follow is
+    logged and the save stands as saved.
   - A change to any of `LAUNCH_SHAPE_KEYS` (`modelPath`, `runtimeId`,
     `maxConcurrent`, `tensorSplit`, `cacheReuse`, `usePeerGpus`, `contextSize`,
-    `kvCacheType`, `openvinoDevice`) or to `launchFlags` (compared as strings) stops a non-idle
+    `kvCacheType`, `openvinoDevice`), to `launchFlags` (compared as strings), or to the
+    stored runtime id however it moved (a new model can move it) stops a non-idle
     server; `serverStopped` is true only when the stop succeeded (a failure is logged).
   - `ramPin.apply()` runs when `pinModelRam` changed, or `modelPath` changed while
     pinning is on; it never stops the server.

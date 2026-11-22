@@ -10,13 +10,29 @@ class LlmDefaultsUpdater {
   async update(payload) {
     const patch = payload || {};
     const before = this._svc.getDefaults();
-    const defaults = this._svc.setDefaults(patch);
+    this._activateRuntime(patch);
+    const defaults = await this._followDefaultModel(patch, this._svc.setDefaults(patch));
     const changed = (key) => patch[key] !== undefined && before[key] !== defaults[key];
     const serverStopped = this._launchShapeChanged(changed, patch, before, defaults) ? await this._stopServer() : false;
     this._reconcileRamPin(changed, defaults);
     this._reconcileRouter(changed);
     this._reconcileHelper(patch, before, defaults);
     return { defaults, serverStopped };
+  }
+
+  _activateRuntime(patch) {
+    if (patch.runtimeId) this._svc.runtimeChooser.activate(patch.runtimeId);
+  }
+
+  async _followDefaultModel(patch, saved) {
+    if (patch.modelPath === undefined && patch.runtimeId === undefined) return saved;
+    try {
+      await this._svc.runtimeFollower.follow();
+    } catch (e) {
+      this._log.warn('[llm-server] following the default model runtime failed:', e && e.message);
+      return saved;
+    }
+    return this._svc.getDefaults();
   }
 
   _reconcileHelper(patch, before, defaults) {
@@ -26,6 +42,7 @@ class LlmDefaultsUpdater {
 
   _launchShapeChanged(changed, patch, before, defaults) {
     if (LlmDefaultsUpdater.LAUNCH_SHAPE_KEYS.some(changed)) return true;
+    if (before.runtimeId !== defaults.runtimeId) return true;
     return patch.launchFlags !== undefined && String(before.launchFlags || '') !== String(defaults.launchFlags || '');
   }
 

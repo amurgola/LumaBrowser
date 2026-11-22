@@ -905,23 +905,6 @@
         }
 
 
-        .model-runtime-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 4px;
-        }
-        .runtime-tag {
-            font-size: var(--text-xs);
-            font-family: var(--mono);
-            padding: 1px 7px;
-            border-radius: var(--radius-sm);
-            background: var(--bg-surface-2);
-            color: var(--text-secondary);
-        }
-        .runtime-tag.compatible { color: var(--text-muted); background: transparent; box-shadow: inset 0 0 0 1px var(--border-soft); }
-        .runtime-tag.compatible.installed { color: var(--text-primary); background: var(--bg-surface-2); box-shadow: none; }
-
         [data-view-pane][hidden] { display: none !important; }
         .grid[data-view-pane="settings"] [data-card-group="image"],
         .grid[data-view-pane="settings"] [data-card-group="music"]    { display: none !important; }
@@ -1244,6 +1227,41 @@
         .setup-fold-body { padding-top: 12px; }
         .setup-fold-body > .runtime-row:first-child { border-top: 0; }
 
+        .defaults-runs-on {
+            margin: -2px 0 8px 160px;
+            font-size: var(--text-sm);
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        .defaults-runs-on.is-missing { color: var(--warning); }
+
+        .fw-formats { margin-bottom: var(--space-3); }
+        .fw-frame { padding: var(--space-3) 0 var(--space-2); }
+        .fw-frame + .fw-frame { border-top: 1px solid var(--border-soft); }
+        .fw-head {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: var(--space-1) var(--space-3);
+            min-width: 0;
+        }
+        .fw-name { font-size: var(--text-md); font-weight: 600; color: var(--text-primary); }
+        .fw-loads { font-size: var(--text-sm); color: var(--text-secondary); }
+        .fw-build { margin-left: auto; min-width: 0; }
+        .fw-build-name { font-size: var(--text-sm); color: var(--text-secondary); }
+        .fw-build-select { max-width: 280px; }
+        .fw-frame > .fw-fold { margin-top: var(--space-1); border-top: 0; }
+        .fw-frame > .fw-fold > summary { padding-top: var(--space-2); }
+        .fw-option-caption {
+            margin: -2px 0 8px 160px;
+            font-size: var(--text-sm);
+            line-height: 1.45;
+            color: var(--text-muted);
+        }
+        .fw-option-note.is-warn { color: var(--warning); }
+        .fw-catalogue-group + .fw-catalogue-group { margin-top: var(--space-4); }
+        .fw-catalogue-group > .fw-head { margin-bottom: var(--space-1); }
+
         .card-head-icon {
             margin-right: auto;
             width: 24px;
@@ -1302,7 +1320,8 @@
         }
         .defaults-row .defaults-trio select { min-width: 0; width: 100%; flex: none; }
 
-        .defaults-row select {
+        .defaults-row select,
+        .fw-build-select {
             flex: 1 1 240px;
             min-width: 200px;
             padding: 6px 10px;
@@ -1317,12 +1336,14 @@
             box-shadow: none;
             transition: border-color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
         }
-        .defaults-row select:focus {
+        .defaults-row select:focus,
+        .fw-build-select:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: var(--focus-ring);
         }
-        .defaults-row select:disabled {
+        .defaults-row select:disabled,
+        .fw-build-select:disabled {
             color: var(--text-muted);
             background: var(--surface-input);
             border-color: var(--border-soft);
@@ -2139,8 +2160,10 @@
             white-space: nowrap;
         }
         .ms-mlx-toggle input { margin: 0; cursor: pointer; }
+        .ms-mlx-toggle[hidden], .ms-quant-badge[hidden] { display: none; }
         .ms-toggles { padding-top: 0; }
         .ms-toggles select { flex: 1; min-width: 0; }
+        .ms-toggles .ms-format { flex: none; min-height: 30px; }
         .ms-toggles .ms-mlx-toggle { flex: none; }
         .ms-status { padding: 0 14px 6px; font-size: var(--text-sm); color: var(--text-dim); flex: none; }
         .ms-status .ms-hidden { cursor: help; text-decoration: underline dotted; }

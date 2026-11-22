@@ -17,7 +17,9 @@ more than it gives.
 - `refusal(service, model, { pinBytes, pinnedAlready })` resolves a reason string
   or `null`. It builds the launch's own inputs short of starting anything: a
   [LaunchContext](../server/launcher/LaunchContext.md) on the service, the
-  installed runtime the defaults name (with the flags it already rejected,
+  installed runtime a launch of the model would start
+  (`service.runtimeChooser.forModel`, [RuntimeChooser](../service/RuntimeChooser.md),
+  so the plan matches the launch whatever the stored runtime id says; with the flags it already rejected,
   `UnsupportedFlagMemory.withLearnedFlags`), the diagnostics with live VRAM and
   the loaded model's own share handed back (`service.residentVram.withoutOwn`),
   and the overrides [LaunchOverrides](../server/launcher/LaunchOverrides.md)
@@ -30,7 +32,7 @@ more than it gives.
   speed. There is not enough free RAM to hold them a second time beside the pin.`
 - Resolves `null` (the pin goes ahead) when the plan is clean and also whenever
   no plan can be made: no `ensureRuntimesView` or `ensureDiagnostics` on the
-  service, the runtime missing, not installed or without a binary, or any
+  service, no installed runtime loading the model, or any
   thrown error. A refusal has to rest on a plan.
 
 ## Why

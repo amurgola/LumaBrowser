@@ -16,6 +16,10 @@ export default class DefaultsPrefs {
     this.vramWarning = await DefaultsPrefs._read(api, 'getVramWarning', (r) => (r && r.success ? !!r.enabled : null), null);
     this.gpuHeadroomBytes = await DefaultsPrefs._read(api, 'getGpuHeadroom', (r) => (r && r.success && Number(r.bytes) > 0 ? Number(r.bytes) : null), null);
     this.approvalPolicy = await DefaultsPrefs._read(api, 'getApprovalPolicy', DefaultsPrefs.policyFrom, null);
+    await this.loadRamPin(api);
+  }
+
+  async loadRamPin(api) {
     const pin = await DefaultsPrefs._read(api, 'getRamPinStatus', (r) => (r && r.success ? r.status : undefined), undefined);
     if (pin !== undefined) this.ramPinStatus = pin;
   }

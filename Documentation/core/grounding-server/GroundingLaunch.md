@@ -13,7 +13,9 @@ Builds the grounding llama-server launch. Explicit args, no planner.
   `OVERHEAD_BYTES` (2.5 GiB).
 - `GroundingLaunch.plan({ port, modelPath, mmprojPath, runtimeId })` adds `modelName`.
 - `async GroundingLaunch.pickRuntime(llmServerService)` the installed
-  `llama-cpp*` runtime with a binary, preferring `getDefaults().runtimeId`.
+  `llama-cpp*` runtime with a binary, preferring the user's active llama.cpp build
+  ([ActiveLlamaBuild](../llm-server/server/launcher/ActiveLlamaBuild.md): the
+  framework's active build, else `getDefaults().runtimeId`).
   Throws `No llama.cpp runtime view available.` or `No llama.cpp runtime is
   installed. Install one in the LLM tab first.`
 - Statics: `CONTEXT`, `OVERHEAD_BYTES`, `IMAGE_MIN_TOKENS`, `IMAGE_MAX_TOKENS`,

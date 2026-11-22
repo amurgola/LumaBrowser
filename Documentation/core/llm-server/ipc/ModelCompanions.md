@@ -9,6 +9,8 @@ model's family from its own repo.
 
 - `new ModelCompanions({ gguf?, catalog?, pin? })` (defaults `HfGgufRepo`,
   `DrafterCatalog`, `HfPinnedRepo.pin`).
+- A file that is not a GGUF (a framework's own pack, such as `.basalt`) has no companions and nothing is looked
+  up for it: projectors, draft heads and catalog drafters are GGUFs that only llama.cpp pairs with a model.
 - `resolve(url, file, { revision? })` resolves `{ repoId, mmproj, mtp, drafter, downloads }`:
   for a Hub URL, the best projector (`GgufCompanionPicker.bestMmproj`) and the draft
   head matching the weights' quant (`bestMtp` with `GgufFileName.quantOf(file)`);

@@ -36,21 +36,25 @@ class LlmPinPlanCheck {
   }
 
   async _launchContext(service, model) {
+    if (!LlmPinPlanCheck._canPlan(service)) return null;
     const ctx = new LaunchContext({ service, planFor: this._planFor });
-    ctx.runtime = await LlmPinPlanCheck._runtime(service, ctx.defaults.runtimeId);
+    const diagnostics = await service.ensureDiagnostics();
+    ctx.runtime = await LlmPinPlanCheck._runtime(service, model, diagnostics);
     if (!ctx.runtime) return null;
     ctx.model = model;
-    ctx.diag = this._cardsAsStartFindsThem(service, await service.ensureDiagnostics());
+    ctx.diag = this._cardsAsStartFindsThem(service, diagnostics);
     LaunchOverrides.apply(ctx, { freeMemory: this._freeMemory });
     return ctx;
   }
 
-  static async _runtime(service, runtimeId) {
-    if (typeof service.ensureRuntimesView !== 'function' || typeof service.ensureDiagnostics !== 'function') return null;
-    const view = await service.ensureRuntimesView();
-    const row = ((view && view.runtimes) || []).find((r) => r.id === runtimeId);
-    if (!row || !row.installed || !row.binaryPath) return null;
-    return UnsupportedFlagMemory.withLearnedFlags(row, service.settingsDb);
+  static _canPlan(service) {
+    return typeof service.ensureRuntimesView === 'function' && typeof service.ensureDiagnostics === 'function';
+  }
+
+  static async _runtime(service, model, diagnostics) {
+    const runtimesView = await service.ensureRuntimesView();
+    const outcome = service.runtimeChooser.forModel(model, { runtimesView, diagnostics });
+    return outcome.runtime ? UnsupportedFlagMemory.withLearnedFlags(outcome.runtime, service.settingsDb) : null;
   }
 
   _cardsAsStartFindsThem(service, diagnostics) {

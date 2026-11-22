@@ -1,6 +1,7 @@
 import HtmlEscaper from '../format/HtmlEscaper.js';
 import Dom from '../dom/Dom.js';
 import HostPlatform from '../wizard/HostPlatform.js';
+import FormatLabels from '../setup-ui/frameworks/FormatLabels.js';
 import ModelSearchDetail from './ModelSearchDetail.js';
 import ModelSearchDownload from './ModelSearchDownload.js';
 import ModelSearchRow from './ModelSearchRow.js';
@@ -11,6 +12,16 @@ export default class ModelSearch {
   static RESULT_LIMIT = 30;
 
   static DEFAULT_SORT = 'trending';
+
+  static GGUF = 'gguf';
+
+  static MLX = 'mlx';
+
+  static FORMAT_LABELS = Object.freeze({ gguf: 'GGUF', mlx: 'MLX' });
+
+  static formatLabel(format) {
+    return ModelSearch.FORMAT_LABELS[format] || FormatLabels.noun(format);
+  }
 
   static EMPTY_DETAIL = '<div class="ms-detail ms-empty-detail">'
     + 'Search for a model on the left, then pick one to see its card and download a quant.</div>';
@@ -36,10 +47,11 @@ export default class ModelSearch {
 
   open() {
     if (!this.overlay) this._build();
-    this.state = { sort: ModelSearch.DEFAULT_SORT, mlx: false, fit: true, results: [], selectedRepo: null, sel: null, downloading: false };
+    this.state = { sort: ModelSearch.DEFAULT_SORT, format: ModelSearch.GGUF, fit: true, results: [], selectedRepo: null, sel: null, downloading: false };
     this._repoLoads.clear();
     this.overlay.hidden = false;
     this._resetControls();
+    this._offerFormats();
     const input = this.overlay.querySelector('.ms-search-in');
     setTimeout(() => input.focus(), 30);
     this._runSearch();
@@ -72,8 +84,7 @@ export default class ModelSearch {
     this.overlay.querySelector('.ms-search-in').addEventListener('input', () => this._debounceSearch());
     this.overlay.querySelector('.ms-sort').addEventListener('change', (event) => this._onSort(event.target.value));
     this.overlay.querySelector('.ms-fit').addEventListener('change', (event) => this._onFit(event.target.checked));
-    const mlx = this.overlay.querySelector('.ms-mlx');
-    if (mlx) mlx.addEventListener('change', (event) => this._onMlx(event.target.checked));
+    this.overlay.querySelector('.ms-format').addEventListener('change', (event) => this._onFormat(event.target.value));
     this.overlay.addEventListener('click', (event) => this._onOverlayClick(event));
     this.overlay.addEventListener('mouseover', (event) => this._onOverlayHover(event));
     document.body.appendChild(this.overlay);
@@ -85,10 +96,34 @@ export default class ModelSearch {
     this.overlay.querySelector('.ms-search-in').value = '';
     this.overlay.querySelector('.ms-sort').value = ModelSearch.DEFAULT_SORT;
     this.overlay.querySelector('.ms-fit').checked = true;
-    const mlx = this.overlay.querySelector('.ms-mlx');
-    if (mlx) mlx.checked = false;
-    this._setSubtitle();
+    this._paintFormatPicker([ModelSearch.GGUF]);
+    this._applyFormat();
     this.overlay.querySelector('.ms-right').innerHTML = ModelSearch.EMPTY_DETAIL;
+  }
+
+  async _offerFormats() {
+    const formats = [ModelSearch.GGUF].concat(this._isMac ? [ModelSearch.MLX] : [], await this._frameworkFormats());
+    if (this.state) this._paintFormatPicker(formats);
+  }
+
+  async _frameworkFormats() {
+    const api = this.api();
+    if (!api || !api.getFrameworksView) return [];
+    try {
+      const result = await api.getFrameworksView();
+      const formats = (result && result.success && result.view && result.view.formats) || [];
+      return formats.filter((format) => format.hub).map((format) => format.id);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  _paintFormatPicker(formats) {
+    const esc = HtmlEscaper.escapeKeepingApostrophes;
+    const select = this.overlay.querySelector('.ms-format');
+    select.innerHTML = formats.map((id) => '<option value="' + esc(id) + '">' + esc(ModelSearch.formatLabel(id)) + '</option>').join('');
+    select.value = this.state.format;
+    select.hidden = formats.length < 2;
   }
 
   _handleKeydown(event) {
@@ -110,15 +145,24 @@ export default class ModelSearch {
     this._runSearch();
   }
 
-  _onMlx(checked) {
-    this.state.mlx = checked;
-    this._setSubtitle();
+  _onFormat(format) {
+    this.state.format = format;
+    this.state.selectedRepo = null;
+    this.state.sel = null;
+    this.overlay.querySelector('.ms-right').innerHTML = ModelSearch.EMPTY_DETAIL;
+    this._applyFormat();
     this._runSearch();
   }
 
-  _setSubtitle() {
+  _applyFormat() {
+    const format = this.state ? this.state.format : ModelSearch.GGUF;
     const sub = this.overlay.querySelector('.ms-sub');
-    if (sub) sub.textContent = 'Hugging Face · ' + (this.state && this.state.mlx ? 'MLX' : 'GGUF');
+    if (sub) sub.textContent = 'Hugging Face · ' + ModelSearch.formatLabel(format);
+    this.overlay.querySelector('.ms-fit-toggle').hidden = format !== ModelSearch.GGUF;
+  }
+
+  _mode() {
+    return { format: this.state.format, mlx: this.state.format === ModelSearch.MLX };
   }
 
   async _runSearch() {
@@ -129,7 +173,7 @@ export default class ModelSearch {
     status.textContent = 'Searching…';
     let result;
     try {
-      result = await this.api().searchModels({ query, sort: this.state.sort, limit: ModelSearch.RESULT_LIMIT, mlx: this.state.mlx, fit: this.state.fit });
+      result = await this.api().searchModels({ query, sort: this.state.sort, limit: ModelSearch.RESULT_LIMIT, ...this._mode(), fit: this.state.fit });
     } catch (err) { result = { success: false, error: err.message }; }
     if (!this.state || seq !== this._searchSeq) return;
     this._paintResults(result, query, status);
@@ -175,12 +219,12 @@ export default class ModelSearch {
   }
 
   _loadRepo(repoId) {
-    const key = (this.state.mlx ? 'mlx:' : 'gguf:') + repoId;
+    const key = this.state.format + ':' + repoId;
     let load = this._repoLoads.get(key);
     if (!load) {
       const api = this.api();
       load = Promise.all([
-        api.expandModelRepo(repoId, { mlx: this.state.mlx }).catch((err) => ({ success: false, error: err.message })),
+        api.expandModelRepo(repoId, this._mode()).catch((err) => ({ success: false, error: err.message })),
         api.getModelReadme(repoId).catch(() => ({ success: false })),
       ]);
       this._repoLoads.set(key, load);
@@ -230,10 +274,7 @@ export default class ModelSearch {
       + '<div class="ms-search-bar ms-toggles">'
       + '<label class="ms-mlx-toggle ms-fit-toggle" title="Hide models whose Q4 quant would not fit the GPU or RAM of this PC">'
       + '<input type="checkbox" class="ms-fit" checked /> Fits this PC</label>'
-      + (this._isMac
-        ? '<label class="ms-mlx-toggle" title="Search Apple MLX models (runs on the Apple Silicon GPU) instead of GGUF">'
-          + '<input type="checkbox" class="ms-mlx" /> MLX</label>'
-        : '')
+      + '<select class="ms-sort ms-format" title="Kind of model to search for" aria-label="Model format" hidden></select>'
       + '</div>'
       + '<div class="ms-status"></div>'
       + '<div class="ms-results"></div>'

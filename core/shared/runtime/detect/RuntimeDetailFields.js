@@ -28,6 +28,8 @@ class RuntimeDetailFields {
     detail.kind = entry.kind;
     detail.description = host.description || entry.description;
     detail.requirementNote = entry.requirementNote || null;
+    detail.framework = entry.framework || entry.id;
+    detail.frameworkName = entry.frameworkName || entry.name;
   }
 
   static _acquisition(detail, entry, catalog, hooks) {
@@ -54,6 +56,7 @@ class RuntimeDetailFields {
     detail.specDialect = entry.specDialect || null;
     detail.platforms = RuntimeDetailFields._copy(entry.platforms);
     detail.modelKinds = Array.isArray(entry.modelKinds) && entry.modelKinds.length > 0 ? entry.modelKinds.slice() : null;
+    detail.hub = entry.hub && typeof entry.hub === 'object' ? { ...entry.hub } : null;
   }
 
   static _copy(list) {

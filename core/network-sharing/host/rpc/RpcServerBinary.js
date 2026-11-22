@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const ActiveLlamaBuild = require('../../../llm-server/server/launcher/ActiveLlamaBuild');
 
 class RpcServerBinary {
   static RUNTIME_PREFERENCE = ['llama-cpp-cuda13', 'llama-cpp-cuda12', 'llama-cpp-vulkan', 'llama-cpp-rocm', 'llama-cpp-sycl', 'llama-cpp-cpu'];
@@ -30,8 +31,7 @@ class RpcServerBinary {
   }
 
   static _runtimeOrder(llmServerService) {
-    const defaults = llmServerService.getDefaults ? llmServerService.getDefaults() : null;
-    const preferred = defaults && defaults.runtimeId;
+    const preferred = ActiveLlamaBuild.of(llmServerService);
     const base = RpcServerBinary._withLoadedVendorBuildsFirst(llmServerService);
     if (!preferred) return base;
     return [preferred, ...base.filter((id) => id !== preferred)];

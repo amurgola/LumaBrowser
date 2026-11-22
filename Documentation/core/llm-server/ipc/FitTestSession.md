@@ -15,8 +15,9 @@ Runs the empirical fit test from the LLM tab, one at a time.
   1. refuses `A fit test is already running.` and `modelPath is required.`;
   2. gathers fresh diagnostics (hardware line from `HardwareSummary`), detects
      runtimes, finds the scanned model (`Model path no longer matches a scanned model.`),
-     picks the runtime ([FitRuntimePicker](FitRuntimePicker.md)) with learned
-     unsupported flags (`No installed llama.cpp runtime can run this test. ...`);
+     picks the runtime a launch would use ([FitRuntimePicker](FitRuntimePicker.md) with the
+     service's `runtimeChooser`) with learned unsupported flags
+     (`No installed runtime that loads this model can run this test. ...`);
   3. stops the chat server when `ready` or `starting` (`chat-server { state: 'stopping' }`);
   4. sends `resolved { runtime, model, hardware }`, runs `FitTester#run` with the
      launch API key (when required), the stored prior fit, a per-combo CUDA pick and

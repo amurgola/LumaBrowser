@@ -18,3 +18,7 @@ None (FoldMemory reads `localStorage`).
 ## Changes (2026-11-09, helper model)
 
 `_helperRows(rows, v)` under More settings when `v.helperAvailable` and the defaults carry `helperModel`: the `defaultHelperModel` toggle with the `helperModelHint` caption, and while it is on the `defaultHelperModelSelect` file row (`v.helperModelOptions`, the whole library) and the `defaultHelperContext` window row. Help texts `helperModel`, `helperModelFile`, `helperContext`.
+
+## Changes (2026-11-22, framework refactor)
+
+The Runtime select, the OpenVINO device row, KV precision, concurrent predictions and the framework switches (tensor split, MoE GPU cache, context retention, peer GPUs, RAM pin) left the card; `runsOnLine(runsOn)` draws the line under the Model row (`#defaultsRunsOn`, `.defaults-runs-on`, `.is-missing` in the warning colour). `HELP` keeps the help copy of the framework options, which [FrameworkOptionRows](../frameworks/FrameworkOptionRows.md) reads; `lockedModel` is gone. The gate note now reads "Chat needs a default model. Pick one above." and shows only without a model.

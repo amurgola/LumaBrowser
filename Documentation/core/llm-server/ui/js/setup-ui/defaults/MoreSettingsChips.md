@@ -11,3 +11,7 @@ What the collapsed "More settings" handle says: only the values that differ from
 ## Globals
 
 None.
+
+## Changes (2026-11-22, framework refactor)
+
+The framework option chips (KV, parallel, tensor split, context retention, MoE GPU cache off, peer GPUs, RAM pin) moved to [FrameworkOptionChips](../frameworks/FrameworkOptionChips.md) on each framework's Options fold. `chipsHtml(labels)` draws a label list as plain fold chips for both.

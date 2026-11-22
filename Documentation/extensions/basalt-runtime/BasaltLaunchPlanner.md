@@ -64,3 +64,17 @@ rest but pins 0.85 GiB of RAM, so text launches leave it off, the same contract
 as llama.cpp's projector. Idle unload is the app's (it stops the process), so
 `--idle-unload` is not passed; rope and YaRN flags are never passed (a context
 past 262,144 ended the engine on Windows).
+
+## Sleep (2026-11-22)
+
+`overrides.frameworkOptions` carries the build's own options (only LumaByte's build declares them,
+[BasaltCatalog](BasaltCatalog.md)). `_resolveSleep` reads `idleSleep` (seconds as a choice id; `off` or none is no
+sleep) and `keepSleepRam`. With a sleep on, the args gain `--idle-sleep <seconds>` and, when keep is on,
+`--keep-sleep-ram`, after `--vision`. On Windows only a pack whose entry has `sizing: 'card'` (the dense 27B) can
+sleep, so another pack gets no flags and the note "Sleep: off for this launch; on Windows only the dense pack can
+sleep."; on Linux every pack sleeps. A launch that sleeps notes the idle time and the flags. The `platform`
+constructor option (default `process.platform`) is a test seam.
+
+Asleep, the engine moves the model's GPU memory to RAM and gives the VRAM back; the next request wakes it in about
+a second. That RAM cannot be paged out while asleep, and keep holds it while awake too, which makes later sleeps
+faster. This is the engine's own sleep; the app's idle unload still stops the process.

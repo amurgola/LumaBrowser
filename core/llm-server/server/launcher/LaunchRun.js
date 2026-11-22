@@ -33,9 +33,7 @@ class LaunchRun {
   }
 
   _refuseMissingDefaults() {
-    const defaults = this._ctx.defaults;
-    if (!defaults.runtimeId) return { success: false, error: 'No default runtime selected.' };
-    if (!defaults.modelPath) return { success: false, error: 'No default model selected.' };
+    if (!this._ctx.defaults.modelPath) return { success: false, error: 'No default model selected.' };
     return null;
   }
 
@@ -82,8 +80,8 @@ class LaunchRun {
     const t = this._timings;
     t.plan = Date.now();
     await this._hotswapReclaim;
-    this._parts.log.log(`[llm-server] launch preflight: diag ${t.diag - t.preflight}ms, runtimes ${t.runtimes - t.diag}ms, `
-      + `scan ${t.scan - t.runtimes}ms, plan ${t.plan - t.scan}ms, evict-join ${Date.now() - t.plan}ms`);
+    this._parts.log.log(`[llm-server] launch preflight: diag ${t.diag - t.preflight}ms, scan ${t.scan - t.diag}ms, `
+      + `runtimes ${t.runtimes - t.scan}ms, plan ${t.plan - t.runtimes}ms, evict-join ${Date.now() - t.plan}ms`);
   }
 
   async _readLiveCards() {

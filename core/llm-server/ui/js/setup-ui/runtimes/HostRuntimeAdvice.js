@@ -92,7 +92,7 @@ export default class HostRuntimeAdvice {
       if (!host.intel && !host.npu) return { tier: 'unsuited', why: 'Needs an Intel GPU or NPU, which this machine does not have.' };
       if (host.npu) {
         const drivers = host.npuUsable ? 'Its drivers are in place.' : 'Needs the Intel compute runtime and the NPU driver first (see the GPU card).';
-        return { tier: 'alternative', why: `The only build that can use your Intel NPU (set the OpenVINO device to NPU in Defaults): small models at low power. Experimental, one request at a time. ${drivers}` };
+        return { tier: 'alternative', why: `The only build that can use your Intel NPU (set its OpenVINO device to NPU): small models at low power. Experimental, one request at a time. ${drivers}` };
       }
       return { tier: 'alternative', why: 'Intel\'s own backend for the GPU; experimental, and needs the Intel compute runtime (see the GPU card). Vulkan is the usual starting point.' };
     },

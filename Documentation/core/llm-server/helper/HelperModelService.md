@@ -27,7 +27,9 @@ absent and callers fall back to the main model.
   rejecting: disabled stops it; a missing file stops it and reports (`Helper
   model not found at ...`, or `Pick a helper model file first.`); otherwise it
   starts through [HelperLaunchPlan](HelperLaunchPlan.md) (the fastest llama.cpp
-  build, the pinned or freest card, the window), and a running server whose
+  build, with the user's active llama.cpp build from
+  [ActiveLlamaBuild](../server/launcher/ActiveLlamaBuild.md) as the fallback hint;
+  the pinned or freest card; the window), and a running server whose
   file, window or card changed is replaced while an unchanged one is left alone.
 - `stop()` (quit), `releaseRuntime(runtimeId)` (stops it while it runs from
   the runtime whose folder is about to be replaced; `apply()` starts it again).

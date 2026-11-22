@@ -5,7 +5,6 @@ import MoreSettingsChips from './MoreSettingsChips.js';
 
 export default class DefaultsCardHtml {
   static HELP = {
-    lockedModel: 'This runtime only loads its own model format, and one such model is installed, so the selection is fixed. Install another model of that format to get a choice here.',
     openvinoDevice: 'Where the OpenVINO runtime runs the model (<code>GGML_OPENVINO_DEVICE</code>). Auto uses the Intel GPU, which is the fastest choice on every chip that has an NPU. NPU runs it on the Intel AI Boost unit of a Core Ultra chip: it uses less power but usually generates slower than the GPU beside it, handles one request at a time (Concurrent predictions is held at 1), works best with a small context (4K to 8K) and Q4_0 models, and some models fail on it. CPU runs on the processor through OpenVINO. Setting <code>GGML_OPENVINO_DEVICE</code> in your own environment overrides this.',
     context: 'How much conversation the model can keep in view at once (<code>-c</code>, in tokens). The KV cache that backs it is sized up front, so bigger windows cost VRAM at launch; the GPU-fit matrix on each model row shows which sizes fit your hardware.',
     kv: 'Precision of the KV cache holding the context (<code>--cache-type-k/v</code>): f16 stores 2 bytes per element, q8_0 about half that. Keys and values are not equally sensitive: a key error changes which token attention finds, a value error only blurs what it reads back, which is why nothing here quantizes keys to 4 bits. A smaller cache buys a bigger usable context for some quality cost, and needs flash attention, which the launcher enables automatically where supported.',
@@ -31,11 +30,10 @@ export default class DefaultsCardHtml {
   static html(rows, v) {
     const H = DefaultsCardHtml.HELP;
     return `
-                ${rows.select('defaultRuntimeSelect', 'Runtime', v.runtimeOptions, '', !v.hasRuntime ? 'disabled' : '')}
-                ${v.openvino ? rows.segmented('defaultOpenVinoDevice', 'OpenVINO device', v.openvino.options, v.defaults.openvinoDevice || '', H.openvinoDevice) : ''}
-                ${rows.select('defaultModelSelect', 'Model', v.modelOptions, v.lockModel ? H.lockedModel : '', (!v.hasModel || v.lockModel) ? 'disabled' : '')}
+                ${rows.select('defaultModelSelect', 'Model', v.modelOptions, '', !v.hasModel ? 'disabled' : '')}
+                ${DefaultsCardHtml.runsOnLine(v.runsOn)}
                 ${rows.select('defaultContextSelect', 'Context length', DefaultsOptions.contextOptionsHtml(Number(v.defaults.contextSize) || null), H.context)}
-                ${v.ready ? '' : '<div class="models-default-note" style="margin-top:10px;">Defaults gate the Chat surface. You need at least one installed runtime, one discovered model, and a selection in each dropdown.</div>'}
+                ${v.defaults.modelPath ? '' : '<div class="models-default-note" style="margin-top:10px;">Chat needs a default model. Pick one above.</div>'}
                 <details class="setup-fold" data-fold-key="llm.more" ${FoldMemory.attr('llm.more')}>
                     <summary><span class="setup-fold-title">More settings</span><span class="setup-fold-meta">${MoreSettingsChips.html(v.defaults, v.prefs)}</span></summary>
                     <div class="setup-fold-body">
@@ -48,13 +46,15 @@ export default class DefaultsCardHtml {
             `;
   }
 
+  static runsOnLine(runsOn) {
+    if (!runsOn) return '';
+    return `<div class="defaults-runs-on${runsOn.missing ? ' is-missing' : ''}" id="defaultsRunsOn">${HtmlEscaper.escape(runsOn.text)}</div>`;
+  }
+
   static _moreRows(rows, v) {
     const H = DefaultsCardHtml.HELP;
     const d = v.defaults;
-    const parallel = DefaultsOptions.parallelValue(d);
     return [
-      rows.segmented('defaultKvSelect', 'KV cache precision', DefaultsOptions.KV, d.kvCacheType || '', H.kv),
-      rows.segmented('defaultParallelSelect', 'Concurrent predictions', DefaultsOptions.parallelOptions(parallel), String(parallel), H.parallel),
       rows.segmented('defaultReasoningEffort', 'Thinking', DefaultsOptions.EFFORT, DefaultsOptions.effortPosition(d), H.thinking),
       v.prefs.gpuHeadroomBytes != null ? rows.segmented('defaultGpuHeadroom', 'GPU headroom', DefaultsOptions.GPU_HEADROOM, DefaultsOptions.headroomPosition(v.prefs.gpuHeadroomBytes), H.gpuHeadroom) : '',
       v.prefs.approvalPolicy != null ? rows.segmented('defaultToolApproval', 'Tool approval', DefaultsOptions.APPROVAL, v.prefs.approvalPolicy, H.approval) : '',
@@ -88,11 +88,6 @@ export default class DefaultsCardHtml {
     const d = v.defaults;
     const pinSupported = v.prefs.ramPinSupported();
     return [
-      rows.toggle('defaultTensorSplit', 'Tensor split', !!d.tensorSplit, 'Split tensors across 2+ NVIDIA GPUs (experimental)', H.tensorSplit),
-      rows.toggle('defaultMoeGpuCache', 'MoE GPU cache', !d.noMoeGpuCache, 'Cache hot experts in VRAM when a MoE model spills to RAM', H.moeGpuCache),
-      rows.toggle('defaultCacheReuse', 'Context retention', !!d.cacheReuse, 'Keep conversation context reusable in server memory', H.cacheReuse),
-      rows.toggle('defaultUsePeerGpus', 'Peer GPUs', !!d.usePeerGpus, 'Borrow GPUs from attached network peers <span id="peerGpusHint" class="defaults-caption-hint"></span>', H.peerGpus),
-      pinSupported ? rows.toggle('defaultRamPin', 'RAM pin', !!d.pinModelRam, 'Keep the default model locked in RAM <span id="ramPinHint" class="defaults-caption-hint"></span>', H.ramPin) : '',
       v.routerAvailable ? rows.toggle('defaultGroupRouter', 'Tool router', !!d.groupRouter, 'Pick the tools for each message with a small helper model <span id="groupRouterHint" class="defaults-caption-hint"></span>', H.groupRouter) : '',
       (v.routerAvailable && pinSupported) ? rows.toggle('defaultGroupRouterPin', 'Router RAM pin', !!d.groupRouterPinRam, 'Keep the tool router model locked in RAM', H.groupRouterPin) : '',
       rows.toggle('defaultAutoUnload', 'Auto-unload', v.prefs.autoUnloadMs > 0, 'Stop the model after 15&nbsp;minutes idle (frees VRAM)', ''),

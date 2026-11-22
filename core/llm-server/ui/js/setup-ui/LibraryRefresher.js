@@ -20,6 +20,7 @@ export default class LibraryRefresher {
     const cards = this._ctx.cards;
     try {
       if (withRuntimes) await cards.runtimes.render();
+      else await cards.runtimes.refreshFrameworks();
       await cards.models.render();
       await cards.defaults.render();
     } catch (_) {}

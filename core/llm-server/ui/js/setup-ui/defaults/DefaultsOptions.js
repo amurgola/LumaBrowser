@@ -41,8 +41,6 @@ export default class DefaultsOptions {
     return hit ? hit.id : '';
   }
 
-  static OPENVINO_RUNTIME_ID = 'llama-cpp-openvino';
-
   static openvinoDeviceOptions(npuNames = []) {
     const npuTitle = npuNames.length > 0
       ? `${npuNames.join(', ')}: lower power, one request at a time, small contexts`
@@ -78,25 +76,15 @@ export default class DefaultsOptions {
       + CtxLadder.RUNGS.map((c) => `<option value="${c.tokens}" ${current === c.tokens ? 'selected' : ''}>${c.label} (${c.tokens.toLocaleString()} tokens)</option>`).join('');
   }
 
-  static runtimeOptionsHtml(runtimes, selectedId) {
+  static modelOptionsHtml(list, selectedPath, fitSummary) {
     const esc = HtmlEscaper.escape;
-    if (runtimes.length === 0) return '<option value="">No runtime installed yet</option>';
-    return '<option value="">Pick a runtime</option>'
-      + runtimes.map((r) => `<option value="${esc(r.id)}" ${r.id === selectedId ? 'selected' : ''}>${esc(r.name)}${r.version ? ' · ' + esc(r.version) : ''}</option>`).join('');
-  }
-
-  static modelOptionsHtml(scoped, selectedPath, fitSummary) {
-    const esc = HtmlEscaper.escape;
-    if (scoped.models.length === 0) {
-      return `<option value="">${scoped.bound ? 'No model installed for this runtime yet' : 'No models discovered yet'}</option>`;
-    }
+    if (list.models.length === 0) return '<option value="">No models discovered yet</option>';
     const option = (m, name) => {
       const fit = fitSummary(m.path);
       return `<option value="${esc(m.path)}" ${m.path === selectedPath ? 'selected' : ''} title="${esc(ModelTree.label(m))}">${esc(name)} · ${ByteFormatter.bytes(m.totalBytes)} · ${esc(m.relativeDirectory)}${fit ? ' · ' + fit : ''}</option>`;
     };
-    if (scoped.locked) return scoped.models.map((m) => option(m, ModelTree.label(m))).join('');
     const rowName = (m) => ModelTree.rowName(m) + (ModelTree.showsQuant(m) ? ` · ${ModelTree.groupingOf(m).quant}` : '');
-    const tree = ModelTree.build(scoped.models, { bytesOf: (m) => m.weightsTotalBytes || m.totalBytes || 0 });
+    const tree = ModelTree.build(list.models, { bytesOf: (m) => m.weightsTotalBytes || m.totalBytes || 0 });
     return '<option value="">Pick a model</option>'
       + tree.flatMap((f) => f.lines.map((l) => `<optgroup label="${esc(ModelTree.heading(f.family, l.line))}">`
         + l.items.map((m) => option(m, rowName(m))).join('') + '</optgroup>')).join('');

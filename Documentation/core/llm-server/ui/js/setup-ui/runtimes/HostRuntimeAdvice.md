@@ -41,3 +41,7 @@ A machine with an Intel GPU and an NPU sees seven llama.cpp builds and
 nothing that says which to click. The pills already say what is installed and
 what hardware is ready; this says which to start with and why the others
 exist.
+
+## Changes (2026-11-22, framework refactor)
+
+The OpenVINO advice says "set its OpenVINO device to NPU": the device is an option of the llama.cpp framework on the Frameworks card, no longer a Chat defaults row.

@@ -12,6 +12,11 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | Member | IPC |
 |---|---|
 | `getRuntimesView(opts)` | invoke `core.llmServer.getRuntimesView` |
+| `getFrameworksView()` | invoke `core.llmServer.getFrameworksView`; resolves `{ success, view }` (FrameworksView) |
+| `setActiveBuild(frameworkId, runtimeId)` | invoke `core.llmServer.setActiveBuild`; a missing id is sent as null and clears the choice |
+| `setFormatFramework(format, frameworkId)` | invoke `core.llmServer.setFormatFramework` |
+| `setModelFramework(modelPath, frameworkId)` | invoke `core.llmServer.setModelFramework` |
+| `setFrameworkOption(frameworkId, optionId, value)` | invoke `core.llmServer.setFrameworkOption`; an undefined value is sent as null and removes the framework's own value |
 | `checkRuntimeUpdates()` | invoke `core.llmServer.checkRuntimeUpdates` |
 | `installRuntime(id, opts)` | invoke `core.llmServer.installRuntime` |
 | `getRuntimePrerelease(id)` | invoke `core.llmServer.getRuntimePrerelease` |

@@ -43,11 +43,12 @@ export default class DefaultsRows {
                 </div>`;
   }
 
-  segmented(id, label, options, current, help) {
+  segmented(id, label, options, current, help, controlAttrs = '') {
+    const picker = SegmentedPicker.html(id, options, current);
     return `
                 <div class="defaults-row">
                     <label>${label}</label>
-                    <div class="defaults-seg-slot">${SegmentedPicker.html(id, options, current)}</div>
+                    <div class="defaults-seg-slot">${controlAttrs ? picker.replace('<input type="hidden"', `<input type="hidden" ${controlAttrs}`) : picker}</div>
                     ${this._helpPair(id, help, true)}
                 </div>`;
   }
@@ -61,12 +62,12 @@ export default class DefaultsRows {
                 </div>`;
   }
 
-  toggle(id, label, checked, caption, help) {
+  toggle(id, label, checked, caption, help, controlAttrs = '') {
     return `
                 <div class="defaults-opt">
                     <label class="defaults-opt-main" for="${id}">
                         <span class="luma-switch">
-                            <input type="checkbox" id="${id}" ${checked ? 'checked' : ''}/>
+                            <input type="checkbox" id="${id}" ${checked ? 'checked' : ''} ${controlAttrs}/>
                             <span class="luma-switch-track"></span>
                         </span>
                         <span class="defaults-opt-text">

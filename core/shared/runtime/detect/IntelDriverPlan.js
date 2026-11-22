@@ -13,7 +13,7 @@ class IntelDriverPlan {
     {
       key: 'npuDriver',
       label: 'Intel NPU user-space driver',
-      why: 'Lets the OpenVINO build run models on the NPU (device NPU in Defaults). The kernel driver alone is not enough.',
+      why: 'Lets the OpenVINO build run models on the NPU (its OpenVINO device option set to NPU). The kernel driver alone is not enough.',
     },
   ]);
 

@@ -1,31 +1,23 @@
+import DefaultModelServing from './DefaultModelServing.js';
 import DefaultsCardHtml from './DefaultsCardHtml.js';
 import DefaultsForm from './DefaultsForm.js';
 import DefaultsOptions from './DefaultsOptions.js';
 import DefaultsPrefs from './DefaultsPrefs.js';
-import DefaultsRows from './DefaultsRows.js';
 import GroupRouterHint from './GroupRouterHint.js';
 import HelperModelHint from './HelperModelHint.js';
-import ModelLibrary from '../models/ModelLibrary.js';
-import PeerGpusHint from './PeerGpusHint.js';
-import RamPinHint from './RamPinHint.js';
+import SaveNote from './SaveNote.js';
 
 export default class DefaultsCard {
-  static SAVE_NOTE_MS = 4000;
-
-  static SHARED_CONTROLS = ['defaultRuntimeSelect', 'defaultModelSelect', 'defaultContextSelect', 'defaultKvSelect',
-    'defaultParallelSelect', 'defaultTensorSplit', 'defaultCacheReuse', 'defaultReasoningEffort', 'defaultUsePeerGpus',
-    'defaultRamPin', 'defaultGroupRouter', 'defaultGroupRouterPin', 'defaultOpenVinoDevice', 'defaultMoeGpuCache',
-    'defaultHelperModel', 'defaultHelperModelSelect', 'defaultHelperContext'];
+  static SHARED_CONTROLS = ['defaultModelSelect', 'defaultContextSelect', 'defaultReasoningEffort', 'defaultGroupRouter',
+    'defaultGroupRouterPin', 'defaultHelperModel', 'defaultHelperModelSelect', 'defaultHelperContext'];
 
   constructor(ctx) {
     this._ctx = ctx;
-    this.rows = new DefaultsRows();
-    this.prefs = new DefaultsPrefs();
-    this._ramPinHint = new RamPinHint(ctx, this.prefs);
+    this.rows = ctx.rows;
+    this.prefs = ctx.prefs;
     this._routerHint = new GroupRouterHint(ctx);
     this._helperHint = new HelperModelHint(ctx);
-    this._autoPinInFlight = null;
-    this._saveNoteTimer = null;
+    this._saveNote = new SaveNote(ctx.doc, { noteId: 'defaultsSaveNote', bodyId: 'defaultsBody', pillId: 'defaultsPill' });
     this._renderedForm = null;
     this._followOutsideChanges();
   }
@@ -42,7 +34,7 @@ export default class DefaultsCard {
   renderView(defaults) {
     this._ctx.lastDefaults = defaults;
     const view = this._view(defaults);
-    this._paintPill(view.ready);
+    this._paintPill(view);
     const body = this._body();
     body.className = '';
     body.innerHTML = DefaultsCardHtml.html(this.rows, view);
@@ -58,68 +50,31 @@ export default class DefaultsCard {
     if (!Object.keys(patch).length) return;
     const res = await this._ctx.api.setDefaults(patch);
     if (!(res && res.success)) return;
+    if ('modelPath' in patch) await this._refreshFrameworks();
     this.renderView(res.defaults);
     this.showSaveNote(!!res.serverStopped);
   }
 
   showSaveNote(serverStopped) {
-    const doc = this._ctx.doc;
-    const body = this._body();
-    if (!body) return;
-    const old = doc.getElementById('defaultsSaveNote');
-    if (old) old.remove();
-    if (this._saveNoteTimer) { clearTimeout(this._saveNoteTimer); this._saveNoteTimer = null; }
-    const note = doc.createElement('div');
-    note.id = 'defaultsSaveNote';
-    note.className = serverStopped ? 'defaults-save-note stopped' : 'defaults-saved';
-    note.textContent = serverStopped
-      ? 'Saved. The running model was stopped so the new settings can apply; it relaunches automatically on your next chat message.'
-      : 'Saved.';
-    if (serverStopped) body.prepend(note);
-    else doc.getElementById('defaultsPill').before(note);
-    if (!serverStopped) this._saveNoteTimer = setTimeout(() => { note.remove(); this._saveNoteTimer = null; }, DefaultsCard.SAVE_NOTE_MS);
+    this._saveNote.show(serverStopped);
   }
 
   _view(defaults) {
     const ctx = this._ctx;
-    const runtimes = ctx.runtimes.installedInference();
-    const scoped = ModelLibrary.forRuntime(ctx.library.choices(), defaults.runtimeId, ctx.runtimes);
-    const modelPath = this._autoPin(defaults, scoped);
-    const hasRuntime = runtimes.length > 0;
-    const hasModel = scoped.models.length > 0;
-    const ready = hasRuntime && hasModel && !!(defaults.runtimeId && modelPath);
+    const models = ctx.library.choices();
+    const fit = (path) => ctx.ctxFit.summary(path);
+    const serving = DefaultModelServing.of(defaults, ctx.frameworks, ctx.runtimes);
     return {
       defaults,
       prefs: this.prefs,
-      runtimeOptions: DefaultsOptions.runtimeOptionsHtml(runtimes, defaults.runtimeId),
-      openvino: defaults.runtimeId === DefaultsOptions.OPENVINO_RUNTIME_ID
-        ? { options: DefaultsOptions.openvinoDeviceOptions(ctx.hostCaps.intelNpuNames()) } : null,
-      modelOptions: DefaultsOptions.modelOptionsHtml(scoped, modelPath, (path) => ctx.ctxFit.summary(path)),
-      lockModel: scoped.locked,
-      hasRuntime,
-      hasModel,
-      ready,
+      modelOptions: DefaultsOptions.modelOptionsHtml({ models }, defaults.modelPath, fit),
+      hasModel: models.length > 0,
+      runsOn: serving.runsOn,
+      ready: !!(defaults.modelPath && serving.runtimeId),
       routerAvailable: !!ctx.api.getGroupRouterStatus,
       helperAvailable: !!ctx.api.getHelperModelStatus,
-      helperModelOptions: DefaultsOptions.modelOptionsHtml(
-        { models: ctx.library.choices(), bound: false, locked: false },
-        (defaults.helperModel && defaults.helperModel.modelPath) || '', (path) => ctx.ctxFit.summary(path),
-      ),
+      helperModelOptions: DefaultsOptions.modelOptionsHtml({ models }, (defaults.helperModel && defaults.helperModel.modelPath) || '', fit),
     };
-  }
-
-  _autoPin(defaults, scoped) {
-    if (!scoped.locked || defaults.modelPath === scoped.models[0].path) return defaults.modelPath;
-    const path = scoped.models[0].path;
-    const api = this._ctx.api;
-    if (this._autoPinInFlight !== path && api && api.setDefaults) {
-      this._autoPinInFlight = path;
-      api.setDefaults({ modelPath: path }).then((res) => {
-        this._autoPinInFlight = null;
-        if (res && res.success) this.renderView(res.defaults);
-      }).catch(() => { this._autoPinInFlight = null; });
-    }
-    return path;
   }
 
   async _ensureScan() {
@@ -133,12 +88,20 @@ export default class DefaultsCard {
   _followOutsideChanges() {
     const api = this._ctx.api;
     if (!api || typeof api.onServerEvent !== 'function') return;
-    api.onServerEvent((event) => {
+    api.onServerEvent(async (event) => {
       if (!event || event.type !== 'defaults-changed' || !this._ctx.lastDefaults) return;
       const defaults = event.payload && event.payload.defaults;
-      if (!defaults || JSON.stringify(defaults) === JSON.stringify(this._ctx.lastDefaults)) return;
+      if (!defaults) return;
+      const servingChanged = await this._refreshFrameworks();
+      if (!servingChanged && JSON.stringify(defaults) === JSON.stringify(this._ctx.lastDefaults)) return;
       this.renderView(defaults);
     });
+  }
+
+  async _refreshFrameworks() {
+    const runtimes = this._ctx.cards.runtimes;
+    if (!runtimes || typeof runtimes.refreshFrameworks !== 'function') return false;
+    try { return await runtimes.refreshFrameworks(); } catch (_) { return false; }
   }
 
   _wire() {
@@ -147,10 +110,8 @@ export default class DefaultsCard {
       const el = doc.getElementById(id);
       if (el) el.addEventListener('change', () => this.onChange());
     }
-    this._ramPinHint.refresh();
     this._routerHint.refresh();
     this._helperHint.refresh();
-    PeerGpusHint.fill(this._ctx.api, doc);
     this._wireOwnSaves();
     this._renderedForm = DefaultsForm.read(doc);
   }
@@ -207,10 +168,11 @@ export default class DefaultsCard {
     }
   }
 
-  _paintPill(ready) {
+  _paintPill(view) {
     const pill = this._ctx.doc.getElementById('defaultsPill');
-    pill.className = 'luma-badge ' + (ready ? 'ok' : 'warn');
-    pill.textContent = ready ? 'Ready' : 'Set defaults to enable chat';
+    pill.className = 'luma-badge ' + (view.ready ? 'ok' : 'warn');
+    if (view.ready) pill.textContent = 'Ready';
+    else pill.textContent = view.runsOn && view.runsOn.missing ? 'Framework not installed' : 'Set defaults to enable chat';
   }
 
   _body() {

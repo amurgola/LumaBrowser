@@ -10,7 +10,8 @@ The state of one local llama-server start, shared by the
 - `new LaunchContext({ service, planFor, withVision })` reads
   `service.getLaunchDefaults()` (the defaults plus the loaded model's own launch
   overrides, such as its KV cache; `getDefaults()` on a service without it) and
-  `service.settingsDb` once.
+  `service.settingsDb` once. These are the serving framework's defaults, read before the runtime is known;
+  [LaunchOverrides](LaunchOverrides.md) replaces `defaults` with those of the framework preflight resolved.
 - Resolved by the steps: `diag`, `runtimeRow` (the detector row), `runtime` (with
   learned unsupported flags), `model`, `catalogEntry`, `launchKey`, `port`, `kvMode`,
   `userArgs`, `overrides`, `layout` ([LlmLayoutIntent](LlmLayoutIntent.md)),

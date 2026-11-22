@@ -15,7 +15,8 @@ The chat model picker's list of local models with per-context options.
   [LlmResidentVram](../service/LlmResidentVram.md)), falling back to the cached snapshot
   on any failure; the runtimes view, a scan of the models folder, and
   `estimator.buildLocalModelOptions` with the stored fit results, the runtime from
-  [FitRuntimePicker](FitRuntimePicker.md), the service's `settingsDb` (placement layout)
+  [FitRuntimePicker](FitRuntimePicker.md) (the service's `runtimeChooser`: the runtime a
+  launch of that model would start), the service's `settingsDb` (placement layout)
 and the service's display names. Every
   entry then gets `grouping` ([ModelGrouping](../models/ModelGrouping.md) of its scan
   model, header included, with the stored rename as the variant), the same fields

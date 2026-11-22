@@ -7,6 +7,8 @@ class LlmRuntimeDeclarations {
 
   static GGML_ORG = { owner: 'ggml-org', repo: 'llama.cpp' };
 
+  static LLAMA_FRAMEWORK = { framework: 'llama-cpp', frameworkName: 'llama.cpp' };
+
   static LLAMA_MANUAL_SOURCE_NOTE =
     'To use your own build instead: cmake -B build -DGGML_CUDA=ON && cmake --build build --config Release, then use Locate to register build/bin/llama-server.';
 
@@ -21,6 +23,7 @@ class LlmRuntimeDeclarations {
   static RUNTIMES = [
     {
       id: 'llama-cpp-cpu',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (CPU)',
       kind: 'inference',
       description:
@@ -46,6 +49,7 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'llama-cpp-cuda12',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (CUDA 12)',
       kind: 'inference',
       description:
@@ -70,6 +74,7 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'llama-cpp-cuda13',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (CUDA 13)',
       kind: 'inference',
       description:
@@ -98,6 +103,7 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'llama-cpp-luma',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (LumaByte)',
       kind: 'inference',
       description:
@@ -117,6 +123,7 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'llama-cpp-vulkan',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (Vulkan)',
       kind: 'inference',
       description:
@@ -137,6 +144,7 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'llama-cpp-opencl-adreno',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (OpenCL, Adreno)',
       kind: 'inference',
       description:
@@ -153,6 +161,7 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'llama-cpp-rocm',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (ROCm)',
       kind: 'inference',
       description:
@@ -171,6 +180,7 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'llama-cpp-sycl',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (SYCL)',
       kind: 'inference',
       description:
@@ -189,10 +199,11 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'llama-cpp-openvino',
+      ...LlmRuntimeDeclarations.LLAMA_FRAMEWORK,
       name: 'llama.cpp (OpenVINO, experimental)',
       kind: 'inference',
       description:
-        'Intel OpenVINO backend: runs on the Intel GPU by default, or on an Intel NPU or the CPU when the OpenVINO device in Defaults says so. Bundles the OpenVINO runtime; the Intel GPU and NPU drivers come from the host. Experimental: not every model architecture or quantization is supported, and NPUs suit small models.',
+        'Intel OpenVINO backend: runs on the Intel GPU by default, or on an Intel NPU or the CPU when its OpenVINO device option says so. Bundles the OpenVINO runtime; the Intel GPU and NPU drivers come from the host. Experimental: not every model architecture or quantization is supported, and NPUs suit small models.',
       repo: LlmRuntimeDeclarations.GGML_ORG,
       assetPatterns: {
         'win32-x64': /^llama-.+-bin-win-openvino(?:-[\d.]+)?-x64\.zip$/i,
@@ -208,6 +219,8 @@ class LlmRuntimeDeclarations {
     },
     {
       id: 'mlx-lm',
+      framework: 'mlx',
+      frameworkName: 'MLX',
       name: 'MLX (mlx-lm)',
       kind: 'inference',
       description:
@@ -221,6 +234,7 @@ class LlmRuntimeDeclarations {
       binaryNames: { darwin: ['mlx_lm.server'] },
       protocol: 'openai-compat',
       launchStyle: 'mlx-server',
+      options: ['maxConcurrent'],
       requiresHw: { kind: 'apple-silicon' },
       requirementNote: 'Runs only on Apple Silicon (M-series) Macs.',
     },

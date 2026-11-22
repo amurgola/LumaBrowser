@@ -17,12 +17,13 @@ export default class SystemStatus {
     return { tone: 'attention', value: 'Could not load', title: text || '' };
   }
 
-  static runtimes(store, chosenId = null) {
+  static runtimes(store, chosenId = null, missingFramework = null) {
     const installed = store.installedInference();
-    if (!installed.length) return { tone: 'attention', value: 'Not installed', title: 'No inference runtime is installed yet' };
+    if (!installed.length) return { tone: 'attention', value: 'Not installed', title: 'No framework is installed yet' };
     const names = installed.map((r) => r.name);
     const title = names.join(', ');
     if (installed.every((r) => SystemStatus._runtimeBroken(r))) return { tone: 'attention', value: 'Needs attention', title };
+    if (missingFramework) return { tone: 'attention', value: `${missingFramework} not installed`, title: `The default model runs on ${missingFramework}` };
     const chosen = chosenId ? installed.find((r) => r.id === chosenId) : null;
     if (SystemStatus.updateNeedsAttention(installed, chosen, (id) => store.update(id))) {
       return { tone: 'attention', value: 'Update available', title };

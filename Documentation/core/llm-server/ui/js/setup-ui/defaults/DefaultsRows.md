@@ -11,3 +11,7 @@ Row builders of the Defaults card with a "?" help toggle whose open state surviv
 ## Globals
 
 None.
+
+## Changes (2026-11-22, framework refactor)
+
+`segmented(..., controlAttrs)` and `toggle(..., controlAttrs)` take attributes for the control (the hidden input of a segmented picker, the checkbox); the Frameworks card tags its options with `data-fw-option` this way. One instance is shared as `ctx.rows`, so the click router's help toggles keep their open state in both cards.

@@ -12,7 +12,7 @@ class QuickChat {
 
   start({ messages, temperature } = {}, send) {
     const status = this._readyStatus();
-    const entry = this._runtimeEntry();
+    const entry = this._runtimeEntry(status);
     this.abort();
     this._active = this._adapterFor(entry, status).chat({
       messages,
@@ -43,8 +43,8 @@ class QuickChat {
     return status;
   }
 
-  _runtimeEntry() {
-    const runtimeId = this._svc.getDefaults().runtimeId;
+  _runtimeEntry(status) {
+    const runtimeId = (status.plan && status.plan.runtimeId) || this._svc.getDefaults().runtimeId;
     const entry = this._catalog.getById(runtimeId);
     if (!entry) throw new Error(`Catalog entry for ${runtimeId} not found.`);
     return entry;

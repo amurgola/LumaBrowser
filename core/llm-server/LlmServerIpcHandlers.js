@@ -44,6 +44,8 @@ const DrafterInstaller = require('./ipc/DrafterInstaller');
 const LlmIpcDeps = require('./ipc/LlmIpcDeps');
 const LlmModelsView = require('./ipc/LlmModelsView');
 const LlmRuntimeSetup = require('./ipc/LlmRuntimeSetup');
+const LlmFrameworks = require('./ipc/LlmFrameworks');
+const HubSources = require('./runtimes/HubSources');
 const LlmServerBroadcast = require('./ipc/LlmServerBroadcast');
 const LocalModelOptions = require('./ipc/LocalModelOptions');
 const MlxRepoInstall = require('./ipc/MlxRepoInstall');
@@ -117,6 +119,7 @@ class LlmServerIpcHandlers {
       diagnostics: new LlmDiagnosticsView(svc),
       existing: new ExistingLlmModels({ llmServerService: svc, modelsView }),
       runtimes: new LlmRuntimeSetup({ llmServerService: svc }),
+      frameworks: new LlmFrameworks({ llmServerService: svc }),
       sysLibs: new SystemLibrariesCheck({ llmServerService: svc, deps }),
       drivers: new IntelDriverInstall({ llmServerService: svc }),
       defaults: new LlmDefaultsUpdater(svc),
@@ -136,7 +139,7 @@ class LlmServerIpcHandlers {
       attachments: new ChatAttachments(),
       pageContext: new PageContextActions(deps),
       docsStatus: () => LlmServerIpcHandlers._docsStatus(deps.get('docsKnowledgeBase')),
-      browser: new HfRepoBrowser({ wizard }),
+      browser: new HfRepoBrowser({ wizard, hubSource: async (format) => HubSources.find(((await svc.ensureRuntimesView()) || {}).runtimes, format) }),
       autoSetup: new AutoSetupPlan({ llmServerService: svc, deps, wizard }),
       downloader: new ModelFileDownloader({ llmServerService: svc, slot, mlxInstall: new MlxRepoInstall({ slot }) }),
       drafters: new DrafterInstaller({ llmServerService: svc, slot }),
@@ -199,7 +202,12 @@ class LlmServerIpcHandlers {
     }));
   }
 
-  static _registerRuntimes({ runtimes }) {
+  static _registerRuntimes({ runtimes, frameworks }) {
+    LlmServerIpcHandlers._handle('getFrameworksView', () => frameworks.view());
+    LlmServerIpcHandlers._handle('setActiveBuild', (_e, frameworkId, runtimeId) => frameworks.setActiveBuild(frameworkId, runtimeId));
+    LlmServerIpcHandlers._handle('setFormatFramework', (_e, format, frameworkId) => frameworks.setFormatFramework(format, frameworkId));
+    LlmServerIpcHandlers._handle('setModelFramework', (_e, modelPath, frameworkId) => frameworks.setModelFramework(modelPath, frameworkId));
+    LlmServerIpcHandlers._handle('setFrameworkOption', (_e, frameworkId, optionId, value) => frameworks.setOption(frameworkId, optionId, value));
     LlmServerIpcHandlers._handle('getRuntimesView', (_e, opts) => runtimes.view(opts));
     LlmServerIpcHandlers._handle('checkRuntimeUpdates', () => runtimes.checkUpdates());
     LlmServerIpcHandlers._handle('getRuntimePrerelease', (_e, id) => runtimes.prerelease(id));

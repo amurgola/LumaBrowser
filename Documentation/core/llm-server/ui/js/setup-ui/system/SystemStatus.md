@@ -31,3 +31,7 @@ Tones:
 ## Globals
 
 None.
+
+## Changes (2026-11-22, framework refactor)
+
+`runtimes(store, chosenId, missingFramework)`: `chosenId` is the build that serves the default model (FrameworkStore `current().runtimeId`), and a `missingFramework` name (the default model's framework has no installed build) is `attention` "Basalt not installed". No installed framework reads "No framework is installed yet".

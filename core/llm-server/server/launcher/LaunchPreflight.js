@@ -17,11 +17,11 @@ class LaunchPreflight {
     ctx.diag = await this._readDiagnostics(ctx.service);
     await this._gpuReady();
     timings.diag = Date.now();
+    const modelRefusal = await this._resolveModel(ctx, timings);
+    if (modelRefusal) return modelRefusal;
     const runtimeRefusal = await this._resolveRuntime(ctx);
     if (runtimeRefusal) return runtimeRefusal;
     timings.runtimes = Date.now();
-    const modelRefusal = await this._resolveModel(ctx, timings);
-    if (modelRefusal) return modelRefusal;
     return this._resolveApiKey(ctx);
   }
 
@@ -42,13 +42,41 @@ class LaunchPreflight {
 
   async _resolveRuntime(ctx) {
     const view = await this._readRuntimesView(ctx.service, ctx.diag);
-    const row = view.runtimes.find((r) => r.id === ctx.defaults.runtimeId);
-    if (!row) return { success: false, error: `Runtime ${ctx.defaults.runtimeId} not found in detector view.` };
-    if (!row.installed) return this._notInstalledRefusal(row);
-    if (!row.binaryPath) return { success: false, error: `Runtime ${row.name} has no usable binary.` };
+    const outcome = ctx.service.runtimeChooser.forModel(ctx.model, { runtimesView: view, diagnostics: ctx.diag });
+    if (outcome.runtime) return this._useRuntime(ctx, outcome.runtime);
+    if (outcome.missing) return this._missingRefusal(outcome.missing);
+    return LaunchPreflight._unloadableRefusal(ctx.model, outcome.unloadable);
+  }
+
+  _useRuntime(ctx, row) {
     ctx.runtimeRow = row;
     ctx.runtime = UnsupportedFlagMemory.withLearnedFlags(row, ctx.settingsDb);
+    LaunchPreflight._recordRuntime(ctx, row.id);
     return null;
+  }
+
+  static _recordRuntime(ctx, runtimeId) {
+    if (runtimeId === ctx.defaults.runtimeId) return;
+    const service = ctx.service;
+    if (typeof service.setDefaults === 'function') {
+      service.setDefaults({ runtimeId });
+      ctx.defaults = service.getLaunchDefaults ? service.getLaunchDefaults() : service.getDefaults();
+    }
+    ctx.defaults = { ...ctx.defaults, runtimeId };
+  }
+
+  _missingRefusal(row) {
+    if (row.installed && !row.binaryPath) return { success: false, error: `Runtime ${row.name} has no usable binary.` };
+    return this._notInstalledRefusal(row);
+  }
+
+  static _unloadableRefusal(model, format) {
+    const what = format ? `${model.name} (${format} format)` : `${model.name}: a projector or draft head is not a model to load on its own`;
+    return {
+      success: false,
+      error: `No framework on this PC loads ${what}. Pick another model in Setup → Defaults.`,
+      code: ModelRuntimeMatch.CODE,
+    };
   }
 
   _notInstalledRefusal(row) {
@@ -76,7 +104,7 @@ class LaunchPreflight {
     const model = (view.models || []).find((m) => m.weights && m.weights[0] && m.weights[0].path === ctx.defaults.modelPath);
     if (!model) return { success: false, error: 'Default model path no longer matches a scanned model.' };
     ctx.model = model;
-    return ModelRuntimeMatch.refusal(model, ctx.runtime);
+    return null;
   }
 
   _resolveApiKey(ctx) {

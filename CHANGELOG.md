@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.2.7
+
+### New features
+- **Frameworks: the model decides what runs it (LLM > Setup).** The "Inference runtimes" card is now "Frameworks". A framework is one engine, such as llama.cpp, ik_llama.cpp, Basalt, NInfer or MLX, and its builds (CUDA, Vulkan, CPU and so on) are listed under it. The Runtime picker in Chat defaults is gone: every model runs on a framework that loads its format.
+  - Pick any installed model as the default and it starts on the right framework. A model that the selected runtime could not load used to be refused, and the Model list showed only the models of that runtime.
+  - Each installed framework has one line with its name, the formats it loads and its active build. With two or more builds installed, you choose the active one there. The framework that runs the default model is marked "In use".
+  - Where two installed frameworks load the same format, as llama.cpp and ik_llama.cpp both load GGUF, "GGUF models run on" sets which one is the default. A "Framework" picker in a model's details pins that one model to either.
+  - Each framework keeps its own launch options in its Options fold: KV cache precision, Concurrent predictions, Tensor split, MoE GPU cache, Context retention, Peer GPUs, RAM pin and OpenVINO device. They moved there from More settings in Chat defaults. A framework shows only the options its active build uses, and a setting made for one framework no longer changes how another starts.
+  - The Builds fold of a framework lists all its builds, to install, update or remove. Frameworks with nothing installed are in the Catalogue fold.
+  - Chat defaults shows what the default model runs on under the Model row, for example "Runs on llama.cpp (LumaByte)". When no installed framework can run the model, it says which one to install.
+  - Installed models are listed under the framework that runs them. Models whose framework is not installed come with one Install button. Models that nothing on this computer can load, and companion files such as a projector, are listed apart.
+  - Your settings carry over. The runtime you had selected stays the active build, and your launch options apply as before until you change them for a framework.
+- **Model search finds a framework's own kind of model.** The search has a format picker when an installed framework has a format of its own. With a Basalt build installed, choose Basalt to search Hugging Face for `.basalt` packs and download one.
+  - A download is checked against the size and the checksum of its listing.
+  - Packs are listed smallest first. They have no "fits this PC" estimate, because a pack does not carry the facts the estimate needs.
+  - On a Mac, MLX is in the same picker. It used to be a checkbox.
+- **Basalt Runtime (add-on 1.3.0):**
+  - Its two builds are one framework, "Basalt", with its own Concurrent predictions and KV cache precision.
+  - **Sleep when idle** (LumaByte build): after 1, 5 or 15 minutes without a request the model goes to sleep. Its GPU memory moves to system RAM and the VRAM is given back to other apps. The next request wakes it in about a second. On Windows only the Qwen3.8 27B pack can sleep.
+  - **Keep sleep memory** (LumaByte build) holds that RAM while the model is awake too, so later sleeps are faster.
+  - Both options show how much RAM a sleep would hold against the RAM that is free, with a warning when it does not fit. The figure appears once the model has loaded.
+  - Basalt packs can be found in the model search, beside the five that install in one click.
+
+### Changes
+- **One rule says which build runs a model.** The launch, the fit test, the context estimate in the model picker and Setup all use it, so they agree. The fit test could measure a model on another build than the one it would start on.
+- **The other local helpers follow the active llama.cpp build.** The helper model, the tool router, the vision helper and GPU sharing over the network use the build that is active for llama.cpp. They used to read the old runtime setting.
+- **The status line in Setup says "Framework".** When the default model runs on a framework that is not installed, it names that framework. Before, it only reported on the runtimes that were installed.
+- **Messages and the settings search point to the new places.** Advice after a failed start names the Frameworks card and the options of a framework, and searching for a setting such as KV cache precision opens it there.
+
 ## 2.2.6
 
 ### New features

@@ -11,7 +11,9 @@ Runs one local llama-server start step by step for [ServerLauncher](../ServerLau
   `liveMemory`, `lending`, `log`, `preflight`, `borrow`, `placement`, `finalizer`, `flagRescue`,
   `oomRescue`, `openvinoRescue`).
 - `execute()` resolves the launcher's result; the step order is listed in
-  [ServerLauncher](../ServerLauncher.md) under Flow.
+  [ServerLauncher](../ServerLauncher.md) under Flow. The only up-front refusal is
+  `No default model selected.`: a stored runtime id is not needed, because
+  [LaunchPreflight](LaunchPreflight.md) resolves the runtime from the model.
 - `LaunchRun.LENDING_WAIT_MS` (30000).
 
 ## Why
@@ -19,7 +21,7 @@ Runs one local llama-server start step by step for [ServerLauncher](../ServerLau
 A per-start object keeps the shared `ServerLauncher` stateless while the steps
 share one [LaunchContext](LaunchContext.md). The hotswap reclaim starts before the
 preflight so the sibling's shutdown overlaps it; the log line
-`launch preflight: diag Nms, runtimes Nms, scan Nms, plan Nms, evict-join Nms`
+`launch preflight: diag Nms, scan Nms, runtimes Nms, plan Nms, evict-join Nms`
 makes swap-latency regressions visible. After that join the cards are read live
 (`parts.liveMemory`), so placement and the budget see the cards with any evicted
 sibling gone and with what the display and other apps hold; a failed read keeps

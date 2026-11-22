@@ -4,8 +4,8 @@ import AddonModels from './AddonModels.js';
 import DrafterDownloads from './DrafterDownloads.js';
 import DrafterModal from './DrafterModal.js';
 import LlmModelRow from './LlmModelRow.js';
+import ModelFrameworkPin from './ModelFrameworkPin.js';
 import ModelsCardHtml from './ModelsCardHtml.js';
-import RuntimeRecommender from './RuntimeRecommender.js';
 
 export default class ModelsCard {
   static LLM_NAMESPACE = 'mlLlmRows';
@@ -21,8 +21,8 @@ export default class ModelsCard {
     this.addons = new AddonModels(ctx);
     this.drafters = new DrafterDownloads(ctx);
     this.drafterModal = new DrafterModal(ctx, this.drafters);
+    this.pins = new ModelFrameworkPin(ctx);
     this._rows = new LlmModelRow({
-      recommender: new RuntimeRecommender(ctx.runtimes, ctx.hostCaps),
       ctxFit: ctx.ctxFit,
       fitBlock: (path) => ctx.cards.fitTest.view.blockHtml(path),
     });
@@ -31,7 +31,7 @@ export default class ModelsCard {
   async render() {
     const api = this._ctx.api;
     if (!api || !api.getModelsView) { this._error('llmDiagAPI.getModelsView is unavailable.'); return; }
-    const [res] = await Promise.all([api.getModelsView(), this._ctx.ctxFit.load()]);
+    const [res] = await Promise.all([api.getModelsView(), this._ctx.ctxFit.load(), this._loadFrameworks()]);
     if (!res || !res.success) { this._error((res && res.error) || 'Failed to load models view'); return; }
     this._ctx.library.scan = res.scan;
     this.renderView(res.config, res.scan);
@@ -85,6 +85,7 @@ export default class ModelsCard {
     body.innerHTML = ModelsCardHtml.scaffold();
     this._llmCtl = this._modelList.mount(body.querySelector('[data-ml-mount="llm"]'), ModelsCard.LLM_NAMESPACE, {
       onAction: (row, act, e, btn) => this._onRowAction(row, act, btn),
+      onChange: (row, control) => { if (control.matches('[data-model-framework]')) this.pins.save(control); },
     });
     this.drafters.attach(this._llmCtl);
     const addonCtl = this._modelList.mount(body.querySelector('[data-ml-mount="llm-addon"]'), ModelsCard.ADDON_NAMESPACE, {
@@ -110,7 +111,13 @@ export default class ModelsCard {
       const path = LlmModelRow.weightsPath(m);
       if (path) this._fitPathByKey.set(LlmModelRow.nameKey(m), path);
     }
-    if (this._llmCtl) this._llmCtl.set(this._rows.views(models));
+    if (this._llmCtl) this._llmCtl.set(this._rows.views(models, this._ctx.frameworks || null));
+  }
+
+  _loadFrameworks() {
+    const store = this._ctx.frameworks;
+    if (!store || store.view || typeof store.load !== 'function') return null;
+    return Promise.resolve(store.load(this._ctx.api)).catch(() => null);
   }
 
   _paintPill(scan) {

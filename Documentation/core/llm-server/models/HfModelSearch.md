@@ -6,7 +6,7 @@ Searches the HuggingFace Hub for GGUF repos, or MLX repos in MLX mode, and bring
 
 ## Methods
 
-- `HfModelSearch.search({ query = '', sort = 'trending', limit = 20, signal, mlx = false })`
+- `HfModelSearch.search({ query = '', sort = 'trending', limit = 20, signal, mlx = false, tag = null })`
   returns `[{ repoId, author, name, downloads, likes, trendingScore, updatedAt, gated, pipelineTag, architecture, paramsB, maxContext }]`,
   dropping rows with no id. `sort` is one of `trending|downloads|likes|lastModified` (`SORTS` maps them
   to the Hub's `trendingScore`, `downloads`, `likes`, `lastModified`; anything else falls back to trending);
@@ -21,7 +21,8 @@ Searches the HuggingFace Hub for GGUF repos, or MLX repos in MLX mode, and bring
 `library=gguf` does not constrain results when combined with `search`; it
 leaks base safetensors repos that then expand to "no quants found".
 `filter=mlx` is the MLX equivalent. The formats are mutually exclusive, so
-`mlx` is a mode switch.
+`mlx` is a mode switch. `tag` is a third mode: the repos carrying a framework's own tag (`filter=<tag>`,
+such as `basalt`), with the query verbatim and no GGUF fields, like MLX.
 
 For GGUF the query gets " gguf" appended (unless already present) to bias
 ranking toward quant repos, which name themselves `...-GGUF`. MLX repos carry

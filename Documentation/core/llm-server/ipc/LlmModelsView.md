@@ -8,7 +8,9 @@ The LLM Setup models view.
 
 - `new LlmModelsView({ llmServerService, scanner?, freeSpace? })` (defaults
   `LlmModelsScanner.shared`, `ModelsDirStorage.freeSpace`).
-- `view()` resolves `{ config, scan, descriptors }` for the configured folder.
+- `view()` resolves `{ config, scan, descriptors }` for the configured folder. Every model of the scan also
+  carries `servedBy`, the framework and build that would run it ([ModelServing](../runtimes/ModelServing.md)),
+  worked out from the runtimes view, the diagnostics and the stored choices.
 - `setModelsDir(dir)` saves the folder (blank resets it) and returns the same view.
 - `scan(dir)` a decorated scan of `dir`.
 - `decorate(scan)` sets `nameKey`, `displayName` (the service's resolver) and

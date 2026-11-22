@@ -9,8 +9,8 @@ class HfModelSearch {
 
   static GGUF_FIELDS = Object.freeze(['downloads', 'likes', 'lastModified', 'gated', 'gguf', 'pipeline_tag', 'trendingScore']);
 
-  static async search({ query = '', sort = HfModelSearch.DEFAULT_SORT, limit = 20, signal, mlx = false } = {}) {
-    const params = HfModelSearch._buildParams({ query, sort, limit, mlx });
+  static async search({ query = '', sort = HfModelSearch.DEFAULT_SORT, limit = 20, signal, mlx = false, tag = null } = {}) {
+    const params = HfModelSearch._buildParams({ query, sort, limit, mlx, tag });
     const rows = await HfHubClient.get(`${HfHubClient.BASE}/api/models?${params.toString()}`, { signal });
     return (Array.isArray(rows) ? rows : []).map(HfModelSearch._toResult).filter((row) => row.repoId);
   }
@@ -19,22 +19,23 @@ class HfModelSearch {
     return HfModelSearch.SORTS[sort] || HfModelSearch.SORTS[HfModelSearch.DEFAULT_SORT];
   }
 
-  static _buildParams({ query, sort, limit, mlx }) {
+  static _buildParams({ query, sort, limit, mlx, tag }) {
+    const gguf = !mlx && !tag;
     const params = new URLSearchParams({
-      filter: mlx ? 'mlx' : 'gguf',
+      filter: tag || (mlx ? 'mlx' : 'gguf'),
       sort: HfModelSearch.sortField(sort),
       direction: '-1',
       limit: String(Math.max(1, Math.min(HfModelSearch.MAX_LIMIT, limit))),
     });
-    const search = HfModelSearch._searchText(query, mlx);
+    const search = HfModelSearch._searchText(query, gguf);
     if (search) params.set('search', search);
-    if (!mlx) for (const field of HfModelSearch.GGUF_FIELDS) params.append('expand[]', field);
+    if (gguf) for (const field of HfModelSearch.GGUF_FIELDS) params.append('expand[]', field);
     return params;
   }
 
-  static _searchText(query, mlx) {
+  static _searchText(query, gguf) {
     const text = String(query || '').trim();
-    if (!text || mlx || /\bgguf\b/i.test(text)) return text;
+    if (!text || !gguf || /\bgguf\b/i.test(text)) return text;
     return `${text} gguf`;
   }
 

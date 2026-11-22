@@ -4,7 +4,7 @@ const LaunchErrorHints = require('./LaunchErrorHints');
 const LlmDrafterChoices = require('../../service/LlmDrafterChoices');
 
 class LocalServerPrep {
-  static NOT_CONFIGURED = 'No local model configured. Pick a runtime + model in Setup.';
+  static NOT_CONFIGURED = 'No local model configured. Pick a model in Setup.';
 
   constructor({ llmServerService, launcher, scanner, imageServerService }) {
     this._service = llmServerService;
@@ -37,7 +37,7 @@ class LocalServerPrep {
 
   _configuredDefaults() {
     const defaults = this._service.getDefaults();
-    if (!defaults.runtimeId || !defaults.modelPath) throw new Error(LocalServerPrep.NOT_CONFIGURED);
+    if (!defaults.modelPath) throw new Error(LocalServerPrep.NOT_CONFIGURED);
     return defaults;
   }
 

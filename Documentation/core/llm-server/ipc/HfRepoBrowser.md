@@ -16,6 +16,12 @@ The wizard's live model browser over the Hugging Face Hub. Metadata only. Search
   `SEARCH_TTL_MS` (5 minutes).
 - `hardware()` the wizard's budget, probed at most once per `HARDWARE_TTL_MS` (1 minute); null when the probe fails.
 - `catalogLive({ force })` `{ models, source, errors }`.
+- `search` and `expand` take `format` (`'gguf'`, `'mlx'`, or the format of an installed framework such as
+  `'basalt'`); the older `mlx` flag still means MLX (`HfRepoBrowser.formatOf`). For a framework's own format the
+  tag and the pack extension come from the constructor's `hubSource(format)` (the installed build's declaration,
+  [HubSources](../runtimes/HubSources.md)), never from the caller; a format no installed framework declares
+  rejects with `UNKNOWN_FORMAT`. Such a search is unfiltered, and `expand` returns the repo's packs
+  ([HfPackRepo](../models/HfPackRepo.md)) as variants with `fit: null`, plus `format` and `extension` on `info`.
 - `expand(repoId, { mlx })` `{ info, hardware }`. GGUF: the repo's variants, each with
   a `FitClassifier` badge (paramsB from the repo, MoE active parameters from a
   curated repo of the same id); MLX: one synthetic variant `{ quant, file: owner__repo,
