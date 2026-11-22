@@ -42,13 +42,13 @@ class ChildProcessRegistry {
 
   static _killQuietly(pid, { platform, spawn, kill, log }) {
     try {
-      ChildProcessRegistry._killTree(pid, { platform, spawn, kill });
+      ChildProcessRegistry.killTree(pid, { platform, spawn, kill });
     } catch (err) {
       try { log.warn(`[children] could not kill pid ${pid}: ${err && err.message}`); } catch (_) {}
     }
   }
 
-  static _killTree(pid, { platform, spawn, kill }) {
+  static killTree(pid, { platform = process.platform, spawn = childProcess.spawn, kill = process.kill } = {}) {
     if (platform === 'win32') {
       spawn('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
     } else {

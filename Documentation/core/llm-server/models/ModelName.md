@@ -17,13 +17,19 @@ stem) never changes; only what is shown to people does.
   noise keeps everything but its quant and format.
 - `ModelName.resolveDisplayName({ stem, overrides })` returns, in order: the
   user's non-blank override for `stem` (trimmed), the curated catalog label when
-  the stem is `<fileBase>` or `<fileBase>-<QUANT>`, else `prettify(stem)`.
+  the stem is `<fileBase>` or `<fileBase>-<QUANT>` for a quant the catalog lists,
+  else `prettify(stem)`.
 
 ## Why
 
 `key` is the key of the persisted display-name override map, so every reader
 and writer must agree; it matches `path.basename(p, path.extname(p))`. Dropping
 more than the last extension would collide `Q4_K_M` with `Q8_0` under one key.
+
+The catalog label needs an exact stem, not a prefix: bartowski publishes first-party
+models without an author prefix, so a curated base such as `Qwen3.8-27B` also starts
+the names of fine-tunes and drafters (`Qwen3.8-27B-DFlash2-Q8_0`), which must keep
+their own names.
 
 The author-prefix rule also strips a leading `Q4_` from a stem that is nothing
 but a quant (`Q4_K_M` -> `K_M`). That is legacy behaviour and kept; real stems

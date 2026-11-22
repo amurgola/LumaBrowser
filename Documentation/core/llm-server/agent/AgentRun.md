@@ -30,7 +30,8 @@ step); every compaction of the run is offered back to the checkpoint.
 Per iteration: `_shouldStop` (wall clock, then cancel), `_prepareRequest`
 (expire the screenshot note, last-steps warning, proactive compaction on every
 iteration including the first, since a long conversation's prior turns can
-already fill the window, notice relay), `_complete` (first completion gets the warm-up retry, then overflow
+already fill the window, notice relay: the queued [AgentNotices](../../shared/AgentNotices.md) and whatever the
+caller's `stepNotices` option returns are appended to the message the model reads next), `_complete` (first completion gets the warm-up retry, then overflow
 recovery), then `_handleReply`: calibrate from `usage.prompt_tokens`, split the reply's
 calls into the batch and (at a pool of one) the dropped rest, push the
 assistant message, and either review a no-tool reply with the

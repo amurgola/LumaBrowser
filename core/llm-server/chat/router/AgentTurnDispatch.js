@@ -50,6 +50,8 @@ class AgentTurnDispatch {
       stepReminder: AgentTurnDispatch._stepReminder(planTool, taskTools),
       finalCheck: planTool ? () => planTool.beforeFinalAnswer() : null,
       awaitsLaterResult: taskTools ? () => taskTools.awaitsLaterResult : null,
+      stepNotices: taskTools ? () => taskTools.endedNotices() : null,
+      slowCalls: taskTools ? taskTools.slowCalls : null,
       images: t.images,
       ...tools,
       ...AgentTurnDispatch._modeSeams(t.modeTurn, t.evalOverrides, sessionTools, t.modelBudget || null),

@@ -1,3 +1,4 @@
+const AddonModelSetup = require('../models/AddonModelSetup');
 const RuntimeCatalogRegistry = require('../runtimes/RuntimeCatalogRegistry');
 
 class ModelClassifier {
@@ -39,7 +40,8 @@ class ModelClassifier {
   }
 
   static _addonRuntimes(model, registry) {
-    if (model.addon.requiresRuntime) return [model.addon.requiresRuntime];
+    const named = AddonModelSetup.runtimeIdsOf(model.addon);
+    if (named.length > 0) return named;
     try {
       return registry.runtimesForModelKind(model.kind);
     } catch (_) {

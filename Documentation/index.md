@@ -592,7 +592,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/server/chat/TimingsUsage.md](core/llm-server/server/chat/TimingsUsage.md): OpenAI usage from llama.cpp timings; has `fromTimings`.
 - [core/llm-server/validation/CodeValidator.md](core/llm-server/validation/CodeValidator.md): dispatches code to the right language validator; has `validate`, `formatForModel`, `isSupported`, `register`.
 - [core/llm-server/validation/ValidationResult.md](core/llm-server/validation/ValidationResult.md): validation result shape and model-facing block; has `fromDiagnostics`, `formatForModel`.
-- [core/llm-server/models/AddonModelSetup.md](core/llm-server/models/AddonModelSetup.md): one-click add-on model setup; has `execute`, `isInstalled`, `sha256File`.
+- [core/llm-server/models/AddonModelSetup.md](core/llm-server/models/AddonModelSetup.md): one-click add-on model setup; has `execute`, `isInstalled`, `runtimeIdsOf`, `sha256File`.
 - [core/llm-server/runtimes/LlmRuntimeDetector.md](core/llm-server/runtimes/LlmRuntimeDetector.md): LLM runtime detector, with the backend device check on installed GPU builds; has `shared`, `detectRuntimes`, `parseVersionOutput`, `listBackendDevices`.
 - [core/llm-server/runtimes/LlmRuntimeInstaller.md](core/llm-server/runtimes/LlmRuntimeInstaller.md): LLM runtime installer; has `shared`, `installRuntime`, `uninstallRuntime`, `fetchLatestRelease`.
 - [core/llm-server/chat/ToolGroups.md](core/llm-server/chat/ToolGroups.md): lazy tool-group registry, the prose tool doc surface; has `staticGroups`, `extGroupsFor`, `extToolDoc`, `groupForTool`, `buildInactiveRegistry`.
@@ -1644,6 +1644,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/tasks/BackgroundTaskWake.md](core/llm-server/chat/tasks/BackgroundTaskWake.md): wakes the model when a reply's background tasks have all ended, once the chat is idle, or leaves a note for tasks the user stopped; has `watch`, `deliver`.
 - [core/llm-server/chat/tasks/ChatIdleWait.md](core/llm-server/chat/tasks/ChatIdleWait.md): waits until no chat turn has been streaming for a settle time; has `until`.
 - [core/llm-server/chat/tasks/SerialLane.md](core/llm-server/chat/tasks/SerialLane.md): runs jobs one at a time in the order they were added, a failure not stopping the lane; has `push`, `length`.
+- [core/llm-server/chat/tasks/SlowCallBudget.md](core/llm-server/chat/tasks/SlowCallBudget.md): how long a direct tool call may hold up its reply (8 s) before it goes on as a background task and the model is answered at once; has `covers`, `settle`, `BUDGET_MS`.
 - [core/llm-server/chat/tasks/TerminalRunFollow.md](core/llm-server/chat/tasks/TerminalRunFollow.md): follows a background `terminal_run` to its real end past the tool's ten-minute wait, gathering the output; Ctrl+C to stop; has `handles`, `run`, `stop`.
 - [core/llm-server/chat/BackgroundRunGate.md](core/llm-server/chat/BackgroundRunGate.md): one shared lock so only one background agent run is in flight; has `tryAcquire`, `release`, `status`.
 - [core/llm-server/chat/BatchScheduler.md](core/llm-server/chat/BatchScheduler.md): runs sub-tasks with a concurrency limit, never editing one file twice at once; has `run`.
@@ -1861,7 +1862,7 @@ Small building blocks shared by more than one subsystem.
 - [core/music-server/runtimes/MusicRuntimeUpdates.md](core/music-server/runtimes/MusicRuntimeUpdates.md): PyPI update check with a cache; has `check`, `latestVersion`.
 - [core/music-server/runtimes/python-env/PythonEnvInstall.md](core/music-server/runtimes/python-env/PythonEnvInstall.md): one uv, venv and pip install, native or in WSL2; has `execute`.
 - [core/music-server/runtimes/python-env/PythonEnvLayout.md](core/music-server/runtimes/python-env/PythonEnvLayout.md): paths for uv, venv and entrypoints; has `uvPath`, `venvPath`, `pythonPath`.
-- [core/music-server/runtimes/python-env/PythonEnvShell.md](core/music-server/runtimes/python-env/PythonEnvShell.md): streamed bash or wsl.exe commands with cancel and timeout; has `stream`, `exec`.
+- [core/music-server/runtimes/python-env/PythonEnvShell.md](core/music-server/runtimes/python-env/PythonEnvShell.md): streamed bash, wsl.exe or shell-less commands with cancel and timeout; has `stream`, `streamCommand`, `exec`.
 - [core/music-server/runtimes/python-env/PythonPackageSpec.md](core/music-server/runtimes/python-env/PythonPackageSpec.md): python package to pip requirement and label; has `requirement`, `label`.
 - [core/music-server/server/MusicRuntimeServer.md](core/music-server/server/MusicRuntimeServer.md): supervises the music server natively or in WSL; has `findFreePort` plus the base API.
 - [core/music-server/server/WslHostFailover.md](core/music-server/server/WslHostFailover.md): health probe with a WSL address fallback and kill-by-port; has `probe`, `killPort`.
@@ -2013,7 +2014,7 @@ Small building blocks shared by more than one subsystem.
 - [core/shell/rest-gateway/McpProxyRoutes.md](core/shell/rest-gateway/McpProxyRoutes.md): controller for `/api/mcp`; has `create`.
 - [core/shell/rest-gateway/HealthRoutes.md](core/shell/rest-gateway/HealthRoutes.md): controller for `/api/health`; has `create`.
 - [core/shell/Updater.md](core/shell/Updater.md): auto-update lifecycle; has `checkForUpdates`.
-- [core/shell/ChildProcessRegistry.md](core/shell/ChildProcessRegistry.md): process-wide inventory of spawned native children for force quit; has `track`, `pids`, `killAll`, `reset`.
+- [core/shell/ChildProcessRegistry.md](core/shell/ChildProcessRegistry.md): process-wide inventory of spawned native children for force quit; has `track`, `pids`, `killAll`, `killTree`, `reset`.
 - [core/shell/ContainerPath.md](core/shell/ContainerPath.md): parses and builds host spellings of paths inside a Docker container; has `parse`, `isContainerPath`, `toHostPath`.
 - [core/shell/DockerExec.md](core/shell/DockerExec.md): one synchronous docker exec that never throws; has `exec`, `sh`, `dockerBin`.
 - [core/shell/ContainerFs.md](core/shell/ContainerFs.md): the sync fs subset served from a container, plus a routed fs; has `routed`, `statSync`, `readFileSync`, `writeFileSync`, `readdirSync`, `list`.
@@ -2493,6 +2494,7 @@ dock under the page, and driven by AI through the `terminal_*` tools once the us
 - [core/terminal/TerminalService.md](core/terminal/TerminalService.md): the app's terminals in the main process: opens sessions from profiles, feeds the one viewer, carries the agent's calls, honours the user's Take over; has `open`, `attach`, `write`, `close`, `setHeld`, `agentRun`, `agentSend`, `agentRead`.
 - [core/terminal/TerminalHostClient.md](core/terminal/TerminalHostClient.md): the line to the terminal host utility process: starts it on first use, matches replies, restarts it after a crash; has `request`, `post`, `stop`.
 - [core/terminal/TerminalViewerSessions.md](core/terminal/TerminalViewerSessions.md): ties a terminal tab's page or the dock to its session, and ends sessions with their page or window; has `attachPage`, `attachDock`, `sessionFor`, `restart`, `openTab`.
+- [core/terminal/NestedShellCheck.md](core/terminal/NestedShellCheck.md): sends back a `terminal_run` line wrapped in a second PowerShell (`powershell -Command "..."`) whose variables or quotes the outer shell would break, once; has `refusal`, `breaks`, `REFUSAL`.
 - [core/terminal/TerminalIpcHandlers.md](core/terminal/TerminalIpcHandlers.md): `core.terminal.*` IPC: a terminal page reaches only its own session, the chrome names sessions, no other page is answered.
 - [core/terminal/TerminalSettings.md](core/terminal/TerminalSettings.md): font, default profile and the AI access switch (`core.terminal.agentAccess`, off by default); has `view`, `update`, `agentAccess`.
 - [core/terminal/TerminalPage.md](core/terminal/TerminalPage.md): the `luma://terminal` address (profile, folder, session), the is-this-a-terminal test and the page's served folders; has `isTerminal`, `url`, `parse`, `routes`, `serve`.
@@ -2686,6 +2688,7 @@ dock under the page, and driven by AI through the `terminal_*` tools once the us
 - [core/llm-server/chat/bridge/tools/ToolProgress.md](core/llm-server/chat/bridge/tools/ToolProgress.md): how a running tool reports on itself to its card; has `reporter`, `messenger`.
 - [core/llm-server/chat/bridge/tools/ToolCallPipeline.md](core/llm-server/chat/bridge/tools/ToolCallPipeline.md): the checks one tool call passes on its way to running, then the notes that ride back on its result.
 - [core/llm-server/chat/bridge/tools/ToolDispatch.md](core/llm-server/chat/bridge/tools/ToolDispatch.md): runs one admitted tool call on whatever owns it.
+- [core/llm-server/chat/bridge/tools/YieldingDispatch.md](core/llm-server/chat/bridge/tools/YieldingDispatch.md): the dispatch of a turn with background tasks: a call the slow-call budget covers is begun so it can be handed on, every other call goes to the plain dispatch; has `dispatch`.
 - [core/llm-server/chat/bridge/tools/DetachedToolCalls.md](core/llm-server/chat/bridge/tools/DetachedToolCalls.md): lets a session tool admit and run another of the run's tools apart from the reply (a background task), on a context whose progress, artifacts and stop belong to the task; has `allows`, `kindOf`, `admit`, `run`.
 - [core/llm-server/chat/bridge/tools/GuestTargetGuard.md](core/llm-server/chat/bridge/tools/GuestTargetGuard.md): keeps a paired client's agent off the host's own addresses, files and internal pages; has `refusal`, `isHostPrivate`.
 - [core/llm-server/chat/bridge/tools/TruncationGuard.md](core/llm-server/chat/bridge/tools/TruncationGuard.md): the outermost check on a tool call.
@@ -3109,6 +3112,27 @@ dock under the page, and driven by AI through the `terminal_*` tools once the us
 - [extensions/ninfer-runtime/NinferToolchain.md](extensions/ninfer-runtime/NinferToolchain.md): checks whether a NInfer source build can run.
 - [extensions/ninfer-runtime/NinferUninstaller.md](extensions/ninfer-runtime/NinferUninstaller.md): the `uninstall` hook.
 - [extensions/ninfer-runtime/main.md](extensions/ninfer-runtime/main.md): `extensions/ninfer-runtime/manifest.js`, `extensions/ninfer-runtime/main.js`.
+
+## extensions/basalt-runtime
+
+- [extensions/basalt-runtime/BasaltActivation.md](extensions/basalt-runtime/BasaltActivation.md): registers the two Basalt runtime rows, their hooks and the add-on packs.
+- [extensions/basalt-runtime/BasaltCard.md](extensions/basalt-runtime/BasaltCard.md): picks the NVIDIA Blackwell card (compute capability 12.x) Basalt runs on; has `pick`, `isBlackwell`.
+- [extensions/basalt-runtime/BasaltCatalog.md](extensions/basalt-runtime/BasaltCatalog.md): the two Basalt builds (LumaByte's and upstream's) as runtime rows with their pinned releases and supported cards; has `buildFor`, `assetFor`, `sourceUrl`, `releaseUrl`.
+- [extensions/basalt-runtime/BasaltContextSizer.md](extensions/basalt-runtime/BasaltContextSizer.md): sizes Basalt's context, against the card for the dense pack, by the engine for mixture-of-experts packs; has `fit`, `needBytes`, `formatBytes`.
+- [extensions/basalt-runtime/BasaltCudaCompanion.md](extensions/basalt-runtime/BasaltCudaCompanion.md): downloads the CUDA 13 runtime archive the core llama.cpp CUDA 13 install takes as its companion; has `fetchInto`.
+- [extensions/basalt-runtime/BasaltCudaRuntime.md](extensions/basalt-runtime/BasaltCudaRuntime.md): puts cudart, cuBLAS and cuBLASLt 13 beside the Basalt binary, reused from llama-cpp-cuda13 or downloaded; has `install`, `missingIn`.
+- [extensions/basalt-runtime/BasaltDetector.md](extensions/basalt-runtime/BasaltDetector.md): the `detect` hook for the row's build, reporting a partial install as not installed.
+- [extensions/basalt-runtime/BasaltInstaller.md](extensions/basalt-runtime/BasaltInstaller.md): the `install` hook for the row's build: card and Python checks, release, CUDA libraries, venv, manifest.
+- [extensions/basalt-runtime/BasaltKvMode.md](extensions/basalt-runtime/BasaltKvMode.md): maps the user's llama.cpp KV cache type onto a pack's `--kv` value; has `resolve`, `bytesPerPosition`.
+- [extensions/basalt-runtime/BasaltLaunchPlanner.md](extensions/basalt-runtime/BasaltLaunchPlanner.md): the synchronous `planLaunch` hook: the `basalt serve` argv plus the plan object the router, chat, Setup UI and context estimator read.
+- [extensions/basalt-runtime/BasaltLayout.md](extensions/basalt-runtime/BasaltLayout.md): the paths inside one unpacked Basalt release archive (bin, top folder, .venv).
+- [extensions/basalt-runtime/BasaltModelEntries.md](extensions/basalt-runtime/BasaltModelEntries.md): the five upstream `.basalt` packs as one-click add-on models with their per-pack launch facts; has `forModel`.
+- [extensions/basalt-runtime/BasaltPythonFinder.md](extensions/basalt-runtime/BasaltPythonFinder.md): finds a Python 3.10 to 3.13 with venv for Basalt's server; has `find`.
+- [extensions/basalt-runtime/BasaltReleaseArchive.md](extensions/basalt-runtime/BasaltReleaseArchive.md): downloads one Basalt build's pinned release archive (size and digest checked) and unpacks it; has `install`.
+- [extensions/basalt-runtime/BasaltRuntimeHooks.md](extensions/basalt-runtime/BasaltRuntimeHooks.md): the hook object registered with each Basalt runtime row (detect, install, planLaunch).
+- [extensions/basalt-runtime/BasaltVenv.md](extensions/basalt-runtime/BasaltVenv.md): builds the `.venv` `basalt serve` runs its Python server from; has `create`.
+- [extensions/basalt-runtime/CoreRequire.md](extensions/basalt-runtime/CoreRequire.md): loads a LumaBrowser core module from this add-on wherever it is installed.
+- [extensions/basalt-runtime/main.md](extensions/basalt-runtime/main.md): `extensions/basalt-runtime/manifest.js`, `extensions/basalt-runtime/main.js`, the two builds, the add-on's flow and the known limits.
 
 ## extensions/cdp-driver
 
@@ -4340,7 +4364,7 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [tools/prompt-bench/PromptBenchCli.md](tools/prompt-bench/PromptBenchCli.md): the `bench:prompt` command (thin entry `scripts/bench-prompt.js`): a short regression bench for the chat system prompt on a real local model; records each response, its score, time and context.
 - [tools/prompt-bench/PromptBenchFixture.md](tools/prompt-bench/PromptBenchFixture.md): the local pages the bench's browsing cases open, one of them carrying a planted instruction.
 - [tools/prompt-bench/PromptBenchReport.md](tools/prompt-bench/PromptBenchReport.md): a run's headline figures, what regressed or was fixed against an earlier run, and the Markdown report.
-- [tools/prompt-bench/PromptBenchSession.md](tools/prompt-bench/PromptBenchSession.md): one bench run's app: pinned model, context and tool-call route, real chat turns, figures read back from the LLM trace.
+- [tools/prompt-bench/PromptBenchSession.md](tools/prompt-bench/PromptBenchSession.md): one bench run's app: pinned model (or an already running OpenAI-compatible endpoint), context and tool-call route, real chat turns, figures read back from the LLM trace.
 - [tools/prompt-bench/PromptBenchTrace.md](tools/prompt-bench/PromptBenchTrace.md): reduces a conversation's LLM trace to requests, system prompt, context tokens and tokens read.
 - [tools/prompt-bench/PromptBenchTranscript.md](tools/prompt-bench/PromptBenchTranscript.md): builds the scorer's transcript from a chat turn's events and stored assistant message.
 

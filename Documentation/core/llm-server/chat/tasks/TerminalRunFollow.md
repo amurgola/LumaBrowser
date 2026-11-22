@@ -18,6 +18,10 @@ ask something), gathering what was printed.
   head line for as long as the head says `running` or the read says `wait ended:
   timeout`, and the task has not been stopped. Resolves `{ success, data }` with
   everything printed; `success` is false when the last call failed.
+- `resume(firstResult)`: follows a `terminal_run` that is already under way (one the
+  reply started itself and handed on, [BackgroundTaskTools](BackgroundTaskTools.md)):
+  `firstResult` is the promise of that call's own result, and the reads go on from it as
+  in `run`. `run` is `resume` of the call it starts.
 - `stop()`: Ctrl+C into the command's terminal (`terminal_send`); nothing before the
   first reply has named the terminal.
 

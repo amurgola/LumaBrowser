@@ -19,6 +19,11 @@ Runs the python-env install commands. Never rejects.
   `onLine(line)` gets only informative lines (downloading, installed, building,
   preparing, resolved, bytecode, creat...), NUL-stripped, trimmed, max 200 chars.
   `out` keeps the last 256 KiB once it passes 512 KiB.
+- `PythonEnvShell.streamCommand({ command, args = [], cwd?, timeout, canceled, onLine })`
+  the same streaming, result, cancel and timeout for a program spawned
+  directly, with no shell (hidden window, piped output, `cwd` when given). The
+  Basalt runtime add-on runs a Windows venv's `python.exe -m pip` through it,
+  where no bash exists.
 - `PythonEnvShell.exec(cmd, args, timeout)` runs `execFile` (hidden, 4 MiB
   buffer) and resolves `{ ok: true, stdout, stderr }` or
   `{ ok: false, reason }` (stderr, else the error message, max 500 chars).

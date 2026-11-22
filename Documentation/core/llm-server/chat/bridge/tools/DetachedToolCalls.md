@@ -2,10 +2,12 @@
 
 `core/llm-server/chat/bridge/tools/DetachedToolCalls.js`
 
-Lets a session tool run another of the run's tools apart from the reply (a background
-task, [BackgroundTaskTools](../../tasks/BackgroundTaskTools.md)). The call passes the same
-admission as any other, then runs on a context of its own, so its progress, artifacts
-and stop signal belong to the task and outlive the reply that started it.
+Runs one of the run's tools apart from the reply (a background task,
+[BackgroundTaskTools](../../tasks/BackgroundTaskTools.md)). A session tool starts one
+there: the call passes the same admission as any other, then runs on a context of its
+own, so its progress, artifacts and stop signal belong to the task and outlive the reply
+that started it. A call the reply made directly can be begun so that it is handed to a
+task while it runs ([YieldingDispatch](YieldingDispatch.md)).
 
 Built by [BridgeRun](../BridgeRun.md) over the run's pipeline, tool table and tool set,
 and set on the tool context as `ctx.detached`, which
@@ -23,6 +25,16 @@ and set on the tool context as `ctx.detached`, which
   `{ report, isStopped, artifacts }` of the task it belongs to. Resolves the tool's
   result; a throw becomes `{ success: false, error: "<name> failed: ..." }`, so it never
   rejects.
+
+- `begin(name, params)`: starts one admitted call inside the reply so that it can be
+  handed on. Returns `{ pending, handTo(task) }`: `pending` resolves the tool's result
+  and never rejects; until `handTo(task)` the call's progress, artifacts and stop signal
+  are the reply's, from then on that task's. The context it runs on reads `hooks`,
+  `artifacts` and `isAborted` through its current owner at the moment they are used,
+  and keeps the `hooks` object and the `isAborted` function the same throughout, since a
+  tool may hold on to them for its whole run ([ToolProgress](ToolProgress.md) does).
+- `HOOKS`: the five hooks a tool sends through (`onToolEvent`, `onStatus`, `onArtifact`,
+  `onArtifactStream`, `onAgentEvent`).
 
 ## The task's context
 

@@ -1,5 +1,66 @@
 # Changelog
 
+## 2.2.6
+
+### New features
+- **Basalt Runtime (add-on 1.1.0): a faster engine for NVIDIA RTX 50 series cards.** The add-on adds Basalt as a runtime in LLM > Setup, with five models made for it that install in one click. Basalt runs on Windows and Linux.
+  - On one RTX 5090 with Qwen3.8 27B it wrote replies about 1.7 times as fast as llama.cpp and read prompts about 4 times as fast. The two ran different files of the model: NVFP4 on Basalt, Q6_K on llama.cpp.
+  - There are two builds, and both load the same models. "Basalt upstream (RTX 50 only)" is the engine's unmodified release. "Basalt LumaByte (RTX 50 + RTX 30/40 second card)" can also put part of Qwen3.8 Flash Next on a second card of the RTX 50, 40 or 30 series. A model set up with one build runs on the other.
+  - The models are Qwen3.8 27B (21 GB), Inkling 2 Mini (20 GB), Qwen3.8 Flash Next (132 GB), Hy4-flash (159 GB) and DeepSeek V4.1 Flash (260 GB). The three large ones keep most of the model in system RAM, so they need a lot of it. All five can read images.
+  - The main card must be an RTX 50 series card with a driver of the R580 branch or newer, and the install needs Python 3.10 to 3.13 on the computer. A computer without them is told so before anything is downloaded.
+  - Basalt loads only its own `.basalt` model files, not GGUF files.
+  - A second card is used only when the model's extra flags name the cards, for example `--gpu 0,1`. The VRAM figures in Setup do not count a second card chosen this way.
+  - The engine's makers have not measured its output quality on Windows.
+- **Chat: a slow tool call no longer holds up the reply.** A tool call that is still running after 8 seconds is moved to the background, and the assistant goes on with the rest of your request. The reply used to sit silent until the call returned.
+  - This covers a long terminal command and the tools of add-ons and MCP servers. Picture, video and music renders, the browser tools and the desktop tools are not moved.
+  - The call shows in the background tasks strip above the message box, with Cancel, like a task the assistant started itself. Its time counts from when the call began.
+  - It works where background tasks do: in plain chat.
+
+### Changes
+- **Background tasks in chat:**
+  - A task that finishes while the assistant is still working is given to it at once and used in the same reply. Its result used to arrive only when the reply and every other task from it had ended. A task that made a picture, a video or music, and a task you stopped, are still reported after the reply.
+  - After it starts a task, the assistant goes on with whatever else you asked that does not need the result. It used to end its reply there. A queued render still starts only when the reply has ended.
+  - The assistant is told plainly that a queued picture, video or song has not been made yet, so that it does not describe one before it exists.
+- **Chat: the first use of a tool takes one step less.** A call to a tool whose instructions were not loaded yet used to be sent back with the instructions, and the assistant had to make it again. The call now runs at once and the instructions come with its result. Picture, video and music renders still get their instructions first, because a render made the wrong way costs minutes.
+- **Terminal: a command wrapped in a second PowerShell is sent back once.** When the assistant sends `powershell -Command "..."` to a terminal that is already PowerShell, the outer shell can break the variables and quotes inside before the inner one reads them. Such a command is not typed; the assistant is told to send the command by itself. If it sends the same line again, it is typed as it is.
+- **Recommended models are up to date (LLM > Setup).**
+  - Qwen 3.8 27B is the pick for any computer with 24 GB of video memory or more. It replaces Qwen 3.6 27B and Gemma 4 31B.
+  - Qwen 3.5 4B and Qwen 3.5 9B are the picks for smaller computers. They replace Gemma 4 E2B and Gemma 4 E4B.
+  - Models are offered by how capable they are, then by size. Qwen 3.8 27B is now offered ahead of the larger Qwen 3.6 35B A3B, which scores lower. The 35B stays as the fast pick for computers with a lot of system RAM.
+  - Gemma 4 26B A4B is listed with its full context of 262,144 tokens. It was listed with 131,072.
+  - Models you have already downloaded stay installed and keep working.
+  - A file whose name only starts with the name of a recommended model, such as a fine-tune or a draft model, is shown under its own name.
+
+## 2.2.5
+
+### New features
+- **Inkling 2 models are supported.** LumaBrowser recognises Thinking Machines' Inkling 2 Mini and Inkling 2 Small, uses the sampler settings their makers recommend and lets them call tools natively.
+  - They need a llama.cpp runtime of build 12600 or newer. The "llama.cpp (LumaByte)" runtime does not load them yet.
+  - The VRAM estimate counts what is particular to these models: a group of layers that runs several times for every token, and working memory that grows with the context.
+  - At a large context the prompt batch is made smaller, so the model stays whole on one card. That is far faster than a split over two cards. Prompts are read slightly slower and replies are not affected. The launch notes say when this was done.
+  - The full-size window cache is left off for these models. It brought no prompt reuse, read prompts less than half as fast and held more VRAM. The launch notes say so.
+  - Only Inkling 2 Mini has been tested so far.
+
+### Changes
+- **VRAM estimates are closer to what a model really uses (LLM > Setup).**
+  - The estimate counts the working memory that grows with the context size, on every card of a split, and leaves out the part of a model that stays in system RAM. The small Gemma 4 models were estimated far too high: Gemma 4 E4B at 8.3 GiB for a load of 4.7 GiB.
+  - A draft model is counted with the memory it needs to run, not only the size of its file. In a split, all of it is counted on the card that holds it.
+  - A split over two cards fills the faster card a little further, now that each card's use is known more exactly.
+  - For a mixture-of-experts model with part of its experts in RAM, the estimate includes the room that is kept free for reading prompts. The model is placed as before; the number shown was too low.
+- **A fit test result is used only for a launch like the one it measured.**
+  - A stored result is set aside when the runtime build, the window cache, the draft model or the expert offload is not what it was measured with. The estimate is used and the launch notes say so. A result used to be trusted whatever was launched, which could split a model over two cards when it fits on one.
+  - Results stored before this update are set aside in the same way until you run the fit test again. The fit table still shows their numbers.
+- **Chat: loading tools in the middle of a conversation no longer makes the model read the whole conversation again.** This applies to models that call tools natively.
+  - Loading a tool group changed the list of tools sent to the model, and with it the start of the prompt, so the whole prompt was read again each time. In a long conversation that could take close to a minute per group.
+  - The list now stays the same for the whole conversation. A tool loaded later is run through one fixed function, `call_tool`, and its card shows the real tool as before.
+- **A model that is newer than the runtime is reported as such.** Starting one used to say the model file may be damaged and to download it again. The message now says the runtime is older than the model, and to update the runtime or pick a newer one.
+- **The model lists in Setup and Image Setup no longer flicker during a download.** Every progress update redrew the list, so the row under the pointer lost its highlight and a control in that row lost the keyboard focus. Only the values that changed are written now.
+- **Personal Hub:**
+  - The assistant knows more about the people in your activity: the context a contact belongs to (a company, for example), and how often and through which apps they have written. People with nothing recorded about them are listed too, and the assistant reads their messages before it says who someone is. It used to guess from a single message.
+  - The assistant sees who a task from a task tracker is assigned to. The names were unreadable to it.
+  - `hub_list_contacts` gives the context of each contact by name.
+- **`luma` command (Windows):** LumaBrowser started with the `luma` command from a program that runs in a Windows compatibility mode no longer takes over that mode. Its window had square corners when it did.
+
 ## 2.2.4
 
 ### New features

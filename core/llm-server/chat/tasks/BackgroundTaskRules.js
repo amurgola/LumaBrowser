@@ -28,6 +28,10 @@ class BackgroundTaskRules {
     return BackgroundTaskRules.MEDIA_TOOLS.includes(String(tool)) ? BackgroundTaskRules.MEDIA_LANE : null;
   }
 
+  static yields(tool, kind) {
+    return BackgroundTaskRules.refusal(tool, kind) === null && BackgroundTaskRules.laneOf(tool) === null;
+  }
+
   static _staysInReply(name) {
     return BackgroundTaskRules.FOREGROUND_TOOLS.includes(name)
       || BackgroundTaskRules.FOREGROUND_PREFIXES.some((prefix) => name.startsWith(prefix));

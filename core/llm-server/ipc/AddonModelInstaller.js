@@ -51,9 +51,11 @@ class AddonModelInstaller {
   }
 
   static runtimeRow(entry, runtimesById) {
-    if (!entry.requiresRuntime) return null;
-    const rt = runtimesById.get(entry.requiresRuntime) || null;
-    if (!rt) return { id: entry.requiresRuntime, name: entry.requiresRuntime, installed: false, installable: false, missing: true };
+    const ids = AddonModelSetup.runtimeIdsOf(entry);
+    if (ids.length === 0) return null;
+    const known = ids.map((id) => runtimesById.get(id)).filter(Boolean);
+    const rt = known.find((runtime) => runtime.installed) || known[0] || null;
+    if (!rt) return { id: ids[0], name: ids[0], installed: false, installable: false, missing: true };
     return {
       id: rt.id, name: rt.name, installed: !!rt.installed, installable: !!rt.installable,
       hardware: rt.hardware || null, platforms: rt.platforms || null, version: rt.version || null,

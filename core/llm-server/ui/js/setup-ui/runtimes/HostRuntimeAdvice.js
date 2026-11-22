@@ -33,7 +33,7 @@ export default class HostRuntimeAdvice {
 
   static backendOf(r) {
     const id = String((r && r.id) || '');
-    if (/cuda|ninfer|luma/.test(id)) return 'cuda';
+    if (/cuda|ninfer|luma|basalt/.test(id)) return 'cuda';
     if (/vulkan/.test(id)) return 'vulkan';
     if (/rocm|hip/.test(id)) return 'rocm';
     if (/sycl/.test(id)) return 'sycl';
@@ -73,7 +73,7 @@ export default class HostRuntimeAdvice {
   static RULES = Object.freeze({
     cuda: (r, host) => {
       if (!host.nvidia) return { tier: 'unsuited', why: 'Needs an NVIDIA GPU with a CUDA driver, which this machine does not have.' };
-      if (/ninfer|luma/.test(r.id)) return { tier: 'alternative', why: 'A specialised NVIDIA build; use it when its row says your card is supported.' };
+      if (/ninfer|luma|basalt/.test(r.id)) return { tier: 'alternative', why: 'A specialised NVIDIA build; use it when its row says your card is supported.' };
       if (/ik-llama/.test(r.id)) return { tier: 'alternative', why: 'The ik_llama.cpp fork: faster for some mixture-of-experts models; the standard CUDA build is the usual starting point.' };
       return { tier: 'alternative', why: host.cudaMajor >= 13 ? 'Works with your driver too; the CUDA 13 build above is faster on current cards.' : 'Needs a driver that reports CUDA 13 (R580 or newer); yours reports CUDA 12.' };
     },

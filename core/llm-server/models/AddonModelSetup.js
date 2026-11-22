@@ -24,6 +24,10 @@ class AddonModelSetup {
     return this._writeSidecarAndFinish();
   }
 
+  static runtimeIdsOf(source) {
+    return [].concat((source && source.requiresRuntime) || []).filter(Boolean);
+  }
+
   static sidecarPathFor(weightsPath) {
     return `${weightsPath}${AddonModelSetup.SIDECAR_SUFFIX}`;
   }
@@ -77,22 +81,31 @@ class AddonModelSetup {
     if (!this._entry) throw AddonModelSetup._typedError(`Unknown add-on model: ${id}`, 'ADDON_MODEL_UNKNOWN');
     if (!options.modelsDir) throw new Error('setupAddonModel: modelsDir is required');
     this._options = options;
-    this._runtimeId = this._entry.requiresRuntime || null;
+    this._runtimeIds = AddonModelSetup.runtimeIdsOf(this._entry);
+    this._runtimeId = null;
     this._destPath = AddonModelSetup.destPathFor(this._entry, options.modelsDir);
     this._sha256 = null;
   }
 
   async _ensureRuntime() {
-    if (!this._runtimeId) return;
-    const detail = await this._detectRuntime();
-    if (!detail) throw AddonModelSetup._typedError(`Runtime ${this._runtimeId} is not available on this host.`, 'RUNTIME_UNAVAILABLE');
-    if (!detail.installed) await this._installRuntime();
+    if (this._runtimeIds.length === 0) return;
+    const known = await this._detectRuntimes();
+    if (known.length === 0) throw AddonModelSetup._typedError(`Runtime ${this._runtimeIds.join(' or ')} is not available on this host.`, 'RUNTIME_UNAVAILABLE');
+    const installed = known.find((runtime) => runtime.detail.installed);
+    this._runtimeId = (installed || known[0]).id;
+    if (!installed) await this._installRuntime();
     this._throwIfCanceled();
   }
 
-  async _detectRuntime() {
+  async _detectRuntimes() {
     const { detectRuntime } = this._options;
-    return typeof detectRuntime === 'function' ? detectRuntime(this._runtimeId) : null;
+    if (typeof detectRuntime !== 'function') return [];
+    const known = [];
+    for (const id of this._runtimeIds) {
+      const detail = await detectRuntime(id);
+      if (detail) known.push({ id, detail });
+    }
+    return known;
   }
 
   async _installRuntime() {
@@ -152,7 +165,7 @@ class AddonModelSetup {
       id: entry.id,
       kind: entry.kind,
       label: entry.label || entry.id,
-      requiresRuntime: this._runtimeId,
+      requiresRuntime: this._runtimeIds.length > 1 ? this._runtimeIds.slice() : (this._runtimeIds[0] || null),
       contextLength: Number(entry.contextLength) || null,
       defaultContextSize: Number(entry.defaultContextSize) || null,
       bytes: AddonModelSetup._sizeOrNull(this._destPath),

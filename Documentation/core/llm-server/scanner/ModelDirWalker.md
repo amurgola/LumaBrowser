@@ -17,7 +17,8 @@ Walks a models directory breadth first and collects raw model candidates.
     [ModelFolderRegistry](../../shared/ModelFolderRegistry.md)`.isOneOf`, so
     case and trailing separators do not matter) and left unentered. The root
     itself is always walked.
-- `MAX_DEPTH` 5, `MAX_ENTRIES` 4000, `GGUF_EXT`, `ADDON_EXTS` (`.ninfer` -> `ninfer`).
+- `MAX_DEPTH` 5, `MAX_ENTRIES` 4000, `GGUF_EXT`, `ADDON_EXTS` (`.ninfer` -> `ninfer`,
+  `.basalt` -> `basalt`, the packs the Basalt runtime add-on loads).
 
 ## Why
 

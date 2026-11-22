@@ -147,6 +147,7 @@ class BaseRuntimeServer extends EventEmitter {
     this.port = launch.plan.port;
     this.healthTimeoutMs = Number(launch.healthTimeoutMs) > 0
       ? Number(launch.healthTimeoutMs) : BaseRuntimeServer.HEALTH_TIMEOUT_MS;
+    this._killTree = launch.killTree === true;
     this._initLaunchState(launch);
     this._setState('starting');
   }
@@ -194,7 +195,7 @@ class BaseRuntimeServer extends EventEmitter {
     this.lastError = err && err.message;
     const child = this.child;
     this.child = null;
-    if (child) ChildReaper.killNow(child);
+    if (child) ChildReaper.killNow(child, { tree: this._killTree });
     this._setState('error', { error: err && err.message });
   }
 
@@ -236,7 +237,7 @@ class BaseRuntimeServer extends EventEmitter {
 
   async _forceKill() {
     if (!this.child) return;
-    await ChildReaper.reap(this.child);
+    await ChildReaper.reap(this.child, { tree: this._killTree });
   }
 
   _onIdleExpired() {

@@ -30,6 +30,7 @@ const ToolCallPipeline = require('./tools/ToolCallPipeline');
 const VaultToolsHandler = require('./tools/handlers/VaultToolsHandler');
 const ToolDispatch = require('./tools/ToolDispatch');
 const TruncationGuard = require('./tools/TruncationGuard');
+const YieldingDispatch = require('./tools/YieldingDispatch');
 const AgentEventRelay = require('./turn/AgentEventRelay');
 const CompletionDriver = require('./turn/CompletionDriver');
 const ReasoningRelay = require('./turn/ReasoningRelay');
@@ -45,7 +46,7 @@ class BridgeRun {
   static IMAGES_GROUP = 'images';
 
   static DEFAULTS = {
-    turnReminder: null, stepReminder: null, finalCheck: null, awaitsLaterResult: null, images: null, allowedTools: null, refreshAllowedTools: null, systemPromptOverride: null,
+    turnReminder: null, stepReminder: null, stepNotices: null, slowCalls: null, finalCheck: null, awaitsLaterResult: null, images: null, allowedTools: null, refreshAllowedTools: null, systemPromptOverride: null,
     extraTools: null, llmExtra: null, noBrowser: false, ctxPerSlot: null, kbScope: null, allowTakeover: false,
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
     approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null, systemRole: null,
@@ -90,7 +91,7 @@ class BridgeRun {
     const o = this._o;
     const table = new ChatToolTable();
     const ctx = this._toolContext();
-    const dispatch = new ToolDispatch({ table, toolSet: this._toolSet, ctx });
+    const dispatch = new YieldingDispatch({ dispatch: new ToolDispatch({ table, toolSet: this._toolSet, ctx }), ctx, slowCalls: o.slowCalls });
     const approval = new ApprovalCheck({
       db: this._host.db,
       policy: ApprovalPolicy.resolveRun({
@@ -234,6 +235,7 @@ class BridgeRun {
       ctxPerSlot: o.ctxPerSlot,
       finalCheck: o.finalCheck,
       awaitsLaterResult: o.awaitsLaterResult,
+      stepNotices: o.stepNotices,
       screenshotVision: this._toolSet.visionActive,
       onEvent: this._relay.handle,
       onWorkTab: o.pinnedTabId != null ? null : (tabId) => preview.start(tabId),

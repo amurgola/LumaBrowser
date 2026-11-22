@@ -13,6 +13,9 @@ grounding runtimes), so force quit can kill whatever is still alive.
   `signalCode`.
 - `ChildProcessRegistry.killAll({ platform, spawn, kill, log })` kills every live tracked child and returns the
   pids it targeted. Windows uses `taskkill /PID <pid> /T /F`; elsewhere `kill(pid, 'SIGKILL')`. Never throws.
+- `ChildProcessRegistry.killTree(pid, { platform, spawn, kill })` ends one process the same way (`taskkill /PID
+  <pid> /T /F` on Windows, `kill(pid, 'SIGKILL')` elsewhere). `ChildReaper` uses it to stop a runtime whose launch
+  says it starts helpers of its own.
 - `ChildProcessRegistry.reset()` forgets every child (tests).
 
 ## Why

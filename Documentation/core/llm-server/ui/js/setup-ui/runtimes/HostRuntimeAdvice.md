@@ -18,7 +18,7 @@ and what it needs.
   CUDA 13 or 12 build on an NVIDIA driver, Vulkan on any other GPU, else CPU.
 - `HostRuntimeAdvice.backendOf(row)`: `cuda`, `vulkan`, `rocm`, `sycl`,
   `openvino`, `mlx`, `cpu` or null, from the id (extension forks follow the
-  same naming; `ninfer` and `llama-cpp-luma` are CUDA builds).
+  same naming; `ninfer`, `basalt` and `llama-cpp-luma` are CUDA builds).
 - `HostRuntimeAdvice.adviceFor(row, host)`: the primary is `recommended`; a
   row with `assetSupported: false` that is not installed and not an extension
   runtime is `unsuited` (no prebuilt download for this platform, e.g. CUDA 12

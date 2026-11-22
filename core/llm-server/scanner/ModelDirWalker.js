@@ -9,7 +9,7 @@ class ModelDirWalker {
 
   static GGUF_EXT = '.gguf';
 
-  static ADDON_EXTS = Object.freeze({ '.ninfer': 'ninfer' });
+  static ADDON_EXTS = Object.freeze({ '.ninfer': 'ninfer', '.basalt': 'basalt' });
 
   async walk(rootDir, { excludeDirs = [] } = {}) {
     this._reset(excludeDirs);

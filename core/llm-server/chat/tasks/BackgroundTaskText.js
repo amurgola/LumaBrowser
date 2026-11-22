@@ -2,22 +2,36 @@ const BackgroundTask = require('./BackgroundTask');
 
 class BackgroundTaskText {
   static NOTE = [
-    'Background tasks: a tool call that will take minutes or longer (a long command in the terminal, several image',
-    'or video renders) can run in the background so the user is not left waiting on it. Call run_in_background with',
-    'tool: the name of the tool, arguments: exactly what you would pass that tool, and title: a few words the user',
-    'will see. It answers at once with a task id. To queue several, call it once for each. Then tell the user what',
-    'you started and end your reply. When every task you started in a reply has finished, the app sends you their',
-    'results in a message marked as automated, and you answer the user from them then. Do not wait, sleep or check',
-    'in a loop for a task, and never state a result you have not been given. background_task_status is for when',
-    'the user asks how a task is going; stop_background_task stops one. Run a call directly, not in the background,',
-    'when it is quick or when you need its result to go on with this reply.',
+    'Slow tool calls and background tasks: a tool call that is still going after a few seconds is moved to the',
+    'background by the app. Its answer then says so and names a task id, and you go on at once. When you already',
+    'know a call will take minutes (a long command in the terminal, several image or video renders), start it there',
+    'yourself: call run_in_background with tool: the name of the tool, arguments: exactly what you would pass that',
+    'tool, and title: a few words the user will see. To queue several, call it once for each. While a task runs,',
+    'go on with whatever else the user asked that does not need its result. The result is handed to you the',
+    'moment it is ready: inside this reply when you are still working, otherwise in a message marked as automated',
+    'after your reply has ended, and you answer the user from it then. When nothing else is left to do, tell the',
+    'user what is still running and end your reply. Renders are the exception: a queued image or video render does',
+    'not start until your reply has ended, so queue every one the user asked for, say what you queued and end your',
+    'reply. Do not wait, sleep or check in a loop for a task, and never state a result you have not been given: a',
+    'task has not finished, and has made nothing, until its result is in front of you. background_task_status is',
+    'for when the user asks how a task is going; stop_background_task stops one.',
   ].join(' ');
+
+  static GO_ON = 'Its result is handed to you the moment it is ready. Go on with anything else the user asked that does '
+    + 'not need it. When nothing is left, tell the user it is still running and end your reply. Do not wait for it or '
+    + 'check on it, and never state its result before you are given it.';
 
   static AUTOMATED_HEAD = '[Automated message from LumaBrowser, not written by the user. Background tasks you started have ended. '
     + 'The user has not seen these results.]';
 
   static AUTOMATED_FOOT = 'Tell the user the outcome now, in your own words, from what is written above only. '
     + 'If a task failed or was stopped, say so plainly.';
+
+  static IN_REPLY_HEAD = '[Automated message from LumaBrowser, not written by the user. A background task ended while you '
+    + 'were working on this reply. The user has not seen its result.]';
+
+  static IN_REPLY_FOOT = 'Use it in the reply you are writing: tell the user the outcome in your own words, from what '
+    + 'is written above only. If a task failed, say so plainly.';
 
   static STATE_WORDS = {
     [BackgroundTask.QUEUED]: 'queued',
@@ -28,11 +42,18 @@ class BackgroundTaskText {
   };
 
   static started(task, queuedAhead = 0) {
+    if (task.state !== BackgroundTask.QUEUED) return `Task ${task.id} "${task.title}" is running in the background. ${BackgroundTaskText.GO_ON}`;
     const place = queuedAhead > 0
       ? `is queued behind ${queuedAhead} other${queuedAhead === 1 ? '' : 's'} and starts when they are done`
-      : (task.state === BackgroundTask.QUEUED ? 'is queued and starts when this reply has ended' : 'is running in the background');
-    return `Task ${task.id} "${task.title}" ${place}. Its result is sent to you automatically when it and the other tasks `
-      + 'from this reply have ended. Tell the user it has started and end your reply: do not wait for it or check on it.';
+      : 'is queued and starts when this reply has ended';
+    return `Task ${task.id} "${task.title}" ${place}. It has not run yet and has made nothing. Queue anything else the user `
+      + 'asked for now, then tell the user what is queued and end your reply. The results are sent to you automatically when '
+      + 'it and the other tasks from this reply have ended: do not wait for them, check on them, or describe them before then.';
+  }
+
+  static movedToBackground(task, waitedMs) {
+    return `${task.tool} was still going after ${BackgroundTaskText.duration(waitedMs)}, so it now runs in the background as task `
+      + `${task.id} "${task.title}". You do not have its result yet. ${BackgroundTaskText.GO_ON}`;
   }
 
   static line(task, progress = null) {
@@ -47,6 +68,10 @@ class BackgroundTaskText {
       ? `Still going, and reported to you later: ${stillRunning.map((task) => BackgroundTaskText.line(task)).join('; ')}.`
       : null;
     return [BackgroundTaskText.AUTOMATED_HEAD, ...sections, running, BackgroundTaskText.AUTOMATED_FOOT].filter(Boolean).join('\n\n');
+  }
+
+  static handOver(tasks) {
+    return [BackgroundTaskText.IN_REPLY_HEAD, ...tasks.map((task) => BackgroundTaskText.outcome(task)), BackgroundTaskText.IN_REPLY_FOOT].join('\n\n');
   }
 
   static outcome(task) {
@@ -70,7 +95,7 @@ class BackgroundTaskText {
     }
     if (waiting.length) {
       parts.push(`ended, with the result not given to you yet: ${waiting.map((task) => `${task.id} "${task.title}"`).join('; ')}. `
-        + 'It reaches you in an automated message once this reply and the other tasks started with it have ended, or call background_task_status with its task_id to read it now');
+        + 'What it made is shown to the user, and reported to you, in an automated message once this reply and the other tasks started with it have ended; or call background_task_status with its task_id to read it now');
     }
     return `[Background tasks in this conversation, ${parts.join('. Also ')}.]`;
   }

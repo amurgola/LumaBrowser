@@ -20,7 +20,9 @@ downloaded.
 ## Steps
 
 1. Pool: [CuratedModelCatalog](CuratedModelCatalog.md) models for the use case (all
-   if none), most parameters first; for development a coder model leads.
+   if none), most capable first: catalog tier, then parameters
+   ([AutoPlanRanking](auto-plan/AutoPlanRanking.md)`.capableFirst`); for development a
+   coder model leads.
 2. Pick, first that applies:
    - on a GPU, the first model with a quant whose weights + 32K q8 KV + 1 GiB fit
      VRAM (highest such quant) and whose predicted speed clears `tkPref`; if none
@@ -42,3 +44,8 @@ reserved for a working session (32K q8 KV), not the catalog's 8K `minVramBytes`,
 so a pick that fits at idle does not OOM as the conversation grows. The context
 budget uses raw weights + overhead + the KV being sized; using `minVramBytes` there
 double-counted and collapsed every pick to 4K.
+
+The pool is ranked by catalog tier before size because the tier is the catalog's
+capability rank: ranked by parameters alone, a 35B sparse model was offered ahead of
+the 27B dense model that out-scores it. A speed bar the dense model cannot clear
+still moves the pick on to the sparse one.

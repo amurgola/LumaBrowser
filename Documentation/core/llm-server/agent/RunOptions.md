@@ -40,5 +40,6 @@ The options of one `AgentRunner.run` call with defaults applied.
 | `ctxPerSlot` | null | per-request window in tokens; sizes every budget |
 | `resultSpill` | null | ToolResultSpill writer for over-budget results |
 | `conversationId` | null | which background notices to relay |
+| `stepNotices` | null | `() => [text]`: asked before every request, for news the model should read with its next message (the result of a background task that ended while the run was working); what it returns counts as delivered |
 | `carriedReasoning` | null | `{charsPerStep, charsTotal}` override |
 | `screenshotVision` | false | screenshots return pixels for the bridge |

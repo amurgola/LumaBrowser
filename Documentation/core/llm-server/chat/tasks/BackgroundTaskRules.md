@@ -22,6 +22,11 @@ Which tool calls may run as a background task, and in which lane.
      run in the background: call it directly in this reply."
 - `laneOf(tool)`: `media` for the media tools, else null (the task starts at once beside
   whatever else runs).
+- `yields(tool, kind)`: whether a direct call of the tool that outlives its time in the
+  reply ([SlowCallBudget](SlowCallBudget.md)) goes on as a background task: `refusal` is
+  null and the tool has no lane. So the extension and MCP tools that may run in the
+  background yield; a render does not, because it shares the cards with the chat model
+  and either holds the reply or waits in its lane until the reply has ended.
 
 ## Tools that stay in the reply
 

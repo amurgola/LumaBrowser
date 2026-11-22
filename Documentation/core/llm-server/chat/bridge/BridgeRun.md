@@ -129,6 +129,15 @@ the result comes later is not nudged.
 
 ## Background tasks
 
+Two more options, null by default, come from the turn's
+[BackgroundTaskTools](../tasks/BackgroundTaskTools.md): `slowCalls` (a
+[SlowCallBudget](../tasks/SlowCallBudget.md)) and `stepNotices` (a function). `_buildGuard`
+wraps the reply's dispatch in a [YieldingDispatch](tools/YieldingDispatch.md) with
+`slowCalls`, so a direct call that is still going after the budget goes on as a
+background task; `stepNotices` goes to the agent run
+([RunOptions](../../agent/RunOptions.md)), which asks it before every request for the
+results of tasks that have ended since.
+
 `_buildGuard` builds one [ChatToolTable](tools/ChatToolTable.md) and one tool context
 and shares them between the reply's [ToolDispatch](tools/ToolDispatch.md) and a
 [DetachedToolCalls](tools/DetachedToolCalls.md) over the same pipeline and tool set,

@@ -1,6 +1,7 @@
 const BackgroundTaskRules = require('./BackgroundTaskRules');
 const BackgroundTasks = require('./BackgroundTasks');
 const BackgroundTaskText = require('./BackgroundTaskText');
+const SlowCallBudget = require('./SlowCallBudget');
 const TerminalRunFollow = require('./TerminalRunFollow');
 const ConversationJobReminder = require('../jobs/ConversationJobReminder');
 const ConversationJobs = require('../jobs/ConversationJobs');
@@ -28,6 +29,7 @@ class BackgroundTaskTools {
     this._conversationId = conversationId;
     this._startedThisTurn = false;
     this._lastTail = null;
+    this.slowCalls = new SlowCallBudget({ handOn: (slowCall) => this._adopt(slowCall) });
   }
 
   get extraTools() {
@@ -46,6 +48,11 @@ class BackgroundTaskTools {
     return this._startedThisTurn;
   }
 
+  endedNotices() {
+    const ended = this._tasks.takeEnded(this._conversationId);
+    return ended.length ? [BackgroundTaskText.handOver(ended)] : [];
+  }
+
   tail() {
     const line = BackgroundTaskText.tail(this._tasks.listFor(this._conversationId), (task) => this._progressOf(task));
     const changed = BackgroundTaskTools._withoutTimes(line) !== BackgroundTaskTools._withoutTimes(this._lastTail);
@@ -61,30 +68,42 @@ class BackgroundTaskTools {
     if (refusal) return { success: false, error: refusal };
     const admitted = await detached.admit(tool, BackgroundTaskTools._arguments(params));
     if (admitted.refusal) return BackgroundTaskTools._refused(admitted.refusal);
-    const task = this._tasks.start(this._spec(tool, admitted.params, params, ctx));
+    const task = this._tasks.start(this._spec(tool, admitted.params, BackgroundTaskTools._title(params.title, tool, admitted.params), ctx));
     this._startedThisTurn = true;
     return {
       success: true, task_id: task.id,
       summary: `In the background: ${task.title}`,
-      message: BackgroundTaskText.started(this._tasks.get(task.id) || task, this._tasks.queuedAhead(task.id)),
+      message: BackgroundTaskText.started(this._tasks.get(task.id) || task, this._tasks.queuedAhead(task.id)) + (admitted.manualNote || ''),
     };
   }
 
-  _spec(tool, toolParams, params, ctx) {
+  _adopt({ tool, params, call, ctx, startedAt, waitedMs }) {
+    const task = this._tasks.start(this._spec(tool, params, BackgroundTaskTools._title(null, tool, params), ctx, { adopted: call, startedAt }));
+    this._startedThisTurn = true;
+    return {
+      success: true, task_id: task.id,
+      summary: `Still running, now in the background: ${task.title}`,
+      message: BackgroundTaskText.movedToBackground(task, waitedMs),
+    };
+  }
+
+  _spec(tool, toolParams, title, ctx, { adopted = null, startedAt = null } = {}) {
     const detached = ctx.detached;
     let follow = null;
-    const run = ({ report, isStopped, artifacts }) => {
-      const call = (name, callParams) => detached.run(name, callParams, { report, isStopped, artifacts });
-      if (!TerminalRunFollow.handles(tool)) return call(tool, toolParams);
-      follow = new TerminalRunFollow({ call, isStopped, report });
-      return follow.run(toolParams);
+    const run = (sink) => {
+      const call = (name, callParams) => detached.run(name, callParams, sink);
+      if (adopted) adopted.handTo(sink);
+      if (!TerminalRunFollow.handles(tool)) return adopted ? adopted.pending : call(tool, toolParams);
+      follow = new TerminalRunFollow({ call, isStopped: sink.isStopped, report: sink.report });
+      return adopted ? follow.resume(adopted.pending) : follow.run(toolParams);
     };
     return {
       conversationId: this._conversationId,
       batchId: ctx.assistantMessageId || null,
       tool,
-      title: BackgroundTaskTools._title(params.title, tool, toolParams),
-      lane: BackgroundTaskRules.laneOf(tool),
+      title,
+      lane: adopted ? null : BackgroundTaskRules.laneOf(tool),
+      startedAt,
       run,
       stop: () => (follow ? follow.stop() : undefined),
     };
@@ -167,7 +186,7 @@ class BackgroundTaskTools {
   static _runDescription() {
     return 'Start a tool call in the background and get a task id at once. For calls that take minutes or longer: '
       + `${TerminalRunFollow.RUN_TOOL} for a long command, ${BackgroundTaskRules.MEDIA_TOOLS.slice(0, 3).join(', ')} and the other renders (they queue and run one at a time), `
-      + 'or a slow tool from an extension. The results come back to you in an automated message when every task from this reply has ended.';
+      + 'or a slow tool from an extension. Each result is handed to you when it is ready: in this reply while you are still working, otherwise in an automated message after it.';
   }
 
   static _runSchema() {

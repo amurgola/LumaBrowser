@@ -18,6 +18,7 @@ Extends [ContributionRegistry](../../shared/registry/ContributionRegistry.md)
 
 Entry shape: `{ id, label, blurb?, licenseNote?, kind, requiresRuntime,
 dir?, file: { url, filename, bytes?, sha256? }, contextLength?,
-defaultContextSize?, sidecar? }`. `kind` is the models-scanner kind; the setup
-pipeline installs `requiresRuntime`, downloads the file, then writes a sidecar
-so the scanner can type it. Entries are stored as given; no defaults are added.
+defaultContextSize?, sidecar? }`. `kind` is the models-scanner kind;
+`requiresRuntime` is one runtime id or a list of ids that each run the model.
+The setup pipeline installs the first of them when none is installed,
+downloads the file, then writes a sidecar so the scanner can type it. Entries are stored as given; no defaults are added.

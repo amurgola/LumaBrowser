@@ -3,8 +3,8 @@
 `core/llm-server/models/AddonModelSetup.js`
 
 One click on an add-on model entry ([ModelCatalogRegistry](ModelCatalogRegistry.md))
-runs the chain a user would otherwise do by hand: install the runtime the
-model needs if it is missing, download the weights, verify them, and write a
+runs the chain a user would otherwise do by hand: install a runtime for the
+model if none of the ones it names is installed, download the weights, verify them, and write a
 `<filename>.luma.json` sidecar the models scanner reads to type the file.
 
 ## Methods
@@ -14,14 +14,20 @@ model needs if it is missing, download the weights, verify them, and write a
   instance per setup run.
 - `execute(id, { modelsDir, runtimesRoot, detectRuntime, installRuntime, onEvent, isCanceled, handle })`
   resolves `{ destPath, runtimeId, sidecar }`:
-  1. `entry.requiresRuntime`: `detectRuntime(id)` must resolve a detector row;
-     when it is not installed, `installRuntime(id, { runtimesRoot, isCanceled, onEvent })` runs.
+  1. `entry.requiresRuntime` (one runtime id, or several that each run the
+     model): `detectRuntime(id)` is asked for each and at least one must
+     resolve a detector row. An installed one serves as it is; with none
+     installed, `installRuntime(id, { runtimesRoot, isCanceled, onEvent })`
+     runs for the first one this host knows. `runtimeId` in the result is the
+     one that serves.
   2. weights download to `destPathFor(entry, modelsDir)`; `handle.cancel` is
      wired to the live transfer while it runs.
   3. when `entry.file.sha256` is set, the file is hashed and compared
      (case-insensitive); a mismatch deletes the file.
   4. the sidecar is written: `{ schema, id, kind, label, requiresRuntime,
      contextLength, defaultContextSize, bytes, sha256, installedAt, ...entry.sidecar }`.
+     `requiresRuntime` is the id when the entry names one, the whole list
+     when it names several, null when it names none.
 - Events `onEvent(type, payload)`: `start { id }`, `runtime { runtimeId, type,
   payload }` (nested installer events between `start` and `finalize`),
   `model { type, payload }` (nested downloader events), `verify { read, total }`
@@ -32,6 +38,8 @@ model needs if it is missing, download the weights, verify them, and write a
   `CHECKSUM_MISMATCH`, `CANCELED` ("Setup canceled.", after the runtime step
   or when the download was canceled or paused). A missing `modelsDir` throws.
 - Statics:
+  - `runtimeIdsOf(source)`: the runtime ids an entry or a scanned model's
+    add-on facts name in `requiresRuntime`, as an array (empty for none).
   - `destPathFor(entry, modelsDir)`: `<modelsDir>/<entry.dir || entry.id>/<file.filename>`,
     with slashes in the folder name turned into `_`.
   - `sidecarPathFor(weightsPath)`: `weightsPath + '.luma.json'`.
@@ -47,6 +55,11 @@ model needs if it is missing, download the weights, verify them, and write a
 The scanner is the only consumer of the sidecar, so the file layout is the
 contract: a model is installed when its weights are at the expected path and
 the sidecar next to them parses.
+
+`requiresRuntime` takes a list because one engine can ship as two runtime rows
+(Basalt's upstream build and LumaByte's): a model set up through one must keep
+running when the user switches to the other, and the setup must not install a
+second build beside the one already there.
 
 The downloader already checks a digest the origin advertises; the extra pass
 pins the file to the digest the extension vouches for, which is the one that

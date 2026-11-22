@@ -13,7 +13,11 @@ class PythonEnvShell {
   static NUL = String.fromCharCode(0);
 
   static stream({ mode, distro, cmd, timeout, canceled, onLine }) {
-    return new Promise((resolve) => new PythonEnvShell(resolve, { timeout, canceled, onLine }).start(mode, distro, cmd));
+    return new Promise((resolve) => new PythonEnvShell(resolve, { timeout, canceled, onLine }).start(PythonEnvShell._spawn(mode, distro, cmd)));
+  }
+
+  static streamCommand({ command, args = [], cwd, timeout, canceled, onLine }) {
+    return new Promise((resolve) => new PythonEnvShell(resolve, { timeout, canceled, onLine }).start(PythonEnvShell._spawnDirect(command, args, cwd)));
   }
 
   static exec(cmd, args, timeout) {
@@ -51,8 +55,7 @@ class PythonEnvShell {
     this._settled = false;
   }
 
-  start(mode, distro, cmd) {
-    const child = PythonEnvShell._spawn(mode, distro, cmd);
+  start(child) {
     child.stdout.on('data', (chunk) => this._collect(chunk));
     child.stderr.on('data', (chunk) => this._collect(chunk));
     this._poll = setInterval(() => this._checkCanceled(child), PythonEnvShell.CANCEL_POLL_MS);
@@ -65,6 +68,12 @@ class PythonEnvShell {
     const options = { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] };
     if (mode !== 'wsl') return spawn('bash', ['-lc', cmd], options);
     return spawn('wsl.exe', [...(distro ? ['-d', distro] : []), '--', 'bash', '-lc', cmd], options);
+  }
+
+  static _spawnDirect(command, args, cwd) {
+    const options = { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] };
+    if (cwd) options.cwd = cwd;
+    return spawn(command, args, options);
   }
 
   _collect(chunk) {

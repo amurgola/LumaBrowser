@@ -67,6 +67,10 @@ class ToolGroupState {
     return unregistered ? `\n\n${ActivationManual.CALL_THROUGH_CALL_TOOL}` : '';
   }
 
+  rulesFirst(key) {
+    return this.available.some((g) => g.key === key && g.rulesFirst === true);
+  }
+
   owningGroups(name) {
     return this.available.filter((g) => g.tools && g.tools.includes(name)).map((g) => g.key);
   }

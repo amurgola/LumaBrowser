@@ -35,7 +35,8 @@ class ToolCallPipeline {
     const refusal = await this._refusal(name, args);
     if (refusal) return { refusal };
     const resolved = VaultPlaceholders.resolveFor(name, args, this._vaultCaller);
-    return resolved.error ? { refusal: { success: false, error: resolved.error } } : { params: resolved.params };
+    if (resolved.error) return { refusal: { success: false, error: resolved.error } };
+    return { params: resolved.params, manualNote: AutoActivation.manualNote(activation) };
   }
 
   async _admitAndRun(name, params, browserService) {

@@ -181,10 +181,20 @@ class AgentRun {
   }
 
   _relayNotices(i, noticeRun) {
-    const notices = noticeRun.drain();
+    const notices = [...noticeRun.drain(), ...this._callerNotices()];
     if (!notices.length) return;
     this._history.appendToLastUser(notices.join('\n'));
     this._steps.push({ iteration: i, notices: notices.length });
+  }
+
+  _callerNotices() {
+    if (typeof this._o.stepNotices !== 'function') return [];
+    try {
+      const notices = this._o.stepNotices();
+      return Array.isArray(notices) ? notices.filter(Boolean) : [];
+    } catch (_) {
+      return [];
+    }
   }
 
   async _complete(i) {

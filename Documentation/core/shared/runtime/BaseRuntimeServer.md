@@ -32,7 +32,9 @@ Protected helpers subclasses call: `_setState(next, payload)`, `_forceKill()`,
 ## Methods and fields
 
 - `start(launch, { shouldCancel })` with `launch = { binaryPath, args, plan: { port },
-  cudaDevice?, extraEnv?, healthTimeoutMs? }`. Throws `Cannot start: server is <state>.`
+  cudaDevice?, extraEnv?, healthTimeoutMs?, killTree? }`. `killTree: true` says the
+  process starts helpers of its own that hold the resources, so every kill of it
+  goes to [ChildReaper](server/ChildReaper.md) with `tree`. Throws `Cannot start: server is <state>.`
   unless idle or error. Spawns from the binary's dir with
   [RuntimeSpawnEnv](server/RuntimeSpawnEnv.md) (passing `cudaDevice` and
   `extraEnv`), tracks the child in

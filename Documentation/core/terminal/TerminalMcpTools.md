@@ -26,6 +26,9 @@ model reads output as it was printed. A run that ends short carries a hint for t
 - `terminal_run` is a command tool for `CommandCallAssessor`: a read-only command skips the question, a destructive one
   always asks, a forbidden one is denied. The handler repeats the deny check itself (with the session's own shell as
   the dialect), so it also holds for callers that never pass the gate.
+- `terminal_run` on a PowerShell terminal sends back, once, a line wrapped in a second
+  PowerShell whose variables or quotes the outer shell would break
+  ([NestedShellCheck](NestedShellCheck.md)); the same line sent again is typed.
 - A session the user took over refuses input ([TerminalService](TerminalService.md)).
 - The tools never reach turns run for someone else (`HostOnlyTools`).
 

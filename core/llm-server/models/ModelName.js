@@ -39,8 +39,12 @@ class ModelName {
   }
 
   static _catalogLabel(key) {
-    const match = CuratedModelCatalog.MODELS.find((m) => m.fileBase && (key === m.fileBase || key.startsWith(m.fileBase + '-')));
+    const match = CuratedModelCatalog.MODELS.find((m) => m.fileBase && ModelName._curatedStems(m).includes(key));
     return match ? match.label : null;
+  }
+
+  static _curatedStems(model) {
+    return [model.fileBase, ...Object.keys(model.variants).map((quant) => `${model.fileBase}-${quant}`)];
   }
 }
 

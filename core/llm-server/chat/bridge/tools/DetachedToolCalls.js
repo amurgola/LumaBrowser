@@ -4,6 +4,7 @@ class DetachedToolCalls {
   static BUILTIN = 'builtin';
   static SESSION = 'session';
   static EXTENSION = 'extension';
+  static HOOKS = ['onToolEvent', 'onStatus', 'onArtifact', 'onArtifactStream', 'onAgentEvent'];
 
   constructor({ pipeline, table, toolSet, ctx }) {
     this._pipeline = pipeline;
@@ -27,13 +28,38 @@ class DetachedToolCalls {
     return this._pipeline.admitDetached(name, params);
   }
 
-  async run(name, params, task) {
-    const dispatch = new ToolDispatch({ table: this._table, toolSet: this._toolSet, ctx: this._taskContext(task) });
+  run(name, params, task) {
+    return this._dispatch(name, params, this._taskContext(task));
+  }
+
+  begin(name, params) {
+    const owner = { ctx: this._ctx };
+    const pending = this._dispatch(name, params, DetachedToolCalls._followingContext(this._ctx, owner));
+    return { pending, handTo: (task) => { owner.ctx = this._taskContext(task); } };
+  }
+
+  async _dispatch(name, params, ctx) {
+    const dispatch = new ToolDispatch({ table: this._table, toolSet: this._toolSet, ctx });
     try {
       return await dispatch.dispatch(name, params, this._ctx.deps && this._ctx.deps.browserService);
     } catch (err) {
       return { success: false, error: `${name} failed: ${(err && err.message) || err}` };
     }
+  }
+
+  static _followingContext(base, owner) {
+    const forward = (hook) => (...args) => {
+      const target = owner.ctx.hooks && owner.ctx.hooks[hook];
+      return typeof target === 'function' ? target(...args) : undefined;
+    };
+    const ctx = {
+      ...base,
+      hooks: Object.fromEntries(DetachedToolCalls.HOOKS.map((hook) => [hook, forward(hook)])),
+      isAborted: () => !!owner.ctx.isAborted(),
+      detached: null,
+    };
+    Object.defineProperty(ctx, 'artifacts', { enumerable: true, get: () => owner.ctx.artifacts });
+    return ctx;
   }
 
   _taskContext(task) {

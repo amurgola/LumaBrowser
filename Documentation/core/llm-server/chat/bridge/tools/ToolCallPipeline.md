@@ -12,7 +12,9 @@ ride back on its result.
 - `execute(name, params, browserService)`:
   1. `MALFORMED_TOOL` -> `{ success: false, error: MALFORMED_CALL }`.
   2. `activate_tools` -> [ActivateToolsCall](../groups/ActivateToolsCall.md).
-  3. [AutoActivation](../groups/AutoActivation.md): a bounce returns.
+  3. [AutoActivation](../groups/AutoActivation.md): a render into a group that is not
+     loaded yet is sent back with the manual; any other call goes on and gets the manual
+     appended to its result.
   4. [BareArgumentRepair](../../BareArgumentRepair.md) over
      `toolSet.requiredArgs`, then `loopMonitor.attempt(name, args, run)`: a
      held call returns its feedback result; steps 5-7 are `run`, which reports
@@ -26,11 +28,13 @@ ride back on its result.
      auto-activation manual (only on a call that ran).
 - `admitDetached(name, params)`: the admission of a call that will run apart
   from the reply (a background task, through
-  [DetachedToolCalls](DetachedToolCalls.md)): the AutoActivation bounce, the
+  [DetachedToolCalls](DetachedToolCalls.md)): the AutoActivation check, the
   argument repair, the required-argument refusal and ApprovalCheck, then the
   vault placeholders. Resolves `{ refusal }` (the result to hand the model) or
-  `{ params }` (repaired, vault keys filled in), ready for a dispatch of its
-  own. The loop monitor is not involved: the call is not part of the reply's
+  `{ params, manualNote }` (repaired, vault keys filled in), ready for a
+  dispatch of its own. `manualNote` is the manual of a group this call loaded
+  (`AutoActivation.manualNote`, `''` when it loaded none), for the caller to
+  hand the model with its answer, since the call's own result comes later. The loop monitor is not involved: the call is not part of the reply's
   run of calls.
 
 ## Vault key placeholders

@@ -31,6 +31,8 @@ launch settings for you.
 | llama.cpp OpenCL | Qualcomm Adreno on Windows on Arm |
 | llama.cpp Metal, MLX | Apple Silicon |
 | ik_llama.cpp, NInfer | Add-ons, x64 only |
+| Basalt upstream | Add-on, NVIDIA RTX 50-series only, Windows and Linux x64, its own `.basalt` model packs |
+| Basalt LumaByte | Add-on, an RTX 50-series main card plus an optional RTX 50, 40 or 30-series second card for Qwen3.8 Flash Next, the same `.basalt` packs |
 
 Each runtime is marked "recommended" or "not for this PC" with the reason, and
 shows an Update button only when a newer release exists.

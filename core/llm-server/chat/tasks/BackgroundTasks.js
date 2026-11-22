@@ -84,6 +84,13 @@ class BackgroundTasks {
       .map((task) => task.view(this._now()));
   }
 
+  takeEnded(conversationId) {
+    const ready = this._of(conversationId).filter((task) => !task.delivered && !task.artifacts.length
+      && (task.state === BackgroundTask.DONE || task.state === BackgroundTask.FAILED));
+    for (const task of ready) task.delivered = true;
+    return ready.map((task) => task.view(this._now()));
+  }
+
   markDelivered(ids) {
     for (const id of ids) {
       const task = this._tasks.get(String(id));
@@ -119,7 +126,7 @@ class BackgroundTasks {
   async _execute(task, spec) {
     if (spec.lane) await this._untilChatIdle();
     if (task.ended) return;
-    task.begin(this._now());
+    task.begin(spec.startedAt || this._now());
     this._runs.get(task.id).stop = typeof spec.stop === 'function' ? spec.stop : null;
     this._jobs.update(task.id, { detail: '' });
     const result = await this._run(task, spec);

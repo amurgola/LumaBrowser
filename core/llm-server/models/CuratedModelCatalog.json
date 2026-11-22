@@ -1,34 +1,34 @@
 [
   {
-    "id": "gemma-4-e2b-it",
-    "label": "Gemma 4 E2B Instruct",
-    "blurb": "The engine floor. Tiny and fast, designed for edge/CPU inference when nothing larger fits.",
-    "repo": "bartowski/google_gemma-4-E2B-it-GGUF",
-    "fileBase": "google_gemma-4-E2B-it",
-    "paramsB": 5.1,
-    "maxContext": 131072,
-    "useCases": ["chat"],
+    "id": "qwen3.5-4b",
+    "label": "Qwen 3.5 4B",
+    "blurb": "The engine floor. Small and fast with vision input, and it scores close to the 9B, so it is the pick when memory is tight.",
+    "repo": "bartowski/Qwen_Qwen3.5-4B-GGUF",
+    "fileBase": "Qwen_Qwen3.5-4B",
+    "paramsB": 4.3,
+    "maxContext": 262144,
+    "useCases": ["chat", "documents"],
     "tier": "small",
     "variantsGb": {
-      "Q4_K_M": { "approxGb": 3.2, "minVramGb": 5 },
-      "Q6_K": { "approxGb": 3.6, "minVramGb": 5.5 },
-      "Q8_0": { "approxGb": 4.6, "minVramGb": 6.5 }
+      "Q4_K_M": { "approxGb": 2.8, "minVramGb": 4.5 },
+      "Q6_K": { "approxGb": 3.5, "minVramGb": 5 },
+      "Q8_0": { "approxGb": 4.3, "minVramGb": 6 }
     }
   },
   {
-    "id": "gemma-4-e4b-it",
-    "label": "Gemma 4 E4B Instruct",
-    "blurb": "Small and quick, but a capable all-rounder. A great low-end default for laptops with a big context window.",
-    "repo": "bartowski/google_gemma-4-E4B-it-GGUF",
-    "fileBase": "google_gemma-4-E4B-it",
-    "paramsB": 8,
-    "maxContext": 131072,
-    "useCases": ["chat", "documents"],
+    "id": "qwen3.5-9b",
+    "label": "Qwen 3.5 9B",
+    "blurb": "The best all-rounder below 24 GB of video memory: strong reasoning for its size, vision input and a very large context window.",
+    "repo": "bartowski/Qwen_Qwen3.5-9B-GGUF",
+    "fileBase": "Qwen_Qwen3.5-9B",
+    "paramsB": 9.2,
+    "maxContext": 262144,
+    "useCases": ["chat", "documents", "development"],
     "tier": "mid",
     "variantsGb": {
-      "Q4_K_M": { "approxGb": 5.0, "minVramGb": 7 },
-      "Q6_K": { "approxGb": 5.9, "minVramGb": 8 },
-      "Q8_0": { "approxGb": 7.5, "minVramGb": 9.5 }
+      "Q4_K_M": { "approxGb": 5.8, "minVramGb": 7.5 },
+      "Q6_K": { "approxGb": 7.4, "minVramGb": 9.5 },
+      "Q8_0": { "approxGb": 9.1, "minVramGb": 11 }
     }
   },
   {
@@ -38,7 +38,7 @@
     "repo": "bartowski/google_gemma-4-26B-A4B-it-GGUF",
     "fileBase": "google_gemma-4-26B-A4B-it",
     "paramsB": 26,
-    "maxContext": 131072,
+    "maxContext": 262144,
     "useCases": ["chat", "documents", "development"],
     "tier": "large",
     "moe": { "activeParamsB": 4 },
@@ -49,52 +49,36 @@
     }
   },
   {
-    "id": "qwen3.6-27b",
-    "label": "Qwen 3.6 27B",
-    "blurb": "Dense all-rounder with deep reasoning and a very large context window. Strong general + code work.",
-    "repo": "bartowski/Qwen_Qwen3.6-27B-GGUF",
-    "fileBase": "Qwen_Qwen3.6-27B",
+    "id": "qwen3.8-27b",
+    "label": "Qwen 3.8 27B",
+    "blurb": "Most capable pick: the strongest open model that fits a single 24 GB card. Deep reasoning, strong code and agent work, vision input.",
+    "repo": "bartowski/Qwen3.8-27B-GGUF",
+    "fileBase": "Qwen3.8-27B",
     "paramsB": 27,
     "maxContext": 262144,
     "useCases": ["chat", "documents", "development"],
-    "tier": "large",
-    "variantsGb": {
-      "Q4_K_M": { "approxGb": 16.3, "minVramGb": 20 },
-      "Q6_K": { "approxGb": 21.6, "minVramGb": 26 },
-      "Q8_0": { "approxGb": 26.7, "minVramGb": 31 }
-    }
-  },
-  {
-    "id": "gemma-4-31b-it",
-    "label": "Gemma 4 31B Instruct",
-    "blurb": "Highly capable dense model for complex reasoning, long documents, and development. Needs a high-VRAM GPU.",
-    "repo": "bartowski/google_gemma-4-31B-it-GGUF",
-    "fileBase": "google_gemma-4-31B-it",
-    "paramsB": 31,
-    "maxContext": 131072,
-    "useCases": ["chat", "documents", "development"],
     "tier": "xl",
     "variantsGb": {
-      "Q4_K_M": { "approxGb": 18.3, "minVramGb": 22 },
-      "Q6_K": { "approxGb": 24.9, "minVramGb": 30 },
-      "Q8_0": { "approxGb": 30.4, "minVramGb": 36 }
+      "Q4_K_M": { "approxGb": 16.2, "minVramGb": 19.5 },
+      "Q6_K": { "approxGb": 22.2, "minVramGb": 25.5 },
+      "Q8_0": { "approxGb": 27.1, "minVramGb": 30.5 }
     }
   },
   {
     "id": "qwen3.6-35b-a3b",
     "label": "Qwen 3.6 35B A3B",
-    "blurb": "Most capable pick: a 35B MoE with only ~3B params active, so it stays fast. Closest to frontier offline.",
+    "blurb": "The speed pick on bigger machines: a 35B MoE with only ~3B params active, so it stays fast even with its experts in system RAM.",
     "repo": "bartowski/Qwen_Qwen3.6-35B-A3B-GGUF",
     "fileBase": "Qwen_Qwen3.6-35B-A3B",
     "paramsB": 35,
     "maxContext": 262144,
     "useCases": ["chat", "documents", "development"],
-    "tier": "xl",
+    "tier": "large",
     "moe": { "activeParamsB": 3 },
     "variantsGb": {
-      "Q4_K_M": { "approxGb": 19.9, "minVramGb": 24 },
-      "Q6_K": { "approxGb": 28.0, "minVramGb": 33 },
-      "Q8_0": { "approxGb": 34.4, "minVramGb": 40 }
+      "Q4_K_M": { "approxGb": 20.8, "minVramGb": 24.5 },
+      "Q6_K": { "approxGb": 28.8, "minVramGb": 32.5 },
+      "Q8_0": { "approxGb": 35.2, "minVramGb": 39 }
     }
   }
 ]

@@ -23,6 +23,9 @@ One run's lazy tool-group state.
   [BridgeRun](../BridgeRun.md) renders the pending manuals at the head of the
   task through ManualDelivery.
 - `refresh(allows, extTools)`: re-derives `available` after admission; keys only grow.
+- `rulesFirst(key)`: whether a call into the group before it is loaded is sent back with
+  its manual instead of run (the group's `rulesFirst` flag,
+  [StaticGroupTable](../../tool-groups/StaticGroupTable.md)).
 - `docsFor(keys)`, `owningGroups(name)`, `groupFor(name)`
   (`ToolGroups.groupForTool`), `keysOwning(names)`.
 - `nativeTools` (boolean, false until [BridgeRun](../BridgeRun.md) sets it from the run's

@@ -1,5 +1,6 @@
 const McpResult = require('../shell/McpResult');
 const CommandCallAssessor = require('../llm-server/chat/approval/CommandCallAssessor');
+const NestedShellCheck = require('./NestedShellCheck');
 
 class TerminalMcpTools {
   static SOURCE = 'core.terminal';
@@ -87,6 +88,7 @@ class TerminalMcpTools {
     this._settings = settings;
     this._viewers = viewers;
     this._db = db;
+    this._nestedShell = new NestedShellCheck();
     this._lastId = null;
     this._routes = this._buildRoutes();
   }
@@ -143,7 +145,7 @@ class TerminalMcpTools {
     const command = String(args.command || '').trim();
     if (!command) return McpResult.error('command is required');
     const id = await this._idFor(args, { openWhenNone: true });
-    const refusal = this._classifierRefusal(id, command);
+    const refusal = this._classifierRefusal(id, command) || this._nestedShell.refusal(id, this._dialectOf(id), command);
     if (refusal) return McpResult.error(refusal);
     const seconds = TerminalMcpTools._clamp(args.timeout_seconds, TerminalMcpTools.DEFAULT_RUN_SECONDS, TerminalMcpTools.MAX_RUN_SECONDS);
     const result = await this._service.agentRun(id, { command, timeoutMs: seconds * 1000 });
@@ -190,11 +192,14 @@ class TerminalMcpTools {
 
   _classifierRefusal(id, command) {
     if (!CommandCallAssessor.isEnabled(this._db)) return null;
-    const profile = this._service.profiles.get(this._service.get(id).profileId);
-    const dialect = profile && TerminalMcpTools.DIALECTS[profile.family];
-    const verdict = CommandCallAssessor.assess('terminal_run', { command }, { dialect });
+    const verdict = CommandCallAssessor.assess('terminal_run', { command }, { dialect: this._dialectOf(id) });
     if (!verdict || verdict.verdict !== 'deny') return null;
     return `This command is not allowed (${verdict.reasons.join('; ') || verdict.tier}). It was not run.`;
+  }
+
+  _dialectOf(id) {
+    const profile = this._service.profiles.get(this._service.get(id).profileId);
+    return profile ? TerminalMcpTools.DIALECTS[profile.family] : undefined;
   }
 
   static _brief(session) {

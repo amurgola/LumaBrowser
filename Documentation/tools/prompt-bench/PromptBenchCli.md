@@ -11,6 +11,14 @@ model really receives, with the user's extensions and tool groups in it.
 A full run takes about two minutes on Qwen3.8-27B Q6 with a 32k window (20 cases, 80 to 100 seconds of turns plus
 boot and model load); `--repeat 3` about five.
 
+To bench another inference server, start it yourself and name it:
+
+    npm run bench:prompt -- --label other-server --endpoint http://127.0.0.1:8080 --model "<id from /v1/models>"
+
+The same cases then run as real chat turns against that server through a remote provider config
+([PromptBenchSession](PromptBenchSession.md)). Compare such a run with another `--endpoint` run, not with a
+managed-model run: the remote route always registers tools natively and leaves the sampler to the server.
+
 ## Methods
 
 - `new PromptBenchCli({ root?, session?, fixture?, now?, stdout?, stderr? })`. `session` is
@@ -21,8 +29,8 @@ boot and model load); `--repeat 3` about five.
   2. `--help` prints the usage and `--list` the cases; both 0;
   3. load the `--compare` run (its folder or its `results.json`), start the fixture, build the cases
      ([PromptBenchCases](PromptBenchCases.md)) and keep the `--only` ones (an unknown id is an error);
-  4. open the session; the run stops with exit 2 when the warm-up turn failed or the live launch plan names another
-     model than the one asked for;
+  4. open the session; the run stops with exit 2 when the warm-up turn failed or the live launch plan (for an
+     `--endpoint` run, the model ref the chat sits on) names another model than the one asked for;
   5. run each case `--repeat` times, score each trial with [Scorer](../../core/llm-server/eval/Scorer.md) and
      print one progress line per trial to stderr (`pass|FAIL  <id>  <seconds>  context <tokens>`). A case passes
      when every trial passes; its `score` and `ms` are the trials' means, its context the fullest any trial reached,
@@ -45,7 +53,8 @@ boot and model load); `--repeat 3` about five.
 
 A run pins the route: without `--native` it forces the text fence, also for a family whose own default is native
 (Gemma 4, DeepSeek V4); with `--native` it registers tools natively, which needs a family that can take them. So a
-native-default family is benched as shipped with `--native`, and without it to see what the fence would do.
+native-default family is benched as shipped with `--native`, and without it to see what the fence would do. An
+`--endpoint` run is always native and is recorded as such.
 
 ## Reading a result
 

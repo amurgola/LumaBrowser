@@ -16,12 +16,14 @@ results go back to the model.
   ([ChatIdleWait](ChatIdleWait.md), wired by
   [LlmServerIpcHandlers](../../LlmServerIpcHandlers.md)). A laned task waits for it
   before it starts.
-- `start({ conversationId, batchId, tool, title, lane?, run, stop? })` -> the task's
+- `start({ conversationId, batchId, tool, title, lane?, startedAt?, run, stop? })` -> the task's
   view ([BackgroundTask](BackgroundTask.md)). `run({ report, isStopped, artifacts })`
   does the work: `report({ detail, step, totalSteps })` moves the task's job line,
   `artifacts` is the list the call pushes onto. A task with a `lane` queues in that
   lane's [SerialLane](SerialLane.md); one without starts at once. The job starts with
-  detail `queued`, cleared when the task begins.
+  detail `queued`, cleared when the task begins. `startedAt` is when the work really
+  began, for a call that was already running when it became a task, so its duration
+  counts the time it spent in the reply.
 - `stop(id, by = BY_USER)` -> whether a task was still going. A queued task ends at once
   as canceled; a running one has its `stop` called and ends as canceled when its run
   settles.
@@ -31,6 +33,12 @@ results go back to the model.
   needs no automated message for it; returns the artifacts not shown yet.
 - `endedUndelivered(conversationId)`: the undelivered tasks of the batches that have
   wholly ended. A batch with one task still going holds back the others.
+- `takeEnded(conversationId)`: for a reply that is still being written
+  ([BackgroundTaskTools](BackgroundTaskTools.md)`.endedNotices`): the finished and failed
+  tasks whose result the model has not been given, each as soon as it has ended, without
+  waiting for the rest of its batch, marked as given. A task that made something to show
+  and a stopped one are left for the results turn, which shows the artifacts and words
+  the stop.
 - `markDelivered(ids)`: their results were handed to the model. Ended, delivered tasks
   beyond the newest `KEEP_DELIVERED` (30) are dropped, oldest first.
 - `onBatchEnded(listener)` -> unsubscribe. `listener({ conversationId, batchId })` is

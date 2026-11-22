@@ -14,6 +14,7 @@ class RunOptions {
     compactionCheckpoint: null,
     finalCheck: null,
     awaitsLaterResult: null,
+    stepNotices: null,
     nativeTools: false,
     nativeToolsTokens: 0,
     tools: undefined,

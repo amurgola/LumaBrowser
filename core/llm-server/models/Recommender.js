@@ -2,6 +2,7 @@ const CuratedModelCatalog = require('./CuratedModelCatalog');
 const FitVramMath = require('./FitVramMath');
 const RecommenderRuntimePicker = require('./RecommenderRuntimePicker');
 const RecommenderRationale = require('./RecommenderRationale');
+const AutoPlanRanking = require('./auto-plan/AutoPlanRanking');
 const CatalogDecodeEstimator = require('../server/decode/CatalogDecodeEstimator');
 
 class Recommender {
@@ -48,14 +49,9 @@ class Recommender {
   _resolvePool() {
     let pool = CuratedModelCatalog.MODELS.filter((m) => m.useCases.includes(this._useCase));
     if (!pool.length) pool = CuratedModelCatalog.MODELS.slice();
-    this._pool = pool.slice().sort((a, b) => {
-      if (this._useCase === 'development') {
-        const ac = a.id.includes('coder') ? 1 : 0;
-        const bc = b.id.includes('coder') ? 1 : 0;
-        if (ac !== bc) return bc - ac;
-      }
-      return b.paramsB - a.paramsB;
-    });
+    this._pool = AutoPlanRanking.capableFirst(pool);
+    if (this._useCase !== 'development') return;
+    this._pool.sort((a, b) => Number(b.id.includes('coder')) - Number(a.id.includes('coder')));
   }
 
   _pickModel() {

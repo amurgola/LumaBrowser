@@ -9,7 +9,8 @@ Tags a scanned model with preferred and compatible runtimes, and MTP capability.
 - `ModelClassifier.classify(model, registry = RuntimeCatalogRegistry.shared)` returns
   `{ preferredRuntimes, compatibleRuntimes, mtpCapable }`:
   - `mlx`: only `mlx-lm`;
-  - add-on: the sidecar's `requiresRuntime`, else `registry.runtimesForModelKind(kind)`;
+  - add-on: the runtimes the sidecar's `requiresRuntime` names (one id or a
+    list, `AddonModelSetup.runtimeIdsOf`), else `registry.runtimesForModelKind(kind)`;
   - `mmproj-only` / `mtp-only`: no runtimes, never MTP-capable;
   - otherwise: preferred = runtimes whose
     `nativeQuantPattern` matches the name, directory and weight file names

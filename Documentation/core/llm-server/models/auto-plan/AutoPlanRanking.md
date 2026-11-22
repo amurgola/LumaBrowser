@@ -3,7 +3,9 @@
 `core/llm-server/models/auto-plan/AutoPlanRanking.js`
 
 The ladders, headroom factors and ranking rules every
-[AutoPlanner](../AutoPlanner.md) step shares.
+[AutoPlanner](../AutoPlanner.md) step shares. The wizard's
+[Recommender](../Recommender.md) orders its pool with `capableFirst` too, so both
+pickers rank the catalog the same way.
 
 ## Methods
 

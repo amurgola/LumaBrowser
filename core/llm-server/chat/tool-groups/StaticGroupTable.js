@@ -31,6 +31,7 @@ class StaticGroupTable {
       tools: ['generate_image', 'edit_image'],
       stub: 'Generate a bitmap image from a text prompt, or edit one you made earlier (generate_image, edit_image).',
       doc: MediaManuals.IMAGE,
+      rulesFirst: true,
     },
     {
       key: 'video',
@@ -38,6 +39,7 @@ class StaticGroupTable {
       tools: ['generate_video', 'animate_image'],
       stub: 'Generate a short video clip from a text prompt, or animate a still image you made earlier into a video (generate_video, animate_image).',
       doc: MediaManuals.VIDEO,
+      rulesFirst: true,
     },
     {
       key: 'music',
@@ -45,6 +47,7 @@ class StaticGroupTable {
       tools: ['generate_music'],
       stub: 'Compose a full song with vocals from lyrics and a style description (generate_music). Very slow: minutes per song.',
       doc: MediaManuals.MUSIC,
+      rulesFirst: true,
     },
     {
       key: 'web',

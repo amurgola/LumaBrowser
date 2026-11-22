@@ -36,6 +36,11 @@ chat turn with a conversation id, and null for a mode turn or an eval run. When 
 - `stepReminder` (`_stepReminder(planTool, taskTools)`) asks the plan's reminder and the
   tasks' `tail()` on every request and joins what they say with a blank line, or null
   when both are silent; null outright when the turn has neither;
+- `stepNotices` is `() => taskTools.endedNotices()`: a task that ends while the reply is
+  still being written hands its result over at the run's next request. `slowCalls` is
+  `taskTools.slowCalls` ([SlowCallBudget](../tasks/SlowCallBudget.md)): a direct call
+  still going after a few seconds goes on as a background task. Both are null for a turn
+  without the task tools.
 - `awaitsLaterResult` is `() => taskTools.awaitsLaterResult`, true once the turn started
   a task, so the bridge's [FinalAnswerGate](../../agent/FinalAnswerGate.md) does not
   nudge a reply that ends with "I will tell you when it is done".

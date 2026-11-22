@@ -10,6 +10,7 @@ Rolls add-on single-file models (for example `.ninfer`) into model entries.
   one entry per file. `kind` and `name` come from the sidecar (`kind`, `label`),
   else the file's default kind and its name without the last extension; `gguf: null`;
   `addon: { id, requiresRuntime, contextLength, defaultContextSize, quant, modelId, hasSidecar }`
+  (`requiresRuntime` is the sidecar's: one runtime id, a list of them, or null)
   (nulls without a sidecar; numbers via `Number(...) || null`).
 
 ## Why

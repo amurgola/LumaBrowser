@@ -20,8 +20,12 @@ class TerminalRunFollow {
     return tool === TerminalRunFollow.RUN_TOOL;
   }
 
-  async run(params) {
-    let result = await this._call(TerminalRunFollow.RUN_TOOL, { ...params, timeout_seconds: TerminalRunFollow.RUN_SECONDS });
+  run(params) {
+    return this.resume(this._call(TerminalRunFollow.RUN_TOOL, { ...params, timeout_seconds: TerminalRunFollow.RUN_SECONDS }));
+  }
+
+  async resume(firstResult) {
+    let result = await firstResult;
     this._gather(result);
     while (this._stillRunning(result) && !this._isStopped()) {
       result = await this._call(TerminalRunFollow.READ_TOOL, { id: this._terminalId, wait_seconds: TerminalRunFollow.READ_SECONDS });

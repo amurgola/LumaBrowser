@@ -20,4 +20,6 @@ Extension-contributed add-on models on the Setup tab's Models card.
 - `cancel()` marks the live setup's handle canceled and cancels its transfer.
 - `AddonModelInstaller.runtimeRow(entry, runtimesById)` `{ id, name, installed,
   installable, hardware, platforms, version }`, a `missing: true` row for a runtime
-  no detector knows, or null when the entry needs none.
+  no detector knows, or null when the entry needs none. For an entry that names
+  several runtimes it is the one the setup would use: an installed one, else
+  the first this host knows.
