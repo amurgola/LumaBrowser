@@ -1,4 +1,5 @@
 const HarmonyToolFence = require('../HarmonyToolFence');
+const InklingLeakedToolCallParser = require('../InklingLeakedToolCallParser');
 
 class CompletionAttempt {
   constructor({ dispatch, nativeTools, stallTimeoutMs, ctl, sinks }) {
@@ -76,8 +77,10 @@ class CompletionAttempt {
   }
 
   _content(summary) {
-    if (!(this._nativeTools && summary && Array.isArray(summary.toolCalls) && summary.toolCalls.length)) return this._text;
-    return HarmonyToolFence.build(this._text, summary.toolCalls, {
+    if (!this._nativeTools) return this._text;
+    const calls = summary && Array.isArray(summary.toolCalls) ? summary.toolCalls : [];
+    if (!calls.length) return this._text.trim() ? this._text : (InklingLeakedToolCallParser.trailing(this._reasoning) || this._text);
+    return HarmonyToolFence.build(this._text, calls, {
       cutByLength: (summary.finishReason || summary.stopReason) === 'length',
     });
   }

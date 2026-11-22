@@ -1,5 +1,6 @@
 const BalancedJson = require('../../../../shared/llm/BalancedJson');
 const HarmonyLeakedToolCallParser = require('../../HarmonyLeakedToolCallParser');
+const InklingLeakedToolCallParser = require('../../InklingLeakedToolCallParser');
 const DsmlToolCallParser = require('./DsmlToolCallParser');
 const ToolJson = require('./ToolJson');
 const XmlToolCallParser = require('./XmlToolCallParser');
@@ -24,7 +25,8 @@ class LooseToolCallParser {
     if (oneXml) return [oneXml];
     const dsml = DsmlToolCallParser.parseAll(s);
     if (dsml.length) return dsml;
-    return HarmonyLeakedToolCallParser.parseAll(s, BalancedJson.extractObject);
+    const harmony = HarmonyLeakedToolCallParser.parseAll(s, BalancedJson.extractObject);
+    return harmony.length ? harmony : InklingLeakedToolCallParser.parseAll(s);
   }
 
   constructor(text) {

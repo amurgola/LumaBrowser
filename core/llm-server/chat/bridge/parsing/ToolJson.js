@@ -82,6 +82,7 @@ class ToolJson {
   static _argsObject(o) {
     if (o.params && typeof o.params === 'object') return o.params;
     if (o.arguments && typeof o.arguments === 'object') return o.arguments;
+    if (o.args && typeof o.args === 'object' && Object.keys(ToolJson.restAsParams(o)).length === 1) return o.args;
     return null;
   }
 

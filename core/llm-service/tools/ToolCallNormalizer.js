@@ -1,6 +1,7 @@
 class ToolCallNormalizer {
   static MARKER_KEYS = ['__argsLost', '__argsCut', '__repaired'];
   static NAME_KEYS = ['tool', 'name', 'params', 'arguments'];
+  static ARGS_ALIAS = 'args';
 
   static normalize(value) {
     if (!ToolCallNormalizer._isObject(value)) return null;
@@ -21,7 +22,13 @@ class ToolCallNormalizer {
         : { tool, params: value.params, __coerced: 'aliased-keys' };
     }
     if (ToolCallNormalizer._isObject(value.arguments)) return { tool, params: value.arguments, __coerced: 'aliased-keys' };
+    if (ToolCallNormalizer._holdsOnlyArgs(value)) return { tool, params: value[ToolCallNormalizer.ARGS_ALIAS], __coerced: 'aliased-keys' };
     return { tool, params: ToolCallNormalizer._flattenedParams(value), __coerced: 'flattened-params' };
+  }
+
+  static _holdsOnlyArgs(value) {
+    const flattened = Object.keys(ToolCallNormalizer._flattenedParams(value));
+    return ToolCallNormalizer._isObject(value[ToolCallNormalizer.ARGS_ALIAS]) && flattened.length === 1;
   }
 
   static _flattenedParams(value) {

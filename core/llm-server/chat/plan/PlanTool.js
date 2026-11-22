@@ -97,9 +97,10 @@ class PlanTool {
   }
 
   _update(params, ctx) {
-    const { steps, error } = this._stepsAfter(params || {});
+    const args = params && typeof params === 'object' ? params : {};
+    const { steps, error } = this._stepsAfter(args);
     if (error) return { success: false, error };
-    const plan = this._plan.save(steps, params && params.explanation);
+    const plan = this._plan.save(steps, args.explanation);
     this._justAnswered = true;
     PlanTool._tell(ctx && ctx.emit, this._conversationId, plan);
     const next = PlanProgressText.nextCall(steps);
@@ -109,9 +110,9 @@ class PlanTool {
   _stepsAfter(args) {
     const listed = PlanTool._argument(args, PlanTool.LIST_KEYS);
     const finished = PlanTool._numbers(PlanTool._argument(args, PlanTool.DONE_KEYS));
-    if (listed === undefined && !finished.length) return { error: PlanTool.BAD_ARGS };
+    if (listed === undefined && !finished.length) return { error: PlanTool._badArgs(args) };
     const base = listed === undefined ? this._storedSteps() : PlanSteps.normalize(listed);
-    if (!base) return { error: listed === undefined ? PlanTool.NO_PLAN : PlanTool.BAD_ARGS };
+    if (!base) return { error: listed === undefined ? PlanTool.NO_PLAN : PlanTool._badArgs(args) };
     return PlanTool._marking(base, finished);
   }
 
@@ -138,6 +139,11 @@ class PlanTool {
       if (!marked) return { error: `There is no step ${number}: the plan has ${steps.length} steps, numbered from 1.` };
     }
     return { steps: marked };
+  }
+
+  static _badArgs(args) {
+    const received = Object.keys(args).map((key) => `"${key}"`).join(', ');
+    return `${PlanTool.BAD_ARGS} ${received ? `This call carried: ${received}.` : 'This call carried no arguments.'}`;
   }
 
   static _argument(args, keys) {

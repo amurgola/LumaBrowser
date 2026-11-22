@@ -45,7 +45,10 @@ The answer is `{ success: true, summary, next? }` from
 began) and `next` spells out the exact call that finishes the step in progress. Errors
 are worded for the model: `BAD_ARGS` (neither argument readable), `NO_PLAN` (`done`
 before any plan), or "There is no step 7: the plan has 3 steps, numbered from 1."
-A failed call stores nothing.
+`BAD_ARGS` ends with what the call did carry (`This call carried: "args".` or
+`This call carried no arguments.`): a model that sent `{ "args": { "done": 4 } }` read
+the bare message as "I passed done: 4" and sent the same shape again (Inkling 2,
+2026-11-22). A failed call stores nothing.
 
 ## Members
 

@@ -12,7 +12,9 @@ Reads one candidate tool-call JSON text into `{ tool, params }`.
   [TruncatedJsonRepair](TruncatedJsonRepair.md) (marked `__repaired: true`);
   else the unkeyed-name shape `{"grep", ...}`. Valid JSON that is not a call
   is null.
-- `fromObject(o)`: `{ tool|name, params|arguments }` with an args object, the
+- `fromObject(o)`: `{ tool|name, params|arguments }` with an args object
+  (also `args`, Inkling 2's key, when no other argument sits beside it, as in
+  [ToolCallNormalizer](../../../../llm-service/tools/ToolCallNormalizer.md)), the
   doubled wrapper `{"tool": {...call}}`, and the `__argsLost`, `__argsCut`,
   `__repaired` markers carried through. Null for `{"name": "John"}`.
 - `restAsParams(o)`: every key except `tool`, `name`, `params`, `arguments`.

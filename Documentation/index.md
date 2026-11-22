@@ -1659,6 +1659,7 @@ Small building blocks shared by more than one subsystem.
 - [core/llm-server/chat/ToolArgumentParser.md](core/llm-server/chat/ToolArgumentParser.md): reads tool-call arguments and repairs stray backslashes; has `parse`.
 - [core/llm-server/chat/HarmonyToolFence.md](core/llm-server/chat/HarmonyToolFence.md): turns native tool calls into the agent's tool fences; has `build`.
 - [core/llm-server/chat/HarmonyLeakedToolCallParser.md](core/llm-server/chat/HarmonyLeakedToolCallParser.md): recovers tool calls that leaked into reply text; has `parseAll`.
+- [core/llm-server/chat/InklingLeakedToolCallParser.md](core/llm-server/chat/InklingLeakedToolCallParser.md): recovers Inkling 2 call blocks that arrived as reply text or at the end of the reasoning; has `parseAll`, `trailing`.
 - [core/llm-server/chat/IdeContextFormatter.md](core/llm-server/chat/IdeContextFormatter.md): formats editor context as the `<ide_context>` block; has `render`, `appendToLastUserMessage`.
 - [core/llm-server/chat/ToolAdmission.md](core/llm-server/chat/ToolAdmission.md): adds tools published mid-run to the live run; has `admitNewTools`.
 - [core/llm-server/chat/ToolLoopMonitor.md](core/llm-server/chat/ToolLoopMonitor.md): watches a run's tool calls for loops and stalls, holding or annotating them with graduated feedback; has `attempt`, `report`.

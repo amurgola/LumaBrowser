@@ -12,7 +12,9 @@ The chat agent's lenient tool-call parser for calls the strict fence matcher mis
   objects, skipping markers inside an accepted call, plus the last unbalanced
   one), then [XmlToolCallParser](XmlToolCallParser.md)`.parseAll`, then
   `.parseLast`, then [DsmlToolCallParser](DsmlToolCallParser.md)`.parseAll`
-  (DeepSeek's markup), then `HarmonyLeakedToolCallParser.parseAll`.
+  (DeepSeek's markup), then `HarmonyLeakedToolCallParser.parseAll`, then
+  [InklingLeakedToolCallParser](../../InklingLeakedToolCallParser.md)`.parseAll`
+  (an Inkling 2 call block written as text).
 - `LooseToolCallParser.parseFirst(content)`: the first call or null.
 - Each candidate is read by [ToolJson](ToolJson.md); repaired calls carry
   `__repaired`.
