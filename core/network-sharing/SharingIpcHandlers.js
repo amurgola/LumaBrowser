@@ -14,6 +14,7 @@ class SharingIpcHandlers {
     this._registerFirewall();
     this._registerShareLinks();
     this._registerTokens();
+    this._registerUsers();
     this._registerClient();
   }
 
@@ -54,6 +55,16 @@ class SharingIpcHandlers {
     this._handle('core.sharing.host.revokeToken', (_e, id) => this._host.revokeToken(id));
     this._handle('core.sharing.host.removeToken', (_e, id) => this._host.removeToken(id));
     this._handle('core.sharing.host.revokeAllTokens', () => this._host.revokeAllTokens());
+  }
+
+  _registerUsers() {
+    this._handle('core.sharing.host.createUser', (_e, fields) => this._withConfig(this._host.createUser(fields || {})));
+    this._handle('core.sharing.host.updateUser', (_e, id, fields) => this._withConfig(this._host.updateUser(id, fields || {})));
+    this._handle('core.sharing.host.setUserOverrides', (_e, id, overrides) => this._withConfig(this._host.setUserOverrides(id, overrides || {})));
+    this._handle('core.sharing.host.rotateUserKey', (_e, id) => this._withConfig(this._host.rotateUserKey(id)));
+    this._handle('core.sharing.host.removeUser', (_e, id) => this._withConfig(this._host.removeUser(id)));
+    this._handle('core.sharing.host.userLoginLink', (_e, id) => this._host.userLoginLink(id));
+    this._handle('core.sharing.host.permissionCatalog', () => this._host.permissionCatalog());
   }
 
   _registerClient() {

@@ -43,3 +43,10 @@ need a pair of ports (the image server's public and private proxy).
 ## Changes (2026-11-09, helper model)
 
 `helper` window: 8220 to 8239 (the helper model's llama-server).
+
+## Changes (2026-11-25)
+
+`isPortFree` also refuses a port something answers on (`isListening`, a loopback connect with a 500 ms timeout)
+before it tries the bind (`_canBind`). A bind alone was not enough on Windows: Basalt's Python server sets
+`SO_REUSEADDR`, so its port stayed bindable while it served, a second server was started on it, and requests went to
+whichever answered.

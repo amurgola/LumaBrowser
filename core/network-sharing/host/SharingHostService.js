@@ -1,4 +1,5 @@
 const TokenStore = require('../TokenStore');
+const UserStore = require('../UserStore');
 const ShareStore = require('../ShareStore');
 const UsageStore = require('../UsageStore');
 const FileMutationQueue = require('../../shell/FileMutationQueue');
@@ -13,17 +14,22 @@ const ShareLinkPublisher = require('./ShareLinkPublisher');
 const WebToolAllowList = require('./WebToolAllowList');
 const LanAddress = require('./LanAddress');
 const PublicUrlProbe = require('./PublicUrlProbe');
+const SharingUsers = require('./SharingUsers');
+const AccessPolicy = require('./AccessPolicy');
+const ImageModelPicks = require('../../image-server/router/ImageModelPicks');
 
 class SharingHostService {
   static DEFAULT_PORT = 3000;
   static IMAGE_QUEUE_KEY = 'image';
   static VIDEO_QUEUE_KEY = 'video';
+  static CATALOG_FLAGS = { shareLocalLlm: true, shareRemoteLlms: true, shareImageGen: true, shareImageEdit: true, shareVideoGen: true };
 
   constructor({ db, getPort, getChatRouter, getImageRouter, getVideoRouter, llmServerService, imageServerService, voiceServices, notifier, mcpAggregator, apiSecurity, discovery, getAgentManager, getAppVersion } = {}) {
     if (!db) throw new Error('SharingHostService requires a SettingsDatabase');
     this._settings = new HostSettings(db);
     this.tokens = new TokenStore(db);
     this.shares = new ShareStore(db);
+    this.users = new UserStore(db);
     this.usage = new UsageStore(db);
     this.enabled = this._settings.readEnabled();
     this.instanceId = this._settings.instanceId();
@@ -51,6 +57,7 @@ class SharingHostService {
     this._shareLinks = new ShareLinkPublisher({ host: this, shares: this.shares });
     this._allowList = new WebToolAllowList({ settings: this._settings, mcpAggregator });
     this._imageQueue = new FileMutationQueue();
+    this._users = new SharingUsers({ users: this.users, usage: this.usage, allowList: this._allowList, baseUrl: () => this._shareLinks.baseUrl() });
     this.setNotifier(notifier);
     this._pairing = new PinPairing({
       settings: this._settings,
@@ -81,8 +88,8 @@ class SharingHostService {
     return this._settings.getBindMode();
   }
 
-  getShareFlags() {
-    return this._settings.getShareFlags();
+  getShareFlags(credential = null) {
+    return AccessPolicy.flags(this._settings.getShareFlags(), credential);
   }
 
   getAppVersion() {
@@ -118,6 +125,7 @@ class SharingHostService {
       ...this.getShareFlags(),
       ...this.getWebConfig(),
       tokens: this.listTokens(),
+      users: this.listUsers(),
       shareLinks: this.shares.list(),
     };
   }
@@ -288,12 +296,13 @@ class SharingHostService {
     return { ...result, publicUrl };
   }
 
-  getWebAllowedTools() {
-    return this._allowList.get();
+  getWebAllowedTools(credential = null) {
+    const userTools = AccessPolicy.listOf(credential, 'tools');
+    return userTools ? this._allowList.clean(userTools) : this._allowList.get();
   }
 
-  getSharedTurnTools() {
-    return this._allowList.forSharedTurn();
+  getSharedTurnTools(credential = null) {
+    return this._allowList.forSharedTurn(AccessPolicy.listOf(credential, 'tools'));
   }
 
   setWebAllowedTools(tools) {
@@ -326,7 +335,7 @@ class SharingHostService {
 
   verifyCredential(token) {
     if (!token) return null;
-    const entry = this.tokens.verify(token);
+    const entry = this.tokens.verify(token) || this._users.credentialFor(token);
     if (entry) return entry;
     if (this._apiSecurity && typeof this._apiSecurity.isValidKey === 'function' && this._apiSecurity.isValidKey(token)) {
       return { id: 'api-key', label: 'Core API key', viaApiKey: true };
@@ -340,12 +349,77 @@ class SharingHostService {
   }
 
 
-  pair(pin, options = {}) {
-    return this._pairing.pair(pin, options);
+  pair(secret, options = {}) {
+    if (!SharingUsers.looksLikeKey(secret)) return this._pairing.pair(secret, options);
+    const result = this._users.signIn(secret);
+    return result.success ? { ...result, name: this.getInstanceName() } : result;
   }
 
   setNotifier(fn) {
     this._notifier = typeof fn === 'function' ? fn : null;
+  }
+
+
+  listUsers() {
+    return this._users.list();
+  }
+
+  createUser(fields) {
+    return this._users.create(fields);
+  }
+
+  updateUser(id, fields) {
+    return this._users.update(id, fields);
+  }
+
+  setUserOverrides(id, overrides) {
+    return this._users.setOverrides(id, overrides);
+  }
+
+  rotateUserKey(id) {
+    return this._users.rotateKey(id);
+  }
+
+  removeUser(id) {
+    return this._users.remove(id);
+  }
+
+  userLoginLink(id) {
+    return this._users.loginLink(id);
+  }
+
+  async permissionCatalog() {
+    const manifest = await this._manifestWith(SharingHostService.CATALOG_FLAGS);
+    return {
+      llms: manifest.llms.map((model) => ({ ref: model.ref, label: model.label, kind: model.kind })),
+      imageModels: SharingHostService._uniqueImageModels(manifest.image),
+      shareFlags: Object.keys(this._settings.getShareFlags()),
+      toolGroups: this._allowList.toolGroups(),
+    };
+  }
+
+  static _uniqueImageModels(image) {
+    const byId = new Map();
+    for (const [kind, slot] of Object.entries(image || {})) {
+      for (const model of (slot && slot.models) || []) {
+        const seen = byId.get(model.id) || { id: model.id, label: model.label, kinds: [] };
+        seen.kinds.push(kind);
+        byId.set(model.id, seen);
+      }
+    }
+    return [...byId.values()];
+  }
+
+  async mediaPicksFor(credential, picks) {
+    const requested = ImageModelPicks.normalize(picks);
+    if (!AccessPolicy.restrictsImageModels(credential)) return requested;
+    const narrowed = {};
+    for (const [job, { kind }] of Object.entries(ImageModelPicks.JOBS)) {
+      const allowed = ((await this._inventory.imageModels(kind)) || []).filter((model) => !AccessPolicy.imageModelDenied(credential, model.id));
+      const pick = allowed.find((model) => model.id === requested[job]) || allowed.find((model) => model.current) || allowed[0];
+      if (pick) narrowed[job] = pick.id;
+    }
+    return narrowed;
   }
 
 
@@ -379,20 +453,26 @@ class SharingHostService {
   }
 
 
-  buildManifest() {
-    return new HostManifestBuilder({ host: this, inventory: this._inventory, llmServerService: this._llm, imageServerService: this._image }).execute();
+  async buildManifest(credential = null) {
+    return AccessPolicy.narrowManifest(await this._manifestWith(this.getShareFlags(credential)), credential);
   }
 
-  async allowedLlmRefs() {
-    return new Set((await this.buildManifest()).llms.map((model) => model.ref));
+  _manifestWith(flags) {
+    return new HostManifestBuilder({ host: this, inventory: this._inventory, llmServerService: this._llm, imageServerService: this._image, flags }).execute();
   }
 
-  imageModelDenied(role, modelId) {
-    return this._inventory.imageModelDenied(role, modelId);
+  async allowedLlmRefs(credential = null) {
+    return new Set((await this.buildManifest(credential)).llms.map((model) => model.ref));
   }
 
-  hostDialPosition() {
-    return HostDialPosition.of(this._llm);
+  async imageModelDenied(role, modelId, credential = null) {
+    const hostDenied = await this._inventory.imageModelDenied(role, modelId);
+    if (hostDenied || !AccessPolicy.restrictsImageModels(credential)) return hostDenied;
+    return AccessPolicy.imageModelDenied(credential, modelId || await this._inventory.currentImageModel(role));
+  }
+
+  hostDialPosition(modelRef = null) {
+    return HostDialPosition.of(this._llm, modelRef);
   }
 
 

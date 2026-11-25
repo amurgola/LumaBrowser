@@ -6,5 +6,5 @@ Assembles the Game mode system prompt from the conversation's setup: persona, pr
 
 ## Methods
 
-- `GameSystemPrompt.build(data, { hasTools, imageReady, artStyle, alpha, models })`; `data` is `meta.data` (`premise`, `name`, `genre`, `kind`, `worldNotes`, `artStyle`). World notes appear only for AI games. No premise asks the user for a brief.
+- `GameSystemPrompt.build(data, { hasTools, imageReady, artStyle, alpha, models })`; `data` is `meta.data` (`premise`, `name`, `genre`, `kind`, `worldNotes`, `artStyle`). World notes appear only for AI games. The assets block gets the locked palette from `data` ([GamePalettes](../assets/GamePalettes.md)`.resolve`, `palette` / `paletteCustom`). No premise asks the user for a brief.
 - `WEB_PERSONA`, `AI_PERSONA`.

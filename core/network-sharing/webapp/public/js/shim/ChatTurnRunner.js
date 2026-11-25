@@ -2,6 +2,9 @@ import TurnRecorder from './TurnRecorder.js';
 
 export default class ChatTurnRunner {
   static EXPIRED = 'Pairing expired. Reconnect.';
+  static PLAN_EVENT = 'plan';
+  static PLAN_KEY = 'plan';
+  static MEDIA_KEY = 'mediaModels';
 
   constructor({ api, store, events }) {
     this._api = api;
@@ -12,6 +15,7 @@ export default class ChatTurnRunner {
 
   async chat2(args) {
     const turn = await this._openConversation(args);
+    if (args.mediaModels) await this._saveMeta(turn, ChatTurnRunner.MEDIA_KEY, args.mediaModels);
     await this._persistPrompt(turn, args);
     await this._openAssistant(turn, args);
     this._emit(turn, 'meta', {
@@ -88,7 +92,13 @@ export default class ChatTurnRunner {
       agentId,
       attachments: turn.images.length ? turn.images : undefined,
       priorArtifacts: priorArtifacts.length ? priorArtifacts : undefined,
-      reasoningEffort: args.reasoningEffort || (turn.conv && turn.conv.reasoningEffort) || undefined,
+      reasoningEffort: args.noThink ? 'off' : (args.reasoningEffort || (turn.conv && turn.conv.reasoningEffort) || undefined),
+      conversationId: turn.convId,
+      plan: ChatTurnRunner.stored(turn.conv, ChatTurnRunner.PLAN_KEY),
+      mediaModels: args.mediaModels || ChatTurnRunner.stored(turn.conv, ChatTurnRunner.MEDIA_KEY) || undefined,
+      choices: args.choicesEnabled === true,
+      voice: args.voice === true,
+      disabledTools: Array.isArray(args.disabledTools) ? args.disabledTools : undefined,
       signal,
       onDelta: (text) => this._emit(turn, 'delta', { text }),
       onReasoning: (text) => {
@@ -102,7 +112,25 @@ export default class ChatTurnRunner {
   _onSideChannel(turn, type, payload) {
     const cacheId = turn.recorder.record(type, payload);
     if (cacheId) this._cacheArtifact(turn, cacheId);
+    if (type === ChatTurnRunner.PLAN_EVENT) this._saveMeta(turn, ChatTurnRunner.PLAN_KEY, payload ? payload.plan : null);
     this._emit(turn, type, payload);
+  }
+
+  static stored(conv, key) {
+    const data = conv && conv.meta && conv.meta.data;
+    return (data && data[key]) || null;
+  }
+
+  async _saveMeta(turn, key, value) {
+    try {
+      const conv = await this._store.conversations.get(turn.convId);
+      const meta = (conv && conv.meta) || { mode: (conv && conv.mode) || 'chat', data: {} };
+      const data = { ...(meta.data || {}) };
+      if (value) data[key] = value;
+      else delete data[key];
+      await this._store.conversations.patch(turn.convId, { meta: { ...meta, data } });
+      if (turn.conv) turn.conv.meta = { ...meta, data };
+    } catch (_) {}
   }
 
   async _failed(turn, e) {

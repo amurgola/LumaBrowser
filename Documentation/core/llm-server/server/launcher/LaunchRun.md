@@ -26,3 +26,9 @@ makes swap-latency regressions visible. After that join the cards are read live
 (`parts.liveMemory`), so placement and the budget see the cards with any evicted
 sibling gone and with what the display and other apps hold; a failed read keeps
 the cached snapshot.
+
+## Changes (2026-11-25)
+
+The custom launch (MLX and extension runtimes such as Basalt) now claims the cards its plan reports before the
+engine starts (`placement.claimCustomLaunch`). The LLM's release and residency hooks already follow the runtime
+server, so the claim ends when the engine stops and is not counted twice once it is ready.

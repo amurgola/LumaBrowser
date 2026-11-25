@@ -54,6 +54,7 @@ class InlineAssetGenerator {
 
   static _pixelNote(spec) {
     if (!spec.isPixel) return '';
+    if (spec.rdFlow) return `pixel-art drawn at 64x64${spec.logicalW !== 64 || spec.logicalH !== 64 ? `, fitted to a ${spec.logicalW}x${spec.logicalH} grid` : ''}${spec.palette ? ' in the game palette' : ''}`;
     if (spec.pixelScale > 1) {
       return `pixel-art on a ${spec.logicalW}x${spec.logicalH} grid at ${spec.pixelScale}x (${spec.pixelScale}px pixels)`;
     }

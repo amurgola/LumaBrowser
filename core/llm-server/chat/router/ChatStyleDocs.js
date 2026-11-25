@@ -54,6 +54,15 @@ class ChatStyleDocs {
     }
     return [{ role: 'system', content: doc }, ...messages];
   }
+
+  static plainTurn(messages, { plainPrompt = null, inMode = false, choicesOn = false, voiceOn = false } = {}) {
+    let out = messages;
+    if (!inMode && plainPrompt) out = plainPrompt.applyTo(out);
+    if (!inMode && !voiceOn) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.WIDGETS);
+    if (choicesOn) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.CHOICES);
+    if (voiceOn) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.VOICE);
+    return out;
+  }
 }
 
 module.exports = ChatStyleDocs;

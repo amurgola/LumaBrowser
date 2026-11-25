@@ -1,5 +1,7 @@
+const RdFlowAssets = require('../assets/RdFlowAssets');
+
 class GameAssetRules {
-  static render({ imageReady = false, artStyle = null, alpha = false, models = null } = {}) {
+  static render({ imageReady = false, artStyle = null, alpha = false, models = null, palette = null } = {}) {
     return `<assets>
 generate_asset / generate_assets create image files under assets/: each writes a correctly-sized
 solid-colour placeholder immediately (so the game loads and lays out right away). ${GameAssetRules._timing(imageReady)}
@@ -18,7 +20,7 @@ ${GameAssetRules._styleLine(artStyle)}
 - Pixel-art above 256px is drawn on a LOGICAL grid and scaled up with hard pixels (a 512x512
   backdrop = 256x256 grid at 2x). Pass pixelSize (file pixels per logical pixel) to keep sprites
   and backdrops equally chunky: 64x64 sprites shown at 4x zoom pair with a backdrop at pixelSize 4.
-- Never embed base64 image data in JS or HTML; always generate_asset + a relative path.${GameAssetRules._modelLine(models)}
+- Never embed base64 image data in JS or HTML; always generate_asset + a relative path.${GameAssetRules._modelLine(models)}${GameAssetRules._rdFlowLine(models)}${GameAssetRules._paletteLine(palette)}
 - Sound: procedural WebAudio only (oscillators/noise in src/systems/audio.js). No audio files.
 </assets>`;
   }
@@ -43,6 +45,25 @@ ${GameAssetRules._styleLine(artStyle)}
     }
     return '- Images are OPAQUE (no transparency). Design sprites to read on any background; make backdrops\n'
       + '  full-canvas assets sized to the game resolution.';
+  }
+
+  static _rdFlowLine(models) {
+    const pins = models || {};
+    if (!RdFlowAssets.isModel(pins.sprite) && !RdFlowAssets.isModel(pins.backdrop)) return '';
+    return '\n- Pixel-art sprites render on RD Flow 64: it draws 64x64 pixel art with exact palette colours and real '
+      + 'transparency, so keep pixel-art sprites square-ish at 64x64 or smaller (or 128/192/256 for whole-pixel zoom). '
+      + 'Write EACH such sprite\'s prompt as ONE plain caption of 120-200 words, in order: what it is; its parts top '
+      + 'to bottom with colours, shapes and positions; pose and facing; the view (front, side, three-quarter, '
+      + 'top-down) with the subject centred and filling most of the frame; outline colour, shading and light '
+      + 'direction. Describe only that subject (no extra props or scenery), never write "pixel art", "sprite" or '
+      + 'sizes, and use no text or lettering.';
+  }
+
+  static _paletteLine(palette) {
+    if (!Array.isArray(palette) || !palette.length) return '';
+    const shown = palette.slice(0, 32).join(' ');
+    return `\n- The game has a locked palette of ${palette.length} colours (${shown}${palette.length > 32 ? ' ...' : ''}): `
+      + 'every pixel-art asset is drawn in or snapped to it, so describe colours it contains.';
   }
 
   static _modelLine(models) {

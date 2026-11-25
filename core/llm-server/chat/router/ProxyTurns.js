@@ -1,19 +1,21 @@
 const ChatModelRef = require('./ChatModelRef');
-const AgentTurnDispatch = require('./AgentTurnDispatch');
-const HostOnlyTools = require('./HostOnlyTools');
+const GuestTurnDispatch = require('./GuestTurnDispatch');
+const ChatStyleDocs = require('./ChatStyleDocs');
+const ChatTurn = require('./ChatTurn');
 
 class ProxyTurns {
-  constructor({ llmServerService, dispatch, agentBridge, getAgentDeps, reclaimer }) {
+  constructor({ llmServerService, dispatch, agentBridge, getAgentDeps, reclaimer, contextWindow, plainPrompt = null }) {
     this._service = llmServerService;
     this._dispatch = dispatch;
-    this._bridge = agentBridge;
-    this._getAgentDeps = getAgentDeps;
     this._reclaimer = reclaimer;
+    this._plainPrompt = plainPrompt;
+    this._guest = new GuestTurnDispatch({ agentBridge, getAgentDeps, contextWindow });
   }
 
-  async stream({ modelRef, messages, temperature, hooks, images = [], extra = null }) {
+  async stream({ modelRef, messages, temperature, hooks, images = [], extra = null, chatStyle = null }) {
     const ref = this.resolveRef(modelRef);
-    const handle = await this._dispatch(ref, messages, temperature, hooks, images, null,
+    const sent = chatStyle ? ChatStyleDocs.plainTurn(messages, { plainPrompt: this._plainPrompt, ...chatStyle }) : messages;
+    const handle = await this._dispatch(ref, sent, temperature, hooks, images, null,
       { ...(extra || {}), trace: { conversationId: null, callType: ProxyTurns._callType(extra) } });
     return this.wrapHandle(ref, handle);
   }
@@ -23,26 +25,37 @@ class ProxyTurns {
   }
 
   agent({ modelRef, messages, temperature, hooks, images = [], priorArtifacts = [], allowedTools = null, extra = null,
-    modeSystemPrompt = null, kbScope = null }) {
+    modeSystemPrompt = null, kbScope = null, clientConversationId = null, plan = null, mediaModels = null, choicesOn = false,
+    voiceOn = false }) {
     const ref = this.resolveRef(modelRef);
-    const deps = AgentTurnDispatch.requireDeps(this._getAgentDeps);
-    return this.wrapHandle(ref, this._bridge.run({
+    return this.wrapHandle(ref, this._guest.run({
       modelRef: ref,
       messages,
       temperature,
-      conversationId: ProxyTurns._ephemeralId(),
-      assistantMessageId: ProxyTurns._ephemeralId(),
-      deps,
       hooks,
-      priorMessages: ProxyTurns._priorMessages(priorArtifacts),
       images,
+      priorMessages: ProxyTurns._priorMessages(priorArtifacts),
       allowedTools,
-      withholdTools: HostOnlyTools.isHostOnly,
-      forGuest: true,
-      llmExtra: extra,
+      extra,
       modeSystemPrompt,
       kbScope,
+      runId: ProxyTurns._ephemeralId(),
+      clientConversationId,
+      plan,
+      mediaModels,
+      choicesOn,
+      voiceOn,
+      modelBudget: this._modelBudget(ref),
     }));
+  }
+
+  _modelBudget(ref) {
+    try {
+      const settings = this._service && this._service.modelSettings;
+      return settings ? ChatTurn._modelBudget(settings.resolve(ref).settings) : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   resolveRef(modelRef) {

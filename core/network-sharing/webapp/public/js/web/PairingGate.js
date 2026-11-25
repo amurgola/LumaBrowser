@@ -1,6 +1,7 @@
 export default class PairingGate {
-  static EXPIRED = 'Pairing expired. Enter the PIN again.';
-  static ENDED = 'Pairing ended. Enter the PIN again.';
+  static EXPIRED = 'Pairing expired. Enter the PIN or your access key again.';
+  static ENDED = 'Pairing ended. Enter the PIN or your access key again.';
+  static LINK_PARAM = 'apiKey';
   static LOAD_FAILED = 'Chat UI failed to load. Refresh the page.';
   static CONNECT_FAILED = 'Could not connect.';
   static CONNECTING = 'Connecting…';
@@ -20,7 +21,9 @@ export default class PairingGate {
     this._wirePinForm();
     this._win.addEventListener('luma-unauthorized', () => this._onUnauthorized());
     await this._showHostName();
-    await this.tryEnter();
+    const linkKey = this._takeLinkKey();
+    if (linkKey) return this._signIn(linkKey);
+    return this.tryEnter();
   }
 
   async tryEnter() {
@@ -40,17 +43,34 @@ export default class PairingGate {
     const pin = this._byId('pair-pin');
     const value = (pin.value || '').trim();
     if (!value) return;
+    if (await this._signIn(value)) pin.value = '';
+  }
+
+  async _signIn(secret) {
     const btn = this._byId('pair-btn');
     this._setBusy(btn, true);
     try {
-      await this._api.pair(value);
-      pin.value = '';
+      await this._api.pair(secret);
       this._enter();
+      return true;
     } catch (e) {
-      this._showError((e && e.message) || PairingGate.CONNECT_FAILED);
+      this._showGate((e && e.message) || PairingGate.CONNECT_FAILED);
+      return false;
     } finally {
       this._setBusy(btn, false);
     }
+  }
+
+  _takeLinkKey() {
+    const location = this._win.location;
+    if (!location || !location.href) return null;
+    const url = new URL(location.href);
+    const key = (url.searchParams.get(PairingGate.LINK_PARAM) || '').trim();
+    if (!key) return null;
+    url.searchParams.delete(PairingGate.LINK_PARAM);
+    const history = this._win.history;
+    if (history && typeof history.replaceState === 'function') history.replaceState(null, '', url.pathname + url.search + url.hash);
+    return key;
   }
 
   _wirePinForm() {

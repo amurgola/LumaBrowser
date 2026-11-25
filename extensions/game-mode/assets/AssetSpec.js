@@ -4,19 +4,20 @@ const AssetPath = require('./AssetPath');
 const AssetSizing = require('./AssetSizing');
 const AssetStyle = require('./AssetStyle');
 const PlaceholderPng = require('./PlaceholderPng');
+const RdFlowAssets = require('./RdFlowAssets');
 const PixelPost = require('../pixel/PixelPost');
 
 class AssetSpec {
-  static prepare({ s, params, artStyle, native = null }) {
+  static prepare({ s, params, artStyle, native = null, modelRef = null, palette = null }) {
     if (!params || !params.prompt || !String(params.prompt).trim()) return { error: 'prompt is required' };
     const location = AssetPath.resolve(s.dir, params.path);
     if (location.error) return { error: location.error };
-    const spec = AssetSpec._plan(location, params, artStyle, native);
+    const spec = AssetSpec._plan(location, params, artStyle, native, { modelRef, palette });
     const written = AssetSpec._writePlaceholder(spec);
     return written.error ? written : spec;
   }
 
-  static _plan(location, params, artStyle, native) {
+  static _plan(location, params, artStyle, native, { modelRef = null, palette = null } = {}) {
     const canPost = PixelPost.available();
     const width = AssetSizing.clampDim(params.width);
     const height = AssetSizing.clampDim(params.height);
@@ -26,7 +27,8 @@ class AssetSpec {
     const grid = isPixel
       ? AssetSizing.pixelGridFor(width, height, params.pixelSize)
       : { logicalW: width, logicalH: height, pixelScale: 1 };
-    const { genW, genH } = AssetSizing.genDimsFor(scaleUp, grid.logicalW, grid.logicalH, native);
+    const rdFlow = isPixel && RdFlowAssets.isModel(modelRef);
+    const { genW, genH } = rdFlow ? { genW: RdFlowAssets.SIZE, genH: RdFlowAssets.SIZE } : AssetSizing.genDimsFor(scaleUp, grid.logicalW, grid.logicalH, native);
     const wantAlpha = !!params.transparent && canPost;
     return {
       rel: location.rel, abs: location.abs, width, height, genW, genH,
@@ -36,7 +38,9 @@ class AssetSpec {
       wantAlpha,
       alphaUnavailable: !!params.transparent && !canPost,
       styleNote: style.note,
-      fullPrompt: AssetStyle.prompt(params.prompt, style.effective, wantAlpha),
+      rdFlow,
+      palette: isPixel && palette && palette.length ? palette : null,
+      fullPrompt: rdFlow ? RdFlowAssets.caption(params.prompt, wantAlpha) : AssetStyle.prompt(params.prompt, style.effective, wantAlpha),
     };
   }
 

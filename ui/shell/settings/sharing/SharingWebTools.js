@@ -49,6 +49,10 @@ export default class SharingWebTools {
     });
   }
 
+  visibleToolGroups(groups) {
+    return SharingWebTools.visibleGroups(groups, this._globallyDisabled);
+  }
+
   static visibleGroups(groups, globallyDisabled) {
     return groups
       .map((g) => ({ ...g, tools: (g.tools || []).filter((t) => !globallyDisabled.has(t.name)) }))

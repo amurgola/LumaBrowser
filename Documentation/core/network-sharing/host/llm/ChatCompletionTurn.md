@@ -21,7 +21,15 @@ Validation, in order (errors are `{ error: { message } }`):
 Inputs ([ChatTurnInputs](ChatTurnInputs.md)): streams unless `stream: false`;
 the agentic path runs for `agent: true` / `tools: true`, or as the agent's
 grant decides; images from `attachments`; `priorArtifacts` passed through;
-thinking `extra` from `ThinkingKnobs.extra(body, service.hostDialPosition())`.
+thinking `extra` from `ThinkingKnobs.extra(body, service.hostDialPosition(model))`
+(the model's Tune effort, else the Setup default). An agent turn (the client's
+own loop, `luma_agent_turn`, or the loop this host runs, `agent: true`) with no
+position anywhere gets `ReasoningEffort.AGENT_DEFAULT`, as the desktop's does.
+A web chat turn's flags ([WebChatTurnFlags](WebChatTurnFlags.md)) ride along:
+the plain path passes `chatStyle` (none for a host agent's persona), the
+agentic path passes `clientConversationId`, `plan`, `choicesOn`, `voiceOn`,
+`mediaModels` (through `service.mediaPicksFor`, so a user's image model list
+holds) and drops the chat's switched-off tools from `allowedTools`.
 An agent's pinned `modelRef` replaces the client's model for the proxy call
 (the wire `model` stays the client's).
 

@@ -205,12 +205,9 @@ class ChatTurn {
 
   _withStyleDocs(messages, choicesOn) {
     if (this._agentMode) return messages;
-    let out = messages;
-    if (!this._mode.turn && this._d.plainPrompt) out = this._d.plainPrompt.applyTo(out);
-    if (!this._mode.turn && this._args.voice !== true) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.WIDGETS);
-    if (choicesOn) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.CHOICES);
-    if (this._args.voice === true) out = ChatStyleDocs.appendToSystemHead(out, ChatStyleDocs.VOICE);
-    return out;
+    return ChatStyleDocs.plainTurn(messages, {
+      plainPrompt: this._d.plainPrompt || null, inMode: !!this._mode.turn, choicesOn, voiceOn: this._args.voice === true,
+    });
   }
 
   async _withDocsSource(messages) {

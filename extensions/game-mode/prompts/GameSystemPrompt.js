@@ -1,4 +1,5 @@
 const GameKind = require('../session/GameKind');
+const GamePalettes = require('../assets/GamePalettes');
 const GamePromptBlocks = require('./GamePromptBlocks');
 const GameAssetRules = require('./GameAssetRules');
 const GameWorkflowRules = require('./GameWorkflowRules');
@@ -29,6 +30,7 @@ class GameSystemPrompt {
         artStyle: opts.artStyle || data.artStyle,
         alpha: !!opts.alpha,
         models: opts.models || null,
+        palette: GamePalettes.resolve(data),
       }),
       opts.hasTools ? GameWorkflowRules.render(ai) : GamePromptBlocks.NO_TOOL_WORKFLOW,
       GameSystemPrompt._goal(data, ai),

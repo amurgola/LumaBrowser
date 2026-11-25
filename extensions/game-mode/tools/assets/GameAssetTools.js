@@ -5,9 +5,9 @@ const RunGameTool = require('./RunGameTool');
 const FetchGamedevDocTool = require('./FetchGamedevDocTool');
 
 class GameAssetTools {
-  static build({ kbCacheDir, artStyle = null, imageModelRef = null, modelRef = null, gatewayInfo = null, ...scopeFields }) {
+  static build({ kbCacheDir, artStyle = null, imageModelRef = null, palette = null, modelRef = null, gatewayInfo = null, ...scopeFields }) {
     const scope = new GameToolScope(scopeFields);
-    const images = { artStyle, imageModelRef };
+    const images = { artStyle, imageModelRef, palette };
     return [
       new GenerateAssetTool(scope, images),
       new GenerateAssetsTool(scope, images),

@@ -10,7 +10,6 @@ class ImageSlotPlacement {
   static FALLBACK_BYTES = { video: 16 * ImageSlotPlacement.GB, edit: 12 * ImageSlotPlacement.GB, generate: 8 * ImageSlotPlacement.GB };
   static AUTO_FIT_FLAG = '--auto-fit';
   static MAX_VRAM_FLAG = '--max-vram';
-  static MIN_SHARED_BUDGET_BYTES = 8 * ImageSlotPlacement.GB;
 
   constructor({ vramCoordinator, capabilities, gpuReady = () => CudaDeviceProbe.whenReady(ImageSlotPlacement.GPU_READY_MS) }) {
     this._vram = vramCoordinator;
@@ -18,10 +17,11 @@ class ImageSlotPlacement {
     this._gpuReady = gpuReady;
   }
 
-  static requiredBytes(model, role) {
+  static requiredBytes(model, role, measuredPeakBytes = 0) {
     const { isEdit, isVideo } = ImageSlotRoles.profile(role, model || {});
     const fallback = ImageSlotPlacement.FALLBACK_BYTES[isVideo ? 'video' : (isEdit ? 'edit' : 'generate')];
-    return (Number(model && model.minVramBytes) || fallback) + ImageSlotPlacement.PAD_BYTES;
+    const declared = (Number(model && model.minVramBytes) || fallback) + ImageSlotPlacement.PAD_BYTES;
+    return Math.max(declared, Number(measuredPeakBytes) || 0);
   }
 
   static isCpuOnlyRuntime(runtime) {
@@ -41,7 +41,9 @@ class ImageSlotPlacement {
     await this._gpuReady();
     const request = { serverId: role, role: 'image', requiredBytes, settingsDb, diagnostics };
     const single = this._reserveOneCard(request);
-    if (!single.offloadToCpu) return (await this._preferStrongestCard(single, request, runtime)) || single;
+    if (!single.offloadToCpu) {
+      return (await this._preferStrongestCard(single, request, runtime)) || (await this._withCardBudget(single, request, runtime)) || single;
+    }
     return (await this._autoFitRescue(request, runtime)) || single;
   }
 
@@ -52,10 +54,22 @@ class ImageSlotPlacement {
       const strongest = ImageSlotPlacement.strongestCard(cards);
       if (cards.length < 2 || !strongest || String(strongest.index) === String(single.cudaDevice)) return null;
       const room = CudaDevicePicker.cardRoomBytes(strongest);
-      if (room < ImageSlotPlacement.MIN_SHARED_BUDGET_BYTES) return null;
+      if (!(room >= Number(request.requiredBytes))) return null;
       if (!(await this._capabilities.supportsFlag(runtime.binaryPath, ImageSlotPlacement.MAX_VRAM_FLAG))) return null;
       this._vram.hold(request.serverId, { devices: [strongest.index], bytes: room, role: 'image' });
       return { cudaDevice: String(strongest.index), offloadToCpu: false, autoFit: ImageSlotPlacement.budgetString([strongest.index], cards) };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async _withCardBudget(single, request, runtime) {
+    try {
+      if (single.cudaDevice == null) return null;
+      const cards = this._vram.debitedDevices(request.diagnostics, { excludeServerId: request.serverId });
+      const card = cards.find((d) => String(d.index) === String(single.cudaDevice));
+      if (!card || !(await this._capabilities.supportsFlag(runtime.binaryPath, ImageSlotPlacement.MAX_VRAM_FLAG))) return null;
+      return { ...single, autoFit: ImageSlotPlacement.budgetString([card.index], cards) };
     } catch (_) {
       return null;
     }

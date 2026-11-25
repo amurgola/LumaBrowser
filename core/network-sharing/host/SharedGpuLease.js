@@ -5,8 +5,8 @@ class SharedGpuLease {
     this._service = service;
   }
 
-  gate() {
-    if (!this._service.getShareFlags().shareGpus) return { status: 403, body: { error: 'GPU sharing is disabled on the host' } };
+  gate(credential = null) {
+    if (!this._service.getShareFlags(credential).shareGpus) return { status: 403, body: { error: 'GPU sharing is disabled on the host' } };
     if (!this._service.getRpcLending()) return { status: 503, body: { error: 'GPU lending is not available on the host' } };
     return null;
   }

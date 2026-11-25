@@ -95,3 +95,8 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
 - `tokenizer` is an external `tokenizer.json` for an LLM encoder whose vocabulary
   sd.cpp does not embed. MOSS-Image needs it: Qwen3.5 tokenizes differently from
   the built-in Qwen tokenizer.
+
+## Changes (2026-11-25)
+
+The plan also carries `maxVram`, the `--max-vram` budget string or null, which
+[ImageCapacityRescue](../router/ImageCapacityRescue.md) reads after a render runs out of room.

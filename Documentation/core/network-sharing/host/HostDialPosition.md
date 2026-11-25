@@ -2,14 +2,16 @@
 
 `core/network-sharing/host/HostDialPosition.js`
 
-The host's own thinking-dial position, read from the same two settings the
-desktop uses ('Disable thinking' and the effort level).
+The host's own thinking-dial position for a model, read the way the desktop
+chat reads it: the model's Tune setting first, then the two Setup settings
+('Disable thinking' and the effort level).
 
 ## Methods
 
-- `HostDialPosition.of(llmServerService)`: `'off'` when `noThink`, else the
-  `reasoningEffort` value, else null; null when there is no service, no
-  defaults, or `getDefaults()` throws.
+- `HostDialPosition.of(llmServerService, modelRef?)`: the model's Tune
+  `reasoningEffort` (`modelSettings.resolve(modelRef).settings`) when set;
+  else `'off'` when `noThink`, else the `reasoningEffort` value, else null;
+  null when there is no service, no defaults, or `getDefaults()` throws.
 
 ## Why
 

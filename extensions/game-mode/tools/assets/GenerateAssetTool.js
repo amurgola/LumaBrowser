@@ -25,7 +25,7 @@ class GenerateAssetTool extends AssetTool {
     const s = this._scope.session();
     const chat = this._scope.chat;
     const model = this._modelFor(params);
-    const spec = AssetSpec.prepare({ s, params, artStyle: this._artStyle, native: await ImageCapability.nativeSize(chat, model) });
+    const spec = AssetSpec.prepare({ s, params, artStyle: this._artStyle, native: await ImageCapability.nativeSize(chat, model), modelRef: model, palette: this._palette });
     if (spec.error) return { success: false, error: spec.error };
     spec.modelRef = model;
     if (ImageCapability.canGenerateInline(chat)) return GenerateAssetTool._inlineResult(spec, await InlineAssetGenerator.generate({ chat, s, spec, modelRef: model, emit: opts.emit }));

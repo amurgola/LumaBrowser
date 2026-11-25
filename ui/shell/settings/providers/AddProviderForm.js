@@ -109,7 +109,7 @@ export default class AddProviderForm {
     const el = this._el;
     const addr = (el.peerAddr.value || '').trim();
     const pin = (el.peerPin.value || '').trim();
-    if (!addr || !pin) { el.peerMsg.textContent = 'Enter the host address and its PIN.'; return; }
+    if (!addr || !pin) { el.peerMsg.textContent = 'Enter the host address and its PIN or your access key.'; return; }
     el.peerMsg.textContent = 'Pairing...';
     el.saveBtn.disabled = true;
     let r = null;

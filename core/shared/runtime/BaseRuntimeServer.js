@@ -3,6 +3,8 @@ const { EventEmitter } = require('events');
 const ChildProcessRegistry = require('../../shell/ChildProcessRegistry');
 const IdleTimer = require('./server/IdleTimer');
 const ChildReaper = require('./server/ChildReaper');
+const ProcessDescendants = require('./server/ProcessDescendants');
+const OrphanedRuntimeProcesses = require('./server/OrphanedRuntimeProcesses');
 const RuntimeLogRing = require('./server/RuntimeLogRing');
 const RuntimeSpawnEnv = require('./server/RuntimeSpawnEnv');
 
@@ -28,6 +30,9 @@ class BaseRuntimeServer extends EventEmitter {
     this._log = new RuntimeLogRing();
     this._idleHolds = 0;
     this._idle = new IdleTimer(() => this._onIdleExpired());
+    this._descendants = { owner: null, list: [] };
+    this._readDescendants = (pid) => ProcessDescendants.list(pid);
+    this._sweepOrphans = (binaryPath) => OrphanedRuntimeProcesses.sweep(binaryPath);
   }
 
   _logTag() { throw new Error(`${this.constructor.name} must implement _logTag()`); }
@@ -66,9 +71,11 @@ class BaseRuntimeServer extends EventEmitter {
   async start(launch, { shouldCancel } = {}) {
     this._assertStartable(launch);
     this._resetForLaunch(launch);
+    if (this._killTree) await this._clearOrphans(launch);
     this._spawnChild(launch);
     this._wireChild();
     await this._awaitHealthyOrCleanUp(shouldCancel);
+    this._recordDescendants(this.child);
     await this._afterHealthy();
     this._setState('ready');
     this._armIdleTimer();
@@ -187,6 +194,7 @@ class BaseRuntimeServer extends EventEmitter {
       this._setState('idle', { exitCode: code, signal });
     } else if (child) {
       this.lastError = `${this._processNoun()} exited unexpectedly (code=${code}, signal=${signal}).`;
+      this._endDescendants();
       this._setState('error', { exitCode: code, signal });
     }
   }
@@ -196,6 +204,7 @@ class BaseRuntimeServer extends EventEmitter {
     const child = this.child;
     this.child = null;
     if (child) ChildReaper.killNow(child, { tree: this._killTree });
+    this._endDescendants();
     this._setState('error', { error: err && err.message });
   }
 
@@ -236,8 +245,34 @@ class BaseRuntimeServer extends EventEmitter {
   }
 
   async _forceKill() {
-    if (!this.child) return;
-    await ChildReaper.reap(this.child, { tree: this._killTree });
+    if (this.child) await ChildReaper.reap(this.child, { tree: this._killTree });
+    this._endDescendants();
+  }
+
+  async _clearOrphans(launch) {
+    try {
+      const ended = await this._sweepOrphans(launch.binaryPath);
+      if (ended && ended.length) console.log(`${this._logTag()} ended ${ended.length} process(es) left running by an earlier session: ${ended.map((p) => `${p.name} ${p.pid}`).join(', ')}`);
+    } catch (_) {}
+  }
+
+  _recordDescendants(child) {
+    if (!this._killTree || !child || !Number.isInteger(child.pid)) return;
+    Promise.resolve(this._readDescendants(child.pid)).then((list) => {
+      if (!Array.isArray(list)) return;
+      if (!list.length) return;
+      this._descendants = { owner: child, list };
+      ChildProcessRegistry.adopt(child, list);
+      if (this.child !== child) this._endDescendants();
+    }).catch(() => {});
+  }
+
+  _endDescendants() {
+    const { owner, list } = this._descendants;
+    this._descendants = { owner: null, list: [] };
+    if (!list.length) return;
+    ProcessDescendants.killAll(list);
+    ChildProcessRegistry.release(owner);
   }
 
   _onIdleExpired() {

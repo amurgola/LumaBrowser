@@ -21,7 +21,7 @@ the host's own local image slot and streams its events as NDJSON. A
    router's `send`. The run is queued FIFO through `service.enqueueImage`.
 3. Calls `generate({ modelRef, prompt, negativePrompt, width, height, steps,
    cfgScale, seed, sampler, scheduler, initImage, strength, refImages, mask,
-   slot, forceLocal: true, send })`; no `model` means the host default.
+   snapNative, palette, opaqueBackground, slot, forceLocal: true, send })`; no `model` means the host default.
 4. A thrown run sends an `error` line. Finally the images of `done` events are
    banked as usage and the response ends.
 5. A client disconnect before the end aborts the image router once the job has
@@ -37,3 +37,7 @@ picked as its own backend. Abort listens to the response closing, because
 ## Changes (2026-11-14, exact size crosses)
 
 `_generateOnRouter` passes `snapNative: false` through when the client asked for it. A caller's "render exactly this size" used to be dropped between a client and its host, so the host snapped an edit to the model's native size; the roleplay turns that snap off on purpose for figure renders. A side-by-side of the same request on a host and through a paired client now shows every generation parameter equal; the client's request differs only in `slot` (always named) and `forceLocal`.
+
+## Changes (2026-11-25, RD Flow 64)
+
+`_generateOnRouter` forwards a client's `palette` and `opaqueBackground` (true only when sent as `true`), the locked palette and opaque switch of palette-pointer models (RD Flow 64), which [RemoteImageRun](../../../image-server/router/RemoteImageRun.md) now relays.

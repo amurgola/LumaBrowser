@@ -29,3 +29,9 @@ reaches the host, and a runaway model would generate on.
 
 A `rollback` of 0 characters now keeps the answer. Legacy computed
 `content.slice(0, -0)`, which is `''`, and wiped it (test in LumaApi.test.js).
+
+## Changes (2026-11-25)
+
+The body also carries the chat's own flags when set, read on the host by
+[WebChatTurnFlags](../../../../host/llm/WebChatTurnFlags.md): `luma_conversation_id`, `luma_plan`,
+`luma_media_models`, `luma_choices`, `luma_voice`, `luma_disabled_tools`.

@@ -1,3 +1,4 @@
+const GamePalettes = require('../assets/GamePalettes');
 const ImageModelPins = require('../assets/ImageModelPins');
 const GameKind = require('../session/GameKind');
 const GameSessions = require('../session/GameSessions');
@@ -63,6 +64,7 @@ class GameTurnBuilder {
         kbCacheDir: this._folders.kbCacheDir,
         artStyle: data.artStyle || null,
         imageModelRef: ImageModelPins.resolve(data),
+        palette: GamePalettes.resolve(data),
         modelRef,
         gatewayInfo: this._gatewayInfo,
       }),

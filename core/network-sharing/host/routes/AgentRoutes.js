@@ -8,10 +8,10 @@ class AgentRoutes {
 
   mount(router) {
     const browser = this._auth.requireBrowserCredential({ as: 'text' });
-    router.get('/agents', this._auth.requireToken, (req, res) => res.json({ agents: this._agents.list() }));
-    router.get('/agents/chat-ui.js', browser, (req, res) => AgentRoutes._sendScript(res, this._agents.chatUi()));
-    router.get('/agents/ui/:file', browser, (req, res) => AgentRoutes._sendScript(res, this._agents.chatUiAsset(req.params.file)));
-    router.get('/chat/modes', this._auth.requireToken, (req, res) => res.json({ modes: this._agents.webModes() }));
+    router.get('/agents', this._auth.requireToken, (req, res) => res.json({ agents: this._agents.list(req.sharingToken) }));
+    router.get('/agents/chat-ui.js', browser, (req, res) => AgentRoutes._sendScript(res, this._agents.chatUi(req.sharingToken)));
+    router.get('/agents/ui/:file', browser, (req, res) => AgentRoutes._sendScript(res, this._agents.chatUiAsset(req.params.file, req.sharingToken)));
+    router.get('/chat/modes', this._auth.requireToken, (req, res) => res.json({ modes: this._agents.webModes(req.sharingToken) }));
   }
 
   static _sendScript(res, target) {

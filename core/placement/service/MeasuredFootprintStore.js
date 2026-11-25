@@ -11,6 +11,12 @@ class MeasuredFootprintStore extends SettingsValueStore {
     try { return this._read(); } catch (_) { return this._emptyValue(); }
   }
 
+  peakVramBytes(modelKey) {
+    const entry = modelKey ? this.all()[modelKey] : null;
+    const peak = Number(entry && entry.peakVramBytes);
+    return Number.isFinite(peak) && peak > 0 ? peak : 0;
+  }
+
   merge(entriesByKey) {
     const all = this.all();
     for (const [key, entry] of Object.entries(entriesByKey || {})) {

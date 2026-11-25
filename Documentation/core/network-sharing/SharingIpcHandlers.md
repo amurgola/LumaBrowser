@@ -23,6 +23,9 @@ arrays, getters stay plain objects), and a throw rejects the invoke.
     -> `getShareLinkStatus`, `createShareLink(args || {})`, `listShareLinks`,
     `revokeShareLink`, `revokeAllShareLinks`.
   - Paired-client tokens. `core.sharing.host.listTokens|revokeToken(id)|removeToken(id)|revokeAllTokens`.
+  - Users. `core.sharing.host.createUser(fields)|updateUser(id, fields)|setUserOverrides(id, overrides)|rotateUserKey(id)|removeUser(id)`
+    reply with the result plus the fresh `config`; `userLoginLink(id)` and
+    `permissionCatalog` reply as the service does.
   - Client. `core.sharing.client.listPeers`, `probe(address, port)`,
     `pair(address, pin, port)` -> `pair(address, pin, { port })`,
     `refreshPeer(id)`, `setPeerEnabled(id, enabled)`,

@@ -24,18 +24,15 @@ class AssetTool extends GameTool {
     },
   };
 
-  constructor(scope, { artStyle = null, imageModelRef = null } = {}) {
+  constructor(scope, { artStyle = null, imageModelRef = null, palette = null } = {}) {
     super(scope);
     this._artStyle = artStyle;
     this._pins = ImageModelPins.normalize(imageModelRef);
+    this._palette = palette;
   }
 
   _modelFor(params) {
-    return ImageModelPins.modelFor({
-      width: AssetSizing.clampDim(params && params.width),
-      height: AssetSizing.clampDim(params && params.height),
-      transparent: !!(params && params.transparent),
-    }, this._pins);
+    return ImageModelPins.modelFor(ImageModelPins.describe(params, this._artStyle), this._pins);
   }
 }
 

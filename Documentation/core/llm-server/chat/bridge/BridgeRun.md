@@ -143,3 +143,9 @@ and shares them between the reply's [ToolDispatch](tools/ToolDispatch.md) and a
 [DetachedToolCalls](tools/DetachedToolCalls.md) over the same pipeline and tool set,
 set on the context as `ctx.detached`. A session tool (`run_in_background`) uses it to
 admit and run another of the run's tools apart from the reply.
+
+## Changes (2026-11-25, guest conversations)
+
+Option `conversationMeta` (a getMeta / setMeta store, [GuestConversationMeta](../router/GuestConversationMeta.md))
+replaces the router's chat store for `mediaModels()` on a guest turn, whose conversation is not on this computer.
+A `forGuest` run never gets a `compactionCheckpoint`: it would write meta for a conversation the host does not keep.

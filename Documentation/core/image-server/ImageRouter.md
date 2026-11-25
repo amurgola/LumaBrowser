@@ -63,3 +63,12 @@ supervisor that serves it) differ for a unified generate+edit model pinned as
 both defaults, so the same weights are never loaded on both slots. The model
 record is resolved before the slot is started (for kind routing) but a missing
 record is only reported once the slot is ready, as legacy did.
+
+## Changes (2026-11-25, a render that ran out of room)
+
+A local render that fails, or comes back done with no image (how sd-server reports a job it could not run, as the
+live edit failure did), with sd.cpp's out-of-room signature in its own log lines is tried once more: [ImageCapacityRescue](router/ImageCapacityRescue.md)
+records the model's need (its launch budget plus 1 GiB) and stops its slot, and the second attempt launches the slot
+again with that need, so it lands on a card that holds it or the chat model is swapped out. The first attempt's `error`
+event and failure notification are held ([HeldRunEvents](router/HeldRunEvents.md)) and only go out when no retry
+follows. There is never a third attempt.

@@ -33,3 +33,7 @@ LoRAs, sigma nodes, cache options and refArea are not relayed (as in legacy).
 ## Changes (2026-11-14, exact size crosses)
 
 `snapNative` is one of `REQUEST_FIELDS`. A caller's "render exactly this size" used to be dropped between a client and its host, so the host snapped an edit to the model's native size; the roleplay turns that snap off on purpose for figure renders. A side-by-side of the same request on a host and through a paired client now shows every generation parameter equal; the client's request differs only in `slot` (always named) and `forceLocal`.
+
+## Changes (2026-11-25, RD Flow 64)
+
+`palette` and `opaqueBackground` are in `REQUEST_FIELDS`: the locked palette and the opaque switch of palette-pointer models (RD Flow 64) reach the host instead of being dropped between a client and its host.

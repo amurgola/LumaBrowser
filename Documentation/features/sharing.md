@@ -6,6 +6,12 @@ Share your models, image, video and voice generation, agents and (opt-in) GPUs
 with your other devices.
 
 - PIN pairing, mDNS discovery and pinned TLS.
+- Users: give a person or a group their own access key under **Settings >
+  Sharing > Users**. They sign in with it instead of the PIN, on the web app or
+  in another LumaBrowser (paste it where the PIN goes). Each user gets your
+  sharing settings unless you override them under **Permissions**: any toggle
+  set to Allow or Block, and their own list of chat models, image models and
+  chat tools.
 - A paired LumaBrowser can chat on this computer's models and render images
   and video clips on its image and video models. The host keeps nothing.
 - A host's helper model is listed too, so a client can use it for bookkeeping
@@ -14,6 +20,11 @@ with your other devices.
 ## Web app
 
 An optional web app (PWA) for phones and tablets on your network.
+
+**Copy link** on a user gives a login link (the web address with
+`?apiKey=<key>`) that signs them straight in. The key is in the link, so treat
+the link like a password: anyone who has it signs in as that user. Press **New
+key** to cut off an old link.
 
 ## Tab Share
 

@@ -2,6 +2,7 @@ const net = require('net');
 
 class FreePort {
   static LOOPBACK = '127.0.0.1';
+  static CONNECT_PROBE_MS = 500;
 
   static PORT_WINDOWS = Object.freeze({
     llm: Object.freeze({ start: 8080, end: 8099 }),
@@ -26,7 +27,25 @@ class FreePort {
     return inRange != null ? inRange : FreePort.ephemeralPort();
   }
 
-  static isPortFree(port) {
+  static async isPortFree(port) {
+    if (await FreePort.isListening(port)) return false;
+    return FreePort._canBind(port);
+  }
+
+  static isListening(port, timeoutMs = FreePort.CONNECT_PROBE_MS) {
+    return new Promise((resolve) => {
+      const socket = net.connect({ port, host: FreePort.LOOPBACK });
+      const finish = (listening) => {
+        socket.destroy();
+        resolve(listening);
+      };
+      socket.setTimeout(timeoutMs, () => finish(false));
+      socket.once('connect', () => finish(true));
+      socket.once('error', () => finish(false));
+    });
+  }
+
+  static _canBind(port) {
     return new Promise((resolve) => {
       const server = net.createServer();
       server.once('error', () => resolve(false));

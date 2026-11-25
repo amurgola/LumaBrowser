@@ -2,7 +2,7 @@
 
 `ui/shell/settings/sharing/NetworkSharingPanel.js`
 
-Network Sharing host settings (enable, name, PIN, bind mode, share flags, web backend) composing the firewall, web tools, tokens and peers parts; reloads on open and warms mDNS discovery.
+Network Sharing host settings (enable, name, PIN, bind mode, share flags, web backend) composing the firewall, web tools, tokens, users ([SharingUsersList](SharingUsersList.md)) and peers parts; reloads on open (and makes the users list read the permission catalog afresh) and warms mDNS discovery.
 
 ## Methods
 

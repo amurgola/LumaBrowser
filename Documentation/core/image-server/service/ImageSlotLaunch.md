@@ -27,7 +27,8 @@ One launch of a model on an image slot. A new instance per launch, created by
      refusal, before any port or VRAM work (ISSUES.md entry 11).
   3. Two ports from the slot's window: public (auth proxy) then private (sd-server, loopback).
   4. `hotswap.acquire(role)`; when it evicted a sibling, re-read live VRAM.
-  5. `placement.place(...)` with `ImageSlotPlacement.requiredBytes(model, role)`.
+  5. `placement.place(...)` with `ImageSlotPlacement.requiredBytes(model, role, measuredPeak)`,
+     the measured peak read from `MeasuredFootprintStore.peakVramBytes(modelId)` (0 when never measured).
      When [ChatSwapOut](ChatSwapOut.md)`.cardToFree` names a card (a RAM offload
      onto a card the automatic chat model fills, or on a one card box a model
      whose need exceeds the room the chat model leaves; it is handed the ledger

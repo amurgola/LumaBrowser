@@ -1,5 +1,6 @@
 const ConversationMeta = require('../ConversationMeta');
 const AiBridge = require('../ai/AiBridge');
+const GamePalettes = require('../assets/GamePalettes');
 const ImageModelPins = require('../assets/ImageModelPins');
 const RuntimeAssetGenerator = require('../assets/RuntimeAssetGenerator');
 const GameKind = require('../session/GameKind');
@@ -38,6 +39,7 @@ class GameAiSurface {
       params,
       artStyle: data.artStyle || null,
       imageModelRef: ImageModelPins.resolve(data),
+      palette: GamePalettes.resolve(data),
     });
   }
 

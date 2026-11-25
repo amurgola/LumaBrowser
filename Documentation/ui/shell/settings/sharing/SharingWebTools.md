@@ -8,6 +8,7 @@ Chat tools web-backend clients may use (globally disabled tools excluded). Until
 
 - `install()`, `refreshGloballyDisabled()`, `render(cfg)`, `draw()`.
 - `visibleGroups(groups, disabled)`, `payload(names, allowed)`, `ticked(cfg)` (static).
+- `visibleToolGroups(groups)`: `visibleGroups` with the current globally disabled set, for the per-user editor ([SharingUserPermissions](SharingUserPermissions.md)).
 
 ## Globals
 

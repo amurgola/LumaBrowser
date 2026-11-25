@@ -68,3 +68,16 @@ onto a start in progress instead of stopping and relaunching it.
 
 TtsServerService does not extend this class: it runs a utilityProcess worker
 with no port and no health endpoint. It shares only [IdleTimer](server/IdleTimer.md).
+
+## Changes (2026-11-25, helpers of a tree-killed launcher)
+
+A launch with `killTree` (Basalt's) has its helpers read once it serves ([ProcessDescendants](server/ProcessDescendants.md),
+through the `_readDescendants` seam) and handed to [ChildProcessRegistry](../../shell/ChildProcessRegistry.md) `adopt`.
+They are ended on every way out: after a stop or force kill (`_forceKill`), when the launcher dies on its own
+(`_onChildExit`), and on a child error. Before this, a launcher that was already gone left its Python server and
+engine running with the model in VRAM after the app quit.
+
+Before a tree-killed launcher starts, the helpers an earlier session left running from the same runtime folder are
+ended ([OrphanedRuntimeProcesses](server/OrphanedRuntimeProcesses.md), through the `_sweepOrphans` seam) and logged as
+"ended N process(es) left running by an earlier session". Only such a launch waits on the sweep; every other start
+spawns in the same tick as before.

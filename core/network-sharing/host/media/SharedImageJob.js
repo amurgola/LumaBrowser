@@ -10,12 +10,13 @@ class SharedImageJob extends SharedMediaJob {
   }
 
   async _refusal() {
-    const flags = this._service.getShareFlags();
+    const credential = this._req.sharingToken;
+    const flags = this._service.getShareFlags(credential);
     if (this._isEdit() && !flags.shareImageEdit) return SharedMediaJob._refuse(403, 'image editing is not shared');
     if (!this._isEdit() && !flags.shareImageGen) return SharedMediaJob._refuse(403, 'image generation is not shared');
     this._router = this._service.getImageRouter();
     if (!this._router || typeof this._router.generate !== 'function') return SharedMediaJob._refuse(503, 'host image server is not ready');
-    const denied = this._model ? await this._service.imageModelDenied(this._role, this._model) : null;
+    const denied = await this._service.imageModelDenied(this._role, this._model, credential);
     return denied ? SharedMediaJob._refuse(403, denied) : null;
   }
 
@@ -41,6 +42,8 @@ class SharedImageJob extends SharedMediaJob {
       refImages: Array.isArray(body.refImages) ? body.refImages : null,
       mask: body.mask || null,
       snapNative: body.snapNative === false ? false : undefined,
+      palette: body.palette || undefined,
+      opaqueBackground: body.opaqueBackground === true,
       slot: this._isEdit() ? 'edit' : 'generate',
       forceLocal: true,
       send: (type, payload) => this._send(type, payload),

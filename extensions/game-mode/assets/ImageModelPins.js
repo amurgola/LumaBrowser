@@ -1,5 +1,10 @@
+const AssetSizing = require('./AssetSizing');
+const AssetStyle = require('./AssetStyle');
+const RdFlowAssets = require('./RdFlowAssets');
+const PixelPost = require('../pixel/PixelPost');
+
 class ImageModelPins {
-  static SPRITE_PREFERRED = ['chroma1-flash', 'chroma1-hd'];
+  static SPRITE_PREFERRED = ['rd-flow-64', 'chroma1-flash', 'chroma1-hd'];
   static BACKDROP_PREFERRED = ['chroma1-hd', 'chroma1-flash'];
   static SPRITE_MAX_SIDE = 256;
 
@@ -20,6 +25,19 @@ class ImageModelPins {
     return { sprite: one, backdrop: one };
   }
 
+  static describe(params, artStyle) {
+    const p = params || {};
+    const width = AssetSizing.clampDim(p.width);
+    const height = AssetSizing.clampDim(p.height);
+    const style = AssetStyle.normalize(p.style ? String(p.style) : '') || AssetStyle.normalize(artStyle);
+    const grid = AssetSizing.pixelGridFor(width, height, p.pixelSize);
+    return {
+      width, height, transparent: !!p.transparent,
+      pixel: style === 'pixel-art' && PixelPost.available(),
+      gridW: grid.logicalW, gridH: grid.logicalH,
+    };
+  }
+
   static roleOf({ width, height, transparent }) {
     if (transparent) return 'sprite';
     const longSide = Math.max(Number(width) || 0, Number(height) || 0);
@@ -28,9 +46,9 @@ class ImageModelPins {
 
   static modelFor(asset, pins) {
     const p = pins || { sprite: null, backdrop: null };
-    const role = ImageModelPins.roleOf(asset || {});
-    const pick = role === 'sprite' ? (p.sprite || p.backdrop) : (p.backdrop || p.sprite);
-    return pick || undefined;
+    const a = asset || {};
+    const order = ImageModelPins.roleOf(a) === 'sprite' ? [p.sprite, p.backdrop] : [p.backdrop, p.sprite];
+    return order.find((ref) => ref && (!RdFlowAssets.isModel(ref) || RdFlowAssets.canDraw(a))) || undefined;
   }
 
   static orderSpecs(specs, pins) {

@@ -5,6 +5,7 @@ const ChatTurnInputs = require('./ChatTurnInputs');
 const ClientRequestKnobs = require('./ClientRequestKnobs');
 const ChatCompletionStream = require('./ChatCompletionStream');
 const LlmModelGate = require('./LlmModelGate');
+const WebChatTurnFlags = require('./WebChatTurnFlags');
 
 class ChatCompletionTurn extends SharedLlmTurn {
   constructor(service, turns, agents) {
@@ -20,7 +21,7 @@ class ChatCompletionTurn extends SharedLlmTurn {
   }
 
   _resolveAgent() {
-    return this._body.agentId != null ? this._agents.resolveTurn(this._body.agentId) : {};
+    return this._body.agentId != null ? this._agents.resolveTurn(this._body.agentId, this._req.sharingToken) : {};
   }
 
   _resolveInputs(agentTurn) {
@@ -32,13 +33,16 @@ class ChatCompletionTurn extends SharedLlmTurn {
     this._wantAgent = ChatTurnInputs.wantsAgent(body, agentTurn);
     this._images = ChatTurnInputs.images(body.attachments);
     this._priorArtifacts = Array.isArray(body.priorArtifacts) ? body.priorArtifacts : [];
-    const dial = ChatCompletionTurn._agentDefault(ThinkingKnobs.extra(body, this._service.hostDialPosition()), body);
+    this._webChat = WebChatTurnFlags.of(body);
+    const hostDial = this._service.hostDialPosition(this._effectiveModel);
+    const dial = ChatCompletionTurn._agentDefault(ThinkingKnobs.extra(body, hostDial), body, this._wantAgent);
     const thinking = ChatCompletionTurn._withResponseFormat(dial, body);
     this._extra = ClientRequestKnobs.apply(thinking, body);
   }
 
-  static _agentDefault(extra, body) {
-    if (extra || !body || body[ClientRequestKnobs.AGENT_TURN] !== true) return extra;
+  static _agentDefault(extra, body, hostRunsAgent = false) {
+    if (extra || !body) return extra;
+    if (body[ClientRequestKnobs.AGENT_TURN] !== true && !hostRunsAgent) return extra;
     return ReasoningEffort.extraFor(ReasoningEffort.AGENT_DEFAULT);
   }
 
@@ -55,7 +59,7 @@ class ChatCompletionTurn extends SharedLlmTurn {
   }
 
   async _modelRefusal() {
-    const denied = await LlmModelGate.denied(this._service, this._model);
+    const denied = await LlmModelGate.denied(this._service, this._model, this._req.sharingToken);
     return denied ? ChatCompletionTurn._refusal(403, denied) : null;
   }
 
@@ -74,17 +78,32 @@ class ChatCompletionTurn extends SharedLlmTurn {
   async _startProxy() {
     const hooks = this._hooks();
     const common = { modelRef: this._effectiveModel, temperature: this._body.temperature, hooks, images: this._images, extra: this._extra };
+    const web = this._webChat;
     if (!this._wantAgent) {
-      return this._chatRouter.proxyStream({ ...common, messages: ChatTurnInputs.streamMessages(this._agentTurn, false, this._body.messages) });
+      return this._chatRouter.proxyStream({
+        ...common,
+        messages: ChatTurnInputs.streamMessages(this._agentTurn, false, this._body.messages),
+        chatStyle: web.isWebChat && !this._agentTurn ? { choicesOn: web.choicesOn, voiceOn: web.voiceOn } : null,
+      });
     }
     return this._chatRouter.proxyAgent({
       ...common,
       messages: this._body.messages,
       priorArtifacts: this._priorArtifacts,
-      allowedTools: ChatTurnInputs.allowedTools(this._agentTurn, this._service.getWebAllowedTools(), this._service.getSharedTurnTools()),
+      allowedTools: WebChatTurnFlags.narrow(this._allowedTools(), web.disabledTools),
       modeSystemPrompt: this._agentTurn ? this._agentTurn.systemPrompt : null,
       kbScope: this._agentTurn ? this._agentTurn.kbScope : null,
+      clientConversationId: web.clientConversationId,
+      plan: web.plan,
+      mediaModels: await this._service.mediaPicksFor(this._req.sharingToken, web.mediaModels),
+      choicesOn: web.choicesOn,
+      voiceOn: web.voiceOn,
     });
+  }
+
+  _allowedTools() {
+    const credential = this._req.sharingToken;
+    return ChatTurnInputs.allowedTools(this._agentTurn, this._service.getWebAllowedTools(credential), this._service.getSharedTurnTools(credential));
   }
 
   _hooks() {

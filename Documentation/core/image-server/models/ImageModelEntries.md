@@ -10,13 +10,15 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 - `ImageModelEntries.ENTRIES`: Z-Image Turbo, Qwen-Image-Edit 2509, Qwen-Image-Edit 2511,
   Qwen-Image 2.1, Qwen-Image 2.1 Turbo, SD 1.5, SDXL base, Sprite Shaper XL, FLUX.1 Schnell,
   Chroma1-HD, Chroma1-Flash, FLUX.2 klein 4B, FLUX.2 klein 9B, FLUX.3 Image Klein, FLUX.1 Kontext dev,
-  Krea 2 Turbo, MOSS-Image, MiniMax-H3-Image (images), then Wan 2.2 T2V, Wan 2.2
+  Krea 2 Turbo, MOSS-Image, MiniMax-H3-Image, RD Flow 64 (images), then Wan 2.2 T2V, Wan 2.2
   I2V, AniSora V3.2, LTX-Video 2B and MiniMax-H3 (video).
 - Shared companions `FLUX_VAE`, `T5XXL_Q8`, `WAN_VAE`, `UMT5_Q8`,
   `QWEN_21_VAE`, `QWEN3_VL_8B_LLM`, `QWEN3_VL_8B_VISION`, `QWEN3_VL_4B_LLM`
   (one encoder file for FLUX.3 Image Klein and Krea 2 Turbo), the shared
   `QWEN_21_PROMPT_GUIDE`, `H3_QWEN3_VL_32B_LLM` (one encoder file for MiniMax-H3
-  video and MiniMax-H3-Image), `H3_IMAGE_SIGMAS`, `H3_IMAGE_PROMPT_GUIDE`, plus
+  video and MiniMax-H3-Image), `H3_IMAGE_SIGMAS`, `H3_IMAGE_PROMPT_GUIDE`,
+  `RD_FLOW_PROMPT_GUIDE` (Retro Diffusion's caption rules from
+  rdflow/prompting.py, condensed: a long plain caption in a fixed order), plus
   `WAN_VIDEO_DEFAULTS` and `WAN_CONSTRAINTS`. Rows copy the file and default
   objects (spread), so one row cannot mutate another; `WAN_CONSTRAINTS` is
   shared, as in legacy. `WAN_VIDEO_DEFAULTS` is 832x480, 20 steps, cfg 3.5,
@@ -166,6 +168,30 @@ comfortable GPU-resident size with the encoders on the CPU.
   rendered at its source's own pixel size comes back over-sharpened, so edits
   render at 1.5x the source side and are scaled back (see
   [EditRenderScale](../router/EditRenderScale.md)).
+- RD Flow 64 (2026-11-25): Retro Diffusion's small model built only for 64x64
+  pixel art, family `rd-flow`. It draws on the pixel grid and picks every pixel
+  from a palette (a locked one when the request sends `palette`), with real
+  transparency unless `opaqueBackground` is set. Files: the diffusion
+  `.safetensors` loaded with `--diffusion-model` (a bare `.safetensors` would be
+  guessed as a single-file checkpoint) and the first 27 layers of
+  Qwen3-VL-4B-Instruct as the `llm`, loaded as released. Measured 2026-11-25 on
+  an RTX 3090 against Retro Diffusion's PyTorch pipeline: pixel-identical with a
+  locked palette, 1.5 s per image; the prompt reader on the CPU reads a caption
+  in about 2 s, so it stays there (`--clip-on-cpu`, plus `--rng cpu`). Defaults
+  16 steps, cfg 4, `euler`, and `RD_FLOW_PROMPT_GUIDE`, since it was trained on
+  long plain captions only. `constraints.fixedSize` is 64x64: any request
+  renders at 64x64 and comes back as true 64x64 pixels (see
+  [ImageRequestPlanner](../router/ImageRequestPlanner.md)), because a smooth
+  scale-back would ruin them. `compatibleRuntimes` and `preferredRuntimes` are
+  `sd-cpp-luma` only, with `minRuntimeTags: { 'sd-cpp-luma': 'luma-b7' }`:
+  patch 0008 of luma-b7 added the model and upstream sd.cpp does not have it.
+  `vaeTiling: false`. Its `licenseNote` is the RD Flow 64 Model License:
+  non-commercial weights (no game, app, site or service may ship or call the
+  model), while the images made are the user's, commercial use included, but
+  may not train AI models. The 2026-11-25 bake-off had it beat Chroma1-Flash
+  plus the pixel post-chain on game sprites, so Game mode prefers it for
+  pixel-art sprites (see
+  [ImageModelPins](../../../extensions/game-mode/assets/ImageModelPins.md)).
 - Video rows: `supportsI2V` is always explicit because a T2V checkpoint silently
   discards `init_image` in sd.cpp. Wan rows share the 4n+1 frame grid capped at
   81 (the 5 s @ 16 fps training ceiling); LTX uses 8n+1 up to 257 at /32;

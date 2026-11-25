@@ -58,6 +58,12 @@ export default class ChatStream {
         attachments: opts.attachments || undefined,
         priorArtifacts: opts.priorArtifacts || undefined,
         reasoning_effort: opts.reasoningEffort || undefined,
+        luma_conversation_id: opts.conversationId || undefined,
+        luma_plan: opts.plan || undefined,
+        luma_media_models: opts.mediaModels || undefined,
+        luma_choices: opts.choices === true || undefined,
+        luma_voice: opts.voice === true || undefined,
+        luma_disabled_tools: Array.isArray(opts.disabledTools) && opts.disabledTools.length ? opts.disabledTools : undefined,
       }),
       signal: opts.signal,
     });

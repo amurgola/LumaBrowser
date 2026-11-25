@@ -64,6 +64,7 @@ class LaunchRun {
     const ctx = this._ctx;
     const launch = ctx.plan();
     await this._hotswapReclaim;
+    this._parts.placement.claimCustomLaunch(launch.plan);
     await ctx.runtimeServer.start(launch);
     ctx.syncQueue(launch.plan);
     return ctx.succeed(launch.plan);

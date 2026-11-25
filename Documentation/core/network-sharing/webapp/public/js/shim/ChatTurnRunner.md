@@ -33,3 +33,11 @@ and re-emits it as the requestId-keyed chat event stream the chat expects.
   legacy); anything else emits `error`, stores it on the message and resolves
   `{ success: false, error }`.
 - `chatAbort()`: aborts the running turn (which also names it to the host).
+
+## Changes (2026-11-25, the turn runs as in the LLM tab)
+
+Each request also sends the conversation id, its stored plan and media picks (`data.plan`, `data.mediaModels` in the
+conversation meta), "Suggest replies" (`choicesEnabled`), voice, the chat's switched-off tools, and
+`reasoning_effort: 'off'` on a `noThink` (voice) turn. A `plan` event from the host is saved into the conversation
+meta (`_saveMeta`, null clears it), where the chat's plan panel reads it and the next turn sends it back; a turn's
+`mediaModels` are saved the same way. `ChatTurnRunner.stored(conv, key)` reads one meta value.

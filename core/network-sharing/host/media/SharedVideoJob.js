@@ -6,10 +6,11 @@ class SharedVideoJob extends SharedMediaJob {
   static NOT_READY = 'host video server is not ready';
 
   async _refusal() {
-    if (!this._service.getShareFlags().shareVideoGen) return SharedMediaJob._refuse(403, SharedVideoJob.NOT_SHARED);
+    const credential = this._req.sharingToken;
+    if (!this._service.getShareFlags(credential).shareVideoGen) return SharedMediaJob._refuse(403, SharedVideoJob.NOT_SHARED);
     this._router = this._service.getVideoRouter();
     if (!this._router || typeof this._router.generate !== 'function') return SharedMediaJob._refuse(503, SharedVideoJob.NOT_READY);
-    const denied = this._model ? await this._service.imageModelDenied(SharedVideoJob.ROLE, this._model) : null;
+    const denied = await this._service.imageModelDenied(SharedVideoJob.ROLE, this._model, credential);
     return denied ? SharedMediaJob._refuse(403, denied) : null;
   }
 

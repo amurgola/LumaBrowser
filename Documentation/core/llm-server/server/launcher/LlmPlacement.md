@@ -14,6 +14,11 @@ Picks the GPU(s) for a local start before the real plan.
   Any failure leaves the start unpinned.
 - `placeForRescue(ctx, headerEstimatedBytes)` reserves again for the header
   estimate and returns `{ cudaDevice, diagnostics }`.
+- `claimCustomLaunch(plan)` for a runtime that picks its own card (Basalt): holds
+  the cards its plan reports (`perGpu` indexes) in the ledger as `llm`, sized by
+  `modelEstimatedBytes`, so the other slots see them taken and an image launch
+  can swap it out ([ChatSwapOut](../../../image-server/service/ChatSwapOut.md)).
+  False, holding nothing, for a plan with no cards (MLX) or a throwing ledger.
 - `previewCudaDevice({ diagnostics, settingsDb, plan })` the `cudaDevice` that `place`
   would pin for that probe plan, through `VramCoordinator.preview` (nothing claimed):
   a `CUDA_VISIBLE_DEVICES` string, or null for every card or on any failure. The

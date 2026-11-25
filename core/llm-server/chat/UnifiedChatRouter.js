@@ -180,6 +180,8 @@ class UnifiedChatRouter {
       agentBridge: this.agentBridge,
       getAgentDeps,
       reclaimer: this._reclaimer,
+      contextWindow: this._window,
+      plainPrompt: new PlainChatPrompt({ db: this.db }),
     });
   }
 

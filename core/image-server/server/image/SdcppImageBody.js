@@ -38,8 +38,10 @@ class SdcppImageBody {
     };
   }
 
-  static _addOptional(body, { negativePrompt, loras, refImageArgs, cacheMode, cacheOption }) {
+  static _addOptional(body, { negativePrompt, loras, refImageArgs, cacheMode, cacheOption, palette, opaqueBackground }) {
     if (negativePrompt) body.negative_prompt = negativePrompt;
+    if (palette) body.palette = String(palette);
+    if (opaqueBackground === true) body.opaque_background = true;
     if (Array.isArray(loras) && loras.length) body.lora = loras;
     if (refImageArgs) body.ref_image_args = String(refImageArgs);
     if (cacheMode) {

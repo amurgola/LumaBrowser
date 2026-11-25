@@ -15,6 +15,8 @@ read degrades to null when a service cannot enumerate.
   or `'video'`, or null.
 - `HostModelInventory.kindOf(role)`: `image-edit` -> `edit`, `image-video` ->
   `video`, anything else `generate`.
+- `currentImageModel(role)`: the id of the model the role runs when none is
+  named (the `current` entry), or null.
 - `imageModelDenied(role, modelId)`: null when allowed (no model always is),
   `'model selection is not supported on this host'` when the slot cannot be
   enumerated, `'model is not available'` when the id is not in the slot's list.

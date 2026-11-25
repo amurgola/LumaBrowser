@@ -7,7 +7,8 @@ needs: ids, names and states, never model paths or directories.
 
 ## Methods
 
-- `VoiceViews.stt(service)`: `{ runtimeReady, models: [{ id, name }],
+- `async VoiceViews.stt(service)` (the speech-to-text service's `getView` is
+  async; read synchronously, the web app saw no engine and no model, 2026-11-25): `{ runtimeReady, models: [{ id, name }],
   language (default 'auto'), serverState }`, or `{ runtimeReady: false, models: [] }`
   without a `getView`.
 - `VoiceViews.tts(service)`: `{ runtimeReady, platformSupported, models: [{ id,

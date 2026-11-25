@@ -6,9 +6,9 @@ Turns run for a paired Network Sharing client: never persisted, never touching t
 
 ## Methods
 
-- `new ProxyTurns({ llmServerService, dispatch, agentBridge, getAgentDeps, reclaimer })`.
-- `async stream({ modelRef, messages, temperature, hooks, images = [], extra = null })`: dispatches with trace `{ conversationId: null, callType: 'sharing' }`; resolves the wrapped handle.
-- `agent({ modelRef, messages, temperature, hooks, images, priorArtifacts, allowedTools, extra, modeSystemPrompt, kbScope })`: `agentBridge.run` with ephemeral `web_...` conversation and message ids, `priorMessages` carrying the client's artifacts, `llmExtra: extra`; returns the wrapped handle (keeping `done`). Throws the not-ready error without the browser.
+- `new ProxyTurns({ llmServerService, dispatch, agentBridge, getAgentDeps, reclaimer, contextWindow, plainPrompt })`.
+- `async stream({ modelRef, messages, temperature, hooks, images = [], extra = null, chatStyle = null })`: dispatches with trace `{ conversationId: null, callType: 'sharing' }`; resolves the wrapped handle. `chatStyle` (`{ choicesOn, voiceOn }`) marks a web chat turn, whose messages get the desktop plain-turn prompt (`ChatStyleDocs.plainTurn` with `plainPrompt`); other callers are sent verbatim.
+- `agent({ modelRef, messages, temperature, hooks, images, priorArtifacts, allowedTools, extra, modeSystemPrompt, kbScope, clientConversationId, plan, mediaModels, choicesOn, voiceOn })`: runs through [GuestTurnDispatch](GuestTurnDispatch.md) with an ephemeral `web_...` run id, `priorMessages` carrying the client's artifacts and the host's Tune budget for the model (`ChatTurn._modelBudget`); returns the wrapped handle (keeping `done`). Throws the not-ready error without the browser.
 - `resolveRef(ref)`: remote refs unchanged; `local::<stem>` unchanged; bare `local::` -> the host's selected model; any local ref throws `No local model is configured on the host.` without one.
 - `wrapHandle(ref, handle)`: idempotent abort that also reclaims the slot for a local ref.
 
@@ -27,3 +27,9 @@ The client owns its history. The sharing route fires abort from both its socket-
 `agent` runs with `withholdTools: HostOnlyTools.isHostOnly`: a turn run for someone else never gets the terminal tools.
 It also runs with `forGuest: true`, so [GuestTargetGuard](../bridge/tools/GuestTargetGuard.md) refuses any call that
 names, or targets a tab showing, the host computer's own addresses, local files or internal pages.
+
+## Changes (2026-11-25, web turns match the LLM tab)
+
+`agent` no longer calls the bridge bare: [GuestTurnDispatch](GuestTurnDispatch.md) gives a shared turn the chat
+assistant's role, answering guidance, native history, context window and `update_plan`, as the host's own chat
+turn has. `stream` gives a web chat's plain turn the desktop chat's prompt.

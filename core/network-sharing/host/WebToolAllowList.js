@@ -14,9 +14,10 @@ class WebToolAllowList {
       .flatMap((group) => group.tools.map((tool) => tool.name));
   }
 
-  forSharedTurn() {
+  forSharedTurn(userTools = null) {
     const switchedOff = new Set(this._settings.getGloballyDisabledTools());
-    return (this.get() || this.defaults()).filter((name) => !switchedOff.has(name));
+    const chosen = Array.isArray(userTools) ? this.clean(userTools) : (this.get() || this.defaults());
+    return chosen.filter((name) => !switchedOff.has(name));
   }
 
   get() {
@@ -31,9 +32,13 @@ class WebToolAllowList {
       this._settings.setWebAllowedTools(null);
       return { success: true, webAllowedTools: null };
     }
-    const cleaned = this._knownNames().filter((name) => tools.includes(name));
+    const cleaned = this.clean(tools);
     this._settings.setWebAllowedTools(cleaned);
     return { success: true, webAllowedTools: cleaned };
+  }
+
+  clean(tools) {
+    return this._knownNames().filter((name) => tools.includes(name));
   }
 
   toolGroups() {

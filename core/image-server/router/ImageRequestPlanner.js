@@ -39,6 +39,7 @@ class ImageRequestPlanner {
     this._resolveDefaults();
     this._snapToNative();
     this._alignToGrid();
+    this._pinFixedSize();
     this._raiseToRenderFloor();
     this._enlargeEditRender();
     this._moveOffHarshCanvas();
@@ -102,6 +103,14 @@ class ImageRequestPlanner {
 
   _alignToGrid() {
     this._resize('grid-aligned', ImageCanvas.alignToGrid(this._effective.width, this._effective.height, this._model.constraints));
+  }
+
+  _pinFixedSize() {
+    const fixed = this._model.constraints && this._model.constraints.fixedSize;
+    if (!fixed || !(fixed.width > 0 && fixed.height > 0)) return;
+    const e = this._effective;
+    if (e.width === fixed.width && e.height === fixed.height) return;
+    this._resize('fixed-size', { width: fixed.width, height: fixed.height });
   }
 
   _raiseToRenderFloor() {
@@ -220,11 +229,19 @@ class ImageRequestPlanner {
         strength: ImageRequestPlanner._strength(r.initImage, r.strength),
         refImages: this._refs.refImages,
         mask: this._init.mask,
+        palette: ImageRequestPlanner._palette(r.palette),
+        opaqueBackground: r.opaqueBackground === true,
       },
       refCount: this._refCount,
       refSizes: this._refs.refSizes,
       outputSize: this._outputSize,
     };
+  }
+
+  static _palette(palette) {
+    const items = Array.isArray(palette) ? palette : String(palette || '').split(/[\s,;]+/);
+    const colours = items.map((c) => String(c).trim().replace(/^#/, '').toLowerCase()).filter((c) => /^([0-9a-f]{3}|[0-9a-f]{6})$/.test(c));
+    return colours.length ? colours.map((c) => `#${c}`).join(',') : null;
   }
 
   _refImageArgs() {

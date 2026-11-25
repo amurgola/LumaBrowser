@@ -109,6 +109,19 @@ class ImageModelEntries {
     + 'so negative prompts have no effect. When editing, refer to the inputs '
     + 'as <Picture 1>, <Picture 2> and say what changes and what stays.';
 
+  static RD_FLOW_PROMPT_GUIDE =
+    'This is RD Flow 64: it draws 64x64 pixel art and nothing else, every pixel an exact palette colour or '
+    + 'transparent. It was trained on LONG, PLAIN descriptions (120-200 words) and draws badly from short '
+    + 'prompts, so always expand the request into one caption of plain present-tense sentences in this order: '
+    + 'what it is; the subject part by part, top to bottom, each part with its colours, shape, size and '
+    + 'position; pose and which way it faces; the view (front, side, three-quarter, top-down, isometric), the '
+    + 'framing and how much of the frame it fills; the background (for a sprite: "The whole subject is visible '
+    + 'with a clear margin on every side and nothing cut off. The background is transparent."; for a scene: '
+    + 'the setting filling the frame); the rendering (outline colour, shading style, light direction, the main '
+    + 'hues). Describe only what was asked: no extra props, clothing or companions. Never write "pixel art", '
+    + '"pixelated", "sprite", "image" or "64x64", never hedge, and it cannot draw text. Steps and guidance are '
+    + 'fixed (16 steps, guidance 4), so negative prompts have no effect.';
+
   static WAN_VIDEO_DEFAULTS = {
     width: 832,
     height: 480,
@@ -1002,6 +1015,52 @@ class ImageModelEntries {
       minRuntimeTags: { 'sd-cpp-luma': 'luma-b4' },
       protocol: 'sd-cpp-http',
       compatibleRuntimes: [...SD_CPP_RUNTIMES],
+    },
+    {
+      id: 'rd-flow-64',
+      label: 'RD Flow 64 (pixel art)',
+      blurb:
+        'Retro Diffusion\'s RD Flow 64: a small model built only for 64x64 pixel art. It draws on the pixel '
+        + 'grid itself and picks every pixel from a palette, so sprites come out with exact colours and real '
+        + 'transparency, no cleanup needed. Lock a palette to keep a whole game\'s art matching. Always '
+        + '64x64; it wants a long, plain description (120-200 words). About 1 GB of VRAM (its prompt reader '
+        + 'runs on the CPU in about 2 s). Needs the LumaByte image runtime luma-b7 or newer.',
+      family: 'rd-flow',
+      kind: 'generate',
+      licenseNote: 'RD Flow 64 Model License: personal, non-commercial use only; no game, app, site or service may ship the model or call it. Images you make are yours, commercial use included, but may not be used to train AI models. Read it before use.',
+      files: {
+        diffusion: {
+          role: 'diffusion',
+          repo: 'Retro-Diffusion/rd-flow-64',
+          file: 'rd-flow-64.safetensors',
+          url: `${HF}/Retro-Diffusion/rd-flow-64/resolve/main/rd-flow-64.safetensors?download=true`,
+          approxBytes: 541893098,
+          loaderFlag: '--diffusion-model',
+        },
+        llm: {
+          role: 'llm',
+          repo: 'Retro-Diffusion/rd-flow-64',
+          file: 'model.safetensors',
+          url: `${HF}/Retro-Diffusion/rd-flow-64/resolve/main/text_encoder/model.safetensors?download=true`,
+          approxBytes: 6228214272,
+        },
+      },
+      minVramBytes: 2 * GB,
+      defaults: {
+        width: 64,
+        height: 64,
+        steps: 16,
+        cfgScale: 4.0,
+        sampler: 'euler',
+        promptGuide: ImageModelEntries.RD_FLOW_PROMPT_GUIDE,
+      },
+      constraints: { fixedSize: { width: 64, height: 64 } },
+      launchArgs: ['--clip-on-cpu', '--rng', 'cpu'],
+      vaeTiling: false,
+      preferredRuntimes: ['sd-cpp-luma'],
+      minRuntimeTags: { 'sd-cpp-luma': 'luma-b7' },
+      protocol: 'sd-cpp-http',
+      compatibleRuntimes: ['sd-cpp-luma'],
     },
     {
       id: 'wan-2-2-t2v-a14b',

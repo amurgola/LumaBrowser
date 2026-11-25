@@ -4,8 +4,9 @@ class HostManifestBuilder {
   static PROTO = 1;
   static VIDEO_ENDPOINT = '/sharing/video/generate';
 
-  constructor({ host, inventory, llmServerService, imageServerService }) {
+  constructor({ host, inventory, llmServerService, imageServerService, flags }) {
     this._host = host;
+    this._flagsOverride = flags || null;
     this._inventory = inventory;
     this._llm = llmServerService || null;
     this._image = imageServerService || null;
@@ -21,7 +22,7 @@ class HostManifestBuilder {
   }
 
   _setupSharedVariables() {
-    this._flags = this._host.getShareFlags();
+    this._flags = this._flagsOverride || this._host.getShareFlags();
     this._manifest = {
       instance: { name: this._host.getInstanceName(), id: this._host.instanceId, proto: HostManifestBuilder.PROTO, version: this._host.getAppVersion() },
       llms: [],

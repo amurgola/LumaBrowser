@@ -289,6 +289,15 @@ details[open] > summary .gs-chevron { transform: rotate(90deg); }
 .gs-key-reveal { display: flex; flex-direction: column; gap: var(--space-2); }
 .gs-list-empty { padding: var(--space-1) 0; font-size: var(--text-sm); color: var(--text-secondary); }
 
+.gs-user { display: flex; flex-direction: column; gap: var(--space-2); }
+.gs-user .gs-item-main { min-width: 10rem; }
+.gs-user .gs-item-row > .gs-copy-btn { flex-shrink: 0; }
+.gs-user-perms { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-2) var(--space-3) var(--space-3); }
+.gs-user-perm-flags { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-2) var(--space-4); }
+.gs-user-perm-flag { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-primary); }
+.gs-user-perm-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.gs-user-perms [hidden] { display: none; }
+
 .gs-tool-group-head {
     display: flex;
     align-items: center;

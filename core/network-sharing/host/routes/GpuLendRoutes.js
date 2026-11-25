@@ -17,7 +17,7 @@ class GpuLendRoutes {
   }
 
   _requireGpuShare(req, res, next) {
-    const refusal = this._lease.gate();
+    const refusal = this._lease.gate(req.sharingToken);
     return refusal ? RouteReply.send(res, refusal) : next();
   }
 }

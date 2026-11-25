@@ -3,6 +3,8 @@ const CudaDeviceProbe = require('../../../shared/runtime/CudaDeviceProbe');
 const CudaDevicePicker = require('../../../shared/runtime/CudaDevicePicker');
 
 class LlmPlacement {
+  static SERVER_ID = 'llm';
+
   constructor({ vram }) {
     this._vram = vram;
   }
@@ -35,6 +37,19 @@ class LlmPlacement {
       return this._vram.preview(LlmPlacement._request({ settingsDb, diag: diagnostics }, need)).cudaDevice;
     } catch (_) {
       return null;
+    }
+  }
+
+  claimCustomLaunch(plan) {
+    try {
+      const devices = (plan && Array.isArray(plan.perGpu) ? plan.perGpu : [])
+        .map((gpu) => Number(gpu && gpu.index))
+        .filter((index) => Number.isInteger(index) && index >= 0);
+      if (!devices.length) return false;
+      this._vram.hold(LlmPlacement.SERVER_ID, { devices, bytes: Number(plan.modelEstimatedBytes) || 0, role: 'llm' });
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

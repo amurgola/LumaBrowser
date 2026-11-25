@@ -6,7 +6,8 @@ class AssetJob {
       rel: spec.rel, abs: spec.abs, prompt: spec.fullPrompt,
       width: spec.genW, height: spec.genH, outW: spec.width, outH: spec.height,
       logicalW: spec.logicalW, logicalH: spec.logicalH, pixelScale: spec.pixelScale,
-      pixel: spec.isPixel, alpha: spec.wantAlpha, ...(modelRef ? { modelRef } : {}),
+      pixel: spec.isPixel, alpha: spec.wantAlpha, rdFlow: !!spec.rdFlow, palette: spec.palette || null,
+      ...(modelRef ? { modelRef } : {}),
     };
   }
 
@@ -16,7 +17,11 @@ class AssetJob {
   }
 
   static request(job) {
-    return { prompt: job.prompt, width: job.width, height: job.height, ...(job.modelRef ? { modelRef: job.modelRef } : {}) };
+    return {
+      prompt: job.prompt, width: job.width, height: job.height,
+      ...(job.modelRef ? { modelRef: job.modelRef } : {}),
+      ...(job.rdFlow ? { opaqueBackground: !job.alpha, ...(job.palette ? { palette: job.palette } : {}) } : {}),
+    };
   }
 
   static mark(s, rel, status, emit) {

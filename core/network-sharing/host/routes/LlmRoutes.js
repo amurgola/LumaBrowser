@@ -12,7 +12,7 @@ class LlmRoutes {
 
   mount(router) {
     const requireToken = this._auth.requireToken;
-    router.get('/llm/v1/models', requireToken, async (req, res) => res.json(await LlmModelGate.modelList(this._service)));
+    router.get('/llm/v1/models', requireToken, async (req, res) => res.json(await LlmModelGate.modelList(this._service, req.sharingToken)));
     router.post('/llm/v1/chat/completions', requireToken, (req, res) => new ChatCompletionTurn(this._service, this._turns, this._agents).run(req, res));
     router.post('/llm/v1/chat/abort', requireToken, (req, res) => this._abort(req, res));
     router.post('/llm/v1/responses', requireToken, (req, res) => new ResponsesTurn(this._service, this._turns).run(req, res));

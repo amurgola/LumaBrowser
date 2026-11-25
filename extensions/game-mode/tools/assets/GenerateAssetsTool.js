@@ -54,7 +54,7 @@ class GenerateAssetsTool extends AssetTool {
     for (const item of batch) {
       const model = this._modelFor(item);
       if (!natives.has(model || '')) natives.set(model || '', await ImageCapability.nativeSize(this._scope.chat, model));
-      const spec = AssetSpec.prepare({ s, params: item, artStyle: this._artStyle, native: natives.get(model || '') });
+      const spec = AssetSpec.prepare({ s, params: item, artStyle: this._artStyle, native: natives.get(model || ''), modelRef: model, palette: this._palette });
       if (spec.error) {
         lines.push(`- ${(item && item.path) || '(no path)'}: FAILED: ${spec.error}`);
         continue;

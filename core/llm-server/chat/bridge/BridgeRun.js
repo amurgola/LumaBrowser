@@ -51,7 +51,7 @@ class BridgeRun {
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
     approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null, systemRole: null,
     approvedTools: null, onRunApproval: null, onRunApprovalUsed: null, userMessageId: null, userText: null,
-    withholdTools: null, forGuest: false,
+    withholdTools: null, forGuest: false, conversationMeta: null,
   };
 
   constructor(host, options) {
@@ -230,7 +230,7 @@ class BridgeRun {
       compactionCarry: (head, recent) => ManualDelivery.carryOver(
         groups, [...groups.active].filter((key) => !groups.promptKeys.has(key)), head, recent, { nativeTools },
       ),
-      compactionCheckpoint: o.nativeHistory ? ConversationCheckpoint.storeFor(this._router && this._router.chatStore, o.conversationId) : null,
+      compactionCheckpoint: (o.nativeHistory && !o.forGuest) ? ConversationCheckpoint.storeFor(this._router && this._router.chatStore, o.conversationId) : null,
       noBrowser: o.noBrowser,
       ctxPerSlot: o.ctxPerSlot,
       finalCheck: o.finalCheck,
@@ -250,7 +250,7 @@ class BridgeRun {
   }
 
   _mediaModels() {
-    const store = this._router && this._router.chatStore;
+    const store = this._o.conversationMeta || (this._router && this._router.chatStore);
     return new ConversationMediaModels(store, this._o.conversationId).usable(BridgeGlobals.imageServerService());
   }
 

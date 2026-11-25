@@ -20,7 +20,7 @@ What the product does, for people rather than for code. The README links here in
 - [features/agents.md](features/agents.md): chat tools, agents, Code mode, Tool Forge, Site APIs, Roleplay, and MCP, ACP, WebDriver and CDP setup.
 - [features/computer-use.md](features/computer-use.md): desktop control and its safeguards, window tabs, Android devices, Lumabyte, system-wide hotkeys, Desktop Integration API.
 - [features/automation.md](features/automation.md): notification and network forwarding, page watches, recurring tasks, triggers, ntfy.
-- [features/sharing.md](features/sharing.md): Network Sharing, the web app, Tab Share.
+- [features/sharing.md](features/sharing.md): Network Sharing (PIN pairing and named users with access keys), the web app and login links, Tab Share.
 
 ## core/shared
 
@@ -158,6 +158,8 @@ Small building blocks shared by more than one subsystem.
 - [core/shared/runtime/detect/RuntimeDetailFields.md](core/shared/runtime/detect/RuntimeDetailFields.md): stamps entry and host fields (host labels, spawn env) onto a detection row and folds in the backend device check; has `stamp`, `applyBackend`.
 - [core/shared/runtime/BaseRuntimeServer.md](core/shared/runtime/BaseRuntimeServer.md): base supervisor for one native inference child; has `start`, `stop`, `getStatus`, `setIdleTimeout`, `markActive`, `holdIdle`, `waitUntilSettled`.
 - [core/shared/runtime/server/ChildReaper.md](core/shared/runtime/server/ChildReaper.md): kills a child and resolves on its real exit; has `reap`, `killNow`.
+- [core/shared/runtime/server/ProcessDescendants.md](core/shared/runtime/server/ProcessDescendants.md): the processes a launcher started under it (Basalt's Python server and engine), read while linked so they end even after the launcher is gone; has `list`, `descendantsOf`, `killAll`.
+- [core/shared/runtime/server/OrphanedRuntimeProcesses.md](core/shared/runtime/server/OrphanedRuntimeProcesses.md): ends the processes a runtime left running when the app that started them died (parent gone, from the runtime's folder), before a new launch; has `find`, `orphansIn`, `runtimeFolder`, `sweep`.
 - [core/shared/runtime/server/RuntimeLogRing.md](core/shared/runtime/server/RuntimeLogRing.md): bounded child output log with the stderr tail; has `capture`, `snapshot`, `clear`, `errorTail`.
 - [core/shared/runtime/server/RuntimeSpawnEnv.md](core/shared/runtime/server/RuntimeSpawnEnv.md): spawn cwd and env (library path, CUDA pin, runtime extra env) for a runtime binary; has `build`, `isPinned`.
 - [core/shared/runtime/HotswapCoordinator.md](core/shared/runtime/HotswapCoordinator.md): single-occupancy eviction per hotswap pool (suspend before stop), plus the one-round-trip pool automatic placement forms; has `shared`, `configure`, `register`, `acquire`, `reclaim`, `isPooled`, `isDisplaced`, `swapOut`, `release`, `snapshot`.
@@ -1523,6 +1525,7 @@ Small building blocks shared by more than one subsystem.
 - [core/network-sharing/RevocableEntryStore.md](core/network-sharing/RevocableEntryStore.md): base for revocable credential lists; has `revoke`, `revokeAll`.
 - [core/network-sharing/ShareStore.md](core/network-sharing/ShareStore.md): public read-only share-link tokens; has `list`, `issueOrGet`, `resolve`, `revoke`, `removeForTarget`, `revokeAll`.
 - [core/network-sharing/TokenStore.md](core/network-sharing/TokenStore.md): paired-client bearer tokens; has `list`, `issue`, `verify`, `revoke`, `remove`, `revokeAll`.
+- [core/network-sharing/UserStore.md](core/network-sharing/UserStore.md): named sharing users (person or group) with access keys and permission overrides; has `list`, `create`, `verify`, `keyOf`, `update`, `setOverrides`, `rotateKey`, `remove`, `looksLikeKey`.
 - [core/network-sharing/UsageStore.md](core/network-sharing/UsageStore.md): per-client usage counters; has `record`, `get`, `remove`.
 - [core/network-sharing/NetworkDiscovery.md](core/network-sharing/NetworkDiscovery.md): mDNS advertise and browse facade; has `isAvailable`, `advertise`, `browse`, `destroy`.
 - [core/network-sharing/MdnsInstancePool.md](core/network-sharing/MdnsInstancePool.md): one Bonjour instance per network interface; has `isAvailable`, `currentInstances`, `destroy`.
@@ -1552,7 +1555,10 @@ Small building blocks shared by more than one subsystem.
 - [core/network-sharing/client/PeerProviderConfigs.md](core/network-sharing/client/PeerProviderConfigs.md): peer LLMs as OpenAI-compatible provider configs; has `register`, `unregister`, `configId`.
 - [core/network-sharing/client/PeerImageServers.md](core/network-sharing/client/PeerImageServers.md): peer image slots as remote image servers; has `register`, `unregister`, `serverId`.
 - [core/network-sharing/client/PeerDiscovery.md](core/network-sharing/client/PeerDiscovery.md): mDNS browse of sharing hosts; has `start`, `stop`, `list`.
-- [core/network-sharing/host/SharingHostService.md](core/network-sharing/host/SharingHostService.md): host side of Network Sharing (toggle, PIN pairing, tokens, share links, manifest, listeners); has `setEnabled`, `setPin`, `pair`, `verifyCredential`, `getInfo`, `buildManifest`, `createShareLink`, `resolveShare`, `shutdown`.
+- [core/network-sharing/host/SharingHostService.md](core/network-sharing/host/SharingHostService.md): host side of Network Sharing (toggle, PIN pairing or access-key sign-in, users, tokens, share links, per-credential manifest and permissions, listeners); has `setEnabled`, `setPin`, `pair`, `verifyCredential`, `getInfo`, `buildManifest`, `createUser`, `setUserOverrides`, `permissionCatalog`, `createShareLink`, `resolveShare`, `shutdown`.
+- [core/network-sharing/host/SharingUsers.md](core/network-sharing/host/SharingUsers.md): the host's named users: create, override, rotate, remove, login links (`?apiKey=`), key to credential and sign-in; has `list`, `create`, `update`, `setOverrides`, `rotateKey`, `remove`, `loginLink`, `credentialFor`, `signIn`.
+- [core/network-sharing/host/AccessPolicy.md](core/network-sharing/host/AccessPolicy.md): what one credential may use: master settings with a user's overrides on top; has `flags`, `listOf`, `restrictsLlms`, `restrictsImageModels`, `imageModelDenied`, `narrowManifest`.
+- [core/network-sharing/host/UserOverrides.md](core/network-sharing/host/UserOverrides.md): the stored shape of a user's overrides (flags, chat models, image models, tools; null inherits); has `normalize`, `isEmpty`.
 - [core/network-sharing/host/HostSettings.md](core/network-sharing/host/HostSettings.md): the host's saved sharing settings with safe defaults; has `getShareFlags`, `setShareFlag`, `setPin`, `getWebPort`, `getTlsPort`.
 - [core/network-sharing/host/PinPairing.md](core/network-sharing/host/PinPairing.md): PIN-for-token pairing, refusing callers PairingThrottle has locked out; has `pair`, `reset`, `pinMatches`.
 - [core/network-sharing/host/PairingThrottle.md](core/network-sharing/host/PairingThrottle.md): wrong-PIN lockouts, per IP (doubling, capped) and global across all callers; has `lockedFor`, `recordFailure`, `recordSuccess`, `reset`.
@@ -1560,10 +1566,10 @@ Small building blocks shared by more than one subsystem.
 - [core/network-sharing/host/ShareLinkPublisher.md](core/network-sharing/host/ShareLinkPublisher.md): public share links gated on sharing and the web toggle; has `status`, `create`, `resolve`, `baseUrl`.
 - [core/network-sharing/host/HostAdvertiser.md](core/network-sharing/host/HostAdvertiser.md): mDNS advert of the sharing host; has `start`, `stop`.
 - [core/network-sharing/host/HostListeners.md](core/network-sharing/host/HostListeners.md): TLS listener, web backend and GPU lender lifecycle; has `startOnEnable`, `stopOnDisable`, `shutdown`, `startWeb`.
-- [core/network-sharing/host/WebToolAllowList.md](core/network-sharing/host/WebToolAllowList.md): agent tools a shared client may use (built-in chat tools until the host chooses); has `get`, `defaults`, `forSharedTurn`, `set`, `toolGroups`.
+- [core/network-sharing/host/WebToolAllowList.md](core/network-sharing/host/WebToolAllowList.md): agent tools a shared client may use (built-in chat tools until the host chooses, or a user's own list); has `get`, `defaults`, `forSharedTurn`, `set`, `clean`, `toolGroups`.
 - [core/network-sharing/host/HostManifestBuilder.md](core/network-sharing/host/HostManifestBuilder.md): toggle-aware sharing resource manifest; has `execute`.
 - [core/network-sharing/host/HostModelInventory.md](core/network-sharing/host/HostModelInventory.md): installed models as client-safe lists; has `localLlmModels`, `imageModels`.
-- [core/network-sharing/host/HostDialPosition.md](core/network-sharing/host/HostDialPosition.md): the host's thinking-dial fallback; has `of`.
+- [core/network-sharing/host/HostDialPosition.md](core/network-sharing/host/HostDialPosition.md): the host's thinking-dial fallback for a model (its Tune effort, else the Setup default); has `of`.
 - [core/network-sharing/host/SharingCredentialReader.md](core/network-sharing/host/SharingCredentialReader.md): bearer and browser credential reading; has `bearer`, `browser`.
 - [core/network-sharing/host/SharedAgents.md](core/network-sharing/host/SharedAgents.md): custom agents offered to shared clients; has `isShared`, `list`, `resolveTurn`.
 - [core/network-sharing/host/SharedArtifacts.md](core/network-sharing/host/SharedArtifacts.md): host artifacts and live data for paired clients; has `describe`, `html`, `data`, `mutate`.
@@ -1581,12 +1587,13 @@ Small building blocks shared by more than one subsystem.
 - [core/network-sharing/host/llm/ChatCompletionTurn.md](core/network-sharing/host/llm/ChatCompletionTurn.md): one shared chat completions turn; has `run`.
 - [core/network-sharing/host/llm/ChatCompletionStream.md](core/network-sharing/host/llm/ChatCompletionStream.md): chat completions SSE and JSON writer; has `chunk`, `usage`, `finish`, `completion`.
 - [core/network-sharing/host/llm/ChatTurnInputs.md](core/network-sharing/host/llm/ChatTurnInputs.md): images, agent mode and tool allow-list for a shared turn; has `images`, `wantsAgent`, `allowedTools`.
+- [core/network-sharing/host/llm/WebChatTurnFlags.md](core/network-sharing/host/llm/WebChatTurnFlags.md): the web chat's per-turn flags (conversation id, plan, media picks, Suggest replies, voice, switched-off tools); has `of`, `narrow`.
 - [core/network-sharing/host/llm/ClientRequestKnobs.md](core/network-sharing/host/llm/ClientRequestKnobs.md): the reply cap, sampler numbers and temperature pin a shared client sent, as the extra the host's dispatcher takes; has `of`, `apply`.
 - [core/network-sharing/host/llm/ResponsesTurn.md](core/network-sharing/host/llm/ResponsesTurn.md): OpenAI Responses API shim turn; has `run`.
 - [core/network-sharing/host/llm/ResponsesStream.md](core/network-sharing/host/llm/ResponsesStream.md): Responses SSE writer; has `started`, `delta`, `completed`, `failed`.
 - [core/network-sharing/host/llm/ResponsesInput.md](core/network-sharing/host/llm/ResponsesInput.md): Responses input to chat messages; has `toMessages`.
 - [core/network-sharing/host/llm/LiveTurnRegistry.md](core/network-sharing/host/llm/LiveTurnRegistry.md): in-flight shared turns for explicit abort; has `register`, `abort`.
-- [core/network-sharing/host/llm/LlmModelGate.md](core/network-sharing/host/llm/LlmModelGate.md): manifest-based model authorization; has `denied`, `modelList`.
+- [core/network-sharing/host/llm/LlmModelGate.md](core/network-sharing/host/llm/LlmModelGate.md): model authorization against the manifest the calling credential sees; has `denied`, `modelList`.
 - [core/network-sharing/host/llm/SseChannel.md](core/network-sharing/host/llm/SseChannel.md): lazily opened SSE response; has `open`, `data`, `event`, `done`.
 - [core/network-sharing/host/llm/TurnUsageMeter.md](core/network-sharing/host/llm/TurnUsageMeter.md): records a shared turn's usage once; has `setUsage`, `bank`.
 - [core/network-sharing/host/media/SharedImageJob.md](core/network-sharing/host/media/SharedImageJob.md): one queued shared image request; has `run`.
@@ -1814,6 +1821,8 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/router/ImageRun.md](core/image-server/router/ImageRun.md): base class for one in-flight image render; has `start`, `abort`, `finished`.
 - [core/image-server/router/LocalImageRun.md](core/image-server/router/LocalImageRun.md): image render on a local slot; has `start`, `abort`.
 - [core/image-server/router/RemoteImageRun.md](core/image-server/router/RemoteImageRun.md): image render relayed to a sharing peer; has `start`, `abort`.
+- [core/image-server/router/ImageCapacityRescue.md](core/image-server/router/ImageCapacityRescue.md): a render that ran out of room on its card records the model's real need and stops its slot so a retry is placed better; has `prepare`, `ranOutOfRoom`, `neededBytes`, `budgetBytes`.
+- [core/image-server/router/HeldRunEvents.md](core/image-server/router/HeldRunEvents.md): a retryable render's send and notify, holding back the failure until the router knows whether a retry follows; has `release`, `discard`.
 - [core/image-server/server/ImageRuntimeServer.md](core/image-server/server/ImageRuntimeServer.md): supervises sd-server behind an auth proxy; has `findFreePort`, `suspend` plus the base API.
 - [core/image-server/rampin/ImagePinTarget.md](core/image-server/rampin/ImagePinTarget.md): default image models to the RAM-pin file list; has `resolve`.
 - [core/image-server/ImageIpcHandlers.md](core/image-server/ImageIpcHandlers.md): IPC controller for the image server (57 channels, routes only); has `register`.
@@ -1877,7 +1886,7 @@ Small building blocks shared by more than one subsystem.
 - [core/image-server/service/SageAttentionPolicy.md](core/image-server/service/SageAttentionPolicy.md): per-launch --sage-attn decision (CUDA build, Ampere+ card, model opt-in or INT8 weights); has `decide`, `isCudaRuntime`.
 - [core/image-server/service/RuntimeReleaseTag.md](core/image-server/service/RuntimeReleaseTag.md): compares an installed image runtime's release tag (`luma-b<n>` or `master-<n>`) with the minimum a model row states; an unknown tag never blocks a launch; has `installedTag`, `isOlder`, `parse`.
 - [core/image-server/service/PreferredImageRuntime.md](core/image-server/service/PreferredImageRuntime.md): one-launch swap onto a model's preferred drop-in runtime (MiniMax-H3 on the LumaByte build); has `pick`, `interchangeable`.
-- [core/image-server/service/ChatSwapOut.md](core/image-server/service/ChatSwapOut.md): when an image launch swaps out the resident automatic chat model instead of offloading beside it; has `cardToFree`.
+- [core/image-server/service/ChatSwapOut.md](core/image-server/service/ChatSwapOut.md): when an image launch swaps out the resident automatic chat model instead of falling back to RAM (a chat card that holds the whole model once freed, else the card the offload runs on); has `cardToFree`, `freeableCard`, `roomOnceFreed`.
 - [core/image-server/service/UserGpuPin.md](core/image-server/service/UserGpuPin.md): whether the user pinned a slot to a GPU; has `isPinnedToGpu`.
 - [core/image-server/service/ImageLaunchInputs.md](core/image-server/service/ImageLaunchInputs.md): pre-launch runtime, model and API key checks; has `runtime`, `model`, `apiKeyRefusal`.
 - [core/image-server/service/ImageLaunchLog.md](core/image-server/service/ImageLaunchLog.md): the image launch console line; has `line`.
@@ -2882,7 +2891,9 @@ dock under the page, and driven by AI through the `terminal_*` tools once the us
 - [core/llm-server/chat/router/ModelContextWindow.md](core/llm-server/chat/router/ModelContextWindow.md): the context window ONE request gets from the model behind a chat model ref, in tokens.
 - [core/llm-server/chat/router/ModelDispatcher.md](core/llm-server/chat/router/ModelDispatcher.md): the one choke point every chat model call passes through.
 - [core/llm-server/chat/router/PeerModelRef.md](core/llm-server/chat/router/PeerModelRef.md): whether a chat model ref is a paired LumaBrowser host's model (its provider config is `peerManaged`); has `is`.
-- [core/llm-server/chat/router/ProxyTurns.md](core/llm-server/chat/router/ProxyTurns.md): turns run for a paired Network Sharing client: never persisted, never touching the host user's in-flight turn.
+- [core/llm-server/chat/router/ProxyTurns.md](core/llm-server/chat/router/ProxyTurns.md): turns run for a paired Network Sharing client: never persisted, never touching the host user's in-flight turn; agent turns go through GuestTurnDispatch, a web chat's plain turn gets the desktop prompt.
+- [core/llm-server/chat/router/GuestTurnDispatch.md](core/llm-server/chat/router/GuestTurnDispatch.md): a Network Sharing client's agent turn run like the host's own chat turn (chat role, answering guidance, native history, context window, update_plan) under the guest limits; has `run`, `conversationId`.
+- [core/llm-server/chat/router/GuestConversationMeta.md](core/llm-server/chat/router/GuestConversationMeta.md): in-memory meta of a conversation the host does not keep, seeded with the client's plan and media picks; has `getMeta`, `setMeta`.
 - [core/llm-server/chat/router/HostOnlyTools.md](core/llm-server/chat/router/HostOnlyTools.md): the tools (the terminal) withheld from turns run for someone else; has `isHostOnly`.
 - [core/llm-server/chat/router/RemoteStream.md](core/llm-server/chat/router/RemoteStream.md): streams one chat request to a remote provider config through an ephemeral provider that never writes the user's settings.
 - [core/llm-server/chat/router/RequestSettings.md](core/llm-server/chat/router/RequestSettings.md): applies a model's or profile's temperature and reply cap to one model call; has `apply`, `maxTokens`.
@@ -3820,15 +3831,17 @@ Turns a signed-in persisted tab into named endpoints: a recorded step script rep
 - [extensions/game-mode/ai/AiToolList.md](extensions/game-mode/ai/AiToolList.md): validates the game functions an in-game call declares: at most 24, valid unique names, descriptions cut to 500 chars, an object schema by default.
 - [extensions/game-mode/assets/AssetJob.md](extensions/game-mode/assets/AssetJob.md): the generation job of one prepared asset (prompt, render size, model, output size, pixel grid, transparency), the shape queued on `session.pendingAssets`.
 - [extensions/game-mode/assets/AssetPath.md](extensions/game-mode/assets/AssetPath.md): normalizes and guards an asset path: a `.png` under `assets/` that resolves inside the game folder.
-- [extensions/game-mode/assets/AssetPostChain.md](extensions/game-mode/assets/AssetPostChain.md): turns a freshly generated image into the asset file: pixel-art K-Centroids to its grid and back up to the layout size; other styles smooth-downscale; transparent assets key their background on the way.
+- [extensions/game-mode/assets/AssetPostChain.md](extensions/game-mode/assets/AssetPostChain.md): turns a freshly generated image into the asset file: pixel-art K-Centroids to its grid (snapped to the game palette when there is one) and back up to the layout size; RD Flow 64's palette art is resized pixel-exactly; other styles smooth-downscale; transparent assets key their background on the way.
 - [extensions/game-mode/assets/AssetSizing.md](extensions/game-mode/assets/AssetSizing.md): asset dimensions: the file size the game lays out for, the logical grid of pixel-art, and the larger size the image model renders before the post-chain downscales it.
 - [extensions/game-mode/assets/AssetSpec.md](extensions/game-mode/assets/AssetSpec.md): validates one asset request, plans its generation and writes its placeholder PNG at the real size.
 - [extensions/game-mode/assets/AssetStyle.md](extensions/game-mode/assets/AssetStyle.md): art styles for generated assets: coerces the style string a model passes onto `pixel-art`, `cartoon`, `painted`, `flat`, and builds the image prompt.
+- [extensions/game-mode/assets/GamePalettes.md](extensions/game-mode/assets/GamePalettes.md): the game's locked colour palette from its setup (a preset or the user's own colours), drawn in by RD Flow 64 and snapped to by other models' pixel art.
 - [extensions/game-mode/assets/ImageCapability.md](extensions/game-mode/assets/ImageCapability.md): what image generation can do right now through `context.chat`.
 - [extensions/game-mode/assets/ImageModelPins.md](extensions/game-mode/assets/ImageModelPins.md): which image model renders which game asset.
 - [extensions/game-mode/assets/InlineAssetGenerator.md](extensions/game-mode/assets/InlineAssetGenerator.md): generates one prepared asset mid-turn and writes it over its placeholder.
 - [extensions/game-mode/assets/PendingAssetDrainer.md](extensions/game-mode/assets/PendingAssetDrainer.md): generates the assets queued during a turn after the turn ends (the mode's postProcess), replacing placeholders, inside one exclusive-image window and grouped by model.
 - [extensions/game-mode/assets/PlaceholderPng.md](extensions/game-mode/assets/PlaceholderPng.md): the solid-colour placeholder PNG every asset gets before its real image exists, so a game never 404s an asset.
+- [extensions/game-mode/assets/RdFlowAssets.md](extensions/game-mode/assets/RdFlowAssets.md): RD Flow 64 as a game-asset model: which pixel-art assets it can draw and the caption it gets.
 - [extensions/game-mode/assets/RuntimeAssetGenerator.md](extensions/game-mode/assets/RuntimeAssetGenerator.md): `AI.image()` from inside a running game: the build-time pipeline for play-time art under `assets/runtime/`, memoised per request and one render at a time process-wide.
 - [extensions/game-mode/assets/RuntimeImageIndex.md](extensions/game-mode/assets/RuntimeImageIndex.md): the memo of play-time images an AI game has drawn, `.gamedata/images.json`, keyed by the game's `key` or a request hash.
 - [extensions/game-mode/flatten/NoScrollbarStyle.md](extensions/game-mode/flatten/NoScrollbarStyle.md): the no-scrollbar style rule added to a game page when it is served for Play, flattened for sharing or the smoke run, or exported; has `apply`.
@@ -4242,10 +4255,12 @@ Desktop Integration: a local API at `/api/desktop` for desktop clients (Windhawk
 - [ui/shell/vault/VaultFieldMenu.md](ui/shell/vault/VaultFieldMenu.md): the autofill list under a focused sign-in field (chrome overlay, so pages cannot read it).
 - [ui/shell/vault/VaultKeyBadge.md](ui/shell/vault/VaultKeyBadge.md): the address bar key icon listing the page's saved logins.
 - [ui/shell/settings/security/SitePermissionsPanel.md](ui/shell/settings/security/SitePermissionsPanel.md): remembered per-origin answers (camera, microphone, pop-ups, notifications, local AI model) with Clear and Clear all; re-read when the Privacy & permissions tab opens.
-- [ui/shell/settings/sharing/NetworkSharingPanel.md](ui/shell/settings/sharing/NetworkSharingPanel.md): network Sharing host settings (enable, name, PIN, bind mode, share flags, web backend) composing the firewall, web tools, tokens and peers parts; reloads on open and warms mDNS discovery.
+- [ui/shell/settings/sharing/NetworkSharingPanel.md](ui/shell/settings/sharing/NetworkSharingPanel.md): network Sharing host settings (enable, name, PIN, bind mode, share flags, web backend) composing the firewall, web tools, tokens, users and peers parts; reloads on open and warms mDNS discovery.
 - [ui/shell/settings/sharing/SharingFirewall.md](ui/shell/settings/sharing/SharingFirewall.md): the firewall status badge and the elevated "Allow through firewall" button.
 - [ui/shell/settings/sharing/SharingPeersList.md](ui/shell/settings/sharing/SharingPeersList.md): already-paired peers: enable, attach GPUs, refresh, remove; follows `sharing:peers-changed`.
 - [ui/shell/settings/sharing/SharingTokensList.md](ui/shell/settings/sharing/SharingTokensList.md): paired web clients with usage, last use, Revoke / Remove and Revoke all.
+- [ui/shell/settings/sharing/SharingUsersList.md](ui/shell/settings/sharing/SharingUsersList.md): the Users fold: add a person or group, Copy link (`?apiKey=`), New key, Remove, Permissions.
+- [ui/shell/settings/sharing/SharingUserPermissions.md](ui/shell/settings/sharing/SharingUserPermissions.md): one user's permission editor: each flag Inherit / Allow / Block, chat models, image models and tools inherited or ticked.
 - [ui/shell/settings/sharing/SharingWebTools.md](ui/shell/settings/sharing/SharingWebTools.md): chat tools web-backend clients may use (globally disabled tools excluded; shows the defaults until the host ticks, saves the ticked names).
 - [ui/shell/tabs/ClosedTabStack.md](ui/shell/tabs/ClosedTabStack.md): recently closed regular web tabs (newest last, at most 25) for Ctrl+Shift+T.
 - [ui/shell/tabs/PersistedTabsMenu.md](ui/shell/tabs/PersistedTabsMenu.md): the persisted-tabs strip button (visible only while persisted tabs exist) and its quick view (background tabs and open tabs in two headed sections; icon, title and host per row), which shows a hidden tab or switches to a visible one.

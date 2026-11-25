@@ -38,6 +38,12 @@ class HostModelInventory {
     return role === 'image-video' ? 'video' : 'generate';
   }
 
+  async currentImageModel(role) {
+    const models = await this.imageModels(HostModelInventory.kindOf(role));
+    const current = (models || []).find((model) => model.current);
+    return current ? current.id : null;
+  }
+
   async imageModelDenied(role, modelId) {
     if (!modelId) return null;
     const models = await this.imageModels(HostModelInventory.kindOf(role));

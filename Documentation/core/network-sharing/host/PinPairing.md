@@ -26,7 +26,8 @@ Exchanges the host PIN for a paired-client bearer token, refusing callers that
   changes).
 - `PinPairing.pinMatches(given, stored)`: `crypto.timingSafeEqual`; a length
   mismatch still burns one comparison before failing.
-- `PinPairing.toReply(result)`: `{ status: 200, body: { token, name } }`, or
+- `PinPairing.toReply(result)`: `{ status: 200, body: { token, name, user } }`
+  (`user` is the user's name after an access-key sign-in, else null), or
   429 (locked) / 401 with `{ error, retryAfterMs }`.
 
 ## Why

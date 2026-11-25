@@ -9,16 +9,32 @@ class PixelPost {
     return CanvasModule.available();
   }
 
-  static async pixelArtProcess(pngBuffer, outW, outH, { paletteSize = 24, transparent = false, report = null, upscaleTo = null } = {}) {
+  static async pixelArtProcess(pngBuffer, outW, outH, { paletteSize = 24, palette = null, transparent = false, report = null, upscaleTo = null } = {}) {
     if (!PixelPost.available()) return null;
     try {
       const { data, width, height } = await CanvasModule.decodeToRgba(pngBuffer);
       if (transparent) PixelPost._report(report, BackgroundKeyer.key(data, width, height));
-      const small = PaletteQuantizer.quantize(KCentroid.downscale(data, width, height, outW, outH), paletteSize);
-      const up = PixelPost._upscaleTarget(upscaleTo, outW, outH);
-      if (up) return CanvasModule.encodePng(NearestUpscale.apply(small, outW, outH, up.width, up.height), up.width, up.height);
-      return CanvasModule.encodePng(small, outW, outH);
+      const cells = KCentroid.downscale(data, width, height, outW, outH);
+      const small = palette && palette.length ? PaletteQuantizer.snap(cells, palette) : PaletteQuantizer.quantize(cells, paletteSize);
+      return PixelPost._encodeGrid(small, outW, outH, upscaleTo);
     } catch (_) { return null; }
+  }
+
+  static async paletteArtResize(pngBuffer, gridW, gridH, { upscaleTo = null } = {}) {
+    if (!PixelPost.available()) return null;
+    try {
+      const { data, width, height } = await CanvasModule.decodeToRgba(pngBuffer);
+      let grid = data;
+      if (gridW < width || gridH < height) grid = PaletteQuantizer.snap(KCentroid.downscale(data, width, height, gridW, gridH), PaletteQuantizer.coloursOf(data));
+      else if (gridW !== width || gridH !== height) grid = NearestUpscale.apply(data, width, height, gridW, gridH);
+      return PixelPost._encodeGrid(grid, gridW, gridH, upscaleTo);
+    } catch (_) { return null; }
+  }
+
+  static _encodeGrid(grid, gridW, gridH, upscaleTo) {
+    const up = PixelPost._upscaleTarget(upscaleTo, gridW, gridH);
+    if (up) return CanvasModule.encodePng(NearestUpscale.apply(grid, gridW, gridH, up.width, up.height), up.width, up.height);
+    return CanvasModule.encodePng(grid, gridW, gridH);
   }
 
   static async removeBackground(pngBuffer) {

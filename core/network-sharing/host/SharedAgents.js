@@ -13,16 +13,16 @@ class SharedAgents {
     this._modes = modeRegistry;
   }
 
-  isShared() {
+  isShared(credential = null) {
     try {
-      return this._service.getShareFlags().shareAgents !== false;
+      return this._service.getShareFlags(credential).shareAgents !== false;
     } catch (_) {
       return true;
     }
   }
 
-  list() {
-    if (!this.isShared()) return [];
+  list(credential = null) {
+    if (!this.isShared(credential)) return [];
     const manager = this._service.getAgentManager();
     try {
       return manager && typeof manager.listAgents === 'function' ? manager.listAgents() : [];
@@ -31,15 +31,15 @@ class SharedAgents {
     }
   }
 
-  chatUi() {
-    if (!this.isShared()) return { status: 403, message: 'Custom agents are not shared' };
+  chatUi(credential = null) {
+    if (!this.isShared(credential)) return { status: 403, message: 'Custom agents are not shared' };
     const manager = this._service.getAgentManager();
     if (!manager || !manager.chatUiPath) return { ...SharedAgents.NOT_AVAILABLE };
     return { path: manager.chatUiPath };
   }
 
-  chatUiAsset(name) {
-    const bundle = this.chatUi();
+  chatUiAsset(name, credential = null) {
+    const bundle = this.chatUi(credential);
     if (!bundle.path) return bundle;
     if (!SharedAgents.ASSET_NAME_RE.test(String(name))) return { ...SharedAgents.NOT_AVAILABLE };
     const dir = path.dirname(bundle.path);
@@ -47,19 +47,20 @@ class SharedAgents {
     return SharedAgents._declaredAssets(dir).includes(wanted) ? { path: wanted } : { ...SharedAgents.NOT_AVAILABLE };
   }
 
-  webModes() {
+  webModes(credential = null) {
     try {
+      const agentsShared = this.isShared(credential);
       return this._modes.list()
         .filter((mode) => SharedAgents.WEB_CHAT_MODE_IDS.has(mode.id))
-        .filter((mode) => mode.id !== SharedAgents.AGENT_CHAT_MODE_ID || this.isShared())
+        .filter((mode) => mode.id !== SharedAgents.AGENT_CHAT_MODE_ID || agentsShared)
         .map((mode) => ({ ...mode, chatUiUrl: SharedAgents.WEB_CHAT_UI_URL }));
     } catch (_) {
       return [];
     }
   }
 
-  resolveTurn(agentId) {
-    if (!this.isShared()) return { refusal: SharedAgents._refusal(403, 'custom agents are not shared') };
+  resolveTurn(agentId, credential = null) {
+    if (!this.isShared(credential)) return { refusal: SharedAgents._refusal(403, 'custom agents are not shared') };
     const turn = this._buildTurn(String(agentId));
     return turn ? { turn } : { refusal: SharedAgents._refusal(404, 'agent not found on host') };
   }

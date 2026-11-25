@@ -17,7 +17,7 @@ class ResponsesTurn extends SharedLlmTurn {
   }
 
   async _modelRefusal() {
-    const denied = await LlmModelGate.denied(this._service, this._model);
+    const denied = await LlmModelGate.denied(this._service, this._model, this._req.sharingToken);
     return denied ? ResponsesTurn._refusal(403, denied) : null;
   }
 
@@ -43,7 +43,7 @@ class ResponsesTurn extends SharedLlmTurn {
       temperature: this._body.temperature,
       hooks: this._hooks(),
       images: this._images,
-      extra: ThinkingKnobs.extra(this._body, this._service.hostDialPosition()),
+      extra: ThinkingKnobs.extra(this._body, this._service.hostDialPosition(this._model)),
     });
   }
 

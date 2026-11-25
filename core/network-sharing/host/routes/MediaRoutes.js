@@ -34,14 +34,14 @@ class MediaRoutes {
   _mountVoice(router) {
     const guards = [this._auth.requireToken, (req, res, next) => this._requireVoiceShare(req, res, next)];
     const rawAudio = express.raw({ type: MediaRoutes.AUDIO_TYPES, limit: MediaRoutes.AUDIO_LIMIT });
-    router.get('/voice/status', this._auth.requireToken, (req, res) => res.json(this._voice.status()));
+    router.get('/voice/status', this._auth.requireToken, async (req, res) => res.json(await this._voice.status(req.sharingToken)));
     router.post('/voice/prewarm', ...guards, async (req, res) => res.json(await this._voice.prewarm()));
     router.post('/voice/transcribe', ...guards, rawAudio, async (req, res) => RouteReply.send(res, await this._voice.transcribe(req)));
     router.post('/voice/synthesize', ...guards, (req, res) => new VoiceSynthesisStream(this._service).run(req, res));
   }
 
   _requireVoiceShare(req, res, next) {
-    const refusal = this._voice.gate();
+    const refusal = this._voice.gate(req.sharingToken);
     return refusal ? RouteReply.send(res, refusal) : next();
   }
 }

@@ -1,5 +1,36 @@
 # Changelog
 
+## 2.2.9
+
+### New features
+- **Sharing users (Settings > Sharing > Users).** Give a person, or a group of people, their own access key instead of handing out the PIN.
+  - **Add user** creates the user and shows their login link once, with a Copy button. Opening the link on a phone or tablet signs them straight into the web app. In another LumaBrowser, they paste the key where the host's PIN goes.
+  - **Copy link** gives the link again later. The key is part of the link, so treat it like a password: anyone who has it signs in as that user. **New key** replaces the key, and the old key and link stop working at once. **Remove** deletes the user.
+  - Each row shows what the user has used and when.
+  - **Permissions** opens a user's own settings. Each sharing toggle can be **Inherit** (it follows your sharing settings, including later changes), **Allow** or **Block**. A user can also have their own list of chat models, image and video models, and chat tools. Leave a list on inherit and the user gets what everyone else gets.
+  - Tools you switched off for your own chat are never offered to a user, whatever their list says.
+- **RD Flow 64, a pixel-art image model (LLM > Image).** Retro Diffusion's small model draws 64x64 pixel art directly on the pixel grid, with every pixel taken from a palette and real transparency, so sprites need no cleanup. It uses about 1 GB of video memory and takes around 1.5 seconds per image on an RTX 3090.
+  - Every picture comes back at exactly 64x64 pixels, whatever size you ask for, so its pixels are never blurred by resizing.
+  - It works best with a long, plain description of the picture (120 to 200 words).
+  - It needs the LumaByte image runtime `luma-b7` or newer (Setup > Image > Image runtimes).
+  - Its licence allows personal, non-commercial use of the model only. The pictures you make are yours, including for commercial use, but may not be used to train AI models.
+- **Game mode: a colour palette for the whole game.** The New game form has a **Colour palette** choice: let the image model pick, one of the presets (PICO-8, Game Boy, Sweetie 16, Endesga 32), or your own colours. Your own colours can be typed as hex codes or pasted from a Lospec `.hex` or paint.net palette file. All of the game's pixel art is then drawn in those colours, or snapped to them, so its sprites and backdrops match.
+- **Game mode draws pixel-art sprites with RD Flow 64.** When RD Flow 64 is installed it is the default sprite model for new games. It is used for pixel-art sprites that are roughly square and 64x64 or smaller, or 128, 192 or 256 pixels, which are enlarged by whole pixels. It draws them in the game's palette with their own transparency. Other assets go to the next sprite or backdrop model.
+
+### Changes
+- **Web app chats work as they do in the LLM tab.** A chat in the sharing web app used to get a plainer version of the assistant, so the same request read worse than on the host. It now gets the same instructions, the full conversation history and the model's context window. It also gets:
+  - plans, shown in the chat's plan panel;
+  - "Suggest replies" and the spoken style in voice mode;
+  - the chat's own image, edit and video model picks.
+
+  Tools you switch off in a web chat stay off for that chat.
+- **Shared models think as they do on the host.** A shared model uses the thinking setting from its own Tune settings, as your chat does, before the general Setup settings. Agent turns from a paired device get the same default thinking level as agent turns on the host.
+- **Web app voice finds its speech-to-text model.** Speech-to-text in the web app showed no engine and no model even when one was installed on the host.
+- **An image that runs out of video memory is made again.** When a render fails because the model needed more video memory than the card had, LumaBrowser remembers how much the model needs and tries once more on a card with room for it, or after the chat model steps aside. You only see an error if the second try fails too. This fixes Qwen-Image 2.1 edits that failed with "failed during weight preparation" when they were placed beside another model.
+- **Image models go where they fit whole.** An image model now goes on a card that holds the whole model. If no card does, it is split across cards. If that does not work either, the chat model gives up its card. Loading part of the model from system RAM, which is much slower, is the last resort. Before, any card with 8 GB free could take an image model, which then failed or ran slowly.
+- **Image models can make room on a Basalt model's card.** LumaBrowser did not keep track of which card a Basalt model was using, so an image model never asked it to step aside and crowded the same card.
+- **Basalt no longer keeps running after you quit.** Closing LumaBrowser could leave Basalt's server running with the model still in video memory. It is now always stopped. Any Basalt server an earlier session left behind is stopped before the next one starts. Leftover servers had caused a model to show "ready" and then "failed to load", or requests to go to the old server.
+
 ## 2.2.8
 
 ### New features

@@ -1,7 +1,7 @@
 class VoiceViews {
-  static stt(service) {
+  static async stt(service) {
     if (!service || typeof service.getView !== 'function') return { runtimeReady: false, models: [] };
-    const view = service.getView() || {};
+    const view = (await service.getView()) || {};
     return {
       runtimeReady: !!view.runtimeReady,
       models: (view.models || []).map((model) => ({ id: model.id, name: model.name })),

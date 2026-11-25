@@ -8,6 +8,8 @@ GPU lending (llama.cpp RPC) to one paired consumer at a time. Methods return
 ## Methods
 
 - `new SharedGpuLease(service)` (`getShareFlags`, `getRpcLending`).
+- `gate(credential?)` reads `shareGpus` for the calling credential (a user's
+  override applies).
 - `gate()`: 403 `GPU sharing is disabled on the host`, 503 `GPU lending is not
   available on the host`, else null.
 - `acquire(credential, { devices }, bindAddress)`: calls the lender with the

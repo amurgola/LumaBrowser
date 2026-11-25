@@ -30,9 +30,12 @@ mcpAggregator, apiSecurity, discovery, getAgentManager, getAppVersion })`
 
 Config and lifecycle:
 - `isEnabled()`, `getPort()` (falls back to 3000), `getInstanceName()`,
-  `getBindMode()`, `getShareFlags()`, `getAppVersion()`.
+  `getBindMode()`, `getShareFlags(credential?)` (the master flags, or one
+  credential's once its user's overrides apply: [AccessPolicy](AccessPolicy.md)),
+  `getAppVersion()`.
 - `getInfo()`: the `/sharing/info` body `{ name, id, proto: 1, requiresPin: true, enabled, version, tls }`.
-- `getConfig()`: everything the settings UI shows; never the raw PIN.
+- `getConfig()`: everything the settings UI shows, including `users`; never
+  the raw PIN or a user's key.
 - `setEnabled(enabled)`: enabling needs a PIN (else reverts and returns
   `Set a PIN before enabling Network Sharing.`), then advertises over mDNS and
   starts TLS and (if on) the web backend; a failed bind only warns. Disabling
@@ -51,15 +54,32 @@ Config and lifecycle:
   host is off; a failed bind reverts the toggle), `setWebPort(port)`,
   `getWebPublicUrl()`, `setWebPublicUrl(url)`, `checkPublicUrlReachable({ fetch, timeoutMs })`
   (`{ skipped: true }`, or `{ ok, publicUrl, error? }` via [PublicUrlProbe](PublicUrlProbe.md)).
-- `getWebAllowedTools()`, `setWebAllowedTools(tools)`, `getSharedTurnTools()` ([WebToolAllowList](WebToolAllowList.md)); `getWebConfig()` also carries `webDefaultTools`, what applies while nothing was chosen.
+- `getWebAllowedTools(credential?)`, `setWebAllowedTools(tools)`, `getSharedTurnTools(credential?)` ([WebToolAllowList](WebToolAllowList.md)); a user with their own tool list gets that list instead of the master one. `getWebConfig()` also carries `webDefaultTools`, what applies while nothing was chosen.
 
 Tokens, pairing and usage:
 - `listTokens()` (usage joined), `revokeToken(id)`, `removeToken(id)` (drops
   its usage), `revokeAllTokens()`, `verifyToken(token)`.
-- `verifyCredential(token)`: a pairing-token entry, or `{ id: 'api-key',
-  label: 'Core API key', viaApiKey: true }` for a valid API key, else null.
+- `verifyCredential(token)`: a pairing-token entry, a user's credential
+  (`{ id, label, peerHint, kind, viaUser: true, overrides }`, from
+  [SharingUsers](SharingUsers.md)), or `{ id: 'api-key', label: 'Core API key',
+  viaApiKey: true }` for a valid API key, else null.
 - `recordUsage(entry, delta)`: skips API-key and id-less entries.
-- `pair(pin, { ip, peerHint })` ([PinPairing](PinPairing.md)), `setNotifier(fn)`.
+- `pair(secret, { ip, peerHint })`: a PIN pairs a new device
+  ([PinPairing](PinPairing.md)); a user's access key (`lumauser_...`) signs in
+  as that user and answers `{ success, token: <the key>, name, user }`.
+  `setNotifier(fn)`.
+
+- `mediaPicksFor(credential, picks)`: the image, edit and video models a shared agent turn's media tools run on:
+  the client's picks, and for a user with an image model list only models on it (their pick, else the slot's
+  current model, else the first allowed).
+
+Users ([SharingUsers](SharingUsers.md)):
+- `listUsers()`, `createUser({ name, kind })`, `updateUser(id, fields)`,
+  `setUserOverrides(id, overrides)`, `rotateUserKey(id)`, `removeUser(id)`,
+  `userLoginLink(id)`.
+- `permissionCatalog()`: what a user's overrides can name, whatever the master
+  toggles say: `{ llms: [{ ref, label, kind }], imageModels: [{ id, label,
+  kinds }], shareFlags, toolGroups }`.
 
 Share links ([ShareLinkPublisher](ShareLinkPublisher.md)):
 - `getShareLinkStatus()`, `createShareLink({ kind, targetId, title })`,
@@ -67,9 +87,12 @@ Share links ([ShareLinkPublisher](ShareLinkPublisher.md)):
   `revokeAllShareLinks()`, `lanAddress()`.
 
 Manifest and proxy targets:
-- `buildManifest()` ([HostManifestBuilder](HostManifestBuilder.md)),
-  `allowedLlmRefs()`, `imageModelDenied(role, modelId)`
-  ([HostModelInventory](HostModelInventory.md)), `hostDialPosition()`
+- `buildManifest(credential?)` ([HostManifestBuilder](HostManifestBuilder.md),
+  with the credential's flags, then narrowed to its user's models),
+  `allowedLlmRefs(credential?)`, `imageModelDenied(role, modelId, credential?)`
+  ([HostModelInventory](HostModelInventory.md); a user with an image model list
+  is held to it even when no model is named, since the host default runs then),
+  `hostDialPosition(modelRef?)`
   ([HostDialPosition](HostDialPosition.md)).
 - `getChatRouter()`, `getImageRouter()`, `getVideoRouter()`, `getChatStore()`,
   `getVoiceServices()`, `getAgentManager()`.

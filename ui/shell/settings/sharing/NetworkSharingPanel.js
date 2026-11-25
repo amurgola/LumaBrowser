@@ -1,6 +1,7 @@
 import SharingFirewall from './SharingFirewall.js';
 import SharingWebTools from './SharingWebTools.js';
 import SharingTokensList from './SharingTokensList.js';
+import SharingUsersList from './SharingUsersList.js';
 import SharingPeersList from './SharingPeersList.js';
 
 export default class NetworkSharingPanel {
@@ -37,6 +38,7 @@ export default class NetworkSharingPanel {
     if (summary) summary.textContent = NetworkSharingPanel.summary(cfg);
     this._webTools.render(cfg);
     this._tokens.render(cfg.tokens || []);
+    this._users.render(cfg);
   }
 
   static summary(cfg) {
@@ -69,6 +71,7 @@ export default class NetworkSharingPanel {
     this._firewall = new SharingFirewall({ sharingApi });
     this._webTools = new SharingWebTools({ sharingApi, feedback: this._feedback });
     this._tokens = new SharingTokensList({ sharingApi, reload: () => this.loadHost() });
+    this._users = new SharingUsersList({ sharingApi, reload: () => this.loadHost(), visibleToolGroups: (groups) => this._webTools.visibleToolGroups(groups) });
     this._peers = new SharingPeersList({ sharingApi, renderProviders: this._renderProviders });
     this._firewall.install();
     this._webTools.install();
@@ -76,6 +79,7 @@ export default class NetworkSharingPanel {
 
   async _onSettingsOpen() {
     await this._webTools.refreshGloballyDisabled();
+    this._users.forgetCatalog();
     this.loadHost();
     this._peers.load();
     try { this._api.startDiscovery(); } catch (_) {}
@@ -120,6 +124,7 @@ export default class NetworkSharingPanel {
     this._wireField(el.publicUrl, () => this._api.setWebPublicUrl(el.publicUrl.value), 'Invalid URL.');
     for (const [flag, id] of Object.entries(NetworkSharingPanel.SHARE_FLAGS)) this._wireFlag(flag, document.getElementById(id));
     this._tokens.install();
+    this._users.install();
     this._peers.install();
   }
 

@@ -18,18 +18,25 @@ Places one image slot's model on the GPUs through the shared
   2. `reserve({ serverId: role, role: 'image', allowSplit: false, ... })`; a
      throwing coordinator leaves the slot unpinned and resident.
   3. When that is resident on a card that is not the strongest (most VRAM) of 2+
-     debited cards, and the strongest still has `MIN_SHARED_BUDGET_BYTES` (8 GB)
+     debited cards, and the strongest has room for the whole model (`requiredBytes`)
      of room, and the binary lists `--max-vram`, and the user did not pin the
      slot in the placement canvas ([UserGpuPin](UserGpuPin.md)): the slot moves
      to the strongest card with `autoFit` set to its room as a budget string
      (`cuda0=11.0`) and the ledger holds that room. Otherwise the single-card
-     placement stands.
+     placement stands, with `autoFit` set to that card's own room as a budget
+     when the binary lists `--max-vram` (`_withCardBudget`): without a budget
+     sd-server has no residency manager, so a pass that needs more than the
+     card has free at that moment splits into segments and fails at the first
+     segment holding weights ("qwen3vl segment 4/30 ... failed during weight
+     preparation", Qwen-Image 2.1 edits on the 3090 with the 5090 full,
+     2026-11-25); with one it streams what does not fit from RAM.
   4. When that offloads, the auto-fit rescue: with 2+ debited cards and a binary
      that lists `--auto-fit`, reserve again with `allowSplit: true`. A resident
      result pins the devices in order (`cudaDevice` `"0,1"`) and, for 2+ cards,
      `autoFit` is the budget string. Otherwise (or on any throw) the offload
      placement stands.
-- `ImageSlotPlacement.requiredBytes(model, role)` `minVramBytes` (else 16 GB for
+- `ImageSlotPlacement.requiredBytes(model, role, measuredPeakBytes = 0)` the larger
+  of a placement test render's measured peak and `minVramBytes` (else 16 GB for
   video-class, 12 GB for edit-class, 8 GB) plus `PAD_BYTES` (2 GB).
 - `ImageSlotPlacement.isCpuOnlyRuntime(runtime)` id `sd-cpp-cpu` or ending `-cpu`.
 - `ImageSlotPlacement.budgetString(devices, debitedCards)`
@@ -56,3 +63,7 @@ weight from RAM each step" into "fully resident across the box". Budgets come
 from the ledger-debited room because nvidia-smi cannot see a sibling server
 mid-load. A retry that still offloads re-records the same placement, so the
 ledger stays truthful.
+
+## Changes (2026-11-25, the automatic flow)
+
+The strongest card takes a slot only when the whole model fits there; room for part of it no longer counts, because streaming from RAM is the last resort: after a card that fits whole, a split, and swapping the chat model out ([ChatSwapOut](ChatSwapOut.md)). `requiredBytes` takes a measured peak (`core.placement.measured`, through [MeasuredFootprintStore](../../placement/service/MeasuredFootprintStore.md) `peakVramBytes`) when it is above the declared floor: anima declares 8 GB and peaked at 12.5 GB. `MIN_SHARED_BUDGET_BYTES` is gone.

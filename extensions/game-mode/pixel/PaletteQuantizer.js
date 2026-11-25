@@ -12,6 +12,24 @@ class PaletteQuantizer {
     return rgba;
   }
 
+  static snap(rgba, palette) {
+    if (!Array.isArray(palette) || !palette.length) return rgba;
+    for (const i of PaletteQuantizer._opaqueIndexes(rgba)) {
+      const p = [rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]];
+      PaletteQuantizer._paint(rgba, i, palette[PaletteQuantizer._nearest(p, palette)]);
+    }
+    return rgba;
+  }
+
+  static coloursOf(rgba) {
+    const seen = new Map();
+    for (const i of PaletteQuantizer._opaqueIndexes(rgba)) {
+      const key = (rgba[i * 4] << 16) | (rgba[i * 4 + 1] << 8) | rgba[i * 4 + 2];
+      if (!seen.has(key)) seen.set(key, [rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]]);
+    }
+    return [...seen.values()];
+  }
+
   static _opaqueIndexes(rgba) {
     const out = [];
     for (let i = 0; i < rgba.length / 4; i++) if (rgba[i * 4 + 3] >= 128) out.push(i);

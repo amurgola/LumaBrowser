@@ -13,19 +13,19 @@ class SharedVoice {
     return voice && (voice.stt || voice.tts) ? voice : null;
   }
 
-  gate() {
-    if (!this._isShared()) return SharedVoice._refusal(403, 'voice is not shared', 'VOICE_NOT_SHARED');
+  gate(credential = null) {
+    if (!this._isShared(credential)) return SharedVoice._refusal(403, 'voice is not shared', 'VOICE_NOT_SHARED');
     if (!this.engines()) return SharedVoice._refusal(503, 'host has no voice engines', 'VOICE_UNAVAILABLE');
     return null;
   }
 
-  status() {
+  async status(credential = null) {
     const voice = this.engines();
-    const shared = this._isShared() && !!voice;
+    const shared = this._isShared(credential) && !!voice;
     return {
       success: true,
       shared,
-      stt: shared ? VoiceViews.stt(voice.stt) : VoiceViews.notSharedStt(),
+      stt: shared ? await VoiceViews.stt(voice.stt) : VoiceViews.notSharedStt(),
       tts: shared ? VoiceViews.tts(voice.tts) : VoiceViews.notSharedTts(),
     };
   }
@@ -63,10 +63,10 @@ class SharedVoice {
     return err && SharedVoice.SETUP_CODES.has(err.code) ? 503 : 500;
   }
 
-  _isShared() {
+  _isShared(credential) {
     let flags = {};
     try {
-      flags = this._service.getShareFlags() || {};
+      flags = this._service.getShareFlags(credential) || {};
     } catch (_) {}
     return flags.shareVoice !== false;
   }

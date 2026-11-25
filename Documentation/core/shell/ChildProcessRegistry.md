@@ -25,3 +25,10 @@ Force quit, the app exits right after `killAll`, so a stuck runtime would otherw
 gone. `/T` matters on Windows because runtimes start helper processes of their own.
 
 State is static because there is exactly one registry per process and every spawn site must share it.
+
+## Changes (2026-11-25)
+
+- `adopt(owner, descendants)` / `release(owner)`: the helpers a launcher child started under it (Basalt's Python
+  server and engine), which `killAll` (the forced quit) ends too, even once their launcher is gone.
+- `killTreeNamed(pid, name)`: `taskkill /F /T /FI "PID eq <pid>" /FI "IMAGENAME eq <name>"`, so a pid reused by
+  another program is left alone. No-op off Windows.

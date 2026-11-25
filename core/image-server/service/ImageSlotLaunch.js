@@ -8,6 +8,7 @@ const ImageSlotRoles = require('./ImageSlotRoles');
 const ImageSlotPlacement = require('./ImageSlotPlacement');
 const ImageLaunchInputs = require('./ImageLaunchInputs');
 const ImageLaunchLog = require('./ImageLaunchLog');
+const MeasuredFootprintStore = require('../../placement/service/MeasuredFootprintStore');
 const PreferredImageRuntime = require('./PreferredImageRuntime');
 const SageAttentionPolicy = require('./SageAttentionPolicy');
 const VaeTilingPolicy = require('./VaeTilingPolicy');
@@ -86,7 +87,7 @@ class ImageSlotLaunch {
   }
 
   async _placeOnGpus() {
-    this._requiredBytes = ImageSlotPlacement.requiredBytes(this._model, this._role);
+    this._requiredBytes = ImageSlotPlacement.requiredBytes(this._model, this._role, this._measuredPeakBytes());
     this._cpuOnly = ImageSlotPlacement.isCpuOnlyRuntime(this._runtime);
     this._placement = await this._deps.placement.place({
       role: this._role,
@@ -112,6 +113,10 @@ class ImageSlotLaunch {
     this._deps.log(`[image-server] ${this._role}: the chat model left GPU ${card} so ${this._modelId} can load; it returns on the next chat turn.`);
     try { this._diag = this._deps.liveMemory(this._diag); } catch (_) {}
     return true;
+  }
+
+  _measuredPeakBytes() {
+    try { return new MeasuredFootprintStore(this._service.settingsDb).peakVramBytes(this._modelId); } catch (_) { return 0; }
   }
 
   _ledgerClaims() {

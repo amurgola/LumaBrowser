@@ -1,4 +1,6 @@
 const ImageAdapterRegistry = require('./server/image/ImageAdapterRegistry');
+const ImageCapacityRescue = require('./router/ImageCapacityRescue');
+const HeldRunEvents = require('./router/HeldRunEvents');
 const ImageEditPromptInfo = require('./router/ImageEditPromptInfo');
 const ImageModelInfo = require('./router/ImageModelInfo');
 const ImageModelResolver = require('./router/ImageModelResolver');
@@ -20,6 +22,7 @@ class ImageRouter {
     this._launcher = new ImageSlotLauncher({ imageServerService });
     this._info = new ImageModelInfo({ imageServerService, models: this._models });
     this._editInfo = new ImageEditPromptInfo({ imageServerService, models: this._models });
+    this._rescue = new ImageCapacityRescue({ getSettingsDb: () => this._svc.settingsDb, log: (message) => console.log(message) });
     this._active = null;
   }
 
@@ -63,17 +66,28 @@ class ImageRouter {
   }
 
   async _generateLocal(request, send) {
+    const held = new HeldRunEvents(send, this._notify);
+    const startedAt = Date.now();
+    const first = await this._generateLocalOnce(request, held.send, held.notify);
+    if (ImageRouter._delivered(first.result) || first.result.aborted || !first.server) return held.release(first.result);
+    if (!(await this._rescue.prepare(first.server, first.modelId, startedAt))) return held.release(first.result);
+    held.discard();
+    return (await this._generateLocalOnce(request, send, this._notify)).result;
+  }
+
+  async _generateLocalOnce(request, send, notify) {
     const startedAt = Date.now();
     const target = await this._resolveTarget(request);
-    if (target.error) return { success: false, error: target.error };
+    if (target.error) return { result: { success: false, error: target.error } };
     const ready = await this._launcher.ensureReady({ wantId: target.wantId, slotRole: target.slotRole, send });
-    if (ready.error) return ImageRouter._fail(send, ready.error);
+    if (ready.error) return { result: ImageRouter._fail(send, ready.error) };
     ready.server.markActive();
-    if (!target.model) return ImageRouter._fail(send, `Image model "${target.wantId}" not found in the models directory.`);
+    if (!target.model) return { result: ImageRouter._fail(send, `Image model "${target.wantId}" not found in the models directory.`) };
     const plan = this._planRequest(request, target.model, send);
     send('status', { phase: ImageRouter.RENDERING_PHASE });
     send('meta', ImageRouter._meta(target.wantId, ready.status, plan));
-    return this._run(this._localRun({ send, target, ready, plan, startedAt }));
+    const result = await this._run(this._localRun({ send, notify, target, ready, plan, startedAt }));
+    return { result, server: ready.server, modelId: target.wantId };
   }
 
   async _resolveTarget(request) {
@@ -92,11 +106,11 @@ class ImageRouter {
     return planner.plan({ request, model, send });
   }
 
-  _localRun({ send, target, ready, plan, startedAt }) {
+  _localRun({ send, notify, target, ready, plan, startedAt }) {
     return new LocalImageRun({
       role: target.role,
       send,
-      notify: this._notify,
+      notify,
       adapter: this._createAdapter(ready.status),
       server: ready.server,
       plan,
@@ -119,6 +133,10 @@ class ImageRouter {
     const result = await run.start();
     if (this._active === run) this._active = null;
     return result;
+  }
+
+  static _delivered(result) {
+    return !!(result && result.success && Array.isArray(result.images) && result.images.length);
   }
 
   static _meta(wantId, status, plan) {

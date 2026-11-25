@@ -14,7 +14,9 @@ paired clients), validated against [AgentToolCatalog](../../llm-service/AgentToo
 - `defaults()`: what applies while nothing was chosen: the built-in tool groups
   of the catalog except `vault` and `programmatic`
   (`WebToolAllowList.WITHHELD_BY_DEFAULT_GROUPS`).
-- `forSharedTurn()`: the tools a shared turn with no agent in charge runs with:
+- `clean(tools)`: the given names that are in the catalog, in catalog order.
+- `forSharedTurn(userTools?)`: the tools a shared turn with no agent in charge
+  runs with: a user's own list (cleaned) when given, else
   `get()` or `defaults()`, minus the tools the host switched off for its own
   chat (`HostSettings.getGloballyDisabledTools`).
 - `set(tools)`: a non-array forgets the choice (`{ success: true,

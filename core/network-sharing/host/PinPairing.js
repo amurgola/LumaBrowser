@@ -35,7 +35,7 @@ class PinPairing {
   }
 
   static toReply(result) {
-    if (result.success) return { status: 200, body: { token: result.token, name: result.name } };
+    if (result.success) return { status: 200, body: { token: result.token, name: result.name, user: result.user || null } };
     return { status: result.retryAfterMs ? 429 : 401, body: { error: result.error, retryAfterMs: result.retryAfterMs } };
   }
 

@@ -6,4 +6,4 @@ The server-side config of one Game turn. With a premise and `context.code`, the 
 
 ## Methods
 
-- `new GameTurnBuilder({ context, sessions, folders, gatewayInfo, aiSurface })`; `build({ meta, conversationId, modelRef })`. Each turn clears the session's whole-read guard (earlier turns roll out of the window).
+- `new GameTurnBuilder({ context, sessions, folders, gatewayInfo, aiSurface })`; `build({ meta, conversationId, modelRef })`. Each turn clears the session's whole-read guard (earlier turns roll out of the window). The asset tools get the setup art style, image-model pins and locked palette ([GamePalettes](../assets/GamePalettes.md)`.resolve`).

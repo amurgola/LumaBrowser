@@ -535,8 +535,8 @@
                                 <input type="text" class="form-input" id="newPeerAddress" placeholder="IP address (e.g. 192.168.1.50), hostname, or https://host">
                             </div>
                             <div class="form-group">
-                                <label class="form-label" for="newPeerPin">PIN</label>
-                                <input type="text" class="form-input gs-input-narrow" id="newPeerPin" inputmode="numeric" maxlength="8" placeholder="PIN set on the host">
+                                <label class="form-label" for="newPeerPin">PIN or access key</label>
+                                <input type="text" class="form-input gs-input-narrow" id="newPeerPin" maxlength="120" autocomplete="off" spellcheck="false" placeholder="PIN set on the host, or a user access key">
                             </div>
                             <div id="newPeerDiscovered" class="gs-discovery"></div>
                             <div id="newPeerMsg" class="form-help"></div>
@@ -1246,6 +1246,26 @@
                                     <div class="gs-inline-controls">
                                         <button class="gs-action-btn" id="gsShareRevokeAll">Revoke all</button>
                                     </div>
+                                </div>
+                                </details>
+                                <details class="gs-fold gs-row-fold" data-gs-fold="share-users">
+                                    <summary class="gs-fold-head">
+                                        <svg class="gs-chevron" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M4 2.5l4 3.5-4 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        <span class="gs-fold-label">Users</span>
+                                        <span class="gs-fold-summary" data-gs-fold-summary></span>
+                                    </summary>
+                                    <div class="gs-fold-body">
+                                    <p class="gs-row-help">People or groups who sign in with their own access key instead of the PIN, for example from a login link (the web address with <code>?apiKey=</code>). The link holds the key, so anyone who has it signs in as that user. Each user gets the settings above unless you override them under Permissions.</p>
+                                    <div class="gs-inline-controls">
+                                        <input type="text" id="gsShareUserName" class="form-input" maxlength="80" placeholder="Name" aria-label="User name" autocomplete="off">
+                                        <select id="gsShareUserKind" class="form-select gs-input-select" aria-label="User kind">
+                                            <option value="person">Person</option>
+                                            <option value="group">Group</option>
+                                        </select>
+                                        <button class="gs-action-btn" id="gsShareUserAdd">Add user</button>
+                                    </div>
+                                    <div id="gsShareUserNotice"></div>
+                                    <div id="gsShareUsers" class="gs-item-list"></div>
                                 </div>
                                 </details>
                             </div>

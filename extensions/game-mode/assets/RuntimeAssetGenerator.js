@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const AssetSizing = require('./AssetSizing');
 const AssetSpec = require('./AssetSpec');
 const ImageCapability = require('./ImageCapability');
 const ImageModelPins = require('./ImageModelPins');
@@ -19,12 +18,13 @@ class RuntimeAssetGenerator {
     return pending;
   }
 
-  constructor({ context, s, params = {}, artStyle, imageModelRef, emit }) {
+  constructor({ context, s, params = {}, artStyle, imageModelRef, palette = null, emit }) {
     this._chat = context && context.chat;
     this._s = s;
     this._params = params;
     this._artStyle = artStyle;
     this._pins = ImageModelPins.normalize(imageModelRef);
+    this._palette = palette;
     this._emit = emit;
   }
 
@@ -57,14 +57,12 @@ class RuntimeAssetGenerator {
   }
 
   async _prepare(prompt) {
-    const modelRef = ImageModelPins.modelFor({
-      width: AssetSizing.clampDim(this._params.width),
-      height: AssetSizing.clampDim(this._params.height),
-      transparent: !!this._params.transparent,
-    }, this._pins);
+    const modelRef = ImageModelPins.modelFor(ImageModelPins.describe(this._params, this._artStyle), this._pins);
     const native = await ImageCapability.nativeSize(this._chat, modelRef);
     const rel = `${RuntimeAssetGenerator.DIR}/${this._id}.png`;
-    const spec = AssetSpec.prepare({ s: this._s, params: { ...this._params, prompt, path: rel }, artStyle: this._artStyle, native });
+    const spec = AssetSpec.prepare({
+      s: this._s, params: { ...this._params, prompt, path: rel }, artStyle: this._artStyle, native, modelRef, palette: this._palette,
+    });
     if (!spec.error) spec.modelRef = modelRef;
     return spec;
   }

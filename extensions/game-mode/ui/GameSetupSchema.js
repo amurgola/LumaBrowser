@@ -1,5 +1,5 @@
 export default class GameSetupSchema {
-  static SPRITE_PREFERRED = ['chroma1-flash', 'chroma1-hd'];
+  static SPRITE_PREFERRED = ['rd-flow-64', 'chroma1-flash', 'chroma1-hd'];
 
   static BACKDROP_PREFERRED = ['chroma1-hd', 'chroma1-flash'];
 
@@ -66,6 +66,20 @@ export default class GameSetupSchema {
           { value: 'painted', label: 'Painted' },
           { value: 'flat', label: 'Flat / vector' },
         ] },
+      { key: 'palette', label: 'Colour palette', type: 'select', half: true,
+        hint: 'pixel art is drawn in or snapped to it, so every asset matches',
+        options: [
+          { value: '', label: 'Let the image model pick' },
+          { value: 'pico-8', label: 'PICO-8 (16)' },
+          { value: 'game-boy', label: 'Game Boy (4 greens)' },
+          { value: 'sweetie-16', label: 'Sweetie 16' },
+          { value: 'endesga-32', label: 'Endesga 32' },
+          { value: 'custom', label: 'My own colours' },
+        ] },
+      { key: 'paletteCustom', label: 'Palette colours', type: 'textarea',
+        hint: 'hex colours, any separator (a Lospec .hex file pasted in works)',
+        placeholder: '#1a1c2c #5d275d #b13e53 #ef7d57 #ffcd75 ...',
+        showIf: { key: 'palette', equals: 'custom' } },
     ];
   }
 

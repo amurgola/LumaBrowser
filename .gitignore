@@ -149,3 +149,6 @@ ide/jetbrains/.kotlin/
 ide/jetbrains/src/main/resources/webview/
 ide/vscode/media/
 ide/vscode/lib/
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/Lumabrowser-prod.iml
+/.idea/workspace.xml

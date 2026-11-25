@@ -3,7 +3,11 @@
 `core/image-server/service/ChatSwapOut.js`
 
 Decides when an image launch swaps the resident chat model out instead of
-loading beside it.
+falling back to RAM. The automatic flow (2026-11-25): a card or split that holds
+the model takes it; else a card the chat model holds that holds the whole model
+once the chat model leaves is freed (the biggest such); else the model streams
+from RAM, and a chat model crowding the card the offload runs on still leaves,
+because sd.cpp needs room there for its compute buffers.
 
 ## Methods
 
@@ -14,16 +18,32 @@ loading beside it.
   `VramCoordinator#snapshot()`, `cards` is `VramCoordinator#debitedDevices`
   with the image slot's own claim left out, and `requiredBytes` is the image
   model's need. A card is returned only when all hold:
-  - either the placement is a RAM offload pinned to one card, or (one card
-    box) the placement is unpinned, `cards` holds exactly one card with a known
-    free reading, and `requiredBytes` exceeds that card's room (free VRAM less
-    the GPU headroom, `CudaDevicePicker.cardRoomBytes`);
+  - the placement would use RAM: a RAM offload, or (one card box) the placement
+    is unpinned, `cards` holds exactly one card with a known free reading, and
+    `requiredBytes` exceeds that card's room (free VRAM less the GPU headroom,
+    `CudaDevicePicker.cardRoomBytes`);
+  - the card is `freeableCard`'s answer, else the card the offload runs on (the
+    offload's card, or a one card box's only card);
   - the live chat claim (`claims.llm`) includes that card;
   - the [placement layout](../../shared/runtime/PlacementLayout.md) leaves both
     the image slot and the chat model automatic (no item resource, no
     singularity), and neither `core.llmServer.cudaDevice` nor
     `core.imageServer.cudaDevice` is set. An unreadable layout counts as
     placed.
+
+- `ChatSwapOut.freeableCard(chat, cards, requiredBytes)` the chat model's card
+  that holds the whole model once the chat model leaves, the biggest first
+  (lowest index on a tie), skipping cards with an unknown free reading; null
+  when none would.
+- `ChatSwapOut.roomOnceFreed(chat, card)` the card's room now plus the chat
+  claim's share of it (its split weight, else an even share), capped at the
+  card's total less the reserve. A chat claim with no size counts as holding
+  everything its card uses.
+
+The chat claim of an engine that picks its own card (Basalt) comes from
+[LlmPlacement](../../llm-server/server/launcher/LlmPlacement.md)
+`claimCustomLaunch`; before 2026-11-25 such an engine had no claim, so it was
+never swapped out.
 
 ## Why
 

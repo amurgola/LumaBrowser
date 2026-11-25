@@ -84,6 +84,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
       runtimeId: runtime.id,
       offloadToCpu: args.includes('--offload-to-cpu'),
       autoFit: args.includes('--auto-fit'),
+      maxVram: ImageLaunchPlanner._valueAfter(args, '--max-vram'),
       vaeTiling: args.includes('--vae-tiling'),
       flashAttention: args.includes('--diffusion-fa'),
       sageAttention: args.includes(ImageLaunchPlanner.SAGE_ATTENTION_FLAG),

@@ -10,7 +10,10 @@ per request.
 
 - `new SharedAgents(service, { modeRegistry = ChatModeRegistry.shared })`:
   `service` provides `getShareFlags` and `getAgentManager`.
-- `isShared()`: `shareAgents !== false`; a throwing flag read counts as shared.
+- `isShared(credential?)`: `shareAgents !== false` for the calling credential
+  (a user's override applies); a throwing flag read counts as shared. `list`,
+  `chatUi`, `chatUiAsset`, `webModes` and `resolveTurn` take the credential last
+  and pass it on.
 - `list()`: the manager's `listAgents()`, or `[]` when not shared, inactive or failing.
 - `chatUi()`: `{ path }` of the manager's `chatUiPath`, else `{ status: 403,
   message: 'Custom agents are not shared' }` or `{ status: 404, message: 'Not available' }`.

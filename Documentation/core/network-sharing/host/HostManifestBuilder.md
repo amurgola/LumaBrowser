@@ -8,7 +8,9 @@ mutates the host. One instance per build.
 
 ## Methods
 
-- `new HostManifestBuilder({ host, inventory, llmServerService, imageServerService })`:
+- `new HostManifestBuilder({ host, inventory, llmServerService, imageServerService, flags })`
+  (`flags`, optional, replaces the host's master share flags: a user's
+  effective flags, or every model shared for the permission catalog):
   `host` is the [SharingHostService](SharingHostService.md) (flags, identity,
   chat router, `getRpcLending`), `inventory` a [HostModelInventory](HostModelInventory.md).
 - `execute()` resolves:

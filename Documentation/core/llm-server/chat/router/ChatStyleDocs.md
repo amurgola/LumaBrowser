@@ -19,6 +19,7 @@ All static.
   block, which the chat shows as code (7 of 9 trials on the prompt bench,
   2026-11-18).
 - `VOICE_REMINDER`: a terse restatement appended to every agent iteration (under 300 characters).
+- `plainTurn(messages, { plainPrompt, inMode, choicesOn, voiceOn })`: a plain (Tools-off) chat turn's messages as the desktop chat sends them: the base prompt (outside a mode), the widgets note (not in voice), "Suggest replies" and voice mode. Used by [ChatTurn](ChatTurn.md) and, for a web chat turn, [ProxyTurns](ProxyTurns.md).
 - `appendToSystemHead(messages, doc)`: appends `doc` to a leading system message, or prepends one; never a second system turn; does not mutate.
 
 ## Why

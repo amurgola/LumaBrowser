@@ -15,7 +15,12 @@ the adapter receives.
   [LocalImageRun](LocalImageRun.md) scales the finished image back to.
   `params` holds `prompt, negativePrompt, width, height, steps, cfgScale,
   sampler, scheduler, seed, loras, customSigmas, refImageArgs, refMaxPixels, cacheMode,
-  cacheOption, initImage, strength, refImages, mask`. In order:
+  cacheOption, initImage, strength, refImages, mask, palette, opaqueBackground`.
+  `palette` (for palette-pointer models such as RD Flow 64) accepts an array of
+  colours or a string with any of comma, semicolon or space between them and
+  becomes `"#rrggbb,..."` (3 or 6 hex digits, `#` optional, lowercased), or
+  `null` when no entry is valid; `opaqueBackground` is true only when the caller
+  sent `true`. In order:
   1. Defaults: caller value, then the model's defaults over its
      [family scaffold](ImageFamilyScaffold.md), then 512x512, 20 steps, cfg 7,
      `euler`. cfg and seed accept 0; seed is `null` when not a number; the
@@ -40,6 +45,12 @@ the adapter receives.
 - `ImageRequestPlanner.metaFields(plan)` returns the resolved values the `meta`
   event reports (`sigmas`, `loras` as `path@multiplier`, `refSizes` and
   `outputSize` as `WxH`).
+- Fixed size step (after grid alignment, before the render floor): a model
+  whose `constraints.fixedSize` is set (RD Flow 64: 64x64) renders at that size
+  whatever was asked, with a `fixed-size` status. `outputSize` stays unset, so
+  the image comes back at the fixed size: a pixel-art result must not be
+  smooth-scaled to the request, and a caller that needs another size scales it
+  pixel-exactly itself.
 - Render floor step (after grid alignment): for a request with no init image
   or mask, on a model whose `constraints.minRenderPixels` is above the canvas
   area (MiniMax-H3-Image: 4 MP), [ImageCanvas](ImageCanvas.md)

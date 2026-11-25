@@ -14,6 +14,9 @@ Builds the `POST /sdcpp/v1/img_gen` request body from an image request.
   is `-1` (random).
   - `negative_prompt`, `lora` (non-empty array), `ref_image_args`, and
     `cache_mode` (+ `cache_option`) only when given.
+  - `palette` (a string) when given and `opaque_background: true` only when
+    `opaqueBackground === true`: they drive palette-pointer models (RD Flow 64,
+    runtime luma-b7 or newer); other models ignore them.
   - `customSigmas` with more than one value sets `sample_params.custom_sigmas`
     and `sample_steps = length - 1`.
   - `initImage` -> `init_image` (base64) with a top-level `strength` in [0, 1],

@@ -1,7 +1,9 @@
+const GamePalettes = require('./GamePalettes');
 const PixelPost = require('../pixel/PixelPost');
 
 class AssetPostChain {
   static async apply(buf, job) {
+    if (job.rdFlow && job.outW) return AssetPostChain._paletteArt(buf, job);
     if (job.pixel && job.outW) return AssetPostChain._pixelArt(buf, job);
     const outW = job.outW || job.width;
     const outH = job.outH || job.height;
@@ -12,9 +14,16 @@ class AssetPostChain {
   static async _pixelArt(buf, job) {
     const report = {};
     const small = await PixelPost.pixelArtProcess(buf, job.logicalW || job.outW, job.logicalH || job.outH, {
-      transparent: !!job.alpha, report, upscaleTo: { width: job.outW, height: job.outH },
+      transparent: !!job.alpha, report, upscaleTo: { width: job.outW, height: job.outH }, palette: GamePalettes.toRgb(job.palette),
     });
     return { buf: small || buf, keyed: AssetPostChain._keyed(job, small, report) };
+  }
+
+  static async _paletteArt(buf, job) {
+    const out = await PixelPost.paletteArtResize(buf, job.logicalW || job.outW, job.logicalH || job.outH, {
+      upscaleTo: { width: job.outW, height: job.outH },
+    });
+    return { buf: out || buf, keyed: job.alpha ? true : null };
   }
 
   static async _smooth(buf, job, outW, outH) {

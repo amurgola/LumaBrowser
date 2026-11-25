@@ -10,9 +10,11 @@ controller shows the same setup panel.
 
 - `new SharedVoice(service)` (`getShareFlags`, `getVoiceServices`).
 - `engines()`: `{ stt, tts }` when either exists, else null.
+- `gate(credential?)` and `status(credential?)` read `shareVoice` for the
+  calling credential (a user's override applies).
 - `gate()`: 403 `VOICE_NOT_SHARED` when `shareVoice` is false, 503
   `VOICE_UNAVAILABLE` without engines, else null. Bodies `{ success: false, error, code }`.
-- `status()`: `{ success: true, shared, stt, tts }` with [VoiceViews](VoiceViews.md); never a 403.
+- `async status()`: `{ success: true, shared, stt, tts }` with [VoiceViews](VoiceViews.md); never a 403.
 - `prewarm()`: `ensureRunning()` on both halves, each `{ ok: true }` or `{ ok:
   false, code, error }` (`VOICE_UNAVAILABLE` for a missing half).
 - `transcribe(req)`: 503 without an STT engine; 400 when
