@@ -31,7 +31,7 @@ class PlacementTestTurn {
     this._router.chat({
       conversationId, modelRef: this._modelRef,
       messages: [{ role: 'user', content: userMessage }],
-      userMessage, agent: true, tools: true, send: (type, payload) => this._onEvent(type, payload),
+      userMessage, agent: true, tools: true, background: true, send: (type, payload) => this._onEvent(type, payload),
     }).then((res) => {
       if (res && res.conversationId) this._convId = res.conversationId;
       if (res && res.success === false) this._finish(res.error || 'chat failed');

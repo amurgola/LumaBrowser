@@ -17,6 +17,14 @@ and reaches the main process only through its host's `invoke`.
 - `Write summaries with a model` (a checkbox): `setSummariesEnabled(checked)`,
   with the notice `Summaries are on.` or `Summaries are off.`. Off, the
   cards still show, filled in by rules.
+- `Let the model ask for more from the source` (a checkbox, off by
+  default): `setSummarySources(checked)`, with the notice `The model may
+  ask for more from the source.` or `The model works from the
+  notifications alone.`. The help under it says what it does: the model
+  can ask the Hub to open what it cannot judge (a chat conversation, a
+  mail) in the signed-in session it came from and read it, a few per
+  card, in a hidden tab, and that opening a mail marks it as read. It
+  shows `status.sources`.
 - `Model` (a select): `Use the active provider (default)`, then every
   available model, its value `<providerId>::<modelId>`. The list and the
   current pick come from the main process (`listSummaryModels` ->
@@ -51,7 +59,8 @@ and reaches the main process only through its host's `invoke`.
 ## IPC
 
 `summaryStatus`, `listSummaryModels`, `setSummaryModel(value)`,
-`setSummariesEnabled(enabled)`, `summarizeNow({ force })`.
+`setSummariesEnabled(enabled)`, `setSummarySources(on)`,
+`summarizeNow({ force })`.
 
 ## Why
 

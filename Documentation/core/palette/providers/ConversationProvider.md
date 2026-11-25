@@ -4,7 +4,7 @@
 
 Search palette provider for chat conversations: a title match
 ([PaletteMatcher](../PaletteMatcher.md) over up to 1000 conversations, archived
-included) or a full-text match in the messages
+and background ones included) or a full-text match in the messages
 ([ConversationIndex](../ConversationIndex.md)), whichever is stronger. A
 conversation found both ways gets a 0.15 bonus. The matching message's snippet,
 with its highlights, becomes the subtitle; without one the subtitle is the date.
@@ -19,4 +19,6 @@ with its highlights, becomes the subtitle; without one the subtitle is the date.
   row, tagged `Archived` when archived.
 - `ConversationProvider.when(iso)`: "Conversation, Nov 6, 2026".
 
-Hidden sub-conversations (delegations) never show.
+Hidden sub-conversations (delegations) never show. Background conversations
+(terminal sessions) do, whatever the sidebar's own toggle says: the palette is
+how a conversation the sidebar does not list is still found.

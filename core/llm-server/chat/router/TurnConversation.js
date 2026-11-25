@@ -9,7 +9,7 @@ class TurnConversation {
     this._service = llmServerService;
   }
 
-  open({ conversationId, regenerateMessageId, editMessageId, userMessage, messages, modelRef, agentMode, disabledTools, choicesEnabled }) {
+  open({ conversationId, regenerateMessageId, editMessageId, userMessage, messages, modelRef, agentMode, disabledTools, choicesEnabled, background }) {
     let convId = conversationId;
     if (regenerateMessageId) {
       const target = this._store.getMessage(regenerateMessageId);
@@ -20,7 +20,7 @@ class TurnConversation {
       if (!target || target.role !== 'user') return { error: 'Message to edit was not found.' };
       if (target.conversationId) convId = target.conversationId;
     }
-    if (!convId) return { convId: this._create({ userMessage, messages, modelRef, agentMode, disabledTools, choicesEnabled }) };
+    if (!convId) return { convId: this._create({ userMessage, messages, modelRef, agentMode, disabledTools, choicesEnabled, background }) };
     if (!this._store.getConversation(convId)) return { error: `Conversation ${convId} not found` };
     return { convId };
   }
@@ -83,7 +83,7 @@ class TurnConversation {
     try { this._store.setConversationModel(convId, modelRef, this._providerTag(modelRef)); } catch (_) {}
   }
 
-  _create({ userMessage, messages, modelRef, agentMode, disabledTools, choicesEnabled }) {
+  _create({ userMessage, messages, modelRef, agentMode, disabledTools, choicesEnabled, background }) {
     const conv = this._store.createConversation({
       title: ConversationTitle.fromText(userMessage || ConversationTitle.firstUserText(messages)),
       modelRef,
@@ -91,6 +91,7 @@ class TurnConversation {
       toolsEnabled: agentMode,
       disabledTools: Array.isArray(disabledTools) ? disabledTools : null,
       choicesEnabled: typeof choicesEnabled === 'boolean' ? choicesEnabled : null,
+      background: background === true,
     });
     return conv.id;
   }

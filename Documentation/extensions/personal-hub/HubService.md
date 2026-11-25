@@ -81,9 +81,9 @@ live modules all call these methods, so their names are the contract
   feed item as `listThreads` gives it, with its `lastNotification` (title,
   body, time, sender, partition, host, url) and `contextId`.
 - `async openThread(threadId)` -> `{ success: true, opened: 'conversation'
-  | 'tab' | 'link' }` or `{ success: false, error }`: takes the user to a
+  | 'mail' | 'tab' | 'link' }` or `{ success: false, error }`: takes the user to a
   feed item in the session that is signed in to it, its conversation when
-  the Hub knows the address, else the tab it came from
+  the Hub knows the address, its mail found in its mailbox, else the tab it came from
   ([ConversationOpener](snapshot/ConversationOpener.md)`.open` over
   `_feedItem`). Answers `The browser is not available.` without an opener
   and `Activity item not found.` for an unknown id; the opener adds its
@@ -131,6 +131,8 @@ live modules all call these methods, so their names are the contract
   [ActivitySummarizer](summary/ActivitySummarizer.md)`.cards` and `.status`;
   each card's items carry `people` as in `listThreads`),
   `summaryStatus()`, `setSummariesEnabled(enabled)` -> the status,
+  `setSummarySources(on)` -> the status (whether the model may ask the Hub
+  to open an item at its source and read it),
   `summaryModels()` -> `{ models: [{ value, label }], chosen }` (the models
   the summariser can use and the one it uses now),
   `setSummaryModel(value)` -> the status (`''` chooses the app's active

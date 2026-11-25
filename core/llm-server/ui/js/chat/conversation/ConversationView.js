@@ -19,7 +19,7 @@ export default class ConversationView {
     if (reattach) this._spliceLiveMessage();
     if (!state.streaming) state.firstTurn = false;
     state.lastUsage = ConversationView._lastUsage(msgs);
-    const conv = state.conversations.find((c) => c.id === id);
+    const conv = await this._conversation(id);
     this._restoreOptions(conv);
     await this._restoreMode(conv, id);
     await ctx.docs.restore(id);
@@ -103,6 +103,18 @@ export default class ConversationView {
     ctx.previewSlot.release();
     ctx.jobsStrip.reset();
     ctx.plan.reset();
+  }
+
+  async _conversation(id) {
+    const { state, api } = this._ctx;
+    const listed = state.conversations.find((c) => c.id === id);
+    if (listed || typeof api.conv.get !== 'function') return listed;
+    try {
+      const r = await api.conv.get(id);
+      return (r && r.success && r.conversation) || undefined;
+    } catch (_) {
+      return undefined;
+    }
   }
 
   async _loadMessages(id) {

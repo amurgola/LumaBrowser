@@ -18,7 +18,7 @@ API's `settingsInvoke`, which may only use the channels in `PANEL_CHANNELS`.
   a tab.
 - `PANEL_CHANNELS`: the channels the Dashboard's settings panel may call:
   `listContexts`, `saveContexts`, `listContextChoices`, `summaryStatus`,
-  `setSummariesEnabled`, `summarizeNow`, `listSummaryModels`,
+  `setSummariesEnabled`, `setSummarySources`, `summarizeNow`, `listSummaryModels`,
   `setSummaryModel`, `listContacts`, `mergeContacts`,
   `splitContactIdentity`, `renameContact`, `keepContactsApart`,
   `saveContactProfile`, `learnContact`, `resolveContactSuggestion`.
@@ -63,6 +63,7 @@ API's `settingsInvoke`, which may only use the channels in `PANEL_CHANNELS`.
 | `learnContact(id)` | `{ contact, read, added }`: the Hub's model read the contact's messages and `added` suggestions wait on it |
 | `resolveContactSuggestion(id, suggestionId, accept)` | `{ contact }`; `accept` is read as a boolean, false dismisses |
 | `summaryStatus`, `setSummariesEnabled(enabled)` | `{ status }` |
+| `setSummarySources(on)` | `{ status }`; whether the model may ask for an item to be opened and read at its source |
 | `listSummaryModels` | `{ models, chosen }`: `[{ value, label }]` with `value` as `<providerId>::<modelId>`, and the summariser slot's current pick (`''` when none) |
 | `setSummaryModel(value)` | `{ status }`; `''` goes back to the app's active provider |
 | `summarizeNow({ force? })` | `{ result: { written, failed, skipped }, status }` |

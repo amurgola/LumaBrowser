@@ -52,6 +52,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
     this._overrides = overrides || {};
     this._unsupported = new Set(Array.isArray(runtime.unsupportedFlags) ? runtime.unsupportedFlags : []);
     this._autoFit = !!this._overrides.autoFit && !this._unsupported.has('--auto-fit');
+    this._int8Weights = !!this._overrides.int8Weights && !!this._options.model.files.diffusion.int8Path;
   }
 
   _buildArgs() {
@@ -86,6 +87,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
       vaeTiling: args.includes('--vae-tiling'),
       flashAttention: args.includes('--diffusion-fa'),
       sageAttention: args.includes(ImageLaunchPlanner.SAGE_ATTENTION_FLAG),
+      int8Weights: this._int8Weights,
       eagerLoad: args.includes(ImageLaunchPlanner.EAGER_LOAD_FLAG),
       vaeTileSize: ImageLaunchPlanner._valueAfter(args, ImageLaunchPlanner.VAE_TILE_SIZE_FLAG),
       files: ImageLaunchPlanner._fileBasenames(model.files),
@@ -96,7 +98,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
     const diffusion = this._options.model.files.diffusion;
     const loaderFlag = diffusion.loaderFlag || ImageLaunchPlanner.inferLoaderFlag(diffusion.path);
     return [
-      loaderFlag, diffusion.path,
+      loaderFlag, this._int8Weights ? diffusion.int8Path : diffusion.path,
       '--listen-ip', ImageLaunchPlanner.HOST,
       '--listen-port', String(this._options.port),
       '-v',
@@ -154,7 +156,7 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
     const usableVram = ImageLaunchPlanner._usableVramBytes(this._options.diagnostics);
     const minVram = Number(this._options.model.minVramBytes) || 0;
     const tooSmall = minVram > 0 && usableVram > 0 && usableVram < minVram;
-    return this._overrides.offloadToCpu || tooSmall ? ['--offload-to-cpu'] : [];
+    return this._overrides.offloadToCpu || this._overrides.hotswapPooled || tooSmall ? ['--offload-to-cpu'] : [];
   }
 
   _modelLaunchArgs() {

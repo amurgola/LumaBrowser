@@ -65,4 +65,5 @@ module.exports = {
     file: './routes.js',
     prefix: '/api/desktop',
   },
+  distributable: true,
 };

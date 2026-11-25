@@ -50,6 +50,22 @@ Ctrl+Alt+Shift+T opens any desktop window as a live tab.
 - A Control switch passes your clicks and typing through to the real window.
 - Because it is an ordinary tab, Tab Share can stream it.
 
+## Android devices
+
+Run an Android device in a tab and use its apps next to your pages.
+
+- Needs the Android SDK on your computer (Android Studio installs it) with the emulator and a system image.
+  **Settings > Android** lists your devices and can make a new one.
+- **Open** shows the device in a tab: click and drag to touch, type on your keyboard, scroll with the wheel. The
+  device's screen takes the size of the tab.
+- It is an ordinary tab, so you can keep it. A kept tab keeps its device running, and after a restart the
+  device is back in a few seconds from its saved state.
+- Notifications the device raises go to the Hub.
+- The assistant and MCP clients can see and drive a device with the `android_*` tools (list, start, read the
+  screen, screenshot, tap, type, swipe, open an app, read notifications). A chat asks before each action that
+  changes something, **Let AI use Android devices** switches the tools off, and they are never offered to people
+  you share your models with.
+
 ## Lumabyte (Windows)
 
 Ctrl+Alt+Shift+A docks a chat panel to any app window, one thread per app. It

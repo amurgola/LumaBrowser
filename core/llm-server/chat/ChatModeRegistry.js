@@ -5,6 +5,22 @@ class ChatModeRegistry extends ContributionRegistry {
   static ENTRY_NOUN = 'descriptor';
   static RESERVED_ID = 'chat';
 
+  constructor() {
+    super();
+    this._listeners = new Set();
+  }
+
+  onChange(listener) {
+    this._listeners.add(listener);
+    return () => this._listeners.delete(listener);
+  }
+
+  _changed() {
+    for (const listener of Array.from(this._listeners)) {
+      try { listener(); } catch (_) {}
+    }
+  }
+
   notifyConversationDeleted(meta) {
     try {
       const mode = meta && meta.mode ? this.get(meta.mode) : null;

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Android</title>
+<link rel="stylesheet" href="page.css">
+</head>
+<body>
+<main id="stage">
+  <canvas id="screen" tabindex="0" width="16" height="16" hidden></canvas>
+  <section id="notice" role="status" aria-live="polite">
+    <p id="notice-text"></p>
+    <div id="notice-list"></div>
+    <button type="button" id="notice-action" hidden></button>
+  </section>
+</main>
+<footer id="toolbar" hidden>
+  <button type="button" data-button="back">Back</button>
+  <button type="button" data-button="home">Home</button>
+  <button type="button" data-button="recents">Recents</button>
+</footer>
+<script type="module" src="DevicePage.js"></script>
+</body>
+</html>

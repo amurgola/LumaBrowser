@@ -40,12 +40,18 @@ layout, leaving out what the app only adds for show (`New message from`,
 | proton | `New email received` | `From: Sender - Subject` | the part between `From:` and the first ` - ` | the subject's first line, else the sender | the subject's first line, else the sender |
 | messages, whatsapp, telegram | contact or group, maybe followed by a count (`Dana Reyes • 2 new`) | text | the title without the count | the title without the count | the title without the count |
 | clickup | `Actor commented on Task` or the task | text | the actor when the title matches the action pattern | the tag, else the task name | the task name |
+| discord | `Sender (#channel, Category)`, `Sender (#channel)`, `Sender (Group name)`, or the sender alone (a direct message); every name sits between invisible isolate marks (U+2068, U+2069) | text | the first marked name, else the title | the conversation: `#channel (Category)`, `#channel`, the group's name, or the sender | the same |
 | default | | | `''` | the tag, else the title | the title |
 
 Every key goes through [ThreadKey](ThreadKey.md). An empty result falls back
 to the tag, title, body, then the app name, so a thread key is never empty.
 
 Notes on the rules:
+
+- Discord's tag is the id of the single message, so until 2026-11-23
+  (no rule of its own) every Discord message was an item of its own with
+  no sender. The marks, not the brackets, split the title: a sender may
+  be called `Kenni (Mobile)`.
 
 - Slack's key stays the whole title (`new message in #general`) however the
   title is read, so an item keeps its history when the reading of titles

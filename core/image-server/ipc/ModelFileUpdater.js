@@ -52,10 +52,12 @@ class ModelFileUpdater {
   }
 
   async _apply({ id, role, dir, manifest, update, send }) {
+    const staleInt8File = (manifest.files && manifest.files[role] && manifest.files[role].int8File) || null;
     ModelFileUpdater.repoint(manifest, role, update);
     ImageModelManifest.write(dir, manifest);
     await this._slots.stopHosting(id);
     ModelFileUpdater._removeSuperseded(dir, update);
+    ModelFileUpdater._removeFile(dir, staleInt8File);
     send('done', { id, dir });
     return { success: true, id, role, file: update.file, replaced: update.replaces || null };
   }
@@ -65,14 +67,20 @@ class ModelFileUpdater {
     manifest.files = manifest.files || {};
     manifest.files[role] = { ...prev, file: update.file, ...(update.loaderFlag ? { loaderFlag: update.loaderFlag } : {}) };
     delete manifest.files[role].name;
+    delete manifest.files[role].int8File;
     manifest.updatedAt = now.toISOString();
     return manifest;
   }
 
   static _removeSuperseded(dir, update) {
     if (!update.replaces || update.replaces === update.file) return;
+    ModelFileUpdater._removeFile(dir, update.replaces);
+  }
+
+  static _removeFile(dir, fileName) {
+    if (!fileName) return;
     try {
-      fs.rmSync(path.join(dir, update.replaces), { force: true });
+      fs.rmSync(path.join(dir, fileName), { force: true });
     } catch (err) {
       console.warn('[image-server] could not remove superseded file:', err && err.message);
     }

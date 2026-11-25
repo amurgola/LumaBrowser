@@ -2,12 +2,15 @@ const TabHosts = require('./TabHosts');
 const CrashTracer = require('../../diagnostics/CrashTracer');
 
 class TabLayout {
+  static UNSEEN_VIEWPORT = { width: 1280, height: 800 };
+
   constructor(registry, hosts, emitter) {
     this._registry = registry;
     this._hosts = hosts;
     this._emitter = emitter;
     this._fullView = new Set();
     this._lent = new WeakSet();
+    this._told = new WeakSet();
   }
 
   setFullView(hostId, on) {
@@ -55,6 +58,7 @@ class TabLayout {
 
   _placeOnScreen(entry) {
     this._lent.delete(entry);
+    this.stopTelling(entry);
     const area = this._areaOf(entry.hostId);
     if (!area.width || !area.height) {
       CrashTracer.mark('tab:bounds-hide', { id: entry.id });
@@ -68,6 +72,7 @@ class TabLayout {
   _placeInBackground(entry) {
     if (entry.viewSize || entry.silent) { this._lend(entry, entry.viewSize); return; }
     this._unlend(entry);
+    if (entry.hidden) this._tellViewport(entry, null);
     const area = this._areaOf(entry.hostId);
     if (!area.width || !area.height) {
       CrashTracer.mark('tab:bounds-hide', { id: entry.id });
@@ -79,13 +84,42 @@ class TabLayout {
 
   _lend(entry, size) {
     const cover = this._coverOf(entry.hostId);
-    if (!cover) { this._unlend(entry); return; }
+    if (!cover) { this._unlend(entry); this._tellViewport(entry, size); return; }
     this._lower(entry);
     const width = size ? Math.min(size.width, cover.width) : cover.width;
     const height = size ? Math.min(size.height, cover.height) : cover.height;
     entry.view.setBounds({ x: cover.x, y: cover.y, width, height });
     entry.view.setVisible(true);
     this._lent.add(entry);
+    if (this._isShowing(entry.hostId)) this.stopTelling(entry);
+    else this._tellViewport(entry, { width, height });
+  }
+
+  _tellViewport(entry, size) {
+    if (!(entry.silent || entry.hidden) || !TabLayout._hasLivePage(entry)) return;
+    const area = this._hosts.boundsOf(entry.hostId);
+    const seen = area.width && area.height ? { width: area.width, height: area.height } : TabLayout.UNSEEN_VIEWPORT;
+    const viewSize = size || seen;
+    entry.view.webContents.enableDeviceEmulation({
+      screenPosition: 'desktop', screenSize: viewSize, viewPosition: { x: 0, y: 0 }, viewSize, deviceScaleFactor: 0, scale: 1,
+    });
+    this._told.add(entry);
+  }
+
+  stopTelling(entry) {
+    if (!this._told.has(entry)) return;
+    this._told.delete(entry);
+    if (TabLayout._hasLivePage(entry)) entry.view.webContents.disableDeviceEmulation();
+  }
+
+  static _hasLivePage(entry) {
+    const wc = entry.view.webContents;
+    return !wc.isDestroyed() && !!wc.getURL() && !wc.isCrashed();
+  }
+
+  _isShowing(hostId) {
+    const win = this._hosts.liveWindowOf(hostId);
+    return !!win && win.isVisible() && !win.isMinimized();
   }
 
   _unlend(entry) {

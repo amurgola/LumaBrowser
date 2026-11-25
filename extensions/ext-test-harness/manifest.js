@@ -49,4 +49,5 @@ module.exports = {
     file: './routes.js',
     prefix: '/api/test-harness',
   },
+  distributable: true,
 };

@@ -93,6 +93,7 @@ class DelegationTools {
       toolsEnabled: true,
       mode: target.modeId,
       parentConversationId: parent.id,
+      background: parent.background,
     });
     store.setMeta(conv.id, { mode: target.modeId, data: { ...started.data, delegatedFrom: parent.id } });
     const run = await this._run(router, conv, target.label, modelRef, [{ role: 'user', content: started.message }], started.message, opts);

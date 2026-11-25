@@ -7,9 +7,12 @@ and run by [DeferredServices](DeferredServices.md).
 
 ## Methods
 
-- `new HeavyServices(ctx, { browserService, log?, inspectConflict?, timers? })`:
+- `new HeavyServices(ctx, { browserService, log?, inspectConflict?, timers?, addonMigration? })`:
   `inspectConflict` defaults to `PortConflict.inspect`; `timers`
-  (`{ setTimeoutFn, clearTimeoutFn }`) reach the binder. Both are test seams.
+  (`{ setTimeoutFn, clearTimeoutFn }`) reach the binder; `addonMigration()`
+  builds the [AddonUpgradeMigration](../../core/shell/extension-admin/AddonUpgradeMigration.md)
+  (`forApp` over the settings db, the extension manager, the machine identity,
+  `ctx.rootDir` and `ctx.app.getVersion()` by default). All are test seams.
 - `run()`:
   1. With the API on, bind the gateway through a [GatewayBinder](GatewayBinder.md)
      (not awaited): the configured port is retried until it binds, never
@@ -47,3 +50,8 @@ and run by [DeferredServices](DeferredServices.md).
   3. `ctx.agentDeps` = [AgentDeps](AgentDeps.md)`.build(...)`.
   4. Start the artifact-task and scheduled-task schedulers; reconcile the
      folder watches; subscribe the page-change and notification sources.
+  5. Run the add-on upgrade (not awaited, it downloads; a throw is swallowed):
+     the add-ons the previous version bundled come back from the catalog. When
+     it installed any, the page-change and notification sources subscribe
+     again, so Page Monitors and the Hub brought back on this launch fire
+     their triggers without a restart.

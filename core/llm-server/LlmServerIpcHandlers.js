@@ -345,6 +345,7 @@ class LlmServerIpcHandlers {
 
   static _registerChatSettings(router, { approval, viewer }) {
     LlmServerIpcHandlers._handle('chat.listModes', () => ({ modes: ChatModeRegistry.shared.list() }), { modes: [] });
+    LlmServerBroadcast.relayModes(ChatModeRegistry.shared);
     LlmServerIpcHandlers._handle('chat.agentTools', () => router.getAgentToolCatalog(), { groups: [], disabled: [] });
     LlmServerIpcHandlers._handle('chat.getApprovalPolicy', () => approval.get(), { policy: ApprovalPolicySetting.DEFAULT });
     LlmServerIpcHandlers._handle('chat.setApprovalPolicy', (_e, policy) => approval.set(policy));

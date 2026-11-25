@@ -17,7 +17,10 @@ hooks. Also New chat.
 
 - `open(id)`, `render(title)`. `open` also records the conversation among the
   search palette's recent places (`api.palette.record`, best effort; hidden
-  sub-conversations are skipped).
+  sub-conversations are skipped). A conversation the sidebar does not list (a
+  background one while those are not shown, opened from the palette or by an
+  IDE's "Open in LumaBrowser") is read with `api.conv.get`, so it opens with
+  its own title, model, options and mode.
 - `newChat()`: ignored while streaming; tells the outgoing mode it is left,
   resets to a plain agentic chat, unfolds the New-chat mode tray, shows the landing.
 

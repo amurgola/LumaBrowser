@@ -8,7 +8,7 @@ export default class ConversationExport {
   }
 
   static async collect(api) {
-    const list = await api.conv.list({ limit: ConversationExport.LIST_LIMIT });
+    const list = await api.conv.list({ limit: ConversationExport.LIST_LIMIT, includeBackground: true });
     const conversations = (list && list.conversations) || [];
     const withMessages = [];
     for (const conv of conversations) {

@@ -1,6 +1,7 @@
 import ByteFormatter from '../format/ByteFormatter.js';
 import HtmlEscaper from '../format/HtmlEscaper.js';
 import CatalogModelRow from './CatalogModelRow.js';
+import Int8WeightsMarkup from './Int8WeightsMarkup.js';
 
 export default class InstalledModelRow {
   static KIND_LABEL = { generate: 'generation', edit: 'edit', video: 'video' };
@@ -13,7 +14,7 @@ export default class InstalledModelRow {
     return m.kind === 'edit' ? 'edit' : (m.kind === 'video' ? 'video' : 'generate');
   }
 
-  static view(m, defaults, downloading) {
+  static view(m, defaults, downloading, int8Build = null) {
     const d = defaults || {};
     const kind = InstalledModelRow.kindOf(m);
     const pinnedId = kind === 'edit' ? d.editModelId : (kind === 'video' ? d.videoModelId : d.modelId);
@@ -28,7 +29,8 @@ export default class InstalledModelRow {
       sizeText: InstalledModelRow._sizeText(m),
       actionsHtml: InstalledModelRow._actions(m, flags, downloading),
       metaHtml: InstalledModelRow._meta(m),
-      groupHtml: '', ctxFitHtml: '', fitHtml: '', quantHtml: '', dlHtml: '', blurbHtml: '', shardsHtml: '',
+      dlHtml: Int8WeightsMarkup.html(m.id, m.int8Weights, int8Build),
+      groupHtml: '', ctxFitHtml: '', fitHtml: '', quantHtml: '', blurbHtml: '', shardsHtml: '',
     };
   }
 

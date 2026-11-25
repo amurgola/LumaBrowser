@@ -1,6 +1,7 @@
 import HubWidgetBase from './HubWidgetBase.js';
 import HubSettingsPanel from './HubSettingsPanel.js';
 import TaskChrome from './TaskChrome.js';
+import ThreadSnapshots from './ThreadSnapshots.js';
 import WidgetDom from './WidgetDom.js';
 
 export default class HubFocusWidget extends HubWidgetBase {
@@ -16,6 +17,7 @@ export default class HubFocusWidget extends HubWidgetBase {
     super(root, host);
     this._picking = false;
     this._tasks = null;
+    this._snapshots = new ThreadSnapshots({ host, repaint: () => this._paint(), alive: () => !this._disposed });
   }
 
   _renderShell() {
@@ -124,6 +126,10 @@ export default class HubFocusWidget extends HubWidgetBase {
     if (need.kind === 'task') {
       actions.push(button('hub-need-start', 'Start', () => this._setTask(need.taskId), 'Make this what you are working on'));
     } else {
+      if (need.kind === 'item') {
+        const showing = this._snapshots.has(need.threadId);
+        actions.push(button('hub-need-context', showing ? 'Hide' : 'Context', () => this._snapshots.toggle(need.threadId), showing ? 'Hide what was read' : 'Read the conversation or the mail behind this'));
+      }
       if (need.kind === 'item' && !need.taskId) actions.push(button('hub-need-task', 'To task', () => this.act(() => this.host.call('threadToTask', need.threadId, {})), 'Make a board task from this'));
       const ids = need.kind === 'context' ? need.threadIds || [] : [need.threadId];
       actions.push(button('hub-need-dismiss', 'Dismiss', () => this.act(() => this.host.call('setThreadsState', ids, HubFocusWidget.DISMISSED)), 'Rule this out; new activity brings it back'));
@@ -136,6 +142,7 @@ export default class HubFocusWidget extends HubWidgetBase {
       WidgetDom.el('div', { class: 'hub-need-main' }, [
         WidgetDom.el('div', { class: 'hub-need-title', text: need.title }),
         reason ? WidgetDom.el('div', { class: 'hub-need-reason', text: reason }) : null,
+        need.kind === 'item' ? this._snapshots.element(need.threadId) : null,
       ]),
       WidgetDom.el('div', { class: 'hub-need-actions' }, actions),
     ]);

@@ -23,6 +23,9 @@ where it stands.
   between two kept parts shows as `[...]`, and runs of blank lines collapse
   to one. A page whose lines match everywhere (it is the conversation)
   comes back whole. The result is cut by `tail`.
+- `head(text, maxChars = MAX_CHARS)` -> the start of a long text, under a
+  closing `[...]` line when it was cut: a mail says what it wants up
+  front, and its end is signatures and quoted replies.
 - `tail(text, maxChars = MAX_CHARS)` -> the end of a long text, where the
   newest messages of a conversation are: at most `MAX_CHARS` = 4000
   characters, starting at a line break when one comes within the first 200,

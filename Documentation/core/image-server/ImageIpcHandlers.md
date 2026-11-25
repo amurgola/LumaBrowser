@@ -7,7 +7,7 @@ lives in the services under [ipc/](ipc/) and in [ImageRouter](ImageRouter.md).
 
 ## Methods
 
-- `ImageIpcHandlers.register(service, { notify, llmService?, civitaiClient? })` registers the 54 channels below
+- `ImageIpcHandlers.register(service, { notify, llmService?, civitaiClient? })` registers the 57 channels below
   on `ipcMain`, wires [ImageServerBroadcast](ipc/ImageServerBroadcast.md) to
   `service.runtimeServer`, and returns `{ router }` (the ImageRouter the chat agent
   bridge shares, one queue and one abort). `service` is the ImageServerService;
@@ -40,6 +40,8 @@ check throws) and `getServerStatus`.
 | `downloadModel` | [CatalogModelInstaller](ipc/CatalogModelInstaller.md) |
 | `removeInstalledModel` | [InstalledModelRemover](ipc/InstalledModelRemover.md) |
 | `updateModelFile` | [ModelFileUpdater](ipc/ModelFileUpdater.md) |
+| `buildInt8Weights({ id })`, `cancelInt8Weights(id)` | [Int8WeightsBuilder](ipc/Int8WeightsBuilder.md) (one instance, shared with ImageModelsView so a running build shows in the view); progress on `core.imageServer.modelEvent` as `int8-start`, `int8-progress`, `int8-end` |
+| `removeInt8Weights(id)` | [Int8WeightsRemover](ipc/Int8WeightsRemover.md) |
 | `listLoras`, `importLora`, `loraCatalog`, `downloadLora` | [ImageLoraLibrary](ipc/ImageLoraLibrary.md) |
 | `importLoraFromCivitai` | [CivitaiLoraInstaller](ipc/CivitaiLoraInstaller.md), over the same library, download slot and CivitAI client |
 | `setModelLoras` | [ModelLoraAttacher](ipc/ModelLoraAttacher.md) (a list: any number of LoRAs per model) |

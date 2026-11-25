@@ -3,16 +3,16 @@ const NotificationClassifier = require('../inbox/NotificationClassifier');
 class ConversationLocator {
   static AUTOMATION_HOST = 'automation';
   static SLACK_TEAM = /\/client\/([A-Z0-9]+)/;
-  static PANES = { slack: '.p-message_pane' };
+  static PANES = { slack: '.p-message_pane', teams: '[data-tid="message-pane-list-viewport"]', discord: '[data-list-id="chat-messages"]' };
 
-  constructor({ tabs, slack = null }) {
+  constructor({ tabs, lists = {} }) {
     this._tabs = tabs;
-    this._slack = slack;
+    this._lists = lists;
   }
 
   async locate(item) {
     const tab = this.tabFor(item);
-    const url = ConversationLocator.ownAddress(item, tab) || await this._slackAddress(item, tab);
+    const url = ConversationLocator.ownAddress(item, tab) || await this._listedAddress(item, tab);
     return { tab, partition: ConversationLocator.partitionOf(item, tab), url, pane: ConversationLocator.PANES[item.app] || null };
   }
 
@@ -44,13 +44,16 @@ class ConversationLocator {
   }
 
   static shows(tab, url) {
-    const path = (value) => { try { const u = new URL(String(value)); return `${u.host}${u.pathname}`.replace(/\/+$/, ''); } catch (_) { return ''; } };
-    return !!tab && !!path(url) && path(tab.url) === path(url);
+    const parts = (value) => { try { const u = new URL(String(value)); return { path: `${u.host}${u.pathname}`.replace(/\/+$/, ''), hash: u.hash }; } catch (_) { return { path: '', hash: '' }; } };
+    const wanted = parts(url);
+    const shown = parts(tab && tab.url);
+    return !!tab && !!wanted.path && shown.path === wanted.path && (!wanted.hash || shown.hash === wanted.hash);
   }
 
-  async _slackAddress(item, tab) {
-    if (item.app !== 'slack' || !tab || !this._slack) return null;
-    return this._slack.addressOf(tab, NotificationClassifier.slackConversation(item.title).name);
+  async _listedAddress(item, tab) {
+    const list = this._lists[item.app];
+    if (!list || !tab) return null;
+    return list.addressOf(tab, item.app === 'slack' ? NotificationClassifier.slackConversation(item.title).name : item.title);
   }
 }
 

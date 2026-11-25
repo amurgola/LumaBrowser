@@ -4,7 +4,8 @@
 
 Plain queries over `hub_threads`: the activity feed, one row per
 `(app, thread key)` that notifications roll up into, carrying whether the
-user dismissed it and whatever an automation enriched it with.
+user dismissed it (and when they last did) and whatever an automation
+enriched it with.
 
 ## Methods
 
@@ -18,4 +19,8 @@ user dismissed it and whatever an automation enriched it with.
   matches exactly. `since` (ISO) keeps threads whose `last_at` is at or after
   it.
 - `countByState()`, `delete(id)`.
-- `static hydrate(row)`.
+- `static hydrate(row)`: the row as `{ id, app, threadKey, title,
+  participants, firstAt, lastAt, count, state, priority, summary, labels,
+  context, url, taskId, snoozeUntil, dismissedAt, updatedAt }`;
+  `dismissedAt` (`dismissed_at`) is when the user last dismissed the item,
+  `null` when they never did or restored it.

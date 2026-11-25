@@ -1,5 +1,6 @@
 const ProviderConfigService = require('../ProviderConfigService');
 const GroundingServerService = require('../../grounding-server/GroundingServerService');
+const LocalServerConnection = require('../../llm-server/server/LocalServerConnection');
 
 class ManagedServers {
   static LOCAL_ID = ProviderConfigService.MANAGED_LOCAL_ID;
@@ -29,6 +30,15 @@ class ManagedServers {
 
   groundingEntry() {
     return ManagedServers._entryFrom(this.groundingServerService, 'computeProviderEntry');
+  }
+
+  localConnection() {
+    const service = this.llmServerService;
+    try {
+      return LocalServerConnection.ofReady(service && service.runtimeServer);
+    } catch {
+      return null;
+    }
   }
 
   async ensureReady(config, { withVision = false } = {}) {

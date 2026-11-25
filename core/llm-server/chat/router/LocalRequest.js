@@ -3,6 +3,7 @@ const FamilySampler = require('./FamilySampler');
 const RequestSettings = require('./RequestSettings');
 const RequestComplexity = require('../RequestComplexity');
 const RequestProfile = require('../../server/chat/RequestProfile');
+const LocalServerConnection = require('../../server/LocalServerConnection');
 
 class LocalRequest {
   static SNIPPET_CHARS = 80;
@@ -41,15 +42,11 @@ class LocalRequest {
     const runtimeId = (live.plan && live.plan.runtimeId) || this._service.getDefaults().runtimeId;
     const entry = this._catalog.getById(runtimeId);
     if (!entry) throw new Error(`Catalog entry for ${runtimeId} not found.`);
-    const server = this._service.runtimeServer;
-    const plan = server.plan || null;
     const probed = (!entry.request && this._service.getRunningThinking)
       ? RequestProfile.fromThinking(this._service.getRunningThinking())
       : null;
     return this._adapters.createAdapterFor(entry, {
-      baseUrl: `http://${live.host || '127.0.0.1'}:${live.port}`,
-      apiKey: server.authKey ? server.authKey : null,
-      model: plan && plan.apiModelName ? plan.apiModelName : null,
+      ...LocalServerConnection.of(this._service.runtimeServer, live),
       ...(probed ? { request: probed } : {}),
     });
   }

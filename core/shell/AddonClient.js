@@ -6,7 +6,9 @@ class AddonClient {
   static LIST_TIMEOUT_MS = 6000;
   static DOWNLOAD_TIMEOUT_MS = 60000;
 
-  constructor({ identity, baseUrl = AddonClient.DEFAULT_BASE_URL } = {}) {
+  static BASE_URL_OVERRIDE = 'LUMA_ADDON_BASE_URL';
+
+  constructor({ identity, baseUrl = process.env[AddonClient.BASE_URL_OVERRIDE] || AddonClient.DEFAULT_BASE_URL } = {}) {
     this._baseUrl = baseUrl.replace(/\/$/, '');
     this._client = new SignedLumaClient({
       baseUrl: this._baseUrl,

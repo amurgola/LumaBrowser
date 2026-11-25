@@ -1,4 +1,5 @@
 const path = require('path');
+const LocalServerConnection = require('./LocalServerConnection');
 
 class LocalApiUpstream {
   static MODELS_CACHE_MS = 15 * 1000;
@@ -11,11 +12,13 @@ class LocalApiUpstream {
   current() {
     const status = this._readyStatus();
     if (!status) return null;
-    return {
-      baseUrl: this._baseUrl(status),
-      apiKey: this._apiKey(),
-      modelId: this._modelId(status),
-    };
+    const live = LocalServerConnection.of(this._service.runtimeServer, status);
+    const upstream = { baseUrl: live.baseUrl, apiKey: live.apiKey, modelId: this._modelId(status) };
+    return live.model ? { ...upstream, requestModel: live.model } : upstream;
+  }
+
+  static requestModel(upstream) {
+    return upstream.requestModel || upstream.modelId;
   }
 
   hostDial() {
@@ -44,26 +47,10 @@ class LocalApiUpstream {
     return status && status.state === 'ready' && status.port ? status : null;
   }
 
-  _baseUrl(status) {
-    const rs = this._service.runtimeServer;
-    return typeof rs.baseUrl === 'function' ? rs.baseUrl() : `http://127.0.0.1:${status.port}`;
-  }
-
   _modelId(status) {
     let modelPath = status.modelPath || (status.plan && status.plan.modelPath);
     if (!modelPath) modelPath = (this._defaults() || {}).modelPath || null;
     return modelPath ? path.basename(modelPath, path.extname(modelPath)) : 'local';
-  }
-
-  _apiKey() {
-    const svc = this._service;
-    if (typeof svc.getApiKeyForLaunch !== 'function') return null;
-    try {
-      const launchKey = svc.getApiKeyForLaunch();
-      return launchKey && launchKey.required ? launchKey.key : null;
-    } catch (_) {
-      return null;
-    }
   }
 
   _defaults() {

@@ -12,14 +12,15 @@ through the session that can show it.
 
 ## Methods
 
-- `new ConversationLocator({ tabs, slack = null })`: `tabs` a
-  [SessionTabs](../connections/SessionTabs.md), `slack` a
-  [SlackSidebar](SlackSidebar.md) or `null`.
+- `new ConversationLocator({ tabs, lists = {} })`: `tabs` a
+  [SessionTabs](../connections/SessionTabs.md), `lists` one
+  [ConversationList](ConversationList.md) per app whose conversations
+  are found by name (`slack`, `teams`, `discord`).
 - `async locate(item)` -> `{ tab, partition, url, pane }`. `item` is a feed
   item with its `lastNotification`. `tab` is the persisted tab it came from
   or `null` (`tabFor`), `partition` its session or `undefined`
   (`partitionOf`), `url` the conversation's own address or `null`
-  (`ownAddress`, else for a Slack item the address its tab's sidebar gives),
+  (`ownAddress`, else the address the app's conversation list gives),
   and `pane` the selector of the conversation on that app's page or `null`
   (`PANES`).
 - `tabFor(item)`: when the last notification recorded its session, the
@@ -40,21 +41,26 @@ through the session that can show it.
 - `static partitionOf(item, tab)`: the last notification's partition, else
   the tab's, else `undefined`.
 - `static shows(tab, url)`: whether a tab is already at an address: the
-  same host and path, whatever query or fragment follows. `false` without a
-  tab or when either address does not parse.
+  same host and path, whatever query follows. When the wanted address
+  names its conversation after a `#` (Teams), the tab's must be the same
+  there too; an address without one matches whatever the tab has after
+  its own. `false` without a tab or when either address does not parse.
 
-## Slack
+## Conversations found by name
 
-A Slack notification names its channel or sender only. For a Slack item
-with a tab and no address of its own, `_slackAddress` asks the sidebar for
-the conversation named by the item's title. The title is read through
+A Slack, Teams or Discord notification names its channel or sender only.
+For such an item with a tab and no address of its own, `_listedAddress`
+asks the app's list for the conversation named by the item's title
+([TeamsSidebar](TeamsSidebar.md), [DiscordSidebar](DiscordSidebar.md)).
+A Slack title is read through
 [NotificationClassifier](../inbox/NotificationClassifier.md)`.slackConversation`,
 so an item still titled `New message in #general` is looked up as
-`#general`. Without a tab or a sidebar reader there is no address.
+`#general`. Without a tab or a list for the app there is no address.
 
 `PANES` names the part of an app's page that holds the conversation, the
-rest being navigation: `slack` is `.p-message_pane`. An app without an entry
-is read whole.
+rest being navigation: `slack` is `.p-message_pane`, `teams` is
+`[data-tid="message-pane-list-viewport"]`, `discord` is
+`[data-list-id="chat-messages"]`. An app without an entry is read whole.
 
 ## Why
 

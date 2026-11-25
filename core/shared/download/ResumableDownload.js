@@ -13,7 +13,7 @@ const ParallelDownload = require('./ParallelDownload');
 const SequentialDownload = require('./SequentialDownload');
 
 class ResumableDownload {
-  static DEFAULT_PARALLEL = 8;
+  static DEFAULT_PARALLEL = 32;
   static DEFAULT_CHUNK_SIZE = 32 * 1024 * 1024;
 
   static download(options) {

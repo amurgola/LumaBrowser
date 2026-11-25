@@ -9,11 +9,14 @@ export default class RendererScriptLoader {
 
   static SOURCE_CHANNEL = 'core.shell.getExtensionRendererSource';
 
-  constructor() {
+  constructor(doc = document) {
+    this._doc = doc;
     this._moduleLoads = new Map();
+    this._mappedPrefixes = new Set();
   }
 
   static mode(ext) {
+    if (ext.rendererModule === true) return RendererScriptLoader.MODULE;
     if (ext.userInstalled) return RendererScriptLoader.INLINE;
     if (ext.distributable === true) return RendererScriptLoader.CLASSIC;
     return RendererScriptLoader.MODULE;
@@ -34,29 +37,41 @@ export default class RendererScriptLoader {
   async _loadInline(ext) {
     const r = await window.ipcBridge.invoke(RendererScriptLoader.SOURCE_CHANNEL, ext.id);
     if (!r || !r.success) throw new Error((r && r.error) || 'failed to load renderer source');
-    const script = document.createElement('script');
+    const script = this._doc.createElement('script');
     script.dataset.ext = ext.id;
     script.textContent = r.content;
-    document.head.appendChild(script);
+    this._doc.head.appendChild(script);
   }
 
   _loadFile(ext, asModule) {
+    if (asModule) this._applyImportMap(ext.rendererImports);
     const src = asModule ? this._moduleSrc(ext) : RendererScriptLoader.src(ext);
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
+      const script = this._doc.createElement('script');
       if (asModule) script.type = 'module';
       script.dataset.ext = ext.id;
       script.src = src;
       script.onload = resolve;
       script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-      document.head.appendChild(script);
+      this._doc.head.appendChild(script);
     });
+  }
+
+  _applyImportMap(imports) {
+    if (!imports) return;
+    const fresh = Object.entries(imports).filter(([prefix]) => !this._mappedPrefixes.has(prefix));
+    if (!fresh.length) return;
+    for (const [prefix] of fresh) this._mappedPrefixes.add(prefix);
+    const map = this._doc.createElement('script');
+    map.type = 'importmap';
+    map.textContent = JSON.stringify({ imports: Object.fromEntries(fresh) });
+    this._doc.head.appendChild(map);
   }
 
   _moduleSrc(ext) {
     const count = this._moduleLoads.get(ext.id) || 0;
     this._moduleLoads.set(ext.id, count + 1);
-    const src = RendererScriptLoader.src(ext);
+    const src = ext.rendererUrl || RendererScriptLoader.src(ext);
     return count === 0 ? src : `${src}?reload=${count}`;
   }
 }

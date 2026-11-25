@@ -22,8 +22,16 @@ class LocalServerPrep {
     const drafterKey = this._drafterKey(defaults.modelPath);
     const decision = LocalRestartDecision.decide({ switched, defaults, status, dirty, imageCount, drafterKey });
     if (decision.reason) await this._restart(decision, status, dirty, hooks, log);
-    else LocalServerPrep._logReady(status, decision, log);
+    else await this._useReady(status, decision, log);
     server.markActive();
+  }
+
+  async _useReady(status, decision, log) {
+    LocalServerPrep._logReady(status, decision, log);
+    if (typeof this._service.reclaimCard !== 'function') return;
+    const startedAt = Date.now();
+    const card = await this._service.reclaimCard();
+    if (card != null) log.line(`hotswap: took GPU ${card} back from a pool member in ${Date.now() - startedAt}ms`);
   }
 
   _drafterKey(modelPath) {

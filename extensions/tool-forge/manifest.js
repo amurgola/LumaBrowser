@@ -16,7 +16,7 @@ module.exports = {
       'core:llm-service': {},
     },
   },
-
+  distributable: true,
   main: './main.js',
 
   mcpTools: {

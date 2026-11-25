@@ -31,6 +31,9 @@ A [PreloadSection](PreloadSection.md) merged into `window.llmDiagAPI` by
 | `image.cancelModelDownload()` | invoke `core.imageServer.cancelModelDownload` |
 | `image.removeInstalledModel(id)` | invoke `core.imageServer.removeInstalledModel` |
 | `image.updateModelFile(args)` | invoke `core.imageServer.updateModelFile` |
+| `image.buildInt8Weights(args)` | invoke `core.imageServer.buildInt8Weights` (`{ id }`; progress on `onModelEvent` as `int8-start`, `int8-progress`, `int8-end`) |
+| `image.cancelInt8Weights(id)` | invoke `core.imageServer.cancelInt8Weights` |
+| `image.removeInt8Weights(id)` | invoke `core.imageServer.removeInt8Weights` |
 | `image.onModelEvent(cb)` | subscribe `core.imageServer.modelEvent` |
 | `image.importModelFromUrl(args)` | invoke `core.imageServer.importModelFromUrl` |
 | `image.importModelFromRepo(args)` | invoke `core.imageServer.importModelFromRepo` |

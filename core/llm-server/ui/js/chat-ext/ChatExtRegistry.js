@@ -42,8 +42,13 @@ export default class ChatExtRegistry {
   async load(api) {
     if (this._loaded) return this.list();
     this._loaded = true;
+    return this.reload(api);
+  }
+
+  async reload(api) {
     const modes = await this._fetchModes(api);
-    for (const mode of modes) this._backendModes.set(mode.id, mode);
+    if (modes === null) return this.list();
+    this._backendModes = new Map(modes.map((mode) => [mode.id, mode]));
     await this._injectBundles(modes);
     return this.list();
   }
@@ -51,10 +56,10 @@ export default class ChatExtRegistry {
   async _fetchModes(api) {
     try {
       const res = api && api.chat && api.chat.listModes ? await api.chat.listModes() : null;
-      return res && res.success && Array.isArray(res.modes) ? res.modes : [];
+      return res && res.success && Array.isArray(res.modes) ? res.modes : null;
     } catch (err) {
       this._log.error('[chat-ext] listModes failed:', err);
-      return [];
+      return null;
     }
   }
 

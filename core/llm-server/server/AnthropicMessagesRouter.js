@@ -1,5 +1,6 @@
 const express = require('express');
 const OpenAiLocalRouter = require('./OpenAiLocalRouter');
+const LocalApiUpstream = require('./LocalApiUpstream');
 const ThinkingKnobs = require('./ThinkingKnobs');
 const AnthropicError = require('./anthropic/AnthropicError');
 const MessagesCompletion = require('./anthropic/MessagesCompletion');
@@ -32,7 +33,7 @@ class AnthropicMessagesRouter {
   _messages(req, res) {
     const upstream = this._getUpstream();
     if (!upstream) return AnthropicError.send(res, 503, 'overloaded_error', OpenAiLocalRouter.NO_MODEL_MESSAGE);
-    const translated = MessagesRequestTranslator.translate(AnthropicMessagesRouter._body(req), upstream.modelId);
+    const translated = MessagesRequestTranslator.translate(AnthropicMessagesRouter._body(req), LocalApiUpstream.requestModel(upstream));
     if (translated.error) return AnthropicError.send(res, 400, 'invalid_request_error', translated.error);
     const body = ThinkingKnobs.apply(translated.body, typeof this._hostDial === 'function' ? this._hostDial() : null);
     const Runner = body.stream ? MessagesStream : MessagesCompletion;

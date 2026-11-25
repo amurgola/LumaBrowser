@@ -36,7 +36,10 @@ class SlotResolver {
     const entry = this._managed.localEntry();
     if (!entry) return SlotResolver._unresolved();
     const model = config.model || entry.selectedModel;
-    return { provider: this._ephemeral.forManagedLocal(entry, model), modelOverride: model || null };
+    const live = this._managed.localConnection();
+    const target = live ? { endpoint: live.baseUrl, apiKey: live.apiKey } : entry;
+    const resolved = { provider: this._ephemeral.forManagedLocal(target, model), modelOverride: model || null };
+    return live && live.model ? { ...resolved, requestModel: live.model } : resolved;
   }
 
   _resolveGrounding() {

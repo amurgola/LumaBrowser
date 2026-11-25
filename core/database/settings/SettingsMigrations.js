@@ -1,4 +1,5 @@
 const SqliteSchema = require('../SqliteSchema');
+const JsonColumn = require('../JsonColumn');
 const MessageTree = require('../../llm-server/chat/MessageTree');
 
 class SettingsMigrations {
@@ -23,14 +24,19 @@ class SettingsMigrations {
     ['llm_messages', 'parent_id', 'TEXT'],
     ['llm_conversations', 'parent_conversation_id', 'TEXT'],
     ['llm_messages', 'sent_content', 'TEXT'],
+    ['llm_conversations', 'background', 'INTEGER NOT NULL DEFAULT 0'],
   ];
 
   static ARTIFACT_VERSION_COLUMNS = ['root_id', 'version'];
+
+  static CODE_MODE = 'code';
+  static BACKGROUND_ORIGINS = ['terminal', 'ide'];
 
   static apply(db) {
     const added = SettingsMigrations._addMissingColumns(db);
     if (SettingsMigrations._addedArtifactVersioning(added)) SettingsMigrations._backfillArtifactRoots(db);
     if (added.includes('llm_messages.parent_id')) SettingsMigrations._backfillMessageParents(db);
+    if (added.includes('llm_conversations.background')) SettingsMigrations._backfillBackgroundConversations(db);
     return added;
   }
 
@@ -57,6 +63,17 @@ class SettingsMigrations {
         for (const [id, parent] of MessageTree.legacyParents(list.all(convId))) {
           if (parent) set.run(parent, id);
         }
+      }
+    })();
+  }
+
+  static _backfillBackgroundConversations(db) {
+    const metas = db.prepare('SELECT conversation_id, data FROM llm_conversation_meta WHERE mode = ?').all(SettingsMigrations.CODE_MODE);
+    const mark = db.prepare('UPDATE llm_conversations SET background = 1 WHERE id = ? OR parent_conversation_id = ?');
+    db.transaction(() => {
+      for (const { conversation_id: convId, data } of metas) {
+        const origin = (JsonColumn.parse(data, null) || {}).origin;
+        if (SettingsMigrations.BACKGROUND_ORIGINS.includes(origin)) mark.run(convId, convId);
       }
     })();
   }

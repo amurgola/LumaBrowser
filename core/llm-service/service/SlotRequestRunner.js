@@ -14,9 +14,10 @@ class SlotRequestRunner {
     const ready = await this._managed.ensureReady(config, { withVision });
     if (!ready.ok) return SlotRequestRunner._notReadyResult(ready);
     if (isAborted()) return { ...SlotRequestRunner.ABORTED };
-    const { provider, modelOverride } = this._resolveSlot(slotId);
+    const { provider, modelOverride, requestModel } = this._resolveSlot(slotId);
     if (!provider) return SlotRequestRunner.noProviderResult(slotId);
-    if (modelOverride) options.model = modelOverride;
+    const model = requestModel || modelOverride;
+    if (model) options.model = model;
     return this._managed.track(config, () => call(provider));
   }
 

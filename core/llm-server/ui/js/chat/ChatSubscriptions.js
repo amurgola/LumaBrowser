@@ -69,10 +69,20 @@ export default class ChatSubscriptions {
   _onServerEvent(ev) {
     const ctx = this._ctx;
     if (ev && ev.type === 'providers-changed') ctx.models.refresh();
+    if (ev && ev.type === 'modes-changed') this._reloadModes().catch(() => {});
     if (!(ev && ev.type === 'state-change')) return;
     const stNow = ev.payload && ev.payload.state;
     ctx.thinkPill.load({ onlyIfUnknown: stNow !== 'ready' });
     ctx.availability.applyServerState(ev.payload || ev.state || ev);
     ctx.models.refresh();
+  }
+
+  async _reloadModes() {
+    const ctx = this._ctx;
+    const ext = ctx.chatExt();
+    if (!(ext && ext.reload)) return;
+    await ext.reload(ctx.api);
+    ctx.sideModes.render();
+    ctx.convList.rebuild();
   }
 }

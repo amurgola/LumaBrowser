@@ -22,6 +22,11 @@ class ImageRuntimeServer extends BaseRuntimeServer {
   _processNoun() { return 'sd-server'; }
   _loadingLabel() { return 'image server'; }
 
+  async suspend() {
+    const asleep = this.state === 'ready' && !!(this.plan && this.plan.offloadToCpu) && !this.idleHeld;
+    return asleep ? { suspended: true, freed: false } : { suspended: false };
+  }
+
   _initLaunchState(launch) {
     this.privatePort = typeof launch.plan.privatePort === 'number' ? launch.plan.privatePort : launch.plan.port;
   }

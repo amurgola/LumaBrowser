@@ -53,8 +53,9 @@ class LocalServerStarter {
     return modelPath ? path.basename(modelPath, path.extname(modelPath)) : null;
   }
 
-  _useReady(status, withVision) {
+  async _useReady(status, withVision) {
     if (withVision && LocalServerStarter.needsVisionLoad(status)) return this._loadVisionProjector();
+    if (typeof this._service.reclaimCard === 'function') await this._service.reclaimCard();
     this._rs.markActive();
     return { success: true, status: this._rs.getStatus() };
   }

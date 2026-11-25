@@ -63,9 +63,15 @@ Lifecycle and strip ([TabLifecycle](tab-view/TabLifecycle.md), [TabActivation](t
   the content area back. The view never grows past the content area
   ([TabLayout](tab-view/TabLayout.md)). `{ success }` or not found. Every tab switch
   (`windowTabSwitched`) runs `TabLayout.refitBackground()`, and a silent tab is laid out as it is
-  created (`tabCreated`), since it is never activated and nothing else would size its page.
+  created (`tabCreated`), since it is never activated and nothing else would size its page, and
+  again whenever it navigates (`tabNavigated`): a viewport told to its page while the window
+  sizes nothing goes with that page's renderer. A hidden persisted tab is placed again on
+  `tabNavigated` as well, which is how a tab restored at start is first told its viewport.
 - `layoutTab(tabId)`: puts a tab's view back where the layout wants it, for a caller that moved it
-  ([TabPreviewManager](TabPreviewManager.md)).
+  ([TabPreviewManager](TabPreviewManager.md), [TabScreenshot](tab-manager/TabScreenshot.md)).
+- `freeViewport(tabId)`: stops telling a silent or hidden tab's page its viewport
+  ([TabLayout](tab-view/TabLayout.md) `stopTelling`), for a caller that gives its view a real size
+  (TabScreenshot on the [CaptureStage](tab-manager/CaptureStage.md)); `layoutTab` tells it again.
 
 Windows ([TabHosts](tab-view/TabHosts.md), [TabTransfer](tab-view/TabTransfer.md)):
 

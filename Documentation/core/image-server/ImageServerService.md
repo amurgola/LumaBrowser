@@ -42,6 +42,10 @@ Slots:
 - `slots()` `[{ role, server, defaultKey }]` for generate (`modelId`), edit
   (`editModelId`) and video (`videoModelId`). Every per-slot fan-out reads it.
 - `serverForRole(role)` edit and video map to their slots; anything else is generate.
+- `reclaimCard(role)` `hotswap.reclaim(normalized role)`: a ready slot a hotswap
+  pool member displaced (it was suspended, so it never stopped) takes its card
+  back before a render. Resolves the card when it swapped, else null; never
+  rejects. Called by [ImageSlotLauncher](router/ImageSlotLauncher.md).
 - `getApiKeyForLaunch()` `{ required, key (first key), keyCount }`; no ApiSecurity is `{ false, null, 0 }`.
 - `getAutoUnloadMs()`, `setAutoUnloadMs(ms)` (applied to every slot; 0 disables).
 - `getCivitaiSettings()`, `setCivitaiSettings(patch)`: the CivitAI API key and adult-content choice ([ImageServerSettings](service/ImageServerSettings.md)); a saved key is applied to [CivitaiAuth](../shared/download/CivitaiAuth.md) on save and at construction, so it outranks the environment from the first download on.

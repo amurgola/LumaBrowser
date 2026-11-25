@@ -436,6 +436,27 @@
         }
         .cm-conv:hover .cm-conv-tag,
         .cm-conv.active .cm-conv-tag { color: var(--text-secondary); }
+        .cm-bg-toggle {
+            position: sticky;
+            bottom: calc(-1 * var(--space-2));
+            display: block;
+            width: 100%;
+            margin-top: var(--space-2);
+            padding: var(--space-2) 10px;
+            border: 0;
+            border-radius: var(--radius-md);
+            background: var(--bg-root);
+            color: var(--text-muted);
+            font: inherit;
+            font-size: var(--text-xs);
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: color var(--dur-fast) var(--ease);
+        }
+        .cm-bg-toggle[hidden] { display: none; }
+        .cm-bg-toggle:hover { color: var(--text-primary); }
+        .cm-bg-toggle:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
         .cm-sched-view {
             max-width: 760px;

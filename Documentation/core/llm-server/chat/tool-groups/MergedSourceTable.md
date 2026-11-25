@@ -25,6 +25,11 @@ As separate groups every step of one job cost an auto-activation bounce:
 building one forge tool took three "auto-activated, re-issue your call" round
 trips. Activating any tool of a merged group loads all of its manuals.
 
+## Android devices
+
+Source `ext.android` merges the thirteen `android_*` tools into one group, key `android`: start, look, tap or
+type and look again are one loop over one device.
+
 ## LoRA training
 
 Source `ext.lora-trainer` merges `train_lora`, `lora_training_status`,

@@ -1,5 +1,6 @@
 const express = require('express');
 const OpenAiLocalRouter = require('./OpenAiLocalRouter');
+const LocalApiUpstream = require('./LocalApiUpstream');
 const ThinkingKnobs = require('./ThinkingKnobs');
 const ResponsesCompletion = require('./responses/ResponsesCompletion');
 const ResponsesError = require('./responses/ResponsesError');
@@ -31,7 +32,7 @@ class OpenAiResponsesRouter {
   _responses(req, res) {
     const upstream = this._getUpstream();
     if (!upstream) return ResponsesError.send(res, 503, 'server_error', OpenAiLocalRouter.NO_MODEL_MESSAGE, { code: 'model_not_loaded' });
-    const translated = ResponsesRequestTranslator.translate(OpenAiResponsesRouter._body(req), upstream.modelId);
+    const translated = ResponsesRequestTranslator.translate(OpenAiResponsesRouter._body(req), LocalApiUpstream.requestModel(upstream));
     if (translated.error) return ResponsesError.send(res, 400, 'invalid_request_error', translated.error, { param: translated.param });
     this._reportDroppedTools(translated.dropped);
     const body = ThinkingKnobs.apply(translated.body, typeof this._hostDial === 'function' ? this._hostDial() : null);

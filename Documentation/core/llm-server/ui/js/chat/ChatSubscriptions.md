@@ -18,7 +18,11 @@ Subscribes the chat to the host's pushes. Every push is optional on the API.
   - `onSchedTasksEvent` / `onTriggersEvent`: refresh the sidebar, re-open the
     runs view showing that task or trigger, mirror a renamed setup chat in the
     top bar; a trigger `'open'` event deep-links to its runs view;
-  - `onServerEvent`: `'providers-changed'` re-lists models; `'state-change'`
+  - `onServerEvent`: `'providers-changed'` re-lists models; `'modes-changed'`
+    reloads the chat modes (`chatExt().reload(api)`) and redraws the sidebar
+    launcher and the conversation pills, so a mode registered after the page
+    loaded (the first custom agent's "Chat with agent", an add-on just
+    installed) shows without a reload; `'state-change'`
     re-probes the thinking dial (forced only on `'ready'`), applies the server
     state to [Availability](composer/Availability.md) and re-lists models;
   - `onServerState` to Availability.

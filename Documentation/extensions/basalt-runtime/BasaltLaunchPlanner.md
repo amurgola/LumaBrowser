@@ -8,7 +8,8 @@ the router, chat, Setup UI and context estimator read.
 ## Methods
 
 - `BasaltLaunchPlanner.plan({ model, runtime, port, overrides?, apiKey?, diagnostics?, userArgs? })`
-  returns `{ binaryPath, args, plan, killTree: true, modelPath, authKey, cudaDevice: null, healthTimeoutMs }`.
+  returns `{ binaryPath, args, plan, killTree: true, suspend?, modelPath, authKey, cudaDevice: null, healthTimeoutMs }`
+  (`suspend: { path: '/v1/sleep' }` when the pack can sleep; see Hotswap suspend below).
   - Throws `basalt planLaunch: model is required`, `runtime has no binaryPath`,
     `model has no pack path`, `port is required`, and
     [BasaltCard](BasaltCard.md)`.NO_CARD_REASON` when neither the diagnostics
@@ -78,3 +79,14 @@ constructor option (default `process.platform`) is a test seam.
 Asleep, the engine moves the model's GPU memory to RAM and gives the VRAM back; the next request wakes it in about
 a second. That RAM cannot be paged out while asleep, and keep holds it while awake too, which makes later sleeps
 faster. This is the engine's own sleep; the app's idle unload still stops the process.
+
+## Hotswap suspend (add-on 1.3.1)
+
+When the pack can sleep at all (the same `_packCanSleep` rule: every pack on Linux, the card-sized dense pack on
+Windows) the launch carries `suspend: { path: '/v1/sleep' }` (`SLEEP_PATH`), next to `killTree`, whether or not the
+idle sleep option is on. Core reads it in [LlmRuntimeServer](../../core/llm-server/server/LlmRuntimeServer.md): a
+hotswap eviction then POSTs `/v1/sleep` and, on `asleep`, leaves the engine alive with its VRAM released instead of
+ending it, so the chat model comes back from a pool swap in about 2 s instead of a full load. A `busy`, `no ram`,
+`unsupported` or `not loaded` answer falls back to the stop. A pack that cannot sleep declares nothing, so its swaps
+stop the engine without a round trip to an endpoint that would answer `unsupported`. Core never names Basalt: the
+capability is the launch field.

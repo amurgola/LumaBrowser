@@ -5,7 +5,10 @@ class ConversationActions {
     this._svc = llmServerService;
   }
 
-  list(opts) { return { conversations: this._store().listConversations(opts || {}) }; }
+  list(opts) {
+    const store = this._store();
+    return { conversations: store.listConversations(opts || {}), backgroundCount: store.countBackgroundConversations() };
+  }
   get(id) { return { conversation: this._store().getConversation(id) }; }
   create(data) { return { conversation: this._store().createConversation(data || {}) }; }
   search(q, opts) { return { conversations: this._store().searchConversations(q, opts || {}) }; }

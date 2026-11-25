@@ -142,7 +142,7 @@ class HubService {
     const found = this._inbox.getThread(threadId);
     if (!found) return null;
     const last = found.notifications[0] || null;
-    const item = { ...found.thread, lastNotification: last ? { title: last.title, body: last.body, receivedAt: last.receivedAt, sender: last.sender, partition: last.partition || '', host: last.host || '', url: last.url || '' } : null };
+    const item = { ...found.thread, lastNotification: last ? { title: last.title, body: last.body, receivedAt: last.receivedAt, sender: last.sender, partition: last.partition || '', host: last.host || '', url: last.url || '', tag: last.tag || '' } : null };
     return { ...item, contextId: this._contexts ? this._contexts.forItem(item) : null };
   }
 
@@ -204,6 +204,10 @@ class HubService {
   setSummariesEnabled(enabled) {
     if (!this._summarizer) throw new Error('Summaries are not available.');
     return this._summarizer.setEnabled(enabled);
+  }
+  setSummarySources(on) {
+    if (!this._summarizer) throw new Error('Summaries are not available.');
+    return this._summarizer.setReadsSources(on);
   }
   async summarizeNow(opts) {
     if (!this._summarizer) throw new Error('Summaries are not available.');

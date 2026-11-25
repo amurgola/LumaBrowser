@@ -12,6 +12,8 @@ The chat-store side of a terminal session's Code-mode conversation.
   (`kind: 'project'`, `projectPath`, `origin`, `client?`, `agentId?`, other data
   kept) and returns the existing message count.
 - `create(store, { cwd, origin, client, agent, modelRef })` -> the new id; title
-  `<agent name or Code> · <folder>`, `toolsEnabled`, mode `code`, meta
+  `<agent name or Code> · <folder>`, `toolsEnabled`, mode `code`,
+  `background: true` (it was started outside the chat tab, so the sidebar lists
+  it only while background conversations are shown), meta
   `{ kind: 'project', projectPath, agentId, origin, task: '', client? }`.
 - `dropIfEmpty(store, id)` deletes a conversation with no messages (best effort).

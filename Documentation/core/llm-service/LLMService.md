@@ -31,7 +31,9 @@ and `sendCompletion` / `createStream` resolve the slot and dispatch, through
   `{ success, response?, error? }`; `createStream(slotId, messages, options, handlers)`
   returns `{ abort, done }` synchronously.
 - `resolveSlot(slotId)` returns `{ provider, modelOverride }` (nulls when the
-  slot cannot route). `describeSlot(slotId)` returns
+  slot cannot route), plus `requestModel` when the running local server
+  answers to another name than the model's own
+  ([SlotResolver](service/SlotResolver.md)). `describeSlot(slotId)` returns
   `{ provider, model, managedLocal }`. `ensureSlotVision(slotId)` returns
   `{ ok, vision, error?, code? }`.
 - Providers: `getProvider(key)`, `getProviders()`, `getAllAvailableModels()`,

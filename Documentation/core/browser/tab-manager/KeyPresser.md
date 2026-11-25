@@ -9,7 +9,8 @@ press_key with honest feedback.
 - `KeyPresser.pressKey(page, { key, selector, ref })` -> `data: { key, target, submitted, warning?, evidence? }`
   plus `urlChanged` / `newUrl`. An Enter that did not navigate answers `data.urlChanged: false` and a note.
   A ref wins over a selector.
-- `KeyPresser.script(selector, key)`: the in-page dispatcher.
+- `KeyPresser.script(selector, key)`: the in-page dispatcher. keydown, keypress and keyup carry the key and
+  the `code` of its physical key ([KeyCodes](KeyCodes.md)).
 
 ## Why
 

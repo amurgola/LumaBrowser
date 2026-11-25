@@ -7,7 +7,9 @@ extensions and fetches one add-on .zip.
 
 ## Methods
 
-- `new AddonClient({ identity, baseUrl = 'https://lumabyte.com' })`; `identity`
+- `new AddonClient({ identity, baseUrl })`; `baseUrl` defaults to the
+  `LUMA_ADDON_BASE_URL` environment variable, else `https://lumabyte.com` (the
+  fresh-install e2e suite points a packaged build at a local catalog this way); `identity`
   is the [MachineIdentity](../install/MachineIdentity.md) used to sign requests
   through [SignedLumaClient](../shared/lumabyte/SignedLumaClient.md).
 - `listAddons()` calls `GET /api/addons` (6 s timeout) and resolves

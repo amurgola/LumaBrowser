@@ -13,6 +13,7 @@ export default class ImageSetupStore {
     this.ramPinStatus = null;
     this.vramBytes = null;
     this.activeDl = null;
+    this.int8Builds = {};
     this.runtimeInstallProgress = {};
     this.runtimeUpdateInfo = new Map();
   }

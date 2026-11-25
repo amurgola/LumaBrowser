@@ -43,8 +43,11 @@ const ContactTidy = require('./contacts/ContactTidy');
 const CalendarEvidence = require('./summary/CalendarEvidence');
 const SnapshotRepository = require('./snapshot/SnapshotRepository');
 const SlackSidebar = require('./snapshot/SlackSidebar');
+const TeamsSidebar = require('./snapshot/TeamsSidebar');
+const DiscordSidebar = require('./snapshot/DiscordSidebar');
 const ConversationLocator = require('./snapshot/ConversationLocator');
 const ConversationReader = require('./snapshot/ConversationReader');
+const MailboxReader = require('./snapshot/MailboxReader');
 const ConversationOpener = require('./snapshot/ConversationOpener');
 
 class PersonalHubExtension {
@@ -53,7 +56,7 @@ class PersonalHubExtension {
   static ENRICH_PATH = '/api/hub/threads/enrich';
   static DEFAULT_BASE_URL = 'http://127.0.0.1:3000';
   static BACKFILL_NOTIFICATIONS = 3000;
-  static FEED_RULES = 2;
+  static FEED_RULES = 3;
   static FEED_RULES_KEY = 'feed.rules';
 
   constructor(overrides = {}) {
@@ -166,9 +169,15 @@ class PersonalHubExtension {
     const snapshots = new SnapshotRepository(db);
     const llm = this._overrides.llm || context.llm || null;
     const browser = context.browser || null;
-    const locator = new ConversationLocator({ tabs, slack: new SlackSidebar({ tabs, browser, db }) });
-    const reader = new ConversationReader({ locator, browser, snapshots, sleep: this._overrides.sleep || undefined });
-    const opener = new ConversationOpener({ locator, tabs, browser });
+    const lists = { slack: new SlackSidebar({ tabs, browser, db }), teams: new TeamsSidebar({ tabs, browser, db }), discord: new DiscordSidebar({ tabs, browser, db }) };
+    const locator = new ConversationLocator({ tabs, lists });
+    const sleep = this._overrides.sleep || undefined;
+    const mailbox = browser ? new MailboxReader({ browser, tabs, sleep }) : null;
+    const reader = new ConversationReader({
+      locator, browser, snapshots, sleep, mailbox,
+      opensMail: () => db.get(ActivitySummarizer.SOURCES_KEY, false) === true,
+    });
+    const opener = new ConversationOpener({ locator, tabs, browser, mailbox });
     this._summarizer = new ActivitySummarizer({
       inbox, contexts, summaries: new SummaryRepository(db), db, llm, reader, people: contacts, meetings: new CalendarEvidence({ calendar, now }), emit, now,
     });

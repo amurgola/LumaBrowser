@@ -22,7 +22,7 @@ class TerminalConversations {
 
   static create(store, { cwd, origin, client, agent, modelRef }) {
     const title = `${agent ? agent.name : 'Code'} · ${path.basename(cwd) || cwd}`;
-    const conv = store.createConversation({ title, modelRef, toolsEnabled: true, mode: TerminalConversations.MODE_ID });
+    const conv = store.createConversation({ title, modelRef, toolsEnabled: true, mode: TerminalConversations.MODE_ID, background: true });
     const data = { kind: 'project', projectPath: cwd, agentId: agent ? agent.id : null, origin, task: '' };
     if (client) data.client = client;
     store.setMeta(conv.id, { mode: TerminalConversations.MODE_ID, data });

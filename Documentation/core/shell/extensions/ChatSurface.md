@@ -13,7 +13,7 @@
 - `forExtension(id, manifest?)` ->
   - `registerMode(descriptor)`, `unregisterMode(modeId)`, `listModes()` (modes owned by the extension);
     a descriptor whose `chatUiUrl` is the manifest's own `chatUi` bundle gets `chatUiModule` set the same
-    way [ExtensionWiring](ExtensionWiring.md) sets it for `manifest.chatModes` (bundled = ES module), so modes
+    way [ExtensionWiring](ExtensionWiring.md) sets it for `manifest.chatModes` (`isModuleFile`: the file is an ES module), so modes
     registered from `activate()` (agent-manager, code-mode, game-mode, roleplay-mode) load their module entry;
   - `uiUrl(relPath)` ([ExtensionUrls](ExtensionUrls.md));
   - `generateImage(opts)`, `abortImage()`;

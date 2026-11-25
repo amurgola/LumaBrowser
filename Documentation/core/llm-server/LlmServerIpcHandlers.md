@@ -74,7 +74,7 @@ a check: `getModelCaps` `{ caps: null }`, `getPeerGpus` `{ peers: [], active: fa
 | `conv.delete` | [ConversationDeletion](ipc/ConversationDeletion.md) |
 | `conv.export` | [ConversationExporter](ipc/ConversationExporter.md) |
 | `chat.wipeAll` | [ChatDataReset](ipc/ChatDataReset.md) |
-| `chat.listModes` | `ChatModeRegistry.shared.list()` |
+| `chat.listModes` | `ChatModeRegistry.shared.list()`; registering it also wires `LlmServerBroadcast.relayModes`, so a mode added or removed later reaches every page as a `modes-changed` server event |
 | `chat.getApprovalPolicy`, `chat.setApprovalPolicy` | [ApprovalPolicySetting](ipc/ApprovalPolicySetting.md) |
 | `chat.readWorkspaceFile` | [WorkspaceFileViewer](ipc/WorkspaceFileViewer.md) |
 | `chat.workspace.*` (7) | [WorkspaceFileIpcHandlers](chat/workspace/WorkspaceFileIpcHandlers.md) over one [WorkspaceFiles](chat/WorkspaceFiles.md) |

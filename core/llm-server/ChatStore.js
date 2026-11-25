@@ -13,21 +13,24 @@ class ChatStore {
   static SQL = {
     insertConversation: `
       INSERT INTO llm_conversations
-        (id, title, model_ref, provider, pinned, archived, hidden, tools_enabled, disabled_tools, choices_enabled, mode, parent_conversation_id, created_at, updated_at)
+        (id, title, model_ref, provider, pinned, archived, hidden, background, tools_enabled, disabled_tools, choices_enabled, mode, parent_conversation_id, created_at, updated_at)
       VALUES
-        (@id, @title, @model_ref, @provider, @pinned, @archived, @hidden, @tools_enabled, @disabled_tools, @choices_enabled, @mode, @parent_conversation_id, @created_at, @updated_at)`,
+        (@id, @title, @model_ref, @provider, @pinned, @archived, @hidden, @background, @tools_enabled, @disabled_tools, @choices_enabled, @mode, @parent_conversation_id, @created_at, @updated_at)`,
     getConversation: 'SELECT * FROM llm_conversations WHERE id = ?',
     listSubConversations: 'SELECT * FROM llm_conversations WHERE parent_conversation_id = ? ORDER BY created_at ASC, rowid ASC',
     listConversations: `
       SELECT * FROM llm_conversations
       WHERE (@include_archived = 1 OR archived = 0) AND (@include_hidden = 1 OR hidden = 0)
+        AND (@include_background = 1 OR background = 0)
       ORDER BY pinned DESC, updated_at DESC
       LIMIT @limit OFFSET @offset`,
+    countBackground: 'SELECT COUNT(*) AS total FROM llm_conversations WHERE background = 1 AND hidden = 0 AND archived = 0',
     searchConversations: `
       SELECT DISTINCT c.* FROM llm_conversations c
       LEFT JOIN llm_messages m ON m.conversation_id = c.id
       WHERE (c.title LIKE @pattern OR m.content LIKE @pattern)
         AND (@include_archived = 1 OR c.archived = 0) AND c.hidden = 0
+        AND (@include_background = 1 OR c.background = 0)
       ORDER BY c.pinned DESC, c.updated_at DESC
       LIMIT @limit`,
     setMode: 'UPDATE llm_conversations SET mode = ?, updated_at = ? WHERE id = ?',
@@ -78,7 +81,7 @@ class ChatStore {
   }
 
 
-  createConversation({ id, title, modelRef, provider, toolsEnabled, disabledTools, choicesEnabled, mode, hidden, parentConversationId } = {}) {
+  createConversation({ id, title, modelRef, provider, toolsEnabled, disabledTools, choicesEnabled, mode, hidden, background, parentConversationId } = {}) {
     const now = ChatStore._now();
     const row = {
       id: id || RecordId.create('conv'),
@@ -88,6 +91,7 @@ class ChatStore {
       pinned: 0,
       archived: 0,
       hidden: hidden ? 1 : 0,
+      background: background ? 1 : 0,
       tools_enabled: toolsEnabled ? 1 : 0,
       disabled_tools: ChatStore._serializeDisabledTools(disabledTools),
       choices_enabled: ChatStore._toTriState(choicesEnabled),
@@ -110,21 +114,27 @@ class ChatStore {
     return this._statements.listSubConversations.all(parentConversationId).map(ChatStore._hydrateConversation);
   }
 
-  listConversations({ includeArchived = false, includeHidden = false, limit = 200, offset = 0 } = {}) {
+  listConversations({ includeArchived = false, includeHidden = false, includeBackground = false, limit = 200, offset = 0 } = {}) {
     return this._statements.listConversations.all({
       include_archived: includeArchived ? 1 : 0,
       include_hidden: includeHidden ? 1 : 0,
+      include_background: includeBackground ? 1 : 0,
       limit: Math.min(limit, ChatStore.MAX_LIST_LIMIT),
       offset,
     }).map(ChatStore._hydrateConversation);
   }
 
-  searchConversations(query, { limit = 50, includeArchived = false } = {}) {
+  countBackgroundConversations() {
+    return this._statements.countBackground.get().total;
+  }
+
+  searchConversations(query, { limit = 50, includeArchived = false, includeBackground = false } = {}) {
     const term = (query || '').trim();
     if (!term) return [];
     return this._statements.searchConversations.all({
       pattern: `%${term}%`,
       include_archived: includeArchived ? 1 : 0,
+      include_background: includeBackground ? 1 : 0,
       limit: Math.min(limit, ChatStore.MAX_SEARCH_LIMIT),
     }).map(ChatStore._hydrateConversation);
   }
@@ -336,6 +346,7 @@ class ChatStore {
       pinned: !!row.pinned,
       archived: !!row.archived,
       hidden: !!row.hidden,
+      background: !!row.background,
       toolsEnabled: !!row.tools_enabled,
       disabledTools: ChatStore._parseDisabledTools(row.disabled_tools),
       choicesEnabled: row.choices_enabled == null ? null : !!row.choices_enabled,

@@ -2,16 +2,21 @@ const ImageModelsScanner = require('../ImageModelsScanner');
 const ImageModelCatalog = require('../models/ImageModelCatalog');
 const ImageTrainingRegistry = require('../models/ImageTrainingRegistry');
 const ImageModelManifest = require('./ImageModelManifest');
+const Int8WeightsBuilder = require('./Int8WeightsBuilder');
 const ModelDescriptor = require('../../shared/ModelDescriptor');
 
 class ImageModelsView {
   static KINDS = ['edit', 'generate', 'video'];
 
-  constructor({ imageServerService, scanner = new ImageModelsScanner(), catalog = new ImageModelCatalog(), training = ImageTrainingRegistry.shared }) {
+  constructor({
+    imageServerService, scanner = new ImageModelsScanner(), catalog = new ImageModelCatalog(), training = ImageTrainingRegistry.shared,
+    int8Weights = new Int8WeightsBuilder({ imageServerService, scanner }),
+  }) {
     this._svc = imageServerService;
     this._scanner = scanner;
     this._catalog = catalog;
     this._training = training;
+    this._int8Weights = int8Weights;
   }
 
   async view() {
@@ -41,7 +46,7 @@ class ImageModelsView {
   async _viewOf(config) {
     const scan = await this._scanner.scan(config.effectivePath);
     for (const model of (scan.models || [])) model.displayName = this._svc.resolveModelDisplayName(model.id);
-    scan.models = (scan.models || []).map((m) => this._withTraining(m));
+    scan.models = (scan.models || []).map((m) => ({ ...this._withTraining(m), int8Weights: this._int8Weights.describe(m) }));
     return { config, scan, descriptors: ImageModelsView.descriptors(scan) };
   }
 

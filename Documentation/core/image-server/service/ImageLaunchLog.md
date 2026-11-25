@@ -6,12 +6,13 @@ The one console line an image slot launch prints.
 
 ## Methods
 
-- `ImageLaunchLog.line({ role, modelId, placement, profile, vaeTiling, cpuOnly, clipNote, runtimeNote?, sageNote? })`
+- `ImageLaunchLog.line({ role, modelId, placement, profile, vaeTiling, cpuOnly, clipNote, runtimeNote?, int8Weights?, sageNote? })`
   `[image-server] <role> model "<id>"` followed, in order, by
   ` → CUDA device <d>`, ` (auto-fit split, budgets <b>)` (several cards) or
   ` (VRAM budget <b>, card shared)` (one card under a budget),
   ` (resident, VAE tiling on|OFF)` (edit-class or Wan video, not offloaded),
   ` (VAE tiling on|OFF)` (Wan video, offloaded), ` (CPU weight-offload on)`,
   ` (CPU runtime, no GPU placement)`, ` (<clipNote>)`, ` (<runtimeNote>)`
-  ([PreferredImageRuntime](PreferredImageRuntime.md)'s swap), ` (<sageNote>)`
+  ([PreferredImageRuntime](PreferredImageRuntime.md)'s swap), ` (INT8 weights)`
+  (the launch runs the INT8 copy of the diffusion weights), ` (<sageNote>)`
   ([SageAttentionPolicy](SageAttentionPolicy.md)'s verdict), each only when it applies.

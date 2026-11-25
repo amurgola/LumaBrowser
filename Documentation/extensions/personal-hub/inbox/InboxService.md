@@ -8,7 +8,8 @@ calendar or task notice, anything a site raises) is logged in full
 (`hub_threads`); automations (n8n) enrich or add items. The feed is context
 about the user's day, not a queue: nothing in it is unread or waiting to be
 cleared. An item can be dismissed (state `done`) to drop it from the feed, and
-new activity brings it back. The older states (`reviewed`, `snoozed`) are
+new activity brings it back, still carrying when it was dismissed
+(`dismissedAt`). The older states (`reviewed`, `snoozed`) are
 still accepted from automations. Emits `thread.changed` after every write.
 
 ## Methods
@@ -31,7 +32,7 @@ still accepted from automations. Emits `thread.changed` after every write.
 - `listThreads({ state = 'active', app?, since?, limit = 100, offset = 0 })`:
   the feed's items, newest activity first, each with its `kind`
   ([ActivityKind](ActivityKind.md)`.of`: chat, mail, calendar, task or other)
-  and `lastNotification: { title, body, receivedAt, sender, partition, host,
+  and `lastNotification: { title, body, receivedAt, sender, partition, host, tag,
   url }` (null when the item has none; all of them come from one
   [NotificationRepository](NotificationRepository.md)`.latestForThreads`
   query). `partition`, `host` and `url` say where the notification came
@@ -45,7 +46,12 @@ still accepted from automations. Emits `thread.changed` after every write.
 - `setThreadState(id, state, { snoozeUntil? })`: `done` dismisses an item,
   `open` restores it; `reviewed` and `snoozed` are still accepted. Snoozing
   needs a future ISO time (default now + 4 h); other states clear the snooze.
-  Throws on an unknown state; `null` for an unknown thread.
+  `done` stamps the item's `dismissedAt` with the time; the stamp stays
+  when new activity brings the item back, so everything in it up to then
+  is known to be what the user had already seen
+  ([ActivitySummarizer](../summary/ActivitySummarizer.md) marks it so for
+  the model), and `open` (a restore by hand, or the undo of a dismissal)
+  clears it. Throws on an unknown state; `null` for an unknown thread.
 - `enrichThread(ref, enrichment)`: `ref` `{ id }` or `{ app, threadKey }`;
   `enrichment` `{ title, summary, priority, labels, kind, context,
   participants, url, taskId, state }`. Only the sent fields change; `context`

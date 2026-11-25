@@ -2,7 +2,7 @@ module.exports = {
   id: 'on-demand-mode',
   name: 'Luma Live',
   version: '0.1.0',
-  distributable: false,
+  distributable: true,
   description:
     'The agent behind Luma Live, the floating panel on every web '
     + 'page. Say or type what you want done on the page you are looking at '

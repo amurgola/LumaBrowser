@@ -5,10 +5,13 @@ import HtmlEscaper from '../../format/HtmlEscaper.js';
 import ConversationGroups from './ConversationGroups.js';
 
 export default class ConversationList {
+  static SHOW_BACKGROUND_KEY = 'luma.chat.showBackgroundConversations';
+
   constructor(ctx) {
     this._ctx = ctx;
     this._source = [];
     this._shownGroups = new Map();
+    ctx.state.showBackground = ConversationList._storedShowBackground();
   }
 
   registerTemplates() {
@@ -36,12 +39,13 @@ export default class ConversationList {
     const rows = this._ctx.state.searchOn ? [] : this._taskRows().concat(this._triggerRows());
     const all = rows.concat(this._conversationRows());
     try { this._ctx.resonant.data.cm.visible.update(all); } catch (_) {}
+    this._applyBackgroundToggle();
     this._ctx.sideModes.applyActive();
   }
 
   async refresh() {
     const { api, state } = this._ctx;
-    state.conversations = await ConversationList._listed(() => api.conv.list({}), 'conversations');
+    await this._loadConversations();
     if (api.schedTasks) state.schedTasks = await ConversationList._listed(() => api.schedTasks.list(), 'tasks');
     if (api.triggers) state.triggers = await ConversationList._listed(() => api.triggers.list(), 'triggers');
     this.repaintCurrent();
@@ -58,11 +62,24 @@ export default class ConversationList {
     const term = (q || '').trim();
     if (!term) { this.render(this._ctx.state.conversations); return; }
     try {
-      const r = await this._ctx.api.conv.search(term, {});
+      const r = await this._ctx.api.conv.search(term, { includeBackground: this._ctx.state.showBackground });
       this.render((r && r.success && r.conversations) || []);
     } catch (_) {
       this.render([]);
     }
+  }
+
+  async toggleBackground() {
+    const { state } = this._ctx;
+    state.showBackground = !state.showBackground;
+    ConversationList._storeShowBackground(state.showBackground);
+    await this.refresh();
+  }
+
+  static backgroundLabel(count, shown) {
+    if (shown) return 'Hide background conversations';
+    if (!count) return '';
+    return 'Show ' + count + ' background conversation' + (count === 1 ? '' : 's');
   }
 
   async deleteGroup(label) {
@@ -110,6 +127,36 @@ export default class ConversationList {
     } catch (_) {
       return [];
     }
+  }
+
+  async _loadConversations() {
+    const { api, state } = this._ctx;
+    let reply = null;
+    try { reply = await api.conv.list({ includeBackground: state.showBackground }); } catch (_) { reply = null; }
+    const ok = !!(reply && reply.success);
+    state.conversations = (ok && reply.conversations) || [];
+    state.backgroundCount = (ok && reply.backgroundCount) || 0;
+  }
+
+  _applyBackgroundToggle() {
+    const { els, state } = this._ctx;
+    const button = els.backgroundToggle;
+    if (!button) return;
+    const label = ConversationList.backgroundLabel(state.backgroundCount, state.showBackground);
+    button.textContent = label;
+    button.hidden = !label;
+    button.setAttribute('aria-pressed', state.showBackground ? 'true' : 'false');
+  }
+
+  static _storedShowBackground() {
+    try { return localStorage.getItem(ConversationList.SHOW_BACKGROUND_KEY) === '1'; } catch (_) { return false; }
+  }
+
+  static _storeShowBackground(shown) {
+    try {
+      if (shown) localStorage.setItem(ConversationList.SHOW_BACKGROUND_KEY, '1');
+      else localStorage.removeItem(ConversationList.SHOW_BACKGROUND_KEY);
+    } catch (_) {}
   }
 
   _taskRows() {

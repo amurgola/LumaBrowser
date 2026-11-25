@@ -1,5 +1,5 @@
 class HostOnlyTools {
-  static PREFIXES = ['terminal_'];
+  static PREFIXES = ['terminal_', 'android_'];
 
   static NAMES = new Set(['train_lora', 'lora_training_status', 'cancel_lora_training', 'apply_lora']);
 

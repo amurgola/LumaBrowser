@@ -21,6 +21,11 @@ class LlmServerBroadcast {
       LlmServerBroadcast.toAll(LlmServerBroadcast.ARTIFACT_DATA_CHANNEL, { rootId, rev, keys }));
   }
 
+  static relayModes(modeRegistry) {
+    modeRegistry.onChange(() =>
+      LlmServerBroadcast.toAll(LlmServerBroadcast.SERVER_EVENT_CHANNEL, { type: 'modes-changed', payload: {} }));
+  }
+
   static relayConversationJobs(jobs) {
     jobs.onEvent((type, payload) => LlmServerBroadcast.toAll(LlmServerBroadcast.CONVERSATION_JOBS_CHANNEL, { type, payload }));
   }

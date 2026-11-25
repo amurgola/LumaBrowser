@@ -61,7 +61,7 @@ class ChatSurface extends ContextSurface {
   static _flagModule(descriptor, extensionId, manifest) {
     const file = manifest && ManifestFields.file(manifest.chatUi);
     if (descriptor && file && descriptor.chatUiUrl === ExtensionUrls.uiAsset(extensionId, file)) {
-      descriptor.chatUiModule = ExtensionWiring.isModuleBundle(manifest);
+      descriptor.chatUiModule = ExtensionWiring.isModuleFile(manifest, file);
     }
     return descriptor;
   }

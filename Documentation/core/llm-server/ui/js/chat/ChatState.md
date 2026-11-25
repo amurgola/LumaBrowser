@@ -27,3 +27,9 @@ frames by message id.
   and video model, `{ image?, edit?, video? }` once picked or restored, see
   [MediaModelChoice](composer/MediaModelChoice.md)).
 - `enterPlainChat()`: mode `'chat'`, no mode descriptor or meta.
+
+`showBackground` is the sidebar's "Show background conversations" choice and
+`backgroundCount` how many such conversations exist; both are kept by
+[ConversationList](sidebar/ConversationList.md). `conversations` holds only
+what the sidebar lists, so a background conversation is absent from it while
+the choice is off.

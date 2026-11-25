@@ -3,7 +3,7 @@ module.exports = {
   name: 'Hub',
   version: '1.0.0',
   description: 'Consolidates calendars, chat and mail notifications and tasks from every workspace into one board, with hub_* tools for agents',
-
+  distributable: true,
   dependencies: {
     required: {
       'core:database': {
@@ -72,6 +72,7 @@ module.exports = {
       './ui/widgets/HubTaskDetail.js',
       './ui/widgets/TaskChrome.js',
       './ui/widgets/StatusPicker.js',
+      './ui/widgets/ThreadSnapshots.js',
       './ui/widgets/HubSettingsPanel.js',
       './ui/settings/HubSection.js',
       './ui/settings/SummarySection.js',

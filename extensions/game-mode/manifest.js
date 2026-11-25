@@ -2,7 +2,7 @@ module.exports = {
   id: 'game-mode',
   name: 'Game',
   version: '0.1.0',
-  distributable: false,
+  distributable: true,
   description:
     'A game studio in the LLM chat. Describe a game and an agent designs and '
     + 'builds it as a real, playable Phaser 3 project on disk: scenes, entities, '

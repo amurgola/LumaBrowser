@@ -9,24 +9,27 @@ one-line snippet. Where the conversation lives comes from the
 ([SnapshotRepository](SnapshotRepository.md)) and reused until the item has
 new activity. One read runs at a time.
 
-## Two ways to read
+## Three ways to read
 
 Tried in this order:
 
 | Scope | When | How |
 |---|---|---|
 | `conversation` | the item has an address of its own (the locator's `url`) | when the user's tab is already at that address it is read as it stands; otherwise a hidden tab in the same session opens it, the conversation is read as text, and the tab is closed |
-| `tab` | otherwise, or when the first way read nothing | the signed-in tab the item came from is read as it stands, and only the part that mentions the item's subject or people is kept ([SnapshotExcerpt](SnapshotExcerpt.md)) |
+| `mail` | the item has no address, the Hub knows its mailbox (Proton, Gmail) and the user lets the Hub open mail | a hidden tab of the same session searches the mailbox for the mail, opens it and reads it ([MailboxReader](MailboxReader.md)); the start of the mail is kept (`SnapshotExcerpt.head`). Opening it marks it as read |
+| `tab` | otherwise, or when the ways above read nothing | the signed-in tab the item came from is read as it stands, and only the part that mentions the item's subject or people is kept ([SnapshotExcerpt](SnapshotExcerpt.md)) |
 
 The user's own tab is never navigated. When it is showing something else
 there is nothing to keep, and the reader says so instead of guessing.
 
 ## Methods
 
-- `new ConversationReader({ locator, browser, snapshots, sleep? })`:
+- `new ConversationReader({ locator, browser, snapshots, mailbox?, opensMail?, sleep? })`:
   `locator` a ConversationLocator, `browser` the BrowserService (`null`
-  outside the app), `snapshots` a SnapshotRepository, `sleep(ms)` a test
-  seam.
+  outside the app), `snapshots` a SnapshotRepository, `mailbox` a
+  [MailboxReader](MailboxReader.md) or `null`, `opensMail()` whether the
+  user lets the Hub open a mail to read it (never, by default), `sleep(ms)`
+  a test seam.
 - `available()`: whether there is a browser that can hand over a page's
   source.
 - `stored(item)` -> the item's stored snapshot with `fresh` (its `sourceAt`
@@ -60,9 +63,16 @@ there is nothing to keep, and the reader says so instead of guessing.
   address in a [HiddenTab](HiddenTab.md) of the same session, with the pane
   as what to wait for, then gives the app `SETTLE_MS` = 2.5 s to draw and
   reads `_conversation(tabId, pane)`: the pane alone
-  (`browser.getSource(tabId, { type: 'markdown', selector: pane })`), or the
-  whole page (`{ type: 'markdown' }`) when the app has no pane or the pane
+  (`browser.getSource(tabId, { type: 'text', selector: pane })`), or the
+  whole page (`{ type: 'text' }`) when the app has no pane or the pane
   read came back empty. The tab is always closed.
+- A page is read as its visible text, one line per block. Read as
+  markdown, a Slack conversation lost who wrote each message (the names
+  are buttons) and carried a permalink on every time stamp; as text it
+  reads `Victoria Schoen`, `11:21 AM`, then her lines (measured
+  2026-11-23).
+- With no address, `_readMail` asks the MailboxReader, when there is one,
+  it handles the item's app and `opensMail()` says yes.
 - What was read keeps its newest end (`SnapshotExcerpt.tail`).
 - The user's tab, for the `tab` scope, is read whole with `getSource` and
   cut down with `SnapshotExcerpt.around` and the item's `needles`.

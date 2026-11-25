@@ -4,7 +4,8 @@
 
 Places each window's active tab view over the content area that window's renderer reports. A tab a
 remote viewer has sized (Tab Share) takes that size instead, on screen or lent a place behind the tab
-on screen. A silent tab is lent the same place, so the page an agent drives has a real viewport.
+on screen. A silent tab is lent the same place, so the page an agent drives has a real viewport; while
+the window sizes no page (minimised, in the tray, nothing on screen) its page is told the viewport instead.
 
 ## Methods
 
@@ -23,6 +24,11 @@ on screen. A silent tab is lent the same place, so the page an agent drives has 
 - `refitBackground()`: places every background tab that is sized, silent (or
   still lent a place) again. Runs on `setBounds` and, through
   [TabViewManager](../TabViewManager.md), on every tab switch.
+- `stopTelling(entry)`: switches off the viewport a page was told (below), when
+  something real sizes it again: the window, or the
+  [CaptureStage](../tab-manager/CaptureStage.md) a screenshot lends the view
+  to. Nothing happens for a page that was told nothing. The next placement
+  tells the page again where it still needs telling.
 
 ## A view sized for a remote viewer (2026-11-15)
 
@@ -61,3 +67,50 @@ the window through `refitBackground`. With nothing to hide behind it waits, as
 above. A lent view already below the tab on screen stays where it is in the
 stack, so several silent tabs do not trade places on every re-fit. [TabViewManager](../TabViewManager.md) calls `applyTo` for a silent tab
 as it is created, before its first load.
+
+### While the window sizes no page (2026-11-23)
+
+A window that is minimised or hidden in the tray sizes no page, lent view or
+not, and neither does a view with nothing to hide behind. Measured in the
+running app, which spends its day in the tray: every silent tab opened then
+was 0x0, so the Hub's read of a Slack conversation got one message, because
+Slack draws only the rows in view. In those two cases the silent tab's page is
+told its viewport with device emulation
+(`webContents.enableDeviceEmulation`): the size it is lent, else the content
+area the window last reported, else `UNSEEN_VIEWPORT` (1280x800). Measured on
+a tall test page in the tray: `innerWidth` and `innerHeight` take the size,
+scrolling works, and animation frames, resize and intersection observers keep
+firing.
+
+- Chromium drops the emulation with the page's renderer, so
+  [TabViewManager](../TabViewManager.md) calls `applyTo` for a silent tab on
+  every `tabNavigated`, and the new page is told again.
+- A page with no renderer behind it is never asked (`_hasLivePage`: an address
+  is committed and the renderer has not crashed). Electron 45 takes the whole
+  app down otherwise; a tab that has not loaded anything yet did exactly that.
+- Once the window is showing again, the next placement lends the view its real
+  size and the emulation is switched off.
+- A tab sized for a remote viewer is not told anything: it keeps the size
+  it had.
+
+### A hidden persisted tab
+
+A persisted tab restored at start is hidden and was never shown, so its
+page was 0x0 for as long as the app sat in the tray. Most mail and chat
+apps still raise their notifications that way; Teams does not start at
+all (measured 2026-11-23: about 250 elements of loading shell in the
+persisted tab, the whole app within three seconds in a hidden tab with a
+viewport), and Slack lists no conversations. So `_placeInBackground` tells
+a hidden tab's page the content area too. It is not lent a place: a dozen
+mail and chat apps would then paint behind the tab on screen. When the
+user shows the tab, `_placeOnScreen` switches the emulation off and the
+window sizes the page. As for a silent tab,
+[TabViewManager](../TabViewManager.md) places it again on every
+`tabNavigated`, which is also what first tells a tab restored at start.
+`node tmp/hidden-tab-size-probe.js` (git-ignored) replays it: created
+hidden in the tray 1402x862, the same after a navigation, the window's
+own size once shown.
+
+`node tmp/silent-size-probe.js` (git-ignored) replays this in an isolated copy
+of the app: a silent tab on screen, in the tray, across navigations, after a
+renderer crash and with the window back.

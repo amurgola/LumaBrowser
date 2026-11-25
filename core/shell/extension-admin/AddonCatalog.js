@@ -12,7 +12,7 @@ class AddonCatalog {
 
   async list() {
     const res = await this._client.listAddons();
-    const extensions = (res.extensions || []).map((a) => ({ ...a, installed: this._isInstalled(a.id), installedVersion: this._installedVersion(a.id) }));
+    const extensions = (res.extensions || []).map((a) => ({ ...a, installed: this.isInstalled(a.id), installedVersion: this._installedVersion(a.id) }));
     return { ...res, extensions };
   }
 
@@ -35,7 +35,7 @@ class AddonCatalog {
     }
   }
 
-  _isInstalled(id) {
+  isInstalled(id) {
     if (this._extensions.manifests && this._extensions.manifests.has(id)) return true;
     const userDir = this._extensions.userExtensionsDir;
     if (!userDir) return false;

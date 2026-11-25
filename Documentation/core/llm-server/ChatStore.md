@@ -15,20 +15,24 @@ better-sqlite3 handle SettingsDatabase owns; rows come back camelCase.
 
 Conversations:
 
-- `createConversation({ id?, title?, modelRef?, provider?, toolsEnabled?, disabledTools?, choicesEnabled?, mode?, hidden?, parentConversationId? })`
+- `createConversation({ id?, title?, modelRef?, provider?, toolsEnabled?, disabledTools?, choicesEnabled?, mode?, hidden?, background?, parentConversationId? })`
   returns the hydrated conversation. A caller id is kept (the renderer's
   optimistic id), otherwise `conv_<ms>_<rand>`. Title defaults to `New chat`,
   mode to `chat`. `parentConversationId` (hydrated as such, else `null`) marks a
   sub-conversation a chat delegated to; the sidebar nests it under that chat.
+  `background` (hydrated as a boolean) marks a conversation that was not
+  started in the chat tab.
 - `getConversation(id)` returns the conversation or `null`. Not filtered by
   hidden or archived (the run-history viewer reads hidden rows by id).
 - `listSubConversations(parentConversationId)` the conversations delegated from
   that chat, oldest first, hidden and archived included; `[]` for a falsy id.
-- `listConversations({ includeArchived = false, includeHidden = false, limit = 200, offset = 0 })`
+- `listConversations({ includeArchived = false, includeHidden = false, includeBackground = false, limit = 200, offset = 0 })`
   pinned first, then newest `updated_at`; limit capped at 1000.
-- `searchConversations(q, { limit = 50, includeArchived = false })` matches the
-  title or any message content (`LIKE %q%`), one row per conversation, never
-  hidden rows; limit capped at 200; blank `q` returns `[]`.
+- `countBackgroundConversations()` how many rows `includeBackground` adds to
+  the default list (background, not hidden, not archived).
+- `searchConversations(q, { limit = 50, includeArchived = false, includeBackground = false })`
+  matches the title or any message content (`LIKE %q%`), one row per
+  conversation, never hidden rows; limit capped at 200; blank `q` returns `[]`.
 - `renameConversation(id, title)`, `setConversationModel(id, modelRef, provider)`,
   `setConversationTools(id, enabled)`, `setConversationDisabledTools(id, names)`,
   `setConversationChoices(id, enabled)`, `setConversationReasoningEffort(id, position)`,
@@ -98,3 +102,11 @@ Messages:
   `{ _raw: text }` (via `JsonColumn.parse`).
 - **Hidden** rows (scheduled-task transcripts) are a stronger "archived": out of
   the list and search, still readable by id.
+- **Background** rows are conversations that were not started in the chat tab:
+  a terminal or IDE Code session
+  ([TerminalConversations](../../extensions/code-mode/terminal/TerminalConversations.md)),
+  the placement test's chat, and whatever such a conversation delegates. The
+  list and search leave them out unless `includeBackground` is passed, which
+  is the sidebar's "Show background conversations" toggle
+  ([ConversationList](ui/js/chat/sidebar/ConversationList.md)). Unlike hidden
+  rows they are the user's own conversations, only held elsewhere.

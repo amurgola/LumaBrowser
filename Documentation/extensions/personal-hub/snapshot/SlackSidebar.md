@@ -2,7 +2,9 @@
 
 `extensions/personal-hub/snapshot/SlackSidebar.js`
 
-Finds the address of a Slack conversation by its name. A Slack notification
+Slack's conversation list as the Hub reads it, a
+[ConversationList](ConversationList.md), which holds the lookup described
+here. A Slack notification
 names its channel or its sender but carries no address, while the
 conversation list in the sidebar of a signed-in Slack page has both: each
 row is the name with the conversation's id. The list is read from the
@@ -28,6 +30,8 @@ conversation is looked up once.
   drawn (`READY`). Every conversation a list names is remembered, not only
   the one asked for. `null` when the tab's address has no team, the name is
   empty, or no list names the conversation.
+- `static spaceOf(tab)` (the team id, or `null`), `home(team)` and
+  `address(team, id)`: what the base asks of it.
 - `static find(rows, name)` -> the id of the conversation called `name`, or
   `null`. `rows` is `[{ id, name }]` as `ROWS_JS` gives them. Names are
   compared in lower case without a leading `#`, so `#General` and `general`

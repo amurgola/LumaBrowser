@@ -11,7 +11,8 @@ The chat sidebar's conversation and message operations over [ChatStore](../ChatS
 
 | Method | Reply |
 |---|---|
-| `list(opts)`, `search(q, opts)` | `{ conversations }` |
+| `list(opts)` | `{ conversations, backgroundCount }`: `backgroundCount` is how many more conversations `includeBackground` would list, whatever `opts` asked for |
+| `search(q, opts)` | `{ conversations }` |
 | `get(id)`, `create(data)` | `{ conversation }` |
 | `rename`, `archive`, `pin`, `setVariant`, `deleteMessage`, `clearMessages`, `setTools` (boolean), `setDisabledTools`, `setChoices` (boolean), `setReasoningEffort` | `{ success }` from the store |
 | `messages(conversationId)` | `{ messages }`, the active variant of each turn only |

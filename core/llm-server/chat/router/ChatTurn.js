@@ -98,6 +98,7 @@ class ChatTurn {
       agentMode: this._agentMode,
       disabledTools: a.disabledTools,
       choicesEnabled: a.choicesEnabled,
+      background: a.background,
     });
     if (opened.convId) this._convId = opened.convId;
     return opened;

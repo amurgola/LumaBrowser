@@ -63,6 +63,8 @@ export default class ChatState {
 
   _initNavigation() {
     this.conversations = [];
+    this.showBackground = false;
+    this.backgroundCount = 0;
     this.activeId = null;
     this.messages = [];
     this.sidebarExpanded = false;

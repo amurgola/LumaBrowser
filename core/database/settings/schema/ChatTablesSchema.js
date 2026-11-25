@@ -8,6 +8,7 @@ class ChatTablesSchema {
       pinned           INTEGER NOT NULL DEFAULT 0,
       archived         INTEGER NOT NULL DEFAULT 0,
       hidden           INTEGER NOT NULL DEFAULT 0,
+      background       INTEGER NOT NULL DEFAULT 0,
       tools_enabled    INTEGER NOT NULL DEFAULT 0,
       disabled_tools   TEXT,
       choices_enabled  INTEGER,

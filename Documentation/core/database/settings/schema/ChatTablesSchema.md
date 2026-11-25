@@ -16,6 +16,9 @@ handle.
 
 - `hidden`: system-owned transcripts (scheduled-run transcripts); excluded from
   the sidebar and search, still fetchable by id.
+- `background`: a conversation that was not started in the chat tab (a
+  terminal or IDE session, the placement test). The sidebar lists these only
+  while its "Show background conversations" toggle is on.
 - `disabled_tools`: JSON array of tool names unchecked in the chat's gear
   panel. NULL or empty means every tool the global catalog allows.
 - `choices_enabled`: "Suggest replies"; 1 asks for three reply choices. NULL

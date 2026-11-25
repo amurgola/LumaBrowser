@@ -15,7 +15,14 @@ class ImageSlotLauncher {
     if (state.status.state !== 'ready' || !state.status.port) {
       return { error: `Image server is ${state.status.state}, not ready.`, cold: state.cold };
     }
+    await this._reclaimCard(state, slotRole);
     return state;
+  }
+
+  async _reclaimCard(state, slotRole) {
+    if (state.cold || typeof this._svc.reclaimCard !== 'function') return;
+    await this._svc.reclaimCard(slotRole);
+    state.status = state.server.getStatus();
   }
 
   async _joinStartInProgress(state, send) {

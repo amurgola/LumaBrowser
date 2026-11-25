@@ -18,6 +18,10 @@ Makes one image slot's server run the requested model before a render.
      `svc.startServerResolved(wantId, { role: slotRole })`. Failure returns its
      error or `Failed to start the image server.`.
   4. Not ready or no port afterwards: `Image server is <state>, not ready.`
+  5. A slot that was already ready (not cold) calls `svc.reclaimCard(slotRole)`:
+     a hotswap pool member may have taken the card while this slot was suspended
+     (it never stopped, so no launch would acquire for it); the card comes back
+     (the chat model sleeps or stops) before the render. The status is re-read.
   `cold` is true whenever the model had to load.
 
 ## Why

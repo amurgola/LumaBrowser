@@ -13,9 +13,13 @@ Adds the columns that shipped after their table did.
   version-1 root (`root_id = id`). When `llm_messages` gained `parent_id`,
   every conversation's rows are linked into the chain they were shown as
   ([MessageTree](../../llm-server/chat/MessageTree.md)`.legacyParents`), in
-  one transaction.
+  one transaction. When `llm_conversations` gained `background`, the Code
+  conversations whose meta names a `terminal` or `ide` origin are marked
+  background, together with the sub-conversations they delegated: until then
+  nothing else recorded where a conversation was started.
 - `SettingsMigrations.ADDED_COLUMNS`: `[table, column, ddl]` in shipping order
-  (the newest: `llm_messages.sent_content`, the text a user turn was sent as).
+  (the newest: `llm_conversations.background`, a conversation not started in
+  the chat tab).
 
 ## Notes
 

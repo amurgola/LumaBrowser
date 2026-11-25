@@ -2,6 +2,7 @@ import HubWidgetBase from './HubWidgetBase.js';
 import HubSettingsPanel from './HubSettingsPanel.js';
 import StatusPicker from './StatusPicker.js';
 import TaskChrome from './TaskChrome.js';
+import ThreadSnapshots from './ThreadSnapshots.js';
 import WidgetDom from './WidgetDom.js';
 
 export default class HubInboxWidget extends HubWidgetBase {
@@ -45,7 +46,7 @@ export default class HubInboxWidget extends HubWidgetBase {
     this._filter = HubInboxWidget.ALL_APPS;
     this._mode = HubInboxWidget._storedMode();
     this._openCards = new Set();
-    this._snapshots = new Map();
+    this._snapshots = new ThreadSnapshots({ host, repaint: () => this._paint(), alive: () => !this._disposed });
     this._limit = HubInboxWidget.PAGE;
     this._showDismissed = false;
     this._undo = null;
@@ -198,21 +199,30 @@ export default class HubInboxWidget extends HubWidgetBase {
         button('hub-sum-toggle', open ? 'Hide items' : 'Show items', () => this._toggleCard(card.key), 'The notifications behind this card'),
         button('hub-sum-dismiss', 'Dismiss', () => this._dismissMany(ids, card.name), 'Take all of this context out of the feed; new activity brings it back'),
       ]),
-      open ? WidgetDom.el('div', { class: 'hub-sum-items' }, card.items.map((t) => this._row(t))) : null,
+      open ? WidgetDom.el('div', { class: 'hub-sum-items' }, card.items.map((t) => this._row(t, card.asks.some((ask) => ask.threadId === t.id)))) : null,
     ]);
   }
 
   _ask(card, ask) {
     const item = card.items.find((t) => t.id === ask.threadId);
     const onBoard = !!(item && item.taskId);
+    const showing = this._snapshots.has(ask.threadId);
     return WidgetDom.el('div', { class: 'hub-sum-ask', data: { thread: ask.threadId } }, [
-      WidgetDom.el('span', { class: 'hub-sum-ask-text', text: ask.what }),
-      onBoard
-        ? WidgetDom.el('span', { class: 'hub-task-mark', text: 'On the board' })
-        : WidgetDom.el('button', {
-          class: 'hub-row-action hub-ask-to-task', text: 'To task', title: 'Make a board task from this',
-          on: { click: () => this.act(() => this.host.call('threadToTask', ask.threadId, {})) },
+      WidgetDom.el('div', { class: 'hub-sum-ask-line' }, [
+        WidgetDom.el('span', { class: 'hub-sum-ask-text', text: ask.what }),
+        WidgetDom.el('button', {
+          class: 'hub-row-action hub-ask-context', text: showing ? 'Hide' : 'Context',
+          title: showing ? 'Hide what was read' : 'Read the conversation or the mail behind this',
+          on: { click: () => this._snapshots.toggle(ask.threadId) },
         }),
+        onBoard
+          ? WidgetDom.el('span', { class: 'hub-task-mark', text: 'On the board' })
+          : WidgetDom.el('button', {
+            class: 'hub-row-action hub-ask-to-task', text: 'To task', title: 'Make a board task from this',
+            on: { click: () => this.act(() => this.host.call('threadToTask', ask.threadId, {})) },
+          }),
+      ]),
+      this._snapshots.element(ask.threadId),
     ]);
   }
 
@@ -267,7 +277,7 @@ export default class HubInboxWidget extends HubWidgetBase {
   }
 
 
-  _row(thread) {
+  _row(thread, underAsk = false) {
     const meta = HubInboxWidget._appMeta(thread.app);
     const last = thread.lastNotification || {};
     const text = thread.summary || last.body || last.title || '';
@@ -290,7 +300,7 @@ export default class HubInboxWidget extends HubWidgetBase {
         this._peopleEl(thread, people),
         text ? WidgetDom.el('div', { class: 'hub-thread-text', text }) : null,
         thread.taskId ? WidgetDom.el('span', { class: 'hub-task-mark', text: 'On the board' }) : null,
-        this._snapshotEl(thread.id),
+        underAsk ? null : this._snapshots.element(thread.id),
         forming ? this._taskFormEl(thread) : this._actions(thread, dismissed),
       ]),
     ]);
@@ -324,8 +334,8 @@ export default class HubInboxWidget extends HubWidgetBase {
     return WidgetDom.el('div', { class: 'hub-thread-actions' }, [
       HubInboxWidget._canOpen(thread) ? button('hub-open-url', 'Open', () => this._openThread(thread.id), 'Open it where you are signed in to it') : null,
       this._snapshots.has(thread.id)
-        ? button('hub-read-hide', 'Hide', () => { this._snapshots.delete(thread.id); this._paint(); }, 'Hide the conversation text')
-        : button('hub-read', 'Read', () => this._readConversation(thread.id), 'Read the conversation from its tab, without opening it'),
+        ? button('hub-read-hide', 'Hide', () => this._snapshots.toggle(thread.id), 'Hide the conversation text')
+        : button('hub-read', 'Read', () => this._snapshots.read(thread.id), 'Read the conversation from its tab, without opening it'),
       thread.taskId ? null : button('hub-to-task', 'To task', () => this._openTaskForm(thread), 'Make a board task from this'),
       dismissed
         ? button('hub-restore', 'Restore', () => this._restore(thread.id), 'Put it back in the feed')
@@ -345,34 +355,6 @@ export default class HubInboxWidget extends HubWidgetBase {
     } catch (err) {
       this._showError(err);
     }
-  }
-
-
-  async _readConversation(threadId) {
-    this._snapshots.set(threadId, { loading: true });
-    this._paint();
-    let shown;
-    try {
-      const { snapshot, reason } = (await this.host.call('snapshotThread', threadId, {})) || {};
-      shown = snapshot && snapshot.text ? { text: snapshot.text, scope: snapshot.scope, takenAt: snapshot.takenAt } : { note: reason || 'There was nothing more to read.' };
-    } catch (err) {
-      shown = { note: (err && err.message) || String(err) };
-    }
-    if (this._disposed || !this._snapshots.has(threadId)) return;
-    this._snapshots.set(threadId, shown);
-    this._paint();
-  }
-
-  _snapshotEl(threadId) {
-    const shown = this._snapshots.get(threadId);
-    if (!shown) return null;
-    if (shown.loading) return WidgetDom.el('div', { class: 'hub-snapshot is-note', text: 'Reading the conversation...' });
-    if (shown.note) return WidgetDom.el('div', { class: 'hub-snapshot is-note', text: shown.note });
-    const from = shown.scope === 'conversation' ? 'Read from the conversation' : 'Read from what its tab is showing';
-    return WidgetDom.el('div', { class: 'hub-snapshot' }, [
-      WidgetDom.el('div', { class: 'hub-snapshot-from', text: `${from}, ${WidgetDom.relativeTime(shown.takenAt)}` }),
-      WidgetDom.el('div', { class: 'hub-snapshot-text', text: shown.text }),
-    ]);
   }
 
   static _when(iso) {

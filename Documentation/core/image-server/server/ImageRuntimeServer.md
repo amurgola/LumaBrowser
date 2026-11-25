@@ -14,6 +14,14 @@ Supervises one sd-server child and, once it is ready, fronts it with an
 - `ImageRuntimeServer.findFreePort(opts)` a free port in the `image` window
   (`ImageRuntimeServer.PORT_RANGE`, 8100-8119); pass `exclude` to keep a
   launch's public and private ports apart.
+- `suspend()` the hotswap eviction hook: resolves `{ suspended: true, freed: false }`
+  when the slot is `ready`, its plan was launched with `--offload-to-cpu`
+  (`plan.offloadToCpu`) and no render holds the idle timer (`idleHeld`, which
+  [LocalImageRun](../router/LocalImageRun.md) holds for each render); else
+  `{ suspended: false }`, and the hotswap stops it as before. No call to the
+  child: an offloaded sd-server keeps its weights in pinned RAM and holds only
+  0.5 to 1.3 GB of VRAM between renders, so it is asleep already and nothing will
+  come back to wait for. [VideoRuntimeServer](VideoRuntimeServer.md) inherits it.
 - Public fields `privatePort`, `apiSecurity`, `authProxy`.
 - `getStatus()` adds `privatePort` and `authProxy` (running or not).
 

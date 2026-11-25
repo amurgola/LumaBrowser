@@ -14,6 +14,8 @@ The optional add-on catalog on lumabyte.com as the Extensions tab sees it.
 - `downloadAndInstall(addonId)` downloads (`Download failed` when the client gives
   no reason), writes `<tmpDir>/luma-addon-<safe id>-<time>.zip`, installs it, and
   always removes the zip. Resolves the installer's result or `{ success: false, error }`.
+- `isInstalled(id)`: discovered by the ExtensionManager, or `<userExtensionsDir>/<id>/manifest.js`
+  exists. `list()` and [AddonUpgradeMigration](AddonUpgradeMigration.md) use it.
 
 ## installedVersion
 

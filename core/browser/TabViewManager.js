@@ -114,6 +114,11 @@ class TabViewManager extends EventEmitter {
     if (entry) this._layout.applyTo(entry);
   }
 
+  freeViewport(tabId) {
+    const entry = this._registry.get(tabId);
+    if (entry) this._layout.stopTelling(entry);
+  }
+
   destroyAll() {
     this.sealSession();
     this.stopKeepAliveSweep();
@@ -303,6 +308,10 @@ class TabViewManager extends EventEmitter {
     this.on('tabSwitched', () => this._fullscreen.onSwitched(TabHosts.MAIN_ID));
     this.on('windowTabSwitched', () => this._layout.refitBackground());
     this.on('tabCreated', (tab) => { if (tab.silent) this.layoutTab(tab.id); });
+    this.on('tabNavigated', (tabId) => {
+      const entry = this._registry.get(tabId);
+      if (entry && (entry.silent || entry.hidden)) this.layoutTab(tabId);
+    });
     this._pinning = new TabPinning({ registry: this._registry, channel: this._channel, lifecycle: this._lifecycle, emitter: this });
     this._keepAlive = new KeepAliveSweep({ registry: this._registry, revive: (entry) => this._persisted.revive(entry) });
     this._zoom = new TabZoom({ db: this.db, registry: this._registry, channel: this._channel });

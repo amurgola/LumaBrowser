@@ -63,7 +63,16 @@ class ImageModelFiles {
     const full = path.join(dir, base);
     const stat = await ImageModelFiles._stat(full);
     if (!stat) return null;
-    return { ...entry, role, file: base, path: full, bytes: stat.size };
+    return ImageModelFiles._withInt8Copy(dir, { ...entry, role, file: base, path: full, bytes: stat.size });
+  }
+
+  static async _withInt8Copy(dir, entry) {
+    if (!entry.int8File) return entry;
+    const int8Path = path.join(dir, entry.int8File);
+    const stat = await ImageModelFiles._stat(int8Path);
+    if (stat) return { ...entry, int8Path, int8Bytes: stat.size };
+    const { int8File: _missing, ...withoutCopy } = entry;
+    return withoutCopy;
   }
 
   static async _describe(dir, role, name) {

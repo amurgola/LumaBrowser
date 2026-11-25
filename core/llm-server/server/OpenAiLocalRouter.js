@@ -2,6 +2,7 @@ const express = require('express');
 const ThinkingKnobs = require('./ThinkingKnobs');
 const UpstreamProxy = require('./UpstreamProxy');
 const OpenAiModelList = require('./OpenAiModelList');
+const LocalApiUpstream = require('./LocalApiUpstream');
 
 class OpenAiLocalRouter {
   static NO_MODEL_MESSAGE = 'No chat model is loaded. Open the LLM tab and start one.';
@@ -64,7 +65,7 @@ class OpenAiLocalRouter {
     if (!upstream) return OpenAiLocalRouter._noModel(res);
     const body = (req.body && typeof req.body === 'object') ? { ...req.body } : {};
     if (chat && !this._prepareChat(body, upstream, res)) return undefined;
-    body.model = upstream.modelId;
+    body.model = LocalApiUpstream.requestModel(upstream);
     return UpstreamProxy.forward({ req, res, upstream, path, body, log: this._log });
   }
 

@@ -7,13 +7,15 @@ CUDA SageAttention (`--sage-attn`).
 
 ## Methods
 
-- `SageAttentionPolicy.decide({ model, runtime, cudaDevice, diagnostics, supportsFlag, env? })`
+- `SageAttentionPolicy.decide({ model, runtime, cudaDevice, diagnostics, supportsFlag, int8Weights?, env? })`
   resolves `{ sageAttention, note }`. `supportsFlag(flag)` probes the runtime's
   binary ([SdServerCapabilities](SdServerCapabilities.md)); `cudaDevice` is the
-  pin (`"0"`, `"0,1"` or null for the whole box).
+  pin (`"0"`, `"0,1"` or null for the whole box); `int8Weights` is true when the
+  launch runs the model's INT8 copy of its diffusion weights.
   1. `SD_SAGE_ATTN=0` is off for everyone; `=1` skips the model and card checks
      (the flag probe still applies).
-  2. A model without `sageAttention: true` gets `{ false, note: null }`.
+  2. A launch where neither the model has `sageAttention: true` nor
+     `int8Weights` is set gets `{ false, note: null }`.
   3. Off, with a reason in the note, when the runtime id is not CUDA (`cuda` or
      `luma`), the diagnostics have no CUDA card reading, any pinned card's
      `computeCapability` is unknown or below `MIN_COMPUTE_CAPABILITY` (8.0), or
@@ -23,6 +25,10 @@ CUDA SageAttention (`--sage-attn`).
   A pin (`cudaDevice` `"0"` or `"0,1"`) is matched against each card's `index`,
   or its position in `diagnostics.cuda.devices` when it has none: the parsed
   diagnostics never carry one, and their position is the CUDA ordinal.
+- `SageAttentionPolicy.isCudaRuntime(runtime)`: the one rule for "this launch
+  runs a CUDA build of sd.cpp" (`CUDA_RUNTIME` against the runtime id). The
+  refusal above and [ImageSlotLaunch](ImageSlotLaunch.md)'s INT8 weights
+  decision both use it.
 - Statics: `FLAG`, `MIN_COMPUTE_CAPABILITY`, `ENV`, `CUDA_RUNTIME`.
 
 ## Why
@@ -33,4 +39,6 @@ RTX 3090 at 39 frames, with no visible difference at equal step counts. Attentio
 quantization does change numerics, so only rows that measured it opt in. sd.cpp's
 kernels need compute capability 8.0 (Ampere) and fail context creation below it,
 and a Vulkan or CPU build errors on the flag, hence the hard refusals. The probe
-is the last check so most launches never spawn `--help` for it.
+is the last check so most launches never spawn `--help` for it. INT8 weights
+qualify on their own because SageAttention measured another 8% on top of them
+for Anima (8.3 it/s on the RTX 5090, 2026-11-22), with the image judged equal.

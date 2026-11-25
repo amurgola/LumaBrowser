@@ -24,6 +24,7 @@ class NotificationClassifier {
   static SLACK_TITLE_RE = /^new (?:message|reply|mention)s? (in|from) (.+)$/i;
   static PROTON_BODY_RE = /^From:\s*(.+?)\s+-(?:\s+([\s\S]*))?$/;
   static NEW_COUNT_RE = /\s*•\s*\d+\s+new$/i;
+  static DISCORD_NAME_RE = /\u2068([^\u2069]*)\u2069/g;
   static CLICKUP_ACTION_RE = /^(.+?)\s+(commented on|assigned you|assigned|mentioned you in|mentioned|changed|updated|created)\s+(.*)$/i;
 
   static RULES = {
@@ -36,6 +37,7 @@ class NotificationClassifier {
     whatsapp: (n) => NotificationClassifier._contact(n),
     telegram: (n) => NotificationClassifier._contact(n),
     clickup: (n) => NotificationClassifier._clickup(n),
+    discord: (n) => NotificationClassifier._discord(n),
   };
 
   static classify(input) {
@@ -118,6 +120,13 @@ class NotificationClassifier {
       threadKey: n.tag ? ThreadKey.normalize(n.tag) : ThreadKey.normalize(taskName),
       threadTitle: taskName || n.title,
     };
+  }
+
+  static _discord(n) {
+    const [sender, place, category] = [...n.title.matchAll(NotificationClassifier.DISCORD_NAME_RE)].map((match) => match[1].trim());
+    if (!sender) return { sender: n.title, threadKey: ThreadKey.normalize(n.title), threadTitle: n.title };
+    const conversation = place ? `${place}${category ? ` (${category})` : ''}` : sender;
+    return { sender, threadKey: ThreadKey.normalize(conversation), threadTitle: conversation };
   }
 
   static _default(n) {

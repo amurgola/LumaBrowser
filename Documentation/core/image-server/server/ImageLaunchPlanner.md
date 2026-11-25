@@ -11,15 +11,20 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
   returns `{ binaryPath, args, plan }`.
   - `plan = { port (publicPort when given, else port), privatePort, modelId,
     runtimeId, offloadToCpu, autoFit, vaeTiling, flashAttention, sageAttention,
-    eagerLoad, vaeTileSize (the emitted value or null), files: { role: basename } }`.
+    int8Weights, eagerLoad, vaeTileSize (the emitted value or null), files: { role: basename } }`
+    (`files.diffusion` names the original even when the INT8 copy went out).
   - Throws `ImageLaunchPlanner: model is required`, `runtime is required`,
     `runtime has no binaryPath`, `port is required` (must be a number),
     `model.files.diffusion.path is required`.
-  - `overrides`: `offloadToCpu`, `autoFit` (true or a `--max-vram` budget
+  - `overrides`: `offloadToCpu`, `hotswapPooled` (the slot is in a hotswap
+    pool: also emits `--offload-to-cpu`), `autoFit` (true or a `--max-vram` budget
     string), `autoFitForm` ('bare' for pre-on|off builds), `vaeTiling`,
     `vaeTileSize` (pixels, emitted only with `vaeTiling`), `eagerLoad`,
     `loraDir`, `clipOnCpu` (false drops the catalog's `--clip-on-cpu`),
-    `sageAttention` (decided by [SageAttentionPolicy](../service/SageAttentionPolicy.md)).
+    `sageAttention` (decided by [SageAttentionPolicy](../service/SageAttentionPolicy.md)),
+    `int8Weights` (decided by [ImageSlotLaunch](../service/ImageSlotLaunch.md) for CUDA
+    builds: the diffusion entry's `int8Path` goes out in place of its `path`, under the
+    same loader flag; ignored when the record has no `int8Path`).
 - `ImageLaunchPlanner.inferLoaderFlag(filePath)` is `--diffusion-model` for
   `.gguf`, else `-m`.
 - `ImageLaunchPlanner.preferSdServer(binaryPath)` keeps an `sd-server*` path,
@@ -29,7 +34,7 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
 
 ## Argv order
 
-1. `<loaderFlag> <diffusion> --listen-ip 127.0.0.1 --listen-port <port> -v`
+1. `<loaderFlag> <diffusion or its INT8 copy> --listen-ip 127.0.0.1 --listen-port <port> -v`
 2. File roles: `--high-noise-diffusion-model`, `--vae`, `--audio-vae`*, `--llm`,
    `--tokenizer`, `--clip_l`, `--t5xxl`, `--llm_vision`*, `--clip_vision`* (* the role's own
    `loaderFlag` wins).
@@ -74,6 +79,15 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
 - The offload heuristic streams weights from RAM when known usable VRAM
   (`diagnostics.budget.vram.maxBytes`, else `totalBytes`) is below the model's
   `minVramBytes`. Unknown VRAM is not zero VRAM, so it does not fire then.
+- A hotswap-pooled slot (`hotswapPooled`) is offloaded on purpose: with the
+  weights in pinned RAM sd-server stages them per request (about 0.2 s) and holds
+  only 0.5 to 1.3 GB of VRAM between renders against 6.5 GB resident, at the same
+  render speed (measured 2026-11-22). The slot is then asleep whenever no render
+  runs, so a swap suspends it instead of stopping it
+  ([ImageRuntimeServer](ImageRuntimeServer.md) `suspend`). The rule that auto-fit
+  and offload never combine holds here too: an auto-fit slot spreads its modules
+  over several cards under `--max-vram` budgets, so it is not offloaded and a swap
+  stops it as before. `plan.offloadToCpu` records the result either way.
 - Video roles: `highNoise` is Wan 2.2's second expert (early steps); `audioVae`
   decodes the audio latent of audio-video models (MiniMax-H3); `vision` is an
   edit model's vision projector for reference images; `clipVision` conditions

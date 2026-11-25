@@ -126,6 +126,7 @@ class ImageSlotLaunch {
     const { cudaDevice, offloadToCpu, autoFit } = this._placement;
     this._vaeTiling = VaeTilingPolicy.decide({ model: this._model, profile: this._profile, offloadToCpu, cudaDevice, diagnostics: this._diag });
     this._clip = this._decideTextEncoders();
+    this._int8Weights = this._decideInt8Weights();
     this._sage = await this._decideSageAttention(cudaDevice);
     const [eagerLoad, tileSize] = await Promise.all([
       this._supportsFlag(ImageLaunchPlanner.EAGER_LOAD_FLAG),
@@ -142,8 +143,10 @@ class ImageSlotLaunch {
         vaeTiling: this._vaeTiling,
         loraDir: ImageSlotLaunch.existingLoraDir(this._modelsDir),
         autoFit,
+        hotswapPooled: this._isHotswapPooled(),
         clipOnCpu: this._clip.clipOnCpu,
         sageAttention: this._sage.sageAttention,
+        int8Weights: this._int8Weights,
         eagerLoad,
         vaeTileSize: tileSize ? VaeTilingPolicy.TILE_SIZE : null,
         autoFitForm: autoFit ? await this._deps.capabilities.autoFitFlagForm(this._runtime.binaryPath) : undefined,
@@ -153,8 +156,18 @@ class ImageSlotLaunch {
     return launch;
   }
 
+  _isHotswapPooled() {
+    if (this._cpuOnly || typeof this._deps.hotswap.isPooled !== 'function') return false;
+    try { return this._deps.hotswap.isPooled(this._role); } catch (_) { return false; }
+  }
+
   _supportsFlag(flag) {
     return this._deps.capabilities.supportsFlag(this._runtime.binaryPath, flag);
+  }
+
+  _decideInt8Weights() {
+    const diffusion = this._model.files && this._model.files.diffusion;
+    return !!(diffusion && diffusion.int8Path) && SageAttentionPolicy.isCudaRuntime(this._runtime);
   }
 
   _decideSageAttention(cudaDevice) {
@@ -165,6 +178,7 @@ class ImageSlotLaunch {
       cudaDevice,
       diagnostics: this._diag,
       supportsFlag: (flag) => this._deps.capabilities.supportsFlag(this._runtime.binaryPath, flag),
+      int8Weights: this._int8Weights,
     });
   }
 
@@ -183,6 +197,7 @@ class ImageSlotLaunch {
       cpuOnly: this._cpuOnly,
       clipNote: this._clip.note,
       runtimeNote: this._runtimeNote,
+      int8Weights: this._int8Weights,
       sageNote: this._sage.note,
     }));
   }

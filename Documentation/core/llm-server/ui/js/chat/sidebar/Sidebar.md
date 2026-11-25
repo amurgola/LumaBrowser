@@ -4,7 +4,9 @@
 
 The sidebar's shell: the header strip (search, collapse), New chat with its
 mode-tray chevron, the extension mode launcher slot, the search box, the
-reactive chats list and the artifacts pane, and the footer (Settings tray with
+reactive chats list with the background-conversations toggle under it
+(`data-act="background"`, see [ConversationList](ConversationList.md)), the
+artifacts pane, and the footer (Settings tray with
 Advanced / Setup and General, All artifacts, Dashboard, logo). Buttons are
 wired by `data-act`.
 

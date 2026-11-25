@@ -92,6 +92,7 @@ class ThreadRepository {
       url: row.url || '',
       taskId: row.task_id,
       snoozeUntil: row.snooze_until,
+      dismissedAt: row.dismissed_at || null,
       updatedAt: row.updated_at,
     };
   }

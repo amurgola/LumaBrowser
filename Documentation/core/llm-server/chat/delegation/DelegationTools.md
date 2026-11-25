@@ -29,7 +29,8 @@ sub-conversation nested under the chat while the user stays in it.
   target by id or label, `task` required, the mode's `start` (its error returned
   as is), the model this chat uses (else `listModels().defaultRef`), then
   `createConversation({ title, modelRef, provider, toolsEnabled: true, mode,
-  parentConversationId })` and `setMeta` with the mode's data plus
+  parentConversationId, background })` (`background` copied from the chat, so
+  the sub-conversation is listed where its chat is) and `setMeta` with the mode's data plus
   `delegatedFrom`. The title is the mode's, else `name`, else the task, with
   whitespace collapsed and capped at 60 characters.
 - `delegate_task { conversationId, message }` continues one of THIS chat's

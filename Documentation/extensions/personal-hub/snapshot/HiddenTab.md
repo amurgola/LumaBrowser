@@ -26,5 +26,9 @@ never shown since the app started has no size. The browser gives a silent
 tab a real size behind the tab on screen (see
 [TabLayout](../../../core/browser/tab-view/TabLayout.md)), so the page lays
 itself out and a list that only draws the rows in view has rows to read.
+While the app sits in the tray no window sizes anything, and until
+2026-11-23 a hidden tab opened then was 0x0 all the same: a read of a
+Slack direct message came back as `Loading history...` and one message.
+The browser now tells such a tab's page its viewport.
 
 Used by [ConversationReader](ConversationReader.md) and [SlackSidebar](SlackSidebar.md).

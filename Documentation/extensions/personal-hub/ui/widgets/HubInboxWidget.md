@@ -56,7 +56,12 @@ minute (`TICK_MS` = 60000).
   with `To task` (`threadToTask(threadId, {})`, one step onto the board with
   the defaults), or the mark `On the board` when that item already has a
   task. The summariser only proposes; nothing becomes a task until the user
-  clicks.
+  clicks. Before it, `Context` (`.hub-ask-context`, added 2026-11-23 at the
+  user's request) shows what is behind the ask under it: the conversation
+  or the mail itself, read at its source
+  ([ThreadSnapshots](ThreadSnapshots.md)); the button then reads `Hide`.
+  With the card's items open, the text stays under the ask and is not
+  repeated under that item's row.
 - A failed attempt shows `Summary not updated: <error>` under the last good
   text.
 - `Show items` / `Hide items` opens the card to its items, drawn as the
@@ -117,7 +122,8 @@ minute (`TICK_MS` = 60000).
   ([ConversationOpener](../../snapshot/ConversationOpener.md)). A reply of
   `success: false` shows its error on the widget's error line (`It could
   not be opened.` when it carries none), as does a failed call.
-- Read: `snapshotThread(id, {})` asks the Hub to read the conversation
+- Read (through [ThreadSnapshots](ThreadSnapshots.md), which `Context`
+  shares): `snapshotThread(id, {})` asks the Hub to read the conversation
   behind the item from its signed-in tab, without opening it
   ([ConversationReader](../../snapshot/ConversationReader.md)). While it
   runs the row shows `Reading the conversation...`. The text then shows

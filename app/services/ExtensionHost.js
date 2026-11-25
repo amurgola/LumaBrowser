@@ -1,5 +1,6 @@
 const path = require('path');
 const ExtensionManager = require('../../core/shell/ExtensionManager');
+const AddonModuleResolver = require('../../core/shell/extensions/AddonModuleResolver');
 
 class ExtensionHost {
   static BUNDLED_DIR = 'extensions';
@@ -10,9 +11,12 @@ class ExtensionHost {
   }
 
   build() {
+    const extensionsDir = this._ctx.path(ExtensionHost.BUNDLED_DIR);
+    const userExtensionsDir = path.join(this._ctx.dataDir, ExtensionHost.BUNDLED_DIR);
+    new AddonModuleResolver({ addonsDir: userExtensionsDir, bundledDir: extensionsDir }).install();
     this._s.extensionManager = new ExtensionManager({
-      extensionsDir: this._ctx.path(ExtensionHost.BUNDLED_DIR),
-      userExtensionsDir: path.join(this._ctx.dataDir, ExtensionHost.BUNDLED_DIR),
+      extensionsDir,
+      userExtensionsDir,
       coreServices: ExtensionHost.coreServices(this._s),
       ipcBridge: this._s.ipcBridge,
       restGateway: this._s.restGateway,

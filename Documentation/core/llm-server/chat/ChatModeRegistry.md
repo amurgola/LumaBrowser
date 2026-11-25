@@ -18,6 +18,10 @@ Extends [ContributionRegistry](../../shared/registry/ContributionRegistry.md).
   Functions and the owner id are stripped. `label` defaults to the id;
   `launcher` is `'sidebar'` only when set so, otherwise `'landing'`; `agent` and
   `hidden` are true only for a literal `true`.
+- `onChange(listener)` runs `listener()` after every register (a replacing one
+  too) and every unregister that removed something; returns the unsubscribe. A
+  throwing listener is swallowed. [LlmServerBroadcast](../ipc/LlmServerBroadcast.md)
+  `relayModes` turns it into the `modes-changed` server event.
 - `notifyConversationDeleted(meta)` fires the mode's `onConversationDeleted({
   conversationId, meta })` for `meta.mode`, fire-and-forget. A throwing or
   rejecting hook is swallowed.

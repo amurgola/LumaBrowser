@@ -9,7 +9,9 @@ One timed tools-on chat turn of the placement test. One instance per turn.
 - `new PlacementTestTurn({ router, modelRef, artifactStore?, emit, clock? })`.
 - `run(label, userMessage, conversationId)` emits `status { phase: 'run', label }`,
   dispatches `router.chat({ conversationId, modelRef, messages: [{ role: 'user',
-  content }], userMessage, agent: true, tools: true, send })` and resolves once
+  content }], userMessage, agent: true, tools: true, background: true, send })`
+  (the test's conversation is a background one, out of the sidebar's default
+  list) and resolves once
   with `{ step, convId, imageId, error }` on the first of:
   - `done` (`'aborted'` when `payload.aborted`), `error` (`payload.message` or
     `turn failed`), a dispatch reply with `success: false` (`error` or

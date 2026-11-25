@@ -6,7 +6,7 @@ import ImageGenerator from './ImageGenerator.js';
 
 export default class LumaChatExt {
   static PUBLIC_METHODS = ['generateImage', 'attachAssist', 'openSchemaModal', 'openSchemaInline', 'registerMode',
-    'getBackend', 'getClient', 'getMerged', 'list', 'hasModes', 'load'];
+    'getBackend', 'getClient', 'getMerged', 'list', 'hasModes', 'load', 'reload'];
 
   static install(win = window) {
     if (!win.LumaChatExt) win.LumaChatExt = new LumaChatExt();
@@ -71,5 +71,9 @@ export default class LumaChatExt {
 
   load(api) {
     return this._registry.load(api);
+  }
+
+  reload(api) {
+    return this._registry.reload(api);
   }
 }

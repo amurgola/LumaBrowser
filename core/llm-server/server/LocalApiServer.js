@@ -15,7 +15,8 @@ class LocalApiServer {
   constructor({ db, llmServerService } = {}) {
     if (!db) throw new Error('LocalApiServer: db is required');
     this._db = db;
-    this._upstream = new LocalApiUpstream(llmServerService || null);
+    this._llm = llmServerService || null;
+    this._upstream = new LocalApiUpstream(this._llm);
     this._listener = new LocalApiListener({ logTag: LocalApiServer.LOG_TAG });
     this._app = null;
   }
@@ -98,6 +99,7 @@ class LocalApiServer {
   _buildApp() {
     const app = express();
     app.disable('x-powered-by');
+    app.use((req, res, next) => this._reclaimBeforeModelCall(req, next));
     app.use(OpenAiLocalRouter.create(this._openAiDeps()));
     app.use(OpenAiResponsesRouter.create(this._translatedDeps()));
     app.use(AnthropicMessagesRouter.create(this._translatedDeps()));
@@ -123,6 +125,11 @@ class LocalApiServer {
       hostDial: () => this._upstream.hostDial(),
       warn: LocalApiServer._warn,
     };
+  }
+
+  _reclaimBeforeModelCall(req, next) {
+    if (req.method !== 'POST' || !this._llm || typeof this._llm.reclaimCard !== 'function') return next();
+    return Promise.resolve(this._llm.reclaimCard()).then(() => next(), () => next());
   }
 
   async _disable() {

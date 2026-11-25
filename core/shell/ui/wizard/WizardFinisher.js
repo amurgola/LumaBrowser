@@ -6,6 +6,7 @@ export default class WizardFinisher {
   static MANAGED_PROVIDER = 'core.llmServer.local';
 
   static CLOSE_DELAY_MS = 550;
+  static FAILED_CLOSE_DELAY_MS = 6000;
 
   constructor(wizard) {
     this._w = wizard;
@@ -15,9 +16,10 @@ export default class WizardFinisher {
     this._lock();
     this._status('info', 'Saving configuration…');
     try {
-      await this._apply();
-      this._status('ok', 'All set. Launching LumaBrowser…');
-      setTimeout(() => this._w.teardown(), WizardFinisher.CLOSE_DELAY_MS);
+      const failed = await this._apply();
+      if (failed.length) this._status('err', WizardFinisher._failedText(failed));
+      else this._status('ok', 'All set. Launching LumaBrowser…');
+      setTimeout(() => this._w.teardown(), failed.length ? WizardFinisher.FAILED_CLOSE_DELAY_MS : WizardFinisher.CLOSE_DELAY_MS);
     } catch (err) {
       console.error('SetupWizard: finalize failed:', err);
       this._status('err', `Setup hit an error: ${err.message || err}. You can retry or close the wizard and finish configuration in Settings.`);
@@ -35,8 +37,26 @@ export default class WizardFinisher {
     await this._applyAutoUpdate();
     const hasLlm = this._hasLlm();
     await this._markComplete(hasLlm);
+    const failed = await this._installAddons();
     if (this._w.state.llm.mode === 'local' && this._w.state.llm.local.done) await this._seedLocalSlots();
     await this._land(hasLlm);
+    return failed;
+  }
+
+  async _installAddons() {
+    await this._extensionsLoaded();
+    try { await this._w.addonsReady; } catch (_) {}
+    const pending = this._w.pendingAddons();
+    if (!pending.length) return [];
+    const { failed } = await this._w.addons.install(pending, ({ name, index, total }) =>
+      this._status('info', `Downloading ${name} (${index} of ${total})…`));
+    for (const f of failed) console.warn(`SetupWizard: add-on ${f.id} not installed:`, f.error);
+    return failed;
+  }
+
+  static _failedText(failed) {
+    const list = failed.map((f) => `${f.name} (${f.error})`).join(', ');
+    return `Set up, but could not add ${list}. Add it later from Settings → Extensions.`;
   }
 
   _lock() {

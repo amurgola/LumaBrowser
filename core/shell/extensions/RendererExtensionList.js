@@ -1,3 +1,6 @@
+const path = require('path');
+const AddonRendererModule = require('./AddonRendererModule');
+const EsModuleSource = require('./EsModuleSource');
 const ManifestDeps = require('./ManifestDeps');
 const ManifestFields = require('./ManifestFields');
 const ManifestHtmlFiles = require('./ManifestHtmlFiles');
@@ -7,18 +10,21 @@ class RendererExtensionList {
   static DEFAULT_VERSION = '1.0.0';
   static UNLOADED_RANK = 999;
 
-  static build(ledger, disabled) {
+  static build(ledger, disabled, { bundledDir = null } = {}) {
     const loaded = new Set(ledger.loadOrder);
-    const rows = [...ledger.manifests].map(([id, manifest]) => RendererExtensionList._row(id, manifest, ledger, disabled, loaded));
+    const bundledFolders = [...ledger.manifests.values()].filter((m) => !m._userInstalled && m._dir).map((m) => path.basename(m._dir));
+    const context = { ledger, disabled, loaded, bundledDir, bundledFolders };
+    const rows = [...ledger.manifests].map(([id, manifest]) => RendererExtensionList._row(id, manifest, context));
     return rows.sort(RendererExtensionList._compare);
   }
 
-  static _row(id, manifest, ledger, disabled, loaded) {
+  static _row(id, manifest, { ledger, disabled, loaded, bundledDir, bundledFolders }) {
     ManifestHtmlFiles.resolve(manifest);
     const isDisabled = disabled.has(id);
     return {
       ...RendererExtensionList._identity(manifest),
       ...RendererExtensionList._surfaces(manifest),
+      ...RendererExtensionList._rendererModule(manifest, bundledDir, bundledFolders),
       dependencies: RendererExtensionList._dependencies(manifest, ledger),
       loadOrder: ledger.loadOrder.indexOf(id),
       enabled: !isDisabled,
@@ -38,6 +44,13 @@ class RendererExtensionList {
       debugOnly: manifest.debugOnly || false,
       distributable: !!manifest.distributable,
     };
+  }
+
+  static _rendererModule(manifest, bundledDir, bundledFolders) {
+    const isModule = !!(manifest.renderer && manifest._dir) && EsModuleSource.isModule(path.resolve(manifest._dir, manifest.renderer));
+    if (!isModule || !manifest._userInstalled || !bundledDir) return { rendererModule: isModule };
+    const { url, imports } = AddonRendererModule.describe(manifest, bundledDir, bundledFolders);
+    return { rendererModule: true, rendererUrl: url, rendererImports: imports };
   }
 
   static _surfaces(manifest) {

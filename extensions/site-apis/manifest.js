@@ -3,7 +3,7 @@ module.exports = {
   name: 'Site APIs',
   version: '1.0.0',
   description: 'Turn a signed-in persisted tab into named endpoints: record a step script once, replay it with parameters, get JSON back as an MCP tool, a REST route or a chat tool',
-
+  distributable: true,
   dependencies: {
     required: {
       'core:database': {

@@ -16,6 +16,7 @@ export default class FeaturesStep extends WizardStepView {
           <div class="setup-wizard__ext-list">${this._rowsHtml() || '<div class="setup-wizard__callout">No extensions discovered.</div>'}</div>
         </div>
       `;
+    this._rerenderWhenAddonsLoad();
     this._body.querySelectorAll('input[data-ext-id]').forEach((cb) => {
       cb.addEventListener('change', () => {
         this._state.extensionOverrides.set(cb.dataset.extId, cb.checked);
@@ -37,16 +38,31 @@ export default class FeaturesStep extends WizardStepView {
     });
   }
 
+  _rerenderWhenAddonsLoad() {
+    if (this._addonsWatched) return;
+    this._addonsWatched = true;
+    this._w.addonsReady.then(() => {
+      if (this._isCurrent('features')) this.render();
+    });
+  }
+
   _rowsHtml() {
+    const installed = this._w.extensions.filter((ext) => !ext.debugOnly).map((ext) => ({ ext, meta: FeaturesStep._installedMeta(ext) }));
+    const addons = this._w.addons.entries().map((ext) => ({ ext, meta: 'Downloads when you finish' }));
+    return [...installed, ...addons]
+      .sort((a, b) => a.ext.name.localeCompare(b.ext.name))
+      .map(({ ext, meta }) => this._rowHtml(ext, meta)).join('');
+  }
+
+  static _installedMeta(ext) {
+    const missing = (ext.dependencies || []).filter((d) => d.isRequired && !d.installed).map((d) => d.name).join(', ');
+    return missing ? `Missing: ${missing}` : 'Dependencies OK';
+  }
+
+  _rowHtml(ext, meta) {
     const esc = HtmlEscaper.escape;
-    return this._w.extensions
-      .filter((ext) => !ext.debugOnly)
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((ext) => {
-        const on = this._state.extensionOverrides.get(ext.id) === true;
-        const missing = (ext.dependencies || []).filter((d) => d.isRequired && !d.installed).map((d) => d.name).join(', ');
-        const meta = missing ? `Missing: ${missing}` : 'Dependencies OK';
-        return `
+    const on = this._state.extensionOverrides.get(ext.id) === true;
+    return `
           <div class="setup-wizard__ext-row">
             <div class="setup-wizard__ext-row-info">
               <div class="setup-wizard__ext-row-name">${esc(ext.name)}</div>
@@ -59,6 +75,5 @@ export default class FeaturesStep extends WizardStepView {
             </label>
           </div>
         `;
-      }).join('');
   }
 }

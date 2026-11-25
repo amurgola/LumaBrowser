@@ -35,6 +35,12 @@ as cards are written.
   lastError }`: `available` is whether the app has an LLM service at all;
   `provider` and `model` are what the slot resolves to right now (the user's
   pick, else the active provider's; `null` when unknown).
+- `readsSources()`, `setReadsSources(on)`: the setting `summary.sources`
+  (`SOURCES_KEY`, off by default): the model may ask for an item to be
+  opened and read at its source, and the Hub may open a mail to do it.
+  Setting it emits `summary.changed`; switching it on while summaries are
+  on writes every card again, so the model gets to ask about what is
+  there now. Returns `status()`, which carries it as `sources`.
 - `enabled()`, `setEnabled(enabled)`: the setting `summary.enabled` (off by
   default). Switching it emits `summary.changed`, and switching it on
   schedules a pass at once. Returns `status()`.
@@ -113,11 +119,23 @@ as cards are written.
   a refused reply (`The model did not answer.`) or one that does not parse
   (`The model did not answer in the expected form.`) is the error.
 - `_enrich(items)`: the items as the prompt wants them. Each gets `people`
-  (`_names`) and `snapshot`: the conversation text when the reader holds a
+  (`_names`), `earlier` (`_earlier`) and `snapshot`: the conversation text
+  when the reader holds a
   snapshot of the item's latest activity (its `sourceAt` equals the item's
   `lastAt`), else empty, so an outdated conversation is never sent. The
   item's `meetings` pass through as they are, and the prompt lists them
   under the item.
+- `_earlier(item)` -> `[{ at, sender, text, seen }]`, oldest first: what reached
+  the user in the item before its newest message, read from the feed's own
+  log (`inbox.getThread`). Only notifications inside the cards' window
+  (`_windowStart`, `WINDOW_DAYS` back), the newest
+  `SummaryPrompt.MAX_EARLIER` of them, each one's body or else its title.
+  One that says exactly what the newest says is left out: a site raising a
+  notification again, or a mail notice that is the same sender and subject
+  each time. `seen` is true for a message that arrived at or before the
+  item's `dismissedAt` ([InboxService](../inbox/InboxService.md)): the
+  user dismissed the item after it, so the prompt lists it as already
+  seen. See "What an item knows" and "After a dismissal" below.
 - `_names(item)`: each participant looked up as a contact (`_contact`). A
   known one is named as the contact, with `(also on slack, gmail)` listing
   the other apps that person appears in; an unknown one, or any when there
@@ -128,13 +146,17 @@ as cards are written.
 - `_contact(item, name)`: the contact a participant is known as
   (`people.lookup({ app, sender, contextId })`), or `null` without a
   contact service or when the lookup throws.
-- When the first answer says the card may need the user (`needsYou`), the
-  card is worth a closer look. `_deepen(items, summary)` reads the
-  conversations behind the items the answer's asks name, or behind the
-  newest item when it named none, at most `DEEP_PER_CARD` = 3, skipping any
-  that already has a fresh snapshot. It answers whether anything new was
-  read; without a reader or a browser it reads nothing. A tab that cannot
-  be read leaves the card as it is.
+- `_worthReading(items, summary, more)` (static) picks what is read at its
+  source after the first answer: when the card may need the user
+  (`needsYou`), the items its asks name, or the newest item when it named
+  none; then the items the model asked to see (`more`, only when
+  `readsSources()`; the first question is then asked with `askMore` and
+  its reply read with `SummaryPrompt.more`). Each item once, at most
+  `DEEP_PER_CARD` = 3.
+- `_deepen(targets)` reads them through the reader, skipping any that
+  already has a fresh snapshot. It answers whether anything new was
+  read; without a reader or a browser it reads nothing. A source that
+  cannot be read leaves the card as it is.
 - Only when something new was read is the model asked once more, now with
   those conversations in the prompt. A usable second answer replaces the
   first; an unusable one (an error, a reply that does not parse) is dropped
@@ -187,6 +209,93 @@ Hub may never see. The calendar is already synced, so the meetings that
 bear on an item ride along with it, and being part of the signature they
 rewrite the card the moment one is booked, which is when "someone is
 waiting" stops being true.
+
+### What an item knows (2026-11-23)
+
+Traced on a live card: a colleague reported a fault over nine direct
+messages, the user fixed it, and her last message was a cheer. The card
+said she "sent a celebratory Slack message". The prompt carried only
+that newest line, although the feed's own log held the eight before it,
+and the conversation was never read because nothing needed the user.
+Each item now brings its earlier messages (`_earlier`), which costs no
+tab and no extra model call. Replayed on the same card with the same
+model (Qwen 3.8 27B), four runs of four said she thanked the user for
+resolving the fault she had reported.
+
+What an item still does not know:
+
+- The user's own replies. They are not notifications, so they reach the
+  model only through a conversation read, which happens when a card may
+  need the user. The system prompt says so, and that thanks after a
+  request means the user has dealt with it.
+- What a mail says. A Proton notification is the sender and the subject
+  (`From: Sender - Subject`), and nothing opens the mail.
+- Anything at all from a conversation read while the app sat in the
+  tray, until 2026-11-23: the hidden tab was 0x0 there and Slack drew
+  one message. See
+  [TabLayout](../../../core/browser/tab-view/TabLayout.md).
+
+`node tmp/hub-context-replay.js <card> [--ask 8080 <model>]`
+(git-ignored) prints a card's prompt from a copy of the real database
+and asks a running llama-server for the card.
+
+### After a dismissal (2026-11-24)
+
+The user dismissed a card, one new line of chatter brought its item
+back, and the new card led with a question a colleague had asked the day
+before (and a bot had answered), which the user had already ruled out.
+Nothing recorded when an item was dismissed, so the earlier messages all
+read as equally current. An item now keeps the time of its last
+dismissal, the prompt says `they dismissed it ... ago` on its line, and
+the messages from before then are listed as `Already seen:`, apart from
+the `Earlier:` ones that are new. The system prompt tells the model the
+old ones only explain the new ones. They are kept, not dropped, because
+a new "any update?" means nothing without the request it follows.
+
+Replayed that day on the same card with the same model (Qwen 3.8 27B
+on Basalt) and a dismissal placed between the old question and the new
+chatter: without the mark every run led with the old question; with the
+mark and a first wording ("do not report them as what is going on")
+three runs of four still added that the question "was already
+answered"; with the wording that forbids any recap, five runs of six
+spoke only of the new chatter and one named the old answer as what the
+new message reacted to. A made-up nudge ("any update on this?") after a
+dismissed request was flagged as needing the user four runs of four,
+with the old request named as what the nudge is about.
+`node tmp/hub-context-replay.js <card> --dismissed <minutes> --ask ...`
+and `node tmp/hub-dismissed-followup.js` (git-ignored) are those two
+checks.
+
+A conversation read at its source is one text with no line drawn through
+it; the system prompt asks the model to treat what it shows from before
+the dismissal the same way. The dismissal is not part of the signature:
+an item cannot come back without new activity, which changes it anyway.
+
+### Asking for the source (2026-11-23)
+
+The user asked for an option, off by default, where the model is asked
+to get more context from where a notification came from: a Slack message
+opens its conversation, a mail is found in its mailbox and opened. With
+`summary.sources` on, the first question lets the model name up to three
+items it cannot judge; the Hub reads those in a hidden tab of the session
+the notification came from
+([ConversationReader](../snapshot/ConversationReader.md), and for mail
+[MailboxReader](../snapshot/MailboxReader.md)) and asks once more. There
+is one round: what the second answer names is not read. Off, nothing
+changes: the model is not told it may ask, and no mail is ever opened.
+
+It is off by default because opening a mail marks it as read, and because
+each read is a hidden tab and a second model call. The user's own tabs
+are not moved: the persisted tab's session is used, not the tab.
+
+Run live on 2026-11-23 in the installed app, hidden in the tray: the model
+asked for two Proton mails, each was opened in a hidden tab, and both cards
+were rewritten from the mail bodies. A reply the user sent from another
+mailbox is not in the mail that was read, so such a card can still say the
+sender is waiting. `node tmp/hub-pass-watch.js <threadId>` (git-ignored)
+nudges a pass in the running app and prints the hidden tabs it opens and
+each card as it is rewritten; `node tmp/hub-read-watch.js <threadId>`
+samples the hidden tab of one read.
 
 ### Room to think
 

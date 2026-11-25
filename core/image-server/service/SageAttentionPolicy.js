@@ -6,18 +6,23 @@ class SageAttentionPolicy {
   static ENV = 'SD_SAGE_ATTN';
   static CUDA_RUNTIME = /cuda|luma/i;
 
-  static async decide({ model, runtime, cudaDevice, diagnostics, supportsFlag, env = process.env }) {
+  static async decide({ model, runtime, cudaDevice, diagnostics, supportsFlag, int8Weights = false, env = process.env }) {
     const forced = SageAttentionPolicy._envOverride(env);
     if (forced === false) return SageAttentionPolicy._off(`${SageAttentionPolicy.ENV}=0`);
-    if (forced !== true && !(model && model.sageAttention === true)) return { sageAttention: false, note: null };
+    const asked = (model && model.sageAttention === true) || int8Weights === true;
+    if (forced !== true && !asked) return { sageAttention: false, note: null };
     const refusal = SageAttentionPolicy._refusal({ runtime, cudaDevice, diagnostics });
     if (refusal) return SageAttentionPolicy._off(refusal);
     if (!(await SageAttentionPolicy._supported(supportsFlag))) return SageAttentionPolicy._off('this build has no --sage-attn');
     return { sageAttention: true, note: `SageAttention on${forced ? ` (${SageAttentionPolicy.ENV}=1)` : ''}` };
   }
 
+  static isCudaRuntime(runtime) {
+    return SageAttentionPolicy.CUDA_RUNTIME.test(String((runtime && runtime.id) || ''));
+  }
+
   static _refusal({ runtime, cudaDevice, diagnostics }) {
-    if (!SageAttentionPolicy.CUDA_RUNTIME.test(String((runtime && runtime.id) || ''))) return 'not a CUDA runtime';
+    if (!SageAttentionPolicy.isCudaRuntime(runtime)) return 'not a CUDA runtime';
     const cards = SageAttentionPolicy._pinnedCards(cudaDevice, diagnostics);
     if (!cards.length) return 'no CUDA card reading';
     for (const card of cards) {

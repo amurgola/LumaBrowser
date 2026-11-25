@@ -41,6 +41,15 @@ class MergedSourceTable {
       stub: 'Build a NEW custom chat tool for the user (sandboxed JS that calls an API): '
         + 'create_tool → test_tool → publish_tool. Publishing enables the tool immediately.',
     }),
+    'ext.android': Object.freeze({
+      key: 'android',
+      label: 'Android devices',
+      stub: 'See and operate an Android device (an emulator on the computer of the user) and its apps: '
+        + 'android_list_devices -> android_start_device -> android_observe (lines of [x,y] role "label") or '
+        + 'android_screenshot -> android_tap / android_type / android_swipe / android_press_key; android_list_apps '
+        + 'and android_open_app open an app, android_notifications reads what the device has raised, and '
+        + 'android_show_device puts the device in a tab for the user to watch.',
+    }),
     'ext.lora-trainer': Object.freeze({
       key: 'lora_training',
       label: 'LoRA training',

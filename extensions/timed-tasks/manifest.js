@@ -3,7 +3,7 @@ module.exports = {
   name: 'Timed Tasks',
   version: '1.1.0',
   description: 'Schedule recurring AI tasks with a prompt, an optional response schema, and an optional webhook for results',
-
+  distributable: true,
   dependencies: {
     required: {
       'core:database': {

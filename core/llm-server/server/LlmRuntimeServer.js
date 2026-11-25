@@ -1,3 +1,4 @@
+const axios = require('axios');
 const BaseRuntimeServer = require('../../shared/runtime/BaseRuntimeServer');
 const FreePort = require('../../shared/runtime/FreePort');
 const FailureInterpreter = require('./FailureInterpreter');
@@ -9,6 +10,10 @@ class LlmRuntimeServer extends BaseRuntimeServer {
   static VRAM_RECLAIM_SETTLE_MS = 600;
   static HEALTH_REQUEST_TIMEOUT_MS = 1500;
   static ERROR_TAIL_LINES = 15;
+  static SUSPEND_TIMEOUT_MS = 8000;
+  static ASLEEP = 'asleep';
+  static NOT_SUSPENDED = Object.freeze({ suspended: false });
+  static SUSPEND_PATH_PATTERN = /^(\/[A-Za-z0-9._~-]+)+$/;
 
   static findFreePort(opts = {}) {
     return FreePort.findFreePort({ range: LlmRuntimeServer.PORT_RANGE, ...opts });
@@ -21,6 +26,7 @@ class LlmRuntimeServer extends BaseRuntimeServer {
     this.modelPath = null;
     this.caps = null;
     this.recallProbe = null;
+    this.suspendPath = null;
     this._hosts = new WslHostFailover({ logTag: this._logTag() });
   }
 
@@ -34,6 +40,14 @@ class LlmRuntimeServer extends BaseRuntimeServer {
 
   markDirty() {
     if (this.state === 'ready' || this.state === 'starting') this.dirty = true;
+  }
+
+  async suspend() {
+    if (this.state !== 'ready' || !this.suspendPath) return LlmRuntimeServer.NOT_SUSPENDED;
+    const answer = await this._requestSleep();
+    const asleep = answer.code === 200 && answer.word === LlmRuntimeServer.ASLEEP;
+    console.log(`${this._logTag()} hotswap suspend: ${LlmRuntimeServer._describeAnswer(answer)}${asleep ? '' : ', stopping instead'}`);
+    return asleep ? { suspended: true, freed: true } : LlmRuntimeServer.NOT_SUSPENDED;
   }
 
   async ensureStopped() {
@@ -50,6 +64,7 @@ class LlmRuntimeServer extends BaseRuntimeServer {
     this.dirty = false;
     this.authKey = LlmRuntimeServer._nonEmptyString(launch.authKey);
     this.modelPath = LlmRuntimeServer._nonEmptyString(launch.modelPath);
+    this.suspendPath = LlmRuntimeServer.suspendPathOf(launch.suspend);
     this._hosts = new WslHostFailover({
       plan: { ...(launch.plan || {}), host: null },
       logTag: this._logTag(),
@@ -80,6 +95,7 @@ class LlmRuntimeServer extends BaseRuntimeServer {
     this.dirty = false;
     this.caps = null;
     this.modelPath = null;
+    this.suspendPath = null;
     this._hosts.killPortDetached(this.port);
   }
 
@@ -102,6 +118,30 @@ class LlmRuntimeServer extends BaseRuntimeServer {
       .map((e) => e.line)
       .join('\n');
     return FailureInterpreter.interpret(`${this.lastError || ''}\n${tail}`);
+  }
+
+  async _requestSleep() {
+    try {
+      const res = await axios.post(`${this.baseUrl()}${this.suspendPath}`, {}, {
+        timeout: LlmRuntimeServer.SUSPEND_TIMEOUT_MS,
+        headers: this.authKey ? { Authorization: `Bearer ${this.authKey}` } : {},
+        validateStatus: () => true,
+      });
+      return { code: res.status, word: res.data && typeof res.data.status === 'string' ? res.data.status : null };
+    } catch (err) {
+      return { code: null, word: null, error: err && err.message };
+    }
+  }
+
+  static _describeAnswer(answer) {
+    if (answer.code == null) return `no answer (${answer.error || 'unknown error'})`;
+    return `${answer.code} ${answer.word || '(no status)'}`;
+  }
+
+  static suspendPathOf(suspend) {
+    const value = suspend && typeof suspend === 'object' ? suspend.path : null;
+    return typeof value === 'string' && LlmRuntimeServer.SUSPEND_PATH_PATTERN.test(value) && !value.split('/').includes('..')
+      ? value : null;
   }
 
   async _reapAnyChild() {

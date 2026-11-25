@@ -1,5 +1,40 @@
 # Changelog
 
+## 2.2.8
+
+### New features
+- **Android devices in a tab (new add-on, Android 1.0.0).** Run an Android emulator from your own Android SDK in a browser tab and use its apps next to your pages.
+  - It needs the Android SDK on your computer (Android Studio installs it) with the emulator and a system image. **Settings > Android** lists your devices and can make a new one.
+  - **Open** shows a device in a tab: click and drag to touch, type on your keyboard and scroll with the wheel. The device's screen takes the size of the tab.
+  - A device tab is an ordinary tab, so you can keep it. A kept tab keeps its device running, and after a restart the device is back in a few seconds from its saved state.
+  - Notifications the device raises go to the Hub.
+  - The assistant and MCP clients can see and drive a device with the `android_*` tools: list, start, read the screen, take a screenshot, tap, type, swipe, open an app and read notifications. A chat asks before each action that changes something, **Let AI use Android devices** switches the tools off, and they are never offered to people you share your models with.
+- **Faster weights for image models (LLM > Image).** An installed Anima model has a **Build faster weights** button in its details. It writes an INT8 copy of the model's weights beside the original, and on an NVIDIA card with a CUDA build of the image runtime that copy is used from then on.
+  - Measured on Anima: 5.6 steps per second against 3.4 on an RTX 5090, and 2.4 against 1.25 on an RTX 3090. The pictures were judged equal to those of the original weights.
+  - The build shows its progress and can be stopped. **Remove** deletes the copy and the model goes back to its original weights.
+  - Vulkan and CPU builds keep using the original weights.
+  - When a model file is updated, its faster weights are removed, because they were built from the old file. Build them again for the new one.
+- **Hub: Teams and Discord.** Discord messages are grouped by channel, group or direct message with their sender, where every message used to be an item of its own with no sender. Teams and Discord conversations can be found and opened from the Hub as Slack ones are.
+- **Hub: Open takes you to the mail.** Open on a mail item (Proton, Gmail) finds the mail in its mailbox and opens it in a new tab. It used to bring the mailbox forward wherever it stood. Opening a mail marks it as read.
+- **Hub: Context button.** The asks on a summary card and the items in Focus have a **Context** button that shows what is behind them, read from the conversation or the mail itself.
+- **Hub: Let the model ask for more from the source (Hub settings, off by default).** When a summary card's model cannot judge an item from its notifications, it can ask the Hub to open the conversation or the mail in the signed-in session it came from and read it, up to three items per card, in a hidden tab. Opening a mail this way marks it as read, which is why it is off by default.
+- **Hub: assistants can open an item.** A new `hub_open_thread` tool opens an item for you as the Open button does.
+- **Chat: background conversations stay out of the sidebar.** Conversations not started in the chat tab, such as terminal and IDE Code sessions and the fit test's chat, are no longer mixed into your chat list. A **Show N background conversations** toggle under the list shows them, and the choice is remembered. The command palette always finds them, and exporting your conversations includes them.
+
+### Changes
+- **More extensions are add-ons you download.** Hub, Timed Tasks, Page Monitors, Site APIs, Tool Forge, Desktop Integration, LoRA Trainer, Game, Luma Live, Ntfy Notifications and the CDP and Selenium drivers no longer come inside the app; they are in the catalogue in **Settings > Extensions**.
+  - Updating keeps them: on the first start after the update, LumaBrowser downloads and installs the ones your previous version had, with their settings and data as they were. One you had switched off stays off. If the download cannot finish, for example while you are offline, it is tried again at the next start.
+  - The first-run wizard can still switch them on: its presets and its Custom features list include add-ons not installed yet, marked "Downloads when you finish", and Finish downloads and installs them. If one cannot be added, setup still completes and tells you which one to add later from Settings > Extensions.
+- **Basalt Runtime (add-on 1.3.1): the chat model sleeps instead of stopping when an image model needs the card.** Where the chat model and an image model share a card, the Basalt model now hands its video memory over and comes back in about 2 seconds, instead of a full reload. Image models that share a card are kept loaded in system RAM between renders, so they also give the card back without stopping. A model that cannot sleep is stopped as before.
+- **Basalt models work with the local API and add-on slots.** Requests through the localhost API (OpenAI and Anthropic routes) and add-ons that use the local model failed with "The model ... does not exist" on Basalt.
+- **Hub summaries read the conversation, not only its newest line.** A card now sees the earlier messages of an item, so a "thanks!" after a reported problem is understood as the problem being fixed, not as "a cheerful message". Summaries say what a message is about rather than how it sounds.
+- **Hub: a dismissed item that comes back is told apart.** When new activity brings back an item you dismissed, its card speaks only of what is new, and what you had already seen is kept only to explain it.
+- **Hub reads work while LumaBrowser sits in the tray.** Pages read in the background, such as a Slack conversation the Hub reads, used to have no size while the window was minimised or in the tray, and came back with a single message. Teams did not load at all in a kept tab until it was shown, and Slack listed no conversations.
+- **Screenshots of tabs that are not on screen.** A screenshot of a tab whose window is minimised or in the tray, or that sits behind the tab on screen, used to come back empty or with the bottom of the page blank. A page that has not painted anything yet now gives a clear error instead of a broken image.
+- **Key presses sent by the assistant carry the right key code** for letters, digits and punctuation, so pages that listen for the physical key respond to them.
+- **New chat modes appear without a reload.** "Chat with agent", which appears with your first custom agent, and the modes of an add-on installed while LumaBrowser runs, show in the chat page at once.
+- **Model downloads are faster.** Downloads from Hugging Face use more connections at a time. On a gigabit line a large file went from about 19 MB/s to about 65 MB/s.
+
 ## 2.2.7
 
 ### New features

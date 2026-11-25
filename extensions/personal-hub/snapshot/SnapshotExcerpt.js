@@ -40,6 +40,11 @@ class SnapshotExcerpt {
     return SnapshotExcerpt.tail(out.join('\n').trim(), maxChars);
   }
 
+  static head(text, maxChars = SnapshotExcerpt.MAX_CHARS) {
+    const s = String(text || '').trim();
+    return s.length <= maxChars ? s : `${s.slice(0, maxChars).trimEnd()}\n[...]`;
+  }
+
   static tail(text, maxChars = SnapshotExcerpt.MAX_CHARS) {
     const s = String(text || '').trim();
     if (s.length <= maxChars) return s;

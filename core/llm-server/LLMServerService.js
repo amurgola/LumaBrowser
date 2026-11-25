@@ -3,6 +3,7 @@ const AppPaths = require('../shared/AppPaths');
 const ModelFolderRegistry = require('../shared/ModelFolderRegistry');
 const ManagedRuntimeSettings = require('../shared/runtime/ManagedRuntimeSettings');
 const VramCoordinator = require('../shared/runtime/VramCoordinator');
+const HotswapCoordinator = require('../shared/runtime/HotswapCoordinator');
 const NvidiaSmiStream = require('../shared/runtime/NvidiaSmiStream');
 const RamPinService = require('../shared/runtime/rampin/RamPinService');
 const LlmRuntimeServer = require('./server/LlmRuntimeServer');
@@ -58,6 +59,7 @@ class LLMServerService {
   static RUNTIMES_CACHE_KEY = 'core.llmServer.runtimesCache';
   static MANUAL_BINARY_PREFIX = 'core.llmServer.runtimes.';
   static RAM_PIN_NAME = 'luma-llm-ram-pin';
+  static HOTSWAP_ID = 'llm';
   static CHANNELS = Object.freeze({
     showChat: 'core.llmServer.showChat',
     showSetup: 'core.llmServer.showSetup',
@@ -109,6 +111,12 @@ class LLMServerService {
 
   ensureRunning(opts) { return this._starter.ensureRunning(opts); }
   whenVisionSettled() { return this._starter.whenVisionSettled(); }
+
+  reclaimCard() {
+    return Promise.resolve()
+      .then(() => this._deps.hotswap.reclaim(LLMServerService.HOTSWAP_ID))
+      .catch(() => null);
+  }
 
 
   getVramPressure() { return this._vramWarning.view(this.vramWatchdog.getState()); }
@@ -341,6 +349,7 @@ class LLMServerService {
       scanner: options.scanner || LlmModelsScanner.shared,
       gatherDiagnostics: options.gatherDiagnostics || ((opts) => SystemDiagnostics.gather(opts)),
       vramCoordinator: options.vramCoordinator || VramCoordinator.shared,
+      hotswap: options.hotswap || HotswapCoordinator.shared,
       releasePeers: options.releasePeers || (() => RpcPeers.releaseAll()),
       vramWatchdogOptions: options.vramWatchdogOptions || {},
       nvidiaSmiStream: options.nvidiaSmiStream || NvidiaSmiStream.shared,

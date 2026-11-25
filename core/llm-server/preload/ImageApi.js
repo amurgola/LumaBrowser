@@ -41,6 +41,9 @@ class ImageApi extends PreloadSection {
       cancelModelDownload: () => ipcRenderer.invoke('core.imageServer.cancelModelDownload'),
       removeInstalledModel: (id) => ipcRenderer.invoke('core.imageServer.removeInstalledModel', id),
       updateModelFile: (args) => ipcRenderer.invoke('core.imageServer.updateModelFile', args),
+      buildInt8Weights: (args) => ipcRenderer.invoke('core.imageServer.buildInt8Weights', args),
+      cancelInt8Weights: (id) => ipcRenderer.invoke('core.imageServer.cancelInt8Weights', id),
+      removeInt8Weights: (id) => ipcRenderer.invoke('core.imageServer.removeInt8Weights', id),
       onModelEvent: sub('core.imageServer.modelEvent'),
     };
   }

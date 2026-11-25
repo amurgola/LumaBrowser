@@ -244,8 +244,10 @@ export default class HubWidgetStyles {
 .hub-sum-needs .hub-prio { flex: 0 0 auto; }
 .hub-sum-reason { color: var(--hub-text); font-size: var(--text-sm); }
 .hub-sum-asks { margin-top: var(--space-1); display: flex; flex-direction: column; gap: 2px; }
-.hub-sum-ask { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--hub-text); }
-.hub-sum-ask::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--hub-muted); flex: 0 0 auto; }
+.hub-sum-ask { font-size: var(--text-sm); color: var(--hub-text); }
+.hub-sum-ask-line { display: flex; align-items: center; gap: 6px; }
+.hub-sum-ask-line::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--hub-muted); flex: 0 0 auto; }
+.hub-sum-ask .hub-snapshot { margin: 4px 0 6px 10px; }
 .hub-sum-ask-text { flex: 1; min-width: 0; }
 .hub-sum-ask .hub-task-mark { margin-top: 0; }
 .hub-sum-error { margin-top: var(--space-1); color: var(--hub-muted); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -26,9 +26,12 @@ surface can reach the activated service.
 
 ## UI script loading mode
 
-`ExtensionWiring.isModuleBundle(manifest)` is true for bundled extensions without
-`distributable: true`. Their stamped chat UI gets `chatUiModule: true` and their Setup tab
-`module: true`, so the LLM tab loads those scripts with `type="module"`. Add-ons
-(distributable or user-installed) stay classic scripts.
+`ExtensionWiring.isModuleFile(manifest, relFile)` is true when that file has import or export
+statements ([EsModuleSource](EsModuleSource.md)), for bundled extensions and add-ons alike. The
+stamped chat UI then gets `chatUiModule: true` and the Setup tab `module: true`, so the LLM tab
+loads it with `type="module"`. Both are served by id at `/llm-ui/ext/<id>/`, so a module's
+relative imports resolve the same wherever the extension is installed. It replaced
+`isModuleBundle(manifest)` (bundled and not distributable) on 2026-11-24, when most extensions
+became distributable and their module UIs broke as classic scripts.
 
 A manifest's `terminalProfiles` array is registered with `TerminalProfileContributions` (CLI add-ons: programs offered wherever terminals are opened).

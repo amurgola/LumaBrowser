@@ -14,9 +14,16 @@ Applies the choices on Finish or Skip setup and closes the wizard.
   type) and empty slots routed to it; the webhook (`setWebhookUrlDirect` on
   first run, else `saveWebhookUrl`); the update preference; `setSetupComplete({
   persona, workflow, enabledExtensions, hasLlm, hasWebhook })` (on first run
-  this activates extensions and awaits it); then empty slots are routed to the
+  this activates extensions and awaits it); then the chosen add-ons a fresh
+  install lacks are downloaded and hot-installed (the wizard's `pendingAddons()`
+  through [WizardAddons](WizardAddons.md), progress "Downloading <name> (i of n)…";
+  after activation because an add-on's required extensions must be active, and
+  before the slots so the add-ons' own slots are routed too); then empty slots are routed to the
   local model (`core.llmServer.local`); then the [landing](WizardLanding.md).
-  "All set. Launching LumaBrowser…", and teardown after 550 ms. A failure reports
+  "All set. Launching LumaBrowser…", and teardown after 550 ms. When an add-on
+  could not be added, setup still completes, the status reads "Set up, but could
+  not add <name> (<reason>). Add it later from Settings → Extensions." and the
+  teardown waits 6 s. A failure reports
   "Setup hit an error: ..." and turns Next into Retry. Status goes to
   `#setupDoneStatus`, or the footer progress text when reached through Skip.
 

@@ -19,8 +19,10 @@ to the installed model a slot is bound to.
      error: SWITCH_BUSY_ERROR }` while the tracker is busy; else makes it the default
      (`setDefaults({ modelPath })`) and `ensureStopped()` so the start below loads it;
   1. waits out a vision restart in progress;
-  2. `ready`: with `withVision` and an unloaded projector, restart with it;
-     otherwise `markActive()` and `{ success: true, status }`;
+  2. `ready`: with `withVision` and an unloaded projector, restart with it
+     (decided before anything yields); otherwise `service.reclaimCard()` (when
+     the service has it: a hotswap card a pool member displaced the server from
+     comes back), `markActive()` and `{ success: true, status }`;
   3. otherwise one shared start for all concurrent callers: wait for a
      `starting`/`stopping` server to settle (or time out), succeed if it became
      ready, refuse `NO_MODEL_ERROR` without a default runtime and model, else launch;

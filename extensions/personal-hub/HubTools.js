@@ -84,6 +84,12 @@ class HubTools {
       inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'Thread id (thr_...)' }, force: { type: 'boolean', description: 'Read again even when a snapshot of the latest activity exists' } }, required: ['id'] },
     },
     {
+      name: 'hub_open_thread',
+      description: 'Open an activity item for the user, in the browser session that is signed in to it: its conversation or its mail in a new tab when the Hub can find it, else the tab it came from. Opening a mail marks it as read. Use when the user asks to see or go to an item.',
+      mutating: true,
+      inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'Thread id (thr_...)' } }, required: ['id'] },
+    },
+    {
       name: 'hub_list_events',
       description: 'Calendar events across every connected calendar (Google, Microsoft 365, ICS feeds) for a window: default today, or `days` ahead, or an explicit from/to.',
       inputSchema: {
@@ -329,6 +335,7 @@ class HubTools {
       const result = await api.snapshotThread(args.id, { force: !!args.force });
       return result.snapshot ? { success: true, ...result } : { success: false, error: result.reason || 'Nothing could be read.' };
     },
+    hub_open_thread: (api, args) => api.openThread(args.id),
     hub_list_events: (api, args) => ({ success: true, events: api.listEvents(HubTools._eventWindow(args)) }),
     hub_list_threads: (api, args) => ({ success: true, threads: api.listThreads({ state: HubTools._threadState(args.state), app: args.app || null, since: args.since || null, limit: args.limit || HubTools.DEFAULT_THREAD_LIMIT }) }),
     hub_get_thread: (api, args) => HubTools._found(api.getThread(args.id), 'Thread not found'),

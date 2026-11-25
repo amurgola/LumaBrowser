@@ -118,7 +118,7 @@ class ExtensionManager {
   }
 
   getRendererExtensionList() {
-    return RendererExtensionList.build(this._ledger, this._disabled);
+    return RendererExtensionList.build(this._ledger, this._disabled, { bundledDir: this.extensionsDir });
   }
 
   getRendererSource(id) {

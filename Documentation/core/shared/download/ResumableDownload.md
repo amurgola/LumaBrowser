@@ -10,7 +10,7 @@ off to `ParallelDownload` or `SequentialDownload`.
 - `ResumableDownload.download(options)` is shorthand for
   `new ResumableDownload(options).execute()`.
 - `new ResumableDownload({ url, destPath, controller, isCanceled, label,
-  onResume, onProgress, onVerify, parallel = 8, chunkSize = 32 MB, verify = true,
+  onResume, onProgress, onVerify, parallel = 32, chunkSize = 32 MB, verify = true,
   headers, expectedSize, expectedSha256, checkFreeSpace = true, freeSpace,
   attempts = 4, sleep })`
   - `controller` (AbortController) and `isCanceled()` are caller-owned.
@@ -61,7 +61,10 @@ off to `ParallelDownload` or `SequentialDownload`.
 Multi-gigabyte weights must survive a dropped connection or app restart, so
 bytes land in a sibling `.partial` and are renamed into place only after
 verification and an fsync ([DownloadPublish](DownloadPublish.md)). Hugging
-Face's CDN throttles per connection, hence parallel Range chunks.
+Face's CDN throttles per connection, hence parallel Range chunks. The default
+of 32 connections comes from a measurement on a gigabit line (2026-11-23, a
+156 GiB file served through the Hub's storage bridge): 8 connections gave
+19 MiB/s and 32 gave 65 to 70 MiB/s, about 2 MiB/s for each connection.
 
 The primitive is deliberately event-vocabulary-agnostic: callers own the
 AbortController, cancel flag and event names, and this only invokes callbacks

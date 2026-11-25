@@ -14,6 +14,7 @@ class BasaltLaunchPlanner {
   static MAX_PARALLEL = 8;
   static HOST = '127.0.0.1';
   static SLEEP_SIZING_ON_WINDOWS = 'card';
+  static SLEEP_PATH = '/v1/sleep';
 
   constructor({ model, runtime, port, overrides, apiKey, diagnostics, userArgs, platform = process.platform }) {
     this._model = model;
@@ -227,6 +228,7 @@ class BasaltLaunchPlanner {
       args: this._serveArgs,
       plan,
       killTree: true,
+      ...(this._packCanSleep ? { suspend: { path: BasaltLaunchPlanner.SLEEP_PATH } } : {}),
       modelPath: this._packPath,
       authKey: this._apiKey,
       cudaDevice: null,

@@ -6,9 +6,12 @@ The serialisable list of every discovered extension the renderer builds its UI f
 
 ## Methods
 
-- `RendererExtensionList.build(ledger, disabled)` returns one row per manifest
+- `RendererExtensionList.build(ledger, disabled, { bundledDir })` returns one row per manifest
   (HTML files inlined first): `id, name, version (default 1.0.0), description,
-  dir, userInstalled, debugOnly, distributable (classic renderer scripts), ui, renderer, navigationBar, settings,
+  dir, userInstalled, debugOnly, distributable, ui, renderer, navigationBar, settings,
+  rendererModule` (the renderer has import or export statements, [EsModuleSource](EsModuleSource.md)),
+  for an installed add-on's module renderer also `rendererUrl` and `rendererImports`
+  ([AddonRendererModule](AddonRendererModule.md); `bundledDir` is the app's extensions dir), `
   setupTab ({ label } or null), dependencies, loadOrder (index or -1), enabled, loadable, unmetDependency`.
   Each dependency is `{ key, name, isCore, isRequired, installed, reason, hasSlots }`
   (core names labelled `Browser`, `Database`, `LLM Service`; an `ext:` dep is

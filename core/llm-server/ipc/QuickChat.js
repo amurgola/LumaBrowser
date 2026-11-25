@@ -1,5 +1,6 @@
 const LlmRuntimeCatalog = require('../runtimes/LlmRuntimeCatalog');
 const ChatAdapterRegistry = require('../server/chat/ChatAdapterRegistry');
+const LocalServerConnection = require('../server/LocalServerConnection');
 
 class QuickChat {
   constructor({ llmServerService, chatRouter, catalog = LlmRuntimeCatalog.shared, adapters = ChatAdapterRegistry }) {
@@ -10,9 +11,10 @@ class QuickChat {
     this._active = null;
   }
 
-  start({ messages, temperature } = {}, send) {
+  async start({ messages, temperature } = {}, send) {
     const status = this._readyStatus();
     const entry = this._runtimeEntry(status);
+    if (typeof this._svc.reclaimCard === 'function') await this._svc.reclaimCard();
     this.abort();
     this._active = this._adapterFor(entry, status).chat({
       messages,
@@ -51,13 +53,7 @@ class QuickChat {
   }
 
   _adapterFor(entry, status) {
-    const server = this._svc.runtimeServer;
-    const plan = server.plan || null;
-    return this._adapters.createAdapterFor(entry, {
-      baseUrl: `http://${status.host || '127.0.0.1'}:${status.port}`,
-      apiKey: server.authKey || null,
-      model: plan && plan.apiModelName ? plan.apiModelName : null,
-    });
+    return this._adapters.createAdapterFor(entry, LocalServerConnection.of(this._svc.runtimeServer, status));
   }
 }
 

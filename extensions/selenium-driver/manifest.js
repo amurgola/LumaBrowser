@@ -5,7 +5,7 @@ module.exports = {
   description: 'W3C WebDriver and ChromeDriver-compatible HTTP server. Selenium clients drive LumaBrowser tabs directly. Failed selectors fall back to LLM resolution when enabled.',
 
   loadPriority: 80,
-
+  distributable: true,
   dependencies: {
     required: {
       'core:browser': {

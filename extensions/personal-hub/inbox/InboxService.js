@@ -74,6 +74,8 @@ class InboxService {
     if (!this._threads.get(id)) return null;
     const columns = { state, snooze_until: null };
     if (state === 'snoozed') columns.snooze_until = this._snoozeTime(snoozeUntil);
+    if (state === 'done') columns.dismissed_at = this._now().toISOString();
+    if (state === 'open') columns.dismissed_at = null;
     const thread = this._threads.update(id, columns);
     this._emit(InboxService.CHANGED_EVENT, { threadId: id, reason: 'state' });
     return thread;
@@ -250,7 +252,7 @@ class InboxService {
     if (!latest) return null;
     return {
       title: latest.title, body: latest.body, receivedAt: latest.receivedAt, sender: latest.sender,
-      partition: latest.partition || '', host: latest.host || '', url: latest.url || '',
+      partition: latest.partition || '', host: latest.host || '', url: latest.url || '', tag: latest.tag || '',
     };
   }
 

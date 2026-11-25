@@ -40,10 +40,13 @@ that stays in the shell entry.
 
 ## Methods the steps use
 
-`state`, `extensions`, `extensionsReady`, `bodyEl`, `progressEl`, `backBtn`,
+`state`, `extensions`, `extensionsReady`, `addons` ([WizardAddons](WizardAddons.md)),
+`addonsReady` (the catalog fetch started with the extension list), `bodyEl`, `progressEl`, `backBtn`,
 `nextBtn`, `skipBtn`, `step(id)`, `currentStepId()`, `steps()`,
 `applyPersona(id, { silent })` (saves `core.persona` unless silent),
-`applyWorkflow(presetId)`, `enabledExtensions()`, `isPlainCopy()`,
+`applyWorkflow(presetId)`, `enabledExtensions()` (every id the choices switch on,
+installed or not), `pendingAddons()` (the enabled ids still to download),
+`extensionName(id)` (installed name, else the catalog's, else the id), `isPlainCopy()`,
 `musicOffered()`, `isCurrentStepValid()`, `rebuildSteps()`, `jumpTo(stepId)`,
 `render()`, `renderSidebar()`, `renderFooter()`, `goBack()`, `goNext()`, `skip()`,
 `finish()`, `addSpeedTimer(id)`, `clearSpeedTimers()`, `teardown()`.

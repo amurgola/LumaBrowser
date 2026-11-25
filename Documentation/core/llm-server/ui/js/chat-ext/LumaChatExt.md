@@ -21,6 +21,7 @@ works as it did with legacy's plain object.
 | Method | Does |
 |---|---|
 | `load(api)` | Once per page: `api.chat.listModes()`, stores each backend descriptor, injects each mode's `chatUiUrl` bundle (see "Loading bundles"), resolves `list()`. A failing or missing `listModes` gives `[]` and logs `[chat-ext] listModes failed:`. |
+| `reload(api)` | Fetches `listModes` again and replaces the backend descriptors with that list (a mode added since `load` appears, a removed one goes), then injects the bundles not injected yet. A failed fetch keeps the current list. The chat page calls it on the `modes-changed` server event. |
 | `registerMode(def)` | Called by a bundle when it runs. `def.id` is required (else `[chat-ext] registerMode requires an object with an id` is logged). Later registrations of the same id replace earlier ones. |
 | `getBackend(id)` / `getClient(id)` | The backend descriptor / the registered hooks, or `null`. |
 | `getMerged(id)` | `{ ...backend, ...client, id }`, or `null` until the backend lists the mode. |

@@ -16,6 +16,7 @@ export default class Sidebar {
     this._wireSearchBox();
     els.recents = els.sidebar.querySelector('.cm-recents');
     els.chatsList = els.sidebar.querySelector('.cm-chats-list');
+    els.backgroundToggle = els.sidebar.querySelector('.cm-bg-toggle');
     els.artsList = els.sidebar.querySelector('.cm-arts-list');
     els.artsList.addEventListener('click', (e) => this._ctx.artsSidebar.onClick(e));
     this._wireActions();
@@ -118,7 +119,8 @@ export default class Sidebar {
       + '<div class="cm-search-box"><input type="text" placeholder="Search chats..." res-oninput="res.cmSearch" /></div>'
       + '<div class="cm-recents">'
       +   '<div class="cm-chats-list">'
-      +     '<div res="cm.visible" res-use="cmConvRow" res-empty="cmEmptyChats"></div>'
+      +     '<div><div res="cm.visible" res-use="cmConvRow" res-empty="cmEmptyChats"></div></div>'
+      +     '<button type="button" class="cm-bg-toggle" data-act="background" hidden></button>'
       +   '</div>'
       +   '<div class="cm-arts-list" style="display:none"></div>'
       + '</div>'
@@ -168,6 +170,7 @@ export default class Sidebar {
       search: () => this.openSearch(),
       collapse: () => this.toggle(),
       newModes: () => { ctx.state.newModesOpen = !ctx.state.newModesOpen; ctx.sideModes.applyActive(); },
+      background: () => ctx.convList.toggleBackground(),
       settingsMenu: () => this._toggleSettingsMenu(),
       setup: () => { this.applySettingsMenu(false); ctx.switchToSetup(); },
       appSettings: () => { this.applySettingsMenu(false); if (ctx.api.openAppSettings) ctx.api.openAppSettings('general'); },

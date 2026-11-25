@@ -24,4 +24,5 @@ module.exports = {
   mcpTools: {
     file: './mcp-tools.js',
   },
+  distributable: true,
 };

@@ -53,6 +53,16 @@ Requests and starting ([LocalRequestTracker](service/LocalRequestTracker.md),
   `EffectiveContext.clampSlots`, 1 when unknown.
 - `getEffectiveContext()` `EffectiveContext.resolve({ status, defaults })`.
 - `ensureRunning({ withVision })`, `whenVisionSettled()`.
+- `reclaimCard()` `hotswap.reclaim('llm')` (`HOTSWAP_ID`; the `hotswap` dep
+  defaults to `HotswapCoordinator.shared`): the gate every request path to a
+  ready chat server passes, so a card a hotswap pool member took while the
+  chat model slept comes back (the member is suspended or stopped) before the
+  request wakes the engine. Resolves the card when it swapped, else null; never
+  rejects. Callers: [LocalServerPrep](chat/router/LocalServerPrep.md) (every
+  chat turn, agent turn, Network Sharing turn and Model Testing turn),
+  [LocalServerStarter](service/LocalServerStarter.md) (slot and extension
+  callers through `ensureRunning`), [LocalApiServer](server/LocalApiServer.md)
+  (every POST of the localhost API) and [QuickChat](ipc/QuickChat.md).
 
 VRAM pressure:
 - `getVramPressure()` the watchdog state through [VramWarningSwitch](server/vram-watchdog/VramWarningSwitch.md)`.view`

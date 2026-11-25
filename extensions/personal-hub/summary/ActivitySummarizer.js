@@ -6,6 +6,7 @@ class ActivitySummarizer {
   static SLOT = 'personal-hub.summarizer';
   static UNAVAILABLE_PREFIX = 'Unavailable: ';
   static ENABLED_KEY = 'summary.enabled';
+  static SOURCES_KEY = 'summary.sources';
   static OTHER_KEY = 'other';
   static OTHER_NAME = 'Other';
   static WINDOW_DAYS = 3;
@@ -41,6 +42,7 @@ class ActivitySummarizer {
     const slot = this._describeSlot();
     return {
       enabled: this.enabled(),
+      sources: this.readsSources(),
       available: !!this._llm,
       provider: slot.provider,
       model: slot.model,
@@ -52,6 +54,17 @@ class ActivitySummarizer {
 
   enabled() {
     return this._db.get(ActivitySummarizer.ENABLED_KEY, false) === true;
+  }
+
+  readsSources() {
+    return this._db.get(ActivitySummarizer.SOURCES_KEY, false) === true;
+  }
+
+  setReadsSources(on) {
+    this._db.set(ActivitySummarizer.SOURCES_KEY, !!on);
+    this._emit('summary.changed', { reason: 'settings' });
+    if (on && this.enabled() && this._llm) this.run({ force: true }).catch(() => {});
+    return this.status();
   }
 
   models() {
@@ -151,10 +164,10 @@ class ActivitySummarizer {
       this._summaries.save({ key: group.key, signature: previous ? previous.signature : '', summary: previous ? previous.summary : null, model: previous ? previous.model : '', error });
       return error;
     };
-    const first = await this._ask(group, items);
+    const first = await this._ask(group, items, this.readsSources());
     if (first.error) return fail(first.error);
     let summary = first.summary;
-    if (summary.needsYou && await this._deepen(items, summary)) {
+    if (await this._deepen(ActivitySummarizer._worthReading(items, summary, first.more))) {
       const second = await this._ask(group, items);
       if (second.summary) summary = second.summary;
     }
@@ -162,18 +175,19 @@ class ActivitySummarizer {
     return null;
   }
 
-  async _ask(group, items) {
+  async _ask(group, items, askMore = false) {
     let reply;
     try {
-      reply = await this._llm.sendCompletion(ActivitySummarizer.SLOT, SummaryPrompt.messages({ name: group.name }, this._enrich(items), { now: this._now(), who: this._who(items) }), {
+      reply = await this._llm.sendCompletion(ActivitySummarizer.SLOT, SummaryPrompt.messages({ name: group.name }, this._enrich(items), { now: this._now(), who: this._who(items), askMore }), {
         temperature: 0.2, max_tokens: ActivitySummarizer.MAX_TOKENS, timeout: ActivitySummarizer.TIMEOUT_MS, label: `Hub summary: ${group.name}`,
       });
     } catch (err) {
       return { error: (err && err.message) || String(err) };
     }
     if (!reply || reply.success === false) return { error: (reply && reply.error) || 'The model did not answer.' };
-    const summary = SummaryPrompt.parse(ResponseText.extract(reply.response), items);
-    return summary ? { summary } : { error: 'The model did not answer in the expected form.' };
+    const text = ResponseText.extract(reply.response);
+    const summary = SummaryPrompt.parse(text, items);
+    return summary ? { summary, more: askMore ? SummaryPrompt.more(text, items) : [] } : { error: 'The model did not answer in the expected form.' };
   }
 
   _enrich(items) {
@@ -183,9 +197,24 @@ class ActivitySummarizer {
       return {
         ...item,
         people: this._names(item),
+        earlier: this._earlier(item),
         snapshot: snapshot && snapshot.sourceAt === (item.lastAt || '') ? snapshot.text : '',
+        snapshotScope: snapshot ? snapshot.scope : '',
       };
     });
+  }
+
+  _earlier(item) {
+    const thread = this._inbox.getThread(item.id);
+    const [newest, ...older] = thread ? thread.notifications : [];
+    if (!newest) return [];
+    const said = (notification) => notification.body || notification.title || '';
+    const since = this._windowStart();
+    return older
+      .filter((n) => n.receivedAt >= since && said(n) && said(n) !== said(newest))
+      .slice(0, SummaryPrompt.MAX_EARLIER)
+      .reverse()
+      .map((n) => ({ at: n.receivedAt, sender: n.sender, text: said(n), seen: !!item.dismissedAt && n.receivedAt <= item.dismissedAt }));
   }
 
   _names(item) {
@@ -213,10 +242,15 @@ class ActivitySummarizer {
     try { return this._people.lookup({ app: item.app, sender: name, contextId: item.contextId || null }); } catch (_) { return null; }
   }
 
-  async _deepen(items, summary) {
-    if (!this._reader || !this._reader.available()) return false;
+  static _worthReading(items, summary, more = []) {
     const asked = new Set(summary.asks.map((ask) => ask.threadId));
-    const targets = (asked.size ? items.filter((i) => asked.has(i.id)) : items.slice(0, 1)).slice(0, ActivitySummarizer.DEEP_PER_CARD);
+    const needed = !summary.needsYou ? [] : (asked.size ? items.filter((i) => asked.has(i.id)) : items.slice(0, 1));
+    const wanted = items.filter((i) => more.includes(i.id));
+    return [...new Set([...needed, ...wanted])].slice(0, ActivitySummarizer.DEEP_PER_CARD);
+  }
+
+  async _deepen(targets) {
+    if (!targets.length || !this._reader || !this._reader.available()) return false;
     let read = 0;
     for (const item of targets) {
       const kept = this._reader.stored(item);
@@ -239,8 +273,7 @@ class ActivitySummarizer {
 
   _groups() {
     const contexts = this._contexts.list();
-    const since = new Date(this._now().getTime() - ActivitySummarizer.WINDOW_DAYS * 86400000).toISOString();
-    const items = this._inbox.listThreads({ state: 'active', since, limit: ActivitySummarizer.MAX_ITEMS });
+    const items = this._inbox.listThreads({ state: 'active', since: this._windowStart(), limit: ActivitySummarizer.MAX_ITEMS });
     const booked = this._meetings ? this._meetings.forItems(items) : {};
     const byKey = new Map();
     for (const item of items) {
@@ -257,6 +290,10 @@ class ActivitySummarizer {
       groups.push(ActivitySummarizer._group(ActivitySummarizer.OTHER_KEY, null, contexts.length ? ActivitySummarizer.OTHER_NAME : 'Everything', '', byKey.get(ActivitySummarizer.OTHER_KEY)));
     }
     return groups;
+  }
+
+  _windowStart() {
+    return new Date(this._now().getTime() - ActivitySummarizer.WINDOW_DAYS * 86400000).toISOString();
   }
 
   static _group(key, contextId, name, color, items) {

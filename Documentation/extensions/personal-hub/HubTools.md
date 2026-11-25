@@ -44,6 +44,12 @@ and task board. `mcp-tools.js` exports `{ tools: HubTools.TOOLS, handler }`.
   Slack name and a mail sender are one person. Its description says that
   often little is recorded and that `hub_get_thread` on the items a person
   appears in shows what they wrote.
+- `hub_open_thread { id }` (mutating): opens the item for the user in the
+  session that is signed in to it, as the activity widget's Open does
+  (`api.openThread`, see
+  [ConversationOpener](snapshot/ConversationOpener.md)): `{ success: true,
+  opened: 'conversation' | 'mail' | 'tab' | 'link' }` or `{ success: false,
+  error }`. Opening a mail marks it as read.
 - `hub_snapshot_thread { id, force? }`: reads the conversation behind an
   activity item from the user's own signed-in tab (more than the
   notification's one line) and keeps it: `{ success: true, snapshot }` with

@@ -44,7 +44,9 @@ when a one-line notification is not enough. Agents reach it through the
   [ContactProfiler](contacts/ContactProfiler.md) (over the contact service,
   the inbox and the LLM service), one
   [ConversationLocator](snapshot/ConversationLocator.md) (over the session
-  tabs, with a [SlackSidebar](snapshot/SlackSidebar.md) over the tabs,
+  tabs, with a [SlackSidebar](snapshot/SlackSidebar.md), a
+  [TeamsSidebar](snapshot/TeamsSidebar.md) and a
+  [DiscordSidebar](snapshot/DiscordSidebar.md) over the tabs,
   `context.browser` and the extension's database) shared by the
   reader and the [ConversationOpener](snapshot/ConversationOpener.md) (both
   over `context.browser`),
@@ -87,7 +89,7 @@ when a one-line notification is not enough. Agents reach it through the
   after the rules that read a notification changed, the stored feed is read
   again with them and the people memory is put right. It runs when the
   setting `feed.rules` (`FEED_RULES_KEY`, 1 when never set) is below
-  `FEED_RULES` = 2: [InboxService](inbox/InboxService.md)`.reclassify()`,
+  `FEED_RULES` = 3 (raised for the Discord rule, 2026-11-23): [InboxService](inbox/InboxService.md)`.reclassify()`,
   then [ContactTidy](contacts/ContactTidy.md)`.run(changed, { contextOf })`
   with `contextOf` resolving a notification's url, partition, host, sender
   and app (`ContextService.resolve`), then the setting is raised to

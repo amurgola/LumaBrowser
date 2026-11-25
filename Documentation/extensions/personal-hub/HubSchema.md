@@ -19,7 +19,9 @@ seeds the default board columns the first time.
 - `hub_threads`: the activity feed's items, unique per `(app, thread_key)`,
   with `state` (open, reviewed, snoozed, done; `done` is an item the user
   dismissed), `priority`, `summary`, `labels`, `context` (an automation's
-  `kind` is kept here), `task_id` and `snooze_until`.
+  `kind` is kept here), `task_id`, `snooze_until` and `dismissed_at` (when
+  the user last dismissed the item; it stays after new activity brings the
+  item back).
 - `hub_board_columns`: the board's columns (`key` unique, `sort_order`, `is_done`).
 - `hub_tasks`: local and imported tasks (`source_id` + `remote_id` unique),
   the `column_key` they sit in, the `remote_status` last seen and its
@@ -65,7 +67,8 @@ That is fourteen tables.
   (`hub_tasks.hidden`, `remote_status_color`, `list_id` and `sync_error`,
   and `hub_contacts.kind` (`TEXT NOT NULL DEFAULT 'general'`),
   `hub_contacts.profile` (`TEXT NOT NULL DEFAULT '{}'`) and
-  `hub_contacts.context_id` (`TEXT NOT NULL DEFAULT ''`); each skipped when
+  `hub_contacts.context_id` (`TEXT NOT NULL DEFAULT ''`), and
+  `hub_threads.dismissed_at` (`TEXT`); each skipped when
   the column exists), then seeds `DEFAULT_COLUMNS`
   (backlog, todo, doing, review, done) when the column table is empty.
 

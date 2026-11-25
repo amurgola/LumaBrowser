@@ -6,6 +6,7 @@ import FoldMemory from '../setup/FoldMemory.js';
 import CatalogModelRow from './CatalogModelRow.js';
 import DownloadDetail from './DownloadDetail.js';
 import InstalledModelRow from './InstalledModelRow.js';
+import Int8WeightsMarkup from './Int8WeightsMarkup.js';
 import ModelsDirControls from './ModelsDirControls.js';
 import ProgressPercent from './ProgressPercent.js';
 import QuantPicker from './QuantPicker.js';
@@ -51,7 +52,9 @@ export default class ImageModelsCard {
     if (!evt) return;
     const { type, payload } = evt;
     const store = this._panel.store;
-    if (type === 'start') {
+    if (ImageModelsCard.INT8_EVENTS.has(type)) {
+      this.onInt8Event(type, payload || {});
+    } else if (type === 'start') {
       store.downloadError = null;
       store.activeDl = ImageModelsCard.newDownload(payload);
       this.paint();
@@ -64,6 +67,19 @@ export default class ImageModelsCard {
       if (type === 'error') store.downloadError = (payload && payload.message) || 'Download failed.';
       store.activeDl = null;
       this._panel.refreshModelsAndDefaults();
+    }
+  }
+
+  static INT8_EVENTS = new Set(['int8-start', 'int8-progress', 'int8-end']);
+
+  onInt8Event(type, payload) {
+    const builds = this._panel.store.int8Builds;
+    if (!payload.id) return;
+    if (type === 'int8-end') delete builds[payload.id];
+    else builds[payload.id] = { doneBytes: payload.doneBytes || 0, totalBytes: payload.totalBytes || 0 };
+    const model = this._panel.store.findModel(payload.id);
+    if (model && this._installedCtl) {
+      this._installedCtl.patchRow(payload.id, { dlHtml: Int8WeightsMarkup.html(model.id, model.int8Weights, builds[payload.id] || null) });
     }
   }
 
@@ -237,7 +253,9 @@ export default class ImageModelsCard {
 
   _setRows(installed) {
     const store = this._panel.store;
-    if (this._installedCtl) this._installedCtl.set(installed.map((m) => InstalledModelRow.view(m, store.defaults, !!store.activeDl)));
+    if (this._installedCtl) {
+      this._installedCtl.set(installed.map((m) => InstalledModelRow.view(m, store.defaults, !!store.activeDl, store.int8Builds[m.id] || null)));
+    }
     const catalog = (store.catalog || []).filter((m) => !installed.some((x) => x.id === m.id));
     if (this._catalogCtl) this._catalogCtl.set(catalog.map((m) => CatalogModelRow.view(m, installed, store.activeDl, store.vramBytes)));
   }

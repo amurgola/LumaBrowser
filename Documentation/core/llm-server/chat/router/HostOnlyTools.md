@@ -2,9 +2,11 @@
 
 `core/llm-server/chat/router/HostOnlyTools.js`
 
-The tools only this computer's own user may put in a model's hands: today the `terminal_*` tools. A turn run for
+The tools only this computer's own user may put in a model's hands: the `terminal_*` tools and the `android_*`
+tools ([extensions/android](../../../../extensions/android/AndroidExtension.md)). A turn run for
 someone else (a paired Network Sharing client, the web app, the local API) is not interactive, so nothing would ask
-before a command ran in a terminal here. [ProxyTurns](ProxyTurns.md) passes `isHostOnly` as the run's `withholdTools`,
+before a command ran in a terminal here, or before a tap acted in an app on a device that holds its owner's
+accounts. [ProxyTurns](ProxyTurns.md) passes `isHostOnly` as the run's `withholdTools`,
 and `RunToolSet` then never allows, offers or lists those tools, whatever the host's allow-list says.
 
 ## Methods

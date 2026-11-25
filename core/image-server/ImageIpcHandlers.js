@@ -23,6 +23,8 @@ const ImageServerBroadcast = require('./ipc/ImageServerBroadcast');
 const ImageServerConfigs = require('./ipc/ImageServerConfigs');
 const ImageSlots = require('./ipc/ImageSlots');
 const InstalledModelRemover = require('./ipc/InstalledModelRemover');
+const Int8WeightsBuilder = require('./ipc/Int8WeightsBuilder');
+const Int8WeightsRemover = require('./ipc/Int8WeightsRemover');
 const ModelFileUpdater = require('./ipc/ModelFileUpdater');
 const ModelLoraAttacher = require('./ipc/ModelLoraAttacher');
 
@@ -61,8 +63,9 @@ class ImageIpcHandlers {
         nsfw: () => !!(service.getCivitaiSettings && service.getCivitaiSettings().nsfw),
       }),
     });
+    const int8Builder = new Int8WeightsBuilder({ imageServerService: service });
     return {
-      models: new ImageModelsView({ imageServerService: service }),
+      models: new ImageModelsView({ imageServerService: service, int8Weights: int8Builder }),
       runtimes: new ImageRuntimeSetup({ imageServerService: service }),
       defaults: new ImageDefaultsUpdater(service),
       configs: new ImageServerConfigs(service),
@@ -76,6 +79,8 @@ class ImageIpcHandlers {
       adopter: new ExistingModelAdopter(service),
       remover: new InstalledModelRemover(service),
       updater: new ModelFileUpdater({ imageServerService: service, slot }),
+      int8Builder,
+      int8Remover: new Int8WeightsRemover(service),
       generations: new ImageGenerationRequests(router),
     };
   }
@@ -122,13 +127,16 @@ class ImageIpcHandlers {
     ImageIpcHandlers._handle('stopServer', IpcEnvelope.enveloped(async () => ({ status: await slots.stopAll() })));
   }
 
-  static _registerModels(slot, { models, installer, remover, updater }) {
+  static _registerModels(slot, { models, installer, remover, updater, int8Builder, int8Remover }) {
     const events = (event) => SenderStream.create(event, ImageIpcHandlers.MODEL_EVENT_CHANNEL);
     ImageIpcHandlers._handle('modelCatalog', IpcEnvelope.enveloped(() => models.catalogView()));
     ImageIpcHandlers._handle('cancelModelDownload', IpcEnvelope.enveloped(() => { slot.cancel(); }));
     ImageIpcHandlers._handle('downloadModel', IpcEnvelope.enveloped((event, args) => installer.install(args, events(event))));
     ImageIpcHandlers._handle('removeInstalledModel', IpcEnvelope.enveloped((_e, id) => remover.remove(id)));
     ImageIpcHandlers._handle('updateModelFile', IpcEnvelope.enveloped((event, args) => updater.update(args, events(event))));
+    ImageIpcHandlers._handle('buildInt8Weights', IpcEnvelope.enveloped((event, args) => int8Builder.build(args, events(event))));
+    ImageIpcHandlers._handle('cancelInt8Weights', IpcEnvelope.enveloped((_e, id) => { int8Builder.cancel(id); }));
+    ImageIpcHandlers._handle('removeInt8Weights', IpcEnvelope.enveloped((_e, id) => int8Remover.remove(id)));
   }
 
   static _registerLoras({ loras, loraInstaller, attacher }) {

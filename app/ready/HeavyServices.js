@@ -1,3 +1,4 @@
+const AddonUpgradeMigration = require('../../core/shell/extension-admin/AddonUpgradeMigration');
 const AgentDeps = require('./AgentDeps');
 const GatewayBinder = require('./GatewayBinder');
 const PortConflict = require('./PortConflict');
@@ -7,13 +8,14 @@ class HeavyServices {
   static NARROWED_NOTICE_TITLE = 'Local API now answers your network only';
   static SETTINGS_TAB = 'apimcp';
 
-  constructor(ctx, { browserService, log = console, inspectConflict = PortConflict.inspect, timers = {} }) {
+  constructor(ctx, { browserService, log = console, inspectConflict = PortConflict.inspect, timers = {}, addonMigration = null }) {
     this._ctx = ctx;
     this._s = ctx.services;
     this._browserService = browserService;
     this._log = log;
     this._inspectConflict = inspectConflict;
     this._timers = timers;
+    this._addonMigration = addonMigration || (() => this._appAddonMigration());
     this._binder = null;
   }
 
@@ -22,6 +24,7 @@ class HeavyServices {
     await this._activateExtensions();
     this._ctx.agentDeps = this._buildAgentDeps();
     this._armBackgroundWork();
+    this._upgradeAddons();
   }
 
   _startGateway() {
@@ -162,8 +165,30 @@ class HeavyServices {
     this._s.artifactTaskScheduler.start();
     this._s.scheduledTaskScheduler.start();
     try { this._s.fileWatchManager.reconcile(); } catch (_) {}
+    this._subscribeTriggerSources();
+  }
+
+  _subscribeTriggerSources() {
     try { this._s.pageChangeSource.ensureSubscribed(); } catch (_) {}
     try { this._s.notificationSource.ensureSubscribed(); } catch (_) {}
+  }
+
+  _upgradeAddons() {
+    return HeavyServices._quietly(() => this._addonMigration().run(), (outcome) => {
+      if (outcome && outcome.installed.length) this._subscribeTriggerSources();
+    });
+  }
+
+  _appAddonMigration() {
+    const s = this._s;
+    return AddonUpgradeMigration.forApp({
+      settings: s.db,
+      extensionManager: s.extensionManager,
+      identity: s.machineIdentity,
+      rootDir: this._ctx.rootDir,
+      currentVersion: this._ctx.app.getVersion(),
+      log: this._log,
+    });
   }
 
   static _quietly(run, onDone) {

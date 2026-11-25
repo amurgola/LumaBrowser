@@ -13,7 +13,7 @@ class ConversationProvider {
     const store = this._getChatStore();
     if (!store) return [];
     const byId = new Map();
-    for (const conv of store.listConversations({ includeArchived: true, limit: ConversationProvider.TITLE_LIMIT })) {
+    for (const conv of store.listConversations({ includeArchived: true, includeBackground: true, limit: ConversationProvider.TITLE_LIMIT })) {
       const m = PaletteMatcher.score(query, [{ text: conv.title, weight: 1 }]);
       if (m) byId.set(conv.id, { conv, score: m.score, marks: m.marks, snippet: null });
     }

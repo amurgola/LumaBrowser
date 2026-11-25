@@ -70,6 +70,7 @@ class HubSchema {
       url           TEXT DEFAULT '',
       task_id       TEXT,
       snooze_until  TEXT,
+      dismissed_at  TEXT,
       updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_hub_threads_key ON hub_threads (app, thread_key)`,
@@ -191,6 +192,7 @@ class HubSchema {
     "ALTER TABLE hub_contacts ADD COLUMN kind TEXT NOT NULL DEFAULT 'general'",
     "ALTER TABLE hub_contacts ADD COLUMN profile TEXT NOT NULL DEFAULT '{}'",
     "ALTER TABLE hub_contacts ADD COLUMN context_id TEXT NOT NULL DEFAULT ''",
+    'ALTER TABLE hub_threads ADD COLUMN dismissed_at TEXT',
   ];
 
   static DEFAULT_COLUMNS = [

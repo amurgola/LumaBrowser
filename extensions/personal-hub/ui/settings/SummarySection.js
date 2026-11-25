@@ -17,12 +17,17 @@ export default class SummarySection extends HubSection {
       <button class="luma-btn luma-btn--sm" id="ext-hub-sumRunBtn" title="Write every card again now">Summarise now</button>
     </div>
     <div class="luma-field-help" id="ext-hub-sumStatus"></div>
+    <div class="ext-form-row-inline ext-mt-8">
+      <label class="luma-check"><input type="checkbox" id="ext-hub-sumSources"> Let the model ask for more from the source</label>
+    </div>
+    <div class="luma-field-help">A notification is often one line. With this on, the model can ask the Hub to open what it cannot judge (a chat conversation, a mail) in the signed-in session it came from and read it, a few per card. It happens in a hidden tab; your own tabs stay where they are. Opening a mail marks it as read.</div>
     <div class="luma-field-help">A small local model is enough and keeps everything on this computer; it needs to be loaded while you work.</div>`;
   }
 
   bind(container) {
     super.bind(container);
     this.$('sumEnabled').addEventListener('change', () => this._setEnabled());
+    this.$('sumSources').addEventListener('change', () => this._setSources());
     this.$('sumModel').addEventListener('change', () => this._saveModel());
     this.$('sumRunBtn').addEventListener('click', () => this._runNow());
   }
@@ -46,6 +51,8 @@ export default class SummarySection extends HubSection {
   _renderStatus(status) {
     const enabled = this.$('sumEnabled');
     if (enabled) enabled.checked = !!status.enabled;
+    const sources = this.$('sumSources');
+    if (sources) sources.checked = !!status.sources;
     const run = this.$('sumRunBtn');
     if (run) run.disabled = !status.available || !!status.running;
     const line = this.$('sumStatus');
@@ -64,6 +71,11 @@ export default class SummarySection extends HubSection {
   _setEnabled() {
     const enabled = this.$('sumEnabled').checked;
     return this.act(() => this.call('setSummariesEnabled', enabled), enabled ? 'Summaries are on.' : 'Summaries are off.');
+  }
+
+  _setSources() {
+    const on = this.$('sumSources').checked;
+    return this.act(() => this.call('setSummarySources', on), on ? 'The model may ask for more from the source.' : 'The model works from the notifications alone.');
   }
 
   _saveModel() {

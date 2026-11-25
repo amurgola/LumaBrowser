@@ -4,6 +4,7 @@ module.exports = {
   version: '1.1.0',
   description: 'Watch web pages, or chosen elements on them, and get a desktop notification or webhook when the content changes',
   loadPriority: 50,
+  distributable: true,
 
   dependencies: {
     required: {

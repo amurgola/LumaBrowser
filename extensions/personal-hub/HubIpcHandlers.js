@@ -3,7 +3,7 @@ const IpcEnvelope = require('../../core/shared/ipc/IpcEnvelope');
 class HubIpcHandlers {
   static PANEL_CHANNELS = [
     'listContexts', 'saveContexts', 'listContextChoices',
-    'summaryStatus', 'setSummariesEnabled', 'summarizeNow', 'listSummaryModels', 'setSummaryModel',
+    'summaryStatus', 'setSummariesEnabled', 'setSummarySources', 'summarizeNow', 'listSummaryModels', 'setSummaryModel',
     'listContacts', 'mergeContacts', 'splitContactIdentity', 'renameContact', 'keepContactsApart',
     'saveContactProfile', 'learnContact', 'resolveContactSuggestion',
   ];
@@ -45,6 +45,7 @@ class HubIpcHandlers {
     on('resolveContactSuggestion', (_e, id, suggestionId, accept) => ({ contact: api.resolveContactSuggestion(id, suggestionId, !!accept) }));
     on('summaryStatus', () => ({ status: api.summaryStatus() }));
     on('setSummariesEnabled', (_e, enabled) => ({ status: api.setSummariesEnabled(!!enabled) }));
+    on('setSummarySources', (_e, on) => ({ status: api.setSummarySources(!!on) }));
     on('summarizeNow', async (_e, opts) => ({ result: await api.summarizeNow(opts || {}), status: api.summaryStatus() }));
   }
 

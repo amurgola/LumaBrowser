@@ -71,7 +71,7 @@ export default class DoneStep extends WizardStepView {
   }
 
   _featureNames(enabledIds) {
-    const names = enabledIds.map((id) => (this._w.extensions.find((e) => e.id === id) || {}).name || id);
+    const names = enabledIds.map((id) => this._w.extensionName(id));
     return names.length ? names.join(', ') : 'None';
   }
 

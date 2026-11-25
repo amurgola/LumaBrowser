@@ -38,7 +38,10 @@ clock alone.
   - a context: the summary's reason, the dot in the context's colour;
     `Dismiss` calls `setThreadsState(threadIds, 'done')`, which takes the
     whole card out of the feed until new activity brings it back.
-  - an item: `Marked high` or `Marked urgent` with its context; `To task`
+  - an item: `Marked high` or `Marked urgent` with its context; `Context`
+    (`.hub-need-context`: what is behind it, read at its source and shown
+    under it, see [ThreadSnapshots](ThreadSnapshots.md); `Hide` while it
+    shows), `To task`
     (`threadToTask(threadId, {})`, hidden when it already has a task) and
     `Dismiss` (the same call with the one id).
   - With more than fit: `and N more in the board and Activity`. With none:

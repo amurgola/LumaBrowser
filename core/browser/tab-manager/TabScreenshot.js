@@ -3,20 +3,39 @@ const InputDriver = require('../InputDriver');
 const ImageOps = require('../vision/ImageOps');
 const VisionPageScripts = require('../vision/VisionPageScripts');
 const ElementDigestFormatter = require('./ElementDigestFormatter');
+const CaptureStage = require('./CaptureStage');
 
 class TabScreenshot {
   static FULL_PAGE_LAYOUT_MS = 500;
   static PAGE_SIZE_SCRIPT = '({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight })';
   static VIEWPORT_SCRIPT = '[window.innerWidth, window.innerHeight]';
+  static NOT_PAINTED_ERROR = 'The page has not painted anything to capture yet';
 
-  constructor(nativeImage = null) {
+  constructor(nativeImage = null, stage = new CaptureStage()) {
     this._nativeImage = nativeImage;
+    this._stage = stage;
   }
 
   async capture(page, options = {}) {
+    if (this._stage.isOnScreen(page.view)) return this._captureKind(page, options);
+    return this._captureOnStage(page, options);
+  }
+
+  _captureKind(page, options) {
     if (options.selector) return this._captureElement(page, options.selector);
     if (options.fullPage) return this._captureFullPage(page);
     return this._captureViewport(page, options);
+  }
+
+  async _captureOnStage(page, options) {
+    try {
+      return await this._stage.lend(page.view, () => {
+        page.tabViewManager.freeViewport(page.tabId);
+        return this._captureKind(page, options);
+      });
+    } finally {
+      page.tabViewManager.layoutTab(page.tabId);
+    }
   }
 
   static elementRectScript(selector) {
@@ -38,20 +57,20 @@ class TabScreenshot {
     if (!measured || !measured.success) return { success: false, error: (measured && measured.error) || 'Could not measure the element' };
     const fits = measured.width <= measured.viewportWidth && measured.height <= measured.viewportHeight;
     const image = fits
-      ? await page.webContents.capturePage(TabScreenshot._clipOf(page, measured))
-      : await TabScreenshot._captureGrown(page, script, measured);
+      ? await this._grab(page, TabScreenshot._clipOf(page, measured))
+      : await this._captureGrown(page, script, measured);
     if (!image) return { success: false, error: 'The element moved while it was being captured' };
     return { success: true, data: { screenshot: image.toPNG().toString('base64'), mimeType: 'image/png', element: { selector } } };
   }
 
-  static async _captureGrown(page, script, measured) {
+  async _captureGrown(page, script, measured) {
     const originalBounds = page.view.getBounds();
     page.view.setBounds(TabScreenshot._grown(originalBounds, { width: Math.ceil(measured.width), height: Math.ceil(measured.height) }));
     try {
       await new Promise((resolve) => setTimeout(resolve, TabScreenshot.FULL_PAGE_LAYOUT_MS));
       const rect = await page.run(script);
       if (!rect || !rect.success) return null;
-      return await page.webContents.capturePage(TabScreenshot._clipOf(page, rect));
+      return await this._grab(page, TabScreenshot._clipOf(page, rect));
     } finally {
       page.view.setBounds(originalBounds);
     }
@@ -67,14 +86,14 @@ class TabScreenshot {
     const dims = await page.run(TabScreenshot.PAGE_SIZE_SCRIPT);
     const originalBounds = page.view.getBounds();
     page.view.setBounds(TabScreenshot._grown(originalBounds, dims));
-    const image = await TabScreenshot._captureThenRestore(page, originalBounds);
+    const image = await this._captureThenRestore(page, originalBounds);
     return { success: true, data: { screenshot: image.toPNG().toString('base64'), mimeType: 'image/png' } };
   }
 
-  static async _captureThenRestore(page, originalBounds) {
+  async _captureThenRestore(page, originalBounds) {
     try {
       await new Promise((resolve) => setTimeout(resolve, TabScreenshot.FULL_PAGE_LAYOUT_MS));
-      return await page.webContents.capturePage();
+      return await this._grab(page);
     } finally {
       page.view.setBounds(originalBounds);
     }
@@ -82,7 +101,7 @@ class TabScreenshot {
 
   async _captureViewport(page, options) {
     const marks = options.marks ? await TabScreenshot._drawMarks(page) : null;
-    let png = await TabScreenshot._capturePng(page, marks);
+    let png = await this._capturePng(page, marks);
     const frame = await TabScreenshot._frameOf(page, png);
     if (options.cssScale && TabScreenshot._needsCssScale(frame)) png = this._scaleToCss(png, frame);
     frame.scale = frame.imageWidth / frame.cssWidth;
@@ -98,12 +117,20 @@ class TabScreenshot {
     return { text: ElementDigestFormatter.format(digest), count: (drawn && drawn.count) || 0 };
   }
 
-  static async _capturePng(page, marks) {
+  async _capturePng(page, marks) {
     try {
-      return (await page.webContents.capturePage()).toPNG();
+      return (await this._grab(page)).toPNG();
     } finally {
       if (marks) await page.run(VisionPageScripts.removeMarksScript()).catch(() => {});
     }
+  }
+
+  async _grab(page, clip) {
+    const image = this._stage.isOnScreen(page.view)
+      ? await page.webContents.capturePage(clip)
+      : await this._stage.capture(page.webContents, clip);
+    if (!image || image.isEmpty()) throw new Error(TabScreenshot.NOT_PAINTED_ERROR);
+    return image;
   }
 
   static async _frameOf(page, png) {

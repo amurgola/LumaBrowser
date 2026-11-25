@@ -2,11 +2,13 @@
 
 `core/browser/tab-manager/TabScreenshot.js`
 
-Captures a tab as a PNG: the viewport with its frame geometry, the full page, or one element whole.
+Captures a tab as a PNG: the viewport with its frame geometry, the full page, or one element whole. A tab its
+own window is not showing is captured on the [CaptureStage](CaptureStage.md).
 
 ## Methods
 
-- `new TabScreenshot(nativeImage)`; `nativeImage` is optional and loaded from Electron on first rescale.
+- `new TabScreenshot(nativeImage, stage)`; `nativeImage` is optional and loaded from Electron on first rescale,
+  `stage` is a [CaptureStage](CaptureStage.md) by default.
 - `capture(page, { selector, fullPage, marks, cssScale })`:
   - `selector` (wins over the other options): the first matching element, whole and at device pixels.
     The page scrolls it to the middle of the viewport and measures it; an element that fits is clipped
@@ -23,6 +25,23 @@ Captures a tab as a PNG: the viewport with its frame geometry, the full page, or
     `finally`, and returns `{ text, count }`.
 - `TabScreenshot.elementRectScript(selector)`: the in-page script that scrolls the element to the centre
   and answers `{ success, x, y, width, height, viewportWidth, viewportHeight }` in viewport CSS px.
+
+## A tab its own window is not showing
+
+`capture` asks the stage first (`isOnScreen`). A tab whose window is minimised or in the tray, or that sits
+behind the tab on screen, cannot be captured where it is: the capture answers an empty image or never answers
+([CaptureStage](CaptureStage.md) has the measurements). The whole capture then runs with the view lent to the
+stage, so growing the view for a full page or a tall element really resizes the page:
+
+- on the stage the page is let go of the viewport it was told ([TabViewManager](../TabViewManager.md)
+  `freeViewport`). A silent or hidden tab in a tray window is pinned to that size by device emulation, and a
+  full-page capture came out with the bottom of the page blank;
+- every capture on the stage waits for the first painted frame (`CaptureStage.capture`);
+- once the view is back in its own window, `layoutTab` places the tab again, which tells its page the viewport
+  again where the window still sizes nothing.
+
+A page that paints nothing in time, on the stage or in a window that is showing, is the error
+`NOT_PAINTED_ERROR` ("The page has not painted anything to capture yet") instead of a broken image.
 
 ## Why
 

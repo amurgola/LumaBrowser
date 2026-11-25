@@ -14,6 +14,12 @@ the local LLM server (`core.llmServer.local`) and the grounding server
 - `localEntry()`, `groundingEntry()`: the live provider entry, recomputed on
   every call; `null` when the service is missing, lacks the method, returns
   nothing or throws.
+- `localConnection()`: `{ baseUrl, apiKey, model }` of the local server while
+  it is serving
+  ([LocalServerConnection](../../llm-server/server/LocalServerConnection.md)`.ofReady`
+  over the service's `runtimeServer`), else `null`; also `null` without a
+  service or when the read throws. `model` is the name the running runtime
+  answers to, which the entry (the installed file's name) does not know.
 - `ensureReady(config, { withVision })` returns `{ ok, error?, code?, runtimeId?, runtimeName?, installable? }`.
   Non-managed providers and a local service without `ensureRunning` are `{ ok: true }`.
   The local server gets `ensureRunning({ withVision?, model? })`: `withVision: true`

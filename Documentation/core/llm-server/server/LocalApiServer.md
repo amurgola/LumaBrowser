@@ -26,7 +26,12 @@ starts a model. Independent of Network Sharing, the LAN surface behind a PIN.
 - `start(port)` binds or rebinds via [LocalApiListener](LocalApiListener.md);
   resolves `{ success, port }` or `{ success: false, error }`, never rejects.
 - `stop()` resolves `{ success: true }`.
-- `getApp()` the Express app (built once): [OpenAiLocalRouter](OpenAiLocalRouter.md),
+- `getApp()` the Express app (built once): first a gate that awaits
+  `llmServerService.reclaimCard()` on every POST (every POST here is a model
+  call: chat, completions, embeddings, Responses, Messages; a failure still lets
+  the request through; GETs never wait), so a hotswap card a pool member took
+  while the chat model slept comes back before the request wakes it; then
+  [OpenAiLocalRouter](OpenAiLocalRouter.md),
   [OpenAiResponsesRouter](OpenAiResponsesRouter.md) and
   [AnthropicMessagesRouter](AnthropicMessagesRouter.md) on the same origin (the two
   translating routers share one deps set: `getUpstream`, `hostDial`, `warn`),

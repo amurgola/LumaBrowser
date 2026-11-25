@@ -11,7 +11,10 @@ it use the loaded local model.
 
 - `OpenAiResponsesRouter.create(deps)` returns an Express router. `deps`:
   - `getUpstream()` (required, throws without it) returns
-    `{ baseUrl, apiKey?, modelId }` for a ready server, else `null`;
+    `{ baseUrl, apiKey?, modelId, requestModel? }` for a ready server, else `null`.
+    The request to the server names `requestModel` when the upstream has one
+    ([LocalApiUpstream](LocalApiUpstream.md)`.requestModel`), else `modelId`;
+    replies always name `modelId`;
   - `hostDial()` returns the host's reasoning dial, used only when the client
     said nothing about reasoning;
   - `warn(message)` (defaults to `console.warn('[local-api]', ...)`).

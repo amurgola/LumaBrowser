@@ -10,8 +10,11 @@ running llama-server, so everything llama-server understands (tool calls,
 ## Methods
 
 - `OpenAiLocalRouter.create(deps)` returns an Express router. `deps`:
-  - `getUpstream()` (required) returns `{ baseUrl, apiKey?, modelId, thinking? }`
-    for a ready server, else `null`;
+  - `getUpstream()` (required) returns `{ baseUrl, apiKey?, modelId, requestModel?, thinking? }`
+    for a ready server, else `null`.
+    The request to the server names `requestModel` when the upstream has one
+    ([LocalApiUpstream](LocalApiUpstream.md)`.requestModel`), else `modelId`;
+    replies always name `modelId`;
   - `listModels()` resolves to `[{ id, current? }]` for `/v1/models`;
   - `hostDial()` returns the host's reasoning dial, used only for silent clients;
   - `getThinking()` returns probe facts for the loaded model (falls back to

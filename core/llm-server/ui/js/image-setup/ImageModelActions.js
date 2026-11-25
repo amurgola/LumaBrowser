@@ -16,6 +16,9 @@ export default class ImageModelActions {
     else if (act === 'loras') this._panel.loraModal.open(id);
     else if (act === 'update-file') await this._updateFile(id, btn);
     else if (act === 'uninstall') await this._uninstall(id, btn);
+    else if (act === 'int8-build') await this._buildInt8(id, btn);
+    else if (act === 'int8-cancel') await this._cancelInt8(id, btn);
+    else if (act === 'int8-remove') await this._removeInt8(id, btn);
   }
 
   async _download(act, id, btn) {
@@ -81,6 +84,40 @@ export default class ImageModelActions {
       await this._panel.reload('server');
       this._panel.modelsCard.paint();
     }
+  }
+
+  async _buildInt8(id, btn) {
+    if (btn) btn.disabled = true;
+    this._panel.store.downloadError = null;
+    try {
+      const result = await this._panel.api().buildInt8Weights({ id });
+      if (result && result.success === false && !result.canceled) this._panel.store.downloadError = result.error || 'Could not build faster weights.';
+    } catch (err) {
+      this._panel.store.downloadError = (err && err.message) || 'Could not build faster weights.';
+    } finally {
+      await this._refreshAfterInt8();
+    }
+  }
+
+  async _cancelInt8(id, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Stopping…'; }
+    try { await this._panel.api().cancelInt8Weights(id); } catch (_) {}
+  }
+
+  async _removeInt8(id, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      const result = await this._panel.api().removeInt8Weights(id);
+      if (result && result.success === false) this._panel.store.downloadError = result.error || 'Could not remove faster weights.';
+    } finally {
+      await this._refreshAfterInt8();
+    }
+  }
+
+  async _refreshAfterInt8() {
+    await this._panel.refreshModels();
+    await this._panel.reload('server');
+    this._panel.modelsCard.paint();
   }
 
   async _uninstall(id, btn) {

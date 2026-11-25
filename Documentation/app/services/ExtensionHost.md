@@ -7,9 +7,10 @@ coreServices map extensions receive as `context.sharedServices`.
 
 ## Methods
 
-- `new ExtensionHost(ctx)`; `build()` adds `extensionManager` over
-  `<root>/extensions` and `<dataDir>/extensions`, with the IPC bridge, REST
-  gateway and MCP aggregator.
+- `new ExtensionHost(ctx)`; `build()` installs the
+  [AddonModuleResolver](../../core/shell/extensions/AddonModuleResolver.md) for
+  `<dataDir>/extensions`, then adds `extensionManager` over `<root>/extensions` and
+  `<dataDir>/extensions`, with the IPC bridge, REST gateway and MCP aggregator.
 - `ExtensionHost.coreServices(services)` returns `{ database, llm, browser: null,
   identity, chromeExtensions, adblocker, networkWatcherService,
   networkInterceptor, activityLog, ttsServer, sttServer, apiSecurity, dashboard }`.

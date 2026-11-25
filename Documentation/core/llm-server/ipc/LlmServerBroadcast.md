@@ -34,3 +34,12 @@ that follow it and no others.
 ## Defaults changes
 
 `LlmServerBroadcast.relayDefaults(llmServerService)` (wired beside `wire` in LlmServerIpcHandlers) sends every change of the launch defaults to all renderers on the server event channel as `{ type: 'defaults-changed', payload: { defaults } }`. The Setup page's Defaults card redraws on it. The other subscribers of the channel act only on the types they know.
+
+## Mode changes
+
+`relayModes(modeRegistry)` (wired in LlmServerIpcHandlers next to `chat.listModes`) sends
+`{ type: 'modes-changed', payload: {} }` on the server event channel whenever a chat mode is
+registered or removed ([ChatModeRegistry](../chat/ChatModeRegistry.md) `onChange`). A mode can
+appear after the chat page loaded: "Chat with agent" registers only once the first custom agent
+exists, and an add-on installed while the app runs registers its modes then.
+[ChatSubscriptions](../ui/js/chat/ChatSubscriptions.md) refetches the list on it.

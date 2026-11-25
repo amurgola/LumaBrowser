@@ -25,10 +25,12 @@ class HotswapWiring {
 
   _register(serverId, server) {
     if (!server || typeof server.stop !== 'function') return;
-    this._hotswap.register(serverId, {
+    const hooks = {
       stop: () => server.stop(),
       getState: () => HotswapWiring._stateOf(server),
-    });
+    };
+    if (typeof server.suspend === 'function') hooks.suspend = () => server.suspend();
+    this._hotswap.register(serverId, hooks);
   }
 
   static _stateOf(server) {

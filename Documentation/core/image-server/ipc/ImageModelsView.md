@@ -6,8 +6,8 @@ The Image Setup models view (folder config, scan with display names, shared desc
 
 ## Methods
 
-- `new ImageModelsView({ imageServerService, scanner?, catalog? })`.
-- `view()` / `setModelsDir(dir)` resolve `{ config, scan, descriptors }`; each scanned model gets `displayName = service.resolveModelDisplayName(id)`; an empty dir resets to the default.
+- `new ImageModelsView({ imageServerService, scanner?, catalog?, training?, int8Weights? })`. `int8Weights` is the [Int8WeightsBuilder](Int8WeightsBuilder.md) the IPC layer runs builds on (a private one by default).
+- `view()` / `setModelsDir(dir)` resolve `{ config, scan, descriptors }`; each scanned model gets `displayName = service.resolveModelDisplayName(id)` and `int8Weights = builder.describe(model)` (`{ buildable, present, file, bytes, estimatedBytes, building }`); an empty dir resets to the default.
 - `setKind(modelId, kind)` (`edit` / `generate` / `video`) writes `kind` (and a missing `id`) onto the model's manifest, creating it if needed, and resolves a fresh view. Refusals throw `modelId is required.`, `kind must be "edit", "generate", or "video".`, `Model "<id>" not found.`.
 - `catalogView()` `{ models, descriptors }` (descriptors without the installed overlay, which the renderer applies).
 - `ImageModelsView.descriptors(scan)` installed-model descriptors (`ModelDescriptor.toImageInstalledDescriptor`).

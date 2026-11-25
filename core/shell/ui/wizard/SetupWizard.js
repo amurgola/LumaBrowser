@@ -8,6 +8,7 @@ import PersonaStep from './steps/PersonaStep.js';
 import WebhookStep from './steps/WebhookStep.js';
 import WorkflowStep from './steps/WorkflowStep.js';
 import ModalGuard from './ModalGuard.js';
+import WizardAddons from './WizardAddons.js';
 import WizardApis from './WizardApis.js';
 import WizardFinisher from './WizardFinisher.js';
 import WizardPersonas from './WizardPersonas.js';
@@ -28,6 +29,8 @@ export default class SetupWizard {
     this.extensions = [];
     this.state = WizardState.initial();
     this.extensionsReady = Promise.resolve();
+    this.addons = new WizardAddons();
+    this.addonsReady = Promise.resolve();
     this._speedTimers = [];
     this._currentIdx = 0;
     this._steps = [];
@@ -40,6 +43,7 @@ export default class SetupWizard {
   async start() {
     this._log('start() called');
     this.extensionsReady = this._loadExtensions();
+    this.addonsReady = this.addons.load();
     this.applyPersona(WizardPersonas.DEFAULT, { silent: true });
     this.rebuildSteps();
     this._currentIdx = 0;
@@ -85,10 +89,16 @@ export default class SetupWizard {
   }
 
   enabledExtensions() {
-    if (this.extensions.length > 0) {
-      return this.extensions.filter((ext) => this.state.extensionOverrides.get(ext.id)).map((ext) => ext.id);
-    }
     return [...this.state.extensionOverrides].filter(([, enabled]) => enabled).map(([id]) => id);
+  }
+
+  pendingAddons() {
+    return this.addons.pending(this.enabledExtensions(), this.extensions.map((ext) => ext.id));
+  }
+
+  extensionName(id) {
+    const ext = this.extensions.find((e) => e.id === id);
+    return (ext && ext.name) || this.addons.nameOf(id);
   }
 
   isPlainCopy() {

@@ -1,4 +1,5 @@
 const ActionEvidenceScripts = require('../ActionEvidenceScripts');
+const KeyCodes = require('./KeyCodes');
 const NavigationReply = require('./NavigationReply');
 const TargetScripts = require('./TargetScripts');
 
@@ -35,15 +36,7 @@ class KeyPresser {
     // is not reported as the key's effect.
     const fp = ${ActionEvidenceScripts.beforeExpr('target === document.body ? null : target')};
     const keyName = ${JSON.stringify(key)};
-    const opts = { key: keyName, code: 'Key' + keyName, bubbles: true, cancelable: true };
-    if (keyName === 'Enter') opts.code = 'Enter';
-    if (keyName === 'Escape') opts.code = 'Escape';
-    if (keyName === 'Tab') opts.code = 'Tab';
-    if (keyName === 'Backspace') opts.code = 'Backspace';
-    if (keyName === 'ArrowDown') opts.code = 'ArrowDown';
-    if (keyName === 'ArrowUp') opts.code = 'ArrowUp';
-    if (keyName === 'ArrowLeft') opts.code = 'ArrowLeft';
-    if (keyName === 'ArrowRight') opts.code = 'ArrowRight';
+    const opts = { key: keyName, code: ${JSON.stringify(KeyCodes.codeOf(key))}, bubbles: true, cancelable: true };
     const down = new KeyboardEvent('keydown', opts);
     const handledByPage = !target.dispatchEvent(down); // false when the page called preventDefault
     target.dispatchEvent(new KeyboardEvent('keypress', opts));

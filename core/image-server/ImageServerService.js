@@ -50,6 +50,12 @@ class ImageServerService {
     return this.slots().find((slot) => slot.role === normalized).server;
   }
 
+  reclaimCard(role) {
+    return Promise.resolve()
+      .then(() => this._deps.hotswap.reclaim(ImageSlotRoles.normalize(role)))
+      .catch(() => null);
+  }
+
   slots() {
     return [
       { role: ImageSlotRoles.GENERATE, server: this.runtimeServer, defaultKey: 'modelId' },

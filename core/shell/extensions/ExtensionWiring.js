@@ -1,4 +1,5 @@
 const path = require('path');
+const EsModuleSource = require('./EsModuleSource');
 const ExtensionUrls = require('./ExtensionUrls');
 const ManifestFields = require('./ManifestFields');
 const McpToolSetMerger = require('./McpToolSetMerger');
@@ -32,7 +33,7 @@ class ExtensionWiring {
       for (const descriptor of ExtensionWiring._chatModeDescriptors(manifest, context)) {
         if (!descriptor) continue;
         if (chatUiUrl && !descriptor.chatUiUrl) descriptor.chatUiUrl = chatUiUrl;
-        if (chatUiUrl && descriptor.chatUiUrl === chatUiUrl) descriptor.chatUiModule = ExtensionWiring.isModuleBundle(manifest);
+        if (chatUiUrl && descriptor.chatUiUrl === chatUiUrl) descriptor.chatUiModule = ExtensionWiring.isModuleFile(manifest, ManifestFields.file(manifest.chatUi));
         context.chat.registerMode(descriptor);
       }
     } catch (err) {
@@ -50,7 +51,7 @@ class ExtensionWiring {
         id: ManifestFields.option(definition, 'id') || id,
         label: ManifestFields.option(definition, 'label') || id,
         url: uiFile ? ExtensionUrls.uiAsset(id, uiFile) : null,
-        module: uiFile ? ExtensionWiring.isModuleBundle(manifest) : false,
+        module: uiFile ? ExtensionWiring.isModuleFile(manifest, uiFile) : false,
         group: ManifestFields.option(definition, 'group') || undefined,
       }, id);
     } catch (err) {
@@ -100,8 +101,8 @@ class ExtensionWiring {
     return Array.isArray(exported) ? exported : [exported];
   }
 
-  static isModuleBundle(manifest) {
-    return !manifest._userInstalled && manifest.distributable !== true;
+  static isModuleFile(manifest, relFile) {
+    return !!(relFile && manifest && manifest._dir) && EsModuleSource.isModule(path.resolve(manifest._dir, relFile));
   }
 
   static _chatUiUrl(id, manifest) {
