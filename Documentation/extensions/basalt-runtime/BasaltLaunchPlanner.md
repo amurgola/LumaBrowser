@@ -12,8 +12,10 @@ the router, chat, Setup UI and context estimator read.
   (`suspend: { path: '/v1/sleep' }` when the pack can sleep; see Hotswap suspend below).
   - Throws `basalt planLaunch: model is required`, `runtime has no binaryPath`,
     `model has no pack path`, `port is required`, and
-    [BasaltCard](BasaltCard.md)`.NO_CARD_REASON` when neither the diagnostics
-    nor the install manifest name a Blackwell card.
+    [BasaltCard](BasaltCard.md)`.noCardReason(build)` when neither the
+    diagnostics nor the install manifest name a card the runtime's build takes
+    (the build is [BasaltCatalog](BasaltCatalog.md)`.buildFor(runtime.id)`; a
+    runtime that is no Basalt build throws too).
   - Pack facts: [BasaltModelEntries](BasaltModelEntries.md)`.forModel`; the
     chat family is the entry's, else core `ModelFamilies.detect`.
   - Slots: `overrides.maxConcurrent` clamped to 1..8. KV:
@@ -29,7 +31,8 @@ the router, chat, Setup UI and context estimator read.
     `--spec 0` for `overrides.noSpecDrafter`, `--vision dynamic`,
     `--api-key <key>`, `runtime.extraArgs`, and the user's own flags for the
     model (core `UserArgs.normalize`) last.
-  - Cards: when the user's flags name them (`--gpu 0,1` or `--gpu=0,1`) the
+  - Cards: when the user's flags name them (`--gpu 0,1 --gpu-mode peer` or
+    `--gpu=0,1`; from Basalt 0.5.7 a list needs `--gpu-mode`) the
     planner leaves its own `--gpu` out and the GPU note says the extra flags
     pick the cards. The context is still sized for the main card and
     `plan.singleGpu` and `plan.perGpu` still describe it alone.
@@ -59,7 +62,9 @@ under it, so none is set. A second card is the user's choice through the extra
 flags, not the planner's: on an RTX 5090 with an RTX 3090 the second card
 raised Qwen3.8 Flash Next's decode only deep into a long context and cost a
 little on short conversations (2026-11-22), and only the LumaByte build takes
-an RTX 40 or RTX 30 series card there. `plan.modelFamily` is what the chat reads for the
+an RTX 40 or RTX 30 series card, there or as the main card. On a host whose
+cards are all older the context is sized for that card: Qwen3.8 27B at the
+default 131,072 steps down to 98,304 on a 24 GB RTX 3090. `plan.modelFamily` is what the chat reads for the
 native tool-call default and the sampler. Vision `dynamic` costs no VRAM at
 rest but pins 0.85 GiB of RAM, so text launches leave it off, the same contract
 as llama.cpp's projector. Idle unload is the app's (it stops the process), so

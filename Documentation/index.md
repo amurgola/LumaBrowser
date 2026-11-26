@@ -3223,7 +3223,7 @@ Android devices (emulators from the user's Android SDK) live in a browser tab: t
 ## extensions/basalt-runtime
 
 - [extensions/basalt-runtime/BasaltActivation.md](extensions/basalt-runtime/BasaltActivation.md): registers the two Basalt runtime rows, their hooks and the add-on packs.
-- [extensions/basalt-runtime/BasaltCard.md](extensions/basalt-runtime/BasaltCard.md): picks the NVIDIA Blackwell card (compute capability 12.x) Basalt runs on; has `pick`, `isBlackwell`.
+- [extensions/basalt-runtime/BasaltCard.md](extensions/basalt-runtime/BasaltCard.md): picks the NVIDIA card a Basalt build runs a model on, by the build's card generations; has `pick`, `generationRank`, `noCardReason`.
 - [extensions/basalt-runtime/BasaltCatalog.md](extensions/basalt-runtime/BasaltCatalog.md): the two Basalt builds (LumaByte's and upstream's) as runtime rows with their pinned releases and supported cards; has `buildFor`, `assetFor`, `sourceUrl`, `releaseUrl`.
 - [extensions/basalt-runtime/BasaltContextSizer.md](extensions/basalt-runtime/BasaltContextSizer.md): sizes Basalt's context, against the card for the dense pack, by the engine for mixture-of-experts packs; has `fit`, `needBytes`, `formatBytes`.
 - [extensions/basalt-runtime/BasaltCudaCompanion.md](extensions/basalt-runtime/BasaltCudaCompanion.md): downloads the CUDA 13 runtime archive the core llama.cpp CUDA 13 install takes as its companion; has `fetchInto`.

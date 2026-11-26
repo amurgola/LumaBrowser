@@ -11,8 +11,8 @@ The `install` hook: installs the Basalt build a row names, end to end.
   [BasaltCatalog](BasaltCatalog.md)`.buildFor(entry.id)`; a row that is no
   Basalt build throws `UNKNOWN_BUILD`. Steps, in order:
   1. core `CudaProbe.probe` (with the nvidia-smi path diagnostics settled on)
-     and [BasaltCard](BasaltCard.md)`.pick`; no Blackwell card is
-     `NO_BLACKWELL_GPU`, before anything is fetched;
+     and [BasaltCard](BasaltCard.md)`.pick` for the build; a host with no
+     card the build takes is `NO_SUPPORTED_GPU`, before anything is fetched;
   2. [BasaltPythonFinder](BasaltPythonFinder.md)`.find`, also before the download;
   3. [BasaltReleaseArchive](BasaltReleaseArchive.md)`.install` of that build;
   4. [BasaltCudaRuntime](BasaltCudaRuntime.md)`.install` into the archive's

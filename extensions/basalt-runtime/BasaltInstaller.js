@@ -35,7 +35,7 @@ class BasaltInstaller {
   }
 
   async execute() {
-    const card = await this._requireBlackwellCard();
+    const card = await this._requireMainCard();
     const python = await this._parts.findPython();
     const { binaryPath, asset } = await this._unpackRelease();
     const layout = new BasaltLayout(binaryPath);
@@ -54,11 +54,11 @@ class BasaltInstaller {
     };
   }
 
-  async _requireBlackwellCard() {
+  async _requireMainCard() {
     const cuda = await this._parts.probeCuda();
-    const card = BasaltCard.pick(cuda && cuda.available ? cuda.devices : []);
+    const card = BasaltCard.pick(cuda && cuda.available ? cuda.devices : [], this._build);
     if (card) return card;
-    throw new RuntimeInstallError(BasaltCard.NO_CARD_REASON, 'NO_BLACKWELL_GPU', { devices: (cuda && cuda.devices) || [] });
+    throw new RuntimeInstallError(BasaltCard.noCardReason(this._build), 'NO_SUPPORTED_GPU', { devices: (cuda && cuda.devices) || [] });
   }
 
   _unpackRelease() {

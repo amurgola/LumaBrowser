@@ -5,15 +5,16 @@
 The Basalt runtime add-on: the Basalt engine as an optional LLM runtime, in
 two builds the user chooses between, plus its five `.basalt` model packs as
 one-click add-on models. Basalt is a C++/CUDA engine with its own Python
-server (OpenAI, Anthropic and Responses APIs) whose main card must be an
-NVIDIA Blackwell card (compute capability 12.0). It runs natively on Windows
-and Linux x64; no WSL. `distributable`.
+server (OpenAI, Anthropic and Responses APIs). Upstream's build needs an
+NVIDIA Blackwell card (compute capability 12.0); the LumaByte build also runs
+on Ada (8.9) and Ampere (8.6) cards. It runs natively on Windows and Linux
+x64; no WSL. `distributable`.
 
 ## The two builds
 
 | Row | What it is | Cards |
 |---|---|---|
-| Basalt LumaByte (RTX 50 + RTX 30/40 second card), `basalt-luma` | [amurgola/basalt](https://github.com/amurgola/basalt) `v0.5.6-luma.1`: upstream's development branch plus the fork's commits | RTX 50 series main card; an RTX 50, RTX 40 or RTX 30 series second card can hold experts for Qwen3.8 Flash Next |
+| Basalt LumaByte (RTX 50, RTX 40, RTX 30), `basalt-luma` | [amurgola/basalt](https://github.com/amurgola/basalt) `v0.5.7-luma.1`: upstream 0.5.7, the Ada port and the fork's commits, built for three card generations | An RTX 50, RTX 40 or RTX 30 series card as the only card, the main card or a second card |
 | Basalt upstream (RTX 50 only), `basalt` | [jesdga95/basalt](https://github.com/jesdga95/basalt) `v0.5.5`, unmodified | RTX 50 series only |
 
 Both load the same packs. Each row's name carries its card series and its
@@ -35,7 +36,7 @@ an install. See
    [BasaltModelEntries](BasaltModelEntries.md) rows.
 2. The runtimes view calls `detect` ([BasaltDetector](BasaltDetector.md)).
 3. Install ([BasaltInstaller](BasaltInstaller.md)) refuses a host without a
-   Blackwell card ([BasaltCard](BasaltCard.md)) or a Python 3.10 to 3.13
+   card the row's build takes ([BasaltCard](BasaltCard.md)) or a Python 3.10 to 3.13
    ([BasaltPythonFinder](BasaltPythonFinder.md)), then unpacks the row's
    pinned release ([BasaltReleaseArchive](BasaltReleaseArchive.md)), puts the CUDA 13
    libraries beside the binary ([BasaltCudaRuntime](BasaltCudaRuntime.md),
@@ -73,11 +74,18 @@ core modules load through [CoreRequire](CoreRequire.md).
   nothing in every attempt (2026-11-21).
 - A context past 262,144 with YaRN ended the engine on Windows (2026-11-21), so
   the planner never passes rope flags and caps Qwen3.8-27B at 262,144.
-- The main card must be Blackwell in both builds. The planner uses the main
-  card alone; a second card is used only when the model's extra flags name the
-  cards (`--gpu 0,1`), and an RTX 40 or RTX 30 series card there needs the
-  LumaByte build (the upstream build refuses it at start). The app's VRAM
-  accounting does not know about a second card picked this way.
+- The planner uses one card: the newest generation the build takes, then the
+  most VRAM. A second card is used only when the model's extra flags name the
+  cards and the mode (`--gpu 0,1 --gpu-mode peer`; Basalt 0.5.7 refuses a list
+  without a mode), and an RTX 40 or RTX 30 series card needs the LumaByte build
+  (the upstream build refuses it at start). The app's VRAM accounting does not
+  know about a second card picked this way.
+- An RTX 3090 reads prompts about fourteen times slower than an RTX 5090 with
+  Qwen3.8 27B (about 1,050 against 14,000 tok/s, 2026-11-25), and decodes at
+  about a third of its speed.
+- With an RTX 50 main card and an older second card, Qwen3.8 Flash Next reads
+  prompts 15 to 18% slower on `v0.5.7-luma.1` than on `v0.5.6-luma.1`
+  (2026-11-25); decode is level.
 - Qwen3.8 Flash Next filled an RTX 5090 that also drives the desktop and ended
   with `verify: a device wait timed out` at Basalt's default 700 MiB VRAM
   reserve (2026-11-21); `--vram-reserve-mib 1500` in the model's extra flags
@@ -92,4 +100,4 @@ Basalt measured faster than llama.cpp on the RTX 5090 with Qwen3.8-27B (NVFP4
 against Q6_K, so the weights differ): about 206 to 279 tok/s drafted decode
 against 120 to 149, and 13,400 to 15,400 tok/s prompt reading against 3,000 to
 3,500 (2026-11-21). It shipped as an add-on, like NInfer, so users without a
-Blackwell card never see the row.
+card the add-on runs on never see the row.

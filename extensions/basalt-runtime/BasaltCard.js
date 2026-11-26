@@ -1,24 +1,34 @@
 const BasaltCatalog = require('./BasaltCatalog');
 
 class BasaltCard {
-  static COMPUTE_MAJOR = 12;
   static MiB = 1024 * 1024;
-  static NO_CARD_REASON = 'Basalt needs an NVIDIA Blackwell card (compute capability 12.0, such as the RTX 5090) as its main GPU, and none was found.';
+  static NOT_A_MAIN_CARD = -1;
 
-  static pick(devices) {
+  static pick(devices, build) {
     const candidates = (Array.isArray(devices) ? devices : [])
-      .map((device, index) => ({ device, index }))
-      .filter(({ device }) => BasaltCard.isBlackwell(device));
+      .map((device, index) => ({ device, index, rank: BasaltCard.generationRank(device, build) }))
+      .filter((candidate) => candidate.rank !== BasaltCard.NOT_A_MAIN_CARD);
     if (candidates.length === 0) return null;
-    const best = candidates.reduce((a, b) => (BasaltCard._vram(b.device) > BasaltCard._vram(a.device) ? b : a));
+    const best = candidates.reduce((a, b) => (BasaltCard._beats(b, a) ? b : a));
     return BasaltCard._describe(best.device, best.index);
   }
 
-  static isBlackwell(device) {
-    if (!device) return false;
+  static generationRank(device, build) {
+    if (!device || !build) return BasaltCard.NOT_A_MAIN_CARD;
     const capability = String(device.computeCapability || '');
-    if (/^\d+\.\d+$/.test(capability)) return Number(capability.split('.')[0]) === BasaltCard.COMPUTE_MAJOR;
-    return new RegExp(BasaltCatalog.BLACKWELL_NAME_PATTERN, 'i').test(String(device.name || ''));
+    const hasCapability = /^\d+\.\d+$/.test(capability);
+    return build.mainCards.findIndex((card) => (hasCapability
+      ? new RegExp(card.capability).test(capability)
+      : new RegExp(card.names, 'i').test(String(device.name || ''))));
+  }
+
+  static noCardReason(build) {
+    return `${build.name} needs an NVIDIA ${BasaltCatalog.mainCardsText(build)} card as its main GPU, and none was found.`;
+  }
+
+  static _beats(challenger, holder) {
+    if (challenger.rank !== holder.rank) return challenger.rank < holder.rank;
+    return BasaltCard._vram(challenger.device) > BasaltCard._vram(holder.device);
   }
 
   static _vram(device) {

@@ -7,7 +7,9 @@ class BasaltCatalog {
 
   static CUDA_RUNTIME_ID = 'llama-cpp-cuda13';
 
-  static BLACKWELL_NAME_PATTERN = 'RTX 50\\d0|RTX PRO \\d{4}.*Blackwell';
+  static BLACKWELL = Object.freeze({ series: 'RTX 50', capability: '^12\\.', names: 'RTX 50\\d0|RTX PRO \\d{4}.*Blackwell' });
+  static ADA = Object.freeze({ series: 'RTX 40', capability: '^8\\.9$', names: 'RTX 40\\d0|RTX \\d{4} Ada' });
+  static AMPERE = Object.freeze({ series: 'RTX 30', capability: '^8\\.6$', names: 'RTX 30\\d0|RTX A\\d{4}' });
 
   static BINARY_NAMES = { win32: ['basalt.exe'], linux: ['basalt'] };
 
@@ -50,18 +52,20 @@ class BasaltCatalog {
   static BUILDS = [
     {
       runtimeId: BasaltCatalog.LUMA_RUNTIME_ID,
-      name: 'Basalt LumaByte (RTX 50 + RTX 30/40 second card)',
+      name: 'Basalt LumaByte (RTX 50, RTX 40, RTX 30)',
       repo: { owner: 'amurgola', repo: 'basalt' },
+      mainCards: [BasaltCatalog.BLACKWELL, BasaltCatalog.ADA, BasaltCatalog.AMPERE],
       description:
-        'Cards: an NVIDIA RTX 50 series main card, which every model still needs, plus an optional RTX 50, RTX 40 '
-        + 'or RTX 30 series second card that holds experts for Qwen3.8 Flash Next (measured with an RTX 3090; the '
-        + 'RTX 40 path is upstream\'s and was not run). LumaByte\'s build of its Basalt fork: upstream\'s '
-        + 'development branch with both older-card options compiled in and a sleep that gives the VRAM back on '
-        + 'Windows. A second card is used only when the model\'s extra flags name it, such as --gpu 0,1. Loads '
-        + 'the same .basalt model packs.',
+        'Cards: an NVIDIA RTX 50, RTX 40 or RTX 30 series card, as the only card, the main card or a second '
+        + 'card (measured on an RTX 5090 and an RTX 3090; the RTX 40 path was not run here). An older card reads '
+        + 'prompts much slower than an RTX 50: about 1,050 tokens a second on an RTX 3090 against 14,000 on an '
+        + 'RTX 5090 with Qwen3.8 27B. LumaByte\'s build of its Basalt fork: upstream 0.5.7 with code for all '
+        + 'three card generations and a sleep that gives the VRAM back on Windows. A second card is used only '
+        + 'when the model\'s extra flags name it, such as --gpu 0,1 --gpu-mode peer. Loads the same .basalt '
+        + 'model packs.',
       requirementNote:
-        'An NVIDIA RTX 50 series main card (an RTX 40 or RTX 30 series card can only be a second card), a driver '
-        + 'of the R580 branch or newer, and Python 3.10 to 3.13 for the install.',
+        'An NVIDIA RTX 50, RTX 40 or RTX 30 series card, a driver of the R580 branch or newer, and Python 3.10 '
+        + 'to 3.13 for the install.',
       options: [...BasaltCatalog.BASE_OPTIONS, ...BasaltCatalog.SLEEP_OPTIONS],
       release: {
         tag: 'v0.5.6-luma.1',
@@ -83,6 +87,7 @@ class BasaltCatalog {
       runtimeId: BasaltCatalog.UPSTREAM_RUNTIME_ID,
       name: 'Basalt upstream (RTX 50 only)',
       repo: { owner: 'jesdga95', repo: 'basalt' },
+      mainCards: [BasaltCatalog.BLACKWELL],
       description:
         'Cards: NVIDIA RTX 50 series only (Blackwell, compute capability 12.0), as the main card and as a second '
         + 'card; any older card is refused. Upstream\'s unmodified release: a C++/CUDA engine with its own '
@@ -124,6 +129,12 @@ class BasaltCatalog {
     return `${BasaltCatalog.sourceUrl(build)}/releases/tag/${build.release.tag}`;
   }
 
+  static mainCardsText(build) {
+    const series = build.mainCards.map((card) => card.series);
+    const listed = series.length > 1 ? `${series.slice(0, -1).join(', ')} or ${series[series.length - 1]}` : series[0];
+    return `${listed} series`;
+  }
+
   static assetFor(build, platformKey = `${process.platform}-${process.arch}`) {
     const asset = build.release.assets[platformKey];
     if (!asset) return null;
@@ -143,8 +154,8 @@ class BasaltCatalog {
       requiresHw: {
         kind: 'nvidia-cuda',
         cudaMajor: 13,
-        gpuNameMatch: BasaltCatalog.BLACKWELL_NAME_PATTERN,
-        gpuNameNote: 'Basalt needs an NVIDIA RTX 50 series card (Blackwell, compute capability 12.0) as its main card; none was detected.',
+        gpuNameMatch: build.mainCards.map((card) => card.names).join('|'),
+        gpuNameNote: `This build needs an NVIDIA ${BasaltCatalog.mainCardsText(build)} card as its main card; none was detected.`,
       },
       requirementNote: build.requirementNote,
       options: JSON.parse(JSON.stringify(build.options)),

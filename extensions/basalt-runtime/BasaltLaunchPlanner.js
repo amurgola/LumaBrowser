@@ -1,4 +1,5 @@
 const BasaltCard = require('./BasaltCard');
+const BasaltCatalog = require('./BasaltCatalog');
 const BasaltContextSizer = require('./BasaltContextSizer');
 const BasaltKvMode = require('./BasaltKvMode');
 const BasaltModelEntries = require('./BasaltModelEntries');
@@ -60,10 +61,12 @@ class BasaltLaunchPlanner {
   }
 
   _resolveCard() {
+    const build = BasaltCatalog.buildFor(this._runtime.id);
+    if (!build) throw new Error(`basalt planLaunch: ${this._runtime.id} is not a Basalt build`);
     const devices = this._diagnostics && this._diagnostics.cuda && this._diagnostics.cuda.devices;
     const manifestCard = this._runtime.manifest && this._runtime.manifest.gpu;
-    this._card = BasaltCard.pick(devices) || (manifestCard && manifestCard.index != null ? manifestCard : null);
-    if (!this._card) throw new Error(BasaltCard.NO_CARD_REASON);
+    this._card = BasaltCard.pick(devices, build) || (manifestCard && manifestCard.index != null ? manifestCard : null);
+    if (!this._card) throw new Error(BasaltCard.noCardReason(build));
   }
 
   _resolveSlots() {
