@@ -11,6 +11,8 @@ Picks the NVIDIA card a Basalt build runs a model on.
   the build's most preferred generation with the most VRAM, the lowest index
   among equals, as `{ index, name, vramBytes, computeCapability }`; null when
   the build takes none of them.
+- `BasaltCard.describe(device, index)`: a diagnostics device at its nvidia-smi
+  position in that shape, for a card the user's flags name.
 - `BasaltCard.generationRank(device, build)`: the position of the device's
   generation in the build's `mainCards` ([BasaltCatalog](BasaltCatalog.md); 0
   is the preferred one), or `NOT_A_MAIN_CARD` (-1). The compute capability

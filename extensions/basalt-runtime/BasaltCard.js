@@ -10,7 +10,16 @@ class BasaltCard {
       .filter((candidate) => candidate.rank !== BasaltCard.NOT_A_MAIN_CARD);
     if (candidates.length === 0) return null;
     const best = candidates.reduce((a, b) => (BasaltCard._beats(b, a) ? b : a));
-    return BasaltCard._describe(best.device, best.index);
+    return BasaltCard.describe(best.device, best.index);
+  }
+
+  static describe(device, index) {
+    return {
+      index,
+      name: device.name || null,
+      vramBytes: BasaltCard._vram(device) * BasaltCard.MiB || null,
+      computeCapability: device.computeCapability || null,
+    };
   }
 
   static generationRank(device, build) {
@@ -33,15 +42,6 @@ class BasaltCard {
 
   static _vram(device) {
     return Number(device.memoryTotalMB) || 0;
-  }
-
-  static _describe(device, index) {
-    return {
-      index,
-      name: device.name || null,
-      vramBytes: BasaltCard._vram(device) * BasaltCard.MiB || null,
-      computeCapability: device.computeCapability || null,
-    };
   }
 }
 

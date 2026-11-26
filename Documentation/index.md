@@ -3223,15 +3223,15 @@ Android devices (emulators from the user's Android SDK) live in a browser tab: t
 ## extensions/basalt-runtime
 
 - [extensions/basalt-runtime/BasaltActivation.md](extensions/basalt-runtime/BasaltActivation.md): registers the two Basalt runtime rows, their hooks and the add-on packs.
-- [extensions/basalt-runtime/BasaltCard.md](extensions/basalt-runtime/BasaltCard.md): picks the NVIDIA card a Basalt build runs a model on, by the build's card generations; has `pick`, `generationRank`, `noCardReason`.
-- [extensions/basalt-runtime/BasaltCatalog.md](extensions/basalt-runtime/BasaltCatalog.md): the two Basalt builds (LumaByte's and upstream's) as runtime rows with their pinned releases and supported cards; has `buildFor`, `assetFor`, `sourceUrl`, `releaseUrl`.
+- [extensions/basalt-runtime/BasaltCard.md](extensions/basalt-runtime/BasaltCard.md): picks the NVIDIA card a Basalt build runs a model on, by the build's card generations; has `pick`, `describe`, `generationRank`, `noCardReason`.
+- [extensions/basalt-runtime/BasaltCatalog.md](extensions/basalt-runtime/BasaltCatalog.md): the two Basalt builds (LumaByte's and upstream's) as runtime rows with their pinned releases and the card generations each takes as its main card; has `buildFor`, `mainCardsText`, `assetFor`, `sourceUrl`, `releaseUrl`.
 - [extensions/basalt-runtime/BasaltContextSizer.md](extensions/basalt-runtime/BasaltContextSizer.md): sizes Basalt's context, against the card for the dense pack, by the engine for mixture-of-experts packs; has `fit`, `needBytes`, `formatBytes`.
 - [extensions/basalt-runtime/BasaltCudaCompanion.md](extensions/basalt-runtime/BasaltCudaCompanion.md): downloads the CUDA 13 runtime archive the core llama.cpp CUDA 13 install takes as its companion; has `fetchInto`.
 - [extensions/basalt-runtime/BasaltCudaRuntime.md](extensions/basalt-runtime/BasaltCudaRuntime.md): puts cudart, cuBLAS and cuBLASLt 13 beside the Basalt binary, reused from llama-cpp-cuda13 or downloaded; has `install`, `missingIn`.
 - [extensions/basalt-runtime/BasaltDetector.md](extensions/basalt-runtime/BasaltDetector.md): the `detect` hook for the row's build, reporting a partial install as not installed.
 - [extensions/basalt-runtime/BasaltInstaller.md](extensions/basalt-runtime/BasaltInstaller.md): the `install` hook for the row's build: card and Python checks, release, CUDA libraries, venv, manifest.
 - [extensions/basalt-runtime/BasaltKvMode.md](extensions/basalt-runtime/BasaltKvMode.md): maps the user's llama.cpp KV cache type onto a pack's `--kv` value; has `resolve`, `bytesPerPosition`.
-- [extensions/basalt-runtime/BasaltLaunchPlanner.md](extensions/basalt-runtime/BasaltLaunchPlanner.md): the synchronous `planLaunch` hook: the `basalt serve` argv plus the plan object the router, chat, Setup UI and context estimator read.
+- [extensions/basalt-runtime/BasaltLaunchPlanner.md](extensions/basalt-runtime/BasaltLaunchPlanner.md): the synchronous `planLaunch` hook: the `basalt serve` argv plus the plan object the router, chat, Setup UI and context estimator read; sizes a two-card split of the dense pack over both cards.
 - [extensions/basalt-runtime/BasaltLayout.md](extensions/basalt-runtime/BasaltLayout.md): the paths inside one unpacked Basalt release archive (bin, top folder, .venv).
 - [extensions/basalt-runtime/BasaltModelEntries.md](extensions/basalt-runtime/BasaltModelEntries.md): the five upstream `.basalt` packs as one-click add-on models with their per-pack launch facts; has `forModel`.
 - [extensions/basalt-runtime/BasaltPythonFinder.md](extensions/basalt-runtime/BasaltPythonFinder.md): finds a Python 3.10 to 3.13 with venv for Basalt's server; has `find`.

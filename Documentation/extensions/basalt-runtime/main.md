@@ -79,7 +79,12 @@ core modules load through [CoreRequire](CoreRequire.md).
   cards and the mode (`--gpu 0,1 --gpu-mode peer`; Basalt 0.5.7 refuses a list
   without a mode), and an RTX 40 or RTX 30 series card needs the LumaByte build
   (the upstream build refuses it at start). The app's VRAM accounting does not
-  know about a second card picked this way.
+  know about a second card picked this way, except for a split of the dense
+  Qwen3.8 27B (`--gpu 0,1 --gpu-mode split`), which the planner sizes and
+  reports over all of its cards.
+- Sleep moves the model's GPU state to RAM, so it needs about that much free
+  RAM: on a 16 GB host the engine keeps the model awake (`the model stays
+  awake (RAM: ...)`) and the app's idle unload is what gives the VRAM back.
 - An RTX 3090 reads prompts about fourteen times slower than an RTX 5090 with
   Qwen3.8 27B (about 1,050 against 14,000 tok/s, 2026-11-25), and decodes at
   about a third of its speed.

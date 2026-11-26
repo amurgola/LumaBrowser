@@ -1,7 +1,7 @@
 module.exports = {
   id: 'basalt-runtime',
   name: 'Basalt Runtime (NVIDIA RTX 50, 40, 30)',
-  version: '1.4.0',
+  version: '1.4.1',
   description:
     'Adds Basalt as an optional LLM runtime: a C++/CUDA engine with its own OpenAI-compatible '
     + 'server, running natively on Windows and Linux, plus its five .basalt model packs as '

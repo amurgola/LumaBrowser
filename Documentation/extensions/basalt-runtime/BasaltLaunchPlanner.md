@@ -35,7 +35,15 @@ the router, chat, Setup UI and context estimator read.
     `--gpu=0,1`; from Basalt 0.5.7 a list needs `--gpu-mode`) the
     planner leaves its own `--gpu` out and the GPU note says the extra flags
     pick the cards. The context is still sized for the main card and
-    `plan.singleGpu` and `plan.perGpu` still describe it alone.
+    `plan.singleGpu` and `plan.perGpu` still describe it alone, with one
+    exception: a split of a card-sized pack (`--gpu 0,1 --gpu-mode split`, or
+    `--gpu all`, on the dense Qwen3.8 27B). Its layers sit on every listed
+    card, so the context is sized against their summed VRAM less
+    `SPLIT_CARD_COST_BYTES` (5.5 GiB) for each card after the first,
+    `plan.perGpu` lists them all, `plan.vramAvailableBytes` is that sum and
+    the GPU note names the cards. A list that names a card the diagnostics do
+    not have, any other mode and any engine-sized pack keep the main card's
+    sizing.
   - `healthTimeoutMs`: core `LaunchFinalizer.healthTimeoutMs(weights)`.
   - `plan` carries the llama.cpp plan keys NInfer's carries (`contextSize`,
     `requestedContextSize`, `cacheTypeK/V` (the Basalt format), `fullOffload`,
@@ -64,7 +72,14 @@ raised Qwen3.8 Flash Next's decode only deep into a long context and cost a
 little on short conversations (2026-11-22), and only the LumaByte build takes
 an RTX 40 or RTX 30 series card, there or as the main card. On a host whose
 cards are all older the context is sized for that card: Qwen3.8 27B at the
-default 131,072 steps down to 98,304 on a 24 GB RTX 3090. `plan.modelFamily` is what the chat reads for the
+default 131,072 steps down to 98,304 on a 24 GB RTX 3090. A split over two such
+cards holds the full 262,144: measured on two RTX 3090s (2026-11-25) it took
+14.2 and 15.0 GiB, 29.2 GiB together against the 26.3 GiB the pack's figures
+price for one card, which is where the 5.5 GiB a further card costs comes from
+(its 2.5 GiB kept free plus that 3 GiB of second-stack workspace). There the
+split also read prompts about half again as fast as one card (1,600 to 1,800
+against 1,180 tok/s) and decoded level. `peer` on the same machine did not
+start: it page-locks more RAM than its 16 GB allow. `plan.modelFamily` is what the chat reads for the
 native tool-call default and the sampler. Vision `dynamic` costs no VRAM at
 rest but pins 0.85 GiB of RAM, so text launches leave it off, the same contract
 as llama.cpp's projector. Idle unload is the app's (it stops the process), so

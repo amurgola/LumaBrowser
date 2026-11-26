@@ -16,6 +16,8 @@ class BasaltLaunchPlanner {
   static HOST = '127.0.0.1';
   static SLEEP_SIZING_ON_WINDOWS = 'card';
   static SLEEP_PATH = '/v1/sleep';
+  static SPLIT_MODE = 'split';
+  static SPLIT_CARD_COST_BYTES = Math.round(5.5 * BasaltContextSizer.GiB);
 
   constructor({ model, runtime, port, overrides, apiKey, diagnostics, userArgs, platform = process.platform }) {
     this._model = model;
@@ -36,6 +38,7 @@ class BasaltLaunchPlanner {
     this._validate();
     this._resolvePack();
     this._resolveCard();
+    this._resolveSplitCards();
     this._resolveSlots();
     this._resolveKv();
     this._sizeContext();
@@ -69,6 +72,33 @@ class BasaltLaunchPlanner {
     if (!this._card) throw new Error(BasaltCard.noCardReason(build));
   }
 
+  _resolveSplitCards() {
+    this._splitCards = [];
+    if (!this._pack || this._pack.sizing !== 'card' || this._userFlag('--gpu-mode') !== BasaltLaunchPlanner.SPLIT_MODE) return;
+    const devices = (this._diagnostics && this._diagnostics.cuda && this._diagnostics.cuda.devices) || [];
+    const listed = String(this._userFlag('--gpu') || '').split(',').map((text) => text.trim()).filter(Boolean);
+    const indices = listed[0] === 'all' ? devices.map((device, index) => index) : listed.map(Number);
+    const cards = indices.map((index) => (devices[index] ? BasaltCard.describe(devices[index], index) : null));
+    if (cards.length > 1 && cards.every((card) => card && card.vramBytes)) this._splitCards = cards;
+  }
+
+  _userFlag(name) {
+    const at = this._userArgs.indexOf(name);
+    if (at !== -1) return this._userArgs[at + 1] || null;
+    const joined = this._userArgs.find((arg) => arg.startsWith(`${name}=`));
+    return joined ? joined.slice(name.length + 1) : null;
+  }
+
+  get _isSplit() {
+    return this._splitCards.length > 1;
+  }
+
+  get _sizingVramBytes() {
+    if (!this._isSplit) return this._card.vramBytes;
+    const total = this._splitCards.reduce((sum, card) => sum + card.vramBytes, 0);
+    return total - (this._splitCards.length - 1) * BasaltLaunchPlanner.SPLIT_CARD_COST_BYTES;
+  }
+
   _resolveSlots() {
     const requested = Math.floor(Number(this._overrides.maxConcurrent));
     this._slots = Number.isFinite(requested) && requested >= 1 ? Math.min(BasaltLaunchPlanner.MAX_PARALLEL, requested) : 1;
@@ -89,7 +119,7 @@ class BasaltLaunchPlanner {
       pack: this._pack,
       kv: this._kv.kv,
       slots: this._slots,
-      vramBytes: this._card.vramBytes,
+      vramBytes: this._sizingVramBytes,
     });
   }
 
@@ -174,6 +204,10 @@ class BasaltLaunchPlanner {
   _gpuNote() {
     const card = this._card;
     const described = `${card.index}${card.name ? ' (' + card.name + ')' : ''}${card.vramBytes ? ', ' + BasaltContextSizer.formatBytes(card.vramBytes) : ''}`;
+    if (this._isSplit) {
+      const cards = this._splitCards.map((each) => `${each.index}${each.name ? ' (' + each.name + ')' : ''}`).join(' and ');
+      return `GPU: the extra flags split the model over cards ${cards}; the context is sized for them together, ${BasaltContextSizer.formatBytes(this._sizingVramBytes)}.`;
+    }
     if (this._userPicksCards) return `GPU: the extra flags pick the cards; the context is sized for the main card, ${described}.`;
     return `GPU: --gpu ${described}; no other card is used.`;
   }
@@ -205,9 +239,9 @@ class BasaltLaunchPlanner {
       apiKeyRequired: !!this._apiKey,
       skippedFlags: [],
       userArgs: this._userArgs.slice(),
-      vramAvailableBytes: card.vramBytes || 0,
+      vramAvailableBytes: this._sizingVramBytes || 0,
       modelEstimatedBytes: fit.estimatedBytes,
-      perGpu: card.vramBytes ? [{ index: card.index, name: card.name, totalBytes: card.vramBytes }] : [],
+      perGpu: this._planCards().map((each) => ({ index: each.index, name: each.name, totalBytes: each.vramBytes })),
       runtimeId: this._runtime.id,
       runtimeName: this._runtime.name,
       modelName: this._model.name,
@@ -223,6 +257,11 @@ class BasaltLaunchPlanner {
       cudaDevice: card.index,
       notes: this._notes(),
     };
+  }
+
+  _planCards() {
+    if (this._isSplit) return this._splitCards;
+    return this._card.vramBytes ? [this._card] : [];
   }
 
   _wrapLaunch(plan) {

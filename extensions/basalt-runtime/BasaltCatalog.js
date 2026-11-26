@@ -68,17 +68,17 @@ class BasaltCatalog {
         + 'to 3.13 for the install.',
       options: [...BasaltCatalog.BASE_OPTIONS, ...BasaltCatalog.SLEEP_OPTIONS],
       release: {
-        tag: 'v0.5.6-luma.1',
+        tag: 'v0.5.7-luma.1',
         assets: {
           'win32-x64': {
-            name: 'basalt-v0.5.6-luma.1-windows-x64.zip',
-            bytes: 126616522,
-            sha256: 'ac47622ba30221ccaca4d14ee7bc61949953be4cd27bc1857ce225f036efeca6',
+            name: 'basalt-v0.5.7-luma.1-windows-x64.zip',
+            bytes: 198772150,
+            sha256: '0775a2ebe88103eaedc2949326b6076af5cfb3202607e74d6a22f3bd63181d09',
           },
           'linux-x64': {
-            name: 'basalt-v0.5.6-luma.1-linux-x64.tar.gz',
-            bytes: 126641929,
-            sha256: '148c4ad71872f0181059ff4236b7b87c1de259a76498632ddc265b227227a54c',
+            name: 'basalt-v0.5.7-luma.1-linux-x64.tar.gz',
+            bytes: 198330039,
+            sha256: '45fea3ba65c7f934de0f2cd1fe34e11168da153ff9f3bdb1b5f71aa4ae5533f0',
           },
         },
       },
