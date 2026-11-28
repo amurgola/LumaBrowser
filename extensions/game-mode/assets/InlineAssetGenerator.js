@@ -3,16 +3,17 @@ const AssetJob = require('./AssetJob');
 const AssetPostChain = require('./AssetPostChain');
 
 class InlineAssetGenerator {
-  static generate({ chat, s, spec, modelRef, emit }) {
-    return new InlineAssetGenerator({ chat, s, spec, modelRef, emit }).execute();
+  static generate({ chat, s, spec, modelRef, emit, onProgress = null }) {
+    return new InlineAssetGenerator({ chat, s, spec, modelRef, emit, onProgress }).execute();
   }
 
-  constructor({ chat, s, spec, modelRef, emit }) {
+  constructor({ chat, s, spec, modelRef, emit, onProgress = null }) {
     this._chat = chat;
     this._s = s;
     this._spec = spec;
     this._job = AssetJob.fromSpec(spec, modelRef);
     this._emit = emit;
+    this._onProgress = onProgress;
   }
 
   async execute() {
@@ -31,7 +32,8 @@ class InlineAssetGenerator {
   }
 
   async _render() {
-    try { return await this._chat.generateImage(AssetJob.request(this._job)); } catch (_) { return null; }
+    const hooks = typeof this._onProgress === 'function' ? { onProgress: this._onProgress } : {};
+    try { return await this._chat.generateImage({ ...AssetJob.request(this._job), ...hooks }); } catch (_) { return null; }
   }
 
   _placeholderStands() {

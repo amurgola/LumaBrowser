@@ -78,7 +78,7 @@ class SmokeCollectorScript {
               var Orig = v.Game;
               var Wrapped = new Proxy(Orig, { construct: function (T, args, N) {
                 var g = Reflect.construct(T, args, N);
-                try { S.games.push(g); } catch (_) {}
+                try { if (S.games.indexOf(g) < 0) S.games.push(g); } catch (_) {}
                 return g;
               } });
               v.Game = Wrapped;
@@ -171,6 +171,131 @@ class SmokeCollectorScript {
   // no x or y at all is not counted.)
   function isNaNNumber(v) { return typeof v === 'number' && v !== v; }
 
+  // The opaque pixel box of a texture frame ({ x, y, w, h, fw, fh }), cached per frame; null when the pixels
+  // cannot be read (a tainted or oversized image). It is what the player sees of a sprite, margins left out.
+  var trimCache = {};
+  function trimOf(o) {
+    var frame = o.frame, key = o.texture.key + '|' + (frame && frame.name);
+    if (Object.prototype.hasOwnProperty.call(trimCache, key)) return trimCache[key];
+    var box = null;
+    try {
+      var image = frame.source && frame.source.image, fw = frame.cutWidth, fh = frame.cutHeight;
+      if (image && fw > 0 && fh > 0 && fw * fh <= 1048576) {
+        var cv = document.createElement('canvas'); cv.width = fw; cv.height = fh;
+        var cx = cv.getContext('2d');
+        cx.drawImage(image, frame.cutX, frame.cutY, fw, fh, 0, 0, fw, fh);
+        var px = cx.getImageData(0, 0, fw, fh).data;
+        var minX = fw, minY = fh, maxX = -1, maxY = -1;
+        for (var y = 0; y < fh; y++) {
+          for (var x = 0; x < fw; x++) {
+            if (px[(y * fw + x) * 4 + 3] <= 32) continue;
+            if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
+          }
+        }
+        if (maxX >= 0) box = { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, fw: fw, fh: fh };
+      }
+    } catch (_) {}
+    trimCache[key] = box;
+    return box;
+  }
+  // Where the object's frame is drawn, as a world rectangle (rotation left out).
+  function drawnRect(o) {
+    var ox = o.originX != null ? o.originX : 0.5, oy = o.originY != null ? o.originY : 0.5;
+    return { x: o.x - o.displayWidth * ox, y: o.y - o.displayHeight * oy, w: o.displayWidth, h: o.displayHeight };
+  }
+  function roundRect(r) { return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.w), h: Math.round(r.h) }; }
+  function overlapArea(a, b) {
+    var w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x), h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+    return w > 0 && h > 0 ? w * h : 0;
+  }
+  // An arcade body against the art the player can see: { tex, art, body } when the body reaches well past the
+  // visible pixels or sits mostly beside them (the player then hits something that is not drawn), or when an
+  // obstacle's art reaches well past its body (the player passes through what looks solid), else null. A moving
+  // sprite with a hitbox smaller than its art is a design choice and is left alone.
+  function bodyMismatch(o) {
+    try {
+      var b = o.body;
+      if (!b || b.enable === false || !o.texture || !o.frame || !(b.width > 0) || !(b.height > 0)) return null;
+      if (o.visible === false || Math.abs(o.rotation || 0) > 0.35) return null;
+      var trim = trimOf(o); if (!trim) return null;
+      var frameRect = drawnRect(o), sx = Math.abs(o.scaleX || 1), sy = Math.abs(o.scaleY || 1);
+      var tx = o.flipX ? trim.fw - trim.x - trim.w : trim.x, ty = o.flipY ? trim.fh - trim.y - trim.h : trim.y;
+      var art = { x: frameRect.x + tx * sx, y: frameRect.y + ty * sy, w: trim.w * sx, h: trim.h * sy };
+      var body = { x: b.x, y: b.y, w: b.width, h: b.height };
+      var over = Math.max(art.x - body.x, art.y - body.y, (body.x + body.w) - (art.x + art.w), (body.y + body.h) - (art.y + art.h));
+      var bigger = body.w * body.h > art.w * art.h * 1.8 && over > 12;
+      var beside = overlapArea(art, body) < body.w * body.h * 0.5 && over > 12;
+      var under = Math.max(body.x - art.x, body.y - art.y, (art.x + art.w) - (body.x + body.w), (art.y + art.h) - (body.y + body.h));
+      var hollow = (b.immovable === true || b.physicsType === 1) && under > 24;
+      if (!bigger && !beside && !hollow) return null;
+      return { tex: o.texture.key, art: roundRect(art), body: roundRect(body) };
+    } catch (_) { return null; }
+  }
+  // How much of the camera's view the big images cover between them, measured on a 20 x 20 grid of points (two
+  // images over the same half count once): { tex, covered, rect } for the first one when a scene has images of
+  // backdrop size that leave much of the screen bare, else null.
+  function backdropGap(kids, cam) {
+    try {
+      if (!cam || !(cam.width > 0) || !(cam.height > 0)) return null;
+      var view = cam.width * cam.height, rects = [], first = null;
+      for (var i = 0; i < kids.length; i++) {
+        var o = kids[i];
+        if (!o.texture || o.visible === false || !(o.displayWidth * o.displayHeight >= view * 0.5)) continue;
+        var rect = drawnRect(o), sf = o.scrollFactorX != null ? o.scrollFactorX : 1;
+        var onScreen = { x: rect.x - cam.scrollX * sf, y: rect.y - cam.scrollY * (o.scrollFactorY != null ? o.scrollFactorY : 1), w: rect.w, h: rect.h };
+        rects.push(onScreen);
+        if (!first) first = { tex: o.texture.key, rect: roundRect(onScreen) };
+      }
+      if (!first) return null;
+      var hit = 0, grid = 20;
+      for (var gy = 0; gy < grid; gy++) {
+        for (var gx = 0; gx < grid; gx++) {
+          var px = (gx + 0.5) * cam.width / grid, py = (gy + 0.5) * cam.height / grid;
+          for (var ri = 0; ri < rects.length; ri++) {
+            var r = rects[ri];
+            if (px >= r.x && px < r.x + r.w && py >= r.y && py < r.y + r.h) { hit++; break; }
+          }
+        }
+      }
+      var covered = hit / (grid * grid);
+      if (covered >= 0.85) return null;
+      first.covered = Math.round(covered * 100) / 100;
+      return first;
+    } catch (_) { return null; }
+  }
+  // A textured object more than a whole screen outside the camera's view: { tex, x, y }, else null. Objects that
+  // just left an edge (a scroller's pillars waiting to be removed) are inside that margin and do not count.
+  function strayObject(o, cam) {
+    try {
+      if (!cam || !o.texture || !o.texture.key || o.visible === false || typeof o.text === 'string') return null;
+      if (isNaNNumber(o.x) || isNaNNumber(o.y)) return null;
+      var sx = o.x - cam.scrollX * (o.scrollFactorX != null ? o.scrollFactorX : 1);
+      var sy = o.y - cam.scrollY * (o.scrollFactorY != null ? o.scrollFactorY : 1);
+      if (sx >= -cam.width && sx <= cam.width * 2 && sy >= -cam.height && sy <= cam.height * 2) return null;
+      return { tex: o.texture.key, x: Math.round(o.x), y: Math.round(o.y) };
+    } catch (_) { return null; }
+  }
+  // The strings of the visible text objects, containers included (a game-over panel keeps its text in one).
+  function collectTexts(kids, out) {
+    for (var i = 0; i < kids.length && out.length < 12; i++) {
+      var o = kids[i];
+      if (!o || o.visible === false || o.alpha === 0) continue;
+      if (o.list && o.list.length) collectTexts(o.list, out);
+      else if (typeof o.text === 'string' && o.text.replace(/\\s+/g, '')) out.push(o.text.replace(/\\s+/g, ' ').slice(0, 40));
+    }
+    return out;
+  }
+  window.__lumaSmokeTexts = function () {
+    var out = [];
+    try {
+      for (var gi = 0; gi < S.games.length; gi++) {
+        var active = S.games[gi].scene && S.games[gi].scene.getScenes ? S.games[gi].scene.getScenes(true) : [];
+        for (var si = 0; si < active.length; si++) collectTexts(active[si].children && active[si].children.list ? active[si].children.list : [], out);
+      }
+    } catch (_) {}
+    return JSON.stringify(out);
+  };
+
   function probeGames() {
     var out = [];
     for (var gi = 0; gi < S.games.length; gi++) {
@@ -182,9 +307,13 @@ class SmokeCollectorScript {
           var sc = active[si];
           var cam = sc.cameras && sc.cameras.main;
           var kids = sc.children && sc.children.list ? sc.children.list : [];
-          var visible = 0, byType = {}, texKeys = {}, nanCount = 0;
+          var visible = 0, byType = {}, texKeys = {}, nanCount = 0, bodies = [], strays = [], strayCount = 0;
           for (var ki = 0; ki < kids.length; ki++) {
             var k = kids[ki];
+            var stray = strayObject(k, cam);
+            if (stray) { strayCount++; if (strays.length < 3) strays.push(stray); }
+            var mismatch = bodies.length < 6 ? bodyMismatch(k) : null;
+            if (mismatch) bodies.push(mismatch);
             if (isNaNNumber(k.x) || isNaNNumber(k.y)) nanCount++;
             if (k.visible !== false && (k.alpha == null || k.alpha > 0)) visible++;
             var t = k.type || 'Object'; byType[t] = (byType[t] || 0) + 1;
@@ -203,7 +332,7 @@ class SmokeCollectorScript {
                 w: o.displayWidth != null ? Math.round(o.displayWidth) : (o.width != null ? Math.round(o.width) : null),
                 h: o.displayHeight != null ? Math.round(o.displayHeight) : (o.height != null ? Math.round(o.height) : null),
                 sf: o.scrollFactorX != null ? o.scrollFactorX : null,
-                tex: o.texture && o.texture.key ? o.texture.key : (o.text != null ? 'text:' + String(o.text).slice(0, 24) : null),
+                tex: typeof o.text === 'string' ? 'text:' + o.text.slice(0, 24) : (o.texture && o.texture.key ? o.texture.key : null),
                 kids: o.list ? o.list.length : null
               });
             } catch (_) {}
@@ -213,6 +342,10 @@ class SmokeCollectorScript {
             objects: kids.length, visible: visible, nan: nanCount, byType: byType,
             textures: Object.keys(texKeys),
             list: objs,
+            bodies: bodies,
+            strays: strays,
+            strayCount: strayCount,
+            backdrop: backdropGap(kids, cam),
             camera: cam ? { x: cam.x, y: cam.y, width: cam.width, height: cam.height,
               scrollX: Math.round(cam.scrollX), scrollY: Math.round(cam.scrollY), zoom: cam.zoom, alpha: cam.alpha,
               fade: cam.fadeEffect ? { running: !!cam.fadeEffect.isRunning, alpha: cam.fadeEffect.alpha, complete: !!cam.fadeEffect.isComplete } : null } : null

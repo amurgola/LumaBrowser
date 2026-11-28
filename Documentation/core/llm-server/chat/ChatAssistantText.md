@@ -23,6 +23,17 @@ assistant is the same one whichever way the Tools switch is set.
 - `ANSWERING`: three lines. Answer at the length the question needs (one word when one word is asked for); plain
   prose, with a list, table, headings or code block when the content has that shape; knowledge ends at the training
   cutoff, so say when a fact is uncertain or newer than that.
+- `UNFAMILIAR_NAMES`: one sentence for a name the model was given no context for (a person, a company, a product,
+  a project): memory offers a plausible match that is usually someone or something else, so do not state who or
+  what it is and do not add guessed details to a search; look the name up exactly as written first and build on
+  what comes back. Asked to "make a plan and research" such a name, Qwen3.8-27B wrote who the person "is" before
+  its first search in 23 of 50 runs without the line, in 7 of 50 with it inside `<answering>`, and in 0 of 25 with
+  it after the request (engine-level runs at temperature 0.7, 2026-11-26); "Who is Linus Torvalds?" was still
+  answered directly, with no search, in 10 of 10.
+- `requestReminder()`: `UNFAMILIAR_NAMES` inside a `<reminder>` block. A Tools-on chat turn writes it once after
+  the user's request ([AgentTurnDispatch](router/AgentTurnDispatch.md) `requestReminder`,
+  [BridgeRun](bridge/BridgeRun.md)); a Tools-off turn does not carry it, since it has nothing to look a name up
+  with.
 - `NO_TOOLS`: Tools are off here, so nothing can be browsed, searched or opened; say what memory gives and mention
   that turning on Tools allows it.
 - `USER_INSTRUCTIONS_LEAD`: the sentence above the user's custom prompt (their instructions win over the defaults);

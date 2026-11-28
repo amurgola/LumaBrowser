@@ -124,7 +124,9 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
 
   _sageAttentionArgs() {
     const flag = ImageLaunchPlanner.SAGE_ATTENTION_FLAG;
-    return this._overrides.sageAttention && !this._unsupported.has(flag) ? [flag] : [];
+    if (!this._overrides.sageAttention || this._unsupported.has(flag)) return [];
+    const withSage = this._options.model.sageLaunchArgs;
+    return [flag, ...(Array.isArray(withSage) ? withSage : [])];
   }
 
   _eagerLoadArgs() {
@@ -153,11 +155,16 @@ class ImageLaunchPlanner extends MediaLaunchPlanner {
   }
 
   _offloadArgs() {
-    if (this._autoFit) return [];
+    if (this._autoFit && !this._pooledOnOneCard()) return [];
     const usableVram = ImageLaunchPlanner._usableVramBytes(this._options.diagnostics);
     const minVram = Number(this._options.model.minVramBytes) || 0;
     const tooSmall = minVram > 0 && usableVram > 0 && usableVram < minVram;
     return this._overrides.offloadToCpu || this._overrides.hotswapPooled || tooSmall ? ['--offload-to-cpu'] : [];
+  }
+
+  _pooledOnOneCard() {
+    const budget = this._overrides.autoFit;
+    return !!this._overrides.hotswapPooled && typeof budget === 'string' && budget.length > 0 && !budget.includes(',');
   }
 
   _modelLaunchArgs() {

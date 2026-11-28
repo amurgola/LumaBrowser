@@ -21,7 +21,8 @@ three `END_STATES`: `DONE`, `FAILED`, `CANCELED`. A task starts queued.
 - `artifacts`: the list the call's artifacts are pushed onto while it runs.
 - `stopRequestedBy`: `'user'` or `'model'`, or null.
 - `delivered`: the model has the result, from the automated message or from reading it
-  with `background_task_status`.
+  with `background_task_status`. A task made with `quiet: true` starts out delivered, so
+  nothing ever reports it.
 - `artifactsShown`: the artifacts were shown in the thread already (by the status
   tool's reply), so they are not shown twice.
 

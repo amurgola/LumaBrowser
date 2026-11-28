@@ -1,6 +1,7 @@
 const SmokeActions = require('./SmokeActions');
 const SmokeErrorFormatter = require('./SmokeErrorFormatter');
 const PhaserProbeReport = require('./PhaserProbeReport');
+const PlayabilityNotes = require('./PlayabilityNotes');
 
 class SmokeReport {
   static MAX_ERRORS = 8;
@@ -70,6 +71,7 @@ class SmokeReport {
     this._screenCheck(shots);
     this._lines.push(...PhaserProbeReport.lines(this._report.games));
     this._nanCheck();
+    this._playability();
     this._errorsBlock();
     this._resourcesAndConsole();
     this._frameRate();
@@ -126,6 +128,12 @@ class SmokeReport {
       + 'delta, or a speed or size read from an undefined field. Find where x or y is assigned and guard the input.');
   }
 
+  _playability() {
+    const notes = PlayabilityNotes.build({ games: this._report.games, texts: this._res.texts, inputs: this._report.inputs });
+    this._checks = notes.checks;
+    this._lines.push(...notes.lines);
+  }
+
   _errorsBlock() {
     const errors = this._errors;
     if (!errors.length) return;
@@ -159,14 +167,21 @@ class SmokeReport {
   _verdict() {
     const ok = !!this._report.canvas && !this._errors.length && !this._isBlack() && !this._nanObjects;
     const seen = this._screen === 'content' || this._screen === 'flat';
-    this._lines.push(ok
-      ? `No runtime errors detected${seen ? ' and the canvas is painting content' : ''}. This proves the game boots${seen ? ' and draws' : ' (no frame was captured, so not that it draws)'}; the user `
-        + 'is still the judge of whether it plays well; tell them to press Play.'
-      : 'Fix these, then call run_game again (with actions that reach the broken screen) until it comes back clean.');
-    return { ok, screen: this._screen, message: this._lines.join('\n'), summary: this._summary(ok, seen) };
+    this._lines.push(ok ? this._cleanLine(seen) : 'Fix these, then call run_game again (with actions that reach the broken screen) until it comes back clean.');
+    return { ok, screen: this._screen, checks: this._checks, message: this._lines.join('\n'), summary: this._summary(ok, seen) };
+  }
+
+  _cleanLine(seen) {
+    const proven = `No runtime errors detected${seen ? ' and the canvas is painting content' : ''}. This proves the game boots${seen ? ' and draws' : ' (no frame was captured, so not that it draws)'}`;
+    if (this._checks) {
+      return `${proven}, NOT that it plays: resolve the ${this._checks} CHECK item${this._checks === 1 ? '' : 's'} above (fix the code, or run again `
+        + 'with actions that prove the point) before you tell the user it is ready. Never describe play you did not see in this report.';
+    }
+    return `${proven}; the user is still the judge of whether it plays well; tell them to press Play.`;
   }
 
   _summary(ok, seen) {
+    if (ok && this._checks) return `smoke · no errors · ${this._checks} to check`;
     if (ok) return seen ? 'smoke · clean · screen ok' : 'smoke · clean';
     const bits = [];
     if (this._errors.length) bits.push(`${this._errors.length} error${this._errors.length === 1 ? '' : 's'}`);

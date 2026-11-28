@@ -21,6 +21,11 @@ class ChatAssistantText {
     '- Your knowledge stops at your training cutoff, which is earlier than today. When an answer depends on newer events, or you are not sure of a fact, say so plainly instead of guessing.',
   ].join('\n');
 
+  static UNFAMILIAR_NAMES = 'A name you were given no context for (a person, a company, a product, a project) may be '
+    + 'one you have never seen: memory then offers a plausible match that is usually someone or something else. Do not '
+    + 'state who or what it is and do not add guessed details to a search; look the name up exactly as written first, '
+    + 'and build on what comes back.';
+
   static NO_TOOLS = 'Tools are off in this conversation, so you cannot browse, search the web or open files here. '
     + 'When a request needs one of those, give what you can from memory and mention that turning on Tools lets you do it.';
 
@@ -28,6 +33,10 @@ class ChatAssistantText {
 
   static toolsAnswering() {
     return `<answering>\n${ChatAssistantText.WHEN_TO_USE_TOOLS}\n${ChatAssistantText.ANSWERING}\n</answering>`;
+  }
+
+  static requestReminder() {
+    return `<reminder>\n${ChatAssistantText.UNFAMILIAR_NAMES}\n</reminder>`;
   }
 
   static today(now) {

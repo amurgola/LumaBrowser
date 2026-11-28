@@ -3,6 +3,7 @@ const path = require('path');
 const AssetPath = require('./AssetPath');
 const AssetSizing = require('./AssetSizing');
 const AssetStyle = require('./AssetStyle');
+const ImageModelPins = require('./ImageModelPins');
 const PlaceholderPng = require('./PlaceholderPng');
 const RdFlowAssets = require('./RdFlowAssets');
 const PixelPost = require('../pixel/PixelPost');
@@ -56,11 +57,16 @@ class AssetSpec {
   static _writePlaceholder(spec) {
     try {
       fs.mkdirSync(path.dirname(spec.abs), { recursive: true });
-      fs.writeFileSync(spec.abs, PlaceholderPng.solid(spec.width, spec.height, PlaceholderPng.colorFor(spec.rel)));
+      fs.writeFileSync(spec.abs, PlaceholderPng.framed(spec.width, spec.height, AssetSpec._placeholderColor(spec)));
       return {};
     } catch (e) {
       return { error: `Could not write ${spec.rel}: ${e.message}` };
     }
+  }
+
+  static _placeholderColor(spec) {
+    const role = ImageModelPins.roleOf({ width: spec.width, height: spec.height, transparent: spec.wantAlpha });
+    return role === 'backdrop' ? PlaceholderPng.BACKDROP_COLOR : PlaceholderPng.colorFor(spec.rel);
   }
 }
 

@@ -34,6 +34,7 @@ class GuestTurnDispatch {
       systemRole: persona ? null : ChatAssistantText.ROLE_TOOLS,
       modeSystemPrompt: AgentTurnDispatch._promptAppend(persona, !!turn.choicesOn, !!turn.voiceOn, null, planTool, null),
       turnReminder: AgentTurnDispatch._turnReminder(!!turn.voiceOn, []),
+      requestReminder: AgentTurnDispatch._requestReminder(persona),
       stepReminder: AgentTurnDispatch._stepReminder(planTool, null),
       finalCheck: planTool ? () => planTool.beforeFinalAnswer() : null,
       images: turn.images || [],

@@ -10,7 +10,7 @@ with its curated catalog row. Used by [ImageModelsScanner](ImageModelsScanner.md
 - `ImageModelRecord.build({ id, dir, manifest, files, catalogEntry, catalogList })`
   returns `{ id, name, label, dir, family, kind, supportsI2V, supportsEdit,
   files, minVramBytes, defaults, constraints, protocol, compatibleRuntimes,
-  launchArgs, preferredRuntimes, minRuntimeTags, sageAttention, vaeTiling, licenseNote, fileUpdates, civitai, manifest }`:
+  launchArgs, preferredRuntimes, minRuntimeTags, sageAttention, sageLaunchArgs, vaeTiling, licenseNote, fileUpdates, civitai, manifest }`:
   - `minRuntimeTags` (catalog, else manifest, else `{}`): the oldest release
     tag per runtime id that loads the model, read by
     [PreferredImageRuntime](service/PreferredImageRuntime.md) to skip or refuse
@@ -25,6 +25,9 @@ with its curated catalog row. Used by [ImageModelsScanner](ImageModelsScanner.md
     (`true` only when the catalog or manifest says exactly `true`) are launch
     preferences read by [PreferredImageRuntime](service/PreferredImageRuntime.md)
     and [SageAttentionPolicy](service/SageAttentionPolicy.md).
+  - `sageLaunchArgs` (catalog, else manifest, else `[]`): arguments
+    [ImageLaunchPlanner](server/ImageLaunchPlanner.md) emits only on a launch
+    that runs SageAttention.
   - `label`, `family`, `constraints`, `protocol`, `compatibleRuntimes`,
     `launchArgs`, `licenseNote`: catalog value, else manifest value, else
     `id` / `null` / `null` / `sd-cpp-http` / `DEFAULT_RUNTIMES` / `[]` / `null`.

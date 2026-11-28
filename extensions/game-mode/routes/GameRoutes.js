@@ -26,6 +26,7 @@ class GameRoutes {
     const router = express.Router();
     router.get(/^\/play\//, (req, res) => this._play(req, res));
     AiRoutes.mount(router, this._context, this._api);
+    router.get('/state/:convId', (req, res) => this._state(req, res));
     router.post('/open-tab/:convId', (req, res) => this._openTab(req, res));
     router.get('/export/:convId', (req, res) => this._export(req, res));
     router.post('/publish/:convId', (req, res) => this._publish(req, res));
@@ -55,6 +56,12 @@ class GameRoutes {
     const html = await PlayRequest.entryHtml(file);
     if (html == null) return res.status(404).end();
     return res.type('html').send(html);
+  }
+
+  _state(req, res) {
+    let game = null;
+    try { game = this._api.snapshotFor(this._api.sanitizeConvId(req.params.convId)); } catch (_) { return res.status(404).json({ success: false, error: 'unknown game' }); }
+    return res.json({ success: true, game });
   }
 
   async _openTab(req, res) {

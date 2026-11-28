@@ -1,14 +1,14 @@
-# GamePanelActions
+# GameStripActions
 
-`extensions/game-mode/ui/GamePanelActions.js`
+`extensions/game-mode/ui/GameStripActions.js`
 
-The status card's export, share and reset actions; progress shows on the
-card's note line. Each does nothing without a conversation.
+The game strip's export, share and reset actions; progress shows on the
+strip's note line. Each does nothing without a conversation.
 
 ## Methods
 
-- `new GamePanelActions(panel, conversationId)`: `panel` is a
-  [GameStatusPanel](GameStatusPanel.md); `conversationId()` the active id.
+- `new GameStripActions(strip, conversationId)`: `strip` is a
+  [GameStrip](GameStrip.md) (for `note()`); `conversationId()` the active id.
 - `exportZip()`: `Exporting…`, downloads the zip through a temporary anchor
   (object URL revoked after 2 s), then `Zip downloaded. Unzip it and open
   index.html.`; failures `Export failed: <message>`.

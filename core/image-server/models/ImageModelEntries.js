@@ -76,6 +76,8 @@ class ImageModelEntries {
     approxBytes: 4280406144,
   };
 
+  static QWEN_21_SAGE_ARGS = ['--model-args', 'qwen_image_2_1_prefix_cache_type=f16'];
+
   static QWEN_21_PROMPT_GUIDE =
     'This is Qwen-Image 2.1 (LLM-conditioned via Qwen3-VL). Write the positive '
     + 'prompt as a NATURAL-LANGUAGE description: subject, setting, style, '
@@ -326,6 +328,7 @@ class ImageModelEntries {
       },
       constraints: { dimensionMultiple: 32 },
       launchArgs: ['--clip-on-cpu'],
+      sageLaunchArgs: [...ImageModelEntries.QWEN_21_SAGE_ARGS],
       protocol: 'sd-cpp-http',
       compatibleRuntimes: [...SD_CPP_RUNTIMES],
     },
@@ -372,6 +375,7 @@ class ImageModelEntries {
       },
       constraints: { dimensionMultiple: 32 },
       launchArgs: ['--clip-on-cpu'],
+      sageLaunchArgs: [...ImageModelEntries.QWEN_21_SAGE_ARGS],
       protocol: 'sd-cpp-http',
       compatibleRuntimes: [...SD_CPP_RUNTIMES],
     },

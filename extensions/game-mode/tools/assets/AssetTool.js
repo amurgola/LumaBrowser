@@ -3,6 +3,8 @@ const AssetSizing = require('../../assets/AssetSizing');
 const ImageModelPins = require('../../assets/ImageModelPins');
 
 class AssetTool extends GameTool {
+  static WHEN_IT_LANDS = 'it renders right after this reply ends and replaces the placeholder by itself.';
+
   static ASSET_PROPS = {
     path: { type: 'string', description: 'Relative path under assets/, e.g. assets/player.png' },
     prompt: { type: 'string', description: 'What the image should show, concretely' },
@@ -24,11 +26,12 @@ class AssetTool extends GameTool {
     },
   };
 
-  constructor(scope, { artStyle = null, imageModelRef = null, palette = null } = {}) {
+  constructor(scope, { artStyle = null, imageModelRef = null, palette = null, queue = null } = {}) {
     super(scope);
     this._artStyle = artStyle;
     this._pins = ImageModelPins.normalize(imageModelRef);
     this._palette = palette;
+    this._queue = queue;
   }
 
   _modelFor(params) {

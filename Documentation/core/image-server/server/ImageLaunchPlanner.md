@@ -17,8 +17,8 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
     `runtime has no binaryPath`, `port is required` (must be a number),
     `model.files.diffusion.path is required`.
   - `overrides`: `offloadToCpu`, `hotswapPooled` (the slot is in a hotswap
-    pool: also emits `--offload-to-cpu`), `autoFit` (true or a `--max-vram` budget
-    string), `autoFitForm` ('bare' for pre-on|off builds), `vaeTiling`,
+    pool: also emits `--offload-to-cpu`, beside a one-card budget too), `autoFit`
+    (true or a `--max-vram` budget string), `autoFitForm` ('bare' for pre-on|off builds), `vaeTiling`,
     `vaeTileSize` (pixels, emitted only with `vaeTiling`), `eagerLoad`,
     `loraDir`, `clipOnCpu` (false drops the catalog's `--clip-on-cpu`),
     `sageAttention` (decided by [SageAttentionPolicy](../service/SageAttentionPolicy.md)),
@@ -40,9 +40,11 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
    `loaderFlag` wins).
 3. `--diffusion-fa --diffusion-conv-direct --vae-conv-direct` unless the runtime
    lists them in `unsupportedFlags`, then `--eager-load` (override, same check),
-   then `--sage-attn` (override, same check).
+   then `--sage-attn` (override, same check) followed by the model's
+   `sageLaunchArgs` (only when the flag went out).
 4. `--vae-tiling [--vae-tile-size <px>]` (overrides), `--lora-model-dir <dir>` (override).
-5. `--auto-fit on [--max-vram <budget>]`, or `--offload-to-cpu`, never both.
+5. `--auto-fit on [--max-vram <budget>]`, or `--offload-to-cpu`; both only for a
+   hotswap-pooled slot whose budget names one card (`cuda0=28.3`).
 6. The model's `launchArgs`, then the runtime's `extraArgs` (last, so they win).
 
 ## Why
@@ -61,7 +63,9 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
   Vulkan build. SageAttention takes precedence over flash attention inside the
   diffusion model, so the two flags coexist; it is per launch because it needs a
   CUDA build and an Ampere-or-newer card (MiniMax-H3's 124-frame step: 7.7 s to
-  4.5 s on an RTX 5090, 2026-10-22).
+  4.5 s on an RTX 5090, 2026-10-22). A row's `sageLaunchArgs` go out with it and
+  never without it: Qwen-Image 2.1 needs its prefix cache set back to 16 bits
+  there (see [ImageModelEntries](../models/ImageModelEntries.md)).
 - VAE tiling keeps an edit model's reference encode small (un-tiled wan_vae is
   7 to 8 GB, the "failed to encode reference image 0" OOM), so it stays resident.
   sd-server's default 256 px tiles turn a 1 MP Qwen-Image decode from 0.7 s into
@@ -84,10 +88,16 @@ model on a runtime. Pure, no I/O. Extends `MediaLaunchPlanner`.
   only 0.5 to 1.3 GB of VRAM between renders against 6.5 GB resident, at the same
   render speed (measured 2026-11-22). The slot is then asleep whenever no render
   runs, so a swap suspends it instead of stopping it
-  ([ImageRuntimeServer](ImageRuntimeServer.md) `suspend`). The rule that auto-fit
-  and offload never combine holds here too: an auto-fit slot spreads its modules
-  over several cards under `--max-vram` budgets, so it is not offloaded and a swap
-  stops it as before. `plan.offloadToCpu` records the result either way.
+  ([ImageRuntimeServer](ImageRuntimeServer.md) `suspend`). A slot split over
+  several cards under `--max-vram` budgets (`cuda0=30.8,cuda1=23.0`) is not
+  offloaded and a swap stops it as before. A budget that names one card is only a
+  cap on what is staged there, so a pooled slot keeps the offload beside it: once
+  every one-card placement carried a budget, pooled slots had stopped offloading
+  and each swap stopped them, so every edit paid a cold launch. Measured on a
+  Qwen-Image 2.1 Turbo edit at 1760x2400 on an RTX 5090 (2026-11-26): offloaded
+  under the budget 27 s and a 22 GB peak, resident under it 30 s and 30 GB; through
+  the app the second edit of a session went from 34 s (cold again) to 30 s (warm).
+  `plan.offloadToCpu` records the result either way.
 - Video roles: `highNoise` is Wan 2.2's second expert (early steps); `audioVae`
   decodes the audio latent of audio-video models (MiniMax-H3); `vision` is an
   edit model's vision projector for reference images; `clipVision` conditions

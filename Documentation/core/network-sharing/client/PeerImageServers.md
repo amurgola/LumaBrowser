@@ -24,7 +24,14 @@ the image server service.
      `selectedModel` is the previous pick if the host still offers it, else `null` (host default);
   4. restores an active selection that pointed at a slot still offered;
   5. on the first registration only (`peer._imageServersAdopted` unset), makes
-     every offered slot active and marks the peer adopted in the store.
+     each offered slot active for a role this machine cannot serve itself, and
+     marks the peer adopted in the store. A role can be served locally when
+     `isEnabled()` is true and `computeLocalServerEntry(role).available` is true
+     (the role has a local default model,
+     [ImageServerSelection](../../image-server/service/ImageServerSelection.md)`.localEntry`);
+     such a role keeps its local slot and the peer's server is only listed. A
+     service without either function (older test fakes) counts as not able to
+     serve locally, so every offered slot is adopted as before.
 - `unregister(peerId)` calls `removeServersForPeer(peerId)`.
 
 ## Why
@@ -35,3 +42,12 @@ the host's manifest changed. Bringing a peer's image servers in is the act of
 choosing them, so they are adopted once; a later re-register must not stomp a
 selection the user has since changed. A slot the host stopped offering stays
 reverted so generation never targets a server that is gone.
+
+## Changes (2026-11-27, pairing no longer takes over a working local slot)
+
+Pairing used to make every offered peer slot active. On 2026-11-26 that made a
+peer's Image Generation the active generator on a machine with its own image
+models and a local default, so every generation (including game assets pinned
+to a local model) went to the peer. Adoption now skips the roles the local
+slot can serve; the peer's servers are still registered and can be picked by
+hand, and a hand-picked peer server is kept across re-registers as before.

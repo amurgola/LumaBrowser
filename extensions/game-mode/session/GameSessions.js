@@ -33,7 +33,7 @@ class GameSessions {
       files: new Map(),
       assets: new Map(),
       readWhole: new Map(),
-      pendingAssets: [],
+      assetTasks: new Map(),
       calls: 0,
       served: 0,
       status: GameSessions.EDITING,

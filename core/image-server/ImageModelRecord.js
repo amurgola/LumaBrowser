@@ -40,6 +40,7 @@ class ImageModelRecord {
       preferredRuntimes: ImageModelRecord._pick(sources, 'preferredRuntimes') || [],
       minRuntimeTags: ImageModelRecord._pick(sources, 'minRuntimeTags') || {},
       sageAttention: ImageModelRecord._pick(sources, 'sageAttention') === true,
+      sageLaunchArgs: ImageModelRecord._pick(sources, 'sageLaunchArgs') || [],
       vaeTiling: ImageModelRecord._optsOutOfVaeTiling(sources) ? false : undefined,
       licenseNote: ImageModelRecord._pick(sources, 'licenseNote'),
       fileUpdates: ImageModelRecord._fileUpdates({ id, family, files }, catalogList),

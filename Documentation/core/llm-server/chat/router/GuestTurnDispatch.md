@@ -18,7 +18,9 @@ calls it.
     prompt append as the desktop (`AgentTurnDispatch._promptAppend`: answering
     guidance, widgets, "Suggest replies", voice, the plan note);
   - `nativeHistory: true`, the model's context window (`ctxPerSlot`), the voice
-    turn reminder, the model's Tune budget (`agentBudget`);
+    turn reminder, the chat assistant's request reminder on unfamiliar names
+    (`AgentTurnDispatch._requestReminder`; none under a host agent's persona),
+    the model's Tune budget (`agentBudget`);
   - `update_plan` (allowed even under a restricted tool list), its step
     reminder and its final-answer check, filed under `clientConversationId`;
   - `conversationMeta`, a [GuestConversationMeta](GuestConversationMeta.md)

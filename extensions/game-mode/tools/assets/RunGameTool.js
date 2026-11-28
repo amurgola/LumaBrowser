@@ -3,6 +3,7 @@ const GameTool = require('../GameTool');
 const GameKind = require('../../session/GameKind');
 const SmokeRunner = require('../../smoke/SmokeRunner');
 const SmokeReport = require('../../smoke/SmokeReport');
+const ArtStatusNote = require('../../smoke/ArtStatusNote');
 
 class RunGameTool extends GameTool {
   constructor(scope, { modelRef = null, gatewayInfo = null } = {}) {
@@ -54,7 +55,7 @@ class RunGameTool extends GameTool {
       screenshots: true,
       shotDir: path.join(s.dir, '.gamedata', 'smoke'),
     });
-    return this._result(res, SmokeReport.format(res));
+    return this._result(res, ArtStatusNote.append(SmokeReport.format(res), s));
   }
 
   _liveUrl() {

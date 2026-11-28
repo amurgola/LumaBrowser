@@ -8,13 +8,31 @@ class PlaceholderPng {
     [192, 132, 252], [45, 212, 191], [250, 204, 21], [244, 114, 182],
   ];
 
+  static BACKDROP_COLOR = [38, 46, 64];
+  static FRAME_SHADE = 0.4;
+  static FRAME_MIN_SIDE = 16;
+
   static _crcTable = null;
 
-  static solid(width, height, [r, g, b]) {
+  static solid(width, height, color) {
+    return PlaceholderPng._png(width, height, 0, color);
+  }
+
+  static framed(width, height, color) {
+    return PlaceholderPng._png(width, height, PlaceholderPng.frameWidth(width, height), color);
+  }
+
+  static frameWidth(width, height) {
+    const short = Math.min(width, height);
+    if (short < 4) return 0;
+    return short >= PlaceholderPng.FRAME_MIN_SIDE ? 2 : 1;
+  }
+
+  static _png(width, height, frame, color) {
     return Buffer.concat([
       PlaceholderPng.SIGNATURE,
       PlaceholderPng._chunk('IHDR', PlaceholderPng._header(width, height)),
-      PlaceholderPng._chunk('IDAT', zlib.deflateSync(PlaceholderPng._pixels(width, height, [r, g, b]))),
+      PlaceholderPng._chunk('IDAT', zlib.deflateSync(PlaceholderPng._pixels(width, height, frame, color))),
       PlaceholderPng._chunk('IEND', Buffer.alloc(0)),
     ]);
   }
@@ -40,14 +58,24 @@ class PlaceholderPng {
     return ihdr;
   }
 
-  static _pixels(width, height, [r, g, b]) {
+  static _pixels(width, height, frame, fill) {
+    const edge = fill.map((channel) => Math.round(channel * PlaceholderPng.FRAME_SHADE));
+    const edgeRow = PlaceholderPng._row(width, () => edge);
+    const innerRow = PlaceholderPng._row(width, (x) => (x < frame || x >= width - frame ? edge : fill));
+    const rows = [];
+    for (let y = 0; y < height; y++) rows.push(y < frame || y >= height - frame ? edgeRow : innerRow);
+    return Buffer.concat(rows);
+  }
+
+  static _row(width, colorAt) {
     const row = Buffer.alloc(1 + width * 3);
     for (let x = 0; x < width; x++) {
+      const [r, g, b] = colorAt(x);
       row[1 + x * 3] = r;
       row[2 + x * 3] = g;
       row[3 + x * 3] = b;
     }
-    return Buffer.concat(new Array(height).fill(row));
+    return row;
   }
 
   static _chunk(type, data) {

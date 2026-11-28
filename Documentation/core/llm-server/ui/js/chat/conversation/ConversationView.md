@@ -15,6 +15,10 @@ hooks. Also New chat.
 
 ## Methods
 
+- `rerender(title)`: redraws the open conversation after its messages changed under it (a regenerate, an
+  edited resend): `render(title)`, then, when the active mode is not plain chat, the mode's
+  `decorateComposer` hook again on the rebuilt bar, so what the mode put on the composer (Game mode's strip)
+  comes back.
 - `open(id)`, `render(title)`. `open` also records the conversation among the
   search palette's recent places (`api.palette.record`, best effort; hidden
   sub-conversations are skipped). A conversation the sidebar does not list (a

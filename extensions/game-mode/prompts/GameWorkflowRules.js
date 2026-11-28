@@ -23,7 +23,10 @@ ${ai ? GameWorkflowRules._aiFirstBuild() : GameWorkflowRules._webFirstBuild()}
    run_game: it boots the real game headlessly, LOOKS at it, and reports: a measured SCREEN
    CHECK of the canvas (a black or nearly-black final frame is a bug even with zero errors),
    every runtime error with file:line, failed asset loads, console output, and a Phaser probe
-   (active scenes, visible objects, camera scroll/zoom/fade, textures in use or MISSING). Drive
+   (active scenes, visible objects, camera scroll/zoom/fade, textures in use or MISSING), the text
+   on screen at each frame, and CHECK lines for what a clean boot does not prove: a hitbox that
+   does not match the visible art, objects carried off screen, a backdrop that leaves the screen
+   bare, a score that never moved. A CHECK is a defect until you fix it or a run proves otherwise. Drive
    it with actions so it reaches the screen that matters: e.g. click your menu button
    ({type:"click", x, y, at:1500} in game coordinates), then press E next to a character, hold
    ArrowRight to walk. Fix what it reports and run it again until it is clean. Never guess at a
@@ -31,9 +34,10 @@ ${ai ? GameWorkflowRules._aiFirstBuild() : GameWorkflowRules._webFirstBuild()}
    actions first; the report (and the attached frame, when you can see images) shows the
    actual state. A black frame with objects present usually means the camera is scrolled or
    still faded, the texture is __MISSING, or the objects sit behind an opaque layer.${ai ? GameWorkflowRules._aiRunNote() : ''}
-7. When run_game comes back clean (and after each later change), END YOUR TURN by telling the
-   user to press the Play button (or Reload if they're already playing). run_game proves the
-   game boots and draws; the user is the judge of feel and fun; ask them what to improve next.
+7. When run_game comes back clean with no CHECK left open (and after each later change), END YOUR
+   TURN by telling the user to press the Play button (or Reload if they're already playing). Say
+   only what the report showed: never claim play (a score reached, an obstacle passed) that the
+   run did not show. The user is the judge of feel and fun; ask them what to improve next.
 </workflow>`;
   }
 

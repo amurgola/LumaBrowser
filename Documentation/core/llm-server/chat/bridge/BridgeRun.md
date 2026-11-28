@@ -54,8 +54,9 @@ normalises its output onto the chat router's hooks.
    active (for the conversation's own image and edit model when it picked
    them), [SystemPromptAppend](prompt/SystemPromptAppend.md) (with the frozen
    `promptKeys` as its active groups), `RunToolSet#runToolList`, then `agent.run` with the
-   catalog, the pending manuals ([ManualDelivery](prompt/ManualDelivery.md))
-   and the task, `priorTurns`, the [RunResultSpill](RunResultSpill.md)
+   catalog, the pending manuals ([ManualDelivery](prompt/ManualDelivery.md)),
+   the task and, when the caller gave one, its `requestReminder` after a
+   blank line (see "Request reminder" below), `priorTurns`, the [RunResultSpill](RunResultSpill.md)
    writer, `tabId`/`lazyTab` (a pinned tab is used as is), `autoCloseTab:
    false`, the budget, `tools`, `systemPromptAppend`, `systemPromptOverride`, `systemRole`,
    `promptExperiments`, `nativeTools`, `nativeToolsTokens`,
@@ -114,6 +115,20 @@ Option `withholdTools` is passed to `RunToolSet`. Option `forGuest` (a turn run
 for a paired Network Sharing client) reaches the tool context, where
 [ToolDispatch](tools/ToolDispatch.md) keeps the run's calls off this computer's
 own addresses, files and internal pages.
+
+## Request reminder
+
+Option `requestReminder` (a string, null by default) is the caller's reminder
+for this one request. `_requestClose` writes it once, after the user's own
+text at the end of the task, so it is the last thing of the request the model
+reads before the per-step tail ([TurnReminder](turn/TurnReminder.md): the
+clock, `turnReminder`, the format block). It stays in that message for the
+whole run and is not written again on the steps after it. A later turn replays
+the message without it, as it does the clock and the format block
+([SentForm](prompt/SentForm.md) keeps the user's text and delivered manuals
+only), so it never accumulates in the history. The chat assistant uses it for
+its line on unfamiliar names
+([ChatAssistantText](../ChatAssistantText.md)`.requestReminder()`).
 
 ## Per-step reminder and final check
 

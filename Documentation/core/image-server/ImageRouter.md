@@ -27,7 +27,8 @@ streams the render's events to the caller's `send`.
   A missing prompt or no configured model returns an error without an event;
   every later failure also sends `error`. Local images resolve as
   `{ bytes, mime, width, height, seed }`; remote ones are converted to that shape.
-- `abort()` aborts the render in flight; returns `{ success: true }`.
+- `abort()` aborts the render in flight, and a request still choosing its
+  route (see Flow step 2); returns `{ success: true }`.
 - `getModelNativeSize(modelRef?)`, `getFrameSizes(modelRef?, picks?)`,
   `getActivePromptInfo(role?, picks?)`: see [ImageModelInfo](router/ImageModelInfo.md).
 - `getEditPromptInfo(picks?)`: see [ImageEditPromptInfo](router/ImageEditPromptInfo.md).
@@ -37,7 +38,8 @@ streams the render's events to the caller's `send`.
 
 The service must provide `getDefaults()`, `getModelsDirConfig()`,
 `serverForRole(role)`, `startServerResolved(id, { role })`, and optionally
-`getActiveServer(role)` and `getApiKeyForLaunch()`. Slot servers are
+`getActiveServer(role)`, `isEnabled()` (treated as on when missing) and
+`getApiKeyForLaunch()`. Slot servers are
 [BaseRuntimeServer](../shared/runtime/BaseRuntimeServer.md)s
 (`getStatus`, `stop`, `markActive`, `holdIdle`, `waitUntilSettled`).
 
@@ -47,6 +49,13 @@ The service must provide `getDefaults()`, `getModelsDirConfig()`,
    matching the chat router and the user's "Stop").
 2. Unless `forceLocal`, an active remote server for the slot's role runs the
    request through [RemoteImageRun](router/RemoteImageRun.md); no local state is touched.
+   The exception: a request whose `modelRef` names a model installed on this
+   machine ([ImageModelResolver](router/ImageModelResolver.md)`.resolve`, a
+   failed lookup counts as not installed) renders on the local slot when the
+   local image feature is on (`isEnabled()`). That lookup is async, so the
+   request remembers the abort count from step 1; if a newer request or an
+   `abort()` arrived meanwhile it resolves `{ success: false, error: 'aborted',
+   aborted: true }` (with an `error` event) and runs nothing.
 3. Resolve the model id, its record, the request's role and the serving slot
    ([ImageSlotPicker](router/ImageSlotPicker.md)).
 4. [ImageSlotLauncher](router/ImageSlotLauncher.md) makes that slot run the model.
@@ -72,3 +81,12 @@ records the model's need (its launch budget plus 1 GiB) and stops its slot, and 
 again with that need, so it lands on a card that holds it or the chat model is swapped out. The first attempt's `error`
 event and failure notification are held ([HeldRunEvents](router/HeldRunEvents.md)) and only go out when no retry
 follows. There is never a third attempt.
+
+## Changes (2026-11-27, a pinned local model renders locally)
+
+Remote peers ignore local model ids ([RemoteImageRun](router/RemoteImageRun.md) drops `modelRef`), so with a paired
+peer active for generation, a request pinned to a model installed here (game mode's per-asset `modelRef`) was drawn by
+the peer's own model. Such a request now renders on the local slot (Flow step 2). A request with no `modelRef`, or one
+naming a model not installed here, still goes to the active peer, and `forceLocal` is unchanged. Callers that pass the
+Setup default explicitly (the Roleplay Lab's `LabScenario` fills `baseModel` / `editModel` from the defaults) now
+render locally while a peer is active.

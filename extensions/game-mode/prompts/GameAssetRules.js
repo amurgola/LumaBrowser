@@ -8,8 +8,7 @@ solid-colour placeholder immediately (so the game loads and lays out right away)
 Rules:
 - When a build step needs MORE THAN ONE asset (hero + enemies + backdrop), make ONE
   generate_assets call with the whole array; never a string of generate_asset calls. The batch
-  generates back-to-back on a single image-model load; per-call generation reloads the model
-  every time on machines that swap models.
+  renders back-to-back on a single image-model load.
 ${GameAssetRules._alphaLine(alpha)}
 - Ask for concrete, single-subject prompts ("red spaceship seen from above").
 ${GameAssetRules._styleLine(artStyle)}
@@ -26,7 +25,10 @@ ${GameAssetRules._styleLine(artStyle)}
   }
 
   static _timing(imageReady) {
-    if (imageReady) return 'The real image lands either during the turn or right after it ends, replacing the placeholder.';
+    if (imageReady) {
+      return 'The real image renders right after your reply ends and replaces the placeholder by itself: keep '
+        + 'building, never wait for it or request it twice, and say in your reply that the art is still on its way.';
+    }
     return 'This machine has NO image generation configured, so placeholders are what ships; lean on '
       + 'shapes, colour, and text so the game still looks intentional.';
   }

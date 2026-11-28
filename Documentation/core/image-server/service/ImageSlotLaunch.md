@@ -55,13 +55,15 @@ One launch of a model on an image slot. A new instance per launch, created by
      `hotswapPooled` is `hotswap.isPooled(role)` read after step 5, so it covers a
      layout singularity and the round trip a chat swap-out just formed; false on a
      CPU runtime (no card to share) or a hotswap without `isPooled`. The planner
-     then emits `--offload-to-cpu` (unless auto-fit), so the slot sleeps between
-     renders and a swap suspends it. The placement's own `offloadToCpu` (and with it
+     then emits `--offload-to-cpu` (unless the slot is split over several cards),
+     so the slot sleeps between renders and a swap suspends it. The placement's own `offloadToCpu` (and with it
      VAE tiling and text encoder placement) is left as placed: the weights fit.
      Same rule for all three slots (generate, edit, video), which share this
      launch and planner.
   7. Log the [ImageLaunchLog](ImageLaunchLog.md) line (with the runtime swap,
-     INT8 weights and SageAttention notes) and `server.start(launch)`.
+     INT8 weights and SageAttention notes) and `server.start(launch)`. The line's
+     offload posture is the planned launch's own (`plan.offloadToCpu`), so a pooled
+     slot reads "CPU weight-offload on", not "resident".
 - `ImageSlotLaunch.existingLoraDir(modelsDir, { existsSync? })` `<modelsDir>/loras`
   when it exists, else `null`.
 

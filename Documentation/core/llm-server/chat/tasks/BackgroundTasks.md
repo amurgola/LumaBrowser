@@ -16,14 +16,17 @@ results go back to the model.
   ([ChatIdleWait](ChatIdleWait.md), wired by
   [LlmServerIpcHandlers](../../LlmServerIpcHandlers.md)). A laned task waits for it
   before it starts.
-- `start({ conversationId, batchId, tool, title, lane?, startedAt?, run, stop? })` -> the task's
+- `start({ conversationId, batchId, tool, title, lane?, startedAt?, quiet?, run, stop? })` -> the task's
   view ([BackgroundTask](BackgroundTask.md)). `run({ report, isStopped, artifacts })`
   does the work: `report({ detail, step, totalSteps })` moves the task's job line,
   `artifacts` is the list the call pushes onto. A task with a `lane` queues in that
   lane's [SerialLane](SerialLane.md); one without starts at once. The job starts with
   detail `queued`, cleared when the task begins. `startedAt` is when the work really
   began, for a call that was already running when it became a task, so its duration
-  counts the time it spent in the reply.
+  counts the time it spent in the reply. `quiet` is for work whose owner reports it in
+  its own way (Game mode's asset renders): the task shows in the chat's strip and can be
+  cancelled there, but its result is never handed to the model and no turn is started
+  for it.
 - `stop(id, by = BY_USER)` -> whether a task was still going. A queued task ends at once
   as canceled; a running one has its `stop` called and ends as canceled when its run
   settles.

@@ -2,7 +2,7 @@
 
 `extensions/game-mode/assets/AssetSpec.js`
 
-Validates one asset request, plans its generation (including the model's own prompt and the game palette) and writes its placeholder PNG at the real size.
+Validates one asset request, plans its generation (including the model's own prompt and the game palette) and writes its placeholder PNG at the real size: [PlaceholderPng](PlaceholderPng.md)`.framed`, in `PlaceholderPng.BACKDROP_COLOR` for a backdrop (opaque and 256px or more on its long side, [ImageModelPins](ImageModelPins.md)`.roleOf`), else in the path's `colorFor` colour.
 
 ## Methods
 

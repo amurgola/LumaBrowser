@@ -16,16 +16,18 @@ class GameTurnBuilder {
   static AGENT_BUDGET = { maxIterations: 40, noTimeout: true, reasoningCharsPerStep: 1e9, reasoningCharsTotal: 1e9 };
   static EXTRA_ALLOWED = ['validate_code', 'search_knowledge_base'];
 
-  constructor({ context, sessions, folders, gatewayInfo, aiSurface }) {
+  constructor({ context, sessions, folders, gatewayInfo, aiSurface, snapshots = null }) {
     this._context = context;
     this._sessions = sessions;
     this._folders = folders;
     this._gatewayInfo = gatewayInfo;
     this._aiSurface = aiSurface;
+    this._snapshots = snapshots;
   }
 
-  build({ meta, conversationId, modelRef = null }) {
+  build({ meta, conversationId, modelRef: composerModelRef = null }) {
     const data = (meta && meta.data) || {};
+    const modelRef = GameTurnBuilder.languageModel(data, composerModelRef);
     const tools = this._canBuild(data) ? this._tools(data, conversationId, modelRef) : null;
     const imageReady = this._imageReady();
     return {
@@ -45,6 +47,11 @@ class GameTurnBuilder {
       kbScope: GameKnowledgeBase.SCOPE,
       modelRef,
     };
+  }
+
+  static languageModel(data, composerModelRef) {
+    const pinned = data && typeof data.llmModel === 'string' ? data.llmModel.trim() : '';
+    return pinned || composerModelRef;
   }
 
   _canBuild(data) {
@@ -67,6 +74,7 @@ class GameTurnBuilder {
         palette: GamePalettes.resolve(data),
         modelRef,
         gatewayInfo: this._gatewayInfo,
+        onAssetSettled: () => { if (this._snapshots) this._snapshots.save(conversationId); },
       }),
       ...(kind === GameKind.AI ? [this._aiPromptTool(scopeFields)] : []),
     ];

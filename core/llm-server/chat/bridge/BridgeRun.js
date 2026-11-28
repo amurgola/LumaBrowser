@@ -46,7 +46,7 @@ class BridgeRun {
   static IMAGES_GROUP = 'images';
 
   static DEFAULTS = {
-    turnReminder: null, stepReminder: null, stepNotices: null, slowCalls: null, finalCheck: null, awaitsLaterResult: null, images: null, allowedTools: null, refreshAllowedTools: null, systemPromptOverride: null,
+    turnReminder: null, requestReminder: null, stepReminder: null, stepNotices: null, slowCalls: null, finalCheck: null, awaitsLaterResult: null, images: null, allowedTools: null, refreshAllowedTools: null, systemPromptOverride: null,
     extraTools: null, llmExtra: null, noBrowser: false, ctxPerSlot: null, kbScope: null, allowTakeover: false,
     agentBudget: null, shouldAbort: null, nativeHistory: false, nativeToolsOverride: null, promptExperiments: null,
     approvalOverride: null, pinnedTabId: null, approvalTimeoutMs: null, priorMessages: null, modeSystemPrompt: null, systemRole: null,
@@ -211,7 +211,8 @@ class BridgeRun {
     return this._agent.run({
       prompt: ArtifactCatalog.render(this._catalog)
         + ManualDelivery.render(groups, this._pendingManuals, { nativeTools })
-        + this._turn.body(),
+        + this._turn.body()
+        + BridgeRun._requestClose(o.requestReminder),
       priorTurns: this._turn.priorTurns,
       resultSpill: RunResultSpill.create(this._router, o.conversationId, o.assistantMessageId),
       conversationId: o.conversationId,
@@ -241,6 +242,10 @@ class BridgeRun {
       onWorkTab: o.pinnedTabId != null ? null : (tabId) => preview.start(tabId),
       shouldAbort: this.control.isAborted,
     });
+  }
+
+  static _requestClose(requestReminder) {
+    return requestReminder ? `\n\n${requestReminder}` : '';
   }
 
   _endProgress() {

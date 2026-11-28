@@ -78,6 +78,12 @@ export default class ConversationView {
     this._ctx.main.pinBottom();
   }
 
+  rerender(title) {
+    this.render(title);
+    const { state, modeCtx } = this._ctx;
+    if (state.activeMode !== 'chat') modeCtx.callHook('decorateComposer', modeCtx.composerEls(), modeCtx.forHooks());
+  }
+
   newChat() {
     const ctx = this._ctx;
     const { state } = ctx;

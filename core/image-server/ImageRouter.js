@@ -12,6 +12,7 @@ const RemoteImageRun = require('./router/RemoteImageRun');
 
 class ImageRouter {
   static RENDERING_PHASE = 'rendering-image';
+  static ABORTED = 'aborted';
 
   constructor({ imageServerService, notify, scanner, presize } = {}) {
     if (!imageServerService) throw new Error('ImageRouter: imageServerService is required');
@@ -24,18 +25,22 @@ class ImageRouter {
     this._editInfo = new ImageEditPromptInfo({ imageServerService, models: this._models });
     this._rescue = new ImageCapacityRescue({ getSettingsDb: () => this._svc.settingsDb, log: (message) => console.log(message) });
     this._active = null;
+    this._abortSequence = 0;
   }
 
   async generate(request = {}) {
     if (!request.prompt || typeof request.prompt !== 'string') return { success: false, error: 'prompt is required' };
     const send = typeof request.send === 'function' ? request.send : () => {};
     this.abort();
-    const remote = this._remoteServerFor(request);
+    const sequence = this._abortSequence;
+    const remote = await this._remoteServerFor(request);
+    if (sequence !== this._abortSequence) return ImageRouter._fail(send, ImageRouter.ABORTED, { aborted: true });
     if (remote) return this._run(new RemoteImageRun({ role: ImageSlotPicker.remoteRole(request.slot), send, notify: this._notify, server: remote, request }));
     return this._generateLocal(request, send);
   }
 
   abort() {
+    this._abortSequence += 1;
     if (this._active) {
       try { this._active.abort(); } catch (_) {}
       this._active = null;
@@ -59,10 +64,22 @@ class ImageRouter {
     return this._info.activePromptInfo(role, picks);
   }
 
-  _remoteServerFor(request) {
+  async _remoteServerFor(request) {
     if (request.forceLocal || !this._svc.getActiveServer) return null;
     const server = this._svc.getActiveServer(ImageSlotPicker.remoteRole(request.slot));
-    return server && server.location === 'remote' ? server : null;
+    if (!server || server.location !== 'remote') return null;
+    return (await this._namesLocalModel(request.modelRef)) ? null : server;
+  }
+
+  async _namesLocalModel(modelRef) {
+    const modelId = ImageModelResolver.stripLocal(modelRef);
+    if (!modelId) return false;
+    if (typeof this._svc.isEnabled === 'function' && !this._svc.isEnabled()) return false;
+    try {
+      return !!(await this._models.resolve(modelId));
+    } catch (_) {
+      return false;
+    }
   }
 
   async _generateLocal(request, send) {
@@ -148,9 +165,9 @@ class ImageRouter {
     };
   }
 
-  static _fail(send, message) {
+  static _fail(send, message, extra = {}) {
     send('error', { message });
-    return { success: false, error: message };
+    return { success: false, error: message, ...extra };
   }
 }
 

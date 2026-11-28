@@ -6,8 +6,9 @@ Boots a game for 3-30 s in a hidden offscreen BrowserWindow (offscreen so rAF ke
 
 ## Methods
 
-- `SmokeRunner.run({ gameDir, seconds, actions, url, screenshots, shotDir, BrowserWindow?, sleep? })` -> `{ available, loaded, report, consoleErrors, consoleLines, shots, actions, seconds, url }` or a `busy` / `flattenError` / `loadError` result. `url` loads the live play page instead of the flattened copy.
+- `SmokeRunner.run({ gameDir, seconds, actions, url, screenshots, shotDir, BrowserWindow?, sleep? })` -> `{ available, loaded, report, consoleErrors, consoleLines, shots, texts, actions, seconds, url }` or a `busy` / `flattenError` / `loadError` result. `url` loads the live play page instead of the flattened copy.
 - `clampSeconds(n)`, `resolveBrowserWindow()`.
+- `texts` is `[{ label, at, texts: [string] }]`: at every captured mark (with or without screenshots) the runner reads `window.__lumaSmokeTexts()` from the collector (`_readTexts`, bounded by `REPORT_TIMEOUT_MS`); a page without the collector, a wedged or throwing page, or an answer that is not a JSON list reads as `[]`. [PlayabilityNotes](PlayabilityNotes.md) turns it into the on-screen text timeline and the progress check.
 
 ## Testing
 

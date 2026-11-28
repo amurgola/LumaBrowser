@@ -11,11 +11,6 @@ class AssetJob {
     };
   }
 
-  static queue(s, spec, modelRef) {
-    s.pendingAssets.push(AssetJob.fromSpec(spec, modelRef));
-    s.assets.set(spec.rel, { status: 'pending' });
-  }
-
   static request(job) {
     return {
       prompt: job.prompt, width: job.width, height: job.height,

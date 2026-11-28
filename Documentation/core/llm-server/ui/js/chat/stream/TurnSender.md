@@ -27,6 +27,8 @@ server makes it a branch; the thread reloads afterwards for the pager.
 - `regenerate(target?)`: the clicked reply, else the last one; ignored while
   streaming.
 - `resend(userMessage, text)`: ignored while streaming; needs a model.
+- Both redraw the thread through [ConversationView](../conversation/ConversationView.md)`.rerender`, not
+  `render`, so a chat mode's composer decoration survives the redraw.
 - `showHostTurn(opening, requestId)`: a turn the host started in the conversation on
   screen (a background task's results, see [HostTurns](HostTurns.md)). The opening
   message (the app's notice) is pushed and rendered, and the reply's placeholder is

@@ -47,6 +47,7 @@ class AgentTurnDispatch {
       systemRole: t.modeTurn ? null : ChatAssistantText.ROLE_TOOLS,
       modeSystemPrompt: AgentTurnDispatch._promptAppend(t.modeTurn, t.choicesOn, t.voiceOn, t.docsGrant, planTool, taskTools),
       turnReminder: AgentTurnDispatch._turnReminder(t.voiceOn, this._otherJobs(t.convId)),
+      requestReminder: AgentTurnDispatch._requestReminder(t.modeTurn),
       stepReminder: AgentTurnDispatch._stepReminder(planTool, taskTools),
       finalCheck: planTool ? () => planTool.beforeFinalAnswer() : null,
       awaitsLaterResult: taskTools ? () => taskTools.awaitsLaterResult : null,
@@ -78,6 +79,10 @@ class AgentTurnDispatch {
   static _turnReminder(voiceOn, runningJobs) {
     const parts = [voiceOn ? ChatStyleDocs.VOICE_REMINDER : null, ConversationJobReminder.build(runningJobs)].filter(Boolean);
     return parts.length ? parts.join('\n') : null;
+  }
+
+  static _requestReminder(modeTurn) {
+    return modeTurn ? null : ChatAssistantText.requestReminder();
   }
 
   static _approvedTools(grants, modeTurn) {

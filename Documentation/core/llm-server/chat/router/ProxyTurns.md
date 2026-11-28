@@ -33,3 +33,14 @@ names, or targets a tab showing, the host computer's own addresses, local files 
 `agent` no longer calls the bridge bare: [GuestTurnDispatch](GuestTurnDispatch.md) gives a shared turn the chat
 assistant's role, answering guidance, native history, context window and `update_plan`, as the host's own chat
 turn has. `stream` gives a web chat's plain turn the desktop chat's prompt.
+
+## Changes (2026-11-26, a paired client's pictures count as images)
+
+`stream` runs the messages through [MessageImages](MessageImages.md)`.lift` and dispatches the lifted images after
+any sent beside the messages (`images`, the web app's attachments). A paired desktop client puts a turn's pictures
+inside its newest user message as `image_url` parts, so the host used to dispatch a turn with no images: the local
+path loads the vision projector only for a turn that has some (`LocalServerPrep.prepare(stem, images.length)`), so
+the model server stayed without image input and answered HTTP 400 ("started without image input"). With the images
+lifted, the host restarts with vision and injects them again, or appends the no-vision note when the model has no
+projector, as it does for a picture attached in its own chat. A text turn is dispatched with the same messages
+array as before.

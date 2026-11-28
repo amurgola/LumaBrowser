@@ -2,6 +2,7 @@ const ChatModelRef = require('./ChatModelRef');
 const GuestTurnDispatch = require('./GuestTurnDispatch');
 const ChatStyleDocs = require('./ChatStyleDocs');
 const ChatTurn = require('./ChatTurn');
+const MessageImages = require('./MessageImages');
 
 class ProxyTurns {
   constructor({ llmServerService, dispatch, agentBridge, getAgentDeps, reclaimer, contextWindow, plainPrompt = null }) {
@@ -15,7 +16,8 @@ class ProxyTurns {
   async stream({ modelRef, messages, temperature, hooks, images = [], extra = null, chatStyle = null }) {
     const ref = this.resolveRef(modelRef);
     const sent = chatStyle ? ChatStyleDocs.plainTurn(messages, { plainPrompt: this._plainPrompt, ...chatStyle }) : messages;
-    const handle = await this._dispatch(ref, sent, temperature, hooks, images, null,
+    const turn = MessageImages.lift(sent);
+    const handle = await this._dispatch(ref, turn.messages, temperature, hooks, [...images, ...turn.images], null,
       { ...(extra || {}), trace: { conversationId: null, callType: ProxyTurns._callType(extra) } });
     return this.wrapHandle(ref, handle);
   }

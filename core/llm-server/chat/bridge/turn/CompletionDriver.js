@@ -36,8 +36,13 @@ class CompletionDriver {
       native.onDelta,
     );
     o.control.clearLive();
+    if (CompletionDriver._failed(completion)) o.images.returnUndelivered();
     if (o.health.noteCompletion(completion)) o.replyCap.noteLengthCut();
     return completion;
+  }
+
+  static _failed(completion) {
+    return !!completion && completion.success === false;
   }
 
   _noteFirstSend(sendMsgs) {

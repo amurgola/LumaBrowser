@@ -6,12 +6,12 @@ Activates Game mode: seeds the knowledge base, registers the `game` chat mode, a
 
 ## Methods
 
-- `GameModeExtension.activate(context)` -> `{ gamesRoot, gameDirFor(id), sanitizeConvId(id), ai (GameAiSurface), gatewayInfo }`.
+- `GameModeExtension.activate(context)` -> `{ gamesRoot, gameDirFor(id), sanitizeConvId(id), ai (GameAiSurface), snapshotFor(id), gatewayInfo }`. `snapshotFor` is [GameSnapshotStore](session/GameSnapshotStore.md)`.current`, what `GET /state/:convId` answers.
 - `new GameModeExtension(context, { folders? })`, `execute()`.
 
 ## Shared state
 
-One `sessions` Map (conversationId -> session record) per activation, shared by the descriptor, the tools and the AI surface. `gatewayInfo` starts `{ baseUrl: null }` and is filled by `routes.js` when core mounts the routes (core hands the address only to the route factory); `run_game` uses it to load the live play page for AI games. `deactivate()` does nothing: the extension manager unregisters chat modes.
+One `sessions` Map (conversationId -> session record) per activation, shared by the descriptor, the tools, the AI surface and the [GameSnapshotStore](session/GameSnapshotStore.md) (also handed to the descriptor, so a render that ends after the reply stores the new snapshot). `gatewayInfo` starts `{ baseUrl: null }` and is filled by `routes.js` when core mounts the routes (core hands the address only to the route factory); `run_game` uses it to load the live play page for AI games. `deactivate()` does nothing: the extension manager unregisters chat modes.
 
 ## Chat-page bundle
 

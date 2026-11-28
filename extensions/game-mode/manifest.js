@@ -25,8 +25,9 @@ module.exports = {
     file: './chat-ui.js',
     assets: [
       './game.css',
-      './ui/GameChatMode.js', './ui/GameKickoff.js', './ui/GamePanelActions.js', './ui/GamePanelMarkup.js',
-      './ui/GamePlayOverlay.js', './ui/GameServerApi.js', './ui/GameSetupSchema.js', './ui/GameStatusPanel.js',
+      './ui/GameChatMode.js', './ui/GameKickoff.js', './ui/GameLanguageModel.js', './ui/GamePlayOverlay.js',
+      './ui/GameServerApi.js', './ui/GameSetupSchema.js', './ui/GameStrip.js', './ui/GameStripActions.js',
+      './ui/GameStripMarkup.js',
     ],
   },
 

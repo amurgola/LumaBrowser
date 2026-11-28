@@ -15,7 +15,8 @@ through [ImageModelCatalog](ImageModelCatalog.md).
 - Shared companions `FLUX_VAE`, `T5XXL_Q8`, `WAN_VAE`, `UMT5_Q8`,
   `QWEN_21_VAE`, `QWEN3_VL_8B_LLM`, `QWEN3_VL_8B_VISION`, `QWEN3_VL_4B_LLM`
   (one encoder file for FLUX.3 Image Klein and Krea 2 Turbo), the shared
-  `QWEN_21_PROMPT_GUIDE`, `H3_QWEN3_VL_32B_LLM` (one encoder file for MiniMax-H3
+  `QWEN_21_PROMPT_GUIDE`, `QWEN_21_SAGE_ARGS` (the two Qwen-Image 2.1 rows'
+  `sageLaunchArgs`), `H3_QWEN3_VL_32B_LLM` (one encoder file for MiniMax-H3
   video and MiniMax-H3-Image), `H3_IMAGE_SIGMAS`, `H3_IMAGE_PROMPT_GUIDE`,
   `RD_FLOW_PROMPT_GUIDE` (Retro Diffusion's caption rules from
   rdflow/prompting.py, condensed: a long plain caption in a fixed order), plus
@@ -39,7 +40,10 @@ approxBytes, loaderFlag?, quants?, supersedes?, updateNote? } }, minVramBytes,
 defaults: { width, height, steps, cfgScale, sampler, scheduler?,
 negativePrompt?, promptGuide?, fixedSigmas?, cacheMode?, cacheOption?, refImageArgs?, videoFrames?, fps?, flowShift? }, constraints?,
 launchArgs, protocol: 'sd-cpp-http'|'sd-cpp-video', compatibleRuntimes,
-preferredRuntimes?, minRuntimeTags?, sageAttention?, recommendedLora? }`.
+preferredRuntimes?, minRuntimeTags?, sageAttention?, sageLaunchArgs?, recommendedLora? }`.
+`sageLaunchArgs` are sd-server arguments the launch adds only when it runs
+SageAttention, whoever asked for it (the row, an installed model's manifest, INT8
+weights or `SD_SAGE_ATTN=1`).
 `minRuntimeTags` maps a runtime id to the oldest release tag that loads the row
 (`luma-b<n>` or `master-<n>`, see
 [RuntimeReleaseTag](../service/RuntimeReleaseTag.md)). The other three are
@@ -78,6 +82,17 @@ comfortable GPU-resident size with the encoders on the CPU.
   with the stock file (see [ModelFileUpdates](ModelFileUpdates.md)). Canvases
   must be /32; the runtime picks its own flow schedule (no `--flow-shift`).
   Needs an sd.cpp build from 2026-09-20 or newer.
+  `sageLaunchArgs` (`QWEN_21_SAGE_ARGS`, shared with the Turbo row) is
+  `--model-args qwen_image_2_1_prefix_cache_type=f16`: the model caches the keys
+  and values of its text and reference tokens for the whole sampling run, at 16
+  bits under flash attention but at 32 bits once SageAttention is on
+  (docs/qwen_image_2.1.md, `auto`). Measured 2026-11-26 on a 1760x2400 edit with
+  a full-size reference (Turbo INT8, RTX 5090): SageAttention alone peaked at
+  28.9 GB against 21.6 GB without it, and with the argument at 23.3 GB for the
+  same 20.8 s and the same picture (54.9 dB between the two caches). The
+  argument rides only on SageAttention launches because forcing 16 bits where
+  an attention step falls back from flash attention (Vulkan, CPU) is untested;
+  a build that does not know the key ignores it.
 - Qwen-Image 2.1 Turbo: Qwen's official 8-step distill, same architecture and
   companions as the base (each row still downloads into its own folder). Quants
   are unsloth's (leejet has no Turbo repo; the card documents sd-cli use).

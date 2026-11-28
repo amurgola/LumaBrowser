@@ -33,7 +33,8 @@ mode's sub-agent, GambitBridgeTurn and the eval adapter.
   `deps` (required: `{ db, browserService, artifactStore, mcpAggregator?,
   ragService?, artifactDataStore?, artifactTaskStore? }`), `hooks` (required), `priorMessages` [null] (persisted
   rows, for the artifact catalog), `modeSystemPrompt` [null], `turnReminder`
-  [null], `images` [null], `allowedTools` [null = unrestricted],
+  [null], `requestReminder` [null] (text written once after the user's request,
+  see [BridgeRun](bridge/BridgeRun.md)), `images` [null], `allowedTools` [null = unrestricted],
   `refreshAllowedTools` [null] (fresh policy for mid-run admission),
   `systemPromptOverride` [null], `extraTools` [null] (mode tools, see
   [ExtraTools](bridge/tools/ExtraTools.md)), `llmExtra` [null], `noBrowser`

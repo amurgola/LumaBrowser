@@ -15,8 +15,9 @@ export default class GameSetupSchema {
     }
   }
 
-  static build(imageModels) {
+  static build(imageModels, llmOptions = []) {
     const fields = GameSetupSchema._baseFields();
+    fields.push(GameSetupSchema._llmField(llmOptions));
     if (imageModels.length) fields.push(...GameSetupSchema._modelFields(imageModels));
     return {
       title: 'New game',
@@ -29,7 +30,7 @@ export default class GameSetupSchema {
   static defaultPins(imageModels) {
     const have = new Set(imageModels.map((m) => m.value));
     const first = (list) => list.find((id) => have.has(id)) || '';
-    return { spriteModel: first(GameSetupSchema.SPRITE_PREFERRED), backdropModel: first(GameSetupSchema.BACKDROP_PREFERRED) };
+    return { llmModel: '', spriteModel: first(GameSetupSchema.SPRITE_PREFERRED), backdropModel: first(GameSetupSchema.BACKDROP_PREFERRED) };
   }
 
   static _baseFields() {
@@ -81,6 +82,12 @@ export default class GameSetupSchema {
         placeholder: '#1a1c2c #5d275d #b13e53 #ef7d57 #ffcd75 ...',
         showIf: { key: 'palette', equals: 'custom' } },
     ];
+  }
+
+  static _llmField(llmOptions) {
+    const options = llmOptions.length ? llmOptions : [{ value: '', label: 'Use current chat model' }];
+    return { key: 'llmModel', label: 'Language model', type: 'select', half: true,
+      hint: 'builds the game; unset keeps the current chat model', options };
   }
 
   static _modelFields(imageModels) {

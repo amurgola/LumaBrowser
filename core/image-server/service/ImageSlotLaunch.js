@@ -34,7 +34,7 @@ class ImageSlotLaunch {
     await this._placeOnGpus();
     if (await this._swapOutCrowdingChat()) await this._placeOnGpus();
     const launch = await this._planLaunch();
-    this._logLaunch();
+    this._logLaunch(launch.plan);
     await this._server.start(launch);
     return { success: true, status: this._server.getStatus(), plan: launch.plan };
   }
@@ -192,11 +192,11 @@ class ImageSlotLaunch {
     return ClipPlacement.decide({ model: this._model, cudaDevice, offloadToCpu, autoFit: !!autoFit, cpuOnly: this._cpuOnly });
   }
 
-  _logLaunch() {
+  _logLaunch(plan) {
     this._deps.log(ImageLaunchLog.line({
       role: this._role,
       modelId: this._modelId,
-      placement: this._placement,
+      placement: { ...this._placement, offloadToCpu: !!(plan && plan.offloadToCpu) },
       profile: this._profile,
       vaeTiling: this._vaeTiling,
       cpuOnly: this._cpuOnly,

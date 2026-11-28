@@ -29,4 +29,7 @@ The `sendCompletion` the bridge hands AgentRunner.
   ([ReplyCap](ReplyCap.md)) and `parallelToolCalls` (the run's `parallel`, so
   llama.cpp is asked for several calls only when the pool can run them). A length cut raises the reply cap. A fresh
   [NativeCallStream](NativeCallStream.md) per iteration puts up the pending
-  card for a native model's calls as their fragments arrive.
+  card for a native model's calls as their fragments arrive. A completion that
+  resolves `{ success: false }` gives its images back
+  ([RunImages](RunImages.md)`.returnUndelivered`), so the loop's retry of that
+  request carries them again instead of going out as text alone.

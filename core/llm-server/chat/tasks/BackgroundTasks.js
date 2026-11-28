@@ -111,7 +111,7 @@ class BackgroundTasks {
     this._sequence += 1;
     const task = new BackgroundTask({
       id: `bg-${this._sequence}`, conversationId: spec.conversationId, batchId: spec.batchId, tool: spec.tool,
-      title: spec.title, now: this._now(),
+      title: spec.title, now: this._now(), quiet: !!spec.quiet,
     });
     this._tasks.set(task.id, task);
     this._runs.set(task.id, { lane: spec.lane || null, stop: null });

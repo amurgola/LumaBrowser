@@ -101,9 +101,24 @@ class PeerImageServers {
   _adoptOnce(peer, offered) {
     if (typeof this._service.setActiveServerId !== 'function' || peer._imageServersAdopted) return;
     try {
-      for (const role of offered) this._service.setActiveServerId(role, PeerImageServers.serverId(peer.id, role));
+      for (const role of offered) {
+        if (this._localSlotUsable(role)) continue;
+        this._service.setActiveServerId(role, PeerImageServers.serverId(peer.id, role));
+      }
       this._peers.patch(peer.id, { _imageServersAdopted: true });
     } catch (_) {}
+  }
+
+  _localSlotUsable(role) {
+    const service = this._service;
+    if (typeof service.isEnabled !== 'function' || typeof service.computeLocalServerEntry !== 'function') return false;
+    try {
+      if (!service.isEnabled()) return false;
+      const entry = service.computeLocalServerEntry(role);
+      return !!(entry && entry.available);
+    } catch (_) {
+      return false;
+    }
   }
 }
 

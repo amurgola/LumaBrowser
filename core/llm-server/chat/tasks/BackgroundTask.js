@@ -6,7 +6,7 @@ class BackgroundTask {
   static CANCELED = 'canceled';
   static END_STATES = [BackgroundTask.DONE, BackgroundTask.FAILED, BackgroundTask.CANCELED];
 
-  constructor({ id, conversationId, batchId, tool, title, now }) {
+  constructor({ id, conversationId, batchId, tool, title, now, quiet = false }) {
     this.id = String(id);
     this.conversationId = String(conversationId);
     this.batchId = String(batchId || id);
@@ -19,7 +19,7 @@ class BackgroundTask {
     this.result = '';
     this.artifacts = [];
     this.stopRequestedBy = null;
-    this.delivered = false;
+    this.delivered = !!quiet;
     this.artifactsShown = false;
   }
 

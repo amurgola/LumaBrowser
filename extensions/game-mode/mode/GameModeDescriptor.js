@@ -1,5 +1,5 @@
 const fs = require('fs');
-const PendingAssetDrainer = require('../assets/PendingAssetDrainer');
+const AssetRenderQueue = require('../assets/AssetRenderQueue');
 const GameSessions = require('../session/GameSessions');
 const GameSnapshot = require('../session/GameSnapshot');
 const GameDataStores = require('../store/GameDataStores');
@@ -45,7 +45,7 @@ class GameModeDescriptor {
   async postProcess({ conversationId, meta, emit, setMeta, aborted }) {
     const s = this._sessions.get(conversationId);
     if (!s || !s.workspaceId) return;
-    await this._settleAssets(s, emit, aborted);
+    this._settleAssets(conversationId, s, aborted);
     s.status = GameSessions.statusAfterTurn(s, aborted);
     let game = null;
     try { game = GameSnapshot.of(s); } catch (_) { return; }
@@ -61,13 +61,10 @@ class GameModeDescriptor {
     try { fs.rmSync(dir, { recursive: true, force: true }); } catch (_) {}
   }
 
-  async _settleAssets(s, emit, aborted) {
-    if (aborted) {
-      s.pendingAssets = [];
-      return;
-    }
+  _settleAssets(conversationId, s, aborted) {
     try {
-      await PendingAssetDrainer.drain({ context: this._context, s, emit: (evt) => emit(evt.type, evt.payload) });
+      if (aborted) new AssetRenderQueue({ chat: this._context.chat, conversationId, session: () => s }).cancelAll();
+      AssetRenderQueue.reconcile(s);
     } catch (_) {}
   }
 }

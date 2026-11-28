@@ -44,6 +44,7 @@ class SmokeRunner {
     const lastAt = this._actions.length ? this._actions[this._actions.length - 1].at : 0;
     this._runMs = Math.max(this._secs * 1000, lastAt + 2000);
     this._url = url;
+    this._texts = [];
     this._screenshots = screenshots;
     this._shotDir = shotDir;
     this._BrowserWindow = BrowserWindow === undefined ? SmokeRunner.resolveBrowserWindow() : BrowserWindow;
@@ -84,6 +85,7 @@ class SmokeRunner {
       consoleErrors: this._console.errors,
       consoleLines: this._console.lines,
       shots: this._capture.shots,
+      texts: this._texts,
       actions: this._actions,
       seconds: Math.round(this._runMs / 1000),
       url: this._url || null,
@@ -139,7 +141,19 @@ class SmokeRunner {
       if (wait > 0) await this._sleep(wait);
       elapsed = Math.max(elapsed, mark.at);
       if (this._screenshots) await this._capture.snap(mark.label, mark.at);
+      this._texts.push({ label: mark.label, at: mark.at, texts: await this._readTexts() });
     }
+  }
+
+  async _readTexts() {
+    try {
+      const raw = await Promise.race([
+        this._win.webContents.executeJavaScript('window.__lumaSmokeTexts ? window.__lumaSmokeTexts() : "[]"', true),
+        this._sleep(SmokeRunner.REPORT_TIMEOUT_MS).then(() => '[]'),
+      ]);
+      const texts = JSON.parse(raw);
+      return Array.isArray(texts) ? texts : [];
+    } catch (_) { return []; }
   }
 
   _marks() {

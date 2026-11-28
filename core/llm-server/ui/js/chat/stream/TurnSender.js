@@ -54,7 +54,7 @@ export default class TurnSender {
     if (idx === -1) return;
     const tgt = state.messages[idx];
     state.messages.length = idx;
-    this._ctx.conversation.render(this._ctx.main.titleText() || 'Conversation');
+    this._ctx.conversation.rerender(this._ctx.main.titleText() || 'Conversation');
     state.firstTurn = false;
     state.regenActive = true;
     this._startAssistant();
@@ -77,7 +77,7 @@ export default class TurnSender {
     const userMsg = { role: 'user', content: composed };
     if (images.length) userMsg.images = images.map((im) => ({ name: im.name, dataUrl: 'data:' + im.mime + ';base64,' + im.base64 }));
     state.messages.push(userMsg);
-    this._ctx.conversation.render(this._ctx.main.titleText() || 'Conversation');
+    this._ctx.conversation.rerender(this._ctx.main.titleText() || 'Conversation');
     state.firstTurn = false;
     state.regenActive = !!m.id;
     this._startAssistant();

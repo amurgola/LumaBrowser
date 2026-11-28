@@ -7,6 +7,11 @@ export default class GameServerApi {
     return bust ? base + '?ts=' + Date.now() : base;
   }
 
+  static async state(convId) {
+    const body = await GameServerApi._jsonCall('/state/' + encodeURIComponent(convId), 'GET', 'state');
+    return body.game || null;
+  }
+
   static async openTab(convId) {
     const r = await fetch(GameServerApi.BASE + '/open-tab/' + encodeURIComponent(convId), { method: 'POST' });
     if (!r.ok) throw new Error('open-tab ' + r.status);

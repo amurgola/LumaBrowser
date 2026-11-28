@@ -1,11 +1,21 @@
 class MessageImages {
   static DEFAULT_MIME = 'image/png';
+  static DATA_URL = /^data:([^;,]+);base64,(.+)$/;
 
   static inject(messages, images) {
     return MessageImages._rewriteLastUser(messages, (message) => ({
       ...message,
       content: MessageImages._parts(MessageImages._text(message), images),
     }));
+  }
+
+  static lift(messages) {
+    let images = [];
+    const lifted = MessageImages._rewriteLastUser(messages, (message) => {
+      images = MessageImages._inlineImages(message.content);
+      return images.length ? { ...message, content: MessageImages._partsText(message.content) } : message;
+    });
+    return images.length ? { messages: lifted, images } : { messages, images };
   }
 
   static noteNotVisible(messages, count) {
@@ -42,6 +52,28 @@ class MessageImages {
       parts.push({ type: 'image_url', image_url: { url: `data:${mime};base64,${image.base64}` } });
     }
     return parts;
+  }
+
+  static _inlineImages(content) {
+    if (!Array.isArray(content)) return [];
+    const images = [];
+    for (const part of content) {
+      if (part && part.type === 'text' && typeof part.text === 'string') continue;
+      const image = MessageImages._inlineImage(part);
+      if (!image) return [];
+      images.push(image);
+    }
+    return images;
+  }
+
+  static _inlineImage(part) {
+    const url = part && part.type === 'image_url' && part.image_url && part.image_url.url;
+    const match = typeof url === 'string' ? MessageImages.DATA_URL.exec(url) : null;
+    return match ? { mime: match[1], base64: match[2] } : null;
+  }
+
+  static _partsText(content) {
+    return content.filter((part) => part.type === 'text').map((part) => part.text).join('\n');
   }
 
   static _notVisibleNote(n) {
